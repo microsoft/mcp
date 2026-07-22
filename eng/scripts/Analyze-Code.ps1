@@ -5,9 +5,28 @@
 
 Push-Location $RepoRoot
 try {
+    $hasErrors = $false
+
+    Write-Host "Checking if solution files are up to date."
+    try {
+        & "$PSScriptRoot/Update-Solution.ps1" -All -Verify
+    } catch {
+        Write-Host "❌ Solution update failed: $_"
+        $hasErrors = $true
+    }
+    if ($LASTEXITCODE -ne 0) {
+        $hasErrors = $true
+    } 
+    if (-not $hasErrors) {
+        Write-Host "✅ Solution files are up to date."
+    }
+
     Write-Host "Running dotnet format to check for formatting issues..."
-    $solutionFile = Get-ChildItem -Path . -Filter *.sln | Select-Object -First 1
-    dotnet format $solutionFile --verify-no-changes
+    $solutionFile = "$RepoRoot/Microsoft.Mcp.slnx"
+
+    # Excluding diagnostics IL2026 and IL3050 due to known issues with source generator
+    # Can be removed when https://github.com/dotnet/sdk/issues/45054 is resolved
+    dotnet format $solutionFile --verify-no-changes --exclude-diagnostics IL2026 IL3050
 
     # Run dotnet format
     if ($LASTEXITCODE) {

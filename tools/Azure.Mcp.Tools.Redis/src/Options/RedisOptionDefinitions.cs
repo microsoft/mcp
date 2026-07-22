@@ -9,6 +9,7 @@ public static class RedisOptionDefinitions
     public const string SkuName = "sku";
     public const string LocationName = "location";
     public const string AccessKeyAuthenticationEnabledName = "access-keys-authentication";
+    public const string PublicNetworkAccessName = "public-network-access";
     public const string ModulesName = "modules";
 
     public static readonly Option<string> Resource = new(
@@ -40,6 +41,14 @@ public static class RedisOptionDefinitions
     )
     {
         Description = "Whether to enable access keys for authentication for the Redis resource. (Default: false)",
+        Required = false
+    };
+
+    public static readonly Option<bool> PublicNetworkAccess = new(
+        $"--{PublicNetworkAccessName}"
+    )
+    {
+        Description = "Whether to enable public network access for the Redis resource. (Default: false)",
         Required = false
     };
 

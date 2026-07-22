@@ -2,6 +2,8 @@ parameters:
 # required matrix parameters
 - name: TestTimeoutInMinutes
   type: number
+- name: BuildTimeoutInMinutes
+  type: number
 - name: ServerName
   type: string
 - name: PublishTarget
@@ -12,10 +14,14 @@ parameters:
   type: string
 - name: MaxParallel
   type: number
+- name: HostArchitecture
+  type: string
+  default: ''
 
 jobs:
-- job: Build_${{ parameters.OSName }}
+- job: Build_${{ parameters.OSName }}_${{ coalesce(parameters.HostArchitecture, 'x64') }}
   displayName: "Build"
+  timeoutInMinutes: ${{ parameters.BuildTimeoutInMinutes }}
   condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'))
   strategy:
     maxParallel: ${{ parameters.MaxParallel }}
@@ -27,12 +33,15 @@ jobs:
     ${{ else }}:
       image: $(OSVmImage)
     os: ${{ parameters.OSName }}
+    ${{ if ne(parameters.HostArchitecture, '') }}:
+      hostArchitecture: ${{ parameters.HostArchitecture }}
 
   # Only run codeql on linux internal build jobs to reduce overall time on pipeline
   ${{ if and(eq(parameters.OSName, 'linux'), eq(variables['System.TeamProject'], 'internal')) }}:
     templateContext:
       sdl:
         codeql:
+          querySuite: 'sdl-required, active-ssirp, secure-future-initiative'
           compiled:
             enabled: true
 
@@ -43,18 +52,7 @@ jobs:
 
   - checkout: self
 
-  - task: UseDotNet@2
-    displayName: "Use .NET SDK from global.json"
-    retryCountOnTaskFailure: 3
-    inputs:
-      useGlobalJson: true
-
-  - task: UseDotNet@2
-    displayName: "Use .NET SDK 9.0.x"
-    retryCountOnTaskFailure: 3
-    inputs:
-      packageType: sdk
-      version: 9.0.x
+  - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
   - task: Powershell@2
     displayName: "Build code"
@@ -63,41 +61,29 @@ jobs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Code.ps1
       arguments: >
-        -ServerName '${{ parameters.ServerName }}'
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
-        -OperatingSystem '${{ parameters.OSName }}'
-        -Architecture '$(Architecture)'
-        -Native:$$(Native)
-        -ReleaseBuild:$${{ ne(parameters.PublishTarget, 'none') }}
+        -ServerName '${{ parameters.ServerName }}'
+        -PlatformName '$(BuildPlatformName)'
+        -ReleaseBuild
         -SelfContained
-        -Trimmed:$$(Trimmed)
         -SingleFile
+        -SmokeTest
+    env:
+      AZURE_MCP_COLLECT_TELEMETRY: 'false'
 
   - task: Powershell@2
-    displayName: "Run unit tests"
+    displayName: "Run tests"
     condition: and(succeeded(), eq(variables['RunUnitTests'], 'true'))
     timeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
     inputs:
       pwsh: true
       filePath:  $(Build.SourcesDirectory)/eng/scripts/Test-Code.ps1
       arguments: >
+        -TestType 'All'
         -CollectCoverage:$${{ eq(parameters.OSName, 'linux') }}
         -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults'
-      workingDirectory: $(Build.SourcesDirectory)
-    env:
-      AZURE_MCP_COLLECT_TELEMETRY: 'false'
-
-  - task: Powershell@2
-    displayName: "Run recorded tests"
-    condition: and(succeeded(), eq(variables['RunRecordedTests'], 'true'))
-    timeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
-    inputs:
-      pwsh: true
-      filePath:  $(Build.SourcesDirectory)/eng/scripts/Test-Code.ps1
-      arguments: >
-        -TestType 'Recorded'
-        -TestResultsPath '$(Build.ArtifactStagingDirectory)/recordedTestResults'
+        -ScopingBuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
       workingDirectory: $(Build.SourcesDirectory)
     env:
       AZURE_MCP_COLLECT_TELEMETRY: 'false'
@@ -107,22 +93,13 @@ jobs:
     condition: and(succeededOrFailed(), eq(variables['RunUnitTests'], 'true'))
     inputs:
       testResultsFiles: "$(Build.ArtifactStagingDirectory)/testResults/*.trx"
-      testRunTitle: "unit-${{ parameters.OSName }}-$(Architecture)"
-      testResultsFormat: "VSTest"
-      mergeTestResults: true
-
-  - task: PublishTestResults@2
-    displayName: "Publish Recorded Test Results"
-    condition: and(succeededOrFailed(), eq(variables['RunRecordedTests'], 'true'))
-    inputs:
-      testResultsFiles: "$(Build.ArtifactStagingDirectory)/recordedTestResults/*.trx"
-      testRunTitle: "recorded-${{ parameters.OSName }}-$(Architecture)"
+      testRunTitle: "unit_$(System.JobName)"
       testResultsFormat: "VSTest"
       mergeTestResults: true
 
   - task: PublishCodeCoverageResults@2
     displayName: "Publish Code Coverage Reports"
-    condition: and(succeededOrFailed(), eq(variables['RunUnitTests'], 'true'), eq('${{ parameters.OSName }}', 'linux'))
+    condition: and(succeededOrFailed(), eq(variables['RunUnitTests'], 'true'), eq(variables['PublishCoverage'], 'true'), eq('${{ parameters.OSName }}', 'linux'))
     inputs:
       summaryFileLocation: $(CoverageFile)
 

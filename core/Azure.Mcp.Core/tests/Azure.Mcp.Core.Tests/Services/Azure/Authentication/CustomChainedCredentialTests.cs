@@ -1,0 +1,626 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Reflection;
+using Azure.Core;
+using Azure.Identity;
+using Microsoft.Extensions.Logging;
+using Xunit;
+
+namespace Azure.Mcp.Core.Tests.Services.Azure.Authentication;
+
+/// <summary>
+/// Tests for CustomChainedCredential configuration behavior.
+/// These tests verify that credentials are created correctly based on environment variable settings.
+/// Note: These tests verify creation behavior only. Actual authentication behavior requires live credentials.
+/// </summary>
+public class CustomChainedCredentialTests
+{
+    /// <summary>
+    /// Tests that default behavior (no AZURE_TOKEN_CREDENTIALS set) creates a credential successfully.
+    /// Expected: Uses default credential chain with InteractiveBrowserCredential fallback.
+    /// </summary>
+    [Fact]
+    public void DefaultBehavior_CreatesCredentialSuccessfully()
+    {
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that dev mode (AZURE_TOKEN_CREDENTIALS="dev") creates a credential successfully.
+    /// Expected: Uses development credentials with InteractiveBrowserCredential fallback.
+    /// </summary>
+    [Fact]
+    public void DevMode_CreatesCredentialSuccessfully()
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "dev");
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that prod mode (AZURE_TOKEN_CREDENTIALS="prod") creates a credential successfully.
+    /// Expected: Uses production credentials (EnvironmentCredential, WorkloadIdentityCredential, ManagedIdentityCredential)
+    /// WITHOUT InteractiveBrowserCredential fallback.
+    /// </summary>
+    [Fact]
+    public void ProdMode_CreatesCredentialSuccessfully()
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "prod");
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that specific credential (AZURE_TOKEN_CREDENTIALS="ManagedIdentityCredential") creates successfully.
+    /// Expected: Uses ONLY ManagedIdentityCredential without InteractiveBrowserCredential fallback.
+    /// </summary>
+    [Fact]
+    public void SpecificCredential_ManagedIdentity_CreatesCredentialSuccessfully()
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "ManagedIdentityCredential");
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that specific credential (AZURE_TOKEN_CREDENTIALS="AzureCliCredential") creates successfully.
+    /// Expected: Uses ONLY AzureCliCredential without InteractiveBrowserCredential fallback.
+    /// </summary>
+    [Fact]
+    public void SpecificCredential_AzureCli_CreatesCredentialSuccessfully()
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "AzureCliCredential");
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that explicit InteractiveBrowserCredential request creates successfully.
+    /// Expected: Uses InteractiveBrowserCredential when explicitly requested.
+    /// </summary>
+    [Fact]
+    public void SpecificCredential_InteractiveBrowser_CreatesCredentialSuccessfully()
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "InteractiveBrowserCredential");
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests all supported specific credential types create successfully.
+    /// Expected: Each credential type creates without errors.
+    /// </summary>
+    [Theory]
+    [InlineData("EnvironmentCredential")]
+    [InlineData("WorkloadIdentityCredential")]
+    [InlineData("VisualStudioCredential")]
+    [InlineData("VisualStudioCodeCredential")]
+    [InlineData("AzurePowerShellCredential")]
+    [InlineData("AzureDeveloperCliCredential")]
+    public void SpecificCredential_VariousTypes_CreateCredentialSuccessfully(string credentialType)
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", credentialType);
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that User-Assigned Managed Identity (AZURE_CLIENT_ID set) creates successfully.
+    /// Expected: ManagedIdentityCredential is configured with the specified clientId.
+    /// </summary>
+    [Fact]
+    public void ManagedIdentityCredential_WithClientId_CreatesCredentialSuccessfully()
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS", "AZURE_CLIENT_ID");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "ManagedIdentityCredential");
+        Environment.SetEnvironmentVariable("AZURE_CLIENT_ID", "12345678-1234-1234-1234-123456789012");
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that System-Assigned Managed Identity (no AZURE_CLIENT_ID) creates successfully.
+    /// Expected: ManagedIdentityCredential is configured for system-assigned identity.
+    /// </summary>
+    [Fact]
+    public void ManagedIdentityCredential_WithoutClientId_CreatesCredentialSuccessfully()
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "ManagedIdentityCredential");
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that "only broker credential" mode creates InteractiveBrowserCredential successfully.
+    /// Expected: Uses only InteractiveBrowserCredential with broker support.
+    /// </summary>
+    [Fact]
+    public void OnlyUseBrokerCredential_CreatesCredentialSuccessfully()
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL");
+        Environment.SetEnvironmentVariable("AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL", "true");
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that VS Code context without explicit setting creates credential successfully.
+    /// Expected: When VSCODE_PID is set and AZURE_TOKEN_CREDENTIALS is not set,
+    /// prioritizes VS Code credential in the chain.
+    /// </summary>
+    [Fact]
+    public void VSCodeContext_WithoutExplicitSetting_CreatesCredentialSuccessfully()
+    {
+        // Arrange
+        using var env = new EnvironmentScope("VSCODE_PID");
+        Environment.SetEnvironmentVariable("VSCODE_PID", "12345");
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that VS Code context with explicit prod setting respects the explicit setting.
+    /// Expected: When both VSCODE_PID and AZURE_TOKEN_CREDENTIALS are set,
+    /// AZURE_TOKEN_CREDENTIALS takes precedence.
+    /// </summary>
+    [Fact]
+    public void VSCodeContext_WithExplicitProdSetting_CreatesCredentialSuccessfully()
+    {
+        // Arrange
+        using var env = new EnvironmentScope("VSCODE_PID", "AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("VSCODE_PID", "12345");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "prod");
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that explicit DeviceCodeCredential request creates successfully in CLI mode.
+    /// Expected: DeviceCodeCredential is created when AZURE_TOKEN_CREDENTIALS="DeviceCodeCredential"
+    /// and no server transport is active (ActiveTransport is empty).
+    /// </summary>
+    [Fact]
+    public void DeviceCodeCredential_ExplicitMode_CreatesCredentialSuccessfully()
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "DeviceCodeCredential");
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that DeviceCodeCredential throws CredentialUnavailableException when the server is in a
+    /// transport mode (stdio or http), because stdout is the protocol pipe and no terminal is attached.
+    /// Expected: GetToken throws CredentialUnavailableException.
+    /// </summary>
+    [Theory]
+    [InlineData("stdio")]
+    [InlineData("http")]
+    public void DeviceCodeCredential_InServerTransportMode_ThrowsCredentialUnavailableException(string transport)
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "DeviceCodeCredential");
+        var credentialType = GetCustomChainedCredentialType();
+        SetActiveTransport(credentialType, transport);
+
+        try
+        {
+            var credential = CreateCustomChainedCredential();
+
+            // Act & Assert — GetToken triggers lazy credential construction, which throws
+            Assert.Throws<CredentialUnavailableException>(() =>
+                credential.GetToken(new TokenRequestContext(["https://management.azure.com/.default"]), CancellationToken.None));
+        }
+        finally
+        {
+            SetActiveTransport(credentialType, string.Empty);
+        }
+    }
+
+    /// <summary>
+    /// Tests that the default credential chain in server transport mode creates a credential
+    /// successfully. DeviceCodeCredential fallback is suppressed but the rest of the chain is intact.
+    /// </summary>
+    [Theory]
+    [InlineData("stdio")]
+    [InlineData("http")]
+    public void DefaultBehavior_InServerTransportMode_CreatesCredentialSuccessfully(string transport)
+    {
+        // Arrange
+        var credentialType = GetCustomChainedCredentialType();
+        SetActiveTransport(credentialType, transport);
+
+        try
+        {
+            // Act
+            var credential = CreateCustomChainedCredential();
+
+            // Assert
+            Assert.NotNull(credential);
+            Assert.IsAssignableFrom<TokenCredential>(credential);
+        }
+        finally
+        {
+            SetActiveTransport(credentialType, string.Empty);
+        }
+    }
+
+    /// <summary>
+    /// Tests that dev mode in server transport mode creates a credential successfully.
+    /// DeviceCodeCredential fallback is suppressed, but the dev chain (VS, VS Code, CLI, etc.) remains.
+    /// </summary>
+    [Theory]
+    [InlineData("stdio")]
+    [InlineData("http")]
+    public void DevMode_InServerTransportMode_CreatesCredentialSuccessfully(string transport)
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "dev");
+        var credentialType = GetCustomChainedCredentialType();
+        SetActiveTransport(credentialType, transport);
+
+        try
+        {
+            // Act
+            var credential = CreateCustomChainedCredential();
+
+            // Assert
+            Assert.NotNull(credential);
+            Assert.IsAssignableFrom<TokenCredential>(credential);
+        }
+        finally
+        {
+            SetActiveTransport(credentialType, string.Empty);
+        }
+    }
+
+    /// <summary>
+    /// Tests that prod mode does not add DeviceCodeCredential as a fallback.
+    /// Prod is a pinned credential mode, so no interactive fallbacks (browser or device code) are added.
+    /// </summary>
+    [Fact]
+    public void ProdMode_DoesNotAddDeviceCodeFallback_CreatesCredentialSuccessfully()
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "prod");
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that a pinned specific credential does not add DeviceCodeCredential as a fallback.
+    /// Any explicit non-dev, non-browser credential setting is a pinned mode.
+    /// </summary>
+    [Theory]
+    [InlineData("AzureCliCredential")]
+    [InlineData("ManagedIdentityCredential")]
+    [InlineData("EnvironmentCredential")]
+    public void PinnedCredentialMode_DoesNotAddDeviceCodeFallback_CreatesCredentialSuccessfully(string credentialType)
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", credentialType);
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that prod mode with forceBrowserFallback=true does NOT add a browser fallback.
+    /// prod always signals a non-interactive environment — the browser popup must never appear.
+    /// </summary>
+    [Fact]
+    public void ProdMode_WithForceBrowserFallback_CreatesCredentialSuccessfully()
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "prod");
+
+        // Act — forceBrowserFallback=true must still be suppressed by prod mode
+        var credential = CreateCustomChainedCredential(forceBrowserFallback: true);
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that a non-prod pinned credential with forceBrowserFallback=true DOES add a browser
+    /// fallback. Only prod is treated as strictly non-interactive.
+    /// </summary>
+    [Theory]
+    [InlineData("AzureCliCredential")]
+    [InlineData("ManagedIdentityCredential")]
+    public void NonProdPinnedCredential_WithForceBrowserFallback_CreatesCredentialSuccessfully(string credentialType)
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", credentialType);
+
+        // Act — forceBrowserFallback=true should override non-prod pinned mode
+        var credential = CreateCustomChainedCredential(forceBrowserFallback: true);
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that an unrecognized AZURE_TOKEN_CREDENTIALS value logs a warning and falls back to
+    /// the default credential chain. This catches typos such as "AzuerCliCredential".
+    /// </summary>
+    [Fact]
+    public void UnknownCredentialValue_LogsWarning_AndFallsBackToDefaultChain()
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "AzuerCliCredential"); // intentional typo
+
+        var provider = new CapturingLoggerProvider();
+        using var factory = LoggerFactory.Create(b => b.AddProvider(provider));
+        var credential = CreateCustomChainedCredentialWithLoggerFactory(factory);
+
+        // Trigger the lazy credential construction (authentication will fail in test environment, that's expected).
+        try
+        {
+            credential.GetToken(new TokenRequestContext(["https://management.azure.com/.default"]), CancellationToken.None);
+        }
+        catch
+        {
+            // credential chain construction is all we need; auth failure is expected
+        }
+
+        // Assert — credential is still created (fallback works)
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+
+        // Assert — exactly one warning was logged containing the unrecognized value
+        var warning = Assert.Single(provider.Warnings);
+        Assert.Contains("AzuerCliCredential", warning);
+        Assert.Contains("AZURE_TOKEN_CREDENTIALS", warning);
+    }
+
+    /// <summary>
+    /// Tests that concurrent calls to GetToken complete without error and leave the
+    /// Lazy&lt;T&gt; credential in a created state, verifying that the ExecutionAndPublication
+    /// mode allows all threads to proceed after initialization.
+    /// </summary>
+    [Fact]
+    public async Task GetToken_ConcurrentCalls_CredentialIsInitializedAfterConcurrentAccess()
+    {
+        // Arrange
+        var credential = CreateCustomChainedCredential();
+        var credentialType = GetCustomChainedCredentialType();
+        var lazyField = credentialType.GetField("_credential",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(lazyField);
+
+        // Act — fire 20 concurrent GetToken calls before the chain is initialized
+        var tasks = Enumerable.Range(0, 20).Select(_ => Task.Run(() =>
+        {
+            try
+            {
+                credential.GetToken(new TokenRequestContext(["https://management.azure.com/.default"]), CancellationToken.None);
+            }
+            catch
+            {
+                // auth failure expected in test environment
+            }
+        })).ToArray();
+
+        await Task.WhenAll(tasks);
+
+        // Assert — the Lazy<T> value was created and is a single shared instance
+        var lazyValue = lazyField.GetValue(credential);
+        Assert.NotNull(lazyValue);
+        var isValueCreated = (bool)lazyValue.GetType()
+            .GetProperty("IsValueCreated")!.GetValue(lazyValue)!;
+        Assert.True(isValueCreated);
+    }
+
+    /// <summary>
+    /// Helper method to create CustomChainedCredential using reflection since it's an internal class.
+    /// </summary>
+    private static TokenCredential CreateCustomChainedCredential(bool forceBrowserFallback = false)
+    {
+        var assembly = typeof(global::Microsoft.Mcp.Core.Services.Azure.Authentication.IAzureTokenCredentialProvider).Assembly;
+        var customChainedCredentialType = assembly.GetType("Microsoft.Mcp.Core.Services.Azure.Authentication.CustomChainedCredential");
+
+        Assert.NotNull(customChainedCredentialType);
+
+        var constructor = customChainedCredentialType.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .FirstOrDefault(c =>
+            {
+                var parameters = c.GetParameters();
+                return parameters.Length == 3 &&
+                       parameters[0].ParameterType == typeof(string) &&
+                       parameters[1].ParameterType == typeof(ILogger<>).MakeGenericType(customChainedCredentialType) &&
+                       parameters[2].ParameterType == typeof(bool);
+            });
+
+        Assert.NotNull(constructor);
+
+        var credential = constructor.Invoke([null, null, forceBrowserFallback]) as TokenCredential;
+        Assert.NotNull(credential);
+
+        return credential;
+    }
+
+    private static TokenCredential CreateCustomChainedCredentialWithLoggerFactory(ILoggerFactory factory)
+    {
+        var assembly = typeof(global::Microsoft.Mcp.Core.Services.Azure.Authentication.IAzureTokenCredentialProvider).Assembly;
+        var customChainedCredentialType = assembly.GetType("Microsoft.Mcp.Core.Services.Azure.Authentication.CustomChainedCredential");
+        Assert.NotNull(customChainedCredentialType);
+
+        // Build a correctly-typed ILogger<CustomChainedCredential> from the factory via the concrete Logger<T> class.
+        var loggerConcreteType = typeof(Logger<>).MakeGenericType(customChainedCredentialType);
+        var logger = Activator.CreateInstance(loggerConcreteType, factory);
+
+        var constructor = customChainedCredentialType.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .FirstOrDefault(c =>
+            {
+                var parameters = c.GetParameters();
+                return parameters.Length == 3 &&
+                       parameters[0].ParameterType == typeof(string) &&
+                       parameters[1].ParameterType == typeof(ILogger<>).MakeGenericType(customChainedCredentialType) &&
+                       parameters[2].ParameterType == typeof(bool);
+            });
+
+        Assert.NotNull(constructor);
+
+        var credential = constructor.Invoke([null, logger, false]) as TokenCredential;
+        Assert.NotNull(credential);
+        return credential;
+    }
+
+    private static Type GetCustomChainedCredentialType()
+    {
+        var assembly = typeof(global::Microsoft.Mcp.Core.Services.Azure.Authentication.IAzureTokenCredentialProvider).Assembly;
+        var type = assembly.GetType("Microsoft.Mcp.Core.Services.Azure.Authentication.CustomChainedCredential");
+        Assert.NotNull(type);
+        return type;
+    }
+
+    private static void SetActiveTransport(Type credentialType, string value)
+    {
+        var prop = credentialType.GetProperty("ActiveTransport",
+            BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+        Assert.NotNull(prop);
+        prop.SetValue(null, value);
+    }
+
+    /// <summary>
+    /// Saves the current values of the specified environment variables and restores them on disposal.
+    /// Use with <c>using var</c> to guarantee restoration even when a test throws.
+    /// </summary>
+    private sealed class EnvironmentScope(params string[] names) : IDisposable
+    {
+        private readonly (string Name, string? Value)[] _saved =
+            names.Select(n => (n, Environment.GetEnvironmentVariable(n))).ToArray();
+
+        public void Dispose()
+        {
+            foreach (var (name, value) in _saved)
+                Environment.SetEnvironmentVariable(name, value);
+        }
+    }
+
+    /// <summary>
+    /// Minimal ILoggerProvider + ILogger implementation that captures warning messages for assertion.
+    /// </summary>
+    private sealed class CapturingLoggerProvider : ILoggerProvider
+    {
+        private readonly List<string> _warnings = [];
+        public IReadOnlyList<string> Warnings => _warnings;
+
+        public ILogger CreateLogger(string categoryName) => new CapturingLogger(_warnings);
+        public void Dispose() { }
+    }
+
+    private sealed class CapturingLogger(List<string> warnings) : ILogger
+    {
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            if (logLevel == LogLevel.Warning)
+                warnings.Add(formatter(state, exception));
+        }
+    }
+}

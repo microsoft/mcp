@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.VirtualDesktop;
 
@@ -37,12 +37,9 @@ public class VirtualDesktopSetup : IAreaSetup
         hostpool.AddSubGroup(sessionhost);
 
         // Register AVD commands
-        var hostpoolList = serviceProvider.GetRequiredService<HostpoolListCommand>();
-        hostpool.AddCommand(hostpoolList.Name, hostpoolList);
-        var sessionHostList = serviceProvider.GetRequiredService<SessionHostListCommand>();
-        sessionhost.AddCommand(sessionHostList.Name, sessionHostList);
-        var sessionHostUserSessionList = serviceProvider.GetRequiredService<SessionHostUserSessionListCommand>();
-        sessionhost.AddCommand(sessionHostUserSessionList.Name, sessionHostUserSessionList);
+        hostpool.AddCommand<HostpoolListCommand>(serviceProvider);
+        sessionhost.AddCommand<SessionHostListCommand>(serviceProvider);
+        sessionhost.AddCommand<SessionHostUserSessionListCommand>(serviceProvider);
 
         return desktop;
     }

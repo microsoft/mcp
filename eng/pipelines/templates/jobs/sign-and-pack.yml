@@ -5,6 +5,10 @@ parameters:
   type: boolean
 - name: PackageVSIX
   type: boolean
+- name: PackagePyPI
+  type: boolean
+- name: PackageMCPB
+  type: boolean
 
 jobs:
 - job: Sign
@@ -110,12 +114,22 @@ jobs:
   parameters:
     DependsOn: Sign
 
+- ${{ if parameters.PackagePyPI }}:
+  - template: /eng/pipelines/templates/jobs/pypi/pack-pypi.yml
+    parameters:
+      DependsOn: Sign
+
 - template: /eng/pipelines/templates/jobs/nuget/pack-and-sign-nuget.yml
   parameters:
     DependsOn: Sign
 
 - ${{ if parameters.PackageVSIX }}:
   - template: /eng/pipelines/templates/jobs/vsix/pack-and-sign-vsix.yml
+    parameters:
+      DependsOn: Sign
+
+- ${{ if parameters.PackageMCPB }}:
+  - template: /eng/pipelines/templates/jobs/mcpb/pack-and-sign-mcpb.yml
     parameters:
       DependsOn: Sign
 
@@ -135,6 +149,6 @@ jobs:
         - PackNpm
         - PackNuget
         - ${{ if parameters.PackageDocker }}:
-          - BuildDockerImages
+          - BuildDockerImage
       TestTimeoutInMinutes: 10
       PackageDocker: ${{ parameters.PackageDocker }}

@@ -2,90 +2,45 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Storage.Models;
-using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Account;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Account;
 
-public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) : SubscriptionCommand<AccountCreateOptions>()
-{
-    private const string CommandTitle = "Create Storage Account";
-    private readonly ILogger<AccountCreateCommand> _logger = logger;
-
-    public override string Id => "a2cf843a-57f2-45ea-8078-59b0be0805e6";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "a2cf843a-57f2-45ea-8078-59b0be0805e6",
+    Name = "create",
+    Title = "Create Storage Account",
+    Description = """
         Creates an Azure Storage account in the specified resource group and location and returns the created storage account
         information including name, location, SKU, access settings, and configuration details.
-        """;
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, IStorageService storageService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<AccountCreateOptions, AccountCreateCommand.AccountCreateCommandResult>(subscriptionResolver)
+{
+    private readonly ILogger<AccountCreateCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AccountCreateOptions options, CancellationToken cancellationToken)
     {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(StorageOptionDefinitions.AccountCreate);
-        command.Options.Add(StorageOptionDefinitions.Location);
-        command.Options.Add(StorageOptionDefinitions.Sku);
-        command.Options.Add(StorageOptionDefinitions.AccessTier);
-        command.Options.Add(StorageOptionDefinitions.EnableHierarchicalNamespace);
-    }
-
-    protected override AccountCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Account = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.AccountCreate.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Location.Name);
-        options.Sku = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Sku.Name);
-        options.AccessTier = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.AccessTier.Name);
-        options.EnableHierarchicalNamespace = parseResult.GetValueOrDefault<bool>(StorageOptionDefinitions.EnableHierarchicalNamespace.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            // Get the storage service from DI
-            var storageService = context.GetService<IStorageService>();
-
-            // Call service to create storage account
-            var account = await storageService.CreateStorageAccount(
-                options.Account!,
-                options.ResourceGroup!,
-                options.Location!,
+            var account = await _storageService.CreateStorageAccount(
+                options.Account,
+                options.ResourceGroup,
+                options.Location,
                 options.Subscription!,
                 options.Sku,
                 options.AccessTier,
@@ -94,22 +49,19 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
                 options.RetryPolicy,
                 cancellationToken);
 
-            // Set results
-            context.Response.Results = ResponseResult.Create(new(account), StorageJsonContext.Default.AccountCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new AccountCreateCommandResult(account), StorageJsonContext.Default.AccountCreateCommandResult);
         }
         catch (Exception ex)
         {
-            // Log error with all relevant context
             _logger.LogError(ex,
-                "Error creating storage account. Account: {Account}, ResourceGroup: {ResourceGroup}, Location: {Location}, Options: {@Options}",
-                options.Account, options.ResourceGroup, options.Location, options);
+                "Error creating storage account. Account: {Account}, ResourceGroup: {ResourceGroup}, Location: {Location}.",
+                options.Account, options.ResourceGroup, options.Location);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    // Implementation-specific error handling
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         KeyNotFoundException => $"Storage account not found. Verify the account name, subscription, and that you have access.",
@@ -123,6 +75,5 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
         _ => base.GetErrorMessage(ex)
     };
 
-    // Strongly-typed result record
-    internal record AccountCreateCommandResult([property: JsonPropertyName("account")] StorageAccountResult Account);
+    public record AccountCreateCommandResult(StorageAccountResult Account);
 }

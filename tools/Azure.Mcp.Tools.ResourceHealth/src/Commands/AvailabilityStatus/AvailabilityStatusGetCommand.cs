@@ -1,87 +1,100 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
+using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ResourceHealth.Options.AvailabilityStatus;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Commands.AvailabilityStatus;
 
 /// <summary>
-/// Gets the current availability status of the specified Azure resource for health diagnostics.
+/// Gets or lists availability status information for Azure resources.
 /// </summary>
-public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCommand> logger)
-    : BaseResourceHealthCommand<AvailabilityStatusGetOptions>()
+[CommandMetadata(
+    Id = "3b388cc7-4b16-4919-9e90-f592247d9891",
+    Name = "get",
+    Title = "Get/List Resource Availability Status",
+    Description = "Get the Azure Resource Health availability status for a specific resource or all resources in a subscription or resource group. Use this tool when asked about the availability status, health status, or Resource Health of an Azure resource (e.g. virtual machine, storage account). Reports whether a resource is Available, Unavailable, Degraded, or Unknown, including the reason and details. This is the correct tool for questions like 'What is the availability status of VM X?' or 'Is resource Y healthy?'.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCommand> logger, IResourceHealthService resourceHealthService, ISubscriptionResolver subscriptionResolver)
+    : BaseResourceHealthCommand<AvailabilityStatusGetOptions, AvailabilityStatusGetCommand.AvailabilityStatusGetCommandResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "Get Resource Availability Status";
     private readonly ILogger<AvailabilityStatusGetCommand> _logger = logger;
+    private readonly IResourceHealthService _resourceHealthService = resourceHealthService;
 
-    public override string Id => "3b388cc7-4b16-4919-9e90-f592247d9891";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        $"""
-        Get the current availability status or health status of a specific Azure resource to diagnose health issues. Works with storage_account_name, virtual machine, resource group, subscription, and other Azure types. It provides detailed information about resource availability state, potential issues, and timestamps.
-        If health model is provided, don't use this command, instead use monitor_healthmodels_entity_get tool.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AvailabilityStatusGetOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(ResourceHealthOptionDefinitions.ResourceId);
-    }
-
-    protected override AvailabilityStatusGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceId = parseResult.GetValueOrDefault(ResourceHealthOptionDefinitions.ResourceId);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var resourceHealthService = context.GetService<IResourceHealthService>() ??
-                throw new InvalidOperationException("Resource Health service is not available.");
+            List<Models.AvailabilityStatus> statuses;
 
-            var status = await resourceHealthService.GetAvailabilityStatusAsync(
-                options.ResourceId!,
-                options.RetryPolicy,
-                cancellationToken);
+            // If resourceId is provided, get single resource status
+            if (!string.IsNullOrEmpty(options.ResourceId))
+            {
+                var status = await _resourceHealthService.GetAvailabilityStatusAsync(
+                    options.ResourceId,
+                    options.RetryPolicy,
+                    cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(status), ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
+                statuses = [status];
+            }
+            // Otherwise, list all resources
+            else
+            {
+                statuses = await _resourceHealthService.ListAvailabilityStatusesAsync(
+                    options.Subscription!,
+                    options.ResourceGroup,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken) ?? [];
+            }
+
+            context.Response.Results = ResponseResult.Create(
+                new(statuses),
+                ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get availability status for resource {ResourceId}", options.ResourceId);
+            if (!string.IsNullOrEmpty(options.ResourceId))
+            {
+                _logger.LogError(ex, "Failed to get availability status for resource {ResourceId}", options.ResourceId);
+            }
+            else
+            {
+                _logger.LogError(ex, "Failed to list availability statuses for subscription {Subscription}{ResourceGroupInfo}",
+                    options.Subscription,
+                    options.ResourceGroup != null ? $" and resource group {options.ResourceGroup}" : "");
+            }
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record AvailabilityStatusGetCommandResult(Models.AvailabilityStatus Status);
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        ResourceHealthUnprocessableEntityException unprocessableEx =>
+            $"Azure Resource Health could not process availability status for resource type '{unprocessableEx.ResourceType}'. Error code: {unprocessableEx.ErrorCode ?? "UnprocessableEntity"}. Details: {unprocessableEx.ErrorDetails ?? unprocessableEx.Message}",
+        FormatException =>
+            "Invalid Azure resource ID. Provide a resource ID in the format /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/<provider>/<type>/<name>",
+        _ => base.GetErrorMessage(ex)
+    };
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        ResourceHealthUnprocessableEntityException unprocessableEx => unprocessableEx.StatusCode,
+        FormatException => HttpStatusCode.BadRequest,
+        _ => base.GetStatusCode(ex)
+    };
+
+    public sealed record AvailabilityStatusGetCommandResult(List<Models.AvailabilityStatus> Statuses);
 }

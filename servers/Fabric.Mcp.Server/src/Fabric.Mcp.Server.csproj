@@ -1,13 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>0.0.0-beta.3</Version>
+    <Version>1.3.0</Version>
     <CliName>fabmcp</CliName>
     <AssemblyTitle>Fabric MCP Server</AssemblyTitle>
     <Description>Microsoft Fabric MCP Server - Model Context Protocol implementation for Fabric</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Fabric.Mcp.Server#readme</ReadmeUrl>
     <ReadmePath>$(RepoRoot)/servers/Fabric.Mcp.Server/README.md</ReadmePath>
     <PackageIcon>$(RepoRoot)/servers/Fabric.Mcp.Server/fabric-icon.png</PackageIcon>
+
+    <!-- Official MCP repository settings -->
     <McpRepositoryName>com.microsoft/microsoft-fabric</McpRepositoryName>
+    <ServerJsonPath>$(MSBuildThisFileDirectory)../server.json</ServerJsonPath>
 
     <!-- npm settings -->
     <NpmPackageName>@microsoft/fabric-mcp</NpmPackageName>
@@ -64,8 +67,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)\core\Microsoft.Fabric.Mcp.Core\src\Microsoft.Fabric.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)\core\Fabric.Mcp.Core\src\Fabric.Mcp.Core.csproj" />
     <ProjectReference Include="$(RepoRoot)\tools\Fabric.*\src\*.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\*.*" />
+    <EmbeddedResource Include="appsettings.json" />
+    <EmbeddedResource Condition="'$(Configuration)' == 'Debug'" Include="appsettings.Development.json" />
   </ItemGroup>
 
   <ItemGroup>

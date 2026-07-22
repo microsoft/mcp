@@ -1,0 +1,19 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "mirroredCatalogId": "5b218778-e7a5-4d73-8187-f10824047715",
+    "beta": true
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "status": "Failed",
+        "lastSyncDateTime": "2026-03-19T01:45:30.1234567Z",
+        "error": {
+          "errorCode": "InvalidInput",
+          "message": "Authentication to the source catalog failed. Verify the connection credentials are valid and have not expired, then try again."
+        }
+      }
+    }
+  }
+}

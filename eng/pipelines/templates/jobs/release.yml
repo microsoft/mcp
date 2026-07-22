@@ -7,6 +7,10 @@ parameters:
   type: boolean
 - name: PackageVSIX
   type: boolean
+- name: PackagePyPI
+  type: boolean
+- name: PackageMCPB
+  type: boolean
 - name: IsTestPipeline
   type: boolean
 
@@ -27,6 +31,12 @@ jobs:
 
   - template: /eng/common/pipelines/templates/steps/retain-run.yml
 
+  - template: /eng/common/pipelines/templates/steps/login-to-github.yml
+    parameters:
+      TokenOwners:
+        - Microsoft
+      ExportAsOutputVariable: true
+
   - pwsh: |
       $buildInfoPath = "$(Pipeline.Workspace)/build_info/build_info.json"
       $buildInfo = Get-Content -Raw -Path $buildInfoPath | ConvertFrom-Json
@@ -45,13 +55,22 @@ jobs:
       gh release upload $tag $(Pipeline.Workspace)/binaries_signed_zipped/*.zip
     displayName: Create GitHub Release and upload artifacts
     env:
-      GH_TOKEN: $(azuresdk-github-pat)
+      GH_TOKEN: $(GH_TOKEN)
+
+- template: /eng/pipelines/templates/jobs/publish-symbols.yml
 
 - template: /eng/pipelines/templates/jobs/npm/release-npm.yml
   parameters:
     ServerName: ${{ parameters.ServerName }}
     IncludeNative: ${{ parameters.IncludeNative }}
     DependsOn: TagRepository
+
+- ${{ if parameters.PackagePyPI }}:
+  - template: /eng/pipelines/templates/jobs/pypi/release-pypi.yml
+    parameters:
+      ServerName: ${{ parameters.ServerName }}
+      IncludeNative: ${{ parameters.IncludeNative }}
+      DependsOn: TagRepository
 
 - template: /eng/pipelines/templates/jobs/nuget/release-nuget.yml
   parameters:
@@ -64,6 +83,12 @@ jobs:
       ServerName: ${{ parameters.ServerName }}
       DependsOn: TagRepository
 
+- ${{ if parameters.PackageMCPB }}:
+  - template: /eng/pipelines/templates/jobs/mcpb/release-mcpb.yml
+    parameters:
+      ServerName: ${{ parameters.ServerName }}
+      DependsOn: TagRepository
+
 - ${{ if parameters.PackageDocker }}:
   - template: /eng/pipelines/templates/jobs/docker/release-docker.yml
     parameters:
@@ -71,6 +96,20 @@ jobs:
       DeploymentEnvironment: 'public'
       ServerName: ${{ parameters.ServerName }}
       DependsOn: TagRepository
+      
+- template: /eng/pipelines/templates/jobs/mcp-registry/release-server-json.yml
+  parameters:
+    ServerName: ${{ parameters.ServerName }}
+    PackageMCPB: ${{ parameters.PackageMCPB }}
+    DependsOn:
+    - PublishNugetPackage
+    - PublishNpm
+    - ${{ if parameters.PackageDocker }}:
+      - PublishACR
+    - ${{ if parameters.PackagePyPI }}:
+      - PublishPyPI
+    - ${{ if parameters.PackageMCPB }}:
+      - PublishMCPB
 
 - job: UpdatePackageVersion
   displayName: "Update Package Versions"
@@ -83,6 +122,7 @@ jobs:
   - task: PowerShell@2
     displayName: Increment version
     inputs:
+      pwsh: true
       targetType: filePath
       filePath: $(Build.SourcesDirectory)/eng/scripts/Update-Version.ps1
       arguments: >

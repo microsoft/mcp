@@ -2,88 +2,46 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Sql.Models;
-using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Database;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
 
-public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
-    : BaseDatabaseCommand<DatabaseCreateOptions>(logger)
-{
-    private const string CommandTitle = "Create SQL Database";
-
-    public override string Id => "a4d9af17-fe8b-4df3-93be-23b69f0b5a0c";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
-        Create a new Azure SQL Database on an existing SQL Server. This command creates a database with configurable
-        performance tiers, size limits, and other settings. Equivalent to 'az sql db create'.
+[CommandMetadata(
+    Id = "a4d9af17-fe8b-4df3-93be-23b69f0b5a0c",
+    Name = "create",
+    Title = "Create SQL Database",
+    Description = """
+        Create a new Azure SQL Database on an existing SQL Server with configurable performance tiers, size limits,
+        and other settings. Equivalent to 'az sql db create'.
         Returns the newly created database information including configuration details.
-        """;
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DatabaseCreateCommand(ISqlService sqlService, ILogger<DatabaseCreateCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<DatabaseCreateOptions, DatabaseCreateCommand.DatabaseCreateResult>(subscriptionResolver)
+{
+    private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<DatabaseCreateCommand> _logger = logger;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DatabaseCreateOptions options, CancellationToken cancellationToken)
     {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(SqlOptionDefinitions.SkuNameOption);
-        command.Options.Add(SqlOptionDefinitions.SkuTierOption);
-        command.Options.Add(SqlOptionDefinitions.SkuCapacityOption);
-        command.Options.Add(SqlOptionDefinitions.CollationOption);
-        command.Options.Add(SqlOptionDefinitions.MaxSizeBytesOption);
-        command.Options.Add(SqlOptionDefinitions.ElasticPoolNameOption);
-        command.Options.Add(SqlOptionDefinitions.ZoneRedundantOption);
-        command.Options.Add(SqlOptionDefinitions.ReadScaleOption);
-    }
-
-    protected override DatabaseCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.SkuName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.SkuNameOption.Name);
-        options.SkuTier = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.SkuTierOption.Name);
-        options.SkuCapacity = parseResult.GetValueOrDefault<int?>(SqlOptionDefinitions.SkuCapacityOption.Name);
-        options.Collation = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.CollationOption.Name);
-        options.MaxSizeBytes = parseResult.GetValueOrDefault<long?>(SqlOptionDefinitions.MaxSizeBytesOption.Name);
-        options.ElasticPoolName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.ElasticPoolNameOption.Name);
-        options.ZoneRedundant = parseResult.GetValueOrDefault<bool?>(SqlOptionDefinitions.ZoneRedundantOption.Name);
-        options.ReadScale = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.ReadScaleOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var database = await sqlService.CreateDatabaseAsync(
-                options.Server!,
-                options.Database!,
-                options.ResourceGroup!,
+            var database = await _sqlService.CreateDatabaseAsync(
+                options.Server,
+                options.Database,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.SkuName,
                 options.SkuTier,
@@ -101,8 +59,8 @@ public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error creating SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Server, options.Database, options.ResourceGroup, options);
+                "Error creating SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}.",
+                options.Server, options.Database, options.ResourceGroup);
             HandleException(context, ex);
         }
 
@@ -123,5 +81,5 @@ public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseCreateResult(SqlDatabase Database);
+    public sealed record DatabaseCreateResult(SqlDatabase Database);
 }

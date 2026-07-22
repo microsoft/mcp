@@ -8,14 +8,17 @@ using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.ResourceManager.EventGrid;
 using Azure.ResourceManager.EventGrid.Models;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.EventGrid.Services;
 
-public class EventGridService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventGridService> logger)
+public class EventGridService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventGridService> logger, IHttpClientFactory httpClientFactory)
     : BaseAzureService(tenantService), IEventGridService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<EventGridService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     public async Task<List<EventGridTopicInfo>> GetTopicsAsync(
         string subscription,
@@ -60,26 +63,17 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         CancellationToken cancellationToken = default)
     {
         var subscriptions = new List<EventGridSubscriptionInfo>();
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
-        try
+        // If specific topic is requested, get subscriptions for that topic only
+        if (!string.IsNullOrEmpty(topicName))
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-
-            // If specific topic is requested, get subscriptions for that topic only
-            if (!string.IsNullOrEmpty(topicName))
-            {
-                await GetSubscriptionsForSpecificTopic(subscriptionResource, resourceGroup, topicName, location, subscriptions, cancellationToken);
-            }
-            else
-            {
-                // Get subscriptions from all topics in the subscription or resource group
-                await GetSubscriptionsFromAllTopics(subscriptionResource, resourceGroup, location, subscriptions, cancellationToken);
-            }
+            await GetSubscriptionsForSpecificTopic(subscriptionResource, resourceGroup, topicName, location, subscriptions, cancellationToken);
         }
-        catch (Exception ex)
+        else
         {
-            // Log the actual error instead of swallowing it
-            throw new InvalidOperationException($"Failed to retrieve EventGrid subscriptions: {ex.Message}", ex);
+            // Get subscriptions from all topics in the subscription or resource group
+            await GetSubscriptionsFromAllTopics(subscriptionResource, resourceGroup, location, subscriptions, cancellationToken);
         }
 
         return subscriptions;
@@ -125,7 +119,13 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             // Parse and validate event data directly to EventGridEventSchema
             var eventGridEventSchemas = ParseAndValidateEventData(eventData, eventSchema ?? "EventGridEvent");
 
-            var publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential);
+            // Create publisher client with HTTP client factory for test proxy support
+            var httpClient = _httpClientFactory.CreateClient(nameof(EventGridPublisherClient));
+            var clientOptions = new EventGridPublisherClientOptions
+            {
+                Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient)
+            };
+            var publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential, clientOptions);
 
             // Serialize each event individually to JSON using source-generated context
             var eventsData = eventGridEventSchemas.Select(eventSchema =>
@@ -138,21 +138,12 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             _logger.LogInformation("Publishing {EventCount} events to topic '{TopicName}' with operation ID: {OperationId}",
                 eventCount, topicName, operationId);
 
-            try
-            {
-                await publisherClient.SendEventsAsync(eventsData, cancellationToken);
-            }
-            catch (Exception publishEx)
-            {
-                _logger.LogError(publishEx, "Failed to publish events to topic '{TopicName}' with operation ID: {OperationId}",
-                    topicName, operationId);
-                throw;
-            }
+            await publisherClient.SendEventsAsync(eventsData, cancellationToken);
 
             _logger.LogInformation("Successfully published {EventCount} events to topic '{TopicName}'",
                 eventCount, topicName);
 
-            return new EventPublishResult(
+            return new(
                 Status: "Success",
                 Message: $"Successfully published {eventCount} event(s) to topic '{topicName}'.",
                 PublishedEventCount: eventCount,
@@ -164,7 +155,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             _logger.LogError(ex, "Failed to publish events to topic '{TopicName}' in resource group '{ResourceGroup}'",
                 topicName, resourceGroup);
 
-            return new EventPublishResult(
+            return new(
                 Status: "Failed",
                 Message: $"Failed to publish events: {ex.Message}",
                 PublishedEventCount: 0,
@@ -173,14 +164,14 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    private static IEnumerable<Models.EventGridEventSchema> ParseAndValidateEventData(string eventData, string eventSchema)
+    private static IEnumerable<EventGridEventSchema> ParseAndValidateEventData(string eventData, string eventSchema)
     {
         try
         {
             // Parse the JSON data
             using var jsonDocument = JsonDocument.Parse(eventData);
 
-            IEnumerable<Models.EventGridEventSchema> events;
+            IEnumerable<EventGridEventSchema> events;
 
             if (jsonDocument.RootElement.ValueKind == JsonValueKind.Array)
             {
@@ -191,7 +182,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             else
             {
                 // Handle single event - return single item enumerable
-                events = new[] { CreateEventGridEventFromJsonElement(jsonDocument.RootElement, eventSchema) };
+                events = [CreateEventGridEventFromJsonElement(jsonDocument.RootElement, eventSchema)];
             }
 
             var eventsList = events.ToList();
@@ -208,15 +199,14 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    private static Models.EventGridEventSchema CreateEventGridEventFromJsonElement(JsonElement eventElement, string eventSchema)
+    private static EventGridEventSchema CreateEventGridEventFromJsonElement(JsonElement eventElement, string eventSchema)
     {
         var eventJson = eventElement.GetRawText();
 
         if (eventSchema.Equals("CloudEvents", StringComparison.OrdinalIgnoreCase))
         {
-            var cloudEvent = JsonSerializer.Deserialize(eventJson, EventGridJsonContext.Default.CloudEvent);
-            if (cloudEvent == null)
-                throw new ArgumentException("Failed to deserialize CloudEvent");
+            var cloudEvent = JsonSerializer.Deserialize(eventJson, EventGridJsonContext.Default.CloudEvent)
+                ?? throw new ArgumentException("Failed to deserialize CloudEvent");
 
             // Validate datacontenttype for CloudEvents
             var dataContentType = cloudEvent.DataContentType ?? MediaTypeNames.Application.Json;
@@ -228,7 +218,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
                 }
             }
 
-            return new Models.EventGridEventSchema
+            return new()
             {
                 Id = cloudEvent.Id ?? Guid.NewGuid().ToString(),
                 Subject = cloudEvent.Source ?? cloudEvent.Subject ?? "/default/subject",
@@ -240,11 +230,10 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         }
         else if (eventSchema.Equals("EventGrid", StringComparison.OrdinalIgnoreCase))
         {
-            var eventGridEvent = JsonSerializer.Deserialize(eventJson, EventGridJsonContext.Default.EventGridEventInput);
-            if (eventGridEvent == null)
-                throw new ArgumentException("Failed to deserialize EventGrid event");
+            var eventGridEvent = JsonSerializer.Deserialize(eventJson, EventGridJsonContext.Default.EventGridEventInput)
+                ?? throw new ArgumentException("Failed to deserialize EventGrid event");
 
-            return new Models.EventGridEventSchema
+            return new()
             {
                 Id = eventGridEvent.Id ?? Guid.NewGuid().ToString(),
                 Subject = eventGridEvent.Subject ?? "/default/subject",
@@ -256,11 +245,10 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         }
         else // Custom schema - try both CloudEvents and EventGrid field names
         {
-            var flexibleEvent = JsonSerializer.Deserialize(eventJson, EventGridJsonContext.Default.CustomEvent);
-            if (flexibleEvent == null)
-                throw new ArgumentException("Failed to deserialize custom event");
+            var flexibleEvent = JsonSerializer.Deserialize(eventJson, EventGridJsonContext.Default.CustomEvent)
+                ?? throw new ArgumentException("Failed to deserialize custom event");
 
-            return new Models.EventGridEventSchema
+            return new()
             {
                 Id = flexibleEvent.Id ?? Guid.NewGuid().ToString(),
                 Subject = flexibleEvent.Subject ?? flexibleEvent.Source ?? "/default/subject",
@@ -280,27 +268,19 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         List<EventGridSubscriptionInfo> subscriptions,
         CancellationToken cancellationToken)
     {
-        try
+        // Find the specific custom topic first
+        var topic = await FindTopic(subscriptionResource, resourceGroup, topicName, cancellationToken);
+        if (topic != null)
         {
-            // Find the specific custom topic first
-            var topic = await FindTopic(subscriptionResource, resourceGroup, topicName, cancellationToken);
-            if (topic != null)
-            {
-                await AddSubscriptionsFromTopic(topic.Data.Location.ToString(), location, subscriptions, topic.GetTopicEventSubscriptions().GetAllAsync(cancellationToken: cancellationToken), cancellationToken);
-                return; // Found custom topic, no need to check system topics
-            }
-
-            // If not found in custom topics, check system topics
-            var systemTopic = await FindSystemTopic(subscriptionResource, resourceGroup, topicName, cancellationToken);
-            if (systemTopic != null)
-            {
-                await AddSubscriptionsFromSystemTopic(systemTopic.Data.Location.ToString(), location, subscriptions, systemTopic.GetSystemTopicEventSubscriptions().GetAllAsync(cancellationToken: cancellationToken), cancellationToken);
-            }
+            await AddSubscriptionsFromTopic(topic.Data.Location.ToString(), location, subscriptions, topic.GetTopicEventSubscriptions().GetAllAsync(cancellationToken: cancellationToken), cancellationToken);
+            return; // Found custom topic, no need to check system topics
         }
-        catch (Exception ex)
+
+        // If not found in custom topics, check system topics
+        var systemTopic = await FindSystemTopic(subscriptionResource, resourceGroup, topicName, cancellationToken);
+        if (systemTopic != null)
         {
-            // Log and re-throw to preserve error information
-            throw new InvalidOperationException($"Failed to get subscriptions for topic '{topicName}': {ex.Message}", ex);
+            await AddSubscriptionsFromSystemTopic(systemTopic.Data.Location.ToString(), location, subscriptions, systemTopic.GetSystemTopicEventSubscriptions().GetAllAsync(cancellationToken: cancellationToken), cancellationToken);
         }
     }
 
@@ -311,82 +291,74 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         List<EventGridSubscriptionInfo> subscriptions,
         CancellationToken cancellationToken)
     {
-        try
+        if (!string.IsNullOrEmpty(resourceGroup))
         {
-            if (!string.IsNullOrEmpty(resourceGroup))
-            {
-                // Get topics from specific resource group and their subscriptions
-                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            // Get topics from specific resource group and their subscriptions
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-                // Check custom topics
-                await foreach (var topic in resourceGroupResource.Value.GetEventGridTopics().GetAllAsync(cancellationToken: cancellationToken))
-                {
-                    try
-                    {
-                        await AddSubscriptionsFromTopic(topic.Data.Location.ToString(), location, subscriptions, topic.GetTopicEventSubscriptions().GetAllAsync(cancellationToken: cancellationToken), cancellationToken);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Continue with other topics if one fails - individual topic access errors
-                        // shouldn't block the entire operation since we're aggregating from multiple topics
-                        _logger.LogWarning(ex, "Failed to get subscriptions for topic '{TopicName}'. Continuing with other topics.", topic.Data.Name);
-                        continue;
-                    }
-                }                // Also check system topics in the resource group
-                await foreach (var systemTopic in resourceGroupResource.Value.GetSystemTopics().GetAllAsync(cancellationToken: cancellationToken))
-                {
-                    try
-                    {
-                        await AddSubscriptionsFromSystemTopic(systemTopic.Data.Location.ToString(), location, subscriptions, systemTopic.GetSystemTopicEventSubscriptions().GetAllAsync(cancellationToken: cancellationToken), cancellationToken);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Continue with other system topics if one fails - individual system topic access errors
-                        // shouldn't block the entire operation since we're aggregating from multiple topics
-                        _logger.LogWarning(ex, "Failed to get subscriptions for system topic '{SystemTopicName}'. Continuing with other topics.", systemTopic.Data.Name);
-                        continue;
-                    }
-                }
-            }
-            else
+            // Check custom topics
+            await foreach (var topic in resourceGroupResource.Value.GetEventGridTopics().GetAllAsync(cancellationToken: cancellationToken))
             {
-                // Get topics from all resource groups and their subscriptions
-                await foreach (var topic in subscriptionResource.GetEventGridTopicsAsync(cancellationToken: cancellationToken))
+                try
                 {
-                    try
-                    {
-                        await AddSubscriptionsFromTopic(topic.Data.Location.ToString(), location, subscriptions, topic.GetTopicEventSubscriptions().GetAllAsync(cancellationToken: cancellationToken), cancellationToken);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Continue with other topics if one fails - individual topic access errors
-                        // shouldn't block the entire operation since we're aggregating from multiple topics
-                        _logger.LogWarning(ex, "Failed to get subscriptions for topic '{TopicName}'. Continuing with other topics.", topic.Data.Name);
-                        continue;
-                    }
+                    await AddSubscriptionsFromTopic(topic.Data.Location.ToString(), location, subscriptions, topic.GetTopicEventSubscriptions().GetAllAsync(cancellationToken: cancellationToken), cancellationToken);
                 }
-
-                // Also check system topics across all resource groups
-                await foreach (var systemTopic in subscriptionResource.GetSystemTopicsAsync(cancellationToken: cancellationToken))
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        await AddSubscriptionsFromSystemTopic(systemTopic.Data.Location.ToString(), location, subscriptions, systemTopic.GetSystemTopicEventSubscriptions().GetAllAsync(cancellationToken: cancellationToken), cancellationToken);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Continue with other system topics if one fails - individual system topic access errors
-                        // shouldn't block the entire operation since we're aggregating from multiple topics
-                        _logger.LogWarning(ex, "Failed to get subscriptions for system topic '{SystemTopicName}'. Continuing with other topics.", systemTopic.Data.Name);
-                        continue;
-                    }
+                    // Continue with other topics if one fails - individual topic access errors
+                    // shouldn't block the entire operation since we're aggregating from multiple topics
+                    _logger.LogWarning(ex, "Failed to get subscriptions for topic '{TopicName}'. Continuing with other topics.", topic.Data.Name);
+                    continue;
+                }
+            }                // Also check system topics in the resource group
+            await foreach (var systemTopic in resourceGroupResource.Value.GetSystemTopics().GetAllAsync(cancellationToken: cancellationToken))
+            {
+                try
+                {
+                    await AddSubscriptionsFromSystemTopic(systemTopic.Data.Location.ToString(), location, subscriptions, systemTopic.GetSystemTopicEventSubscriptions().GetAllAsync(cancellationToken: cancellationToken), cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    // Continue with other system topics if one fails - individual system topic access errors
+                    // shouldn't block the entire operation since we're aggregating from multiple topics
+                    _logger.LogWarning(ex, "Failed to get subscriptions for system topic '{SystemTopicName}'. Continuing with other topics.", systemTopic.Data.Name);
+                    continue;
                 }
             }
         }
-        catch (Exception ex)
+        else
         {
-            // Log and re-throw to preserve error information
-            throw new InvalidOperationException($"Failed to get subscriptions from all topics in resource group '{resourceGroup}': {ex.Message}", ex);
+            // Get topics from all resource groups and their subscriptions
+            await foreach (var topic in subscriptionResource.GetEventGridTopicsAsync(cancellationToken: cancellationToken))
+            {
+                try
+                {
+                    await AddSubscriptionsFromTopic(topic.Data.Location.ToString(), location, subscriptions, topic.GetTopicEventSubscriptions().GetAllAsync(cancellationToken: cancellationToken), cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    // Continue with other topics if one fails - individual topic access errors
+                    // shouldn't block the entire operation since we're aggregating from multiple topics
+                    _logger.LogWarning(ex, "Failed to get subscriptions for topic '{TopicName}'. Continuing with other topics.", topic.Data.Name);
+                    continue;
+                }
+            }
+
+            // Also check system topics across all resource groups
+            await foreach (var systemTopic in subscriptionResource.GetSystemTopicsAsync(cancellationToken: cancellationToken))
+            {
+                try
+                {
+                    await AddSubscriptionsFromSystemTopic(systemTopic.Data.Location.ToString(), location, subscriptions, systemTopic.GetSystemTopicEventSubscriptions().GetAllAsync(cancellationToken: cancellationToken), cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    // Continue with other system topics if one fails - individual system topic access errors
+                    // shouldn't block the entire operation since we're aggregating from multiple topics
+                    _logger.LogWarning(ex, "Failed to get subscriptions for system topic '{SystemTopicName}'. Continuing with other topics.", systemTopic.Data.Name);
+                    continue;
+                }
+            }
         }
     }
 
@@ -398,42 +370,26 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
     {
         if (!string.IsNullOrEmpty(resourceGroup))
         {
-            try
-            {
-                // Search in specific resource group
-                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            // Search in specific resource group
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-                await foreach (var topic in resourceGroupResource.Value.GetEventGridTopics().GetAllAsync(cancellationToken: cancellationToken))
-                {
-                    if (topic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return topic;
-                    }
-                }
-            }
-            catch (Exception ex)
+            await foreach (var topic in resourceGroupResource.Value.GetEventGridTopics().GetAllAsync(cancellationToken: cancellationToken))
             {
-                _logger.LogError(ex, "Error accessing resource group '{ResourceGroup}'", resourceGroup);
-                throw;
+                if (topic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
+                {
+                    return topic;
+                }
             }
         }
         else
         {
-            try
+            // Search in all resource groups
+            await foreach (var topic in subscriptionResource.GetEventGridTopicsAsync(cancellationToken: cancellationToken))
             {
-                // Search in all resource groups
-                await foreach (var topic in subscriptionResource.GetEventGridTopicsAsync(cancellationToken: cancellationToken))
+                if (topic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
                 {
-                    if (topic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return topic;
-                    }
+                    return topic;
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error searching topics across subscription");
-                throw;
             }
         }
 
@@ -453,7 +409,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
 
             await foreach (var systemTopic in resourceGroupResource.Value.GetSystemTopics().GetAllAsync(cancellationToken: cancellationToken))
             {
-                if (systemTopic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                if (systemTopic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
                 {
                     return systemTopic;
                 }
@@ -464,7 +420,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             // Search in all resource groups
             await foreach (var systemTopic in subscriptionResource.GetSystemTopicsAsync(cancellationToken: cancellationToken))
             {
-                if (systemTopic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                if (systemTopic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
                 {
                     return systemTopic;
                 }
@@ -476,7 +432,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
 
     private static EventGridTopicInfo CreateTopicInfo(EventGridTopicData topicData)
     {
-        return new EventGridTopicInfo(
+        return new(
             Name: topicData.Name,
             Location: topicData.Location.ToString(),
             Endpoint: topicData.Endpoint?.ToString(),
@@ -531,7 +487,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             filterInfo = filterDetails.Any() ? string.Join("; ", filterDetails) : null;
         }
 
-        return new EventGridSubscriptionInfo(
+        return new(
             Name: subscriptionData.Name,
             Type: subscriptionData.ResourceType.ToString(),
             EndpointType: endpointType,
@@ -546,7 +502,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         );
     }
 
-    private async Task AddSubscriptionsFromTopic(
+    private static async Task AddSubscriptionsFromTopic(
         string topicLocation,
         string? locationFilter,
         List<EventGridSubscriptionInfo> subscriptions,
@@ -562,7 +518,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    private async Task AddSubscriptionsFromSystemTopic(
+    private static async Task AddSubscriptionsFromSystemTopic(
         string topicLocation,
         string? locationFilter,
         List<EventGridSubscriptionInfo> subscriptions,

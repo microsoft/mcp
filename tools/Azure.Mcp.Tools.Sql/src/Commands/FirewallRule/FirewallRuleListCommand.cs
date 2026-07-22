@@ -2,58 +2,44 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.FirewallRule;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 
-public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> logger)
-    : BaseSqlCommand<FirewallRuleListOptions>(logger)
-{
-    private const string CommandTitle = "List SQL Server Firewall Rules";
-
-    public override string Id => "1f55cab9-0bbb-499a-a9ac-1492f11c043a";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        Gets a list of firewall rules for a SQL server. This command retrieves all
-        firewall rules configured for the specified SQL server, including their IP address ranges
+[CommandMetadata(
+    Id = "1f55cab9-0bbb-499a-a9ac-1492f11c043a",
+    Name = "list",
+    Title = "List SQL Server Firewall Rules",
+    Description = """
+        Gets/retrieves a list of all firewall rules configured for a SQL server, including their IP address ranges
         and rule names. Returns an array of firewall rule objects with their properties.
-        """;
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class FirewallRuleListCommand(ISqlService sqlService, ILogger<FirewallRuleListCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<FirewallRuleListOptions, FirewallRuleListCommand.FirewallRuleListResult>(subscriptionResolver)
+{
+    private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<FirewallRuleListCommand> _logger = logger;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FirewallRuleListOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var firewallRules = await sqlService.ListFirewallRulesAsync(
-                options.Server!,
-                options.ResourceGroup!,
+            var firewallRules = await _sqlService.ListFirewallRulesAsync(
+                options.Server,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.RetryPolicy,
                 cancellationToken);
@@ -63,8 +49,8 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing SQL server firewall rules. Server: {Server}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Server, options.ResourceGroup, options);
+                "Error listing SQL server firewall rules. Server: {Server}, ResourceGroup: {ResourceGroup}.",
+                options.Server, options.ResourceGroup);
             HandleException(context, ex);
         }
 
@@ -81,5 +67,5 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record FirewallRuleListResult(List<SqlServerFirewallRule> FirewallRules);
+    public sealed record FirewallRuleListResult(List<SqlServerFirewallRule> FirewallRules);
 }

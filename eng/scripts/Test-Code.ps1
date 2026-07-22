@@ -3,15 +3,16 @@
 
 [CmdletBinding()]
 param(
-    [string] $TestResultsPath,
     [string[]] $Paths,
     [string[]] $Members,
     [ValidateSet('Live', 'Unit', 'All', 'Recorded')]
     [string] $TestType = 'Unit',
+    [string] $TestResultsPath,
     [switch] $CollectCoverage,
     [switch] $OpenReport,
     [switch] $TestNativeBuild,
-    [switch] $OnlyBuild
+    [switch] $OnlyBuild,
+    [string] $ScopingBuildInfoPath = $null
 )
 
 $ErrorActionPreference = 'Stop'
@@ -20,6 +21,14 @@ $ErrorActionPreference = 'Stop'
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 $debugLogs = $env:SYSTEM_DEBUG -eq 'true' -or $DebugPreference -eq 'Continue'
+
+$BuildInfo = $null
+if ($ScopingBuildInfoPath) {
+    if (!(Test-Path $ScopingBuildInfoPath)) {
+        Write-Error "BuildInfo path was provided, but not found at path: $ScopingBuildInfoPath"
+    }
+    $BuildInfo = Get-Content $ScopingBuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+}
 
 $workPath = "$RepoRoot/.work/tests"
 Remove-Item -Recurse -Force $workPath -ErrorAction SilentlyContinue
@@ -34,22 +43,30 @@ Remove-Item -Recurse -Force $TestResultsPath -ErrorAction SilentlyContinue
 
 # Finds all test projects, then filters them based on the specified path filters.
 function FilterTestProjects {
-    $fileNameFilters = switch ($testType) {
-        'Live' { '*.LiveTests.csproj' }
-        'Unit' { '*.UnitTests.csproj' }
-        'Recorded' { '*.LiveTests.csproj' }
-        'All'  { '*.LiveTests.csproj', '*.UnitTests.csproj' }
+    $testProjects = Get-ChildItem -Path "$RepoRoot" -Recurse -Filter "*Tests.csproj" -File
+    | Where-Object {
+        $testProjectDetails = & "$($PSScriptRoot)/Get-ProjectProperties.ps1" -Path $_.FullName
+        return ($testProjectDetails.HasLiveTests -and $TestType -in @('Live', 'Recorded', 'All')) -or
+                ($testProjectDetails.HasUnitTests -and $TestType -in @('Unit', 'All'))
     }
-
-    $testProjects = Get-ChildItem -Path "$RepoRoot" -Recurse -Filter "*.csproj" -Include $fileNameFilters -File
     | ForEach-Object { @{
         FullName = $_.FullName
         Relative = (Resolve-Path -Path $_.FullName -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./')
     }}
 
-    # until all LiveTest projects are migrated to recorded tests, we _must_ complete
-    # an additional filter such that we'll only invoke those csprojs where playback is possible
+    # if provided a buildinfo, further scope the tests to only those impacted by changes
+    if ($BuildInfo){
+        $changedPaths = $BuildInfo.pathsToTest | ForEach-Object { $_.path }
+
+        $testProjects = $testProjects | Where-Object {
+            $testProjectPath = $_.Relative
+            ($changedPaths | Where-Object { $testProjectPath.StartsWith($_) }).Count -gt 0
+        }
+    }
+
     if ($testType -eq 'Recorded') {
+        # until all LiveTest projects are migrated to recorded tests, we _must_ complete
+        # an additional filter such that we'll only invoke those csprojs where playback is possible
         $testProjects = $testProjects | Where-Object {
             $projectDirectory = Split-Path -Path $_.FullName -Parent
             Test-Path -Path (Join-Path -Path $projectDirectory -ChildPath 'assets.json')
@@ -91,13 +108,20 @@ function CreateTestSolution {
     Push-Location $workPath
     try {
         dotnet new sln -n "Tests" | Out-Null
-        dotnet sln add $testProjects --in-root | Out-Host
+        dotnet sln add $testProjects --in-root --include-references false | Out-Host
     }
     finally {
         Pop-Location
     }
 
-    return "$workPath/Tests.sln"
+    # .NET 10+ creates .slnx by default instead of .sln
+    $slnFile = Get-ChildItem -Path $workPath -Filter "Tests.sln*" -File | Select-Object -First 1
+    if (-not $slnFile) {
+        Write-Error "Failed to create temporary solution file in $workPath"
+        return $null
+    }
+
+    return $slnFile.FullName.Replace('\', '/')
 }
 
 function Create-CoverageReport {
@@ -275,12 +299,26 @@ try {
     $coverageArg = $CollectCoverage ? "--collect:'XPlat Code Coverage'" : ""
     $resultsArg = "--results-directory '$TestResultsPath'"
     $loggerArg = "--logger 'trx' --logger 'console;verbosity=detailed'"
-
-    $command = "dotnet test $coverageArg $resultsArg $loggerArg"
+    $filterArg = switch ($TestType) {
+        'Live' { "TestType=Live" }
+        'Unit' { "TestType!=Live" }
+        'Recorded' { "TestType=Live" }
+        default { "" }
+    }
 
     if($Members.Count -gt 0) {
         $memberFilterString = $Members | ForEach-Object { "FullyQualifiedName~$_" } | Join-String -Separator '|'
-        $command += " --filter '$memberFilterString'"
+        if ($filterArg) {
+            $filterArg += "&($memberFilterString)"
+        } else {
+            $filterArg = "$memberFilterString"
+        }
+    }
+
+    $command = "dotnet test $coverageArg $resultsArg $loggerArg"
+
+    if ($filterArg) {
+        $command += " --filter `"$filterArg`""
     }
 
     Invoke-LoggedMsBuildCommand -Command $command -AllowedExitCodes @(0, 1)

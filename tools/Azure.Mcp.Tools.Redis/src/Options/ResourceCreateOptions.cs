@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Redis.Options;
 
@@ -26,6 +26,11 @@ public class ResourceCreateOptions : SubscriptionOptions
     /// Whether to enable access keys for authentication for the Redis resource. (Default: false)
     /// </summary>
     public bool? AccessKeyAuthenticationEnabled { get; set; }
+
+    /// <summary>
+    /// Whether to enable public network access for the Redis resource. (Default: false)
+    /// </summary>
+    public bool? PublicNetworkAccessEnabled { get; set; }
 
     /// <summary>
     /// A list of modules to enable on the Azure Managed Redis resource (e.g., RedisBloom, RedisJSON).

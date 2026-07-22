@@ -1,34 +1,44 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Monitor.Models.HealthModels;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
 public interface IMonitorHealthModelService
 {
     /// <summary>
-    /// Gets the health of an entity from a health model
+    /// Lists Azure Monitor Health Models in a subscription or resource group. Returns a summary projection.
     /// </summary>
-    /// <param name="entity">The entity to get health for</param>
-    /// <param name="healthModelName">The health model name</param>
-    /// <param name="resourceGroupName">The resource group name containing the health model</param>
-    /// <param name="subscription">Subscription ID or name</param>
-    /// <param name="authMethod">Optional authentication method</param>
-    /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
-    /// <param name="retryPolicy">Optional retry policy for the operation</param>
-    /// <param name="cancellationToken">A cancellation token</param>
-    /// <returns>Entity health information</returns>
-    /// <exception cref="AuthenticationFailedException">When authentication fails</exception>
-    /// <exception cref="RequestFailedException">When the service request fails</exception>
-    Task<JsonNode> GetEntityHealth(
-        string entity,
-        string healthModelName,
-        string resourceGroup,
+    /// <param name="subscription">Subscription ID or name.</param>
+    /// <param name="resourceGroup">Optional resource group to scope the listing.</param>
+    /// <param name="tenant">Optional tenant ID.</param>
+    /// <param name="retryPolicy">Optional retry policy.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>List health models.</returns>
+    Task<List<HealthModelSummary>> ListHealthModels(
         string subscription,
-        AuthMethod? authMethod = null,
-        string? tenantId = null,
+        string? resourceGroup = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a single Azure Monitor Health Model by name.
+    /// </summary>
+    /// <param name="subscription">Subscription ID or name.</param>
+    /// <param name="resourceGroup">The resource group containing the health model.</param>
+    /// <param name="healthModelName">The health model name.</param>
+    /// <param name="tenant">Optional tenant ID.</param>
+    /// <param name="retryPolicy">Optional retry policy.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The health model resource.</returns>
+    Task<HealthModelDetail> GetHealthModel(
+        string subscription,
+        string resourceGroup,
+        string healthModelName,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

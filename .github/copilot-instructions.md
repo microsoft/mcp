@@ -31,15 +31,15 @@
 
 ## Transitioning Live Tests to Recorded Tests
 
-- Always convert `tool` services to inject `IHttpClientService` into its clients and use `HttpClientService.CreateClient` method to instantiate the `HttpClient` for usage in the tool classes' methods.
-  - If `IHttpClientService` is already injected into the client, ensure that `HttpClientService.CreateClient` is used to instantiate the `HttpClient`. If this is done, then no further action is needed.
+- Always convert `tool` services to inject `IHttpClientFactory` into its clients and use `IHttpClientFactory.CreateClient` method to instantiate the `HttpClient` for usage in the tool classes' methods.
+  - If `IHttpClientFactory` is already injected into the client, ensure that `IHttpClientFactory.CreateClient` is used to instantiate the `HttpClient`. If this is done, then no further action is needed.
 - Always re-parent test classes parented by `CommandTestsBase` to `RecordedCommandTestsBase`. This will require minor fixture adjustments.
 - Always generate a new `assets.json` file alongside the livetest csproj file if one does not exist. This file should contain the following content:
   ```jsonc
   {
     "AssetsRepo": "Azure/azure-sdk-assets",
     "AssetsRepoPrefixPath": "",
-    "TagPrefix": "<LiveTestCsProjFileNameWithoutExtension>", // e.g., "Azure.Mcp.Tools.KeyVault.LiveTests"
+    "TagPrefix": "<TestCsProjFileNameWithoutExtension>", // e.g., "Azure.Mcp.Tools.KeyVault.Tests"
     "Tag": ""
   }
   ```

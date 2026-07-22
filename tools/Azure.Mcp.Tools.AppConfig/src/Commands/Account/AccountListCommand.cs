@@ -1,61 +1,49 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Azure.Mcp.Tools.AppConfig.Options.Account;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.Account;
 
-public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : SubscriptionCommand<AccountListOptions>()
-{
-    private const string CommandTitle = "List App Configuration Stores";
-    private readonly ILogger<AccountListCommand> _logger = logger;
-
-    public override string Id => "e403c988-b57b-4ac1-afb7-25ba3fdd6e6a";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "e403c988-b57b-4ac1-afb7-25ba3fdd6e6a",
+    Name = "list",
+    Title = "List App Configuration Stores",
+    Description = """
         List all App Configuration stores in a subscription. This command retrieves and displays all App Configuration
         stores available in the specified subscription. Results include store names returned as a JSON array.
-        """;
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AccountListCommand(ILogger<AccountListCommand> logger, IAppConfigService appConfigService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<AccountListOptions, AccountListCommand.AccountListCommandResult>(subscriptionResolver)
+{
+    private readonly ILogger<AccountListCommand> _logger = logger;
+    private readonly IAppConfigService _appConfigService = appConfigService;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AccountListOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var appConfigService = context.GetService<IAppConfigService>();
-            var accounts = await appConfigService.GetAppConfigAccounts(
+            var accounts = await _appConfigService.GetAppConfigAccounts(
                 options.Subscription!,
+                options.ResourceGroup,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(accounts ?? []), AppConfigJsonContext.Default.AccountListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false), AppConfigJsonContext.Default.AccountListCommandResult);
         }
         catch (Exception ex)
         {
@@ -66,5 +54,5 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
         return context.Response;
     }
 
-    internal record AccountListCommandResult(List<AppConfigurationAccount> Accounts);
+    public sealed record AccountListCommandResult(List<AppConfigurationAccount> Accounts, bool AreResultsTruncated);
 }

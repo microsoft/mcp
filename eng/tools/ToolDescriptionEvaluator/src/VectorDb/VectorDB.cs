@@ -39,13 +39,7 @@ public class DotProduct : IDistanceMetric
         if (a.Length != b.Length)
             throw new ArgumentException("Vector lengths must match");
 
-        float dotProduct = 0.0f;
-        for (int i = 0; i < a.Length; i++)
-        {
-            dotProduct += a[i] * b[i];
-        }
-
-        return dotProduct;
+        return TensorPrimitives.Dot(a.AsSpan(), b.AsSpan());
     }
 }
 

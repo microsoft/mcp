@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
 using Azure.Mcp.Tools.FunctionApp.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.FunctionApp;
 
@@ -26,8 +26,7 @@ public class FunctionAppSetup : IAreaSetup
     {
         var functionApp = new CommandGroup(Name, "Function App operations - Commands for managing and accessing Azure Function App resources.", Title);
 
-        var getCommand = serviceProvider.GetRequiredService<FunctionAppGetCommand>();
-        functionApp.AddCommand(getCommand.Name, getCommand);
+        functionApp.AddCommand<FunctionAppGetCommand>(serviceProvider);
 
         return functionApp;
     }

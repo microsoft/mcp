@@ -3,31 +3,18 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Tools.Cosmos.Options;
+using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;
 
 public abstract class BaseCosmosCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : SubscriptionCommand<TOptions> where TOptions : BaseCosmosOptions, new()
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<TOptions, TResult>(subscriptionResolver) where TOptions : class, ISubscriptionOption
 {
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(CosmosOptionDefinitions.Account);
-    }
-
-    protected override TOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.Account.Name);
-        return options;
-    }
-
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         CosmosException cosmosEx => cosmosEx.Message,

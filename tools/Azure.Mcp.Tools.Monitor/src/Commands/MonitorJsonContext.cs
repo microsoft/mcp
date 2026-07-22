@@ -1,15 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
+using Azure.Mcp.Tools.Monitor.Commands.HealthModels;
+using Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Commands.Table;
 using Azure.Mcp.Tools.Monitor.Commands.TableType;
 using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
+using Azure.Mcp.Tools.Monitor.Models.HealthModels;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
@@ -18,6 +22,12 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(ActivityLogListCommand.ActivityLogListCommandResult))]
 [JsonSerializable(typeof(ActivityLogListResponse))]
 [JsonSerializable(typeof(ActivityLogLocalizableString))]
+[JsonSerializable(typeof(GetLearningResourceCommand.GetLearningResourceCommandResult))]
+[JsonSerializable(typeof(HealthModelDetail))]
+[JsonSerializable(typeof(HealthModelGetCommand.HealthModelGetCommandResult))]
+[JsonSerializable(typeof(HealthModelIdentity))]
+[JsonSerializable(typeof(HealthModelSummary))]
+[JsonSerializable(typeof(List<HealthModelSummary>))]
 [JsonSerializable(typeof(List<JsonNode>))]
 [JsonSerializable(typeof(MetricsDefinitionsCommand.MetricsDefinitionsCommandResult))]
 [JsonSerializable(typeof(MetricsDefinitionsCommand.MetricsDefinitionsCommandResult))]
@@ -25,10 +35,8 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(MetricsQueryCommand.MetricsQueryCommandResult))]
 [JsonSerializable(typeof(TableListCommand.TableListCommandResult))]
 [JsonSerializable(typeof(TableTypeListCommand.TableTypeListCommandResult))]
-[JsonSerializable(typeof(WebTestsCreateCommand.WebTestsCreateCommandResult))]
+[JsonSerializable(typeof(WebTestsCreateOrUpdateCommand.WebTestsCreateOrUpdateCommandResult))]
 [JsonSerializable(typeof(WebTestsGetCommand.WebTestsGetCommandResult))]
-[JsonSerializable(typeof(WebTestsListCommand.WebTestsListCommandResult))]
-[JsonSerializable(typeof(WebTestsUpdateCommand.WebTestsUpdateCommandResult))]
 [JsonSerializable(typeof(WorkspaceListCommand.WorkspaceListCommandResult))]
 [JsonSerializable(typeof(Dictionary<string, object>))]
 [JsonSerializable(typeof(Dictionary<string, object?>))]
@@ -38,6 +46,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(JsonElement?))]
 [JsonSerializable(typeof(string))]
+[JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(int))]
 [JsonSerializable(typeof(int?))]
 [JsonSerializable(typeof(long))]
@@ -47,6 +56,4 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(bool))]
 [JsonSerializable(typeof(bool?))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal sealed partial class MonitorJsonContext : JsonSerializerContext
-{
-}
+internal sealed partial class MonitorJsonContext : JsonSerializerContext;

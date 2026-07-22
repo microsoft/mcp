@@ -12,9 +12,7 @@ namespace Azure.Mcp.Tools.LoadTesting.Commands;
 
 [JsonSerializable(typeof(TestResourceListCommand.TestResourceListCommandResult))]
 [JsonSerializable(typeof(TestRunGetCommand.TestRunGetCommandResult))]
-[JsonSerializable(typeof(TestRunCreateCommand.TestRunCreateCommandResult))]
-[JsonSerializable(typeof(TestRunListCommand.TestRunListCommandResult))]
-[JsonSerializable(typeof(TestRunUpdateCommand.TestRunUpdateCommandResult))]
+[JsonSerializable(typeof(TestRunCreateOrUpdateCommand.TestRunCreateOrUpdateCommandResult))]
 [JsonSerializable(typeof(TestGetCommand.TestGetCommandResult))]
 [JsonSerializable(typeof(TestResourceCreateCommand.TestResourceCreateCommandResult))]
 [JsonSerializable(typeof(TestCreateCommand.TestCreateCommandResult))]

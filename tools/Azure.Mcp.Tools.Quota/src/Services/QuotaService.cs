@@ -4,7 +4,6 @@
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Services.Util;
 using Azure.ResourceManager;
@@ -15,10 +14,10 @@ namespace Azure.Mcp.Tools.Quota.Services;
 public class QuotaService(
     ITenantService tenantService,
     ILoggerFactory loggerFactory,
-    IHttpClientService httpClientService)
+    IHttpClientFactory httpClientFactory)
     : BaseAzureService(tenantService), IQuotaService
 {
-    private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     public async Task<Dictionary<string, List<UsageInfo>>> GetAzureQuotaAsync(
         List<string> resourceTypes,
@@ -27,15 +26,15 @@ public class QuotaService(
         CancellationToken cancellationToken)
     {
         TokenCredential credential = await GetCredential(cancellationToken);
-        Dictionary<string, List<UsageInfo>> quotaByResourceTypes = await AzureQuotaService.GetAzureQuotaAsync(
+        return await AzureQuotaService.GetAzureQuotaAsync(
             credential,
             resourceTypes,
             subscriptionId,
             location,
+            TenantService,
             loggerFactory,
-            _httpClientService,
+            _httpClientFactory,
             cancellationToken);
-        return quotaByResourceTypes;
     }
 
     public async Task<List<string>> GetAvailableRegionsForResourceTypesAsync(

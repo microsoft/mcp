@@ -4,58 +4,80 @@
 using System.Data;
 using System.Data.Common;
 using System.Net;
-using Azure.Core;
-using Azure.Mcp.Core.Exceptions;
+using System.Runtime.CompilerServices;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Tools.Postgres.Auth;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
+using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Npgsql;
-
 
 namespace Azure.Mcp.Tools.Postgres.Services;
 
-public class PostgresService : BaseAzureService, IPostgresService
+public class PostgresService(
+    IResourceGroupService resourceGroupService,
+    ISubscriptionService subscriptionService,
+    ITenantService tenantService,
+    IEntraTokenProvider entraTokenAuth,
+    IDbProvider dbProvider) : BaseAzureService(tenantService), IPostgresService
 {
-    private readonly IResourceGroupService _resourceGroupService;
-    private readonly IEntraTokenProvider _entraTokenAuth;
-    private readonly IDbProvider _dbProvider;
+    private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
+    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+    private readonly IEntraTokenProvider _entraTokenAuth = entraTokenAuth;
+    private readonly IDbProvider _dbProvider = dbProvider;
 
-    public PostgresService(
-        IResourceGroupService resourceGroupService,
-        ITenantService tenantService,
-        IEntraTokenProvider entraTokenAuth,
-        IDbProvider dbProvider)
-        : base(tenantService)
-    {
-        _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
-        _entraTokenAuth = entraTokenAuth;
-        _dbProvider = dbProvider;
-    }
+    internal const int MaxRowCount = 10_000;
 
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
-        TokenCredential tokenCredential = await GetCredential(cancellationToken);
-        AccessToken accessToken = await _entraTokenAuth.GetEntraToken(tokenCredential, cancellationToken);
+        var tokenCredential = await GetCredential(cancellationToken);
+        var accessToken = await _entraTokenAuth.GetEntraToken(tokenCredential, cancellationToken);
 
         return accessToken.Token;
     }
 
-    private static string NormalizeServerName(string server)
+    private static readonly string[] AllowedPostgresSuffixes =
+    [
+        ".postgres.database.azure.com",
+        ".postgres.database.usgovcloudapi.net",
+        ".postgres.database.chinacloudapi.cn",
+    ];
+
+    private string NormalizeServerName(string server)
     {
         if (!server.Contains('.'))
         {
-            return server + ".postgres.database.azure.com";
+            return TenantService.CloudConfiguration.CloudType switch
+            {
+                AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
+                    server + ".postgres.database.azure.com",
+                AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
+                    server + ".postgres.database.usgovcloudapi.net",
+                AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
+                    server + ".postgres.database.chinacloudapi.cn",
+                _ =>
+                    server + ".postgres.database.azure.com"
+            };
         }
+
+        if (!Array.Exists(AllowedPostgresSuffixes, suffix => server.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new ArgumentException(
+                $"The server name '{server}' is not a valid Azure Database for PostgreSQL hostname. " +
+                $"Fully qualified server names must end with one of: {string.Join(", ", AllowedPostgresSuffixes)}.");
+        }
+
         return server;
     }
 
-    public async Task<List<string>> ListDatabasesAsync(
-        string subscriptionId,
-        string resourceGroup,
+    public async Task<DatabaseListResult> ListDatabasesAsync(
         string authType,
         string user,
         string? password,
@@ -64,23 +86,30 @@ public class PostgresService : BaseAzureService, IPostgresService
     {
         string? passwordToUse = await GetPassword(authType, password, cancellationToken);
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database=postgres;Username={user};Password={passwordToUse}";
+        var connectionString = BuildConnectionString(host, "postgres", user, passwordToUse);
 
-        var query = "SELECT datname FROM pg_database WHERE datistemplate = false;";
+        var query = "SELECT datname FROM pg_database WHERE datistemplate = false ORDER BY datname LIMIT @maxResults;";
         await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType, cancellationToken);
         await using NpgsqlCommand command = _dbProvider.GetCommand(query, resource);
+        // Fetch cap+1 rows so we can detect truncation by observing whether an extra row exists, then trim it.
+        command.Parameters.AddWithValue("maxResults", MaxRowCount + 1);
         await using DbDataReader reader = await _dbProvider.ExecuteReaderAsync(command, cancellationToken);
         var dbs = new List<string>();
         while (await reader.ReadAsync(cancellationToken))
         {
             dbs.Add(reader.GetString(0));
         }
-        return dbs;
+
+        var isTruncated = dbs.Count > MaxRowCount;
+        if (isTruncated)
+        {
+            dbs.RemoveRange(MaxRowCount, dbs.Count - MaxRowCount);
+        }
+
+        return new DatabaseListResult(dbs, isTruncated);
     }
 
     public async Task<List<string>> ExecuteQueryAsync(
-        string subscriptionId,
-        string resourceGroup,
         string authType,
         string user,
         string? password,
@@ -91,10 +120,18 @@ public class PostgresService : BaseAzureService, IPostgresService
     {
         string? passwordToUse = await GetPassword(authType, password, cancellationToken);
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
+        var connectionString = BuildConnectionString(host, database, user, passwordToUse);
+
+        var (parameterizedQuery, queryParameters) = ParameterizeStringLiterals(query);
 
         await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType, cancellationToken);
-        await using NpgsqlCommand command = _dbProvider.GetCommand(query, resource);
+        await using NpgsqlCommand command = _dbProvider.GetCommand(parameterizedQuery, resource);
+
+        foreach (var (name, value) in queryParameters)
+        {
+            command.Parameters.AddWithValue(name, value);
+        }
+
         await using DbDataReader reader = await _dbProvider.ExecuteReaderAsync(command, cancellationToken);
 
         var rows = new List<string>();
@@ -128,35 +165,42 @@ public class PostgresService : BaseAzureService, IPostgresService
         return rows;
     }
 
-    public async Task<List<string>> ListTablesAsync(
-        string subscriptionId,
-        string resourceGroup,
+    public async Task<TableListResult> ListTablesAsync(
         string authType,
         string user,
         string? password,
         string server,
         string database,
+        string schema,
         CancellationToken cancellationToken)
     {
         string? passwordToUse = await GetPassword(authType, password, cancellationToken);
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
+        var connectionString = BuildConnectionString(host, database, user, passwordToUse);
 
-        var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';";
+        var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = @schema ORDER BY table_name LIMIT @maxResults;";
         await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType, cancellationToken);
         await using NpgsqlCommand command = _dbProvider.GetCommand(query, resource);
+        command.Parameters.AddWithValue("schema", schema);
+        // Fetch cap+1 rows so we can detect truncation by observing whether an extra row exists, then trim it.
+        command.Parameters.AddWithValue("maxResults", MaxRowCount + 1);
         await using DbDataReader reader = await _dbProvider.ExecuteReaderAsync(command, cancellationToken);
         var tables = new List<string>();
         while (await reader.ReadAsync(cancellationToken))
         {
             tables.Add(reader.GetString(0));
         }
-        return tables;
+
+        var isTruncated = tables.Count > MaxRowCount;
+        if (isTruncated)
+        {
+            tables.RemoveRange(MaxRowCount, tables.Count - MaxRowCount);
+        }
+
+        return new TableListResult(tables, isTruncated);
     }
 
     public async Task<List<string>> GetTableSchemaAsync(
-        string subscriptionId,
-        string resourceGroup,
         string authType,
         string user,
         string? password,
@@ -167,7 +211,7 @@ public class PostgresService : BaseAzureService, IPostgresService
     {
         string? passwordToUse = await GetPassword(authType, password, cancellationToken);
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
+        var connectionString = BuildConnectionString(host, database, user, passwordToUse);
 
         var query = $"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = @tableName;";
         await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType, cancellationToken);
@@ -184,21 +228,46 @@ public class PostgresService : BaseAzureService, IPostgresService
 
     public async Task<List<string>> ListServersAsync(
         string subscriptionId,
-        string resourceGroup,
-        string user,
+        string? resourceGroup,
         CancellationToken cancellationToken)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken);
-        if (rg == null)
-        {
-            throw new Exception($"Resource group '{resourceGroup}' not found.");
-        }
         var serverList = new List<string>();
-        await foreach (PostgreSqlFlexibleServerResource server in rg.GetPostgreSqlFlexibleServers().GetAllAsync(cancellationToken))
+
+        if (string.IsNullOrEmpty(resourceGroup))
         {
-            serverList.Add(server.Data.Name);
+            // List all Flexible Servers across the entire subscription
+            var subscription = await _subscriptionService.GetSubscription(subscriptionId, cancellationToken: cancellationToken);
+            await foreach (var name in ListSubscriptionServerNamesAsync(subscription, cancellationToken))
+                serverList.Add(name);
         }
+        else
+        {
+            // List Flexible Servers scoped to the given resource group
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken);
+            if (rg == null)
+                throw new Exception($"Resource group '{resourceGroup}' not found.");
+            await foreach (var name in ListResourceGroupServerNamesAsync(rg, cancellationToken))
+                serverList.Add(name);
+        }
+
         return serverList;
+    }
+
+    // Virtual so tests can override and avoid calling the un-mockable ARM SDK extension methods.
+    protected virtual async IAsyncEnumerable<string> ListSubscriptionServerNamesAsync(
+        SubscriptionResource subscription,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await foreach (PostgreSqlFlexibleServerResource server in subscription.GetPostgreSqlFlexibleServersAsync(cancellationToken))
+            yield return server.Data.Name;
+    }
+
+    protected virtual async IAsyncEnumerable<string> ListResourceGroupServerNamesAsync(
+        ResourceGroupResource resourceGroup,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await foreach (PostgreSqlFlexibleServerResource server in resourceGroup.GetPostgreSqlFlexibleServers().GetAllAsync(cancellationToken))
+            yield return server.Data.Name;
     }
 
     public async Task<string> GetServerConfigAsync(
@@ -206,13 +275,13 @@ public class PostgresService : BaseAzureService, IPostgresService
         string resourceGroup,
         string user,
         string server,
-        CancellationToken cancellationToken)
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken);
-        if (rg == null)
-        {
-            throw new Exception($"Resource group '{resourceGroup}' not found.");
-        }
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
+
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);
         var pgServerData = pgServer.Value.Data;
         var result = $"Server Name: {pgServerData.Name}\n" +
@@ -231,13 +300,13 @@ public class PostgresService : BaseAzureService, IPostgresService
         string user,
         string server,
         string param,
-        CancellationToken cancellationToken)
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken);
-        if (rg == null)
-        {
-            throw new Exception($"Resource group '{resourceGroup}' not found.");
-        }
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
+
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);
 
         var configResponse = await pgServer.Value.GetPostgreSqlFlexibleServerConfigurationAsync(param, cancellationToken);
@@ -255,13 +324,13 @@ public class PostgresService : BaseAzureService, IPostgresService
         string server,
         string param,
         string value,
-        CancellationToken cancellationToken)
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken);
-        if (rg == null)
-        {
-            throw new Exception($"Resource group '{resourceGroup}' not found.");
-        }
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
+
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);
 
         var configResponse = await pgServer.Value.GetPostgreSqlFlexibleServerConfigurationAsync(param, cancellationToken);
@@ -276,7 +345,8 @@ public class PostgresService : BaseAzureService, IPostgresService
             Source = "user-override"
         };
 
-        var updateOperation = await configResponse.Value.UpdateAsync(WaitUntil.Completed, configData, cancellationToken);
+        var updateOperation = await configResponse.Value.UpdateAsync(WaitUntil.Started, configData, cancellationToken);
+        await WaitForLroCompletionAsync(updateOperation, cancellationToken);
         if (updateOperation.HasCompleted && updateOperation.HasValue)
         {
             return $"Parameter '{param}' updated successfully to '{value}'.";
@@ -286,6 +356,22 @@ public class PostgresService : BaseAzureService, IPostgresService
             throw new Exception($"Failed to update parameter '{param}' to value '{value}'.");
         }
     }
+
+    private static string BuildConnectionString(string host, string database, string user, string password)
+    {
+        var builder = new NpgsqlConnectionStringBuilder
+        {
+            Host = host,
+            Database = database,
+            Username = user,
+            Password = password,
+            SslMode = SslMode.Require
+        };
+        return builder.ConnectionString;
+    }
+
+    internal static (string Query, List<(string Name, string Value)> Parameters) ParameterizeStringLiterals(string query) =>
+        SqlQueryParameterizer.Parameterize(query, SqlQueryParameterizer.SqlDialect.Standard);
 
     private async Task<string> GetPassword(string authType, string? password, CancellationToken cancellationToken)
     {
@@ -298,11 +384,11 @@ public class PostgresService : BaseAzureService, IPostgresService
         {
             if (string.IsNullOrEmpty(password))
             {
-                throw new CommandValidationException($"Password must be provided for '{AuthTypes.PostgreSQL}' authentication.", HttpStatusCode.BadRequest);
+                throw new CommandValidationException($"Password must be provided for '{AuthTypes.PostgreSQL}' authentication.");
             }
             return password;
         }
 
-        throw new CommandValidationException($"Unsupported authentication type. Please use '{AuthTypes.MicrosoftEntra}' or '{AuthTypes.PostgreSQL}'", HttpStatusCode.BadRequest);
+        throw new CommandValidationException($"Unsupported authentication type. Please use '{AuthTypes.MicrosoftEntra}' or '{AuthTypes.PostgreSQL}'");
     }
 }

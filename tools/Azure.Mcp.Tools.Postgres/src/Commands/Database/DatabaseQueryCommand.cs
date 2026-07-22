@@ -1,74 +1,45 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Database;
 using Azure.Mcp.Tools.Postgres.Services;
 using Azure.Mcp.Tools.Postgres.Validation;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Database;
 
-public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) : BaseDatabaseCommand<DatabaseQueryOptions>(logger)
+[CommandMetadata(
+    Id = "81a28bca-014c-4738-9e1a-654d77cb2dd8",
+    Name = "query",
+    Title = "Query PostgreSQL Database",
+    Description = "Executes a SQL query on an Azure Database for PostgreSQL server to search for specific terms, retrieve records, or perform SELECT operations.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogger<DatabaseQueryCommand> logger)
+    : AuthenticatedCommand<DatabaseQueryOptions, DatabaseQueryCommand.DatabaseQueryCommandResult>
 {
-    private const string CommandTitle = "Query PostgreSQL Database";
+    private readonly IPostgresService _postgresService = postgresService;
+    private readonly ILogger<DatabaseQueryCommand> _logger = logger;
 
-    public override string Id => "81a28bca-014c-4738-9e1a-654d77cb2dd8";
-
-    public override string Name => "query";
-
-    public override string Description => "Executes a SQL query on an Azure Database for PostgreSQL server to search for specific terms, retrieve records, or perform SELECT operations.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DatabaseQueryOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(PostgresOptionDefinitions.Query);
-    }
-
-    protected override DatabaseQueryOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Query = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Query.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
             // Validate the query early to avoid sending unsafe SQL to the server.
             SqlQueryValidator.EnsureReadOnlySelect(options.Query);
-            List<string> queryResult = await pgService.ExecuteQueryAsync(
-                options.Subscription!,
-                options.ResourceGroup!,
-                options.AuthType!,
-                options.User!,
+            List<string> queryResult = await _postgresService.ExecuteQueryAsync(
+                options.AuthType,
+                options.User,
                 options.Password,
-                options.Server!,
-                options.Database!,
-                options.Query!,
+                options.Server,
+                options.Database,
+                options.Query,
                 cancellationToken);
             context.Response.Results = ResponseResult.Create(new(queryResult ?? []), PostgresJsonContext.Default.DatabaseQueryCommandResult);
         }
@@ -81,5 +52,5 @@ public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) :
         return context.Response;
     }
 
-    internal record DatabaseQueryCommandResult(List<string> QueryResult);
+    public sealed record DatabaseQueryCommandResult(List<string> QueryResult);
 }

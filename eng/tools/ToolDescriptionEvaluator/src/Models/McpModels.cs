@@ -8,7 +8,7 @@ namespace ToolSelection.Models;
 // Constants
 public static class McpConstants
 {
-    public const string LatestProtocolVersion = "2025-06-18";
+    public const string LatestProtocolVersion = "2025-11-25";
     public const string JsonRpcVersion = "2.0";
 }
 
@@ -83,6 +83,9 @@ public class ToolAnnotations
 // Tool definition for azmcp tools list response
 public class Tool
 {
+    [JsonPropertyName("id")]
+    public string? Id { get; set; }
+
     [JsonPropertyName("name")]
     public required string Name { get; set; }
 

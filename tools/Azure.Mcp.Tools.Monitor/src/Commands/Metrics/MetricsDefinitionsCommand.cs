@@ -1,82 +1,47 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Monitor.Models;
-using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Options.Metrics;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
 
 /// <summary>
 /// Command for listing Azure Monitor metric definitions
 /// </summary>
-public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand> logger)
-    : BaseMetricsCommand<MetricsDefinitionsOptions>
+[CommandMetadata(
+    Id = "d3bf37ed-5f2e-448d-a16e-73140ef908c2",
+    Name = "definitions",
+    Title = "List Azure Monitor Metric Definitions",
+    Description = "List available metric definitions for an Azure resource. Returns metadata about the metrics available for the resource.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand> logger, IMonitorMetricsService metricsService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<MetricsDefinitionsOptions, MetricsDefinitionsCommand.MetricsDefinitionsCommandResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "List Azure Monitor Metric Definitions";
     private readonly ILogger<MetricsDefinitionsCommand> _logger = logger;
+    private readonly IMonitorMetricsService _metricsService = metricsService;
 
-    public override string Id => "d3bf37ed-5f2e-448d-a16e-73140ef908c2";
-
-    public override string Name => "definitions";
-
-    public override string Description =>
-            $"""
-                List available metric definitions for an Azure resource. Returns metadata about the metrics available for the resource.
-            """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, MetricsDefinitionsOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(MonitorOptionDefinitions.Metrics.MetricNamespace.AsOptional());
-        command.Options.Add(MonitorOptionDefinitions.Metrics.SearchString);
-        command.Options.Add(MonitorOptionDefinitions.Metrics.DefinitionsLimit);
-    }
-
-    protected override MetricsDefinitionsOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.MetricNamespace = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.MetricNamespace.Name);
-        options.SearchString = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.SearchString.Name);
-        options.Limit = parseResult.GetValueOrDefault<int>(MonitorOptionDefinitions.Metrics.DefinitionsLimit.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            // Get the metrics service from DI
-            var service = context.GetService<IMonitorMetricsService>();
             // Call service operation with required parameters
-            var allResults = await service.ListMetricDefinitionsAsync(
+            var allResults = await _metricsService.ListMetricDefinitionsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.ResourceType,
-                options.ResourceName!,
+                options.Resource!,
                 options.MetricNamespace,
                 options.SearchString,
                 options.Tenant,
@@ -112,8 +77,8 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
         catch (Exception ex)
         {            // Log error with all relevant context
             _logger.LogError(ex,
-                "Error listing metric definitions. ResourceGroup: {ResourceGroup}, ResourceType: {ResourceType}, ResourceName: {ResourceName}, MetricNamespace: {MetricNamespace}, Options: {@Options}",
-                options.ResourceGroup, options.ResourceType, options.ResourceName, options.MetricNamespace, options);
+                "Error listing metric definitions. ResourceGroup: {ResourceGroup}, ResourceType: {ResourceType}, ResourceName: {ResourceName}, MetricNamespace: {MetricNamespace}.",
+                options.ResourceGroup, options.ResourceType, options.Resource, options.MetricNamespace);
             HandleException(context, ex);
         }
 
@@ -121,5 +86,5 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
     }
 
     // Strongly-typed result record
-    internal record MetricsDefinitionsCommandResult(List<MetricDefinition> Results, string Status);
+    public sealed record MetricsDefinitionsCommandResult(List<MetricDefinition> Results, string Status);
 }

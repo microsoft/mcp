@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Grafana.Models;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Grafana.Services;
 
@@ -16,8 +17,9 @@ public interface IGrafanaService
     /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <returns>List of Grafana workspace details</returns>
     /// <exception cref="Exception">When the service request fails</exception>
-    Task<IEnumerable<GrafanaWorkspace>> ListWorkspacesAsync(
+    Task<ResourceQueryResults<GrafanaWorkspace>> ListWorkspacesAsync(
         string subscription,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

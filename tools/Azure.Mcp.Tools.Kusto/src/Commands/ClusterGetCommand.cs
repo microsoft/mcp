@@ -2,80 +2,51 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Kusto.Models;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : SubscriptionCommand<ClusterGetOptions>
+[CommandMetadata(
+    Id = "5fc5a42b-a7f6-4d4a-9517-a8e119752b7a",
+    Name = "get",
+    Title = "Get Kusto Cluster Details",
+    Description = "Get/retrieve/show details for a specific Azure Data Explorer/Kusto/KQL cluster in a subscription. Not for listing multiple clusters. Required: --cluster and --subscription.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ClusterGetCommand(
+    ILogger<ClusterGetCommand> logger,
+    IKustoService kustoService,
+    ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ClusterGetOptions, ClusterGetCommand.ClusterGetCommandResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "Get Kusto Cluster Details";
-    private readonly ILogger<ClusterGetCommand> _logger = logger;
-
-    public override string Id => "5fc5a42b-a7f6-4d4a-9517-a8e119752b7a";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "Get/retrieve/show details for a specific Azure Data Explorer/Kusto/KQL cluster in a subscription. Not for listing multiple clusters. Required: --cluster and --subscription.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ClusterGetOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(KustoOptionDefinitions.Cluster.AsRequired());
-    }
-
-    protected override ClusterGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ClusterName = parseResult.GetValueOrDefault<string>(KustoOptionDefinitions.Cluster.Name);
-
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var kusto = context.GetService<IKustoService>();
-            var cluster = await kusto.GetClusterAsync(
+            var cluster = await kustoService.GetClusterAsync(
                 options.Subscription!,
-                options.ClusterName!,
+                options.Cluster,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = cluster is null ?
-                null : ResponseResult.Create(new(cluster), KustoJsonContext.Default.ClusterGetCommandResult);
+                null : ResponseResult.Create(new ClusterGetCommandResult(cluster), KustoJsonContext.Default.ClusterGetCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An exception occurred getting Kusto cluster details. Cluster: {Cluster}.", options.ClusterName);
+            logger.LogError(ex, "An exception occurred getting Kusto cluster details. Cluster: {Cluster}.", options.Cluster);
             HandleException(context, ex);
         }
 
@@ -100,5 +71,5 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : Subsc
         _ => base.GetStatusCode(ex)
     };
 
-    internal record ClusterGetCommandResult(KustoClusterModel Cluster);
+    public record ClusterGetCommandResult(KustoClusterModel Cluster);
 }

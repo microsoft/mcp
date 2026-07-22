@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Admin;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 using Azure.Mcp.Tools.KeyVault.Commands.Key;
 using Azure.Mcp.Tools.KeyVault.Commands.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.KeyVault;
 
@@ -22,15 +22,12 @@ public class KeyVaultSetup : IAreaSetup
     {
         services.AddSingleton<IKeyVaultService, KeyVaultService>();
 
-        services.AddSingleton<KeyListCommand>();
         services.AddSingleton<KeyGetCommand>();
         services.AddSingleton<KeyCreateCommand>();
 
-        services.AddSingleton<SecretListCommand>();
         services.AddSingleton<SecretCreateCommand>();
         services.AddSingleton<SecretGetCommand>();
 
-        services.AddSingleton<CertificateListCommand>();
         services.AddSingleton<CertificateGetCommand>();
         services.AddSingleton<CertificateCreateCommand>();
         services.AddSingleton<CertificateImportCommand>();
@@ -54,34 +51,20 @@ public class KeyVaultSetup : IAreaSetup
         var admin = new CommandGroup("admin", "Key Vault administration operations - Commands for administering a Managed HSM in Azure Key Vault.");
         keyVault.AddSubGroup(admin);
 
-        var keyList = serviceProvider.GetRequiredService<KeyListCommand>();
-        keys.AddCommand(keyList.Name, keyList);
-        var keyGet = serviceProvider.GetRequiredService<KeyGetCommand>();
-        keys.AddCommand(keyGet.Name, keyGet);
-        var keyCreate = serviceProvider.GetRequiredService<KeyCreateCommand>();
-        keys.AddCommand(keyCreate.Name, keyCreate);
+        keys.AddCommand<KeyGetCommand>(serviceProvider);
+        keys.AddCommand<KeyCreateCommand>(serviceProvider);
 
-        var secretList = serviceProvider.GetRequiredService<SecretListCommand>();
-        secret.AddCommand(secretList.Name, secretList);
-        var secretCreate = serviceProvider.GetRequiredService<SecretCreateCommand>();
-        secret.AddCommand(secretCreate.Name, secretCreate);
-        var secretGet = serviceProvider.GetRequiredService<SecretGetCommand>();
-        secret.AddCommand(secretGet.Name, secretGet);
+        secret.AddCommand<SecretCreateCommand>(serviceProvider);
+        secret.AddCommand<SecretGetCommand>(serviceProvider);
 
-        var certificateList = serviceProvider.GetRequiredService<CertificateListCommand>();
-        certificate.AddCommand(certificateList.Name, certificateList);
-        var certificateGet = serviceProvider.GetRequiredService<CertificateGetCommand>();
-        certificate.AddCommand(certificateGet.Name, certificateGet);
-        var certificateCreate = serviceProvider.GetRequiredService<CertificateCreateCommand>();
-        certificate.AddCommand(certificateCreate.Name, certificateCreate);
-        var certificateImport = serviceProvider.GetRequiredService<CertificateImportCommand>();
-        certificate.AddCommand(certificateImport.Name, certificateImport);
+        certificate.AddCommand<CertificateGetCommand>(serviceProvider);
+        certificate.AddCommand<CertificateCreateCommand>(serviceProvider);
+        certificate.AddCommand<CertificateImportCommand>(serviceProvider);
 
         var settings = new CommandGroup("settings", "Key Vault Managed HSM account settings operations - Commands for managing Key Vault Managed HSM account settings.");
         admin.AddSubGroup(settings);
 
-        var adminSettingsGet = serviceProvider.GetRequiredService<AdminSettingsGetCommand>();
-        settings.AddCommand(adminSettingsGet.Name, adminSettingsGet);
+        settings.AddCommand<AdminSettingsGetCommand>(serviceProvider);
 
         return keyVault;
     }

@@ -2,51 +2,32 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Tools.VirtualDesktop.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 
-public abstract class BaseHostPoolCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>
-    : BaseVirtualDesktopCommand<T>
-    where T : BaseHostPoolOptions, new()
+public abstract class BaseHostPoolCommand<[DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<TOptions, TResult>(subscriptionResolver) where TOptions : BaseHostPoolOptions
 {
-
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(TOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(VirtualDesktopOptionDefinitions.HostPool);
-        command.Options.Add(VirtualDesktopOptionDefinitions.HostPoolResourceIdOption);
-        command.Validators.Add(commandResult =>
+        base.ValidateOptions(options, validationResult);
+
+        var hasHostPool = !string.IsNullOrWhiteSpace(options.Hostpool);
+        var hasHostPoolResourceId = !string.IsNullOrWhiteSpace(options.HostpoolResourceId);
+
+        // Validate that either hostpool or hostpool-resource-id is provided, but not both
+        if (!hasHostPool && !hasHostPoolResourceId)
         {
-            // Retrieve values once and infer presence from non-empty values
-            commandResult.TryGetValue(VirtualDesktopOptionDefinitions.HostPool, out string? hostPoolName);
-            commandResult.TryGetValue(VirtualDesktopOptionDefinitions.HostPoolResourceIdOption, out string? hostPoolResourceId);
+            validationResult.Errors.Add("Either --hostpool or --hostpool-resource-id must be provided.");
+        }
 
-            var hasHostPool = !string.IsNullOrWhiteSpace(hostPoolName);
-            var hasHostPoolResourceId = !string.IsNullOrWhiteSpace(hostPoolResourceId);
-
-            // Validate that either hostpool or hostpool-resource-id is provided, but not both
-            if (!hasHostPool && !hasHostPoolResourceId)
-            {
-                commandResult.AddError("Either --hostpool or --hostpool-resource-id must be provided.");
-            }
-
-            if (hasHostPool && hasHostPoolResourceId)
-            {
-                commandResult.AddError("Cannot specify both --hostpool and --hostpool-resource-id. Use only one.");
-            }
-        });
-    }
-
-    protected override T BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.HostPoolName = parseResult.GetValueOrDefault<string>(VirtualDesktopOptionDefinitions.HostPool.Name);
-        options.HostPoolResourceId = parseResult.GetValueOrDefault<string>(VirtualDesktopOptionDefinitions.HostPoolResourceIdOption.Name);
-        return options;
+        if (hasHostPool && hasHostPoolResourceId)
+        {
+            validationResult.Errors.Add("Cannot specify both --hostpool and --hostpool-resource-id. Use only one.");
+        }
     }
 }

@@ -1,70 +1,43 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Table;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Table;
 
-public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger) : BaseDatabaseCommand<TableSchemaGetOptions>(logger)
+[CommandMetadata(
+    Id = "643a3497-44e1-4727-b3d6-c2e5dba6cab2",
+    Name = "get",
+    Title = "Get PostgreSQL Table Schema",
+    Description = "Retrieves the schema of a specified table in a PostgreSQL database.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class TableSchemaGetCommand(IPostgresService postgresService, ILogger<TableSchemaGetCommand> logger)
+    : AuthenticatedCommand<TableSchemaGetOptions, TableSchemaGetCommand.TableSchemaGetCommandResult>
 {
-    private const string CommandTitle = "Get PostgreSQL Table Schema";
+    private readonly IPostgresService _postgresService = postgresService;
+    private readonly ILogger<TableSchemaGetCommand> _logger = logger;
 
-    public override string Id => "643a3497-44e1-4727-b3d6-c2e5dba6cab2";
-    public override string Name => "get";
-    public override string Description => "Retrieves the schema of a specified table in a PostgreSQL database.";
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TableSchemaGetOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(PostgresOptionDefinitions.Table);
-    }
-
-    protected override TableSchemaGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Table = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Table.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
 
-
-            IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
-            List<string> schema = await pgService.GetTableSchemaAsync(
-                options.Subscription!,
-                options.ResourceGroup!,
-                options.AuthType!,
-                options.User!,
+            List<string> schema = await _postgresService.GetTableSchemaAsync(
+                options.AuthType,
+                options.User,
                 options.Password,
-                options.Server!,
-                options.Database!,
-                options.Table!,
+                options.Server,
+                options.Database,
+                options.Table,
                 cancellationToken);
             context.Response.Results = ResponseResult.Create(new(schema ?? []), PostgresJsonContext.Default.TableSchemaGetCommandResult);
         }
@@ -77,5 +50,5 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
         return context.Response;
     }
 
-    internal record TableSchemaGetCommandResult(List<string> Schema);
+    public sealed record TableSchemaGetCommandResult(List<string> Schema);
 }

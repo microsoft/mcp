@@ -1,0 +1,101 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Tools.FileShares.Options;
+using Azure.Mcp.Tools.FileShares.Options.FileShare;
+using Azure.Mcp.Tools.FileShares.Services;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
+
+namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
+
+[CommandMetadata(
+    Id = "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f",
+    Name = "get",
+    Title = "Get File Share",
+    Description = "Get details of a specific file share or list all file shares. If --name is provided, returns a specific file share; otherwise, lists all file shares in the subscription or resource group.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFileSharesService service)
+    : BaseFileSharesCommand<FileShareGetOptions>(logger, service)
+{
+
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(FileSharesOptionDefinitions.FileShare.Name.AsOptional());
+    }
+
+    protected override FileShareGetOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Name.Name);
+        return options;
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
+        var options = BindOptions(parseResult);
+
+        try
+        {
+            // If file share name is provided, get specific file share
+            if (!string.IsNullOrEmpty(options.FileShareName))
+            {
+                _logger.LogInformation("Getting file share. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}",
+                    options.Subscription, options.ResourceGroup, options.FileShareName);
+
+                var fileShare = await _fileSharesService.GetFileShareAsync(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.FileShareName!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                context.Response.Results = ResponseResult.Create(new([fileShare]), FileSharesJsonContext.Default.FileShareGetCommandResult);
+
+                _logger.LogInformation("Successfully retrieved file share. FileShareName: {FileShareName}", options.FileShareName);
+            }
+            else
+            {
+                // List all file shares
+                _logger.LogInformation("Listing file shares. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}",
+                    options.Subscription, options.ResourceGroup ?? "(all)");
+
+                var fileShares = await _fileSharesService.ListFileSharesAsync(
+                    options.Subscription!,
+                    options.ResourceGroup,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                context.Response.Results = ResponseResult.Create(new(fileShares ?? []), FileSharesJsonContext.Default.FileShareGetCommandResult);
+
+                _logger.LogInformation("Successfully listed {Count} file shares", fileShares?.Count ?? 0);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get file share(s)");
+            HandleException(context, ex);
+        }
+
+        return context.Response;
+    }
+
+    internal record FileShareGetCommandResult(List<FileShareInfo> FileShares);
+}

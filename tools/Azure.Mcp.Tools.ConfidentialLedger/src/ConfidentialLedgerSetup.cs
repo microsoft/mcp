@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger;
 
@@ -30,11 +30,8 @@ public class ConfidentialLedgerSetup : IAreaSetup
         var entries = new CommandGroup("entries", "Ledger entries operations - Commands for appending and retrieving ledger entries.");
         root.AddSubGroup(entries);
 
-        var append = serviceProvider.GetRequiredService<LedgerEntryAppendCommand>();
-        entries.AddCommand(append.Name, append);
-
-        var get = serviceProvider.GetRequiredService<LedgerEntryGetCommand>();
-        entries.AddCommand(get.Name, get);
+        entries.AddCommand<LedgerEntryAppendCommand>(serviceProvider);
+        entries.AddCommand<LedgerEntryGetCommand>(serviceProvider);
 
         return root;
     }

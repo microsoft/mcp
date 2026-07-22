@@ -1,0 +1,351 @@
+targetScope = 'resourceGroup'
+
+@minLength(3)
+@maxLength(24)
+@description('The base resource name.')
+param baseName string = resourceGroup().name
+
+@description('The client OID to grant access to test resources.')
+param testApplicationOid string = deployer().objectId
+
+@description('Admin username for the VM.')
+@secure()
+param adminUsername string = 'azureuser'
+
+@description('Admin password for the VM.')
+@secure()
+param adminPassword string = newGuid()
+
+@description('The VM size to use for testing.')
+param vmSize string = 'Standard_B2s'
+
+// Compute ignores the default location from eng/common
+var location string = 'eastus2'
+
+// Virtual Network
+resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
+  name: '${baseName}-vnet'
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.0.0.0/16'
+      ]
+    }
+    subnets: [
+      {
+        name: 'default'
+        properties: {
+          addressPrefix: '10.0.0.0/24'
+        }
+      }
+    ]
+  }
+}
+
+// Network Interface for VM
+resource nic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
+  name: '${baseName}-nic'
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          subnet: {
+            id: vnet.properties.subnets[0].id
+          }
+          privateIPAllocationMethod: 'Dynamic'
+        }
+      }
+    ]
+  }
+}
+
+// Test Virtual Machine (Linux)
+resource vm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
+  name: '${baseName}-vm'
+  location: location
+  properties: {
+    hardwareProfile: {
+      vmSize: vmSize
+    }
+    storageProfile: {
+      imageReference: {
+        publisher: 'Canonical'
+        offer: '0001-com-ubuntu-server-jammy'
+        sku: '22_04-lts-gen2'
+        version: 'latest'
+      }
+      osDisk: {
+        createOption: 'FromImage'
+        managedDisk: {
+          storageAccountType: 'Standard_LRS'
+        }
+      }
+      diskControllerType: 'SCSI'
+    }
+    osProfile: {
+      computerName: '${baseName}-vm'
+      adminUsername: adminUsername
+      adminPassword: adminPassword
+      linuxConfiguration: {
+        disablePasswordAuthentication: false
+      }
+    }
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: nic.id
+          properties: {
+            primary: true
+          }
+        }
+      ]
+    }
+  }
+  tags: {
+    environment: 'test'
+    purpose: 'mcp-testing'
+  }
+}
+
+// Virtual Machine Scale Set for VMSS testing
+resource vmss 'Microsoft.Compute/virtualMachineScaleSets@2024-03-01' = {
+  name: '${baseName}-vmss'
+  location: location
+  sku: {
+    name: vmSize
+    tier: 'Standard'
+    capacity: 1
+  }
+  properties: {
+    overprovision: false
+    upgradePolicy: {
+      mode: 'Manual'
+    }
+    virtualMachineProfile: {
+      storageProfile: {
+        imageReference: {
+          publisher: 'Canonical'
+          offer: '0001-com-ubuntu-server-jammy'
+          sku: '22_04-lts-gen2'
+          version: 'latest'
+        }
+        osDisk: {
+          createOption: 'FromImage'
+          managedDisk: {
+            storageAccountType: 'Standard_LRS'
+          }
+        }
+        diskControllerType: 'SCSI'
+      }
+      osProfile: {
+        computerNamePrefix: '${baseName}-'
+        adminUsername: adminUsername
+        adminPassword: adminPassword
+        linuxConfiguration: {
+          disablePasswordAuthentication: false
+        }
+      }
+      networkProfile: {
+        networkInterfaceConfigurations: [
+          {
+            name: 'vmssnic'
+            properties: {
+              primary: true
+              ipConfigurations: [
+                {
+                  name: 'vmssipconfig'
+                  properties: {
+                    subnet: {
+                      id: vnet.properties.subnets[0].id
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+
+// Virtual Machine Contributor role for managing VMs
+resource vmContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  // This is the Virtual Machine Contributor role
+  // Lets you manage virtual machines, but not access to them, and not the virtual network or storage account they're connected to
+  // See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
+  name: '9980e02c-c2be-4d73-94e8-173b1dc7cf3c'
+}
+
+// Assign Virtual Machine Contributor role to test application
+resource appVmContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(vmContributorRoleDefinition.id, testApplicationOid, resourceGroup().id)
+  scope: resourceGroup()
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: vmContributorRoleDefinition.id
+    description: 'Virtual Machine Contributor for testApplicationOid'
+  }
+}
+
+// Reader role for querying VM information
+resource readerRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  // This is the Reader role
+  // View all resources, but does not allow you to make any changes
+  // See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#reader
+  name: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
+}
+
+// Assign Reader role to test application for resource group
+resource appReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(readerRoleDefinition.id, testApplicationOid, resourceGroup().id)
+  scope: resourceGroup()
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: readerRoleDefinition.id
+    description: 'Reader for testApplicationOid'
+  }
+}
+
+// Network Contributor role for creating network resources (NSG, VNet, NIC, Public IP)
+resource networkContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  // This is the Network Contributor role
+  // Lets you manage networks, but not access to them
+  // See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#network-contributor
+  name: '4d97b98b-1d4f-4787-a291-c67834d212e7'
+}
+
+// Assign Network Contributor role to test application for VM create tests
+resource appNetworkContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(networkContributorRoleDefinition.id, testApplicationOid, resourceGroup().id)
+  scope: resourceGroup()
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: networkContributorRoleDefinition.id
+    description: 'Network Contributor for testApplicationOid - required for VM create tests'
+  }
+}
+
+// Output values for test consumption
+output vmName string = vm.name
+output vmssName string = vmss.name
+output vnetName string = vnet.name
+output resourceGroupName string = resourceGroup().name
+output diskName string = testDisk.name
+output location string = location
+output galleryImageVersionId string = galleryImageVersion.id
+
+// Create a test managed disk
+resource testDisk 'Microsoft.Compute/disks@2023-10-02' = {
+  name: '${baseName}-disk'
+  location: location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  properties: {
+    creationData: {
+      createOption: 'Empty'
+    }
+    diskSizeGB: 32
+  }
+  tags: {
+    Environment: 'Test'
+    Purpose: 'MCP-Testing'
+  }
+}
+
+// Separate data disk for gallery image data disk at LUN 0
+resource testDataDisk 'Microsoft.Compute/disks@2023-10-02' = {
+  name: '${baseName}-datadisk'
+  location: location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  properties: {
+    creationData: {
+      createOption: 'Empty'
+    }
+    diskSizeGB: 16
+  }
+}
+
+// Compute Gallery for testing gallery image reference parameter
+resource gallery 'Microsoft.Compute/galleries@2023-07-03' = {
+  name: '${replace(baseName, '-', '')}gallery'
+  location: location
+}
+
+// Gallery Image Definition (Standard security, no TrustedLaunch)
+resource galleryImage 'Microsoft.Compute/galleries/images@2023-07-03' = {
+  parent: gallery
+  name: 'test-linux-image'
+  location: location
+  properties: {
+    identifier: {
+      publisher: 'TestPublisher'
+      offer: 'TestOffer'
+      sku: 'TestSku'
+    }
+    osType: 'Linux'
+    osState: 'Specialized'
+    hyperVGeneration: 'V2'
+    architecture: 'x64'
+  }
+}
+
+// Gallery Image Version with OS disk (from test disk) and data disk at LUN 0 (from data disk)
+resource galleryImageVersion 'Microsoft.Compute/galleries/images/versions@2023-07-03' = {
+  parent: galleryImage
+  name: '1.0.0'
+  location: location
+  properties: {
+    storageProfile: {
+      osDiskImage: {
+        source: {
+          id: testDisk.id
+        }
+      }
+      dataDiskImages: [
+        {
+          lun: 0
+          source: {
+            id: testDataDisk.id
+          }
+        }
+      ]
+    }
+    publishingProfile: {
+      replicaCount: 1
+      targetRegions: [
+        {
+          name: location
+          regionalReplicaCount: 1
+          storageAccountType: 'Standard_LRS'
+        }
+      ]
+    }
+  }
+}
+
+// Assign Contributor role for managing disks
+resource diskContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  // Contributor role
+  name: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
+}
+
+resource diskContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(diskContributorRoleDefinition.id, testApplicationOid, resourceGroup().id)
+  scope: resourceGroup()
+  properties: {
+    roleDefinitionId: diskContributorRoleDefinition.id
+    principalId: testApplicationOid
+    description: 'Contributor for testApplicationOid - allows creating and updating disks in the resource group'
+  }
+}

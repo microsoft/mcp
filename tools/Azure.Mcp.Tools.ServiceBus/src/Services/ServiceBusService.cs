@@ -1,17 +1,36 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ServiceBus.Services;
 
-public class ServiceBusService(ITenantService tenantService) : BaseAzureService(tenantService), IServiceBusService
+public sealed class ServiceBusService(ITenantService tenantService) : BaseAzureService(tenantService), IServiceBusService
 {
+    private void ValidateNamespace(string namespaceName)
+    {
+        // Reject any characters that would introduce scheme, path, query, fragment, or port components.
+        // A fully-qualified namespace must be a bare hostname (e.g. "mynamespace.servicebus.windows.net").
+        if (namespaceName.AsSpan().IndexOfAny("/:?#@") >= 0)
+        {
+            throw new ArgumentException(
+                $"Namespace name contains invalid characters. A fully-qualified namespace must be a bare hostname (e.g. 'mynamespace.servicebus.windows.net'). Received: '{namespaceName}'.",
+                nameof(namespaceName));
+        }
+
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            $"https://{namespaceName}/",
+            "servicebus",
+            TenantService.CloudConfiguration.ArmEnvironment);
+    }
+
     public async Task<QueueDetails> GetQueueDetails(
         string namespaceName,
         string queueName,
@@ -19,12 +38,15 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var credential = await GetCredential(cancellationToken);
-        var client = new ServiceBusAdministrationClient(namespaceName, credential);
+        ValidateNamespace(namespaceName);
+        var credential = await GetCredential(tenantId, cancellationToken);
+        var options = ConfigureRetryPolicy(AddDefaultPolicies(new ServiceBusAdministrationClientOptions()), retryPolicy);
+        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        var client = new ServiceBusAdministrationClient(namespaceName, credential, options);
         var runtimeProperties = (await client.GetQueueRuntimePropertiesAsync(queueName, cancellationToken)).Value;
         var properties = (await client.GetQueueAsync(queueName, cancellationToken)).Value;
 
-        return new QueueDetails
+        return new()
         {
             DefaultMessageTimeToLive = properties.DefaultMessageTimeToLive,
             EnablePartitioning = properties.EnablePartitioning,
@@ -57,12 +79,15 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var credential = await GetCredential(cancellationToken);
-        var client = new ServiceBusAdministrationClient(namespaceName, credential);
+        ValidateNamespace(namespaceName);
+        var credential = await GetCredential(tenantId, cancellationToken);
+        var options = ConfigureRetryPolicy(AddDefaultPolicies(new ServiceBusAdministrationClientOptions()), retryPolicy);
+        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        var client = new ServiceBusAdministrationClient(namespaceName, credential, options);
         var runtimeProperties = (await client.GetSubscriptionRuntimePropertiesAsync(topicName, subscriptionName, cancellationToken)).Value;
         var properties = (await client.GetSubscriptionAsync(topicName, subscriptionName, cancellationToken)).Value;
 
-        return new SubscriptionDetails
+        return new()
         {
             ActiveMessageCount = runtimeProperties.ActiveMessageCount,
             DeadLetteringOnMessageExpiration = properties.DeadLetteringOnMessageExpiration,
@@ -88,12 +113,15 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var credential = await GetCredential(cancellationToken);
-        var client = new ServiceBusAdministrationClient(namespaceName, credential);
+        ValidateNamespace(namespaceName);
+        var credential = await GetCredential(tenantId, cancellationToken);
+        var options = ConfigureRetryPolicy(AddDefaultPolicies(new ServiceBusAdministrationClientOptions()), retryPolicy);
+        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        var client = new ServiceBusAdministrationClient(namespaceName, credential, options);
         var runtimeProperties = (await client.GetTopicRuntimePropertiesAsync(topicName, cancellationToken)).Value;
         var properties = (await client.GetTopicAsync(topicName, cancellationToken)).Value;
 
-        return new TopicDetails
+        return new()
         {
             DefaultMessageTimeToLive = properties.DefaultMessageTimeToLive,
             EnablePartitioning = properties.EnablePartitioning,
@@ -116,7 +144,8 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var credential = await GetCredential(cancellationToken);
+        ValidateNamespace(namespaceName);
+        var credential = await GetCredential(tenantId, cancellationToken);
 
         await using (var client = new ServiceBusClient(namespaceName, credential))
         await using (var receiver = client.CreateReceiver(queueName))
@@ -136,7 +165,8 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var credential = await GetCredential(cancellationToken);
+        ValidateNamespace(namespaceName);
+        var credential = await GetCredential(tenantId, cancellationToken);
 
         await using (var client = new ServiceBusClient(namespaceName, credential))
         await using (var receiver = client.CreateReceiver(topicName, subscriptionName))

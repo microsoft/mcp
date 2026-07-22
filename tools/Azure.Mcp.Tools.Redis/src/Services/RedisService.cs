@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Identity;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -16,10 +14,16 @@ using Azure.ResourceManager.Redis.Models;
 using Azure.ResourceManager.RedisEnterprise;
 using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Resources.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Identity;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Redis.Services;
 
-public class RedisService(ISubscriptionService _subscriptionService, ITenantService _tenantService)
+public class RedisService(
+    ISubscriptionService _subscriptionService,
+    ITenantService _tenantService,
+    ILogger<RedisService> _logger)
     : BaseAzureService(_tenantService), IRedisService
 {
     public async Task<IEnumerable<Resource>> ListResourcesAsync(
@@ -30,39 +34,35 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
+            ?? throw new KeyNotFoundException($"Subscription '{subscription}' not found");
+
+        var resources = new List<Resource>();
+        var resourcesTasks = new List<Task<IEnumerable<Resource>>>();
+
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
-                ?? throw new Exception($"Subscription '{subscription}' not found");
-
-            var resources = new List<Resource>();
-            var resourcesTasks = new List<Task<IEnumerable<Resource>>>();
-
-            try
+            resourcesTasks.Add(ListAcrResourcesAsync(subscriptionResource, _logger, cancellationToken));
+            resourcesTasks.Add(ListAmrResourcesAsync(subscriptionResource, _logger, cancellationToken));
+            await Task.WhenAll(resourcesTasks);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Log individual task failures; partial results are still collected in the finally block.
+            _logger.LogWarning(ex, "One or more Redis resource listing tasks failed.");
+        }
+        finally
+        {
+            foreach (var resourceTask in resourcesTasks)
             {
-                resourcesTasks.Add(ListAcrResourcesAsync(subscriptionResource, cancellationToken));
-                resourcesTasks.Add(ListAmrResourcesAsync(subscriptionResource, cancellationToken));
-                await Task.WhenAll(resourcesTasks);
-            }
-            catch (Exception)
-            { }
-            finally
-            {
-                foreach (var resourceTask in resourcesTasks)
+                if (resourceTask.Status == TaskStatus.RanToCompletion)
                 {
-                    if (resourceTask.Status == TaskStatus.RanToCompletion)
-                    {
-                        resources.AddRange(resourceTask.Result);
-                    }
+                    resources.AddRange(resourceTask.Result);
                 }
             }
+        }
 
-            return resources;
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error retrieving Redis resources: {ex.Message}", ex);
-        }
+        return resources;
     }
 
     public async Task<Resource> CreateResourceAsync(
@@ -72,6 +72,7 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
         string location,
         string? sku,
         bool? accessKeyAuthenticationEnabled = false,
+        bool? publicNetworkAccessEnabled = false,
         string[]? modules = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -90,73 +91,71 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
             sku = "Balanced_B0";
         }
 
-        try
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
+            ?? throw new KeyNotFoundException($"Subscription '{subscription}' not found");
+
+        var resourceGroups = subscriptionResource.GetResourceGroups();
+        var resourceGroupResource = await resourceGroups.GetAsync(resourceGroup, cancellationToken);
+
+        if (resourceGroupResource.Value == null)
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
-                ?? throw new Exception($"Subscription '{subscription}' not found");
-
-            var resourceGroups = subscriptionResource.GetResourceGroups();
-            var resourceGroupResource = await resourceGroups.GetAsync(resourceGroup, cancellationToken);
-
-            if (resourceGroupResource.Value == null)
-            {
-                throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
-            }
-
-            var accessKeyAuthenticationString = accessKeyAuthenticationEnabled == true
-                ? "Enabled"
-                : "Disabled";
-
-            var bicepTemplate = GetCreateResourceBicepTemplate();
-
-            var requestedModules = new ModuleList()
-            {
-                Value = modules?.Select(m => new Module { Name = m }).ToArray() ?? []
-            };
-
-            var parameters = new RedisCreateParameters
-            {
-                ResourceName = new BicepParameter() { Value = name },
-                Location = new BicepParameter() { Value = location },
-                SkuName = new BicepParameter() { Value = sku },
-                AccessKeyAuthenticationEnabled = new BicepParameter() { Value = accessKeyAuthenticationString },
-                Modules = requestedModules
-            };
-
-            var parametersJson = JsonSerializer.Serialize(parameters, RedisJsonContext.Default.RedisCreateParameters);
-
-            var deploymentProperties = new ArmDeploymentProperties(ArmDeploymentMode.Incremental)
-            {
-                Template = BinaryData.FromString(bicepTemplate),
-                Parameters = BinaryData.FromString(parametersJson)
-            };
-
-            await resourceGroupResource.Value.GetArmDeployments()
-                .CreateOrUpdateAsync(
-                WaitUntil.Started,
-                $"redis-{name}-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
-                new ArmDeploymentContent(deploymentProperties),
-                cancellationToken
-            );
-
-            return new Resource
-            {
-                Name = name,
-                Type = "AzureManagedRedis",
-                ResourceGroupName = resourceGroup,
-                SubscriptionId = subscription,
-                Location = location,
-                Sku = sku,
-                Status = "Creating"
-            };
+            throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
         }
-        catch (Exception ex)
+
+        var accessKeyAuthenticationString = accessKeyAuthenticationEnabled == true
+            ? "Enabled"
+            : "Disabled";
+
+        var publicNetworkAccessString = publicNetworkAccessEnabled == true
+            ? "Enabled"
+            : "Disabled";
+
+        var bicepTemplate = GetCreateResourceBicepTemplate();
+
+        var requestedModules = new ModuleList()
         {
-            throw new Exception($"Error creating Redis resource: {ex.Message}", ex);
-        }
+            Value = modules?.Select(m => new Module { Name = m }).ToArray() ?? []
+        };
+
+        var parameters = new RedisCreateParameters
+        {
+            ResourceName = new() { Value = name },
+            Location = new() { Value = location },
+            SkuName = new() { Value = sku },
+            AccessKeyAuthenticationEnabled = new() { Value = accessKeyAuthenticationString },
+            PublicNetworkAccess = new() { Value = publicNetworkAccessString },
+            Modules = requestedModules
+        };
+
+        var parametersJson = JsonSerializer.Serialize(parameters, RedisJsonContext.Default.RedisCreateParameters);
+
+        var deploymentProperties = new ArmDeploymentProperties(ArmDeploymentMode.Incremental)
+        {
+            Template = BinaryData.FromString(bicepTemplate),
+            Parameters = BinaryData.FromString(parametersJson)
+        };
+
+        await resourceGroupResource.Value.GetArmDeployments()
+            .CreateOrUpdateAsync(
+            WaitUntil.Started,
+            $"redis-{name}-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+            new(deploymentProperties),
+            cancellationToken
+        );
+
+        return new()
+        {
+            Name = name,
+            Type = "AzureManagedRedis",
+            ResourceGroupName = resourceGroup,
+            SubscriptionId = subscription,
+            Location = location,
+            Sku = sku,
+            Status = "Creating"
+        };
     }
 
-    private async Task<IEnumerable<Resource>> ListAcrResourcesAsync(SubscriptionResource subscriptionResource, CancellationToken cancellationToken)
+    private static async Task<IEnumerable<Resource>> ListAcrResourcesAsync(SubscriptionResource subscriptionResource, ILogger<RedisService> logger, CancellationToken cancellationToken)
     {
         var resources = new List<Resource>();
 
@@ -174,7 +173,7 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
             try
             {
                 var accessPolicyAssignmentCollection = acrResource.GetRedisCacheAccessPolicyAssignments();
-                await foreach (var accessPolicyAssignmentResource in accessPolicyAssignmentCollection)
+                await foreach (var accessPolicyAssignmentResource in accessPolicyAssignmentCollection.WithCancellation(cancellationToken))
                 {
                     if (string.IsNullOrWhiteSpace(accessPolicyAssignmentResource?.Id.ToString())
                         || string.IsNullOrWhiteSpace(accessPolicyAssignmentResource.Data.Name))
@@ -190,77 +189,89 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
                     });
                 }
             }
-            catch (Exception) { }
-
-            resources.Add(new()
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                Name = resource.Name,
-                Type = "AzureCacheForRedis",
-                ResourceGroupName = acrResource.Id.ResourceGroupName,
-                SubscriptionId = acrResource.Id.SubscriptionId,
-                Location = resource.Location,
-                Sku = $"{resource.Sku.Name} {resource.Sku.Family}{resource.Sku.Capacity}",
-                Status = resource.ProvisioningState?.ToString(),
-                RedisVersion = resource.RedisVersion,
-                HostName = resource.HostName,
-                SslPort = resource.SslPort,
-                UnencryptedPort = resource.Port,
-                ShardCount = resource.ShardCount,
-                PublicNetworkAccess = resource.PublicNetworkAccess?.Equals(RedisPublicNetworkAccess.Enabled),
-                EnableNonSslPort = resource.EnableNonSslPort,
-                IsAccessKeyAuthenticationDisabled = resource.IsAccessKeyAuthenticationDisabled,
-                LinkedServers = resource.LinkedServers.Any() ?
-                    [.. resource.LinkedServers.Select(server => server.Id.ToString())]
-                    : null,
-                MinimumTlsVersion = resource.MinimumTlsVersion.ToString(),
-                PrivateEndpointConnections = resource.PrivateEndpointConnections.Any() ?
-                    [.. resource.PrivateEndpointConnections.Select(connection => connection.Id.ToString())]
-                    : null,
-                Identity = resource.Identity is null ? null : new ManagedIdentityInfo
-                {
-                    SystemAssignedIdentity = new SystemAssignedIdentityInfo
-                    {
-                        Enabled = resource.Identity != null,
-                        TenantId = resource.Identity?.TenantId?.ToString(),
-                        PrincipalId = resource.Identity?.PrincipalId?.ToString()
-                    },
-                    UserAssignedIdentities = resource.Identity?.UserAssignedIdentities?
-                        .Select(identity => new UserAssignedIdentityInfo
-                        {
-                            ClientId = identity.Value.ClientId?.ToString(),
-                            PrincipalId = identity.Value.PrincipalId?.ToString()
-                        }).ToArray()
-                },
-                ReplicasPerPrimary = resource.ReplicasPerPrimary,
-                SubnetId = resource.SubnetId,
-                UpdateChannel = resource.UpdateChannel?.ToString(),
-                ZonalAllocationPolicy = resource.ZonalAllocationPolicy?.ToString(),
-                Zones = resource.Zones?.Any() == true ? [.. resource.Zones] : null,
-                Tags = resource.Tags.Any() ? resource.Tags : null,
-                AccessPolicyAssignments = accessPolicyAssignments.Any() == true ? accessPolicyAssignments.ToArray() : null,
-                AuthNotRequired = resource.RedisConfiguration.AuthNotRequired,
-                IsRdbBackupEnabled = resource.RedisConfiguration.IsRdbBackupEnabled,
-                IsAofBackupEnabled = resource.RedisConfiguration.IsAofBackupEnabled,
-                RdbBackupFrequency = resource.RedisConfiguration.RdbBackupFrequency,
-                RdbBackupMaxSnapshotCount = resource.RedisConfiguration.RdbBackupMaxSnapshotCount,
-                MaxFragmentationMemoryReserved = resource.RedisConfiguration.MaxFragmentationMemoryReserved,
-                MaxMemoryPolicy = resource.RedisConfiguration.MaxMemoryPolicy,
-                MaxMemoryReserved = resource.RedisConfiguration.MaxMemoryReserved,
-                MaxMemoryDelta = resource.RedisConfiguration.MaxMemoryDelta,
-                MaxClients = int.TryParse(resource.RedisConfiguration.MaxClients.ToString(), out var maxClients) ? maxClients : null,
-                NotifyKeyspaceEvents = resource.RedisConfiguration.NotifyKeyspaceEvents,
-                PreferredDataArchiveAuthMethod = resource.RedisConfiguration.PreferredDataArchiveAuthMethod,
-                PreferredDataPersistenceAuthMethod = resource.RedisConfiguration.PreferredDataPersistenceAuthMethod,
-                ZonalConfiguration = resource.RedisConfiguration.ZonalConfiguration,
-                StorageSubscriptionId = resource.RedisConfiguration.StorageSubscriptionId,
-                IsEntraIDAuthEnabled = string.IsNullOrWhiteSpace(resource.RedisConfiguration.IsAadEnabled) ? null : StringComparer.OrdinalIgnoreCase.Equals(resource.RedisConfiguration.IsAadEnabled, "True"),
-            });
+                // Access policy assignments may not be available for all cache types; continue with partial data.
+                logger.LogWarning(ex, "Failed to retrieve access policy assignments for {ResourceName}.", acrResource.Data.Name);
+            }
+
+            resources.Add(MapAcrResource(resource, accessPolicyAssignments));
         }
 
         return resources;
     }
 
-    private async Task<IEnumerable<Resource>> ListAmrResourcesAsync(SubscriptionResource subscriptionResource, CancellationToken cancellationToken)
+    internal static Resource MapAcrResource(RedisData resource, IReadOnlyList<AccessPolicyAssignment> accessPolicyAssignments)
+    {
+        var redisConfig = resource.RedisConfiguration;
+        var isAadEnabled = redisConfig?.IsAadEnabled;
+
+        return new()
+        {
+            Name = resource.Name,
+            Type = "AzureCacheForRedis",
+            ResourceGroupName = resource.Id?.ResourceGroupName,
+            SubscriptionId = resource.Id?.SubscriptionId,
+            Location = resource.Location,
+            Sku = $"{resource.Sku.Name} {resource.Sku.Family}{resource.Sku.Capacity}",
+            Status = resource.ProvisioningState?.ToString(),
+            RedisVersion = resource.RedisVersion,
+            HostName = resource.HostName,
+            SslPort = resource.SslPort,
+            UnencryptedPort = resource.Port,
+            ShardCount = resource.ShardCount,
+            PublicNetworkAccess = resource.PublicNetworkAccess?.Equals(RedisPublicNetworkAccess.Enabled),
+            EnableNonSslPort = resource.EnableNonSslPort,
+            IsAccessKeyAuthenticationDisabled = resource.IsAccessKeyAuthenticationDisabled,
+            LinkedServers = resource.LinkedServers.Any() ?
+                [.. resource.LinkedServers.Select(server => server.Id.ToString())]
+                : null,
+            MinimumTlsVersion = resource.MinimumTlsVersion.ToString(),
+            PrivateEndpointConnections = resource.PrivateEndpointConnections.Any() ?
+                [.. resource.PrivateEndpointConnections.Select(connection => connection.Id.ToString())]
+                : null,
+            Identity = resource.Identity is null ? null : new()
+            {
+                SystemAssignedIdentity = new()
+                {
+                    Enabled = resource.Identity != null,
+                    TenantId = resource.Identity?.TenantId?.ToString(),
+                    PrincipalId = resource.Identity?.PrincipalId?.ToString()
+                },
+                UserAssignedIdentities = resource.Identity?.UserAssignedIdentities?
+                    .Select(identity => new UserAssignedIdentityInfo
+                    {
+                        ClientId = identity.Value.ClientId?.ToString(),
+                        PrincipalId = identity.Value.PrincipalId?.ToString()
+                    }).ToArray()
+            },
+            ReplicasPerPrimary = resource.ReplicasPerPrimary,
+            SubnetId = resource.SubnetId,
+            UpdateChannel = resource.UpdateChannel?.ToString(),
+            ZonalAllocationPolicy = resource.ZonalAllocationPolicy?.ToString(),
+            Zones = resource.Zones?.Any() == true ? [.. resource.Zones] : null,
+            Tags = resource.Tags.Any() ? resource.Tags : null,
+            AccessPolicyAssignments = accessPolicyAssignments.Any() == true ? accessPolicyAssignments.ToArray() : null,
+            AuthNotRequired = redisConfig?.AuthNotRequired,
+            IsRdbBackupEnabled = redisConfig?.IsRdbBackupEnabled,
+            IsAofBackupEnabled = redisConfig?.IsAofBackupEnabled,
+            RdbBackupFrequency = redisConfig?.RdbBackupFrequency,
+            RdbBackupMaxSnapshotCount = redisConfig?.RdbBackupMaxSnapshotCount,
+            MaxFragmentationMemoryReserved = redisConfig?.MaxFragmentationMemoryReserved,
+            MaxMemoryPolicy = redisConfig?.MaxMemoryPolicy,
+            MaxMemoryReserved = redisConfig?.MaxMemoryReserved,
+            MaxMemoryDelta = redisConfig?.MaxMemoryDelta,
+            MaxClients = redisConfig?.MaxClients is { } mc && int.TryParse(mc.ToString(), out var maxClients) ? maxClients : null,
+            NotifyKeyspaceEvents = redisConfig?.NotifyKeyspaceEvents,
+            PreferredDataArchiveAuthMethod = redisConfig?.PreferredDataArchiveAuthMethod,
+            PreferredDataPersistenceAuthMethod = redisConfig?.PreferredDataPersistenceAuthMethod,
+            ZonalConfiguration = redisConfig?.ZonalConfiguration,
+            StorageSubscriptionId = redisConfig?.StorageSubscriptionId,
+            IsEntraIDAuthEnabled = string.IsNullOrWhiteSpace(isAadEnabled) ? null : StringComparer.OrdinalIgnoreCase.Equals(isAadEnabled, "True"),
+        };
+    }
+
+    private static async Task<IEnumerable<Resource>> ListAmrResourcesAsync(SubscriptionResource subscriptionResource, ILogger<RedisService> logger, CancellationToken cancellationToken)
     {
         var resources = new List<Resource>();
 
@@ -278,7 +289,7 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
             try
             {
                 var databaseCollection = amrResource.GetRedisEnterpriseDatabases();
-                await foreach (var databaseResource in databaseCollection)
+                await foreach (var databaseResource in databaseCollection.WithCancellation(cancellationToken))
                 {
                     if (string.IsNullOrWhiteSpace(databaseResource?.Id.ToString())
                         || string.IsNullOrWhiteSpace(databaseResource.Data.Name))
@@ -309,7 +320,11 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
                     });
                 }
             }
-            catch (Exception) { }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // Database listing may fail for some enterprise clusters; continue with partial data.
+                logger.LogWarning(ex, "Failed to retrieve databases for {ResourceName}.", resource.Name);
+            }
 
             resources.Add(new()
             {
@@ -327,9 +342,9 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
                 PrivateEndpointConnections = resource.PrivateEndpointConnections.Any() ?
                     [.. resource.PrivateEndpointConnections.Select(connection => connection.Id.ToString())]
                     : null,
-                Identity = resource.Identity is null ? null : new ManagedIdentityInfo
+                Identity = resource.Identity is null ? null : new()
                 {
-                    SystemAssignedIdentity = new SystemAssignedIdentityInfo
+                    SystemAssignedIdentity = new()
                     {
                         Enabled = resource.Identity != null,
                         TenantId = resource.Identity?.TenantId?.ToString(),
@@ -344,7 +359,7 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
                 },
                 Zones = resource.Zones?.Any() == true ? [.. resource.Zones] : null,
                 Tags = resource.Tags.Any() ? resource.Tags : null,
-                Databases = databases.Any() == true ? databases.ToArray() : null
+                Databases = databases?.ToArray()
             });
         }
 
@@ -374,6 +389,10 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
                 "modules": {
                   "type": "array",
                   "defaultValue": []
+                },
+                "publicNetworkAccess": {
+                  "type": "string",
+                  "defaultValue": "Disabled"
                 }
               },
               "resources": [
@@ -388,7 +407,7 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
                   "properties": {
                     "highAvailability": "Enabled",
                     "minimumTlsVersion": "1.2",
-                    "publicNetworkAccess": "Enabled"
+                    "publicNetworkAccess": "[parameters('publicNetworkAccess')]"
                   }
                 },
                 {

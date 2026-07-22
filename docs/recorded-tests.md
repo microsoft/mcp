@@ -2,18 +2,18 @@
 
 ## Context
 
-This repository ships CLI tools. Specifically, multiple combinations of `tools` assembled into `mcp servers` that are effectively standalone CLI tools themselves. Developers contribute LiveTests that invoke these tools against live azure resources and verify the output is as expected.
+This repository ships CLI tools. Specifically, multiple combinations of `tools` assembled into `mcp servers` that are effectively standalone CLI tools themselves. Developers contribute LiveTests that invoke these tools against live Azure resources and verify the output is as expected.
 
 ## Architecture Overview
 
 - **CLI and Servers** – MCP ships multiple CLI-like toolsets that can run under the MCP server host. Commands typically interact with Azure resources.
-- **Test Harness** – Live tests inherit from [`CommandTestsBase`](https://github.com/microsoft/mcp/blob/main/core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Client/CommandTestsBase.cs). **Recorded** tests inherit from [`RecordedCommandTestsBase`](https://github.com/microsoft/mcp/blob/main/core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Client/RecordedCommandTestsBase.cs) The harness:
+- **Test Harness** – Live tests inherit from [`CommandTestsBase`](https://github.com/microsoft/mcp/blob/main/core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Client/CommandTestsBase.cs). **Recorded** tests inherit from [`RecordedCommandTestsBase`](https://github.com/microsoft/mcp/blob/main/core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Client/RecordedCommandTestsBase.cs) The harness:
   - Auto-downloads the Test Proxy into the repo at `.proxy/Azure.Sdk.Tools.TestProxy.exe` (Windows) or `.proxy/Azure.Sdk.Tools.TestProxy` for unix platforms.
   - Handles start/stop of the proxy as necessary
   - Registers any behavior changes from default for the auto-started proxy
   - Manages recording state (`Record`, `Playback`, `Live`) based on `.testsettings.json`.
 
-- **HTTP Redirect** – In Debug builds the server-side `HttpClientService.CreateClient()` automatically routes traffic through the proxy when `TEST_PROXY_URL` is set. Tests don’t need to customize transports, they merely need to ensure the tool they are testing is correctly injecting and utilizing `HttpClientService`.
+- **HTTP Redirect** – In Debug builds the server-side `IHttpClientFactory.CreateClient()` automatically routes traffic through the proxy when `TEST_PROXY_URL` is set. Tests don’t need to customize transports, they merely need to ensure the tool they are testing is correctly injecting and utilizing `IHttpClientFactory`.
 
 ## Test Proxy Primer (Relevant Bits)
 
@@ -39,12 +39,34 @@ core/Azure.Mcp.Core/tests/...      # RecordedCommandTestsBase and supporting inf
 
 The `.proxy` directory is recreated whenever a recorded test run needs the Test Proxy. This folder is gitignored by default. Do not commit these binaries.
 
+## Migration Guide (Live ➜ Recorded)
+
+1. **Rebase on latest** – Ensure your branch includes the current recorded-test infrastructure.
+2. **Re-parent the test class** – Update live tests to inherit from `RecordedCommandTestsBase` instead of `CommandTestsBase`.
+3. **Ensure proxy-aware HTTP usage** – Commands must obtain `HttpClient` instances via `IHttpClientFactory.CreateClient()` to benefit from playback redirection.
+4. **Add `assets.json`** – If the toolset doesn’t have one, create `tools/<Tool>/tests/<Tests.CsProj.Folder>/assets.json`:
+   ```json
+   {
+     "AssetsRepo": "Azure/azure-sdk-assets",
+     "AssetsRepoPrefixPath": "",
+     "TagPrefix": "Azure.Mcp.Tools.YourService",
+     "Tag": ""
+   }
+   ```
+   If using `copilot` for initial migration, ensure that it indeed created this file.
+5. **Record and push** – Follow the workflow above to generate recordings and push them to the assets repo.
+6. **Document sanitizers** – Leave brief comments explaining why custom sanitizers exist to help future maintainers.
+
+Example Migrations:
+ - [Azure.Mcp.Tools.KeyVault](https://github.com/microsoft/mcp/pull/1080)
+
+
 ## Recording Workflow
 
 Follow this checklist any time you need to update recordings:
 
 0. **Deploy LiveResources** - `Connect-AzAccount` with your targeted subscription, then invoke `./eng/scripts/Deploy-TestResources.ps1`. EG `./eng/scripts/Deploy-TestResources.ps1 -Paths KeyVault`.
-1. **Set record mode** – Locate the `.testsettings.json` next to your test project (for example `tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.LiveTests/.testsettings.json`). Update the file `TestMode` value to `Record`:
+1. **Set record mode** – Locate the `.testsettings.json` next to your test project (for example `tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.Tests/.testsettings.json`). Update the file `TestMode` value to `Record`:
    ```jsonc
    {
      // ...
@@ -52,17 +74,17 @@ Follow this checklist any time you need to update recordings:
      // ...
    }
    ```
-2. **Run tests** – Invoke the live test project (e.g. `dotnet test tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.LiveTests`). The harness boots the proxy, registers default sanitizers, and writes fresh recordings under `.assets/`.
+2. **Run tests** – Invoke the live test project (e.g. `dotnet test tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.Tests`). The harness boots the proxy, registers default sanitizers, and writes fresh recordings under `.assets/`.
 3. **Inspect recordings** – Use the helper to locate the exact folder:
    ```powershell
-   ./.proxy/Azure.Sdk.Tools.TestProxy.exe config locate -a tools/Azure.Mcp.Tools.KeyVault/tests/assets.json
+   ./.proxy/Azure.Sdk.Tools.TestProxy.exe config locate -a tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.Tests/assets.json
    ```
    Review each JSON recording and confirm no secrets or unstable data were missed by existing sanitizers.
    - Note that on `unix` platforms there is no `.exe` suffix.
 4. **Switch to playback** – Change the `TestMode` value in `.testsettings.json` to `Playback`. Re-run the tests to verify they pass without hitting live resources.
 5. **Push assets** – When satisfied, publish the updated recordings:
    ```powershell
-   ./.proxy/Azure.Sdk.Tools.TestProxy.exe push -a tools/Azure.Mcp.Tools.KeyVault/tests/assets.json
+   ./.proxy/Azure.Sdk.Tools.TestProxy.exe push -a tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.Tests/assets.json
    ```
    This stages the local recording updates for commit, creates a new tag in `Azure/azure-sdk-assets`, and updates the `Tag` field in local `assets.json` to reflect new recording location.
 6. **Commit** to `mcp` repo – Include:
@@ -77,25 +99,6 @@ Follow this checklist any time you need to update recordings:
 | Restore recordings referenced by an assets file | `./.proxy/Azure.Sdk.Tools.TestProxy.exe restore -a path/to/assets.json` |
 | Reset local clone to the current tag | `./.proxy/Azure.Sdk.Tools.TestProxy.exe reset -a path/to/assets.json` |
 
-## Migration Guide (Live ➜ Recorded)
-
-1. **Rebase on latest** – Ensure your branch includes the current recorded-test infrastructure.
-2. **Re-parent the test class** – Update live tests to inherit from `RecordedCommandTestsBase` instead of `CommandTestsBase`.
-3. **Ensure proxy-aware HTTP usage** – Commands must obtain `HttpClient` instances via `HttpClientService.CreateClient()` to benefit from playback redirection.
-4. **Add `assets.json`** – If the toolset doesn’t have one, create `tools/<Tool>/tests/<LiveTest.CsProj.Folder>/assets.json`:
-   ```json
-   {
-     "AssetsRepo": "Azure/azure-sdk-assets",
-     "AssetsRepoPrefixPath": "",
-     "TagPrefix": "Azure.Mcp.Tools.YourService",
-     "Tag": ""
-   }
-   ```
-5. **Record and push** – Follow the workflow above to generate recordings and push them to the assets repo.
-6. **Document sanitizers** – Leave brief comments explaining why custom sanitizers exist to help future maintainers.
-
-Example Migrations:
- - [Azure.Mcp.Tools.KeyVault](https://github.com/microsoft/mcp/pull/1080)
 
 ## Working With Sanitizers and Matchers
 
@@ -176,7 +179,7 @@ public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixtu
         // should clear out kid hostnames of actual vault names appearing anywhere in any section
         // of the body
         new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
-          Regex = "(?=http://|https://)(?<host[^/?\.]+)",
+          Regex = "(?=http://|https://)(?<host>[^/?\.]+)",
           GroupForReplace = "host",
         })
     };
@@ -249,7 +252,7 @@ public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixtu
 
 ## Additional Resources
 
-- [RecordedCommandTestsBase source](https://github.com/microsoft/mcp/blob/main/core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Client/RecordedCommandTestsBase.cs)
+- [RecordedCommandTestsBase source](https://github.com/microsoft/mcp/blob/main/core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Client/RecordedCommandTestsBase.cs)
 - [Azure SDK Test Proxy README](https://github.com/Azure/azure-sdk-tools/blob/main/tools/test-proxy/Azure.Sdk.Tools.TestProxy/README.md)
 - [Test Proxy Asset Sync Guide](https://github.com/Azure/azure-sdk-tools/blob/main/tools/test-proxy/documentation/asset-sync/README.md)
   - Details on how assets are stored in `Azure/azure-sdk-assets` repo

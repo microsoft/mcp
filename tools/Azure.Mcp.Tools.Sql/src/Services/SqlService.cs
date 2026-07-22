@@ -3,21 +3,42 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
+using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Sql.Models;
-using Azure.Mcp.Tools.Sql.Services.Models;
 using Azure.ResourceManager.Sql;
 using Azure.ResourceManager.Sql.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Sql.Services;
 
-public class SqlService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<SqlService> logger) : BaseAzureResourceService(subscriptionService, tenantService), ISqlService
+public class SqlService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<SqlService> logger)
+    : BaseAzureResourceService(subscriptionService, tenantService), ISqlService
 {
+    private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ILogger<SqlService> _logger = logger;
+
+    /// <summary>
+    /// Resolves a subscription name or ID to a subscription ID. When the value is already a
+    /// subscription ID no additional ARM request is made, preserving the existing network
+    /// behavior for ID-based callers.
+    /// </summary>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="retryPolicy">Optional retry policy configuration</param>
+    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <returns>The resolved subscription ID</returns>
+    private async Task<string> ResolveSubscriptionIdAsync(
+        string subscription,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        return _subscriptionService.IsSubscriptionId(subscription)
+            ? subscription
+            : await _subscriptionService.GetSubscriptionIdByName(subscription, null, retryPolicy, cancellationToken);
+    }
 
     /// <summary>
     /// Helper method to navigate the Azure resource hierarchy and retrieve a SQL Server resource.
@@ -35,9 +56,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
-        var subscriptionResource = armClient.GetSubscriptionResource(
-            ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         return await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName, cancellationToken: cancellationToken);
     }
@@ -62,30 +81,24 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(databaseName), databaseName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
         try
         {
-            var result = await ExecuteSingleResourceQueryAsync(
-                "Microsoft.Sql/servers/databases",
-                resourceGroup: resourceGroup,
-                subscription: subscription,
-                retryPolicy: retryPolicy,
-                converter: ConvertToSqlDatabaseModel,
-                additionalFilter: $"name =~ '{EscapeKqlString(databaseName)}'",
-                cancellationToken: cancellationToken);
+            var subscriptionId = await ResolveSubscriptionIdAsync(subscription, retryPolicy, cancellationToken);
+            var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, retryPolicy, cancellationToken);
 
-            if (result == null)
-            {
-                throw new KeyNotFoundException($"SQL database '{databaseName}' not found in resource group '{resourceGroup}' for subscription '{subscription}'.");
-            }
+            var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
 
-            return result;
+            return ConvertToSqlDatabaseModel(databaseResource.Value);
         }
-        catch (Exception ex)
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
         {
-            _logger.LogError(ex,
-                "Error getting SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                serverName, databaseName, resourceGroup, subscription);
-            throw;
+            throw new KeyNotFoundException($"SQL database '{databaseName}' not found on server '{serverName}' in resource group '{resourceGroup}' for subscription '{subscription}'.", ex);
         }
     }
 
@@ -128,84 +141,73 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(serverName), serverName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
-            (nameof(databaseName), databaseName)
-        );
+            (nameof(databaseName), databaseName));
 
-        try
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+
+        var databaseData = new SqlDatabaseData(sqlServerResource.Data.Location);
+
+        // Configure SKU if provided
+        if (!string.IsNullOrEmpty(skuName) || !string.IsNullOrEmpty(skuTier) || skuCapacity.HasValue)
         {
-            var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
-
-            var databaseData = new ResourceManager.Sql.SqlDatabaseData(sqlServerResource.Data.Location);
-
-            // Configure SKU if provided
-            if (!string.IsNullOrEmpty(skuName) || !string.IsNullOrEmpty(skuTier) || skuCapacity.HasValue)
+            databaseData.Sku = new(skuName ?? "Basic")
             {
-                databaseData.Sku = new ResourceManager.Sql.Models.SqlSku(skuName ?? "Basic")
-                {
-                    Tier = skuTier,
-                    Capacity = skuCapacity
-                };
-
-                _logger.LogInformation(
-                    "SKU Configuration - Name: {SkuName}, Tier: {SkuTier}, Capacity: {SkuCapacity}, Family: {SkuFamily}, Size: {SkuSize}",
-                    databaseData.Sku.Name, databaseData.Sku.Tier, databaseData.Sku.Capacity, databaseData.Sku.Family, databaseData.Sku.Size);
-            }
-
-            // Configure collation if provided
-            if (!string.IsNullOrEmpty(collation))
-            {
-                databaseData.Collation = collation;
-            }
-
-            // Configure max size if provided
-            if (maxSizeBytes.HasValue)
-            {
-                databaseData.MaxSizeBytes = maxSizeBytes.Value;
-            }
-
-            // Configure elastic pool if provided
-            if (!string.IsNullOrEmpty(elasticPoolName))
-            {
-                databaseData.ElasticPoolId = Azure.Core.ResourceIdentifier.Parse(
-                    $"{sqlServerResource.Id}/elasticPools/{elasticPoolName}");
-            }
-
-            // Configure zone redundancy if provided
-            if (zoneRedundant.HasValue)
-            {
-                databaseData.IsZoneRedundant = zoneRedundant.Value;
-            }
-
-            // Configure read scale if provided
-            if (!string.IsNullOrEmpty(readScale))
-            {
-                if (Enum.TryParse<DatabaseReadScale>(readScale, true, out var readScaleEnum))
-                {
-                    databaseData.ReadScale = readScaleEnum;
-                }
-            }
-
-            var operation = await sqlServerResource.GetSqlDatabases().CreateOrUpdateAsync(
-                WaitUntil.Completed,
-                databaseName,
-                databaseData,
-                cancellationToken);
-
-            var database = operation.Value;
+                Tier = skuTier,
+                Capacity = skuCapacity
+            };
 
             _logger.LogInformation(
-                "Successfully created SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}",
-                serverName, databaseName, resourceGroup);
+                "SKU Configuration - Name: {SkuName}, Tier: {SkuTier}, Capacity: {SkuCapacity}, Family: {SkuFamily}, Size: {SkuSize}",
+                databaseData.Sku.Name, databaseData.Sku.Tier, databaseData.Sku.Capacity, databaseData.Sku.Family, databaseData.Sku.Size);
+        }
 
-            return ConvertToSqlDatabaseModel(database);
-        }
-        catch (Exception ex)
+        // Configure collation if provided
+        if (!string.IsNullOrEmpty(collation))
         {
-            _logger.LogError(ex,
-                "Error creating SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                serverName, databaseName, resourceGroup, subscription);
-            throw;
+            databaseData.Collation = collation;
         }
+
+        // Configure max size if provided
+        if (maxSizeBytes.HasValue)
+        {
+            databaseData.MaxSizeBytes = maxSizeBytes.Value;
+        }
+
+        // Configure elastic pool if provided
+        if (!string.IsNullOrEmpty(elasticPoolName))
+        {
+            databaseData.ElasticPoolId = ResourceIdentifier.Parse($"{sqlServerResource.Id}/elasticPools/{elasticPoolName}");
+        }
+
+        // Configure zone redundancy if provided
+        if (zoneRedundant.HasValue)
+        {
+            databaseData.IsZoneRedundant = zoneRedundant.Value;
+        }
+
+        // Configure read scale if provided
+        if (!string.IsNullOrEmpty(readScale))
+        {
+            if (Enum.TryParse<DatabaseReadScale>(readScale, true, out var readScaleEnum))
+            {
+                databaseData.ReadScale = readScaleEnum;
+            }
+        }
+
+        var operation = await sqlServerResource.GetSqlDatabases().CreateOrUpdateAsync(
+            WaitUntil.Started,
+            databaseName,
+            databaseData,
+            cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        var database = operation.Value;
+
+        _logger.LogInformation(
+            "Successfully created SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}",
+            serverName, databaseName, resourceGroup);
+
+        return ConvertToSqlDatabaseModel(database);
     }
 
     /// <summary>
@@ -247,81 +249,70 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(serverName), serverName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
-            (nameof(databaseName), databaseName)
-        );
+            (nameof(databaseName), databaseName));
 
-        try
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+
+        var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
+        var databaseData = databaseResource.Value.Data;
+
+        if (!string.IsNullOrEmpty(skuName) || !string.IsNullOrEmpty(skuTier) || skuCapacity.HasValue)
         {
-            var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+            // When SKU name is being changed, reset tier, capacity, family, and size to avoid conflicts
+            // Only preserve values that are explicitly provided or if SKU name isn't changing
+            bool isSkuNameChanging = !string.IsNullOrEmpty(skuName) && skuName != databaseData.Sku?.Name;
 
-            var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
-            var databaseData = databaseResource.Value.Data;
-
-            if (!string.IsNullOrEmpty(skuName) || !string.IsNullOrEmpty(skuTier) || skuCapacity.HasValue)
+            var sku = new SqlSku(skuName ?? databaseData.Sku?.Name ?? "Basic")
             {
-                // When SKU name is being changed, reset tier, capacity, family, and size to avoid conflicts
-                // Only preserve values that are explicitly provided or if SKU name isn't changing
-                bool isSkuNameChanging = !string.IsNullOrEmpty(skuName) && skuName != databaseData.Sku?.Name;
+                Tier = skuTier ?? (isSkuNameChanging ? null : databaseData.Sku?.Tier),
+                Capacity = skuCapacity ?? (isSkuNameChanging ? null : databaseData.Sku?.Capacity),
+                Family = isSkuNameChanging ? null : databaseData.Sku?.Family,
+                Size = isSkuNameChanging ? null : databaseData.Sku?.Size
+            };
 
-                var sku = new ResourceManager.Sql.Models.SqlSku(skuName ?? databaseData.Sku?.Name ?? "Basic")
-                {
-                    Tier = skuTier ?? (isSkuNameChanging ? null : databaseData.Sku?.Tier),
-                    Capacity = skuCapacity ?? (isSkuNameChanging ? null : databaseData.Sku?.Capacity),
-                    Family = isSkuNameChanging ? null : databaseData.Sku?.Family,
-                    Size = isSkuNameChanging ? null : databaseData.Sku?.Size
-                };
-
-                databaseData.Sku = sku;
-            }
-
-            if (!string.IsNullOrEmpty(collation))
-            {
-                databaseData.Collation = collation;
-            }
-
-            if (maxSizeBytes.HasValue)
-            {
-                databaseData.MaxSizeBytes = maxSizeBytes.Value;
-            }
-
-            if (!string.IsNullOrEmpty(elasticPoolName))
-            {
-                databaseData.ElasticPoolId = Azure.Core.ResourceIdentifier.Parse(
-                    $"{sqlServerResource.Id}/elasticPools/{elasticPoolName}");
-            }
-
-            if (zoneRedundant.HasValue)
-            {
-                databaseData.IsZoneRedundant = zoneRedundant.Value;
-            }
-
-            if (!string.IsNullOrEmpty(readScale) &&
-                Enum.TryParse<DatabaseReadScale>(readScale, true, out var readScaleEnum))
-            {
-                databaseData.ReadScale = readScaleEnum;
-            }
-
-            var operation = await sqlServerResource.GetSqlDatabases().CreateOrUpdateAsync(
-                WaitUntil.Completed,
-                databaseName,
-                databaseData,
-                cancellationToken);
-
-            var updatedDatabase = operation.Value;
-
-            _logger.LogInformation(
-                "Successfully updated SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}",
-                serverName, databaseName, resourceGroup);
-
-            return ConvertToSqlDatabaseModel(updatedDatabase);
+            databaseData.Sku = sku;
         }
-        catch (Exception ex)
+
+        if (!string.IsNullOrEmpty(collation))
         {
-            _logger.LogError(ex,
-                "Error updating SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                serverName, databaseName, resourceGroup, subscription);
-            throw;
+            databaseData.Collation = collation;
         }
+
+        if (maxSizeBytes.HasValue)
+        {
+            databaseData.MaxSizeBytes = maxSizeBytes.Value;
+        }
+
+        if (!string.IsNullOrEmpty(elasticPoolName))
+        {
+            databaseData.ElasticPoolId = ResourceIdentifier.Parse($"{sqlServerResource.Id}/elasticPools/{elasticPoolName}");
+        }
+
+        if (zoneRedundant.HasValue)
+        {
+            databaseData.IsZoneRedundant = zoneRedundant.Value;
+        }
+
+        if (!string.IsNullOrEmpty(readScale) &&
+            Enum.TryParse<DatabaseReadScale>(readScale, true, out var readScaleEnum))
+        {
+            databaseData.ReadScale = readScaleEnum;
+        }
+
+        var operation = await sqlServerResource.GetSqlDatabases().CreateOrUpdateAsync(
+            WaitUntil.Started,
+            databaseName,
+            databaseData,
+            cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        var updatedDatabase = operation.Value;
+
+        _logger.LogInformation(
+            "Successfully updated SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}",
+            serverName, databaseName, resourceGroup);
+
+        return ConvertToSqlDatabaseModel(updatedDatabase);
     }
 
     /// <summary>
@@ -349,46 +340,38 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(serverName), serverName),
             (nameof(databaseName), databaseName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription)
-        );
-        if (string.IsNullOrWhiteSpace(newDatabaseName))
-            throw new ArgumentException("New database name cannot be null or empty.", nameof(newDatabaseName));
-        try
-        {
-            var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
+            (nameof(subscription), subscription),
+            (nameof(newDatabaseName), newDatabaseName));
 
-            var currentDatabaseId = SqlDatabaseResource.CreateResourceIdentifier(
-                subscription,
-                resourceGroup,
-                serverName,
-                databaseName);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
+        var subscriptionId = subscriptionResource.Data.SubscriptionId;
 
-            var targetDatabaseId = SqlDatabaseResource.CreateResourceIdentifier(
-                subscription,
-                resourceGroup,
-                serverName,
-                newDatabaseName);
+        var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
 
-            var databaseResource = armClient.GetSqlDatabaseResource(currentDatabaseId);
-            var moveDefinition = new SqlResourceMoveDefinition(targetDatabaseId);
+        var currentDatabaseId = SqlDatabaseResource.CreateResourceIdentifier(
+            subscriptionId,
+            resourceGroup,
+            serverName,
+            databaseName);
 
-            await databaseResource.RenameAsync(moveDefinition, cancellationToken);
+        var targetDatabaseId = SqlDatabaseResource.CreateResourceIdentifier(
+            subscriptionId,
+            resourceGroup,
+            serverName,
+            newDatabaseName);
 
-            var renamedDatabaseResource = await armClient.GetSqlDatabaseResource(targetDatabaseId).GetAsync(cancellationToken);
+        var databaseResource = armClient.GetSqlDatabaseResource(currentDatabaseId);
+        var moveDefinition = new SqlResourceMoveDefinition(targetDatabaseId);
 
-            _logger.LogInformation(
-                "Successfully renamed SQL database. Server: {Server}, Database: {Database}, NewDatabase: {NewDatabase}, ResourceGroup: {ResourceGroup}",
-                serverName, databaseName, newDatabaseName, resourceGroup);
+        await databaseResource.RenameAsync(moveDefinition, cancellationToken);
 
-            return ConvertToSqlDatabaseModel(renamedDatabaseResource.Value);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error renaming SQL database. Server: {Server}, Database: {Database}, NewDatabase: {NewDatabase}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                serverName, databaseName, newDatabaseName, resourceGroup, subscription);
-            throw;
-        }
+        var renamedDatabaseResource = await armClient.GetSqlDatabaseResource(targetDatabaseId).GetAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "Successfully renamed SQL database. Server: {Server}, Database: {Database}, NewDatabase: {NewDatabase}, ResourceGroup: {ResourceGroup}",
+            serverName, databaseName, newDatabaseName, resourceGroup);
+
+        return ConvertToSqlDatabaseModel(renamedDatabaseResource.Value);
     }
 
     /// <summary>
@@ -408,23 +391,25 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        try
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var subscriptionId = await ResolveSubscriptionIdAsync(subscription, retryPolicy, cancellationToken);
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, retryPolicy, cancellationToken);
+
+        var databases = new List<SqlDatabase>();
+        await foreach (var database in sqlServerResource.GetSqlDatabases().GetAllAsync(cancellationToken: cancellationToken))
         {
-            return await ExecuteResourceQueryAsync(
-                "Microsoft.Sql/servers/databases",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToSqlDatabaseModel,
-                cancellationToken: cancellationToken);
+            databases.Add(ConvertToSqlDatabaseModel(database));
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error listing SQL databases. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                serverName, resourceGroup, subscription);
-            throw;
-        }
+
+        _logger.LogInformation(
+            "Successfully listed SQL databases. Server: {Server}, ResourceGroup: {ResourceGroup}, Count: {Count}",
+            serverName, resourceGroup, databases.Count);
+
+        return databases;
     }
 
     /// <summary>
@@ -448,41 +433,30 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         ValidateRequiredParameters(
             (nameof(serverName), serverName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription)
-        );
+            (nameof(subscription), subscription));
 
-        try
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+
+        var administrators = new List<SqlServerEntraAdministrator>();
+        await foreach (var admin in sqlServerResource.GetSqlServerAzureADAdministrators().GetAllAsync(cancellationToken))
         {
-            var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
-
-            var administrators = new List<SqlServerEntraAdministrator>();
-            await foreach (var admin in sqlServerResource.GetSqlServerAzureADAdministrators().GetAllAsync(cancellationToken))
-            {
-                administrators.Add(new SqlServerEntraAdministrator(
-                    Name: admin.Data.Name,
-                    Id: admin.Data.Id.ToString(),
-                    Type: admin.Data.ResourceType.ToString() ?? "Unknown",
-                    AdministratorType: admin.Data.AdministratorType?.ToString(),
-                    Login: admin.Data.Login,
-                    Sid: admin.Data.Sid?.ToString(),
-                    TenantId: admin.Data.TenantId?.ToString(),
-                    AzureADOnlyAuthentication: admin.Data.IsAzureADOnlyAuthenticationEnabled
-                ));
-            }
-
-            _logger.LogInformation(
-                "Successfully listed SQL server Entra ID administrators. Server: {Server}, ResourceGroup: {ResourceGroup}, Count: {Count}",
-                serverName, resourceGroup, administrators.Count);
-
-            return administrators;
+            administrators.Add(new(
+                Name: admin.Data.Name,
+                Id: admin.Data.Id.ToString(),
+                Type: admin.Data.ResourceType.ToString() ?? "Unknown",
+                AdministratorType: admin.Data.AdministratorType?.ToString(),
+                Login: admin.Data.Login,
+                Sid: admin.Data.Sid?.ToString(),
+                TenantId: admin.Data.TenantId?.ToString(),
+                AzureADOnlyAuthentication: admin.Data.IsAzureADOnlyAuthenticationEnabled
+            ));
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error getting SQL server Entra ID administrators. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                serverName, resourceGroup, subscription);
-            throw;
-        }
+
+        _logger.LogInformation(
+            "Successfully listed SQL server Entra ID administrators. Server: {Server}, ResourceGroup: {ResourceGroup}, Count: {Count}",
+            serverName, resourceGroup, administrators.Count);
+
+        return administrators;
     }
 
     /// <summary>
@@ -503,23 +477,25 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        try
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var subscriptionId = await ResolveSubscriptionIdAsync(subscription, retryPolicy, cancellationToken);
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, retryPolicy, cancellationToken);
+
+        var elasticPools = new List<SqlElasticPool>();
+        await foreach (var elasticPool in sqlServerResource.GetElasticPools().GetAllAsync(cancellationToken: cancellationToken))
         {
-            return await ExecuteResourceQueryAsync(
-                "Microsoft.Sql/servers/elasticPools",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToSqlElasticPoolModel,
-                cancellationToken: cancellationToken);
+            elasticPools.Add(ConvertToSqlElasticPoolModel(elasticPool));
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error getting SQL elastic pools. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                serverName, resourceGroup, subscription);
-            throw;
-        }
+
+        _logger.LogInformation(
+            "Successfully listed SQL elastic pools. Server: {Server}, ResourceGroup: {ResourceGroup}, Count: {Count}",
+            serverName, resourceGroup, elasticPools.Count);
+
+        return elasticPools;
     }
 
     /// <summary>
@@ -543,38 +519,27 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         ValidateRequiredParameters(
             (nameof(serverName), serverName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription)
-        );
+            (nameof(subscription), subscription));
 
-        try
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+
+        var firewallRules = new List<SqlServerFirewallRule>();
+        await foreach (var firewallRule in sqlServerResource.GetSqlFirewallRules().GetAllAsync(cancellationToken))
         {
-            var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
-
-            var firewallRules = new List<SqlServerFirewallRule>();
-            await foreach (var firewallRule in sqlServerResource.GetSqlFirewallRules().GetAllAsync(cancellationToken))
-            {
-                firewallRules.Add(new SqlServerFirewallRule(
-                    Name: firewallRule.Data.Name,
-                    Id: firewallRule.Data.Id.ToString(),
-                    Type: firewallRule.Data.ResourceType.ToString() ?? "Unknown",
-                    StartIpAddress: firewallRule.Data.StartIPAddress,
-                    EndIpAddress: firewallRule.Data.EndIPAddress
-                ));
-            }
-
-            _logger.LogInformation(
-                "Successfully listed SQL server firewall rules. Server: {Server}, ResourceGroup: {ResourceGroup}, Count: {Count}",
-                serverName, resourceGroup, firewallRules.Count);
-
-            return firewallRules;
+            firewallRules.Add(new(
+                Name: firewallRule.Data.Name,
+                Id: firewallRule.Data.Id.ToString(),
+                Type: firewallRule.Data.ResourceType.ToString() ?? "Unknown",
+                StartIpAddress: firewallRule.Data.StartIPAddress,
+                EndIpAddress: firewallRule.Data.EndIPAddress
+            ));
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error getting SQL server firewall rules. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                serverName, resourceGroup, subscription);
-            throw;
-        }
+
+        _logger.LogInformation(
+            "Successfully listed SQL server firewall rules. Server: {Server}, ResourceGroup: {ResourceGroup}, Count: {Count}",
+            serverName, resourceGroup, firewallRules.Count);
+
+        return firewallRules;
     }
 
     /// <summary>
@@ -607,42 +572,31 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(subscription), subscription),
             (nameof(firewallRuleName), firewallRuleName),
             (nameof(startIpAddress), startIpAddress),
-            (nameof(endIpAddress), endIpAddress)
-        );
+            (nameof(endIpAddress), endIpAddress));
 
-        try
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+
+        var firewallRuleData = new SqlFirewallRuleData()
         {
-            var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+            StartIPAddress = startIpAddress,
+            EndIPAddress = endIpAddress
+        };
 
-            var firewallRuleData = new ResourceManager.Sql.SqlFirewallRuleData()
-            {
-                StartIPAddress = startIpAddress,
-                EndIPAddress = endIpAddress
-            };
+        var operation = await sqlServerResource.GetSqlFirewallRules().CreateOrUpdateAsync(
+            WaitUntil.Started,
+            firewallRuleName,
+            firewallRuleData,
+            cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
-            var operation = await sqlServerResource.GetSqlFirewallRules().CreateOrUpdateAsync(
-                WaitUntil.Completed,
-                firewallRuleName,
-                firewallRuleData,
-                cancellationToken);
+        var firewallRule = operation.Value;
 
-            var firewallRule = operation.Value;
-
-            return new SqlServerFirewallRule(
-                Name: firewallRule.Data.Name,
-                Id: firewallRule.Data.Id.ToString(),
-                Type: firewallRule.Data.ResourceType?.ToString() ?? "Unknown",
-                StartIpAddress: firewallRule.Data.StartIPAddress,
-                EndIpAddress: firewallRule.Data.EndIPAddress
-            );
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error creating SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Rule: {Rule}",
-                serverName, resourceGroup, subscription, firewallRuleName);
-            throw;
-        }
+        return new(
+            Name: firewallRule.Data.Name,
+            Id: firewallRule.Data.Id.ToString(),
+            Type: firewallRule.Data.ResourceType?.ToString() ?? "Unknown",
+            StartIpAddress: firewallRule.Data.StartIPAddress,
+            EndIpAddress: firewallRule.Data.EndIPAddress);
     }
 
     /// <summary>
@@ -668,8 +622,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(serverName), serverName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
-            (nameof(firewallRuleName), firewallRuleName)
-        );
+            (nameof(firewallRuleName), firewallRuleName));
 
         try
         {
@@ -677,7 +630,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
             var firewallRuleResource = await sqlServerResource.GetSqlFirewallRules().GetAsync(firewallRuleName, cancellationToken);
 
-            await firewallRuleResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+            var deleteOperation = await firewallRuleResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully deleted SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}",
@@ -693,13 +647,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
             // Return false to indicate the rule was not found (idempotent delete)
             return false;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error deleting SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Rule: {Rule}",
-                serverName, resourceGroup, subscription, firewallRuleName);
-            throw;
         }
     }
 
@@ -736,61 +683,45 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(subscription), subscription),
             (nameof(location), location),
             (nameof(administratorLogin), administratorLogin),
-            (nameof(administratorPassword), administratorPassword)
-        );
+            (nameof(administratorPassword), administratorPassword));
 
-        try
+        // Resolve the subscription (supports both subscription IDs and names) before navigating to the resource group
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+
+        var serverData = new SqlServerData(location)
         {
-            // Use ARM client directly for create operations
-            var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-
-            var serverData = new SqlServerData(location)
-            {
-                AdministratorLogin = administratorLogin,
-                AdministratorLoginPassword = administratorPassword,
-                Version = version ?? "12.0", // Default to SQL Server 2014 (12.0)
-            };
-
-            // Set PublicNetworkAccess if specified
-            if (!string.IsNullOrEmpty(publicNetworkAccess))
-            {
-                // Set the public network access value - defaults to "Enabled" if not "Disabled"
-                serverData.PublicNetworkAccess = publicNetworkAccess.Equals("Enabled", StringComparison.OrdinalIgnoreCase)
+            AdministratorLogin = administratorLogin,
+            AdministratorLoginPassword = administratorPassword,
+            Version = version ?? "12.0", // Default to SQL Server 2014 (12.0)
+            // Default to Disabled for secure-by-default behavior
+            PublicNetworkAccess = !string.IsNullOrEmpty(publicNetworkAccess) &&
+                publicNetworkAccess.Equals("Enabled", StringComparison.OrdinalIgnoreCase)
                     ? ServerNetworkAccessFlag.Enabled
-                    : ServerNetworkAccessFlag.Disabled;
-            }
+                    : ServerNetworkAccessFlag.Disabled
+        };
 
-            var operation = await resourceGroupResource.Value.GetSqlServers().CreateOrUpdateAsync(
-                WaitUntil.Completed,
-                serverName,
-                serverData,
-                cancellationToken);
+        var operation = await resourceGroupResource.Value.GetSqlServers().CreateOrUpdateAsync(
+            WaitUntil.Started,
+            serverName,
+            serverData,
+            cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
-            var server = operation.Value;
-            var tags = server.Data.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value) ?? new Dictionary<string, string>();
+        var server = operation.Value;
+        var tags = server.Data.Tags?.ToDictionary() ?? [];
 
-            return new SqlServer(
-                Name: server.Data.Name,
-                FullyQualifiedDomainName: server.Data.FullyQualifiedDomainName,
-                Location: server.Data.Location.ToString(),
-                ResourceGroup: resourceGroup,
-                Subscription: subscription,
-                AdministratorLogin: server.Data.AdministratorLogin,
-                Version: server.Data.Version,
-                State: server.Data.State?.ToString(),
-                PublicNetworkAccess: server.Data.PublicNetworkAccess?.ToString(),
-                Tags: tags
-            );
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error creating SQL server. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Location: {Location}",
-                serverName, resourceGroup, subscription, location);
-            throw;
-        }
+        return new(
+            Name: server.Data.Name,
+            FullyQualifiedDomainName: server.Data.FullyQualifiedDomainName,
+            Location: server.Data.Location.ToString(),
+            ResourceGroup: resourceGroup,
+            Subscription: subscription,
+            AdministratorLogin: server.Data.AdministratorLogin,
+            Version: server.Data.Version,
+            State: server.Data.State?.ToString(),
+            PublicNetworkAccess: server.Data.PublicNetworkAccess?.ToString(),
+            Tags: tags);
     }
 
     /// <summary>
@@ -814,38 +745,22 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         ValidateRequiredParameters(
             (nameof(serverName), serverName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription)
-        );
+            (nameof(subscription), subscription));
 
-        try
-        {
-            var server = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
-            var tags = server.Data.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value) ?? new Dictionary<string, string>();
+        var server = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+        var tags = server.Data.Tags?.ToDictionary() ?? [];
 
-            return new SqlServer(
-                Name: server.Data.Name,
-                FullyQualifiedDomainName: server.Data.FullyQualifiedDomainName,
-                Location: server.Data.Location.ToString(),
-                ResourceGroup: resourceGroup,
-                Subscription: subscription,
-                AdministratorLogin: server.Data.AdministratorLogin,
-                Version: server.Data.Version,
-                State: server.Data.State?.ToString(),
-                PublicNetworkAccess: server.Data.PublicNetworkAccess?.ToString(),
-                Tags: tags
-            );
-        }
-        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
-        {
-            throw new KeyNotFoundException($"SQL server '{serverName}' not found in resource group '{resourceGroup}' for subscription '{subscription}'.");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error getting SQL server. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                serverName, resourceGroup, subscription);
-            throw;
-        }
+        return new(
+            Name: server.Data.Name,
+            FullyQualifiedDomainName: server.Data.FullyQualifiedDomainName,
+            Location: server.Data.Location.ToString(),
+            ResourceGroup: resourceGroup,
+            Subscription: subscription,
+            AdministratorLogin: server.Data.AdministratorLogin,
+            Version: server.Data.Version,
+            State: server.Data.State?.ToString(),
+            PublicNetworkAccess: server.Data.PublicNetworkAccess?.ToString(),
+            Tags: tags);
     }
 
     /// <summary>
@@ -865,44 +780,32 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     {
         ValidateRequiredParameters(
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription)
-        );
+            (nameof(subscription), subscription));
 
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
+
+        ResourceManager.Resources.ResourceGroupResource resourceGroupResource;
         try
         {
-            var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
-
-            Azure.ResourceManager.Resources.ResourceGroupResource resourceGroupResource;
-            try
-            {
-                var response = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-                resourceGroupResource = response.Value;
-            }
-            catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
-            {
-                _logger.LogWarning(reqEx,
-                    "Resource group not found when listing SQL servers. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                    resourceGroup, subscription);
-                return [];
-            }
-
-            var servers = new List<SqlServer>();
-
-            await foreach (var serverResource in resourceGroupResource.GetSqlServers().GetAllAsync(cancellationToken: cancellationToken))
-            {
-                servers.Add(ConvertToSqlServerModel(serverResource));
-            }
-
-            return servers;
+            var response = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            resourceGroupResource = response.Value;
         }
-        catch (Exception ex)
+        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
         {
-            _logger.LogError(ex,
-                "Error listing SQL servers. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+            _logger.LogWarning(reqEx,
+                "Resource group not found when listing SQL servers. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
                 resourceGroup, subscription);
-            throw;
+            return [];
         }
+
+        var servers = new List<SqlServer>();
+
+        await foreach (var serverResource in resourceGroupResource.GetSqlServers().GetAllAsync(cancellationToken: cancellationToken))
+        {
+            servers.Add(ConvertToSqlServerModel(serverResource));
+        }
+
+        return servers;
     }
 
     public async Task<bool> DeleteServerAsync(
@@ -915,16 +818,14 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         ValidateRequiredParameters(
             (nameof(serverName), serverName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription)
-        );
+            (nameof(subscription), subscription));
 
         try
         {
             var serverResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
 
-            var operation = await serverResource.DeleteAsync(
-                WaitUntil.Completed,
-                cancellationToken);
+            var operation = await serverResource.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
 
             return true;
         }
@@ -934,13 +835,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 "SQL server not found during delete operation. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
                 serverName, resourceGroup, subscription);
             return false; // Server doesn't exist
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error deleting SQL server. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                serverName, resourceGroup, subscription);
-            throw;
         }
     }
 
@@ -967,8 +861,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(serverName), serverName),
             (nameof(databaseName), databaseName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription)
-        );
+            (nameof(subscription), subscription));
 
         try
         {
@@ -976,7 +869,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
             var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
 
-            await databaseResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+            var deleteOperation = await databaseResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully deleted SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}",
@@ -993,25 +887,18 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             // Return false to indicate the database was not found (idempotent delete)
             return false;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error deleting SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                serverName, databaseName, resourceGroup, subscription);
-            throw;
-        }
     }
 
     private static SqlDatabase ConvertToSqlDatabaseModel(SqlDatabaseResource databaseResource)
     {
         var data = databaseResource.Data;
 
-        return new SqlDatabase(
+        return new(
             Name: data.Name,
             Id: data.Id.ToString(),
             Type: data.ResourceType.ToString(),
             Location: data.Location.ToString(),
-            Sku: data.Sku != null ? new DatabaseSku(
+            Sku: data.Sku != null ? new(
                 Name: data.Sku.Name,
                 Tier: data.Sku.Tier,
                 Capacity: data.Sku.Capacity,
@@ -1033,16 +920,15 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
     private static SqlDatabase ConvertToSqlDatabaseModel(JsonElement item)
     {
-        Models.SqlDatabaseData? sqlDatabase = Models.SqlDatabaseData.FromJson(item);
-        if (sqlDatabase == null)
-            throw new InvalidOperationException("Failed to parse SQL database data");
+        Models.SqlDatabaseData? sqlDatabase = Models.SqlDatabaseData.FromJson(item)
+            ?? throw new InvalidOperationException("Failed to parse SQL database data");
 
-        return new SqlDatabase(
+        return new(
                 Name: sqlDatabase.ResourceName ?? "Unknown",
                 Id: sqlDatabase.ResourceId ?? "Unknown",
                 Type: sqlDatabase.ResourceType ?? "Unknown",
                 Location: sqlDatabase.Location,
-                Sku: sqlDatabase.Sku != null ? new DatabaseSku(
+                Sku: sqlDatabase.Sku != null ? new(
                     Name: sqlDatabase.Sku.Name,
                     Tier: sqlDatabase.Sku.Tier,
                     Capacity: sqlDatabase.Sku.Capacity,
@@ -1067,9 +953,9 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         ArgumentNullException.ThrowIfNull(serverResource);
 
         var data = serverResource.Data;
-        var tags = data.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value) ?? new Dictionary<string, string>();
+        var tags = data.Tags?.ToDictionary() ?? [];
 
-        return new SqlServer(
+        return new(
             Name: data.Name,
             FullyQualifiedDomainName: data.FullyQualifiedDomainName,
             Location: data.Location.ToString(),
@@ -1082,37 +968,35 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             Tags: tags.Count > 0 ? tags : null);
     }
 
-    private static SqlElasticPool ConvertToSqlElasticPoolModel(JsonElement item)
+    private static SqlElasticPool ConvertToSqlElasticPoolModel(ElasticPoolResource elasticPoolResource)
     {
-        SqlElasticPoolData? elasticPool = SqlElasticPoolData.FromJson(item);
-        if (elasticPool == null)
-            throw new InvalidOperationException("Failed to parse SQL elastic pool data");
+        var data = elasticPoolResource.Data;
 
-        return new SqlElasticPool(
-                    Name: elasticPool.ResourceName ?? "Unknown",
-                    Id: elasticPool.ResourceId ?? "Unknown",
-                    Type: elasticPool.ResourceType ?? "Unknown",
-                    Location: elasticPool.Location,
-                    Sku: elasticPool.Sku != null ? new ElasticPoolSku(
-                        Name: elasticPool.Sku.Name,
-                        Tier: elasticPool.Sku.Tier,
-                        Capacity: elasticPool.Sku.Capacity,
-                        Family: elasticPool.Sku.Family,
-                        Size: elasticPool.Sku.Size
-                    ) : null,
-                    State: elasticPool.Properties?.State,
-                    CreationDate: elasticPool.Properties?.CreatedOn,
-                    MaxSizeBytes: elasticPool.Properties?.MaxSizeBytes,
-                    PerDatabaseSettings: elasticPool.Properties?.PerDatabaseSettings != null ? new Sql.Models.ElasticPoolPerDatabaseSettings(
-                        MinCapacity: elasticPool.Properties.PerDatabaseSettings.MinCapacity,
-                        MaxCapacity: elasticPool.Properties.PerDatabaseSettings.MaxCapacity
-                    ) : null,
-                    ZoneRedundant: elasticPool.Properties?.IsZoneRedundant,
-                    LicenseType: elasticPool.Properties?.LicenseType,
-                    DatabaseDtuMin: null, // DTU properties not available in current SDK
-                    DatabaseDtuMax: null,
-                    Dtu: null,
-                    StorageMB: null
-                );
+        return new(
+            Name: data.Name,
+            Id: data.Id.ToString(),
+            Type: data.ResourceType.ToString(),
+            Location: data.Location.ToString(),
+            Sku: data.Sku != null ? new(
+                Name: data.Sku.Name,
+                Tier: data.Sku.Tier,
+                Capacity: data.Sku.Capacity,
+                Family: data.Sku.Family,
+                Size: data.Sku.Size
+            ) : null,
+            State: data.State?.ToString(),
+            CreationDate: data.CreatedOn,
+            MaxSizeBytes: data.MaxSizeBytes,
+            PerDatabaseSettings: data.PerDatabaseSettings != null ? new(
+                MinCapacity: data.PerDatabaseSettings.MinCapacity,
+                MaxCapacity: data.PerDatabaseSettings.MaxCapacity
+            ) : null,
+            ZoneRedundant: data.IsZoneRedundant,
+            LicenseType: data.LicenseType?.ToString(),
+            DatabaseDtuMin: null, // DTU properties not available in current SDK
+            DatabaseDtuMax: null,
+            Dtu: null,
+            StorageMB: null
+        );
     }
 }

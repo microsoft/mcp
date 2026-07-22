@@ -1,99 +1,71 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
+using System.Text.Json;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCommand<QueryOptions>()
+[CommandMetadata(
+    Id = "d1e22074-53ce-4eef-8596-0ea134a9e317",
+    Name = "query",
+    Title = "Query Kusto Database",
+    Description = "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class QueryCommand(
+    ILogger<QueryCommand> logger,
+    IKustoService kustoService,
+    ISubscriptionResolver subscriptionResolver)
+    : BaseClusterCommand<QueryOptions, QueryCommand.QueryCommandResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "Query Kusto Database";
-    private readonly ILogger<QueryCommand> _logger = logger;
-
-    public override string Id => "d1e22074-53ce-4eef-8596-0ea134a9e317";
-
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, QueryOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(KustoOptionDefinitions.Query);
-    }
-
-    protected override QueryOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Query = parseResult.GetValueOrDefault<string>(KustoOptionDefinitions.Query.Name);
-        return options;
-    }
-
-    public override string Name => "query";
-
-    public override string Description =>
-        "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            List<JsonElement> results = [];
-            var kusto = context.GetService<IKustoService>();
+            List<JsonElement> results;
 
             if (UseClusterUri(options))
             {
-                results = await kusto.QueryItemsAsync(
+                results = await kustoService.QueryItemsAsync(
                     options.ClusterUri!,
-                    options.Database!,
-                    options.Query!,
+                    options.Database,
+                    options.Query,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }
             else
             {
-                results = await kusto.QueryItemsAsync(
+                results = await kustoService.QueryItemsAsync(
                     options.Subscription!,
-                    options.ClusterName!,
-                    options.Database!,
-                    options.Query!,
+                    options.Cluster!,
+                    options.Database,
+                    options.Query,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(new(results ?? []), KustoJsonContext.Default.QueryCommandResult);
+            context.Response.Results = ResponseResult.Create(new QueryCommandResult(results ?? []), KustoJsonContext.Default.QueryCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An exception occurred querying Kusto. Cluster: {Cluster}, Database: {Database},"
-            + " Query: {Query}", options.ClusterUri ?? options.ClusterName, options.Database, options.Query);
+            logger.LogError(ex, "An exception occurred querying Kusto. Cluster: {Cluster}, Database: {Database},"
+            + " Query: {Query}", options.ClusterUri ?? options.Cluster, options.Database, options.Query);
             HandleException(context, ex);
         }
         return context.Response;
     }
 
-    internal record QueryCommandResult(List<JsonElement> Items);
+    public record QueryCommandResult(List<JsonElement> Items);
 }

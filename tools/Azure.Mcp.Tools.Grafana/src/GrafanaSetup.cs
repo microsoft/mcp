@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Grafana.Commands.Workspace;
 using Azure.Mcp.Tools.Grafana.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Grafana;
 
@@ -26,8 +26,7 @@ public class GrafanaSetup : IAreaSetup
     {
         var grafana = new CommandGroup(Name, "Grafana workspace operations - Commands for managing and accessing Azure Managed Grafana resources and monitoring dashboards. Includes operations for listing Grafana workspaces and managing data visualization and monitoring capabilities.", Title);
 
-        var workspace = serviceProvider.GetRequiredService<WorkspaceListCommand>();
-        grafana.AddCommand(workspace.Name, workspace);
+        grafana.AddCommand<WorkspaceListCommand>(serviceProvider);
 
         return grafana;
     }

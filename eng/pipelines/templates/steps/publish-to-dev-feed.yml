@@ -5,6 +5,15 @@ parameters:
     type: string
   - name: Tag
     type: string
+  - name: ServiceConnection
+    type: string
+    default: ''
+  - name: Access
+    type: string
+    default: 'public'
+  - name: IgnoreDuplicates
+    type: boolean
+    default: true
 
 steps:
   - template: /eng/common/pipelines/templates/steps/set-default-branch.yml
@@ -13,8 +22,10 @@ steps:
     parameters:
       npmrcPath: ${{parameters.PathToArtifacts}}/.npmrc
       registryUrl: ${{parameters.Registry}}
+      ServiceConnection: ${{parameters.ServiceConnection}}
 
   - pwsh: |
+      $ignoreDuplicates = $${{parameters.IgnoreDuplicates}}
       $tgzFiles = Get-ChildItem -Path . -Filter *.tgz -Recurse
       | Sort-Object FullName
 
@@ -28,13 +39,29 @@ steps:
         Write-Host "  - $($file.FullName)"
       }
 
+      $access = '${{parameters.Access}}'
       $tag = '${{parameters.Tag}}'
+
       foreach ($file in $tgzFiles) {
-        $command = "npm publish '$file' --access public --tag '$tag'"
+        $command = "npm publish '$file' --loglevel verbose"
+
+        if (![string]::IsNullOrEmpty($access)) {
+          $command += " --access $access"
+        }
+
+        if (![string]::IsNullOrEmpty($tag)) {
+          $command += " --tag '$tag'"
+        }
+
         Write-Host "> $command"
-        Invoke-Expression $command
-        if (!$?) {
-          exit 1
+        Invoke-Expression $command 2>&1 | Tee-Object -Variable publishOutput
+        if ($LASTEXITCODE -ne 0) {
+          if ($ignoreDuplicates -and $publishOutput -match 'The feed .* already contains file') {
+            Write-Host "Package $($file.FullName) has already been published with the same version. Skipping."
+          } else {
+            Write-Host "Failed to publish $($file.FullName). Error: $publishOutput"
+            exit 1
+          }
         }
       }
     displayName: Publish packages to dev feed

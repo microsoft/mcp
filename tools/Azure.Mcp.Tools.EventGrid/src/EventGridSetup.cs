@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Tools.EventGrid.Commands.Events;
 using Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 using Azure.Mcp.Tools.EventGrid.Commands.Topic;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.EventGrid;
 
@@ -42,16 +43,13 @@ public class EventGridSetup : IAreaSetup
         eventGrid.AddSubGroup(subscriptions);
 
         // Register Events commands
-        var eventsPublish = serviceProvider.GetRequiredService<EventGridPublishCommand>();
-        events.AddCommand(eventsPublish.Name, eventsPublish);
+        events.AddCommand<EventGridPublishCommand>(serviceProvider);
 
         // Register Topic commands
-        var topicList = serviceProvider.GetRequiredService<TopicListCommand>();
-        topics.AddCommand(topicList.Name, topicList);
+        topics.AddCommand<TopicListCommand>(serviceProvider);
 
         // Register Subscription commands
-        var subscriptionList = serviceProvider.GetRequiredService<SubscriptionListCommand>();
-        subscriptions.AddCommand(subscriptionList.Name, subscriptionList);
+        subscriptions.AddCommand<SubscriptionListCommand>(serviceProvider);
 
         return eventGrid;
     }

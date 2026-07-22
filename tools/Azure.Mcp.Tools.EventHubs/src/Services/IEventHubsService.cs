@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.EventHubs.Models;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.EventHubs.Services;
 
@@ -72,6 +72,7 @@ public interface IEventHubsService
         string subscription,
         int? partitionCount = null,
         long? messageRetentionInHours = null,
+        string? status = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

@@ -2,82 +2,99 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
+using System.Net.Sockets;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Sql.Models;
-using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.FirewallRule;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 
-public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand> logger)
-    : BaseSqlCommand<FirewallRuleCreateOptions>(logger)
-{
-    private const string CommandTitle = "Create SQL Server Firewall Rule";
-
-    public override string Id => "37c43190-c3f5-4cd2-beda-3ecc2e3ec049";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "37c43190-c3f5-4cd2-beda-3ecc2e3ec049",
+    Name = "create",
+    Title = "Create SQL Server Firewall Rule",
+    Description = """
         Creates a firewall rule for a SQL server. Firewall rules control which IP addresses
         are allowed to connect to the SQL server. You can specify either a single IP address
         (by setting start and end IP to the same value) or a range of IP addresses. Returns
         the created firewall rule with its properties.
-        """;
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<FirewallRuleCreateCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<FirewallRuleCreateOptions, FirewallRuleCreateCommand.FirewallRuleCreateResult>(subscriptionResolver)
+{
+    private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<FirewallRuleCreateCommand> _logger = logger;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(FirewallRuleCreateOptions options, ValidationResult validationResult)
     {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        base.ValidateOptions(options, validationResult);
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(SqlOptionDefinitions.FirewallRuleNameOption);
-        command.Options.Add(SqlOptionDefinitions.StartIpAddressOption);
-        command.Options.Add(SqlOptionDefinitions.EndIpAddressOption);
-    }
+        var startIpIsValid = !string.IsNullOrEmpty(options.StartIpAddress) && IsValidIpAddress(options.StartIpAddress);
+        var endIpIsValid = !string.IsNullOrEmpty(options.EndIpAddress) && IsValidIpAddress(options.EndIpAddress);
 
-    protected override FirewallRuleCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.FirewallRuleName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.FirewallRuleNameOption.Name);
-        options.StartIpAddress = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.StartIpAddressOption.Name);
-        options.EndIpAddress = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.EndIpAddressOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        if (!startIpIsValid)
         {
-            return context.Response;
+            validationResult.Errors.Add($"Invalid start IP address format: '{options.StartIpAddress}'. Must be a valid IPv4 address.");
         }
 
-        var options = BindOptions(parseResult);
+        if (!endIpIsValid)
+        {
+            validationResult.Errors.Add($"Invalid end IP address format: '{options.EndIpAddress}'. Must be a valid IPv4 address.");
+        }
 
+        if (startIpIsValid && endIpIsValid && IsDangerousRange(options.StartIpAddress, options.EndIpAddress))
+        {
+            validationResult.Errors.Add(
+                "The specified IP range is not allowed. A range of 0.0.0.0 to 0.0.0.0 enables access from all Azure services, and a range of 0.0.0.0 to 255.255.255.255 opens access to the entire internet. " +
+                "These overly permissive rules are blocked for security. Specify a narrower IP range instead."
+            );
+        }
+    }
+
+    // IP address must be a dotted-quad IPv4 format (e.g. 10.0.0.1).
+    // The .ToString() check rejects non-canonical forms (e.g. 0, 4294967295) that would bypass the dangerous-range string checks via alternate representations.
+    internal static bool IsValidIpAddress(string ipAddress) =>
+        IPAddress.TryParse(ipAddress, out var parsed) && parsed.AddressFamily == AddressFamily.InterNetwork && parsed.ToString() == ipAddress;
+
+    internal static bool IsDangerousRange(string startIp, string endIp)
+    {
+        // Block 0.0.0.0 - 0.0.0.0 (opens server to all Azure-internal traffic)
+        if (startIp == "0.0.0.0" && endIp == "0.0.0.0")
+        {
+            return true;
+        }
+
+        // Block 0.0.0.0 - 255.255.255.255 (opens server to entire internet)
+        if (startIp == "0.0.0.0" && endIp == "255.255.255.255")
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FirewallRuleCreateOptions options, CancellationToken cancellationToken)
+    {
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var firewallRule = await sqlService.CreateFirewallRuleAsync(
-                options.Server!,
-                options.ResourceGroup!,
+            var firewallRule = await _sqlService.CreateFirewallRuleAsync(
+                options.Server,
+                options.ResourceGroup,
                 options.Subscription!,
-                options.FirewallRuleName!,
-                options.StartIpAddress!,
-                options.EndIpAddress!,
+                options.FirewallRuleName,
+                options.StartIpAddress,
+                options.EndIpAddress,
                 options.RetryPolicy,
                 cancellationToken);
 
@@ -86,8 +103,8 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error creating SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}, Options: {@Options}",
-                options.Server, options.ResourceGroup, options.FirewallRuleName, options);
+                "Error creating SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}.",
+                options.Server, options.ResourceGroup, options.FirewallRuleName);
             HandleException(context, ex);
         }
 
@@ -107,12 +124,5 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
-    };
-
-    internal record FirewallRuleCreateResult(SqlServerFirewallRule FirewallRule);
+    public sealed record FirewallRuleCreateResult(SqlServerFirewallRule FirewallRule);
 }

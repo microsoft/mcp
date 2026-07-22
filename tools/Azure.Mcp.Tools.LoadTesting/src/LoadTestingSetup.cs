@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.LoadTesting;
 
@@ -29,9 +29,7 @@ public class LoadTestingSetup : IAreaSetup
         services.AddSingleton<TestCreateCommand>();
 
         services.AddSingleton<TestRunGetCommand>();
-        services.AddSingleton<TestRunListCommand>();
-        services.AddSingleton<TestRunCreateCommand>();
-        services.AddSingleton<TestRunUpdateCommand>();
+        services.AddSingleton<TestRunCreateOrUpdateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -59,27 +57,16 @@ public class LoadTestingSetup : IAreaSetup
         service.AddSubGroup(testRun);
 
         // Register commands for Load Test Resource
-
-        var testResourceList = serviceProvider.GetRequiredService<TestResourceListCommand>();
-        testResource.AddCommand(testResourceList.Name, testResourceList);
-        var testResourceCreate = serviceProvider.GetRequiredService<TestResourceCreateCommand>();
-        testResource.AddCommand(testResourceCreate.Name, testResourceCreate);
+        testResource.AddCommand<TestResourceListCommand>(serviceProvider);
+        testResource.AddCommand<TestResourceCreateCommand>(serviceProvider);
 
         // Register commands for Load Test
-        var testGet = serviceProvider.GetRequiredService<TestGetCommand>();
-        test.AddCommand(testGet.Name, testGet);
-        var testCreate = serviceProvider.GetRequiredService<TestCreateCommand>();
-        test.AddCommand(testCreate.Name, testCreate);
+        test.AddCommand<TestGetCommand>(serviceProvider);
+        test.AddCommand<TestCreateCommand>(serviceProvider);
 
         // Register commands for Load Test Run
-        var testRunGet = serviceProvider.GetRequiredService<TestRunGetCommand>();
-        testRun.AddCommand(testRunGet.Name, testRunGet);
-        var testRunList = serviceProvider.GetRequiredService<TestRunListCommand>();
-        testRun.AddCommand(testRunList.Name, testRunList);
-        var testRunCreate = serviceProvider.GetRequiredService<TestRunCreateCommand>();
-        testRun.AddCommand(testRunCreate.Name, testRunCreate);
-        var testRunUpdate = serviceProvider.GetRequiredService<TestRunUpdateCommand>();
-        testRun.AddCommand(testRunUpdate.Name, testRunUpdate);
+        testRun.AddCommand<TestRunGetCommand>(serviceProvider);
+        testRun.AddCommand<TestRunCreateOrUpdateCommand>(serviceProvider);
 
         return service;
     }

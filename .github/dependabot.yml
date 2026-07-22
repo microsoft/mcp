@@ -1,0 +1,13 @@
+version: 2
+updates:
+  # Enable version updates for NuGet packages
+  - package-ecosystem: "nuget"
+    # Look for `.csproj` and `Directory.Packages.props` files in the root directory
+    directory: "/"
+    # Check the NuGet registry for updates every day (weekdays)
+    schedule:
+      interval: "daily"
+    # Currently only enabling this for Azure.Bicep.Types package used by Azure MCP server
+    # Feel free to extend this to other packages as needed
+    allow:
+      - dependency-name: "Azure.Bicep.Types"

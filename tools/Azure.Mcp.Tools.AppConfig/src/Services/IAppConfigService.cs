@@ -1,15 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AppConfig.Models;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AppConfig.Services;
 
 public interface IAppConfigService
 {
-    Task<List<AppConfigurationAccount>> GetAppConfigAccounts(
+    Task<ResourceQueryResults<AppConfigurationAccount>> GetAppConfigAccounts(
         string subscription,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
@@ -43,7 +45,7 @@ public interface IAppConfigService
         string? contentType = null,
         string[]? tags = null,
         CancellationToken cancellationToken = default);
-    Task DeleteKeyValue(
+    Task<bool> DeleteKeyValue(
         string accountName,
         string key,
         string subscription,

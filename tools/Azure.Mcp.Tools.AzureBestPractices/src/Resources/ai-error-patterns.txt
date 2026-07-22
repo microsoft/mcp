@@ -1,0 +1,187 @@
+## Error Patterns to Avoid
+
+### Workflows
+**IMPORTANT**: When implementing workflows, use the correct namespace and event handling patterns.
+
+✅ **CORRECT Pattern**:
+```csharp
+using Microsoft.Agents.AI.Workflows;  // ✅ CORRECT namespace
+using Microsoft.Agents.AI.Workflows.Reflection; // ✅ CORRECT namespace
+```
+
+❌ **INCORRECT Pattern** (outdated documentation):
+```csharp
+using Microsoft.Agents.Workflows;  // ❌ WRONG namespace, use Microsoft.Agents.AI.Workflows instead
+using Microsoft.Agents.Workflows.Reflection;  // ❌ WRONG namespace, use Microsoft.Agents.AI.Workflows.Reflection instead
+```
+
+#### Correct Workflow Building Pattern
+Use non-generic `Workflow` type and non-generic `Build()` method:
+
+✅ **CORRECT Pattern**:
+```csharp
+Workflow workflow = builder.Build();  // ✅ CORRECT: Workflow and Build() are non-generic
+```
+
+❌ **INCORRECT Pattern** (outdated documentation):
+```csharp
+Workflow<ChatMessage> workflow = builder.Build<ChatMessage>();  // ❌ WRONG: Workflow and Build() are non-generic, don't use Workflow<T> or Build<T>()
+```
+
+#### Correct Workflow Output Event Handling
+Use `ExecutorCompletedEvent` to handle workflow completion:
+
+✅ **CORRECT Pattern** (use ExecutorCompletedEvent):
+```csharp
+await using StreamingRun run = await InProcessExecution.StreamAsync(workflow, "What is temperature?");
+
+await foreach (WorkflowEvent evt in run.WatchStreamAsync().ConfigureAwait(false))
+{
+    // ✅ **CORRECT Pattern** (use ExecutorCompletedEvent):
+    if (evt is ExecutorCompletedEvent executorComplete)
+    {
+        Console.WriteLine($"{executorComplete.ExecutorId}: {executorComplete.Data}");
+    }
+    if (evt is WorkflowOutputEvent output)
+    {
+        Console.WriteLine($"Workflow completed with results:\n{output.Data}");
+    }
+}
+```
+
+❌ **INCORRECT Pattern** (outdated):
+```csharp
+await foreach (WorkflowEvent evt in run.WatchStreamAsync().ConfigureAwait(false))
+{
+    // ❌ WRONG: WorkflowCompletedEvent is deprecated - use ExecutorCompletedEvent instead
+    if (evt is WorkflowCompletedEvent completed)
+    {
+        result = (List<ChatMessage>)completed.Data!;
+        break;
+    }
+}
+```
+
+### Shared States Implementation
+#### Correct Shared State Operations
+✅ **CORRECT Pattern**:
+```csharp
+// Writing to shared state
+await context.QueueStateUpdateAsync(key: stateId, value: data, scopeName: "MyScopeConstants", cancellationToken: cancellationToken);
+// Reading from shared state
+var data = await context.ReadStateAsync<string>(key: stateId, scopeName: "MyScopeConstants", cancellationToken: cancellationToken);
+```
+
+### Agent Type 
+#### Agent Type Selection
+
+**For .NET:**
+**IMPORTANT**: When using Microsoft Foundry, always use `AIProjectClient` to create agents - NOT `AzureOpenAIClient`.
+- ❌ Do NOT use `AzureOpenAIClient` for Microsoft Foundry models - that's only for testing and lacks conversation persistence
+- ✅ DO use `AIProjectClient` - it provides full agent capabilities with service-managed state and is the latest recommended approach
+- ⚠️ `PersistentAgentsClient` is a legacy client (deprecated) - use `AIProjectClient` instead
+
+Code samples may show `AzureOpenAIClient` for simplicity or backward compatibility, but production implementations should use `AIProjectClient` for Microsoft Foundry.
+
+#### Key Differences: AIProjectClient vs AzureOpenAIClient
+
+**1. Creation Pattern:**
+- `AIProjectClient` uses `await aiProjectClient.CreateAIAgentAsync(...)` - creates agents on the server
+- `AzureOpenAIClient` uses `.GetChatClient(deploymentName).CreateAIAgent(...)` - creates local agents
+
+#### ✅ CORRECT - AIProjectClient Pattern (Recommended)
+
+```csharp
+using System.ComponentModel;
+using System.Text.Json.Serialization;
+using Azure.AI.Projects;
+using Azure.Identity;
+using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
+
+string endpoint = Environment.GetEnvironmentVariable("AZURE_FOUNDRY_PROJECT_ENDPOINT") ?? throw new InvalidOperationException("AZURE_FOUNDRY_PROJECT_ENDPOINT is not set.");
+string deploymentName = Environment.GetEnvironmentVariable("AZURE_FOUNDRY_PROJECT_DEPLOYMENT_NAME") ?? "gpt-4o-mini";
+
+[Description("Get the weather for a given location.")]
+static string GetWeather([Description("The location to get the weather for.")] string location)
+    => $"The weather in {location} is cloudy with a high of 15°C.";
+
+const string AssistantInstructions = "You are a helpful assistant that can get weather information.";
+const string AssistantName = "WeatherAssistant";
+
+// Define structured output schema for weather response
+[Description("Weather information for a location")]
+public class WeatherResponse
+{
+    [JsonPropertyName("location")]
+    public string Location { get; set; } = string.Empty;
+
+    [JsonPropertyName("temperature")]
+    public string Temperature { get; set; } = string.Empty;
+
+    [JsonPropertyName("condition")]
+    public string Condition { get; set; } = string.Empty;
+}
+
+// Get a client to create/retrieve/delete server side agents with Microsoft Foundry agents.
+AIProjectClient aiProjectClient = new(new Uri(endpoint), new AzureCliCredential());
+
+// Define the agent with function tools.
+AITool tool = AIFunctionFactory.Create(GetWeather);
+
+// Create AIAgent directly - Simple agent with tools for basic scenarios
+AIAgent agent = await aiProjectClient.CreateAIAgentAsync(
+    name: AssistantName,
+    model: deploymentName,
+    instructions: AssistantInstructions,
+    tools: [tool]);
+
+// Create ChatClientAgent - Advanced agent with structured output support via ResponseFormat
+// Use this when you need structured JSON responses with schema validation
+ChatClientAgent agent1 = await aiProjectClient.CreateAIAgentAsync(
+    model: deploymentName,
+    new ChatClientAgentOptions(name: AssistantName, instructions: AssistantInstructions, tools: [tool])
+    {
+        ChatOptions = new()
+        {
+            ResponseFormat = Microsoft.Extensions.AI.ChatResponseFormat.ForJsonSchema<WeatherResponse>()
+        }
+    });
+
+// Non-streaming agent interaction with function tools.
+Console.WriteLine(await agent.RunAsync("What is the weather like in Amsterdam?"));
+
+// Streaming agent interaction with function tools.
+await foreach (AgentRunResponseUpdate update in agent.RunStreamingAsync("What is the weather like in Amsterdam?"))
+{
+    Console.WriteLine(update);
+}
+
+// Cleanup: Delete the created agent instance by name.
+await aiProjectClient.Agents.DeleteAgentAsync(agent.Name);
+await aiProjectClient.Agents.DeleteAgentAsync(agent1.Name);
+
+
+
+```
+
+#### ❌ INCORRECT - AzureOpenAIClient Patterns to Avoid
+
+**Don't use explicit thread management with AzureOpenAIClient:**
+```csharp
+
+// Create AIAgent with AzureOpenAIClient
+AIAgent agent = new AzureOpenAIClient(new Uri(endpoint), new AzureCliCredential()) // ❌ WRONG: Use AIProjectClient instead
+    .GetChatClient(deploymentName)
+    .CreateAIAgent(instructions: "You are a helpful assistant");
+```
+
+#### ❌ INCORRECT - Don't Use Legacy PersistentAgentsClient Pattern
+
+```csharp
+using Azure.AI.Agents.Persistent;  // ❌ WRONG: Use Azure.AI.Projects instead
+
+var client = new PersistentAgentsClient(  // ❌ WRONG: Use AIProjectClient instead
+    "https://<resource>.services.ai.azure.com/api/projects/<project>",
+    new AzureCliCredential());
+```

@@ -1,0 +1,871 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Lakehouse data types",
+    "version": "v1"
+  },
+  "paths": {},
+  "definitions": {
+    "Lakehouses": {
+      "description": "A list of lakehouses.",
+      "required": ["value"],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of lakehouses.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Lakehouse"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "Lakehouse": {
+      "description": "A lakehouse item.",
+      "type": "object",
+      "required": ["type"],
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/Item"
+        }
+      ],
+      "properties": {
+        "properties": {
+          "description": "The lakehouse properties.",
+          "$ref": "#/definitions/LakehouseProperties"
+        }
+      }
+    },
+    "LakehouseProperties": {
+      "required": ["oneLakeTablesPath", "oneLakeFilesPath"],
+      "description": "The lakehouse properties.",
+      "type": "object",
+      "properties": {
+        "oneLakeTablesPath": {
+          "description": "OneLake path to the Lakehouse tables directory.",
+          "type": "string"
+        },
+        "oneLakeFilesPath": {
+          "description": "OneLake path to the Lakehouse files directory.",
+          "type": "string"
+        },
+        "sqlEndpointProperties": {
+          "description": "An object containing the properties of the SQL endpoint.",
+          "$ref": "#/definitions/SqlEndpointProperties"
+        },
+        "defaultSchema": {
+          "description": "Default schema of the lakehouse. This property is returned only for schema enabled lakehouse.",
+          "type": "string"
+        }
+      }
+    },
+    "SqlEndpointProperties": {
+      "required": ["provisioningStatus"],
+      "description": "An object containing the properties of the SQL endpoint.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "SQL endpoint ID.",
+          "type": "string"
+        },
+        "connectionString": {
+          "description": "SQL endpoint connection string.",
+          "type": "string"
+        },
+        "provisioningStatus": {
+          "description": "The SQL endpoint provisioning status.",
+          "$ref": "#/definitions/SqlEndpointProvisioningStatus"
+        }
+      }
+    },
+    "SqlEndpointProvisioningStatus": {
+      "type": "string",
+      "description": "The SQL endpoint provisioning status type. Additional `SqlEndpointProvisioningStatus` types may be added over time.",
+      "enum": ["InProgress", "Success", "Failed"],
+      "x-ms-enum": {
+        "name": "SqlEndpointProvisioningStatus",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "InProgress",
+            "description": "SQL endpoint provisioning is in progress."
+          },
+          {
+            "value": "Success",
+            "description": "SQL endpoint provisioning succeeded."
+          },
+          {
+            "value": "Failed",
+            "description": "SQL endpoint provisioning failed."
+          }
+        ]
+      }
+    },
+    "CreateLakehouseRequest": {
+      "description": "Create lakehouse request payload.",
+      "type": "object",
+      "required": ["displayName"],
+      "properties": {
+        "displayName": {
+          "description": "The lakehouse display name. The display name must follow naming rules according to item type.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The lakehouse description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        },
+        "folderId": {
+          "description": "The folder ID. If not specified or null, the lakehouse is created with the workspace as its folder.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": false
+        },
+        "creationPayload": {
+          "description": "The lakehouse creation payload.",
+          "$ref": "#/definitions/LakehouseCreationPayload",
+          "readOnly": false
+        },
+        "definition": {
+          "description": "The lakehouse public definition.",
+          "$ref": "#/definitions/LakehouseDefinition",
+          "readOnly": false
+        },
+        "sensitivityLabelSettings": {
+          "description": "The sensitivity label settings for the lakehouse.",
+          "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+          "readOnly": false
+        }
+      }
+    },
+    "LakehouseRefreshMaterializedLakeViewsSchedule": {
+      "description": "Lakehouse refresh materialized lake views schedule.",
+      "type": "object",
+      "required": ["id", "enabled"],
+      "allOf": [
+        {
+          "$ref": "../common/job_scheduling.json#/definitions/BaseItemSchedule"
+        }
+      ],
+      "properties": {
+        "executionData": {
+          "description": "The execution data for the refresh materialized lake views.",
+          "$ref": "#/definitions/RefreshMaterializedLakeViewsExecutionData"
+        }
+      }
+    },
+    "CreateLakehouseRefreshMaterializedLakeViewsScheduleRequest": {
+      "description": "Create lakehouse refresh materialized lake views schedule request payload.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "../common/job_scheduling.json#/definitions/BaseCreateScheduleRequest"
+        }
+      ],
+      "properties": {
+        "executionData": {
+          "description": "The execution data for the refresh materialized lake views.",
+          "$ref": "#/definitions/RefreshMaterializedLakeViewsExecutionData"
+        }
+      }
+    },
+    "UpdateLakehouseRefreshMaterializedLakeViewsScheduleRequest": {
+      "description": "Update lakehouse refresh materialized lake views schedule request payload.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "../common/job_scheduling.json#/definitions/BaseUpdateScheduleRequest"
+        }
+      ],
+      "properties": {
+        "executionData": {
+          "description": "The execution data for the refresh materialized lake views.",
+          "$ref": "#/definitions/RefreshMaterializedLakeViewsExecutionData"
+        }
+      }
+    },
+    "UpdateLakehouseDefinitionRequest": {
+      "description": "Update Lakehouse public definition request payload.",
+      "required": ["definition"],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/LakehouseDefinition"
+        }
+      }
+    },
+    "LakehouseDefinitionResponse": {
+      "description": "Lakehouse public definition response.",
+      "required": ["definition"],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/LakehouseDefinition",
+          "readOnly": true
+        }
+      }
+    },
+    "LakehouseDefinition": {
+      "description": "Lakehouse public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/lakehouse-definition) for more details on the structure of the Lakehouse definition.",
+      "type": "object",
+      "required": ["parts"],
+      "properties": {
+        "format": {
+          "description": "The format of the lakehouse definition.",
+          "type": "string",
+          "readOnly": false
+        },
+        "parts": {
+          "description": "A list of definition parts.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LakehouseDefinitionPart"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "LakehouseDefinitionPart": {
+      "description": "Lakehouse definition part object.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "The lakehouse part path.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payload": {
+          "description": "The lakehouse part payload.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payloadType": {
+          "description": "The payload type.",
+          "$ref": "../common/definitions.json#/definitions/PayloadType",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateLakehouseRequest": {
+      "description": "Update lakehouse request.",
+      "properties": {
+        "displayName": {
+          "description": "The lakehouse display name. The display name must follow naming rules according to item type.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The lakehouse description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        }
+      }
+    },
+    "LakehouseCreationPayload": {
+      "description": "**(Preview)** Lakehouse item payload. This property is currently required due to the schema enabled lakehouse being in preview. It might become redundant upon General Availability (GA).",
+      "type": "object",
+      "required": ["enableSchemas"],
+      "properties": {
+        "enableSchemas": {
+          "description": "Create a schema enabled lakehouse when set to true. Only 'true' is allowed.",
+          "type": "boolean"
+        }
+      }
+    },
+    "Tables": {
+      "required": ["data"],
+      "description": "A paginated list of tables.",
+      "type": "object",
+      "properties": {
+        "continuationToken": {
+          "description": "Token to get the next page of results.",
+          "type": "string"
+        },
+        "continuationUri": {
+          "description": "The URI of the next chunk in the result set.",
+          "type": "string"
+        },
+        "data": {
+          "description": "List of tables.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Table"
+          }
+        }
+      }
+    },
+    "Table": {
+      "required": ["type", "name", "location", "format"],
+      "description": "Table information.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "Table type.",
+          "$ref": "#/definitions/TableType"
+        },
+        "name": {
+          "type": "string",
+          "description": "Table name."
+        },
+        "location": {
+          "type": "string",
+          "description": "Table location."
+        },
+        "format": {
+          "type": "string",
+          "description": "Table format."
+        }
+      }
+    },
+    "TableType": {
+      "type": "string",
+      "description": "The table type. Additional `TableType` types may be added over time.",
+      "enum": ["Managed", "External"],
+      "x-ms-enum": {
+        "name": "TableType",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Managed",
+            "description": "Managed table."
+          },
+          {
+            "value": "External",
+            "description": "External table."
+          }
+        ]
+      }
+    },
+    "LoadTableRequest": {
+      "type": "object",
+      "description": "Represents a load table operation request.",
+      "required": ["relativePath", "pathType"],
+      "properties": {
+        "relativePath": {
+          "pattern": "^Files(\\/[\\p{L}\\w]{1}([ \\p{L}\\w\\.-]*[\\p{L}\\w\\.-]{1})*)*$",
+          "type": "string",
+          "description": "The relative path of the data file or folder."
+        },
+        "pathType": {
+          "type": "string",
+          "description": "The type of `relativePath`, either file or folder. Additional `PathType` types may be added over time.",
+          "enum": ["File", "Folder"],
+          "x-ms-enum": {
+            "name": "PathType",
+            "modelAsString": true,
+            "values": [
+              {
+                "value": "File",
+                "description": "load table from file."
+              },
+              {
+                "value": "Folder",
+                "description": "load table from folder."
+              }
+            ]
+          }
+        },
+        "fileExtension": {
+          "pattern": "^[a-zA-Z0-9_-]{1,16}$",
+          "type": "string",
+          "description": "The file extension of the data file."
+        },
+        "mode": {
+          "type": "string",
+          "description": "The load table operation mode, overwrite or append. Additional mode types may be added over time.",
+          "enum": ["Overwrite", "Append"],
+          "x-ms-enum": {
+            "name": "ModeType",
+            "modelAsString": true,
+            "values": [
+              {
+                "value": "Overwrite",
+                "description": "load table in overwrite mode."
+              },
+              {
+                "value": "Append",
+                "description": "load table in append mode."
+              }
+            ]
+          }
+        },
+        "recursive": {
+          "type": "boolean",
+          "description": "Indicates whether to search data files recursively or not, when loading a table from a folder."
+        },
+        "formatOptions": {
+          "$ref": "#/definitions/FileFormatOptions"
+        }
+      }
+    },
+    "FileFormatOptions": {
+      "type": "object",
+      "description": "Abstract type of data file format options.",
+      "discriminator": "format",
+      "required": ["format"],
+      "properties": {
+        "format": {
+          "type": "string",
+          "description": "Data file format name. Additional file format types may be added over time.",
+          "enum": ["Csv", "Parquet"],
+          "x-ms-enum": {
+            "name": "FileFormat",
+            "modelAsString": true,
+            "values": [
+              {
+                "value": "Csv",
+                "description": "CSV format name."
+              },
+              {
+                "value": "Parquet",
+                "description": "Parquet format name."
+              }
+            ]
+          }
+        }
+      }
+    },
+    "Csv": {
+      "type": "object",
+      "description": "CSV format options for CSV files.",
+      "properties": {
+        "header": {
+          "type": "boolean",
+          "description": "This property indicates whether the CSV data file contains a header line or not."
+        },
+        "delimiter": {
+          "pattern": "^[^\\(\\)\\[\\]\\{\\}'\"\"]{0,8}$",
+          "type": "string",
+          "description": "The delimiter of CSV file."
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/FileFormatOptions"
+        }
+      ],
+      "x-ms-discriminator-value": "Csv"
+    },
+    "Parquet": {
+      "type": "object",
+      "description": "Format options for Parquet files.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/FileFormatOptions"
+        }
+      ],
+      "x-ms-discriminator-value": "Parquet"
+    },
+    "RunOnDemandTableMaintenanceRequest": {
+      "description": "Run on demand lakehouse table maintenance instance payload",
+      "type": "object",
+      "required": ["executionData"],
+      "properties": {
+        "executionData": {
+          "description": "Execution data to configure the [table maintenance](/fabric/data-engineering/lakehouse-table-maintenance) job.",
+          "$ref": "#/definitions/TableMaintenanceExecutionData"
+        }
+      }
+    },
+    "TableMaintenanceExecutionData": {
+      "type": "object",
+      "description": "Run on demand lakehouse table maintenance instance payload",
+      "required": ["tableName"],
+      "properties": {
+        "tableName": {
+          "type": "string",
+          "description": "Name of the table to run maintenance on. Max length of 256 character alphanumeric string with underscores.",
+          "pattern": "^(?=[0-9]*[a-zA-Z_])[a-zA-Z0-9_]{1,256}$"
+        },
+        "schemaName": {
+          "type": "string",
+          "description": "Name of the schema under which the table is created. This property is applicable only for a schema enabled Lakehouse. Max length of 128 character alphanumeric string with underscores.",
+          "pattern": "^(?=[0-9]*[a-zA-Z_])[a-zA-Z0-9_]{1,128}$"
+        },
+        "optimizeSettings": {
+          "$ref": "#/definitions/OptimizeSettings",
+          "description": "Configures the optimization settings of the maintenance job. To skip table optimization, leave this parameter empty."
+        },
+        "vacuumSettings": {
+          "$ref": "#/definitions/VacuumSettings",
+          "description": "Configures the [vacuum](https://docs.delta.io/latest/delta-utility.html#-delta-vacuum) settings of the maintenance job. To skip table vacuum, leave this parameter empty."
+        },
+        "purgeDeletionVectors": {
+          "type": "boolean",
+          "description": "When true, executes REORG TABLE APPLY (PURGE) to rewrite files with [deletion vectors](https://docs.delta.io/latest/delta-deletion-vectors.html), physically removing deleted rows."
+        }
+      }
+    },
+    "OptimizeSettings": {
+      "type": "object",
+      "description": "Table maintenance optimization settings.",
+      "properties": {
+        "zOrderBy": {
+          "type": "array",
+          "description": "A list of column names to Z-Order the data by. If not provided, Z-Ordering isn't applied.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "vOrder": {
+          "type": "boolean",
+          "description": "The [V-Order](/fabric/data-engineering/delta-optimization-and-v-order#what-is-v-order) settings. True - Enabled, False - Disabled."
+        }
+      }
+    },
+    "VacuumSettings": {
+      "type": "object",
+      "description": "Table maintenance [vacuum](/fabric/data-engineering/lakehouse-table-maintenance#table-maintenance-operations) settings.",
+      "properties": {
+        "retentionPeriod": {
+          "type": "string",
+          "pattern": "^(\\d+:)?\\d{1,2}:\\d{1,2}:\\d{1,2}$",
+          "description": "Overrides the default retention period. Unreferenced files or data files associated with delta table versions older than the specified retention period are removed. This value should follow the pattern of `d:hh:mm:ss` where d is the number of days, hh is the number of hours between 00 and 23, mm is the number of minutes between 00 and 59, and ss is the number of seconds between 00 and 59."
+        }
+      }
+    },
+    "MaterializedLakeViewExecutionDefinitions": {
+      "description": "A list of materialized lake view execution definitions.",
+      "required": ["value"],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of materialized lake view execution definitions.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MaterializedLakeViewExecutionDefinition"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "MaterializedLakeViewExecutionDefinition": {
+      "description": "A materialized lake views execution definition object.",
+      "type": "object",
+      "required": ["id", "displayName", "currentLakehouseExecutionContext"],
+      "properties": {
+        "id": {
+          "description": "The materialized lake views execution definition ID.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "displayName": {
+          "description": "The materialized lake views execution definition display name.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "A short description of the materialized lake views execution definition.",
+          "type": "string",
+          "readOnly": false
+        },
+        "settings": {
+          "description": "The materialized lake views execution definition settings.",
+          "$ref": "#/definitions/MaterializedLakeViewExecutionDefinitionSettingsResponse",
+          "readOnly": false
+        },
+        "currentLakehouseExecutionContext": {
+          "description": "The current lakehouse execution context for the materialized lake views execution definition.",
+          "$ref": "#/definitions/CurrentLakehouseExecutionContext",
+          "readOnly": false
+        },
+        "extendedLineageExecutionContext": {
+          "description": "The extended lineage execution context for the materialized lake views execution definition.",
+          "$ref": "#/definitions/ExtendedLineageExecutionContextResponse",
+          "readOnly": false
+        }
+      }
+    },
+    "CreateMaterializedLakeViewExecutionDefinitionRequest": {
+      "description": "Create materialized lake views execution definition request payload.",
+      "type": "object",
+      "required": ["displayName", "currentLakehouseExecutionContext"],
+      "properties": {
+        "displayName": {
+          "description": "The materialized lake views execution definition display name.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "A short description of the materialized lake views execution definition.",
+          "type": "string",
+          "readOnly": false
+        },
+        "settings": {
+          "description": "The materialized lake views execution definition settings.",
+          "$ref": "#/definitions/MaterializedLakeViewExecutionDefinitionSettingsRequest",
+          "readOnly": false
+        },
+        "currentLakehouseExecutionContext": {
+          "description": "The current lakehouse execution context for the materialized lake views execution definition.",
+          "$ref": "#/definitions/CurrentLakehouseExecutionContext",
+          "readOnly": false
+        },
+        "extendedLineageExecutionContext": {
+          "description": "The extended lineage execution context for the materialized lake views execution definition.",
+          "$ref": "#/definitions/ExtendedLineageExecutionContextRequest",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateMaterializedLakeViewExecutionDefinitionRequest": {
+      "description": "Update materialized lake views execution definition request payload. Only the fields provided are updated; omitted fields retain their existing values.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "description": "The materialized lake views execution definition display name.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "A short description of the materialized lake views execution definition.",
+          "type": "string",
+          "readOnly": false
+        },
+        "settings": {
+          "description": "The materialized lake views execution definition settings.",
+          "$ref": "#/definitions/MaterializedLakeViewExecutionDefinitionSettingsRequest",
+          "readOnly": false
+        },
+        "currentLakehouseExecutionContext": {
+          "description": "The current lakehouse execution context for the materialized lake views execution definition.",
+          "$ref": "#/definitions/CurrentLakehouseExecutionContext",
+          "readOnly": false
+        },
+        "extendedLineageExecutionContext": {
+          "description": "The extended lineage execution context for the materialized lake views execution definition.",
+          "$ref": "#/definitions/ExtendedLineageExecutionContextRequest",
+          "readOnly": false
+        }
+      }
+    },
+    "MaterializedLakeViewExecutionDefinitionSettingsRequest": {
+      "description": "The materialized lake views execution definition settings.",
+      "type": "object",
+      "properties": {
+        "environment": {
+          "description": "The Spark environment reference to be used with the materialized lake views execution definition.",
+          "$ref": "../common/definitions.json#/definitions/ItemReferenceById",
+          "readOnly": false
+        },
+        "refreshMode": {
+          "description": "The refresh mode setting to be used with the materialized lake views execution definition. Defaults to `Optimal` if not specified.",
+          "$ref": "#/definitions/RefreshMode",
+          "readOnly": false
+        }
+      }
+    },
+    "MaterializedLakeViewExecutionDefinitionSettingsResponse": {
+      "description": "The materialized lake views execution definition settings (response).",
+      "type": "object",
+      "properties": {
+        "environment": {
+          "description": "The Spark environment reference to be used with the materialized lake views execution definition.",
+          "$ref": "../common/definitions.json#/definitions/ItemReference",
+          "readOnly": false
+        },
+        "refreshMode": {
+          "description": "The refresh mode setting to be used with the materialized lake views execution definition. Defaults to `Optimal` if not specified.",
+          "$ref": "#/definitions/RefreshMode",
+          "readOnly": false
+        }
+      }
+    },
+    "RefreshMode":{
+      "type": "string",
+      "description": "The refresh mode for the execution definition. Additional `RefreshMode` types may be added over time.",
+      "enum": [
+        "Optimal",
+        "Full"
+      ],
+      "x-ms-enum": {
+        "name": "RefreshMode",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Optimal",
+            "description": "This mode chooses the best strategy to maximize performance from among incremental, full, or no recompute while refreshing each materialized lake view."
+          },
+          {
+            "value": "Full",
+            "description": "This mode enforces the full recompute for materialized lake views being refreshed."
+          }
+        ]
+      }
+    },
+    "CurrentLakehouseExecutionContext": {
+      "description": "The current lakehouse execution context for a materialized lake views execution definition.",
+      "type": "object",
+      "required": ["mode"],
+      "discriminator": "mode",
+      "properties": {
+        "mode": {
+          "description": "The execution context mode for the current lakehouse.",
+          "$ref": "#/definitions/ExecutionContextMode",
+          "readOnly": false
+        }
+      }
+    },
+    "CurrentLakehouseExecutionContextAll": {
+      "description": "Current lakehouse execution context where all materialized lake views are included.",
+      "type": "object",
+      "x-ms-discriminator-value": "All",
+      "allOf": [
+        {
+          "$ref": "#/definitions/CurrentLakehouseExecutionContext"
+        }
+      ]
+    },
+    "CurrentLakehouseExecutionContextSelected": {
+      "description": "Current lakehouse execution context where only selected materialized lake views are included.",
+      "type": "object",
+      "x-ms-discriminator-value": "Selected",
+      "allOf": [
+        {
+          "$ref": "#/definitions/CurrentLakehouseExecutionContext"
+        }
+      ],
+      "properties": {
+        "selectedMlvs": {
+          "description": "The list of fully qualified names of materialized lake views from the current lakehouse to be refreshed.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "readOnly": false
+        }
+      },
+      "required": ["selectedMlvs"]
+    },
+    "ExtendedLineageExecutionContextRequest": {
+      "description": "The extended lineage execution context for a materialized lake views execution definition.",
+      "type": "object",
+      "required": ["mode"],
+      "discriminator": "mode",
+      "properties": {
+        "mode": {
+          "description": "The execution context mode for extended lineage.",
+          "$ref": "#/definitions/ExecutionContextMode",
+          "readOnly": false
+        }
+      }
+    },
+    "ExtendedLineageExecutionContextRequestAll": {
+      "description": "Extended lineage execution context where all lakehouses are included.",
+      "type": "object",
+      "x-ms-discriminator-value": "All",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ExtendedLineageExecutionContextRequest"
+        }
+      ]
+    },
+    "ExtendedLineageExecutionContextRequestSelected": {
+      "description": "Extended lineage execution context where only selected lakehouses are included.",
+      "type": "object",
+      "x-ms-discriminator-value": "Selected",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ExtendedLineageExecutionContextRequest"
+        }
+      ],
+      "properties": {
+        "selectedLakehouses": {
+          "description": "The list of lakehouses to be included in refresh.",
+          "type": "array",
+          "items": {
+            "$ref": "../common/definitions.json#/definitions/ItemReferenceById"
+          },
+          "readOnly": false
+        }
+      },
+      "required": ["selectedLakehouses"]
+    },
+    "ExtendedLineageExecutionContextResponse": {
+      "description": "The extended lineage execution context for a materialized lake views execution definition (response).",
+      "type": "object",
+      "required": ["mode"],
+      "discriminator": "mode",
+      "properties": {
+        "mode": {
+          "description": "The execution context mode for extended lineage.",
+          "$ref": "#/definitions/ExecutionContextMode",
+          "readOnly": false
+        }
+      }
+    },
+    "ExtendedLineageExecutionContextResponseAll": {
+      "description": "Extended lineage execution context where all lakehouses are included (response).",
+      "type": "object",
+      "x-ms-discriminator-value": "All",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ExtendedLineageExecutionContextResponse"
+        }
+      ]
+    },
+    "ExtendedLineageExecutionContextResponseSelected": {
+      "description": "Extended lineage execution context where only selected lakehouses are included (response).",
+      "type": "object",
+      "x-ms-discriminator-value": "Selected",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ExtendedLineageExecutionContextResponse"
+        }
+      ],
+      "properties": {
+        "selectedLakehouses": {
+          "description": "The list of lakehouses to be included in refresh.",
+          "type": "array",
+          "items": {
+            "$ref": "../common/definitions.json#/definitions/ItemReference"
+          },
+          "readOnly": false
+        }
+      },
+      "required": ["selectedLakehouses"]
+    },
+    "ExecutionContextMode": {
+      "type": "string",
+      "description": "The execution context mode. Additional `ExecutionContextMode` types may be added over time.",
+      "enum": [
+        "All",
+        "Selected"
+      ],
+      "x-ms-enum": {
+        "name": "ExecutionContextMode",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "All",
+            "description": "All items are included in the execution boundary."
+          },
+          {
+            "value": "Selected",
+            "description": "Only selected items are included in the execution boundary."
+          }
+        ]
+      }
+    },
+    "RefreshMaterializedLakeViewsExecutionData": {
+      "description": "The execution data for the refresh materialized lake views.",
+      "type": "object",
+      "properties": {
+        "mlvExecutionDefinitionId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The MLV Execution Definition Id."
+        }
+      }
+    }
+  }
+}

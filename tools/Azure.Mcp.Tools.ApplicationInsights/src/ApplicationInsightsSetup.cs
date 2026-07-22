@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;
 using Azure.Mcp.Tools.ApplicationInsights.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.ApplicationInsights;
 
@@ -39,8 +38,7 @@ public class ApplicationInsightsSetup : IAreaSetup
         var recommendation = new CommandGroup("recommendation", "Application Insights recommendation operations - list recommendation targets (components).");
         group.AddSubGroup(recommendation);
 
-        var recommendationList = serviceProvider.GetRequiredService<RecommendationListCommand>();
-        recommendation.AddCommand(recommendationList.Name, recommendationList);
+        recommendation.AddCommand<RecommendationListCommand>(serviceProvider);
 
         return group;
     }

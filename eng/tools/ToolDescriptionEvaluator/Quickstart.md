@@ -44,10 +44,10 @@ Or copy `.env.example` to `.env` and fill in your credentials.
     ./scripts/Run-ToolDescriptionEvaluator.ps1
 
     # For Fabric MCP Server
-    ./scripts/Run-ToolDescriptionEvaluator.ps1 -Server "Fabric"
+    ./scripts/Run-ToolDescriptionEvaluator.ps1 -Area "Acr"
 
-    # For a specific server executable
-    ./scripts/Run-ToolDescriptionEvaluator.ps1 -ServerExe "./path/to/azmcp.exe"
+    # Build the Azure.Mcp.Server as part of the run
+    ./scripts/Run-ToolDescriptionEvaluator.ps1 -BuildAzureMcp
     ```
 
 4. Check if your tool ranks in the top 3 for the prompts (ideally #1) and with a score of at least `0.4`

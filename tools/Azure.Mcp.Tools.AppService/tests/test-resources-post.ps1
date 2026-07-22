@@ -3,15 +3,14 @@ param(
     [string] $TestApplicationId,
     [string] $ResourceGroupName,
     [string] $BaseName,
-    [hashtable] $DeploymentOutputs
+    [hashtable] $DeploymentOutputs,
+    [hashtable] $AdditionalParameters
 )
 
 $ErrorActionPreference = "Stop"
 
 . "$PSScriptRoot/../../../eng/common/scripts/common.ps1"
 . "$PSScriptRoot/../../../eng/scripts/helpers/TestResourcesHelpers.ps1"
-
-$testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 
 # $testSettings contains:
 # - TenantId
@@ -68,6 +67,16 @@ try {
         Write-Host "Cosmos Connection String: $cosmosConnectionString" -ForegroundColor Green
     }
 
+    Write-Host "Deploying dummy ZIP file for Web App deployment testing..." -ForegroundColor Green
+    $deploymentResult = az webapp deploy --resource-group $webAppResourceGroup --name $webAppName --src-path "$PSScriptRoot/helloworld.zip" --type zip
+    $json = $deploymentResult | ConvertFrom-Json
+    if ($json.provisioningState -ne "Succeeded") {
+        throw "Web App deployment failed with error: $($json.status_text)"
+    }
+    else {
+        $DeploymentOutputs['DEPLOYMENTID'] = $json.id
+    }
+
     Write-Host "App Service post-deployment setup completed successfully." -ForegroundColor Green
 }
 catch {
@@ -75,3 +84,4 @@ catch {
     throw
 }
 
+$testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot

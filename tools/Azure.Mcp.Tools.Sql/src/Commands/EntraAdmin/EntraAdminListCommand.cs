@@ -2,58 +2,44 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.EntraAdmin;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.EntraAdmin;
 
-public sealed class EntraAdminListCommand(ILogger<EntraAdminListCommand> logger)
-    : BaseSqlCommand<EntraAdminListOptions>(logger)
+[CommandMetadata(
+    Id = "240aac03-0eb0-4cd3-91f8-475577289186",
+    Name = "list",
+    Title = "List SQL Server Entra ID Administrators",
+    Description = """
+        Gets a list of all Microsoft Entra ID administrators for a SQL server, including their display names,
+        object IDs, and tenant information. Returns an array of Entra ID administrator objects with their properties.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class EntraAdminListCommand(ISqlService sqlService, ILogger<EntraAdminListCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<EntraAdminListOptions, EntraAdminListCommand.EntraAdminListResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "List SQL Server Entra ID Administrators";
+    private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<EntraAdminListCommand> _logger = logger;
 
-    public override string Id => "240aac03-0eb0-4cd3-91f8-475577289186";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        Gets a list of Microsoft Entra ID administrators for a SQL server. This command retrieves all
-        Entra ID administrators configured for the specified SQL server, including their display names, object IDs,
-        and tenant information. Returns an array of Entra ID administrator objects with their properties.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, EntraAdminListOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var administrators = await sqlService.GetEntraAdministratorsAsync(
-                options.Server!,
-                options.ResourceGroup!,
+            var administrators = await _sqlService.GetEntraAdministratorsAsync(
+                options.Server,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.RetryPolicy,
                 cancellationToken);
@@ -63,8 +49,8 @@ public sealed class EntraAdminListCommand(ILogger<EntraAdminListCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing SQL server Entra ID administrators. Server: {Server}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Server, options.ResourceGroup, options);
+                "Error listing SQL server Entra ID administrators. Server: {Server}, ResourceGroup: {ResourceGroup}.",
+                options.Server, options.ResourceGroup);
             HandleException(context, ex);
         }
 
@@ -81,5 +67,5 @@ public sealed class EntraAdminListCommand(ILogger<EntraAdminListCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record EntraAdminListResult(List<SqlServerEntraAdministrator> Administrators);
+    public sealed record EntraAdminListResult(List<SqlServerEntraAdministrator> Administrators);
 }

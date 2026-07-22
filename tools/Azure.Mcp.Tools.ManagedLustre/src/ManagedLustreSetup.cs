@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.ManagedLustre;
 
@@ -25,6 +28,18 @@ public class ManagedLustreSetup : IAreaSetup
         services.AddSingleton<SubnetSizeAskCommand>();
         services.AddSingleton<SubnetSizeValidateCommand>();
         services.AddSingleton<SkuGetCommand>();
+        services.AddSingleton<AutoexportJobCreateCommand>();
+        services.AddSingleton<AutoexportJobCancelCommand>();
+        services.AddSingleton<AutoexportJobGetCommand>();
+        services.AddSingleton<AutoexportJobDeleteCommand>();
+        services.AddSingleton<AutoimportJobCreateCommand>();
+        services.AddSingleton<AutoimportJobCancelCommand>();
+        services.AddSingleton<AutoimportJobGetCommand>();
+        services.AddSingleton<AutoimportJobDeleteCommand>();
+        services.AddSingleton<ImportJobCreateCommand>();
+        services.AddSingleton<ImportJobCancelCommand>();
+        services.AddSingleton<ImportJobGetCommand>();
+        services.AddSingleton<ImportJobDeleteCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -35,29 +50,44 @@ public class ManagedLustreSetup : IAreaSetup
         var fileSystem = new CommandGroup("fs", "Azure Managed Lustre file system operations - Commands for listing managed Lustre file systems.");
         managedLustre.AddSubGroup(fileSystem);
 
-        var list = serviceProvider.GetRequiredService<FileSystemListCommand>();
-        fileSystem.AddCommand(list.Name, list);
-
-        var create = serviceProvider.GetRequiredService<FileSystemCreateCommand>();
-        fileSystem.AddCommand(create.Name, create);
-
-        var update = serviceProvider.GetRequiredService<FileSystemUpdateCommand>();
-        fileSystem.AddCommand(update.Name, update);
+        fileSystem.AddCommand<FileSystemListCommand>(serviceProvider);
+        fileSystem.AddCommand<FileSystemCreateCommand>(serviceProvider);
+        fileSystem.AddCommand<FileSystemUpdateCommand>(serviceProvider);
 
         var subnetSize = new CommandGroup("subnetsize", "Subnet size planning and validation operations for Azure Managed Lustre.");
         fileSystem.AddSubGroup(subnetSize);
 
-        var subnetSizeAsk = serviceProvider.GetRequiredService<SubnetSizeAskCommand>();
-        subnetSize.AddCommand(subnetSizeAsk.Name, subnetSizeAsk);
-
-        var subnetSizeValidate = serviceProvider.GetRequiredService<SubnetSizeValidateCommand>();
-        subnetSize.AddCommand(subnetSizeValidate.Name, subnetSizeValidate);
+        subnetSize.AddCommand<SubnetSizeAskCommand>(serviceProvider);
+        subnetSize.AddCommand<SubnetSizeValidateCommand>(serviceProvider);
 
         var sku = new CommandGroup("sku", "This group provides commands to discover and retrieve information about available Azure Managed Lustre SKUs, including supported tiers, performance characteristics, and regional availability. Use these commands to validate SKU options prior to provisioning or updating a filesystem.");
         fileSystem.AddSubGroup(sku);
 
-        var skuGet = serviceProvider.GetRequiredService<SkuGetCommand>();
-        sku.AddCommand(skuGet.Name, skuGet);
+        sku.AddCommand<SkuGetCommand>(serviceProvider);
+
+        var autoexportJob = new CommandGroup("blob_autoexport", "Autoexport job operations for Azure Managed Lustre - Commands for creating jobs to export data from the filesystem to blob storage.");
+        fileSystem.AddSubGroup(autoexportJob);
+
+        autoexportJob.AddCommand<AutoexportJobCreateCommand>(serviceProvider);
+        autoexportJob.AddCommand<AutoexportJobCancelCommand>(serviceProvider);
+        autoexportJob.AddCommand<AutoexportJobGetCommand>(serviceProvider);
+        autoexportJob.AddCommand<AutoexportJobDeleteCommand>(serviceProvider);
+
+        var autoimportJob = new CommandGroup("blob_autoimport", "Autoimport job operations for Azure Managed Lustre - Commands for creating jobs to import data from blob storage to the filesystem.");
+        fileSystem.AddSubGroup(autoimportJob);
+
+        autoimportJob.AddCommand<AutoimportJobCreateCommand>(serviceProvider);
+        autoimportJob.AddCommand<AutoimportJobCancelCommand>(serviceProvider);
+        autoimportJob.AddCommand<AutoimportJobGetCommand>(serviceProvider);
+        autoimportJob.AddCommand<AutoimportJobDeleteCommand>(serviceProvider);
+
+        var blobImport = new CommandGroup("blob_import", "One-time blob import operations for Azure Managed Lustre - Commands for creating jobs to perform one-time import of data from blob storage to the filesystem.");
+        fileSystem.AddSubGroup(blobImport);
+
+        blobImport.AddCommand<ImportJobCreateCommand>(serviceProvider);
+        blobImport.AddCommand<ImportJobCancelCommand>(serviceProvider);
+        blobImport.AddCommand<ImportJobGetCommand>(serviceProvider);
+        blobImport.AddCommand<ImportJobDeleteCommand>(serviceProvider);
 
         return managedLustre;
     }

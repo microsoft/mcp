@@ -1,0 +1,36 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "beta": true
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "12345678-1234-1234-1234-123456789012",
+                        "name": "MyAirflowPool",
+                        "nodeSize": "Small",
+                        "shutdownPolicy": "OneHourInactivity",
+                        "computeScalability": {
+                            "minNodeCount": 5,
+                            "maxNodeCount": 8
+                        },
+                        "apacheAirflowJobVersion": "1.0.0"
+                    },
+                    {
+                        "id": "87654321-4321-4321-4321-210987654321",
+                        "name": "LargeAirflowPool",
+                        "nodeSize": "Large",
+                        "shutdownPolicy": "AlwaysOn",
+                        "computeScalability": {
+                            "minNodeCount": 5,
+                            "maxNodeCount": 10
+                        },
+                        "apacheAirflowJobVersion": "1.0.0"
+                    }
+                ]
+            }
+        }
+    }
+}

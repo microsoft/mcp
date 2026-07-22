@@ -1,0 +1,110 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Tools.ManagedLustre.Options;
+using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoimportJob;
+using Azure.Mcp.Tools.ManagedLustre.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
+
+namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
+
+[CommandMetadata(
+    Id = "b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
+    Name = "get",
+    Title = "Get Azure Managed Lustre Autoimport Job",
+    Description = """
+        Gets the details of auto import jobs for an Azure Managed Lustre filesystem. Use this to retrieve the status, configuration, and progress information of autoimport operations that sync data from the linked blob storage container to the Lustre filesystem. If job-name is provided, returns details of a specific job; otherwise returns all jobs for the filesystem.
+        Required options:
+        - filesystem-name: The name of the AMLFS filesystem
+        - resource-group: The resource group containing the filesystem
+        - subscription: The subscription containing the filesystem
+        Optional options:
+        - job-name: The name of a specific autoimport job (if omitted, all jobs are returned)
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AutoimportJobGetCommand(IManagedLustreService service, ILogger<AutoimportJobGetCommand> logger)
+    : BaseManagedLustreCommand<AutoimportJobGetOptions>(logger)
+{
+
+    private readonly IManagedLustreService _service = service;
+    private new readonly ILogger<AutoimportJobGetCommand> _logger = logger;
+
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(ManagedLustreOptionDefinitions.FileSystemNameOption);
+        command.Options.Add(ManagedLustreOptionDefinitions.JobNameOption.AsOptional());
+    }
+
+    protected override AutoimportJobGetOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.FileSystemName ??= parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.FileSystemNameOption.Name);
+        options.JobName ??= parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.JobNameOption.Name);
+        return options;
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
+        var options = BindOptions(parseResult);
+
+        try
+        {
+
+            if (!string.IsNullOrWhiteSpace(options.JobName))
+            {
+                // Get specific job
+                var result = await _service.GetAutoimportJobAsync(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.FileSystemName!,
+                    options.JobName!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                context.Response.Results = ResponseResult.Create(new(result), ManagedLustreJsonContext.Default.AutoimportJobGetResult);
+            }
+            else
+            {
+                // List all jobs
+                var results = await _service.ListAutoimportJobsAsync(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    options.FileSystemName!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                context.Response.Results = ResponseResult.Create(new(results ?? []), ManagedLustreJsonContext.Default.AutoimportJobListResult);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting autoimport job {JobName} for AMLFS filesystem {FileSystemName}.", options.JobName, options.FileSystemName);
+            HandleException(context, ex);
+        }
+
+        return context.Response;
+    }
+
+    public record AutoimportJobGetResult(Models.AutoimportJob Job);
+    public record AutoimportJobListResult(List<Models.AutoimportJob> Jobs);
+}

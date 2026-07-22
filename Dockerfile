@@ -1,5 +1,5 @@
 # Build the runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-alpine AS runtime
 
 # Add build argument for publish directory
 ARG PUBLISH_DIR
@@ -17,8 +17,6 @@ RUN if [ -z "$EXECUTABLE_NAME" ]; then \
     echo "ERROR: EXECUTABLE_NAME build argument is required" && exit 1; \
     fi
 
-RUN apk add --no-cache libc6-compat
-
 # Copy the contents of the publish directory to '/mcp-server' and set it as the working directory
 RUN mkdir -p /mcp-server
 COPY ${PUBLISH_DIR} /mcp-server/
@@ -31,9 +29,14 @@ RUN ls -la
 RUN if [ ! -f $EXECUTABLE_NAME ]; then \
     echo "ERROR: $EXECUTABLE_NAME executable does not exist" && exit 1; \
     fi
-    
+
 # Copy the server binary to a known location and make it executable
 COPY ${PUBLISH_DIR}/${EXECUTABLE_NAME} server-binary
 RUN chmod +x server-binary && test -x server-binary
+
+# Run as non-root user for security hardening
+RUN adduser -D -s /sbin/nologin mcp && \
+    chown -R mcp:mcp /mcp-server
+USER mcp
 
 ENTRYPOINT ["./server-binary", "server", "start"]

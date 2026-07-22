@@ -1,0 +1,22 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
+using Azure.Mcp.Tools.ServiceFabric.Models;
+
+namespace Azure.Mcp.Tools.ServiceFabric.Commands;
+
+[JsonSerializable(typeof(ManagedClusterNodeGetCommand.ManagedClusterNodeGetCommandResult))]
+[JsonSerializable(typeof(ManagedClusterNodeTypeRestartCommand.ManagedClusterNodeTypeRestartCommandResult))]
+[JsonSerializable(typeof(ManagedClusterNode))]
+[JsonSerializable(typeof(ManagedClusterNodeProperties))]
+[JsonSerializable(typeof(NodeIdentifier))]
+[JsonSerializable(typeof(NodeDeactivationInfo))]
+[JsonSerializable(typeof(NodeDeactivationTask))]
+[JsonSerializable(typeof(PendingSafetyCheck))]
+[JsonSerializable(typeof(ListNodesResponse))]
+[JsonSerializable(typeof(RestartNodeRequest))]
+[JsonSerializable(typeof(RestartNodeResponse))]
+[JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+internal sealed partial class ServiceFabricJsonContext : JsonSerializerContext;

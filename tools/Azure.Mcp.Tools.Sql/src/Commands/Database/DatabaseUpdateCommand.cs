@@ -2,89 +2,47 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Sql.Models;
-using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Database;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
 
-public sealed class DatabaseUpdateCommand(ILogger<DatabaseUpdateCommand> logger)
-    : BaseDatabaseCommand<DatabaseUpdateOptions>(logger)
-{
-    private const string CommandTitle = "Update SQL Database";
-
-    public override string Id => "16f02fbf-6760-440a-bacc-925365b6de49";
-
-    public override string Name => "update";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "16f02fbf-6760-440a-bacc-925365b6de49",
+    Name = "update",
+    Title = "Update SQL Database",
+    Description = """
         Scale and configure Azure SQL Database performance settings.
         Update an existing database's SKU, compute tier, storage capacity,
         or redundancy options to meet changing performance requirements.
         Returns the updated database configuration including applied scaling changes.
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DatabaseUpdateCommand(ISqlService sqlService, ILogger<DatabaseUpdateCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<DatabaseUpdateOptions, DatabaseUpdateCommand.DatabaseUpdateResult>(subscriptionResolver)
+{
+    private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<DatabaseUpdateCommand> _logger = logger;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DatabaseUpdateOptions options, CancellationToken cancellationToken)
     {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(SqlOptionDefinitions.SkuNameOption);
-        command.Options.Add(SqlOptionDefinitions.SkuTierOption);
-        command.Options.Add(SqlOptionDefinitions.SkuCapacityOption);
-        command.Options.Add(SqlOptionDefinitions.CollationOption);
-        command.Options.Add(SqlOptionDefinitions.MaxSizeBytesOption);
-        command.Options.Add(SqlOptionDefinitions.ElasticPoolNameOption);
-        command.Options.Add(SqlOptionDefinitions.ZoneRedundantOption);
-        command.Options.Add(SqlOptionDefinitions.ReadScaleOption);
-    }
-
-    protected override DatabaseUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.SkuName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.SkuNameOption.Name);
-        options.SkuTier = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.SkuTierOption.Name);
-        options.SkuCapacity = parseResult.GetValueOrDefault<int?>(SqlOptionDefinitions.SkuCapacityOption.Name);
-        options.Collation = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.CollationOption.Name);
-        options.MaxSizeBytes = parseResult.GetValueOrDefault<long?>(SqlOptionDefinitions.MaxSizeBytesOption.Name);
-        options.ElasticPoolName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.ElasticPoolNameOption.Name);
-        options.ZoneRedundant = parseResult.GetValueOrDefault<bool?>(SqlOptionDefinitions.ZoneRedundantOption.Name);
-        options.ReadScale = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.ReadScaleOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var database = await sqlService.UpdateDatabaseAsync(
-                options.Server!,
-                options.Database!,
-                options.ResourceGroup!,
+            var database = await _sqlService.UpdateDatabaseAsync(
+                options.Server,
+                options.Database,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.SkuName,
                 options.SkuTier,
@@ -102,8 +60,8 @@ public sealed class DatabaseUpdateCommand(ILogger<DatabaseUpdateCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error updating SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Server, options.Database, options.ResourceGroup, options);
+                "Error updating SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}.",
+                options.Server, options.Database, options.ResourceGroup);
             HandleException(context, ex);
         }
 
@@ -122,5 +80,5 @@ public sealed class DatabaseUpdateCommand(ILogger<DatabaseUpdateCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseUpdateResult(SqlDatabase Database);
+    public sealed record DatabaseUpdateResult(SqlDatabase Database);
 }

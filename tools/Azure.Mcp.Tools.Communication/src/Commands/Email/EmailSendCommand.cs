@@ -1,47 +1,34 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Tools.Communication.Commands;
 using Azure.Mcp.Tools.Communication.Models;
 using Azure.Mcp.Tools.Communication.Options;
 using Azure.Mcp.Tools.Communication.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Communication.Commands.Email;
 
 /// <summary>
 /// Send an email message using Azure Communication Services.
 /// </summary>
-public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCommunicationCommand<EmailSendOptions>
+[CommandMetadata(
+    Id = "60f79b69-9e90-4f07-9bf4-bd4452f1143d",
+    Name = "send",
+    Title = "Send Email",
+    Description = "Send emails to one or multiple recipients to the given email-address. The emails can be plain text or HTML formatted. You can include a subject, custom sender name, CC and BCC recipients, and reply-to addresses.",
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = true,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger, ICommunicationService communicationService) : BaseCommunicationCommand<EmailSendOptions>
 {
-    private const string CommandTitle = "Send Email";
     private readonly ILogger<EmailSendCommand> _logger = logger;
-
-    public override string Name => "send";
-    public override string Id => "60f79b69-9e90-4f07-9bf4-bd4452f1143d";
-
-    public override string Title => CommandTitle;
-
-    public override string Description =>
-        """
-        Send emails to one or multiple recipients to the given email-address. The emails can be plain text or HTML formatted. You can include a subject, custom sender name, CC and BCC recipients, and reply-to addresses.
-        """;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        ReadOnly = true,
-        OpenWorld = true,
-        Idempotent = false,
-        Secret = false,
-        LocalRequired = false
-    };
+    private readonly ICommunicationService _communicationService = communicationService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -99,11 +86,10 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
             return context.Response;
         }
         var options = BindOptions(parseResult);
-        var communicationService = context.GetService<ICommunicationService>();
 
         try
         {
-            var result = await communicationService.SendEmailAsync(
+            var result = await _communicationService.SendEmailAsync(
                 options.Endpoint!,
                 options.From!,
                 options.SenderName,
@@ -122,7 +108,7 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, options);
+            _logger.LogError(ex, "Error in {Operation}. Endpoint: {Endpoint}.", Name, options.Endpoint);
             HandleException(context, ex);
         }
 

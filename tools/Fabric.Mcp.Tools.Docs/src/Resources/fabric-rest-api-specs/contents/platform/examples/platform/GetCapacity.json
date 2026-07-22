@@ -1,0 +1,16 @@
+{
+    "parameters": {
+        "capacityId": "96f3f0ff-4fe2-4712-b61b-05a456ba9357"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "96f3f0ff-4fe2-4712-b61b-05a456ba9357",
+                "displayName": "F4 Capacity",
+                "sku": "F4",
+                "region": "West Central US",
+                "state": "Active"
+            }
+        }
+    }
+}

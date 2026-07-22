@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Models.Identity;
 using Azure.Mcp.Tools.Redis.Models.CacheForRedis;
 using Azure.Mcp.Tools.Redis.Models.ManagedRedis;
+using Microsoft.Mcp.Core.Models.Identity;
 
 namespace Azure.Mcp.Tools.Redis.Models
 {

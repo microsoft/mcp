@@ -2,65 +2,39 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Tools.Sql.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Sql.Options.Server;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
-public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
-    : BaseSqlCommand<ServerDeleteOptions>(logger)
-{
-    private const string CommandTitle = "Delete SQL Server";
-
-    public override string Id => "381bd0ef-5bb4-45ed-ae51-d129dcc044b2";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "381bd0ef-5bb4-45ed-ae51-d129dcc044b2",
+    Name = "delete",
+    Title = "Delete SQL Server",
+    Description = """
         Remove the specified SQL server from your Azure subscription, including all associated databases.
         This operation permanently deletes all server data and cannot be reversed.
         Use --force to bypass confirmation.
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ServerDeleteCommand(ISqlService sqlService, ILogger<ServerDeleteCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ServerDeleteOptions, ServerDeleteCommand.ServerDeleteResult>(subscriptionResolver)
+{
+    private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<ServerDeleteCommand> _logger = logger;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ServerDeleteOptions options, CancellationToken cancellationToken)
     {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(SqlOptionDefinitions.ForceOption);
-    }
-
-    protected override ServerDeleteOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Force = parseResult.GetValueOrDefault<bool>(SqlOptionDefinitions.ForceOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             // Show warning about destructive operation unless force is specified
@@ -74,11 +48,9 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
                 return context.Response;
             }
 
-            var sqlService = context.GetService<ISqlService>();
-
-            var deleted = await sqlService.DeleteServerAsync(
-                options.Server!,
-                options.ResourceGroup!,
+            var deleted = await _sqlService.DeleteServerAsync(
+                options.Server,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.RetryPolicy,
                 cancellationToken);
@@ -96,8 +68,8 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error deleting SQL server. Server: {Server}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Server, options.ResourceGroup, options);
+                "Error deleting SQL server. Server: {Server}, ResourceGroup: {ResourceGroup}.",
+                options.Server, options.ResourceGroup);
             HandleException(context, ex);
         }
 
@@ -117,12 +89,5 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
-    };
-
-    internal record ServerDeleteResult(string Message, bool Success);
+    public sealed record ServerDeleteResult(string Message, bool Success);
 }

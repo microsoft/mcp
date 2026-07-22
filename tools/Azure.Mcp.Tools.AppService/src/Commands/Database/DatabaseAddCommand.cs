@@ -1,97 +1,66 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Core.Services.Telemetry;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppService.Models;
-using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Options.Database;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Database;
 
-public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : BaseAppServiceCommand<DatabaseAddOptions>()
-{
-    private const string CommandTitle = "Add Database to App Service";
-    private readonly ILogger<DatabaseAddCommand> _logger = logger;
-
-    public override string Id => "14be1264-82c8-4a4c-8271-7cfe1fbebbc8";
-
-    public override string Name => "add";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "14be1264-82c8-4a4c-8271-7cfe1fbebbc8",
+    Name = "add",
+    Title = "Add Database to App Service",
+    Description = """
         Add a database connection for an App Service using connection string for an existing database. This command configures database connection
         settings for the specified App Service, allowing it to connect to a database server name. You must specify the App Service name, database name,
         database type, database server name, connection string, resource group name and subscription.
-        """;
+        """,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = true,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger, IAppServiceService appServiceService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<DatabaseAddOptions, DatabaseAddCommand.DatabaseAddResult>(subscriptionResolver)
+{
+    private readonly ILogger<DatabaseAddCommand> _logger = logger;
+    private readonly IAppServiceService _appServiceService = appServiceService;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = false };
-
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DatabaseAddOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AppServiceOptionDefinitions.AppServiceName);
-        command.Options.Add(AppServiceOptionDefinitions.DatabaseTypeOption);
-        command.Options.Add(AppServiceOptionDefinitions.DatabaseServerOption);
-        command.Options.Add(AppServiceOptionDefinitions.DatabaseNameOption);
-        command.Options.Add(AppServiceOptionDefinitions.ConnectionStringOption);
-    }
-
-    protected override DatabaseAddOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.AppName = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.AppServiceName);
-        options.DatabaseType = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.DatabaseTypeOption);
-        options.DatabaseServer = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.DatabaseServerOption);
-        options.DatabaseName = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.DatabaseNameOption);
-        options.ConnectionString = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.ConnectionStringOption);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        // Validate first, then bind
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var appServiceService = context.GetService<IAppServiceService>();
-            var connectionInfo = await appServiceService.AddDatabaseAsync(
-                options.AppName!,
-                options.ResourceGroup!,
-                options.DatabaseType!,
-                options.DatabaseServer!,
-                options.DatabaseName!,
+            var connectionInfo = await _appServiceService.AddDatabaseAsync(
+                options.App,
+                options.ResourceGroup,
+                options.DatabaseType,
+                options.DatabaseServer,
+                options.Database,
                 options.ConnectionString ?? string.Empty, // connectionString - will be generated if not provided
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new Result(connectionInfo),
-                AppServiceJsonContext.Default.Result);
+            context.Response.Results = ResponseResult.Create(new(connectionInfo), AppServiceJsonContext.Default.DatabaseAddResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to add database connection to App Service '{AppName}'", options.AppName);
+            _logger.LogError(ex, "Failed to add database connection to App Service '{App}'", options.App);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    public record Result(DatabaseConnectionInfo ConnectionInfo);
+    public sealed record DatabaseAddResult(DatabaseConnectionInfo ConnectionInfo);
 }

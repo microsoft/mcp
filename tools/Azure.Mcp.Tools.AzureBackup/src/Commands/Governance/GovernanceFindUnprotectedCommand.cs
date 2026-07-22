@@ -1,0 +1,65 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.AzureBackup.Models;
+using Azure.Mcp.Tools.AzureBackup.Options.Governance;
+using Azure.Mcp.Tools.AzureBackup.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+
+namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
+
+[CommandMetadata(
+    Id = "73b050ca-2e20-448c-a76c-08e8cd5bbe25",
+    Name = "find-unprotected",
+    Title = "Find Unprotected Resources",
+    Description = """
+        Scans the subscription to find Azure resources that are not currently protected by any
+        backup policy. Optionally filter by resource type, resource group, or tags.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnprotectedCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<GovernanceFindUnprotectedOptions, GovernanceFindUnprotectedCommand.GovernanceFindUnprotectedCommandResult>(subscriptionResolver)
+{
+    private readonly ILogger<GovernanceFindUnprotectedCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, GovernanceFindUnprotectedOptions options, CancellationToken cancellationToken)
+    {
+        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
+        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, "scan");
+
+        try
+        {
+            var resources = await _azureBackupService.FindUnprotectedResourcesAsync(
+                options.Subscription!,
+                options.ResourceTypeFilter,
+                options.ResourceGroup,
+                options.TagFilter,
+                options.Tenant,
+                options.RetryPolicy,
+                cancellationToken);
+
+            context.Response.Results = ResponseResult.Create(
+                new(resources),
+                AzureBackupJsonContext.Default.GovernanceFindUnprotectedCommandResult);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error finding unprotected resources. Subscription: {Subscription}", options.Subscription);
+            HandleException(context, ex);
+        }
+
+        return context.Response;
+    }
+
+    public sealed record GovernanceFindUnprotectedCommandResult(List<UnprotectedResourceInfo> Resources);
+}

@@ -175,7 +175,14 @@ function Test-DockerImages {
         return $true
     }
 
-    $artifactsPath = "$ArtifactsDirectory/docker_output"
+    # Map .NET architecture to Docker architecture
+    $dockerArch = switch ($TargetArch) {
+        'x64' { 'amd64' }
+        'arm64' { 'arm64' }
+        default { $TargetArch }
+    }
+
+    $artifactsPath = "$ArtifactsDirectory/docker_output_$dockerArch"
     if( -not (Test-Path $artifactsPath) ) {
         $message = "Artifacts path $artifactsPath does not exist."
         if ($ignoreMissingArtifacts) {
@@ -187,11 +194,11 @@ function Test-DockerImages {
         }
     }
 
-    $imageTar = Get-ChildItem -Path $artifactsPath -Filter "$($Server.cliName)-image.tar" -ErrorAction SilentlyContinue | Select-Object -First 1
+    $imageTar = Get-ChildItem -Path $artifactsPath -Filter "$($Server.cliName)-$dockerArch-image.tar" -ErrorAction SilentlyContinue | Select-Object -First 1
     Write-Host "Verifying Docker image for $($Server.name)"
     
     if (-not $imageTar) {
-        LogError "Docker image tar file $($Server.cliName)-image.tar not found in $artifactsPath"
+        LogError "Docker image tar file $($Server.cliName)-$dockerArch-image.tar not found in $artifactsPath"
         return $false
     }
 

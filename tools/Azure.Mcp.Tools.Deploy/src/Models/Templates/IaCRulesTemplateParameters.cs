@@ -18,13 +18,6 @@ public sealed class IaCRulesTemplateParameters
     public string FinalInstructions { get; set; } = string.Empty;
     public string RequiredTools { get; set; } = string.Empty;
     public string AdditionalNotes { get; set; } = string.Empty;
-    public string OutputFileName { get; set; } = string.Empty;
-    public string ContainerRegistryOutput { get; set; } = string.Empty;
-    public string RoleAssignmentResource { get; set; } = string.Empty;
-    public string ImageProperty { get; set; } = string.Empty;
-    public string CorsConfiguration { get; set; } = string.Empty;
-    public string LogAnalyticsConfiguration { get; set; } = string.Empty;
-    public string DiagnosticSettingsResource { get; set; } = string.Empty;
 
     /// <summary>
     /// Converts the parameters to a dictionary for template processing.
@@ -42,14 +35,7 @@ public sealed class IaCRulesTemplateParameters
             { nameof(ResourceSpecificRules), ResourceSpecificRules },
             { nameof(FinalInstructions), FinalInstructions },
             { nameof(RequiredTools), RequiredTools },
-            { nameof(AdditionalNotes), AdditionalNotes },
-            { nameof(OutputFileName), OutputFileName },
-            { nameof(ContainerRegistryOutput), ContainerRegistryOutput },
-            { nameof(RoleAssignmentResource), RoleAssignmentResource },
-            { nameof(ImageProperty), ImageProperty },
-            { nameof(CorsConfiguration), CorsConfiguration },
-            { nameof(LogAnalyticsConfiguration), LogAnalyticsConfiguration },
-            { nameof(DiagnosticSettingsResource), DiagnosticSettingsResource },
+            { nameof(AdditionalNotes), AdditionalNotes }
         };
     }
 }

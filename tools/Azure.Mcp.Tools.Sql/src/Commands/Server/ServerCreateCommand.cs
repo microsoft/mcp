@@ -2,86 +2,51 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Server;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
-public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
-    : BaseSqlCommand<ServerCreateOptions>(logger)
+[CommandMetadata(
+    Id = "43f5f55d-2f21-47ac-b7f3-53f5d51b5218",
+    Name = "create",
+    Title = "Create SQL Server",
+    Description = """
+        Creates a new Azure SQL server in the specified resource group and location, with the specified administrator
+        credentials and optional configuration settings. Returns the created server with its properties including the
+        fully qualified domain name.
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCreateCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ServerCreateOptions, ServerCreateCommand.ServerCreateResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "Create SQL Server";
+    private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<ServerCreateCommand> _logger = logger;
 
-    public override string Id => "43f5f55d-2f21-47ac-b7f3-53f5d51b5218";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
-        Creates a new Azure SQL server in the specified resource group and location.
-        The server will be created with the specified administrator credentials and
-        optional configuration settings. Returns the created server with its properties
-        including the fully qualified domain name.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ServerCreateOptions options, CancellationToken cancellationToken)
     {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(SqlOptionDefinitions.AdministratorLoginOption);
-        command.Options.Add(SqlOptionDefinitions.AdministratorPasswordOption);
-        command.Options.Add(SqlOptionDefinitions.LocationOption);
-        command.Options.Add(SqlOptionDefinitions.VersionOption);
-        command.Options.Add(SqlOptionDefinitions.PublicNetworkAccessOption);
-    }
-
-    protected override ServerCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.AdministratorLogin = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.AdministratorLoginOption.Name);
-        options.AdministratorPassword = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.AdministratorPasswordOption.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.LocationOption.Name);
-        options.Version = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.VersionOption.Name);
-        options.PublicNetworkAccess = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.PublicNetworkAccessOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var server = await sqlService.CreateServerAsync(
-                options.Server!,
-                options.ResourceGroup!,
+            var server = await _sqlService.CreateServerAsync(
+                options.Server,
+                options.ResourceGroup,
                 options.Subscription!,
-                options.Location!,
-                options.AdministratorLogin!,
-                options.AdministratorPassword!,
+                options.Location,
+                options.AdministratorLogin,
+                options.AdministratorPassword,
                 options.Version,
                 options.PublicNetworkAccess,
                 options.RetryPolicy,
@@ -92,8 +57,8 @@ public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error creating SQL server. Server: {Server}, ResourceGroup: {ResourceGroup}, Location: {Location}, Options: {@Options}",
-                options.Server, options.ResourceGroup, options.Location, options);
+                "Error creating SQL server. Server: {Server}, ResourceGroup: {ResourceGroup}, Location: {Location}",
+                options.Server, options.ResourceGroup, options.Location);
             HandleException(context, ex);
         }
 
@@ -113,12 +78,5 @@ public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
-    };
-
-    internal record ServerCreateResult(SqlServer Server);
+    public sealed record ServerCreateResult(SqlServer Server);
 }

@@ -1,0 +1,845 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Net;
+using Azure.ResourceManager.FileShares;
+using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
+
+namespace Azure.Mcp.Tools.FileShares.Services;
+
+/// <summary>
+/// Service for Azure File Shares operations using Azure Resource Manager SDK.
+/// </summary>
+public sealed class FileSharesService(
+    ISubscriptionService subscriptionService,
+    ITenantService tenantService,
+    ILogger<FileSharesService> logger) : BaseAzureService(tenantService), IFileSharesService
+{
+    private readonly ISubscriptionService _subscriptionService = subscriptionService;
+    private readonly ILogger<FileSharesService> _logger = logger;
+    public const string HttpClientName = "AzureMcpFileSharesService";
+
+    public async Task<List<FileShareInfo>> ListFileSharesAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var fileShares = new List<FileShareInfo>();
+
+        if (!string.IsNullOrEmpty(resourceGroup))
+        {
+            ResourceGroupResource resourceGroupResource;
+            try
+            {
+                var response = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+                resourceGroupResource = response.Value;
+            }
+            catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning(reqEx,
+                    "Resource group not found when listing file shares. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                    resourceGroup, subscription);
+                return [];
+            }
+
+            var collection = resourceGroupResource.GetFileShares();
+            await foreach (var fileShareResource in collection.WithCancellation(cancellationToken))
+            {
+                fileShares.Add(FileShareInfo.FromResource(fileShareResource));
+            }
+        }
+        else
+        {
+            await foreach (var fileShareResource in subscriptionResource.GetFileSharesAsync(cancellationToken))
+            {
+                fileShares.Add(FileShareInfo.FromResource(fileShareResource));
+            }
+        }
+
+        return fileShares;
+    }
+
+    public async Task<FileShareInfo> GetFileShareAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName));
+
+        try
+        {
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+            return FileShareInfo.FromResource(fileShareResource.Value);
+        }
+        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
+        {
+            _logger.LogWarning(reqEx,
+                "File share not found. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                fileShareName, resourceGroup, subscription);
+            throw new KeyNotFoundException($"File share '{fileShareName}' not found in resource group '{resourceGroup}'.");
+        }
+    }
+
+    public async Task<FileShareInfo> CreateOrUpdateFileShareAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string location,
+        string? mountName = null,
+        string? mediaTier = null,
+        string? redundancy = null,
+        string? protocol = null,
+        int? provisionedStorageInGiB = null,
+        int? provisionedIOPerSec = null,
+        int? provisionedThroughputMiBPerSec = null,
+        string? publicNetworkAccess = null,
+        string? nfsRootSquash = null,
+        string? nfsEncryptionInTransit = null,
+        string[]? allowedSubnets = null,
+        Dictionary<string, string>? tags = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName),
+            (nameof(location), location));
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+
+        var fileShareData = new FileShareData(new(location))
+        {
+            Properties = new()
+        };
+
+        // Populate properties from parameters
+        if (!string.IsNullOrEmpty(mountName))
+            fileShareData.Properties.MountName = mountName;
+
+        if (!string.IsNullOrEmpty(mediaTier))
+            fileShareData.Properties.MediaTier = new(mediaTier);
+
+        if (!string.IsNullOrEmpty(redundancy))
+            fileShareData.Properties.Redundancy = new(redundancy);
+
+        if (!string.IsNullOrEmpty(protocol))
+            fileShareData.Properties.Protocol = new(protocol);
+
+        if (provisionedStorageInGiB.HasValue)
+            fileShareData.Properties.ProvisionedStorageInGiB = provisionedStorageInGiB.Value;
+
+        if (provisionedIOPerSec.HasValue)
+            fileShareData.Properties.ProvisionedIOPerSec = provisionedIOPerSec.Value;
+
+        if (provisionedThroughputMiBPerSec.HasValue)
+            fileShareData.Properties.ProvisionedThroughputMiBPerSec = provisionedThroughputMiBPerSec.Value;
+
+        if (!string.IsNullOrEmpty(publicNetworkAccess))
+            fileShareData.Properties.PublicNetworkAccess = new(publicNetworkAccess);
+
+        if (!string.IsNullOrEmpty(nfsRootSquash) || !string.IsNullOrEmpty(nfsEncryptionInTransit))
+        {
+            fileShareData.Properties.NfsProtocolProperties ??= new();
+            if (!string.IsNullOrEmpty(nfsRootSquash))
+                fileShareData.Properties.NfsProtocolProperties.RootSquash = new(nfsRootSquash);
+            if (!string.IsNullOrEmpty(nfsEncryptionInTransit))
+                fileShareData.Properties.NfsProtocolProperties.EncryptionInTransitRequired = new(nfsEncryptionInTransit);
+        }
+
+        if (allowedSubnets != null && allowedSubnets.Length > 0)
+        {
+            foreach (var subnet in allowedSubnets)
+            {
+                fileShareData.Properties.PublicAccessAllowedSubnets.Add(subnet);
+            }
+        }
+
+        if (tags != null && tags.Count > 0)
+        {
+            foreach (var tag in tags)
+            {
+                fileShareData.Tags.Add(tag.Key, tag.Value);
+            }
+        }
+
+        var operation = await resourceGroupResource.Value.GetFileShares().CreateOrUpdateAsync(
+            WaitUntil.Started,
+            fileShareName,
+            fileShareData,
+            cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        _logger.LogInformation(
+            "Successfully created or updated file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}, Location: {Location}",
+            fileShareName, resourceGroup, location);
+
+        return FileShareInfo.FromResource(operation.Value);
+    }
+
+    public async Task<FileShareInfo> PatchFileShareAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        int? provisionedStorageInGiB = null,
+        int? provisionedIOPerSec = null,
+        int? provisionedThroughputMiBPerSec = null,
+        string? publicNetworkAccess = null,
+        string? nfsRootSquash = null,
+        string? nfsEncryptionInTransit = null,
+        string[]? allowedSubnets = null,
+        Dictionary<string, string>? tags = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName));
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+
+        // Create a patch object with only the properties to update
+        var patch = new ResourceManager.FileShares.Models.FileSharePatch();
+
+        // Set properties that are explicitly provided
+        if (provisionedStorageInGiB.HasValue || provisionedIOPerSec.HasValue || provisionedThroughputMiBPerSec.HasValue ||
+            !string.IsNullOrEmpty(publicNetworkAccess) || !string.IsNullOrEmpty(nfsRootSquash) || !string.IsNullOrEmpty(nfsEncryptionInTransit) || allowedSubnets?.Length > 0)
+        {
+            patch.Properties = new();
+
+            if (provisionedStorageInGiB.HasValue)
+            {
+                patch.Properties.ProvisionedStorageInGiB = provisionedStorageInGiB.Value;
+            }
+
+            if (provisionedIOPerSec.HasValue)
+            {
+                patch.Properties.ProvisionedIOPerSec = provisionedIOPerSec.Value;
+            }
+
+            if (provisionedThroughputMiBPerSec.HasValue)
+            {
+                patch.Properties.ProvisionedThroughputMiBPerSec = provisionedThroughputMiBPerSec.Value;
+            }
+
+            if (!string.IsNullOrEmpty(publicNetworkAccess))
+            {
+                patch.Properties.PublicNetworkAccess = new(publicNetworkAccess);
+            }
+
+            if (!string.IsNullOrEmpty(nfsRootSquash) || !string.IsNullOrEmpty(nfsEncryptionInTransit))
+            {
+                patch.Properties.NfsProtocolProperties ??= new();
+                if (!string.IsNullOrEmpty(nfsRootSquash))
+                    patch.Properties.NfsProtocolProperties.RootSquash = new(nfsRootSquash);
+                if (!string.IsNullOrEmpty(nfsEncryptionInTransit))
+                    patch.Properties.NfsProtocolProperties.EncryptionInTransitRequired = new(nfsEncryptionInTransit);
+            }
+
+            if (allowedSubnets != null && allowedSubnets.Length > 0)
+            {
+                foreach (var subnet in allowedSubnets)
+                {
+                    patch.Properties.PublicAccessAllowedSubnets.Add(subnet);
+                }
+            }
+        }
+
+        if (tags is { Count: > 0 })
+        {
+            foreach (var tag in tags)
+            {
+                patch.Tags.Add(tag.Key, tag.Value);
+            }
+        }
+
+        // Get the file share resource to update
+        var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+
+        // Use UpdateAsync to patch the file share
+        var operation = await fileShareResource.Value.UpdateAsync(WaitUntil.Started, patch, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        _logger.LogInformation(
+            "Successfully patched file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
+            fileShareName, resourceGroup);
+
+        return FileShareInfo.FromResource(operation.Value);
+    }
+
+    public async Task DeleteFileShareAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName));
+
+        try
+        {
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+
+            var deleteOperation = await fileShareResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully deleted file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
+                fileShareName, resourceGroup);
+        }
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
+        {
+            _logger.LogWarning(
+                "File share not found (already deleted). FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
+                fileShareName, resourceGroup);
+            // Idempotent delete - don't throw on not found
+        }
+    }
+
+    public async Task<FileShareNameAvailabilityResult> CheckNameAvailabilityAsync(
+        string subscription,
+        string fileShareName,
+        string location,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(fileShareName), fileShareName),
+            (nameof(location), location));
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var content = new ResourceManager.FileShares.Models.FileShareNameAvailabilityContent
+        {
+            Name = fileShareName,
+            Type = "Microsoft.FileShares/fileShares"
+        };
+        var response = await subscriptionResource.CheckFileShareNameAvailabilityAsync(new(location), content, cancellationToken);
+
+        var result = response.Value;
+
+        _logger.LogInformation(
+            "File share name availability checked. FileShare: {FileShareName}, IsAvailable: {IsAvailable}",
+            fileShareName, result.IsNameAvailable);
+
+        return new(
+            result.IsNameAvailable ?? false,
+            result.Reason?.ToString(),
+            result.Message);
+    }
+
+    public async Task<FileShareSnapshotInfo> CreateSnapshotAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string snapshotName,
+        Dictionary<string, string>? metadata = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName),
+            (nameof(snapshotName), snapshotName));
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+
+        var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+        var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
+
+        var snapshotData = new FileShareSnapshotData
+        {
+            Properties = new()
+        };
+
+        // Populate metadata if provided
+        if (metadata != null && metadata.Count > 0)
+        {
+            foreach (var kvp in metadata)
+            {
+                snapshotData.Properties.Metadata[kvp.Key] = kvp.Value;
+            }
+        }
+
+        var operation = await snapshotCollection.CreateOrUpdateAsync(
+            WaitUntil.Started,
+            snapshotName,
+            snapshotData,
+            cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        _logger.LogInformation(
+            "Successfully created snapshot. Snapshot: {SnapshotName}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
+            snapshotName, fileShareName, resourceGroup);
+
+        return FileShareSnapshotInfo.FromResource(operation.Value);
+    }
+
+    public async Task<FileShareSnapshotInfo> GetSnapshotAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string snapshotId,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName),
+            (nameof(snapshotId), snapshotId));
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+
+        var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+        var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
+
+        await foreach (var snapshotResource in snapshotCollection.WithCancellation(cancellationToken))
+        {
+            if (snapshotResource.Data.Name.Equals(snapshotId, StringComparisons.ResourceName) ||
+                snapshotResource.Data.Id.ToString().Equals(snapshotId, StringComparison.OrdinalIgnoreCase))
+            {
+                return FileShareSnapshotInfo.FromResource(snapshotResource);
+            }
+        }
+
+        throw new KeyNotFoundException($"Snapshot '{snapshotId}' not found for file share '{fileShareName}' in resource group '{resourceGroup}'.");
+    }
+
+    public async Task<List<FileShareSnapshotInfo>> ListSnapshotsAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName));
+
+        try
+        {
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+
+            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+            var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
+
+            var snapshots = new List<FileShareSnapshotInfo>();
+            await foreach (var snapshotResource in snapshotCollection.WithCancellation(cancellationToken))
+            {
+                snapshots.Add(FileShareSnapshotInfo.FromResource(snapshotResource));
+            }
+
+            return snapshots;
+        }
+        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
+        {
+            _logger.LogWarning(reqEx,
+                "File share not found when listing snapshots. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
+                fileShareName, resourceGroup);
+            return [];
+        }
+    }
+
+    public async Task<FileShareSnapshotInfo> PatchSnapshotAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string snapshotId,
+        Dictionary<string, string>? metadata = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName),
+            (nameof(snapshotId), snapshotId));
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+
+        var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+        var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
+
+        // Get the existing snapshot
+        var existingSnapshot = await snapshotCollection.GetAsync(snapshotId, cancellationToken);
+
+        // Create a patch object with only the properties to update
+        var patch = new ResourceManager.FileShares.Models.FileShareSnapshotPatch();
+
+        if (metadata is { Count: > 0 })
+        {
+            foreach (var kvp in metadata)
+            {
+                patch.FileShareSnapshotUpdateMetadata.Add(kvp.Key, kvp.Value);
+            }
+        }
+
+        // Use UpdateAsync to patch the snapshot
+        var operation = await existingSnapshot.Value.UpdateAsync(
+            WaitUntil.Started,
+            patch,
+            cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        _logger.LogInformation(
+            "Successfully updated snapshot. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
+            snapshotId, fileShareName, resourceGroup);
+
+        return FileShareSnapshotInfo.FromResource(operation.Value);
+    }
+
+    public async Task DeleteSnapshotAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string snapshotId,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName),
+            (nameof(snapshotId), snapshotId));
+
+        try
+        {
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+
+            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+            var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
+
+            // Get the snapshot and delete it
+            var snapshotResource = await snapshotCollection.GetAsync(snapshotId, cancellationToken);
+            var deleteOperation = await snapshotResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully deleted snapshot. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
+                snapshotId, fileShareName, resourceGroup);
+        }
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
+        {
+            _logger.LogWarning(
+                "Snapshot not found (already deleted). Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
+                snapshotId, fileShareName, resourceGroup);
+            // Idempotent delete - don't throw on not found
+        }
+    }
+
+    public async Task<FileShareLimitsResult> GetLimitsAsync(
+        string subscription,
+        string location,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(location), location));
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var response = await subscriptionResource.GetLimitsAsync(new(location), cancellationToken);
+
+        var output = response.Value.Properties;
+
+        _logger.LogInformation(
+            "Retrieved limits. MaxFileShares: {MaxFileShares}, Subscription: {Subscription}, Location: {Location}",
+            output.Limits.MaxFileShares, subscription, location);
+
+        return new()
+        {
+            Limits = new()
+            {
+                MaxFileShares = output.Limits.MaxFileShares,
+                MaxFileShareSnapshots = output.Limits.MaxFileShareSnapshots,
+                MaxFileShareSubnets = output.Limits.MaxFileShareSubnets,
+                MaxFileSharePrivateEndpointConnections = output.Limits.MaxFileSharePrivateEndpointConnections,
+                MinProvisionedStorageGiB = output.Limits.MinProvisionedStorageGiB,
+                MaxProvisionedStorageGiB = output.Limits.MaxProvisionedStorageGiB,
+                MinProvisionedIOPerSec = output.Limits.MinProvisionedIOPerSec,
+                MaxProvisionedIOPerSec = output.Limits.MaxProvisionedIOPerSec,
+                MinProvisionedThroughputMiBPerSec = output.Limits.MinProvisionedThroughputMiBPerSec,
+                MaxProvisionedThroughputMiBPerSec = output.Limits.MaxProvisionedThroughputMiBPerSec
+            },
+            ProvisioningConstants = new()
+            {
+                BaseIOPerSec = output.ProvisioningConstants.BaseIOPerSec,
+                ScalarIOPerSec = output.ProvisioningConstants.ScalarIOPerSec,
+                BaseThroughputMiBPerSec = output.ProvisioningConstants.BaseThroughputMiBPerSec,
+                ScalarThroughputMiBPerSec = output.ProvisioningConstants.ScalarThroughputMiBPerSec
+            }
+        };
+    }
+
+    public async Task<FileShareUsageDataResult> GetUsageDataAsync(
+        string subscription,
+        string location,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(location), location));
+
+        try
+        {
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var response = await subscriptionResource.GetUsageDataAsync(new(location), cancellationToken);
+
+            var result = response.Value;
+
+            _logger.LogInformation(
+                "Retrieved usage data. FileShareCount: {Count}, Subscription: {Subscription}, Location: {Location}",
+                result.LiveSharesFileShareCount, subscription, location);
+
+            return new()
+            {
+                LiveShares = new()
+                {
+                    FileShareCount = result.LiveSharesFileShareCount
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error getting usage data. Subscription: {Subscription}, Location: {Location}",
+                subscription, location);
+            throw;
+        }
+    }
+
+    public async Task<FileShareProvisioningRecommendationResult> GetProvisioningRecommendationAsync(
+        string subscription,
+        string location,
+        int provisionedStorageGiB,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(location), location),
+            (nameof(provisionedStorageGiB), provisionedStorageGiB.ToString()));
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var response = await subscriptionResource.GetProvisioningRecommendationAsync(new(location), new(provisionedStorageGiB), cancellationToken);
+
+        var output = response.Value.Properties;
+
+        _logger.LogInformation(
+            "Retrieved provisioning recommendation. StorageGiB: {Storage}, IOPerSec: {IO}, ThroughputMiBPerSec: {Throughput}, Location: {Location}",
+            provisionedStorageGiB, output.ProvisionedIOPerSec, output.ProvisionedThroughputMiBPerSec, location);
+
+        return new()
+        {
+            ProvisionedIOPerSec = output.ProvisionedIOPerSec,
+            ProvisionedThroughputMiBPerSec = output.ProvisionedThroughputMiBPerSec,
+            AvailableRedundancyOptions = output.AvailableRedundancyOptions?.Select(r => r.ToString()).ToList() ?? []
+        };
+    }
+
+    public async Task<PrivateEndpointConnectionInfo> GetPrivateEndpointConnectionAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string connectionName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName),
+            (nameof(connectionName), connectionName));
+
+        try
+        {
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var subscriptionResource = armClient.GetSubscriptionResource(
+                SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+
+            var connection = await fileShareResource.Value.GetFileSharePrivateEndpointConnections()
+                .GetAsync(connectionName, cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully retrieved private endpoint connection. Connection: {ConnectionName}, FileShare: {FileShareName}",
+                connectionName, fileShareName);
+
+            return PrivateEndpointConnectionInfo.FromResource(connection.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error getting private endpoint connection. Connection: {ConnectionName}, FileShare: {FileShareName}",
+                connectionName, fileShareName);
+            throw;
+        }
+    }
+
+    public async Task<List<PrivateEndpointConnectionInfo>> ListPrivateEndpointConnectionsAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName));
+
+        try
+        {
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var subscriptionResource = armClient.GetSubscriptionResource(
+                SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+
+            var connections = new List<PrivateEndpointConnectionInfo>();
+            await foreach (var connection in fileShareResource.Value.GetFileSharePrivateEndpointConnections()
+                .GetAllAsync(cancellationToken))
+            {
+                connections.Add(PrivateEndpointConnectionInfo.FromResource(connection));
+            }
+
+            _logger.LogInformation(
+                "Successfully listed private endpoint connections. Count: {Count}, FileShare: {FileShareName}",
+                connections.Count, fileShareName);
+
+            return connections;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error listing private endpoint connections. FileShare: {FileShareName}",
+                fileShareName);
+            throw;
+        }
+    }
+
+    public async Task<PrivateEndpointConnectionInfo> UpdatePrivateEndpointConnectionAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string connectionName,
+        string status,
+        string? description = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName),
+            (nameof(connectionName), connectionName),
+            (nameof(status), status));
+
+        try
+        {
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var subscriptionResource = armClient.GetSubscriptionResource(
+                SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+
+            // Get existing connection (validate existence)
+            _ = await fileShareResource.Value.GetFileSharePrivateEndpointConnections()
+                .GetAsync(connectionName, cancellationToken);
+
+            // Create updated connection data
+            var connectionData = new FileSharePrivateEndpointConnectionData
+            {
+                Properties = new(new()
+                {
+                    Status = new(status),
+                    Description = description
+                })
+            };
+
+            var operation = await fileShareResource.Value.GetFileSharePrivateEndpointConnections()
+                .CreateOrUpdateAsync(WaitUntil.Started, connectionName, connectionData, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully updated private endpoint connection. Connection: {ConnectionName}, FileShare: {FileShareName}, Status: {Status}",
+                connectionName, fileShareName, status);
+
+            return PrivateEndpointConnectionInfo.FromResource(operation.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error updating private endpoint connection. Connection: {ConnectionName}, FileShare: {FileShareName}",
+                connectionName, fileShareName);
+            throw;
+        }
+    }
+}
+
+/// <summary>
+/// Result of file share name availability check.
+/// </summary>
+/// <param name="IsAvailable">Whether the name is available.</param>
+/// <param name="Reason">The reason if the name is unavailable.</param>
+/// <param name="Message">Additional message about availability.</param>
+public record FileShareNameAvailabilityResult(bool IsAvailable, string? Reason, string? Message);

@@ -1,0 +1,20 @@
+<Solution>
+  <Folder Name="/core/" />
+  <Folder Name="/core/Microsoft.Mcp.Core/" />
+  <Folder Name="/core/Microsoft.Mcp.Core/src/">
+    <Project Path="../../core/Microsoft.Mcp.Core/src/Microsoft.Mcp.Core.csproj" />
+  </Folder>
+  <Folder Name="/core/Microsoft.Mcp.Core/tests/">
+    <Project Path="../../core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Core.Tests/Microsoft.Mcp.Core.Tests.csproj" />
+    <Project Path="../../core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Microsoft.Mcp.Tests.csproj" />
+  </Folder>
+  <Folder Name="/core/Template.Mcp.Core/" />
+  <Folder Name="/core/Template.Mcp.Core/src/">
+    <Project Path="../../core/Template.Mcp.Core/src/Template.Mcp.Core.csproj" />
+  </Folder>
+  <Folder Name="/servers/" />
+  <Folder Name="/servers/Template.Mcp.Server/" />
+  <Folder Name="/servers/Template.Mcp.Server/src/">
+    <Project Path="./src/Template.Mcp.Server.csproj" />
+  </Folder>
+</Solution>

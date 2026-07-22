@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Commands.Blob;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
+using Azure.Mcp.Tools.Storage.Table.Commands;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Storage;
 
@@ -29,19 +30,20 @@ public class StorageSetup : IAreaSetup
 
         services.AddSingleton<ContainerCreateCommand>();
         services.AddSingleton<ContainerGetCommand>();
+
+        services.AddSingleton<TableListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var storage = new CommandGroup(Name,
             """
-            Storage operations - Commands for managing and accessing Azure Storage accounts and the Blobs service for
-            scalable cloud storage solutions. Use this tool when you need to list storage accounts and work with blob
-            containers and blobs. This tool focuses on object storage scenarios. This tool is a hierarchical MCP command
-            router where sub-commands are routed to MCP servers that require specific fields inside the "parameters" object.
-            To invoke a command, set "command" and wrap its arguments in "parameters". Set "learn=true" to discover available
-            sub-commands for different Azure Storage service operations including blobs. Note that this tool requires
-            appropriate Storage account permissions and will only access storage resources accessible to the authenticated user.
+            Storage operations - Commands for creating, listing, getting, and managing Azure Storage accounts,
+            blob containers, blobs, and tables. Use this tool to create storage accounts, list and get storage
+            account details (SKU, location, HNS, HTTPS-only settings), create and list blob containers, list
+            and get blob properties, upload files to blob storage, and list tables. Covers Azure Blob Storage,
+            Azure Table Storage, and storage account management. Do not use for Azure Cosmos DB containers,
+            Azure Container Registry, or Azure Managed Lustre file systems.
             """,
             Title);
 
@@ -57,20 +59,20 @@ public class StorageSetup : IAreaSetup
         blobs.AddSubGroup(blobContainer);
 
         // Register Storage commands
-        var accountCreate = serviceProvider.GetRequiredService<AccountCreateCommand>();
-        storageAccount.AddCommand(accountCreate.Name, accountCreate);
-        var accountGet = serviceProvider.GetRequiredService<AccountGetCommand>();
-        storageAccount.AddCommand(accountGet.Name, accountGet);
+        storageAccount.AddCommand<AccountCreateCommand>(serviceProvider);
+        storageAccount.AddCommand<AccountGetCommand>(serviceProvider);
 
-        var blobGet = serviceProvider.GetRequiredService<BlobGetCommand>();
-        blobs.AddCommand(blobGet.Name, blobGet);
-        var blobUpload = serviceProvider.GetRequiredService<BlobUploadCommand>();
-        blobs.AddCommand(blobUpload.Name, blobUpload);
+        blobs.AddCommand<BlobGetCommand>(serviceProvider);
+        blobs.AddCommand<BlobUploadCommand>(serviceProvider);
 
-        var containerCreate = serviceProvider.GetRequiredService<ContainerCreateCommand>();
-        blobContainer.AddCommand(containerCreate.Name, containerCreate);
-        var containerGet = serviceProvider.GetRequiredService<ContainerGetCommand>();
-        blobContainer.AddCommand(containerGet.Name, containerGet);
+        blobContainer.AddCommand<ContainerCreateCommand>(serviceProvider);
+        blobContainer.AddCommand<ContainerGetCommand>(serviceProvider);
+
+        // Create Table subgroup under storage
+        var tables = new CommandGroup("table", "Storage table operations - Commands for managing tables in your Azure Storage accounts.");
+        storage.AddSubGroup(tables);
+
+        tables.AddCommand<TableListCommand>(serviceProvider);
 
         return storage;
     }

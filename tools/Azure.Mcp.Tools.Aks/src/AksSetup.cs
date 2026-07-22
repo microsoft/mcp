@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Aks.Commands.Cluster;
 using Azure.Mcp.Tools.Aks.Commands.Nodepool;
 using Azure.Mcp.Tools.Aks.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Aks;
 
@@ -35,11 +35,9 @@ public class AksSetup : IAreaSetup
         aks.AddSubGroup(nodepool);
 
         // Register AKS commands
-        var clusterGet = serviceProvider.GetRequiredService<ClusterGetCommand>();
-        cluster.AddCommand(clusterGet.Name, clusterGet);
+        cluster.AddCommand<ClusterGetCommand>(serviceProvider);
 
-        var nodepoolGet = serviceProvider.GetRequiredService<NodepoolGetCommand>();
-        nodepool.AddCommand(nodepoolGet.Name, nodepoolGet);
+        nodepool.AddCommand<NodepoolGetCommand>(serviceProvider);
 
         return aks;
     }
