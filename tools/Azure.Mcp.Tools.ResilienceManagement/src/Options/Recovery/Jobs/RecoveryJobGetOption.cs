@@ -6,19 +6,16 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Options.Recovery.Jobs;
 
-public class RecoveryJobGetOptions : ISubscriptionOption
+public sealed class RecoveryJobGetOptions
 {
-    [Option(Description = "The name of the service group.")]
+    [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
 
-    [Option(Description = "The name of the recovery plan.")]
+    [Option(Description = ResilienceManagementOptionDescriptions.RecoveryPlan)]
     public required string RecoveryPlan { get; set; }
 
     [Option(Description = "The name of the recovery job. Provide this argument to get the details of a particular recovery job; omit it to list all recovery jobs of the recovery plan (id and name only).")]
     public string? Name { get; set; }
-
-    [Option(Description = OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

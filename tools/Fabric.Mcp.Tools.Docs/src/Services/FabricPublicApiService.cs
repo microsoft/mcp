@@ -55,8 +55,6 @@ public class FabricPublicApiService(
 
         _logger.LogInformation("Getting example files for workload {workloadType}", workloadType);
 
-        var res = new Dictionary<string, string>();
-
         return await GetExamplesFromDirectoryAsync(workloadExamplesDirPath, cancellationToken);
     }
 

@@ -1,7 +1,18 @@
 param(
-    [string]$ResourceGroupName,
-    [hashtable]$DeploymentOutputs
+    [string] $TenantId,
+    [string] $TestApplicationId,
+    [string] $ResourceGroupName,
+    [string] $BaseName,
+    [hashtable] $DeploymentOutputs,
+    [hashtable] $AdditionalParameters
 )
+
+$ErrorActionPreference = "Stop"
+
+. "$PSScriptRoot/../../../eng/common/scripts/common.ps1"
+. "$PSScriptRoot/../../../eng/scripts/helpers/TestResourcesHelpers.ps1"
+
+$testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 
 Write-Host "Setting up IoT Hub test devices..."
 
@@ -42,4 +53,6 @@ foreach ($deviceId in $testDevices) {
 }
 
 Write-Host "IoT Hub test setup complete"
+
+
 

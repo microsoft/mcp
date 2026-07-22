@@ -7,7 +7,6 @@ using global::DataFactory.MCP.Handlers.Pipeline;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
 
@@ -20,9 +19,8 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
     Idempotent = true,
     ReadOnly = true,
     OpenWorld = false)]
-public sealed class ListPipelinesCommand(
-    ILogger<ListPipelinesCommand> logger,
-    PipelineHandler handler) : AuthenticatedCommand<ListPipelinesOptions, ListPipelinesCommandResult>
+public sealed class ListPipelinesCommand(ILogger<ListPipelinesCommand> logger, PipelineHandler handler)
+    : AuthenticatedCommand<ListPipelinesOptions, ListPipelinesCommandResult>
 {
     private readonly ILogger<ListPipelinesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly PipelineHandler _handler = handler ?? throw new ArgumentNullException(nameof(handler));

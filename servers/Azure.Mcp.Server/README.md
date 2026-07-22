@@ -1067,6 +1067,11 @@ Example prompts that generate Azure CLI commands:
 
 * "Show me all my Cosmos DB databases"
 * "List containers in my Cosmos DB database"
+* "Infer the schema of container 'items' in database 'mydb' for Cosmos DB account 'myaccount'"
+* "Show me the 15 most recent documents in container 'items' of database 'mydb' in Cosmos DB account 'myaccount'"
+* "Get the document with id '123' from container 'items' in database 'mydb' of Cosmos DB account 'myaccount'"
+* "Search documents in container 'items' from database 'mydb' where 'description' contains 'wireless headphones'"
+* "Find documents similar to 'noise cancelling earbuds' in container 'items' of database 'mydb' using vector property 'embedding'"
 
 ### 🧮 Azure Data Explorer
 
@@ -1115,6 +1120,11 @@ Example prompts that generate Azure CLI commands:
 * "Analyze my Azure infrastructure and surface patterns to help me plan my next project"
 * "Generate insights about my Azure environment to help me plan a new data analytics platform"
 * "What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS?"
+
+### 🌐 Azure IoT Hub
+
+* "Show me IoT Hub 'my-iot-hub' in resource group 'my-resource-group' of my subscription 'my-subscription'"
+* "Get details for IoT Hub 'my-iot-hub' in resource group 'my-resource-group' of my subscription 'my-subscription'"
 
 ### 🔑 Azure Key Vault
 
@@ -1278,6 +1288,7 @@ The Azure MCP Server provides tools for interacting with **44+ Azure service are
 - 📁 **Azure File Shares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management and functions project files, language support, and templates source code
 - 💡 **Azure Insights** - Derive infrastructure insights from Azure Resource Graph patterns
+- 🌐 **Azure IoT Hub** - IoT Hub resource discovery and details
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
 - 📦 **Azure Load Testing** - Performance testing

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using System.Text;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -122,13 +121,8 @@ public sealed class BlobGetCommand(
 
             var finalMessage = messageBuilder.ToString();
 
-            var commandResult = new BlobGetCommandResult(
-                result,
-                finalMessage);
-
-            context.Response.Status = HttpStatusCode.OK;
             context.Response.Message = finalMessage;
-            context.Response.Results = ResponseResult.Create(commandResult, OneLakeJsonContext.Default.BlobGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new(result, finalMessage), OneLakeJsonContext.Default.BlobGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -141,31 +135,25 @@ public sealed class BlobGetCommand(
     }
 
     public sealed record BlobGetCommandResult(BlobGetResult Blob, string Message);
-
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
-    };
 }
 
 public sealed class BlobGetOptions
 {
-    [Option(Description = "The ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.WorkspaceId)]
     public string? WorkspaceId { get; set; }
 
-    [Option(Description = "The name or ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.Workspace)]
     public string? Workspace { get; set; }
 
-    [Option(Description = "The ID of the Fabric item.")]
+    [Option(Description = OneLakeOptionDescriptions.ItemId)]
     public string? ItemId { get; set; }
 
-    [Option(Description = "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').")]
+    [Option(Description = OneLakeOptionDescriptions.Item)]
     public string? Item { get; set; }
 
-    [Option(Description = "The path to the file in OneLake.")]
+    [Option(Description = OneLakeOptionDescriptions.FilePath)]
     public required string FilePath { get; set; }
 
-    [Option(Description = "Local path to save the downloaded content when running locally.")]
+    [Option(Description = OneLakeOptionDescriptions.DownloadFilePath)]
     public string? DownloadFilePath { get; set; }
 }

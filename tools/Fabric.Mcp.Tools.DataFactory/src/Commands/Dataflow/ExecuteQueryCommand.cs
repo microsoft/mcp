@@ -7,7 +7,6 @@ using global::DataFactory.MCP.Handlers.Dataflow;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.DataFactory.Commands.Dataflow;
 
@@ -20,9 +19,8 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Dataflow;
     Idempotent = true,
     ReadOnly = true,
     OpenWorld = false)]
-public sealed class ExecuteQueryCommand(
-    ILogger<ExecuteQueryCommand> logger,
-    DataflowQueryHandler handler) : AuthenticatedCommand<ExecuteQueryOptions, ExecuteQueryCommandResult>
+public sealed class ExecuteQueryCommand(ILogger<ExecuteQueryCommand> logger, DataflowQueryHandler handler)
+    : AuthenticatedCommand<ExecuteQueryOptions, ExecuteQueryCommandResult>
 {
     private readonly ILogger<ExecuteQueryCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly DataflowQueryHandler _handler = handler ?? throw new ArgumentNullException(nameof(handler));

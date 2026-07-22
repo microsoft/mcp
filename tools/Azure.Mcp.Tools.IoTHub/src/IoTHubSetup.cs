@@ -6,6 +6,11 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.IoTHub.Commands.Device;
 using Azure.Mcp.Tools.IoTHub.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Azure.Mcp.Tools.IoTHub.Commands.IoTHub;
+using Azure.Mcp.Tools.IoTHub.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.IoTHub;
 
@@ -21,6 +26,7 @@ public class IoTHubSetup : IAreaSetup
         services.AddSingleton<IIoTHubDeviceService, IoTHubDeviceService>();
 
         services.AddSingleton<IoTHubDeviceListCommand>();
+        services.AddSingleton<IoTHubGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -34,6 +40,10 @@ public class IoTHubSetup : IAreaSetup
 
         var deviceListCommand = serviceProvider.GetRequiredService<IoTHubDeviceListCommand>();
         device.AddCommand(deviceListCommand.Name, deviceListCommand);
+        var hub = new CommandGroup("hub", "IoT Hub resource operations.");
+        iothub.AddSubGroup(hub);
+
+        hub.AddCommand<IoTHubGetCommand>(serviceProvider);
 
         return iothub;
     }

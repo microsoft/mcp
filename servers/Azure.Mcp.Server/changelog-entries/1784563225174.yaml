@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Properly pass tenant and retry options in Azure Migrate tools."

@@ -224,7 +224,7 @@ public sealed class OptionBinderTests
         Assert.True(tagsOption.AllowMultipleArgumentsPerToken);
 
         var nullableTagsOption = command.Options.Single(o => o.Name == "--nullable-tags");
-        Assert.Equal(ArgumentArity.ZeroOrMore, nullableTagsOption.Arity);
+        Assert.Equal(ArgumentArity.OneOrMore, nullableTagsOption.Arity);
         Assert.True(nullableTagsOption.AllowMultipleArgumentsPerToken);
     }
 
@@ -467,7 +467,7 @@ public sealed class OptionBinderTests
         var parseResult = command.Parse("--color Invalid");
         var ex = Assert.Throws<CommandValidationException>(() => OptionBinder.BindOptions<EnumOptions>(parseResult));
 
-        Assert.Contains("Argument 'Invalid' not recognized. Must be one of:", ex.Message);
+        Assert.Contains("Invalid --color 'Invalid'. Must be one of:", ex.Message);
     }
 
     [Fact]

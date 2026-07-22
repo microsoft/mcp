@@ -10,6 +10,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -540,6 +541,164 @@ public class CommandFactoryToolLoaderTests
         Assert.True(itemsProperty.TryGetProperty("type", out var itemTypeProperty));
         Assert.Equal("string", itemTypeProperty.GetString());
     }
+
+    [Fact]
+    public async Task ListToolsHandler_EveryTool_ProducesValidInputSchema()
+    {
+        // Arrange
+        var (toolLoader, commandFactory) = CreateToolLoader();
+        var request = CreateRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotEmpty(result.Tools);
+
+        var visibleCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands)
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+        foreach (var tool in result.Tools)
+        {
+            var schema = tool.InputSchema;
+            Assert.Equal(JsonValueKind.Object, schema.ValueKind);
+
+            // Raw MCP passthrough commands supply a hand-authored schema verbatim, so they
+            // are not expected to follow the generated strict-object shape. Skip them.
+            if (UsesRawMcpToolInput(visibleCommands[tool.Name]))
+            {
+                continue;
+            }
+
+            Assert.True(schema.TryGetProperty("type", out var typeProperty),
+                $"'{tool.Name}' input schema is missing 'type'.");
+            Assert.Equal("object", typeProperty.GetString());
+
+            Assert.True(schema.TryGetProperty("properties", out var propertiesProperty),
+                $"'{tool.Name}' input schema is missing 'properties'.");
+            Assert.Equal(JsonValueKind.Object, propertiesProperty.ValueKind);
+
+            // OpenAI strict-mode compatibility: additionalProperties must be false.
+            Assert.True(schema.TryGetProperty("additionalProperties", out var additionalProperties),
+                $"'{tool.Name}' input schema is missing 'additionalProperties'.");
+            Assert.Equal(JsonValueKind.False, additionalProperties.ValueKind);
+
+            // Every 'required' entry must reference a declared property.
+            if (schema.TryGetProperty("required", out var requiredProperty))
+            {
+                Assert.Equal(JsonValueKind.Array, requiredProperty.ValueKind);
+
+                foreach (var required in requiredProperty.EnumerateArray())
+                {
+                    var name = required.GetString();
+                    Assert.False(string.IsNullOrEmpty(name),
+                        $"'{tool.Name}' has an empty entry in 'required'.");
+                    Assert.True(propertiesProperty.TryGetProperty(name!, out _),
+                        $"'{tool.Name}' requires '{name}' which is not a declared property.");
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_EnumOption_IsExportedAsStringType()
+    {
+        // Arrange
+        // Build a fake command that declares a single enum-backed option using the same production
+        // machinery real commands use (OptionBinder.RegisterOptions -> OptionDescriptor + OptionTypeHandler).
+        // This exercises how an enum flows through OptionSchemaGenerator without coupling the test to a
+        // shipping tool whose options could change over time.
+        var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
+        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+
+        var fakeSystemCommand = new Command("fake-enum-get", "A fake command with an enum option for testing.");
+        OptionBinder.RegisterOptions<EnumSchemaTestOptions>(fakeSystemCommand);
+
+        var fakeCommand = Substitute.For<IBaseCommand>();
+        fakeCommand.GetCommand().Returns(fakeSystemCommand);
+        fakeCommand.Title.Returns("Fake Enum Get");
+        fakeCommand.Metadata.Returns(new ToolMetadata());
+
+        var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
+        var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
+        commandMap["fake-enum-get"] = fakeCommand;
+
+        var toolLoader = new CommandFactoryToolLoader(serviceProvider, commandFactory, toolLoaderOptions, logger);
+        var request = CreateRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        // Enum options are modeled as Option<string> by OptionTypeHandler (a JsonStringEnumConverter is
+        // registered so values round-trip as member names, never integers). The schema generator only sees
+        // Option.ValueType (string), so an enum surfaces as JSON "type": "string" with its allowed values
+        // described in prose - it does not emit a JSON "enum" keyword. This spot-check locks that contract:
+        // an enum-backed option must be exported as a string type, guarding against a regression to integer
+        // (ordinal) serialization.
+        var tool = result.Tools.FirstOrDefault(t => t.Name == "fake-enum-get");
+        Assert.NotNull(tool);
+
+        var schema = tool.InputSchema;
+        Assert.True(schema.TryGetProperty("properties", out var properties),
+            "'fake-enum-get' input schema is missing 'properties'.");
+
+        Assert.True(properties.TryGetProperty("sample-level", out var sampleLevel),
+            "'fake-enum-get' input schema is missing the 'sample-level' enum option.");
+        Assert.Equal(JsonValueKind.Object, sampleLevel.ValueKind);
+
+        Assert.True(sampleLevel.TryGetProperty("type", out var typeProperty),
+            "'sample-level' schema is missing 'type'.");
+
+        // The enum must map to the JSON string type and never to a numeric (ordinal) type. Tolerate a
+        // scalar ("string") or a union array (e.g. ["string", "null"]) representation of nullability.
+        static bool IsStringType(JsonElement type) =>
+            type.ValueKind == JsonValueKind.String && type.GetString() == "string";
+        static bool IsNullType(JsonElement type) =>
+            type.ValueKind == JsonValueKind.String && type.GetString() == "null";
+
+        if (typeProperty.ValueKind == JsonValueKind.Array)
+        {
+            var entries = typeProperty.EnumerateArray().ToArray();
+
+            // Assert.All invokes the predicate on every element, so a stray numeric (or any other
+            // unexpected) entry fails the test. Whitelisting "string"/"null" is stricter than
+            // blacklisting numeric, since it also rejects anything else the union should not contain.
+            Assert.All(entries, entry => Assert.True(IsStringType(entry) || IsNullType(entry),
+                $"'sample-level' type union should contain only 'string'/'null' but had '{entry}'."));
+
+            // The union must also actually include the string type (Assert.Contains is an existence check).
+            Assert.Contains(entries, IsStringType);
+        }
+        else
+        {
+            Assert.True(IsStringType(typeProperty),
+                $"'sample-level' enum option should be exported as a string type but was '{typeProperty}'.");
+        }
+    }
+
+    // A self-contained enum + options POCO used only by ListToolsHandler_EnumOption_IsExportedAsStringType.
+    // Declaring them here keeps the enum-to-schema contract test independent of any shipping tool.
+    private enum SchemaSampleLevel
+    {
+        Critical,
+        Error,
+        Informational,
+        Verbose,
+        Warning
+    }
+
+    private sealed class EnumSchemaTestOptions
+    {
+        [Option(Name = "sample-level", Description = "A sample enum option for schema testing.")]
+        public SchemaSampleLevel? SampleLevel { get; set; }
+    }
+
+    private static bool UsesRawMcpToolInput(IBaseCommand command) =>
+        command.GetCommand().Options.Any(BaseToolLoader.IsRawMcpToolInputOption);
 
     [Fact]
     public async Task ListToolsHandler_ToolsWithSecretMetadata_HaveSecretHintInMeta()

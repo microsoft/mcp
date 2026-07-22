@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
+using Azure.Mcp.Tools.ConfidentialLedger.Models;
 using Azure.Mcp.Tools.ConfidentialLedger.Options;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
 
@@ -24,43 +22,21 @@ namespace Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
     Secret = false,
     LocalRequired = false)]
 public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service, ILogger<LedgerEntryAppendCommand> logger)
-    : BaseConfidentialLedgerCommand<AppendEntryOptions>
+    : AuthenticatedCommand<AppendEntryOptions, AppendEntryResult>
 {
     private readonly IConfidentialLedgerService _service = service;
     private readonly ILogger<LedgerEntryAppendCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AppendEntryOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(ConfidentialLedgerOptionDefinitions.Content.AsRequired());
-        command.Options.Add(ConfidentialLedgerOptionDefinitions.CollectionId);
-    }
-
-    protected override AppendEntryOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Content = parseResult.GetValueOrDefault<string>(ConfidentialLedgerOptionDefinitions.Content.Name);
-        options.CollectionId = parseResult.GetValueOrDefault<string?>(ConfidentialLedgerOptionDefinitions.CollectionId.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var result = await _service.AppendEntryAsync(options.LedgerName!, options.Content!, options.CollectionId, cancellationToken);
+            var result = await _service.AppendEntryAsync(options.Ledger, options.Content, options.CollectionId, cancellationToken);
             context.Response.Results = ResponseResult.Create(result, ConfidentialLedgerJsonContext.Default.AppendEntryResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error appending ledger entry. Ledger: {Ledger}", options.LedgerName);
+            _logger.LogError(ex, "Error appending ledger entry. Ledger: {Ledger}", options.Ledger);
             HandleException(context, ex);
         }
 

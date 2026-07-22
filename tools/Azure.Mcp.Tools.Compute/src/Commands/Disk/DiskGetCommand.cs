@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using System.Text.RegularExpressions;
-using Azure.Mcp.Tools.Compute.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Compute.Options.Disk;
 using Azure.Mcp.Tools.Compute.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 
@@ -27,39 +26,17 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class DiskGetCommand(
-    ILogger<DiskGetCommand> logger,
-    IComputeService computeService)
-    : BaseComputeCommand<DiskGetOptions>(false)
+public sealed class DiskGetCommand(ILogger<DiskGetCommand> logger, IComputeService computeService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<DiskGetOptions, DiskGetCommand.DiskGetCommandResult>(subscriptionResolver)
 {
-
     private readonly ILogger<DiskGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IComputeService _computeService = computeService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DiskGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(ComputeOptionDefinitions.Disk.AsOptional());
-    }
-
-    protected override DiskGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Disk = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Disk.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
         try
         {
-            var diskNamePattern = options.Disk;
+            var diskNamePattern = options.DiskName;
             var hasWildcard = !string.IsNullOrEmpty(diskNamePattern) && (diskNamePattern.Contains('*') || diskNamePattern.Contains('?'));
             var hasResourceGroup = !string.IsNullOrEmpty(options.ResourceGroup);
 
@@ -103,7 +80,7 @@ public sealed class DiskGetCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting disks. Disk: {Disk}, ResourceGroup: {ResourceGroup}.", options.Disk, options.ResourceGroup);
+            _logger.LogError(ex, "Error getting disks. Disk: {Disk}, ResourceGroup: {ResourceGroup}.", options.DiskName, options.ResourceGroup);
             HandleException(context, ex);
         }
 
@@ -122,14 +99,6 @@ public sealed class DiskGetCommand(
         return $"^{pattern}$";
     }
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
-    };
-
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == 404 =>
@@ -146,5 +115,5 @@ public sealed class DiskGetCommand(
     /// <summary>
     /// Result record for the disk get command.
     /// </summary>
-    public record DiskGetCommandResult(List<Models.DiskInfo> Disks);
+    public sealed record DiskGetCommandResult(List<Models.DiskInfo> Disks);
 }

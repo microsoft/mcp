@@ -31,22 +31,18 @@ public class AvmModuleListCommandTests : CommandUnitTestsBase<AvmModuleListComma
     {
         var expectedModules = new List<AvmModule>
         {
-            new()
-            {
-                ModuleName = "avm-res-storage-storageaccount",
-                Description = "Azure Storage Account module",
-                Source = "Azure/avm-res-storage-storageaccount/azurerm",
-                RepoUrl = "https://github.com/Azure/terraform-azurerm-avm-res-storage-storageaccount",
-                ModuleType = "resource"
-            },
-            new()
-            {
-                ModuleName = "avm-ptn-aiml-ai-foundry",
-                Description = "AI Foundry pattern module",
-                Source = "Azure/avm-ptn-aiml-ai-foundry/azurerm",
-                RepoUrl = "https://github.com/Azure/terraform-azurerm-avm-ptn-aiml-ai-foundry",
-                ModuleType = "pattern"
-            }
+            new(
+                ModuleName: "avm-res-storage-storageaccount",
+                Description: "Azure Storage Account module",
+                Source: "Azure/avm-res-storage-storageaccount/azurerm",
+                RepoUrl: "https://github.com/Azure/terraform-azurerm-avm-res-storage-storageaccount",
+                ModuleType: "resource"),
+            new(
+                ModuleName: "avm-ptn-aiml-ai-foundry",
+                Description: "AI Foundry pattern module",
+                Source: "Azure/avm-ptn-aiml-ai-foundry/azurerm",
+                RepoUrl: "https://github.com/Azure/terraform-azurerm-avm-ptn-aiml-ai-foundry",
+                ModuleType: "pattern")
         };
 
         Service.ListModulesAsync(Arg.Any<CancellationToken>())
@@ -80,8 +76,7 @@ public class AvmModuleListCommandTests : CommandUnitTestsBase<AvmModuleListComma
     {
         if (shouldSucceed)
         {
-            Service.ListModulesAsync(Arg.Any<CancellationToken>())
-                .Returns(new List<AvmModule>());
+            Service.ListModulesAsync(Arg.Any<CancellationToken>()).Returns([]);
         }
 
         var response = await ExecuteCommandAsync(args);
@@ -101,13 +96,12 @@ public class AvmModuleListCommandTests : CommandUnitTestsBase<AvmModuleListComma
     {
         var expectedModules = new List<AvmModule>
         {
-            new()
-            {
-                ModuleName = "avm-res-storage-storageaccount",
-                Description = "Azure Storage Account module",
-                Source = "Azure/avm-res-storage-storageaccount/azurerm",
-                RepoUrl = "https://github.com/Azure/terraform-azurerm-avm-res-storage-storageaccount"
-            }
+            new(
+                ModuleName: "avm-res-storage-storageaccount",
+                Description: "Azure Storage Account module",
+                Source: "Azure/avm-res-storage-storageaccount/azurerm",
+                RepoUrl: "https://github.com/Azure/terraform-azurerm-avm-res-storage-storageaccount",
+                ModuleType: string.Empty)
         };
 
         Service.ListModulesAsync(Arg.Any<CancellationToken>())

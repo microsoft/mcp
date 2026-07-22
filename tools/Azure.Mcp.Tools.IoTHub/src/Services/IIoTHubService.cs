@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.IoTHub.Models;
+using Azure.Mcp.Core.Services.Azure;
 
 namespace Azure.Mcp.Tools.IoTHub.Services;
 
@@ -21,4 +22,4 @@ public interface IIoTHubService
         string subscription,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
-}
+      }

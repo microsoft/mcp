@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.MySql.Options.Server;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -20,22 +22,17 @@ namespace Azure.Mcp.Tools.MySql.Commands.Server;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logger, IMySqlService mysqlService) : BaseServerCommand<ServerConfigGetOptions>(logger)
+public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logger, IMySqlService mysqlService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<MySqlServerOptions, ServerConfigGetCommand.ServerConfigGetCommandResult>(subscriptionResolver)
 {
     private readonly IMySqlService _mysqlService = mysqlService;
+    private readonly ILogger<ServerConfigGetCommand> _logger = logger;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, MySqlServerOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var config = await _mysqlService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.Server!, cancellationToken);
+            var config = await _mysqlService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup, options.Server, cancellationToken);
             context.Response.Results = !string.IsNullOrEmpty(config) ?
                 ResponseResult.Create(new(config), MySqlJsonContext.Default.ServerConfigGetCommandResult) :
                 null;
@@ -48,5 +45,5 @@ public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logge
         return context.Response;
     }
 
-    internal record ServerConfigGetCommandResult(string Configuration);
+    public sealed record ServerConfigGetCommandResult(string Configuration);
 }

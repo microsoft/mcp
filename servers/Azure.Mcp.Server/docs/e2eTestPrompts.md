@@ -597,6 +597,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | insights_get | Generate insights about my Azure environment to help me plan a new data analytics platform |
 | insights_get | What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS? |
 
+## Azure IoT Hub
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| iothub_hub_get | Get details for IoT Hub <hub_name> in resource group <resource_group_name> |
+| iothub_hub_get | Show IoT Hub <hub_name> in resource group <resource_group_name> for subscription <subscription_id> |
+| iothub_hub_get | Retrieve IoT Hub <hub_name> metadata from resource group <resource_group_name> |
+
 ## Azure Key Vault
 
 | Tool Name | Test Prompt |

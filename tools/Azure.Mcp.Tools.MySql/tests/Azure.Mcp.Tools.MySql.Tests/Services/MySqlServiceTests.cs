@@ -5,7 +5,6 @@ using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.MySql.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -18,7 +17,6 @@ public class MySqlServiceTests
     private readonly IResourceGroupService _resourceGroupService;
     private readonly ISubscriptionService _subscriptionService;
     private readonly ITenantService _tenantService;
-    private readonly ILogger<MySqlService> _logger;
     private readonly MySqlService _mysqlService;
 
     public MySqlServiceTests()
@@ -26,27 +24,26 @@ public class MySqlServiceTests
         _resourceGroupService = Substitute.For<IResourceGroupService>();
         _subscriptionService = Substitute.For<ISubscriptionService>();
         _tenantService = Substitute.For<ITenantService>();
-        _logger = Substitute.For<ILogger<MySqlService>>();
 
-        _mysqlService = new MySqlService(_resourceGroupService, _subscriptionService, _tenantService, _logger);
+        _mysqlService = new MySqlService(_resourceGroupService, _subscriptionService, _tenantService);
     }
 
     [Fact]
     public void Constructor_WithNullResourceGroupService_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => new MySqlService(null!, _subscriptionService, _tenantService, _logger));
+        Assert.Throws<ArgumentNullException>(() => new MySqlService(null!, _subscriptionService, _tenantService));
     }
 
     [Fact]
     public void Constructor_WithNullSubscriptionService_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => new MySqlService(_resourceGroupService, null!, _tenantService, _logger));
+        Assert.Throws<ArgumentNullException>(() => new MySqlService(_resourceGroupService, null!, _tenantService));
     }
 
     [Fact]
     public void Constructor_WithValidDependencies_CreatesInstance()
     {
-        var service = new MySqlService(_resourceGroupService, _subscriptionService, _tenantService, _logger);
+        var service = new MySqlService(_resourceGroupService, _subscriptionService, _tenantService);
         Assert.NotNull(service);
     }
 

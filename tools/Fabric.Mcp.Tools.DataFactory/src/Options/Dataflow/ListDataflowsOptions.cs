@@ -5,7 +5,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.DataFactory.Options.Dataflow;
 
-public class ListDataflowsOptions
+public sealed class ListDataflowsOptions
 {
     [Option(Description = "The ID of the Microsoft Fabric workspace.")]
     public required string WorkspaceId { get; set; }

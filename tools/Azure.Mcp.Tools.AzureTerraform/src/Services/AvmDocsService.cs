@@ -23,9 +23,9 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
     private const string ModuleRepoUrlColumn = "RepoURL";
     private const string ModuleStatusProposed = "Proposed";
 
-    private static readonly TimeSpan CacheExpiration = TimeSpan.FromHours(24);
+    private static readonly TimeSpan s_cacheExpiration = TimeSpan.FromHours(24);
 
-    private static readonly Lock CacheLock = new();
+    private static readonly Lock s_cacheLock = new();
     private static List<AvmModule>? s_cachedModules;
     private static DateTime s_cacheTimestamp;
 
@@ -57,12 +57,7 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         foreach (var release in releases)
         {
             var tagName = release.TagName.TrimStart('v');
-            versions.Add(new AvmVersion
-            {
-                TagName = tagName,
-                CreatedAt = release.CreatedAt,
-                TarballUrl = release.TarballUrl
-            });
+            versions.Add(new(tagName, release.CreatedAt, release.TarballUrl));
         }
 
         versions.Sort((a, b) => string.Compare(b.CreatedAt, a.CreatedAt, StringComparison.Ordinal));
@@ -102,9 +97,9 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
 
     private async Task<List<AvmModule>> GetModuleCollectionAsync(CancellationToken cancellationToken)
     {
-        lock (CacheLock)
+        lock (s_cacheLock)
         {
-            if (s_cachedModules is not null && DateTime.UtcNow - s_cacheTimestamp < CacheExpiration)
+            if (s_cachedModules is not null && DateTime.UtcNow - s_cacheTimestamp < s_cacheExpiration)
             {
                 return s_cachedModules.ToList();
             }
@@ -122,7 +117,7 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         modules.AddRange(resourceModules);
         modules.AddRange(patternModules);
 
-        lock (CacheLock)
+        lock (s_cacheLock)
         {
             s_cachedModules = modules;
             s_cacheTimestamp = DateTime.UtcNow;
@@ -197,14 +192,12 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
                 continue;
             }
 
-            modules.Add(new AvmModule
-            {
-                ModuleName = moduleName,
-                Description = descIdx >= 0 && descIdx < values.Count ? values[descIdx] : string.Empty,
-                RepoUrl = repoUrl,
-                Source = SourceFromRepoUrl(repoUrl),
-                ModuleType = moduleType
-            });
+            modules.Add(new(
+                ModuleName: moduleName,
+                Description: descIdx >= 0 && descIdx < values.Count ? values[descIdx] : string.Empty,
+                RepoUrl: repoUrl,
+                Source: SourceFromRepoUrl(repoUrl),
+                ModuleType: moduleType));
         }
 
         return modules;
@@ -275,8 +268,7 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         var githubToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
         if (!string.IsNullOrEmpty(githubToken))
         {
-            client.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", githubToken);
+            client.DefaultRequestHeaders.Authorization = new("Bearer", githubToken);
         }
     }
 

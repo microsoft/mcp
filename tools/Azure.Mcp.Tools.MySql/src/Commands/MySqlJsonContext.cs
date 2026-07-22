@@ -18,6 +18,4 @@ namespace Azure.Mcp.Tools.MySql.Commands;
 [JsonSerializable(typeof(MySqlService.ServerConfigGetResult))]
 [JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 
-internal sealed partial class MySqlJsonContext : JsonSerializerContext
-{
-}
+internal sealed partial class MySqlJsonContext : JsonSerializerContext;

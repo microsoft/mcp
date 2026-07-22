@@ -7,7 +7,6 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -74,7 +73,7 @@ public sealed class PathListCommand(IOneLakeService service, ILogger<PathListCom
                     cancellationToken: cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new() { RawResponse = rawResponse },
+                    new(null, rawResponse),
                     MinimalJsonContext.Default.PathListResult);
                 return context.Response;
             }
@@ -101,7 +100,7 @@ public sealed class PathListCommand(IOneLakeService service, ILogger<PathListCom
             }
 
             context.Response.Results = ResponseResult.Create(
-                new(fileSystemItems),
+                new(fileSystemItems, null),
                 MinimalJsonContext.Default.PathListResult);
         }
         catch (Exception ex)
@@ -114,18 +113,5 @@ public sealed class PathListCommand(IOneLakeService service, ILogger<PathListCom
         return context.Response;
     }
 
-    public record PathListResult
-    {
-        public List<FileSystemItem>? Items { get; init; }
-        public string? RawResponse { get; init; }
-
-        public PathListResult(List<FileSystemItem> items)
-        {
-            Items = items;
-        }
-
-        public PathListResult()
-        {
-        }
-    }
+    public sealed record PathListResult(List<FileSystemItem>? Items, string? RawResponse);
 }

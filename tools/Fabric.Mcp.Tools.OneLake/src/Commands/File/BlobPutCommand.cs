@@ -24,9 +24,8 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     OpenWorld = false,
     ReadOnly = false,
     Secret = false)]
-public sealed class BlobPutCommand(
-    ILogger<BlobPutCommand> logger,
-    IOneLakeService oneLakeService) : AuthenticatedCommand<BlobPutOptions, BlobPutCommand.BlobPutCommandResult>
+public sealed class BlobPutCommand(ILogger<BlobPutCommand> logger, IOneLakeService oneLakeService)
+    : AuthenticatedCommand<BlobPutOptions, BlobPutCommand.BlobPutCommandResult>
 {
     private readonly ILogger<BlobPutCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -149,28 +148,28 @@ public sealed class BlobPutCommand(
 
 public sealed class BlobPutOptions
 {
-    [Option(Description = "The ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.WorkspaceId)]
     public string? WorkspaceId { get; set; }
 
-    [Option(Description = "The name or ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.Workspace)]
     public string? Workspace { get; set; }
 
-    [Option(Description = "The ID of the Fabric item.")]
+    [Option(Description = OneLakeOptionDescriptions.ItemId)]
     public string? ItemId { get; set; }
 
-    [Option(Description = "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').")]
+    [Option(Description = OneLakeOptionDescriptions.Item)]
     public string? Item { get; set; }
 
-    [Option(Description = "The path to the file in OneLake.")]
+    [Option(Description = OneLakeOptionDescriptions.FilePath)]
     public required string FilePath { get; set; }
 
-    [Option(Description = "The content to write to the file.")]
+    [Option(Description = OneLakeOptionDescriptions.Content)]
     public string? Content { get; set; }
 
-    [Option(Description = "The path to a local file to upload.")]
+    [Option(Description = OneLakeOptionDescriptions.LocalFilePath)]
     public string? LocalFilePath { get; set; }
 
-    [Option(Description = "Whether to overwrite existing files.")]
+    [Option(Description = OneLakeOptionDescriptions.Overwrite)]
     public bool Overwrite { get; set; }
 
     [Option(Description = "MIME content type to set on the uploaded file (e.g., 'application/json'). Defaults to 'application/octet-stream'.")]

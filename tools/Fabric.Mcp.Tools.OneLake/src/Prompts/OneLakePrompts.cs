@@ -29,11 +29,11 @@ $@"Now list contents at:
 workspace={workspace}, lakehouse={lakehouse}, path={path}
 {(maxResults is not null ? $"maxResults={maxResults}" : "maxResults not specified (default=100)")}";
 
-        return new[]
-        {
+        return
+        [
             new ChatMessage(ChatRole.User, header),
             new ChatMessage(ChatRole.User, instruction)
-        };
+        ];
     }
 
     [McpServerPrompt(Name = "onelake_query")]
@@ -56,11 +56,11 @@ workspace={workspace}, lakehouse={lakehouse}
 sql:
 {sql}";
 
-        return new[]
-        {
+        return
+        [
             new ChatMessage(ChatRole.User, guide),
             new ChatMessage(ChatRole.User, exec)
-        };
+        ];
     }
 
     [McpServerPrompt(Name = "onelake_best-practices")]
@@ -76,7 +76,7 @@ sql:
     - Surface schema first (columns/types) before large reads.
     """;
 
-        return new[] { new ChatMessage(ChatRole.User, content) };
+        return [new ChatMessage(ChatRole.User, content)];
     }
 
     [McpServerPrompt(Name = "onelake_confirm_delete")]
@@ -99,9 +99,6 @@ Target:
 
 Ask the user explicitly if they are sure they want to proceed. Require a clear affirmative response (yes/confirm) before calling any delete tool. If they decline or stay silent, stop and report that the deletion was cancelled.";
 
-        return new[]
-        {
-            new ChatMessage(ChatRole.User, message)
-        };
+        return [new ChatMessage(ChatRole.User, message)];
     }
 }

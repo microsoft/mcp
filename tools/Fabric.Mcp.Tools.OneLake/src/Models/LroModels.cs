@@ -9,7 +9,7 @@ namespace Fabric.Mcp.Tools.OneLake.Models;
 /// Describes the current state of a Fabric long running operation.
 /// Returned by GET /v1/operations/{operationId}.
 /// </summary>
-public class OperationState
+public sealed class OperationState
 {
     [JsonPropertyName("status")]
     public string? Status { get; set; }
@@ -30,7 +30,7 @@ public class OperationState
 /// <summary>
 /// Error details returned when a long running operation fails.
 /// </summary>
-public class OperationError
+public sealed class OperationError
 {
     [JsonPropertyName("errorCode")]
     public string? ErrorCode { get; set; }

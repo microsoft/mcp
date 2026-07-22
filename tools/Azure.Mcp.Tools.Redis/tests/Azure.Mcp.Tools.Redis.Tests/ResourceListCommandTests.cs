@@ -2,14 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Redis.Commands;
 using Azure.Mcp.Tools.Redis.Models.CacheForRedis;
 using Azure.Mcp.Tools.Redis.Models.ManagedRedis;
 using Azure.Mcp.Tools.Redis.Services;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -17,7 +15,7 @@ using CacheModel = Azure.Mcp.Tools.Redis.Models.Resource;
 
 namespace Azure.Mcp.Tools.Redis.Tests;
 
-public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand, IRedisService>
+public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<ResourceListCommand, IRedisService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -60,11 +58,8 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        AssertSuccessResponse(response);
+        var result = ValidateAndDeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
 
-        var result = DeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Collection(result.Resources,
             item => Assert.Equal("cache1", item.Name),
             item => Assert.Equal("cache2", item.Name));
@@ -80,12 +75,8 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
 
-        var result = DeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Resources);
     }
 
@@ -154,11 +145,8 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        AssertSuccessResponse(response);
+        var result = ValidateAndDeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
 
-        var result = DeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Collection(result.Resources,
             item => Assert.Equal("cache1", item.Name),
             item =>
@@ -183,11 +171,8 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        AssertSuccessResponse(response);
+        var result = ValidateAndDeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
 
-        var result = DeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Collection(result.Resources,
             item =>
             {
@@ -231,11 +216,8 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        AssertSuccessResponse(response);
+        var result = ValidateAndDeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
 
-        var result = DeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Collection(result.Resources,
             item =>
             {
@@ -260,24 +242,13 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        AssertSuccessResponse(response);
+        var result = ValidateAndDeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
 
-        var result = DeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Collection(result.Resources,
             item =>
             {
                 Assert.Equal("cache1", item.Name);
                 Assert.Null(item.Databases);
             });
-    }
-
-    private static void AssertSuccessResponse(CommandResponse response)
-    {
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
     }
 }

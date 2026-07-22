@@ -7,7 +7,6 @@ using global::DataFactory.MCP.Handlers.Dataflow;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.DataFactory.Commands.Dataflow;
 
