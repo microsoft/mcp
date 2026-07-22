@@ -9,6 +9,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Microsoft.Mcp.Core.Models;
 
 [JsonSerializable(typeof(List<CommandInfo>))]
+[JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(CommandResponse))]
 [JsonSerializable(typeof(ETag), TypeInfoPropertyName = "McpETag")]
 [JsonSerializable(typeof(ToolMetadata))]

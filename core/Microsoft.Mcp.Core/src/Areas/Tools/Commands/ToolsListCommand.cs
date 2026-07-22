@@ -175,8 +175,26 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
     {
         public override ToolsListResult? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            // Can't deserialize an object without knowing its type.
-            throw new NotSupportedException();
+            if (reader.TokenType == JsonTokenType.StartObject)
+            {
+                List<string>? names = null;
+                while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
+                {
+                    if (reader.TokenType == JsonTokenType.PropertyName && reader.GetString() == "names")
+                    {
+                        reader.Read(); // Move to the value of "names"
+                        names = JsonSerializer.Deserialize(ref reader, ModelsJsonContext.Default.ListString);
+                    }
+                }
+                return new(null, names);
+            }
+            else if (reader.TokenType == JsonTokenType.StartArray)
+            {
+                var commands = JsonSerializer.Deserialize(ref reader, ModelsJsonContext.Default.ListCommandInfo);
+                return new(commands, null);
+            }
+
+            throw new JsonException("Invalid JSON format for ToolsListResult.");
         }
 
         public override void Write(Utf8JsonWriter writer, ToolsListResult? value, JsonSerializerOptions options)
@@ -190,12 +208,8 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
                 else if (value.Names is not null)
                 {
                     writer.WriteStartObject();
-                    writer.WriteStartArray("names");
-                    foreach (var name in value.Names)
-                    {
-                        writer.WriteStringValue(name);
-                    }
-                    writer.WriteEndArray();
+                    writer.WritePropertyName("names");
+                    JsonSerializer.Serialize(writer, value.Names, ModelsJsonContext.Default.ListString);
                     writer.WriteEndObject();
                 }
             }
