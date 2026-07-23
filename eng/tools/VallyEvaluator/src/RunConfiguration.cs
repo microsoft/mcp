@@ -13,14 +13,20 @@ public class RunConfiguration
     public List<string> Namespaces { get; set; } = new List<string>();
 
     /// <summary>
-    /// Path to prompts file. If not set, will default to /servers/Azure.Mcp.Server/docs/e2eTestPrompts.md
+    /// Path to prompts file. If not set, will default to "${repoRoot}/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md"
     /// </summary>
     [ConfigurationKeyName("promptFile")]
     public string PromptFilePath { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Path to working directory where eval files and workspace will be created. If not set, will default to "${repoRoot}/.work/vally"
+    /// </summary>
     [ConfigurationKeyName("workingDirectory")]
     public string WorkingDirectory { get; set; } = string.Empty;
 
+    /// <summary>
+    /// (Optional) Path to build info file.  If set, will create evals based on the "pathsToTest" in the build info file.  If not set, will create evals for all prompts in the prompts file.
+    /// </summary>
     [ConfigurationKeyName("buildInfo")]
     public string BuildInfo { get; set; } = string.Empty;
 }
