@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
-using System.Globalization;
 using System.Net;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
@@ -53,14 +53,16 @@ public sealed class CommandFactoryToolLoader(
             });
         }
 
-        // outputSchema only became part of the MCP specification in 2025-06-18, so only advertise it to
-        // clients that negotiated that protocol version or newer. Older clients get the legacy shape.
-        var supportsStructuredOutput = SupportsStructuredOutput(request.Server.NegotiatedProtocolVersion);
+        var structuredOutputEnabled = StructuredOutputHelper.IsEnabled(
+            _options.Value.StructuredOutputMode,
+            request.Server.NegotiatedProtocolVersion);
+        var compactOutputEnabled = structuredOutputEnabled
+            && _options.Value.StructuredOutputMode == StructuredOutputMode.Compact;
 
         var tools = visibleCommands
             .Where(kvp => !_options.Value.ReadOnly || kvp.Value.Metadata.ReadOnly)
             .Where(kvp => !_options.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
-            .Select(kvp => GetTool(kvp.Key, kvp.Value, supportsStructuredOutput))
+            .Select(kvp => GetTool(kvp.Key, kvp.Value, structuredOutputEnabled, compactOutputEnabled))
             .ToList();
 
         var listToolsResult = new ListToolsResult { Tools = tools };
@@ -161,18 +163,25 @@ public sealed class CommandFactoryToolLoader(
             }, command.Id);
         }
 
-        var supportsStructuredOutput = command.ResultTypeInfo != null
-            && SupportsStructuredOutput(request.Server.NegotiatedProtocolVersion);
+        var structuredOutputEnabled = command.ResultTypeInfo != null
+            && StructuredOutputHelper.IsEnabled(
+                _options.Value.StructuredOutputMode,
+                request.Server.NegotiatedProtocolVersion);
+        var compactOutputEnabled = structuredOutputEnabled
+            && _options.Value.StructuredOutputMode == StructuredOutputMode.Compact;
         var commandArguments = request.Params.Arguments;
         var legacyContent = false;
-        if (supportsStructuredOutput
-            && !TryExtractLegacyContentArgument(request.Params.Arguments, out commandArguments, out legacyContent))
+        if (compactOutputEnabled
+            && !StructuredOutputHelper.TryExtractLegacyContentArgument(
+                request.Params.Arguments,
+                out commandArguments,
+                out legacyContent))
         {
             return McpHelper.InjectToolIdMetadata(new CallToolResult
             {
                 Content = [new TextContentBlock
                 {
-                    Text = $"The '{LegacyContentArgumentName}' argument must be a Boolean."
+                    Text = $"The '{StructuredOutputHelper.LegacyContentArgumentName}' argument must be a Boolean."
                 }],
                 IsError = true
             }, command.Id);
@@ -231,11 +240,11 @@ public sealed class CommandFactoryToolLoader(
 
             // Successful structured responses use a compact text block by default. The complete historical
             // response remains available on request for clients that do not expose structuredContent.
-            var structuredContent = !isError && supportsStructuredOutput
-                ? TryBuildStructuredContent(jsonResponse)
+            var structuredContent = !isError && structuredOutputEnabled
+                ? StructuredOutputHelper.TryBuildStructuredContent(jsonResponse)
                 : null;
-            var contentText = structuredContent != null && !legacyContent
-                ? CompactStructuredContentMessage
+            var contentText = structuredContent != null && compactOutputEnabled && !legacyContent
+                ? StructuredOutputHelper.CompactContentMessage
                 : jsonResponse;
 
             var callToolResult = new CallToolResult
@@ -268,7 +277,11 @@ public sealed class CommandFactoryToolLoader(
     /// <param name="fullName">The full name of the command.</param>
     /// <param name="command">The command to convert.</param>
     /// <returns>An MCP tool definition.</returns>
-    private static Tool GetTool(string fullName, IBaseCommand command, bool supportsStructuredOutput)
+    private static Tool GetTool(
+        string fullName,
+        IBaseCommand command,
+        bool structuredOutputEnabled,
+        bool compactOutputEnabled)
     {
         var underlyingCommand = command.GetCommand();
         var tool = new Tool
@@ -301,7 +314,7 @@ public sealed class CommandFactoryToolLoader(
         }
         tool.Meta = meta;
 
-        var resultTypeInfo = supportsStructuredOutput
+        var resultTypeInfo = structuredOutputEnabled
             ? command.ResultTypeInfo
             : null;
         if (resultTypeInfo != null)
@@ -318,145 +331,14 @@ public sealed class CommandFactoryToolLoader(
             ? JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? []
             : OptionSchemaGenerator.CreateInputSchema(options);
 
-        if (resultTypeInfo != null)
+        if (resultTypeInfo != null && compactOutputEnabled)
         {
-            AddLegacyContentArgument(inputSchema);
+            StructuredOutputHelper.AddLegacyContentArgument(inputSchema);
         }
 
         tool.InputSchema = JsonSerializer.SerializeToElement(inputSchema, ServerJsonContext.Default.JsonObject);
 
         return tool;
-    }
-
-    /// <summary>
-    /// The first MCP protocol version that includes <c>outputSchema</c> and <c>structuredContent</c> in
-    /// the specification. Clients that negotiated an older version receive the legacy content-only shape.
-    /// </summary>
-    internal const string StructuredContentMinProtocolVersion = "2025-06-18";
-
-    internal const string LegacyContentArgumentName = "legacy-content";
-    internal const string CompactStructuredContentMessage =
-        "Response successful. See structuredContent for details. If structuredContent is unavailable, retry with \"legacy-content\": true.";
-    private const string LegacyContentArgumentDescription =
-        "Return the complete response in content for clients that do not expose structuredContent.";
-    private static readonly DateOnly StructuredContentMinProtocolDate = new(2025, 6, 18);
-
-    /// <summary>
-    /// Determines whether a client that negotiated <paramref name="negotiatedProtocolVersion"/> can be sent
-    /// <c>outputSchema</c> and <c>structuredContent</c>. MCP protocol versions must be valid
-    /// <c>YYYY-MM-DD</c> dates. A null, empty, malformed, or older value is treated as unsupported so the
-    /// server falls back to the legacy shape.
-    /// </summary>
-    /// <remarks><see langword="internal"/> (rather than <see langword="private"/>) so the version gate can be
-    /// unit tested directly without exercising the full tool-loading pipeline.</remarks>
-    internal static bool SupportsStructuredOutput(string? negotiatedProtocolVersion) =>
-        DateOnly.TryParseExact(
-            negotiatedProtocolVersion,
-            "yyyy-MM-dd",
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.None,
-            out var protocolDate)
-        && protocolDate >= StructuredContentMinProtocolDate;
-
-    private static void AddLegacyContentArgument(JsonObject inputSchema)
-    {
-        if (inputSchema["properties"] is not JsonObject properties)
-        {
-            properties = [];
-            inputSchema["properties"] = properties;
-        }
-
-        if (properties.Any(property =>
-            string.Equals(property.Key, LegacyContentArgumentName, StringComparison.OrdinalIgnoreCase)))
-        {
-            throw new InvalidOperationException(
-                $"Command input schema already defines the reserved '{LegacyContentArgumentName}' argument.");
-        }
-
-        properties[LegacyContentArgumentName] = new JsonObject
-        {
-            ["type"] = "boolean",
-            ["description"] = LegacyContentArgumentDescription,
-            ["default"] = false
-        };
-    }
-
-    private static bool TryExtractLegacyContentArgument(
-        IDictionary<string, JsonElement>? arguments,
-        out IDictionary<string, JsonElement>? commandArguments,
-        out bool legacyContent)
-    {
-        commandArguments = arguments;
-        legacyContent = false;
-
-        if (arguments is null)
-        {
-            return true;
-        }
-
-        string? argumentKey = null;
-        foreach (var key in arguments.Keys)
-        {
-            if (!string.Equals(key, LegacyContentArgumentName, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            if (argumentKey is not null)
-            {
-                return false;
-            }
-
-            argumentKey = key;
-        }
-
-        if (argumentKey is null)
-        {
-            return true;
-        }
-
-        var value = arguments[argumentKey];
-        if (value.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
-        {
-            return false;
-        }
-
-        legacyContent = value.GetBoolean();
-        var filteredArguments = new Dictionary<string, JsonElement>(arguments);
-        filteredArguments.Remove(argumentKey);
-        commandArguments = filteredArguments;
-        return true;
-    }
-
-    /// <summary>
-    /// Extracts the command result payload from a serialized <see cref="CommandResponse"/> and shapes it
-    /// into the <c>structuredContent</c> value. Object payloads are used as-is; array or scalar payloads
-    /// are wrapped under a single <c>value</c> property to match the wrapping applied by
-    /// <see cref="OptionSchemaGenerator.CreateOutputSchema"/>. Returns <see langword="null"/> when there
-    /// is no result payload.
-    /// </summary>
-    /// <remarks><see langword="internal"/> (rather than <see langword="private"/>) so the payload-shaping
-    /// contract can be unit tested directly without exercising the full call-tool pipeline.</remarks>
-    internal static JsonElement? TryBuildStructuredContent(string jsonResponse)
-    {
-        using var document = JsonDocument.Parse(jsonResponse);
-
-        if (!document.RootElement.TryGetProperty("results", out var results))
-        {
-            return null;
-        }
-
-        switch (results.ValueKind)
-        {
-            case JsonValueKind.Object:
-                return results.Clone();
-            case JsonValueKind.Null:
-            case JsonValueKind.Undefined:
-                return null;
-            default:
-                var wrapper = new JsonObject { ["value"] = JsonNode.Parse(results.GetRawText()) };
-                return JsonSerializer.SerializeToElement(wrapper, ServerJsonContext.Default.JsonObject);
-        }
     }
 
     /// <summary>

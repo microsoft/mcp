@@ -32,6 +32,13 @@ public class ServiceStartOptions
     public string? Mode { get; set; } = ModeTypes.NamespaceProxy;
 
     /// <summary>
+    /// Gets or sets how tools advertise and return structured output.
+    /// Defaults to legacy content-only responses.
+    /// </summary>
+    [JsonPropertyName("structuredOutputMode")]
+    public StructuredOutputMode StructuredOutputMode { get; set; } = StructuredOutputMode.Legacy;
+
+    /// <summary>
     /// Gets or sets the specific tool names to expose.
     /// When specified, only these tools will be available.
     /// </summary>

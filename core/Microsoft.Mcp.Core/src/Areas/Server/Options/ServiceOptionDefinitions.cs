@@ -8,6 +8,7 @@ public static class ServiceOptionDefinitions
     public const string TransportName = "transport";
     public const string NamespaceName = "namespace";
     public const string ModeName = "mode";
+    public const string StructuredOutputModeName = "structured-output-mode";
     public const string ToolName = "tool";
     public const string ReadOnlyName = "read-only";
     public const string DebugName = "debug";
@@ -41,6 +42,13 @@ public static class ServiceOptionDefinitions
         Required = false,
         Arity = ArgumentArity.ZeroOrOne,
         DefaultValueFactory = _ => (string?)ModeTypes.NamespaceProxy
+    };
+
+    public static readonly Option<StructuredOutputMode> StructuredOutputMode = new($"--{StructuredOutputModeName}")
+    {
+        Description = "Structured output mode. 'legacy' (default) returns content only. 'duplicated' returns complete content and structuredContent. 'compact' returns concise content and complete structuredContent.",
+        Required = false,
+        DefaultValueFactory = _ => Options.StructuredOutputMode.Legacy
     };
 
     public static readonly Option<string[]?> Tool = new($"--{ToolName}")

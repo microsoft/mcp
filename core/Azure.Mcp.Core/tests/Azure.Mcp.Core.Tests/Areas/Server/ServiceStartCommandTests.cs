@@ -109,6 +109,33 @@ public class ServiceStartCommandTests
     }
 
     [Theory]
+    [InlineData("legacy", StructuredOutputMode.Legacy)]
+    [InlineData("duplicated", StructuredOutputMode.Duplicated)]
+    [InlineData("compact", StructuredOutputMode.Compact)]
+    public void StructuredOutputModeOption_ParsesCaseInsensitiveValues(
+        string value,
+        StructuredOutputMode expected)
+    {
+        var parseResult = _command.GetCommand().Parse(
+            ["--structured-output-mode", value]);
+
+        Assert.Empty(parseResult.Errors);
+        Assert.Equal(expected, parseResult.GetValue(ServiceOptionDefinitions.StructuredOutputMode));
+    }
+
+    [Fact]
+    public void StructuredOutputModeOption_DefaultsToLegacy()
+    {
+        var parseResult = _command.GetCommand().Parse([]);
+
+        Assert.Empty(parseResult.Errors);
+        Assert.Equal(
+            StructuredOutputMode.Legacy,
+            parseResult.GetValue(ServiceOptionDefinitions.StructuredOutputMode));
+        Assert.Equal(StructuredOutputMode.Legacy, GetBoundOptions(parseResult).StructuredOutputMode);
+    }
+
+    [Theory]
     [InlineData("azmcp_storage_account_get")]
     [InlineData("azmcp_keyvault_secret_get")]
     [InlineData("azmcp_storage_account_get", "azmcp_keyvault_secret_get")]
@@ -212,6 +239,7 @@ public class ServiceStartCommandTests
         Assert.Equal(TransportTypes.StdIo, options.Transport);
         Assert.Equal(new[] { "storage", "keyvault" }, options.Namespace);
         Assert.Equal("all", options.Mode);
+        Assert.Equal(StructuredOutputMode.Compact, options.StructuredOutputMode);
         Assert.True(options.ReadOnly);
         Assert.True(options.Debug);
         Assert.False(options.DangerouslyDisableHttpIncomingAuth);
@@ -823,6 +851,7 @@ public class ServiceStartCommandTests
             "--namespace", "storage",
             "--namespace", "keyvault",
             "--mode", "all",
+            "--structured-output-mode", "compact",
             "--read-only",
             "--debug",
             "--dangerously-disable-elicitation",

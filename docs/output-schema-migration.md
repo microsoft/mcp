@@ -5,13 +5,11 @@ This guide describes how to opt a toolset's commands into MCP **`outputSchema`**
 pilot. It is written so that an AI agent (or a human) can follow it mechanically, one command at a
 time.
 
-> **Cardinal rule: this migration is purely additive. We are describing the result, not changing it.**
+> **Cardinal rule: this migration describes the result; it does not change the command's result model.**
 >
-> The existing text `content` block of every tool response stays byte-for-byte identical, and no CLI
-> option, name, or description changes. You are only (a) advertising a schema for the result and
-> (b) echoing the same result payload into `structuredContent`. If a `tools list` diff shows any change
-> to `name`, `description`, `inputSchema`, or annotations — or if the text `content` of a response
-> changes — stop and investigate.
+> No CLI option, name, result type, or description changes. The server's startup
+> `--structured-output-mode` determines whether the MCP response remains content-only, duplicates the
+> complete result into `structuredContent`, or uses compact text alongside `structuredContent`.
 
 ## What this migration does
 
@@ -25,8 +23,10 @@ Two things happen once a command opts in, both driven by the command exposing it
    also returns it as `structuredContent`, shaped with the **same** wrapping rule so it validates against
    the advertised `outputSchema`.
 
-The plumbing already exists in `Microsoft.Mcp.Core`. You do **not** touch it when migrating a toolset —
-it activates automatically for any command that exposes a result type:
+The plumbing already exists in `Microsoft.Mcp.Core`. You do **not** touch it when migrating a toolset.
+For clients that negotiate MCP protocol version `2025-06-18` or later, it activates automatically for
+any command that exposes a result type when the server starts with
+`--structured-output-mode duplicated` or `--structured-output-mode compact`:
 
 - ``Commands/BaseCommand`2.cs`` — defines the `ResultTypeInfo` hook and the `SetResult(...)` helper.
 - `Areas/Server/Commands/OptionSchemaGenerator.cs` — `CreateOutputSchema(...)` builds the schema.
@@ -35,6 +35,18 @@ it activates automatically for any command that exposes a result type:
 
 The only per-command change is: **tell the base command what your result type is, and let the base
 command store the result.**
+
+## Server startup modes
+
+| Mode | `outputSchema` | `structuredContent` | Text `content` |
+|---|---|---|---|
+| `legacy` (default) | Omitted | Omitted | Complete historical response |
+| `duplicated` | Emitted | Complete result payload | Complete historical response |
+| `compact` | Emitted | Complete result payload | Concise pointer with a `legacy-content` retry instruction |
+
+Clients that negotiate an older protocol version always receive the legacy shape. In compact mode,
+eligible tools advertise the reserved Boolean `legacy-content` argument. Setting it to `true` retains
+`structuredContent` but returns the complete historical response in `content`.
 
 ## Prerequisites
 
@@ -192,7 +204,9 @@ Run these from the repository root, scoped to the toolset you migrated (App Conf
    ./eng/scripts/Test-Code.ps1 -Paths AppConfig
    ```
 
-3. **Confirm the schema appears (optional but recommended).** Regenerate the tools-list snapshot and
+3. **Confirm the schema appears (optional but recommended).** Start the server with
+   `--structured-output-mode duplicated` or `--structured-output-mode compact`, regenerate the
+   tools-list snapshot, and
    confirm each migrated tool now carries an `outputSchema`, while `name`, `description`, and
    `inputSchema` are unchanged.
    ```powershell
@@ -228,8 +242,8 @@ Run these from the repository root, scoped to the toolset you migrated (App Conf
 | Result type exposed to server | Not exposed | `public override JsonTypeInfo<TResult>? ResultTypeInfo => XxxJsonContext.Default.<TResult>;` |
 | Storing the success result | `context.Response.Results = ResponseResult.Create(<result>, XxxJsonContext.Default.<TResult>);` | `SetResult(context, <result>);` |
 | `using` directives | — | `+ using System.Text.Json.Serialization.Metadata;` |
-| Tool `outputSchema` | Absent | Generated from `ResultTypeInfo` |
-| Response `structuredContent` | Absent | Result payload, same wrapping as the schema |
-| Text `content` block | Unchanged | Unchanged |
-| CLI options / `inputSchema` | Unchanged | Unchanged |
+| Tool `outputSchema` | Absent | Generated from `ResultTypeInfo` when structured output is enabled |
+| Response `structuredContent` | Absent | Result payload, same wrapping as the schema, when enabled |
+| Text `content` block | Complete response | Complete in `legacy`/`duplicated`; concise by default in `compact` |
+| CLI options / `inputSchema` | Unchanged | `compact` adds the reserved `legacy-content` MCP argument |
 | Error handling | `HandleException(context, ex)` | `HandleException(context, ex)` (unchanged) |

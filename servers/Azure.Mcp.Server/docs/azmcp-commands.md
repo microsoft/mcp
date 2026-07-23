@@ -257,6 +257,7 @@ The `azmcp server start` command supports the following options:
 |--------|----------|---------|-------------|
 | `--transport` | No | `stdio` | Transport mechanism to use. Valid values: `stdio` (default, supported in all distributions) or `http` (supported only in the Docker image distribution and other builds with HTTP enabled; may not be available in local CLI builds). |
 | `--mode` | No | `namespace` | Server mode: `namespace` (default), `consolidated`, `all`, or `single` |
+| `--structured-output-mode` | No | `legacy` | Structured output mode for eligible tools: `legacy` returns the historical content-only response, `duplicated` returns the complete response in both `content` and `structuredContent`, and `compact` returns concise `content` with the complete result in `structuredContent`. Structured output requires MCP protocol version `2025-06-18` or later. |
 | `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all existing modes to filter tools. |
 | `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |

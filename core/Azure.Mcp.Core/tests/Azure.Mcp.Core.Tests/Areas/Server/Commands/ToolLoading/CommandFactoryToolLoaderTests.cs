@@ -7,6 +7,7 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
@@ -37,7 +38,7 @@ public class CommandFactoryToolLoaderTests
     private const string LegacyProtocolVersion = "2025-03-26";
 
     private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateRequest(
-        string? negotiatedProtocolVersion = CommandFactoryToolLoader.StructuredContentMinProtocolVersion)
+        string? negotiatedProtocolVersion = StructuredOutputHelper.MinProtocolVersion)
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
         mockServer.NegotiatedProtocolVersion.Returns(negotiatedProtocolVersion);
@@ -696,7 +697,10 @@ public class CommandFactoryToolLoaderTests
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions
+        {
+            StructuredOutputMode = StructuredOutputMode.Compact
+        });
 
         var fakeCommand = Substitute.For<IBaseCommand>();
         fakeCommand.GetCommand().Returns(new Command("fake-output-get", "A fake command that advertises a result type."));
@@ -732,7 +736,7 @@ public class CommandFactoryToolLoaderTests
         Assert.True(properties.TryGetProperty("name", out _), "outputSchema should expose the result record's 'name' property.");
 
         var inputProperties = tool.InputSchema.GetProperty("properties");
-        Assert.True(inputProperties.TryGetProperty(CommandFactoryToolLoader.LegacyContentArgumentName, out var legacyContent));
+        Assert.True(inputProperties.TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out var legacyContent));
         Assert.Equal("boolean", legacyContent.GetProperty("type").GetString());
         Assert.False(legacyContent.GetProperty("default").GetBoolean());
     }
@@ -770,7 +774,54 @@ public class CommandFactoryToolLoaderTests
         Assert.NotNull(tool);
         Assert.Null(tool.OutputSchema);
         Assert.False(tool.InputSchema.GetProperty("properties")
-            .TryGetProperty(CommandFactoryToolLoader.LegacyContentArgumentName, out _));
+            .TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out _));
+    }
+
+    [Theory]
+    [InlineData(StructuredOutputMode.Legacy, false, false)]
+    [InlineData(StructuredOutputMode.Duplicated, true, false)]
+    [InlineData(StructuredOutputMode.Compact, true, true)]
+    public async Task ListToolsHandler_StructuredOutputMode_ControlsSchemaAndFallbackArgument(
+        StructuredOutputMode mode,
+        bool expectsOutputSchema,
+        bool expectsLegacyContentArgument)
+    {
+        var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
+        var logger = serviceProvider.GetRequiredService<ILoggerFactory>()
+            .CreateLogger<CommandFactoryToolLoader>();
+        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions
+        {
+            StructuredOutputMode = mode
+        });
+        var fakeCommand = Substitute.For<IBaseCommand>();
+        fakeCommand.GetCommand().Returns(new Command("fake-output-get"));
+        fakeCommand.Title.Returns("Fake Output Get");
+        fakeCommand.Metadata.Returns(new ToolMetadata());
+        fakeCommand.ResultTypeInfo.Returns(OutputSchemaTestJsonContext.Default.OutputSchemaSampleResult);
+
+        var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
+        var commandMapField = typeof(CommandFactory).GetField(
+            "_commandMap",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
+        commandMap["fake-output-get"] = fakeCommand;
+
+        var toolLoader = new CommandFactoryToolLoader(
+            serviceProvider,
+            commandFactory,
+            toolLoaderOptions,
+            logger);
+
+        var result = await toolLoader.ListToolsHandler(
+            CreateRequest(),
+            TestContext.Current.CancellationToken);
+
+        var tool = Assert.Single(result.Tools, tool => tool.Name == "fake-output-get");
+        Assert.Equal(expectsOutputSchema, tool.OutputSchema.HasValue);
+        Assert.Equal(
+            expectsLegacyContentArgument,
+            tool.InputSchema.GetProperty("properties")
+                .TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out _));
     }
 
     [Theory]
@@ -787,7 +838,7 @@ public class CommandFactoryToolLoaderTests
     {
         // structuredContent/outputSchema only entered the spec in 2025-06-18. Anything null, empty,
         // malformed, or older falls back to the legacy content-only shape.
-        Assert.Equal(expected, CommandFactoryToolLoader.SupportsStructuredOutput(negotiatedProtocolVersion));
+        Assert.Equal(expected, StructuredOutputHelper.SupportsProtocolVersion(negotiatedProtocolVersion));
     }
 
     [Fact]
@@ -800,7 +851,10 @@ public class CommandFactoryToolLoaderTests
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions
+        {
+            StructuredOutputMode = StructuredOutputMode.Compact
+        });
 
         var fakeCommand = Substitute.For<IBaseCommand>();
         fakeCommand.GetCommand().Returns(new Command("fake-output-get", "A fake command that advertises a result type."));
@@ -824,7 +878,7 @@ public class CommandFactoryToolLoaderTests
         Assert.NotNull(tool);
         Assert.Null(tool.OutputSchema);
         Assert.False(tool.InputSchema.GetProperty("properties")
-            .TryGetProperty(CommandFactoryToolLoader.LegacyContentArgumentName, out _));
+            .TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out _));
     }
 
     [Fact]
@@ -836,7 +890,10 @@ public class CommandFactoryToolLoaderTests
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions
+        {
+            StructuredOutputMode = StructuredOutputMode.Compact
+        });
 
         var fakeCommand = Substitute.For<IBaseCommand>();
         fakeCommand.GetCommand().Returns(new Command("fake-output-get", "A fake command that advertises a result type."));
@@ -860,7 +917,7 @@ public class CommandFactoryToolLoaderTests
         Assert.NotNull(tool);
         Assert.Null(tool.OutputSchema);
         Assert.False(tool.InputSchema.GetProperty("properties")
-            .TryGetProperty(CommandFactoryToolLoader.LegacyContentArgumentName, out _));
+            .TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out _));
     }
 
     [Fact]
@@ -873,7 +930,7 @@ public class CommandFactoryToolLoaderTests
             new OutputSchemaSampleResult("alpha", 3),
             OutputSchemaTestJsonContext.Default.OutputSchemaSampleResult));
 
-        var structuredContent = CommandFactoryToolLoader.TryBuildStructuredContent(json);
+        var structuredContent = StructuredOutputHelper.TryBuildStructuredContent(json);
 
         Assert.NotNull(structuredContent);
         var value = structuredContent!.Value;
@@ -893,7 +950,7 @@ public class CommandFactoryToolLoaderTests
             new[] { "one", "two" },
             OutputSchemaTestJsonContext.Default.StringArray));
 
-        var structuredContent = CommandFactoryToolLoader.TryBuildStructuredContent(json);
+        var structuredContent = StructuredOutputHelper.TryBuildStructuredContent(json);
 
         Assert.NotNull(structuredContent);
         var value = structuredContent!.Value;
@@ -912,7 +969,7 @@ public class CommandFactoryToolLoaderTests
             42,
             OutputSchemaTestJsonContext.Default.Int32));
 
-        var structuredContent = CommandFactoryToolLoader.TryBuildStructuredContent(json);
+        var structuredContent = StructuredOutputHelper.TryBuildStructuredContent(json);
 
         Assert.NotNull(structuredContent);
         var value = structuredContent!.Value;
@@ -928,7 +985,7 @@ public class CommandFactoryToolLoaderTests
         // there is no payload to set as structuredContent.
         var json = SerializeResponse(results: null);
 
-        var structuredContent = CommandFactoryToolLoader.TryBuildStructuredContent(json);
+        var structuredContent = StructuredOutputHelper.TryBuildStructuredContent(json);
 
         Assert.Null(structuredContent);
     }
@@ -938,7 +995,7 @@ public class CommandFactoryToolLoaderTests
     {
         // Even if a 'results' property is present but null, there is no payload to set as structuredContent.
         // The realistic serializer path omits null results, so this uses a hand-built response to exercise it.
-        var structuredContent = CommandFactoryToolLoader.TryBuildStructuredContent("{\"results\":null}");
+        var structuredContent = StructuredOutputHelper.TryBuildStructuredContent("{\"results\":null}");
 
         Assert.Null(structuredContent);
     }
@@ -949,7 +1006,10 @@ public class CommandFactoryToolLoaderTests
         // Arrange
         // A non-secret command that advertises a result type and returns a payload. A client on a protocol
         // version that supports structuredContent should receive the payload there and compact text content.
-        var (toolLoader, commandFactory) = CreateToolLoader();
+        var (toolLoader, commandFactory) = CreateToolLoader(new ToolLoaderOptions
+        {
+            StructuredOutputMode = StructuredOutputMode.Compact
+        });
 
         var fakeCommand = Substitute.For<IBaseCommand>();
         fakeCommand.GetCommand().Returns(new Command("fake-structured-get", "A fake command that returns a structured payload."));
@@ -968,7 +1028,7 @@ public class CommandFactoryToolLoaderTests
         commandMap["fake-structured-get"] = fakeCommand;
 
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        mockServer.NegotiatedProtocolVersion.Returns(CommandFactoryToolLoader.StructuredContentMinProtocolVersion);
+        mockServer.NegotiatedProtocolVersion.Returns(StructuredOutputHelper.MinProtocolVersion);
         var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
@@ -983,7 +1043,7 @@ public class CommandFactoryToolLoaderTests
 
         // Assert
         Assert.False(result.IsError);
-        Assert.Equal(CommandFactoryToolLoader.CompactStructuredContentMessage, GetTextContent(result));
+        Assert.Equal(StructuredOutputHelper.CompactContentMessage, GetTextContent(result));
         Assert.NotNull(result.StructuredContent);
         var structured = result.StructuredContent!.Value;
         Assert.Equal("alpha", structured.GetProperty("name").GetString());
@@ -996,7 +1056,10 @@ public class CommandFactoryToolLoaderTests
         // Arrange
         // The same result-type command, but a client on a protocol version that predates structuredContent.
         // The version gate should suppress structuredContent while the payload still flows through content.
-        var (toolLoader, commandFactory) = CreateToolLoader();
+        var (toolLoader, commandFactory) = CreateToolLoader(new ToolLoaderOptions
+        {
+            StructuredOutputMode = StructuredOutputMode.Compact
+        });
 
         var fakeCommand = Substitute.For<IBaseCommand>();
         fakeCommand.GetCommand().Returns(new Command("fake-structured-get", "A fake command that returns a structured payload."));
@@ -1050,6 +1113,26 @@ public class CommandFactoryToolLoaderTests
         Assert.Equal(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse), GetTextContent(result));
     }
 
+    [Theory]
+    [InlineData(StructuredOutputMode.Legacy, false)]
+    [InlineData(StructuredOutputMode.Duplicated, true)]
+    public async Task CallToolHandler_NonCompactMode_UsesFullContent(
+        StructuredOutputMode mode,
+        bool expectsStructuredContent)
+    {
+        var response = CreateSuccessfulStructuredResponse();
+        var (toolLoader, _) = CreateStructuredToolLoader(response, mode: mode);
+
+        var result = await toolLoader.CallToolHandler(
+            CreateCallRequest(),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse),
+            GetTextContent(result));
+        Assert.Equal(expectsStructuredContent, result.StructuredContent.HasValue);
+    }
+
     [Fact]
     public async Task CallToolHandler_LegacyContentFalse_UsesCompactContent()
     {
@@ -1058,17 +1141,17 @@ public class CommandFactoryToolLoaderTests
         var (toolLoader, _) = CreateStructuredToolLoader(response, onExecute: _ => executionCount++);
         var arguments = new Dictionary<string, JsonElement>
         {
-            [CommandFactoryToolLoader.LegacyContentArgumentName] = JsonSerializer.SerializeToElement(false)
+            [StructuredOutputHelper.LegacyContentArgumentName] = JsonSerializer.SerializeToElement(false)
         };
 
         var result = await toolLoader.CallToolHandler(
             CreateCallRequest(arguments: arguments),
             TestContext.Current.CancellationToken);
 
-        Assert.Equal(CommandFactoryToolLoader.CompactStructuredContentMessage, GetTextContent(result));
+        Assert.Equal(StructuredOutputHelper.CompactContentMessage, GetTextContent(result));
         Assert.NotNull(result.StructuredContent);
         Assert.Equal(1, executionCount);
-        Assert.True(arguments.ContainsKey(CommandFactoryToolLoader.LegacyContentArgumentName));
+        Assert.True(arguments.ContainsKey(StructuredOutputHelper.LegacyContentArgumentName));
     }
 
     [Fact]
@@ -1078,7 +1161,7 @@ public class CommandFactoryToolLoaderTests
         var (toolLoader, _) = CreateStructuredToolLoader(response);
         var arguments = new Dictionary<string, JsonElement>
         {
-            [CommandFactoryToolLoader.LegacyContentArgumentName] = JsonSerializer.SerializeToElement(true)
+            [StructuredOutputHelper.LegacyContentArgumentName] = JsonSerializer.SerializeToElement(true)
         };
 
         var result = await toolLoader.CallToolHandler(
@@ -1087,7 +1170,7 @@ public class CommandFactoryToolLoaderTests
 
         Assert.Equal(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse), GetTextContent(result));
         Assert.NotNull(result.StructuredContent);
-        Assert.True(arguments.ContainsKey(CommandFactoryToolLoader.LegacyContentArgumentName));
+        Assert.True(arguments.ContainsKey(StructuredOutputHelper.LegacyContentArgumentName));
     }
 
     [Theory]
@@ -1102,7 +1185,7 @@ public class CommandFactoryToolLoaderTests
         using var valueDocument = JsonDocument.Parse(jsonValue);
         var arguments = new Dictionary<string, JsonElement>
         {
-            [CommandFactoryToolLoader.LegacyContentArgumentName] = valueDocument.RootElement.Clone()
+            [StructuredOutputHelper.LegacyContentArgumentName] = valueDocument.RootElement.Clone()
         };
 
         var result = await toolLoader.CallToolHandler(
@@ -1112,7 +1195,7 @@ public class CommandFactoryToolLoaderTests
         Assert.True(result.IsError);
         Assert.Null(result.StructuredContent);
         Assert.Equal(
-            $"The '{CommandFactoryToolLoader.LegacyContentArgumentName}' argument must be a Boolean.",
+            $"The '{StructuredOutputHelper.LegacyContentArgumentName}' argument must be a Boolean.",
             GetTextContent(result));
         Assert.Equal(0, executionCount);
     }
@@ -1186,13 +1269,13 @@ public class CommandFactoryToolLoaderTests
         var tool = Assert.Single(tools.Tools, tool => tool.Name == "fake-structured-get");
         var schemaProperties = tool.InputSchema.GetProperty("properties");
         Assert.True(schemaProperties.TryGetProperty("payload", out _));
-        Assert.True(schemaProperties.TryGetProperty(CommandFactoryToolLoader.LegacyContentArgumentName, out var legacyContentSchema));
+        Assert.True(schemaProperties.TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out var legacyContentSchema));
         Assert.Equal("boolean", legacyContentSchema.GetProperty("type").GetString());
 
         var arguments = new Dictionary<string, JsonElement>
         {
             ["payload"] = JsonSerializer.SerializeToElement(new { Name = "test" }),
-            [CommandFactoryToolLoader.LegacyContentArgumentName] = JsonSerializer.SerializeToElement(true)
+            [StructuredOutputHelper.LegacyContentArgumentName] = JsonSerializer.SerializeToElement(true)
         };
         var result = await toolLoader.CallToolHandler(
             CreateCallRequest(arguments: arguments),
@@ -1202,10 +1285,10 @@ public class CommandFactoryToolLoaderTests
         var rawInput = receivedParseResult.GetValue<string>("--raw-mcp-tool-input");
         using var rawInputDocument = JsonDocument.Parse(Assert.IsType<string>(rawInput));
         Assert.True(rawInputDocument.RootElement.TryGetProperty("payload", out _));
-        Assert.False(rawInputDocument.RootElement.TryGetProperty(CommandFactoryToolLoader.LegacyContentArgumentName, out _));
+        Assert.False(rawInputDocument.RootElement.TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out _));
         Assert.Equal(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse), GetTextContent(result));
         Assert.NotNull(result.StructuredContent);
-        Assert.True(arguments.ContainsKey(CommandFactoryToolLoader.LegacyContentArgumentName));
+        Assert.True(arguments.ContainsKey(StructuredOutputHelper.LegacyContentArgumentName));
     }
 
     [Theory]
@@ -1220,7 +1303,7 @@ public class CommandFactoryToolLoaderTests
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
             async () => await toolLoader.ListToolsHandler(CreateRequest(), TestContext.Current.CancellationToken));
 
-        Assert.Contains(CommandFactoryToolLoader.LegacyContentArgumentName, exception.Message);
+        Assert.Contains(StructuredOutputHelper.LegacyContentArgumentName, exception.Message);
     }
 
     private static string GetTextContent(CallToolResult result)
@@ -1244,9 +1327,13 @@ public class CommandFactoryToolLoaderTests
         CommandResponse response,
         Command? systemCommand = null,
         string commandName = "fake-structured-get",
-        Action<ParseResult>? onExecute = null)
+        Action<ParseResult>? onExecute = null,
+        StructuredOutputMode mode = StructuredOutputMode.Compact)
     {
-        var (toolLoader, commandFactory) = CreateToolLoader();
+        var (toolLoader, commandFactory) = CreateToolLoader(new ToolLoaderOptions
+        {
+            StructuredOutputMode = mode
+        });
         var fakeCommand = Substitute.For<IBaseCommand>();
         fakeCommand.GetCommand().Returns(systemCommand ?? new Command(commandName));
         fakeCommand.Title.Returns("Fake Structured Get");
@@ -1273,7 +1360,7 @@ public class CommandFactoryToolLoaderTests
 
     private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallRequest(
         Dictionary<string, JsonElement>? arguments = null,
-        string protocolVersion = CommandFactoryToolLoader.StructuredContentMinProtocolVersion,
+        string protocolVersion = StructuredOutputHelper.MinProtocolVersion,
         string commandName = "fake-structured-get")
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
