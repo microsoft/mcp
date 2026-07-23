@@ -34,6 +34,7 @@ public sealed class McpRuntime : IMcpRuntime
     /// </summary>
     /// <param name="toolLoader">The tool loader responsible for discovering and loading tools.</param>
     /// <param name="options">Configuration options for the MCP server.</param>
+    /// <param name="telemetry">Telemetry service for logging and monitoring.</param>
     /// <param name="logger">Logger for runtime operations.</param>
     /// <exception cref="ArgumentNullException">Thrown if any required dependencies are null.</exception>
     public McpRuntime(

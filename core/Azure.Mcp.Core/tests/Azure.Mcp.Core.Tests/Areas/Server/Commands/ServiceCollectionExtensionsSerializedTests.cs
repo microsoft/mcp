@@ -12,10 +12,6 @@ using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands;
 
-// This is intentionally placed after the namespace declaration to avoid
-// conflicts with Azure.Mcp.Core.Areas.Server.Options
-using Options = Microsoft.Extensions.Options.Options;
-
 public class ServiceCollectionExtensionsSerializedTests
 {
     private static readonly Assembly s_testAssembly = typeof(ServiceCollectionExtensionsTests).Assembly;
@@ -65,7 +61,7 @@ public class ServiceCollectionExtensionsSerializedTests
         {
             Transport = TransportTypes.Http,
         };
-        var services = SetupBaseServices().AddSingleton(Options.Create(serviceStartOptions));
+        var services = SetupBaseServices().AddSingleton(Microsoft.Extensions.Options.Options.Create(serviceStartOptions));
 
         // Act
         services.InitializeConfigurationAndOptions(s_serverAssembly);
@@ -121,7 +117,7 @@ public class ServiceCollectionExtensionsSerializedTests
         {
             SupportLoggingFolder = "/tmp/logs"
         };
-        var services = SetupBaseServices().AddSingleton(Options.Create(serviceStartOptions));
+        var services = SetupBaseServices().AddSingleton(Microsoft.Extensions.Options.Options.Create(serviceStartOptions));
 
         // Act
         Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", null);
@@ -145,7 +141,7 @@ public class ServiceCollectionExtensionsSerializedTests
         {
             SupportLoggingFolder = "/tmp/logs"
         };
-        var services = SetupBaseServices().AddSingleton(Options.Create(serviceStartOptions));
+        var services = SetupBaseServices().AddSingleton(Microsoft.Extensions.Options.Options.Create(serviceStartOptions));
 
         // Act
         Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", "true");
@@ -171,7 +167,7 @@ public class ServiceCollectionExtensionsSerializedTests
         {
             SupportLoggingFolder = folderPath
         };
-        var services = SetupBaseServices().AddSingleton(Options.Create(serviceStartOptions));
+        var services = SetupBaseServices().AddSingleton(Microsoft.Extensions.Options.Options.Create(serviceStartOptions));
 
         // Act
         Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", null);

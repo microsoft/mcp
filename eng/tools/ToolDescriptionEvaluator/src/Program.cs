@@ -3,13 +3,13 @@
 
 using System.Diagnostics;
 using System.Text.Json;
-using ToolSelection.Models;
-using ToolSelection.Services;
-using ToolSelection.VectorDb;
+using ToolDescriptionEvaluator.Models;
+using ToolDescriptionEvaluator.Services;
+using ToolDescriptionEvaluator.VectorDb;
 
-namespace ToolSelection;
+namespace ToolDescriptionEvaluator;
 
-class Program
+internal class Program
 {
     private static readonly HttpClient HttpClient = new();
 
@@ -825,7 +825,9 @@ class Program
         }
     }
 
+#pragma warning disable IDE0060 // Should use isCiMode parameter, but it's not used in this method.
     private static async Task PerformAnalysis(Dictionary<string, List<string>> toolNameWithPrompts, EmbeddingService embeddingService, VectorDB db, TimeSpan databaseSetupTime, StreamWriter writer, int maxResultsPerTest = 5, bool isCiMode = false)
+#pragma warning restore IDE0060
     {
         var stopwatch = Stopwatch.StartNew();
         int promptCount = 0;

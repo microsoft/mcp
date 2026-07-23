@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure;
-using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Commands.IoTHub;

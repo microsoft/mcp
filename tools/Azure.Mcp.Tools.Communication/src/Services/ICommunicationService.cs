@@ -32,7 +32,9 @@ public interface ICommunicationService
     /// <param name="cc">Optional CC recipient email addresses.</param>
     /// <param name="bcc">Optional BCC recipient email addresses.</param>
     /// <param name="replyTo">Optional reply-to addresses.</param>
+    /// <param name="tenantId">Optional tenant ID.</param>
     /// <param name="retryPolicy">Optional retry policy options.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>The result of the email send operation.</returns>
     Task<EmailSendResult> SendEmailAsync(
         string endpoint,

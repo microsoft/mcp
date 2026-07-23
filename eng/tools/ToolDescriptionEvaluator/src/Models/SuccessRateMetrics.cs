@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace ToolSelection.Models;
+namespace ToolDescriptionEvaluator.Models;
 
 public class SuccessRateMetrics
 {

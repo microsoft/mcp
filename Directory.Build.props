@@ -20,6 +20,8 @@
       See: https://learn.microsoft.com/nuget/reference/errors-and-warnings/nu1901-nu1904
     -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902</WarningsNotAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">

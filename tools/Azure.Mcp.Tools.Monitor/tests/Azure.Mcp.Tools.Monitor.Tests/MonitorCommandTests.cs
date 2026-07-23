@@ -10,7 +10,6 @@ using Azure.ResourceManager.CloudHealth.Models;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
@@ -25,15 +24,10 @@ namespace Azure.Mcp.Tools.Monitor.Tests;
 
 public sealed class MonitorCommandTests : RecordedCommandTestsBase
 {
-    private LogAnalyticsHelper? _logHelper;
-    private const string TestLogType = "TestLogs_CL";
     private readonly ServiceProvider _httpClientProvider;
     private readonly MemoryCache _memoryCache;
     private readonly ITenantService _tenantService;
-    private readonly IMonitorService _monitorService;
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ILogger<MonitorService> _logger;
-    private string? _storageAccountName;
     private string? _appInsightsName;
     private string? _bingWebTestName;
     private string? _healthModelParentName;
@@ -70,8 +64,6 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         var subscriptionService = new SubscriptionService(cacheService, _tenantService, NullLogger<SubscriptionService>.Instance);
         var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService, _tenantService);
         var resourceResolverService = new ResourceResolverService(subscriptionService, _tenantService);
-        _logger = NullLogger<MonitorService>.Instance;
-        _monitorService = new MonitorService(subscriptionService, _tenantService, resourceGroupService, resourceResolverService, _httpClientFactory, _logger);
     }
 
     public override List<UriRegexSanitizer> UriRegexSanitizers { get; } =
@@ -117,7 +109,6 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync();
-        _storageAccountName = $"{Settings.ResourceBaseName}mon";
         _appInsightsName = $"{Settings.ResourceBaseName}-ai";
         _bingWebTestName = $"{Settings.ResourceBaseName}-bing-test";
         _healthModelParentName = $"{Settings.ResourceBaseName}-hm-a";
@@ -127,16 +118,6 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         {
             return;
         }
-
-        _logHelper = new LogAnalyticsHelper(
-            Settings.ResourceBaseName,
-            Settings.SubscriptionId,
-            _monitorService,
-            _tenantService,
-            _httpClientFactory,
-            Settings.TenantId,
-            TestLogType,
-            NullLogger.Instance);
     }
 
     public override async ValueTask DisposeAsync()

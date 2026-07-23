@@ -42,7 +42,7 @@ public class CommandFactory : ICommandFactory
     /// Creates a fresh <see cref="Option{T}"/> for <c>--learn</c> each time it is called.
     /// A new instance is required per command because System.CommandLine v2 tracks option
     /// ownership by object identity; sharing a single static instance causes
-    /// <see cref="ParseResult.GetValue{T}"/> to return the default value on every command
+    /// <see cref="ParseResult.GetValue{T}(Option{T})"/> to return the default value on every command
     /// except the last one the option was added to.
     /// </summary>
     private static Option<bool> CreateLearnOption()

@@ -31,7 +31,7 @@ public interface ITenantService
     /// Gets the tenant ID from either a tenant ID or tenant name.
     /// </summary>
     /// <param name="tenantIdOrName">The tenant ID or tenant name.</param>
-    /// <param name="cancellation">A cancellation token.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>
     /// A task representing the asynchronous operation, with the tenant ID or <see langword="null"/>
     /// if not found.
@@ -40,7 +40,7 @@ public interface ITenantService
     /// Thrown when a tenant with the specified name is not found.
     /// </exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the tenant has a <see langword="null"> TenantId.
+    /// Thrown when the tenant has a <see langword="null"/> TenantId.
     /// </exception>
     Task<string> GetTenantId(string tenantIdOrName, CancellationToken cancellationToken);
 
@@ -48,7 +48,7 @@ public interface ITenantService
     /// Gets the tenant ID by tenant name.
     /// </summary>
     /// <param name="tenantName">The tenant name.</param>
-    /// <param name="cancellation">A cancellation token.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>
     /// A task representing the asynchronous operation, with the tenant ID or <see langword="null"/>
     /// if not found.
@@ -57,7 +57,7 @@ public interface ITenantService
     /// Thrown when a tenant with the specified name is not found.
     /// </exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the tenant has a <see langword="null"> TenantId.
+    /// Thrown when the tenant has a <see langword="null"/> TenantId.
     /// </exception>
     Task<string> GetTenantIdByName(string tenantName, CancellationToken cancellationToken);
 
@@ -65,7 +65,7 @@ public interface ITenantService
     /// Gets the tenant name by tenant ID.
     /// </summary>
     /// <param name="tenantId">The tenant ID.</param>
-    /// <param name="cancellation">A cancellation token.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>
     /// A task representing the asynchronous operation, with the tenant name or <see langword="null"/> if not found.
     /// </returns>
@@ -73,7 +73,7 @@ public interface ITenantService
     /// Thrown when a tenant with the specified ID is not found.
     /// </exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the tenant has a <see langword="null"> DisplayName.
+    /// Thrown when the tenant has a <see langword="null"/> DisplayName.
     /// </exception>
     Task<string> GetTenantNameById(string tenantId, CancellationToken cancellationToken);
 
@@ -90,7 +90,7 @@ public interface ITenantService
     /// Gets an instance of <see cref="TokenCredential"/>.
     /// </summary>
     /// <param name="tenantId">Optional tenant ID. Use <see langword="null"/> in most cases.</param>
-    /// <param name="cancellation">A cancellation token.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>
     /// A task representing the asynchronous operation, with a value of <see cref="TokenCredential"/>.
     /// </returns>

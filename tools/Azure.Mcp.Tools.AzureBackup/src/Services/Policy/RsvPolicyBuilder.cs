@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Globalization;
-using System.Linq;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services.Policy;
@@ -184,41 +183,6 @@ public static class RsvPolicyBuilder
         {
             sub.TieringPolicy["ArchivedRP"] = tiering;
         }
-
-        return sub;
-    }
-
-    private static SubProtectionPolicy BuildVmWorkloadSnapshotSubPolicy(PolicyCreateRequest req, IList<DateTimeOffset> scheduleTimes)
-    {
-        // Retained for backward-compatibility with existing unit tests; not currently invoked by Build().
-        var schedule = new SimpleSchedulePolicy { ScheduleRunFrequency = ScheduleRunType.Daily };
-        foreach (var t in scheduleTimes)
-        {
-            schedule.ScheduleRunTimes.Add(t);
-        }
-
-        var snapshotDays = TryParsePositiveInt(req.SnapshotInstantRpRetentionDays, out var rpDays) ? rpDays : 2;
-        var retention = new SimpleRetentionPolicy
-        {
-            RetentionDuration = new RetentionDuration { Count = snapshotDays, DurationType = RetentionDurationType.Days },
-        };
-
-        var sub = new SubProtectionPolicy
-        {
-            PolicyType = new SubProtectionPolicyType("SnapshotCopyOnlyFull"),
-            SchedulePolicy = schedule,
-            RetentionPolicy = retention,
-        };
-
-        var details = new SnapshotBackupAdditionalDetails
-        {
-            InstantRpRetentionRangeInDays = snapshotDays,
-        };
-        if (!string.IsNullOrWhiteSpace(req.SnapshotInstantRpResourceGroup))
-        {
-            details.InstantRPDetails = req.SnapshotInstantRpResourceGroup;
-        }
-        sub.SnapshotBackupAdditionalDetails = details;
 
         return sub;
     }
@@ -813,18 +777,6 @@ public static class RsvPolicyBuilder
 
     private static bool IsWeeklyFrequency(ScheduleRunType? frequency)
         => frequency == ScheduleRunType.Weekly;
-
-    private static bool HasAnyText(params string?[] values)
-    {
-        foreach (var v in values)
-        {
-            if (!string.IsNullOrWhiteSpace(v))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
 
     private static string Capitalize(string text)
     {

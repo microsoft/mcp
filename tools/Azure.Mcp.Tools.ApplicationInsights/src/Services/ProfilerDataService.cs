@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System.Collections.Specialized;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -170,6 +173,7 @@ public class ProfilerDataService(
     /// </summary>
     /// <param name="path">The path</param>
     /// <param name="queries">Optional queries to append to the path.</param>
+    /// <param name="apiVersion">The API version to use.</param>
     /// <param name="clientRequestId">Optional client request ID.</param>
     /// <param name="httpContent">The content of the incoming request.</param>
     /// <param name="additionalHeaders">Additional headers to be added to the request</param>

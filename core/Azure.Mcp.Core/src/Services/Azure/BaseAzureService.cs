@@ -253,6 +253,8 @@ public abstract class BaseAzureService
     /// <param name="tenantIdOrName">Optional Azure tenant ID or name.</param>
     /// <param name="retryPolicy">Optional retry policy configuration.</param>
     /// <param name="armClientOptions">Optional ARM client options.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>An initialized <see cref="ArmClient"/> instance.</returns>
     protected async Task<ArmClient> CreateArmClientAsync(
         string? tenantIdOrName = null,
         RetryPolicyOptions? retryPolicy = null,

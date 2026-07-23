@@ -21,13 +21,7 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 /// into build errors. Option value types come from <c>System.CommandLine</c> as
 /// runtime <see cref="Type"/> values, so this helper has to use
 /// <see cref="DefaultJsonTypeInfoResolver"/> and
-/// <see cref="JsonStringEnumConverter"/>, both annotated. The
-/// <see cref="UnconditionalSuppressMessageAttribute"/> attributes below are used
-/// because this class uses the exporter only to read schema metadata (no
-/// (de)serialization, no enum materialization), and because the actual option
-/// types in use are primitives, enums, <see cref="Guid"/>, nullables of those,
-/// and arrays of those, which the default resolver handles without trimming or
-/// dynamic-codegen concerns.
+/// <see cref="JsonStringEnumConverter"/>, both annotated.
 /// </remarks>
 internal static class OptionSchemaGenerator
 {

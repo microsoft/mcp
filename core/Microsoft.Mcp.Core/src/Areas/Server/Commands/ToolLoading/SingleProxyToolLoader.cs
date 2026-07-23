@@ -203,10 +203,11 @@ public sealed class SingleProxyToolLoader(
     }
 
     /// <summary>
-    /// Gets the set of <see cref="IBaseCommand"/> within an <see cref="IAreaSetup">.
+    /// Gets the set of <see cref="IBaseCommand"/> within an <see cref="IAreaSetup"/>.
     /// </summary>
     /// <param name="request">Calling request</param>
     /// <param name="tool">Name of the <see cref="IAreaSetup"/> to get commands for.</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>JSON serialized string representing the list of commands available in the tool's area.</returns>
     private async Task<string> GetToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {

@@ -17,6 +17,8 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 /// This strategy converts Azure CLI command groups into MCP servers, allowing them to be accessed via the MCP protocol.
 /// </summary>
 /// <param name="commandFactory">The command factory used to access available command groups.</param>
+/// <param name="serviceProvider">The service provider for dependency injection.</param>
+/// <param name="definitionProvider">The provider for consolidated tool definitions.</param>
 /// <param name="options">Options for configuring the service behavior.</param>
 /// <param name="configurationOptions">Configuration options for the Azure MCP server.</param>
 /// <param name="logger">Logger instance for this discovery strategy.</param>

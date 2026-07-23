@@ -163,7 +163,7 @@ internal static class GitHubUrlValidator
     /// Enforces the limit in bytes and then decodes to UTF-8 string.
     /// </summary>
     /// <param name="content">The HTTP content to read.</param>
-    /// <param name="maxSizeBytes">Maximum allowed size in bytes (must be <= int.MaxValue).</param>
+    /// <param name="maxSizeBytes">Maximum allowed size in bytes (must be &lt;= int.MaxValue).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The content as a string.</returns>
     /// <exception cref="InvalidOperationException">Thrown when content exceeds the size limit.</exception>

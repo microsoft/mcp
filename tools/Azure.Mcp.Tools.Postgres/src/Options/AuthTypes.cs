@@ -1,12 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Postgres.Options
-{
-    public class AuthTypes
-    {
-        public const string MicrosoftEntra = "MicrosoftEntra";
+namespace Azure.Mcp.Tools.Postgres.Options;
 
-        public const string PostgreSQL = "PostgreSQL";
-    }
+public static class AuthTypes
+{
+    public const string MicrosoftEntra = "MicrosoftEntra";
+
+    public const string PostgreSQL = "PostgreSQL";
 }

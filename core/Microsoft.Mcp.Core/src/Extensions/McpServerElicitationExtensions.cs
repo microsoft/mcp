@@ -203,10 +203,9 @@ public static class McpServerElicitationExtensions
     /// Checks if elicitation should be triggered for a tool based on its metadata.
     /// </summary>
     /// <param name="server">The MCP server instance.</param>
-    /// <param name="toolName">The name of the tool.</param>
     /// <param name="toolMetadata">The tool metadata to check.</param>
     /// <returns>True if elicitation should be triggered, false otherwise.</returns>
-    public static bool ShouldTriggerElicitation(this McpServer server, string toolName, object? toolMetadata)
+    public static bool ShouldTriggerElicitation(this McpServer server, object? toolMetadata)
     {
         if (!server.SupportsElicitation())
         {

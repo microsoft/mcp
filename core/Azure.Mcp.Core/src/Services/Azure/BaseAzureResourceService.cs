@@ -156,7 +156,9 @@ public abstract class BaseAzureResourceService(
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="converter">Function to convert JsonElement to the target type</param>
+    /// <param name="tableName">Optional table name to query (default: "resources")</param>
     /// <param name="additionalFilter">Optional additional KQL filter condition</param>
+    /// <param name="tenant">Optional tenant to use for the query</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Single resource converted to the specified type, or null if not found</returns>
     protected async Task<T?> ExecuteSingleResourceQueryAsync<T>(
@@ -183,6 +185,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="apiVersion">The API version to set for the specified resource type.</param>
     /// <param name="tenant">Optional tenant to use when creating the client.</param>
     /// <param name="retryPolicy">Optional retry policy used by token acquisition.</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>An initialized <see cref="ArmClient"/> configured with the requested API version.</returns>
     protected async Task<ArmClient> CreateArmClientWithApiVersionAsync(string resourceTypeForApiVersion, string apiVersion, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
@@ -224,6 +227,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="azureLocation">The Azure location for the resource.</param>
     /// <param name="content">The content to create or update the resource with.</param>
     /// <param name="jsonTypeInfo">The JSON type information for serialization.</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The <see cref="GenericResource"/> instance for the requested resource.</returns>
     /// <exception cref="ArgumentNullException">Thrown when a required parameter is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the content is invalid.</exception>

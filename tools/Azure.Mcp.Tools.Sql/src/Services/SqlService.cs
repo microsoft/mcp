@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -916,36 +915,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             ReadScale: data.ReadScale?.ToString(),
             ZoneRedundant: data.IsZoneRedundant
         );
-    }
-
-    private static SqlDatabase ConvertToSqlDatabaseModel(JsonElement item)
-    {
-        Models.SqlDatabaseData? sqlDatabase = Models.SqlDatabaseData.FromJson(item)
-            ?? throw new InvalidOperationException("Failed to parse SQL database data");
-
-        return new(
-                Name: sqlDatabase.ResourceName ?? "Unknown",
-                Id: sqlDatabase.ResourceId ?? "Unknown",
-                Type: sqlDatabase.ResourceType ?? "Unknown",
-                Location: sqlDatabase.Location,
-                Sku: sqlDatabase.Sku != null ? new(
-                    Name: sqlDatabase.Sku.Name,
-                    Tier: sqlDatabase.Sku.Tier,
-                    Capacity: sqlDatabase.Sku.Capacity,
-                    Family: sqlDatabase.Sku.Family,
-                    Size: sqlDatabase.Sku.Size
-                ) : null,
-                Status: sqlDatabase.Properties?.Status,
-                Collation: sqlDatabase.Properties?.Collation,
-                CreationDate: sqlDatabase.Properties?.CreatedOn,
-                MaxSizeBytes: sqlDatabase.Properties?.MaxSizeBytes,
-                ServiceLevelObjective: sqlDatabase.Properties?.CurrentServiceObjectiveName,
-                Edition: sqlDatabase.Properties?.CurrentSku?.Name,
-                ElasticPoolName: sqlDatabase.Properties?.ElasticPoolId?.ToString().Split('/').LastOrDefault(),
-                EarliestRestoreDate: sqlDatabase.Properties?.EarliestRestoreOn,
-                ReadScale: sqlDatabase.Properties?.ReadScale,
-                ZoneRedundant: sqlDatabase.Properties?.IsZoneRedundant
-            );
     }
 
     private static SqlServer ConvertToSqlServerModel(SqlServerResource serverResource)

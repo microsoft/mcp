@@ -360,7 +360,7 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
     /// <summary>
     /// Reads either stdout or stderr from a <see cref="Process"/> asynchronously.
     /// Handlers are attached in the constructor, and reading begins when
-    /// <see cref="StartReading"/> is called after the process has started.
+    /// <see cref="ReadToEndAsync"/> is called after the process has started.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -370,7 +370,7 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
     ///   <item><description>Create and configure the <see cref="Process"/> with redirected streams.</description></item>
     ///   <item><description>Construct <see cref="ProcessStreamReader"/> (handlers attach immediately).</description></item>
     ///   <item><description>Start the process.</description></item>
-    ///   <item><description>Call <see cref="StartReading"/> to begin event-driven reading.</description></item>
+    ///   <item><description>Call <see cref="ReadToEndAsync"/> to begin event-driven reading.</description></item>
     ///   <item><description>Await the returned task to obtain the full stream content.</description></item>
     /// </list>
     ///
@@ -401,8 +401,8 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
 
         public ProcessStreamReader(Process process, bool isErrorStream, ILogger<ExternalProcessService> logger)
         {
-            this._process = process ?? throw new ArgumentNullException(nameof(process));
-            this._isErrorStream = isErrorStream;
+            _process = process ?? throw new ArgumentNullException(nameof(process));
+            _isErrorStream = isErrorStream;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             _handler = (_, e) =>
@@ -430,7 +430,7 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
 
         /// <summary>
         /// Begins asynchronous reading of the associated stream.
-        /// Must be called only after <see cref="Process.Start"/> has successfully completed.
+        /// Must be called only after <see cref="Process.Start()"/> has successfully completed.
         /// </summary>
         /// <remarks>
         /// This method does not accept a <see cref="CancellationToken"/> because the underlying
@@ -581,7 +581,7 @@ internal static class ProcessExtensions
     /// <param name="process">The process to check.</param>
     /// <param name="logger">Logger for diagnostic messages.</param>
     /// <returns>
-    /// An <see cref="ExitState"/> indicating:
+    /// An <see cref="ExitCheckResult"/> indicating:
     /// <list type="bullet">
     ///   <item><description><see cref="ExitStatus.Exited"/> with null exception if the process has exited.</description></item>
     ///   <item><description><see cref="ExitStatus.NotExited"/> with null exception if the process has not exited.</description></item>
@@ -603,9 +603,9 @@ internal static class ProcessExtensions
         {
             // Official docs: "No process is associated with this object." - treat as "already gone".
             logger.LogDebug(
-            checkException,
-            "Process.HasExited reported no associated process. Treating as already exited. " +
-            "Process: {ProcessName}, PID: {Pid}", process.SafeName(), process.SafeId());
+                checkException,
+                "Process.HasExited reported no associated process. Treating as already exited. " +
+                "Process: {ProcessName}, PID: {Pid}", process.SafeName(), process.SafeId());
             return new ExitCheckResult(ExitStatus.Exited, CheckException: null);
         }
         catch (System.ComponentModel.Win32Exception checkException)

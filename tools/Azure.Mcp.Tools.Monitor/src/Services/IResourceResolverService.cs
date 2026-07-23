@@ -20,6 +20,7 @@ public interface IResourceResolverService
     /// <param name="resourceName">The resource name or full resource ID</param>
     /// <param name="tenant">Optional tenant ID for multi-tenant scenarios</param>
     /// <param name="retryPolicy">Optional retry policy parameters</param>
+    /// <param name="cancellationToken">Cancellation token for the operation</param>
     /// <returns>The full Azure resource ID</returns>
     Task<ResourceIdentifier> ResolveResourceIdAsync(
         string subscription,

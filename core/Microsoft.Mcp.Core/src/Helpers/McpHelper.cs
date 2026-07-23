@@ -27,6 +27,7 @@ public static class McpHelper
     /// Determines whether the tool has the hint in its metadata and is true.
     /// </summary>
     /// <param name="tool">The tool to check its metadata for the hint.</param>
+    /// <param name="hintKey">The key of the hint to check in the tool's metadata.</param>
     /// <returns>True if the hint was found, successfully extracted, and is true; otherwise, false.</returns>
     public static bool HasHint(Tool tool, string hintKey)
         => tool.Meta != null && tool.Meta.TryGetPropertyValue(hintKey, out var hintNode)

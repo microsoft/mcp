@@ -4,43 +4,42 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Tools.Monitor.Models
+namespace Azure.Mcp.Tools.Monitor.Models;
+
+/// <summary>
+/// Custom JSON converter that rounds double arrays to 2 decimal places
+/// </summary>
+public class RoundedDoubleArrayConverter : JsonConverter<double[]?>
 {
-    /// <summary>
-    /// Custom JSON converter that rounds double arrays to 2 decimal places
-    /// </summary>
-    public class RoundedDoubleArrayConverter : JsonConverter<double[]?>
+    public override double[]? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        public override double[]? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            if (reader.TokenType == JsonTokenType.Null)
-                return null;
+        if (reader.TokenType == JsonTokenType.Null)
+            return null;
 
-            var list = new List<double>();
-            if (reader.TokenType == JsonTokenType.StartArray)
+        var list = new List<double>();
+        if (reader.TokenType == JsonTokenType.StartArray)
+        {
+            while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
             {
-                while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
-                {
-                    list.Add(reader.GetDouble());
-                }
+                list.Add(reader.GetDouble());
             }
-            return [.. list];
+        }
+        return [.. list];
+    }
+
+    public override void Write(Utf8JsonWriter writer, double[]? value, JsonSerializerOptions options)
+    {
+        if (value == null)
+        {
+            writer.WriteNullValue();
+            return;
         }
 
-        public override void Write(Utf8JsonWriter writer, double[]? value, JsonSerializerOptions options)
+        writer.WriteStartArray();
+        foreach (var item in value)
         {
-            if (value == null)
-            {
-                writer.WriteNullValue();
-                return;
-            }
-
-            writer.WriteStartArray();
-            foreach (var item in value)
-            {
-                writer.WriteNumberValue(Math.Round(item, 2));
-            }
-            writer.WriteEndArray();
+            writer.WriteNumberValue(Math.Round(item, 2));
         }
+        writer.WriteEndArray();
     }
 }

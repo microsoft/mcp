@@ -25,6 +25,7 @@ public sealed class MockMcpDiscoveryStrategyBuilder
     /// <param name="serverName">The display name of the server. If null, uses the serverId.</param>
     /// <param name="description">The description of the server. If null, uses a default description.</param>
     /// <param name="client">The mock client to return for this server.</param>
+    /// <param name="toolPrefix">Optional tool prefix for the server.</param>
     /// <returns>The current instance for method chaining.</returns>
     public MockMcpDiscoveryStrategyBuilder AddServer(string serverId, string? serverName = null, string? description = null, McpClient? client = null, string? toolPrefix = null)
     {
@@ -64,6 +65,7 @@ public sealed class MockMcpDiscoveryStrategyBuilder
     /// <param name="serverName">The display name of the server. If null, uses the serverId.</param>
     /// <param name="description">The description of the server. If null, uses a default description.</param>
     /// <param name="clientBuilder">The MockMcpClientBuilder to use for creating the client.</param>
+    /// <param name="toolPrefix">Optional tool prefix for the server.</param>
     /// <returns>The current instance for method chaining.</returns>
     public MockMcpDiscoveryStrategyBuilder AddServer(string serverId, string? serverName, string? description, MockMcpClientBuilder clientBuilder, string? toolPrefix = null)
     {

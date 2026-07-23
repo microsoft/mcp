@@ -5,7 +5,7 @@ using System.Net.Http.Headers;
 using Azure.Core;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
-namespace Azure.Mcp.Core;
+namespace Microsoft.Mcp.Core;
 
 /// <summary>
 /// <see cref="DelegatingHandler"/> that adds a Bearer access token to each outgoing request.

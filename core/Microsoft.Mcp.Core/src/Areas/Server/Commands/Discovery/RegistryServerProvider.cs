@@ -32,7 +32,6 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 /// <param name="id">The unique identifier for the server.</param>
 /// <param name="serverInfo">Configuration information for the server.</param>
 /// <param name="httpClientFactory">Factory for creating HTTP clients.</param>
-/// <param name="tokenCredentialProvider">The token credential provider for OAuth authentication.</param>
 public sealed class RegistryServerProvider(string id, RegistryServerInfo serverInfo, IHttpClientFactory httpClientFactory) : IMcpServerProvider
 {
     private readonly string _id = id;

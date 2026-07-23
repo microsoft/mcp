@@ -3,9 +3,9 @@
 
 using System.Text;
 using System.Text.Json;
-using ToolSelection.Models;
+using ToolDescriptionEvaluator.Models;
 
-namespace ToolSelection.Services;
+namespace ToolDescriptionEvaluator.Services;
 
 public class EmbeddingService(HttpClient httpClient, string endpoint, string apiKey)
 {

@@ -16,7 +16,6 @@ using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
@@ -30,13 +29,11 @@ namespace Azure.Mcp.Tools.AppLens.Services;
 public class AppLensService(
     IHttpClientFactory httpClientFactory,
     ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ILogger<AppLensService> logger) : BaseAzureResourceService(subscriptionService, tenantService), IAppLensService
+    ITenantService tenantService) : BaseAzureResourceService(subscriptionService, tenantService), IAppLensService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-    private readonly ILogger<AppLensService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly AppLensOptions _options = new();
 
     /// <inheritdoc />
@@ -442,6 +439,7 @@ public class AppLensService(
     /// </summary>
     /// <param name="session">The AppLens session.</param>
     /// <param name="question">The diagnostic question.</param>
+    /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task containing diagnostic insights and solutions.</returns>
     private async Task<DiagnosticResult> CollectInsightsAsync(AppLensSession session, string question, CancellationToken cancellationToken)
     {

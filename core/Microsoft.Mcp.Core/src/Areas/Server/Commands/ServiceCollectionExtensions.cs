@@ -20,10 +20,6 @@ using ModelContextProtocol.Protocol;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
-// This is intentionally placed after the namespace declaration to avoid
-// conflicts with Microsoft.Mcp.Core.Areas.Server.Options
-using Options = Microsoft.Extensions.Options.Options;
-
 /// <summary>
 /// Extension methods for configuring Azure MCP server services.
 /// </summary>
@@ -45,7 +41,7 @@ public static partial class ServiceCollectionExtensions
 
         // Register options for service start
         services.AddSingleton(serviceStartOptions);
-        services.AddSingleton(Options.Create(serviceStartOptions));
+        services.AddSingleton(Microsoft.Extensions.Options.Options.Create(serviceStartOptions));
 
         // Register default tool loader options from service start options
         var defaultToolLoaderOptions = new ToolLoaderOptions
@@ -66,7 +62,7 @@ public static partial class ServiceCollectionExtensions
         }
 
         services.AddSingleton(defaultToolLoaderOptions);
-        services.AddSingleton(Options.Create(defaultToolLoaderOptions));
+        services.AddSingleton(Microsoft.Extensions.Options.Options.Create(defaultToolLoaderOptions));
 
         // Register tool loader strategies
         services.AddSingleton<CommandFactoryToolLoader>();
@@ -155,7 +151,7 @@ public static partial class ServiceCollectionExtensions
                 toolLoaders.Add(new CommandFactoryToolLoader(
                     sp,
                     sp.GetRequiredService<ICommandFactory>(),
-                    Options.Create(utilityToolLoaderOptions),
+                    Microsoft.Extensions.Options.Options.Create(utilityToolLoaderOptions),
                     loggerFactory.CreateLogger<CommandFactoryToolLoader>()
                 ));
 

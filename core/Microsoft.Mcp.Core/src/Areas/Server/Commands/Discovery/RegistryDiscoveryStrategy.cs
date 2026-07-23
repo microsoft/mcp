@@ -22,19 +22,19 @@ public sealed class RegistryDiscoveryStrategy(IOptions<ServiceStartOptions> opti
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     /// <inheritdoc/>
-    public override async Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync(CancellationToken cancellationToken)
+    public override Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync(CancellationToken cancellationToken)
     {
         if (registryRoot?.Servers == null)
         {
-            return [];
+            return Task.FromResult<IEnumerable<IMcpServerProvider>>([]);
         }
 
-        return registryRoot
+        return Task.FromResult(registryRoot
             .Servers
             .Where(s => _options.Value.Namespace == null ||
                        _options.Value.Namespace.Length == 0 ||
                        _options.Value.Namespace.Contains(s.Key, StringComparer.OrdinalIgnoreCase))
             .Select(s => new RegistryServerProvider(s.Key, s.Value, _httpClientFactory))
-            .Cast<IMcpServerProvider>();
+            .Cast<IMcpServerProvider>());
     }
 }

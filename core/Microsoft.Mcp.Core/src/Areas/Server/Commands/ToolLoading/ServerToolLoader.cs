@@ -413,6 +413,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     /// </summary>
     /// <param name="request"></param>
     /// <param name="tool"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns></returns>
     internal async Task<List<Tool>> GetAllChildToolsAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {

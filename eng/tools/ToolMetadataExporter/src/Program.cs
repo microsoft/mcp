@@ -4,7 +4,6 @@
 using Azure.Core;
 using Azure.Identity;
 using Kusto.Data;
-using Kusto.Data.Common;
 using Kusto.Data.Net.Client;
 using Kusto.Ingest;
 using Microsoft.Extensions.Configuration;
@@ -84,13 +83,12 @@ public class Program
         services.AddScoped<TokenCredential>(sp =>
         {
             var credential = new ChainedTokenCredential(
-                new ManagedIdentityCredential(),
-                new DefaultAzureCredential()
-            );
+                new ManagedIdentityCredential(new ManagedIdentityCredentialOptions()),
+                new DefaultAzureCredential());
 
             return credential;
         });
-        services.AddSingleton<ICslQueryProvider>(sp =>
+        services.AddSingleton(sp =>
         {
             var config = sp.GetRequiredService<IOptions<AppConfiguration>>();
 
@@ -100,7 +98,7 @@ public class Program
 
             return KustoClientFactory.CreateCslQueryProvider(connectionStringBuilder);
         });
-        services.AddSingleton<IKustoIngestClient>(sp =>
+        services.AddSingleton(sp =>
         {
             var config = sp.GetRequiredService<IOptions<AppConfiguration>>();
 
