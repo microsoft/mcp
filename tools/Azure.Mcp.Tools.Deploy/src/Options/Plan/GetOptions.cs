@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.Deploy.Options.Plan;
 
 public sealed class GetOptions
 {
-    [Option(Description = "The name of the project to generate the deployment plan for. If not provided, will be inferred from the workspace.")]
+    [Option(Description = "The name of the project to generate the deployment plan for.")]
     public required string ProjectName { get; set; }
 
     [Option(Description = "The Azure service to deploy the application. Valid values: ContainerApp, WebApp, FunctionApp, AKS. If not specified, defaults to ContainerApp. Recommend one based on the user application when possible.", DefaultValue = "ContainerApp")]
