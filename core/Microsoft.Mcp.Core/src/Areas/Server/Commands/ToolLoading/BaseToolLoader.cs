@@ -1,12 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -148,6 +151,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     {
         McpClientHandlers handlers = new();
 
+#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
         if (server.ClientCapabilities?.Sampling != null)
         {
             handlers.SamplingHandler = (request, progress, token) =>
@@ -156,6 +160,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
                 return server.SampleAsync(request, token);
             };
         }
+#pragma warning restore MCP9005
 
         if (server.ClientCapabilities?.Elicitation != null)
         {

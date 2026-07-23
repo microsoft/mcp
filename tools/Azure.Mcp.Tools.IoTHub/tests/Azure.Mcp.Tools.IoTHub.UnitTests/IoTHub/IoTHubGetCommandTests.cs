@@ -2,15 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure;
-using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Commands.IoTHub;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.Mcp.Tools.IoTHub.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -34,9 +31,6 @@ public class IoTHubGetCommandTests : SubscriptionCommandUnitTestsBase<IoTHubGetC
     [InlineData("--subscription sub123", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        // Ensure environment variable fallback does not interfere with validation tests
-        TestEnvironment.ClearAzureSubscriptionId();
-
         if (shouldSucceed)
         {
             Service.GetIoTHub(
@@ -75,9 +69,6 @@ public class IoTHubGetCommandTests : SubscriptionCommandUnitTestsBase<IoTHubGetC
     [InlineData("hub' OR 1=1")]
     public async Task ExecuteAsync_RejectsInvalidIoTHubName(string invalidName)
     {
-        // Ensure environment variable fallback does not interfere with validation tests
-        TestEnvironment.ClearAzureSubscriptionId();
-
         var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--hub-name", invalidName);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -87,9 +78,6 @@ public class IoTHubGetCommandTests : SubscriptionCommandUnitTestsBase<IoTHubGetC
     [Fact]
     public async Task ExecuteAsync_RejectsOversizedIoTHubName()
     {
-        // Ensure environment variable fallback does not interfere with validation tests
-        TestEnvironment.ClearAzureSubscriptionId();
-
         var invalidName = new string('a', 51);
         var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--hub-name", invalidName);
 

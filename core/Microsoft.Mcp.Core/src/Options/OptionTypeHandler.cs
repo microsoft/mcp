@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Reflection;
 using Microsoft.Mcp.Core.Extensions;
@@ -320,7 +321,7 @@ public sealed class OptionTypeHandler
         {
             option.Validators.Add(emptyOrWhiteSpaceValidator);
         }
-        return (option, parseResult => parseResult.GetValueOrDefaultWithoutName(option));
+        return (option, parseResult => parseResult.CommandResult.GetValueOrDefault(option));
     }
 
     private static ArgumentArity GetArgumentArity(Type type, bool isMulti)

@@ -2,6 +2,20 @@
 
 Session-aware routing for Model Context Protocol (MCP) servers that need to run across multiple instances. This package builds on ASP.NET Core HybridCache and YARP so every MCP request reaches the server that owns the session state.
 
+> [!IMPORTANT]
+> This package is optional and is **not required** for MCP 2026-07-28 stateless protocol compliance.
+> Use it only when you intentionally need custom stateful routing behavior across replicas.
+
+> [!TIP]
+> For MCP 2026-07-28 deployments, prefer header-based stateless routing (`Mcp-Method`, `Mcp-Name`) at your gateway/load balancer.
+> Only enable session affinity when your application intentionally depends on server-local state.
+
+## When Not To Use It
+
+- Your MCP server is stateless and follows MCP 2026-07-28 request semantics.
+- You route requests through API gateways or reverse proxies using MCP routing headers.
+- You do not rely on `Mcp-Session-Id` ownership for continuity.
+
 ## Why Use It
 
 - Keep in-memory session data (prompt history, tool context) with its owning instance
@@ -17,7 +31,7 @@ dotnet add package Microsoft.ModelContextProtocol.HttpServer.Distributed --prere
 
 Add the distributed cache provider that matches your environment (for example `Microsoft.Extensions.Caching.StackExchangeRedis`).
 
-## Quick Start (Single Instance / Local Dev)
+## Quick Start (Stateful Opt-In)
 
 ```csharp
 using Microsoft.ModelContextProtocol.HttpServer;
@@ -36,7 +50,7 @@ var app = builder.Build();
 app.UseMicrosoftMcpServer();
 
 app.MapMicrosoftMcpServer()
-   .WithSessionAffinity(); // Add this to enable session affinity routing
+    .WithSessionAffinity(); // Opt-in only when stateful affinity is required
 
 app.Run();
 ```

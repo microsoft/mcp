@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 

@@ -25,20 +25,19 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class ServiceInfoCommand(IOptions<McpServerConfiguration> serverOptions, ILogger<ServiceInfoCommand> logger) : BaseCommand<EmptyOptions>
+public sealed class ServerInfoCommand(IOptions<McpServerConfiguration> serverOptions, ILogger<ServerInfoCommand> logger)
+    : BaseCommand<EmptyOptions, ServerInfoCommand.ServiceInfoCommandResult>
 {
-    private static readonly EmptyOptions EmptyOptions = new();
-
     private readonly IOptions<McpServerConfiguration> _serverOptions = serverOptions;
-    private readonly ILogger<ServiceInfoCommand> _logger = logger;
+    private readonly ILogger<ServerInfoCommand> _logger = logger;
 
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
     {
         try
         {
             context.Response.Results = ResponseResult.Create(
                 new(_serverOptions.Value.Name, _serverOptions.Value.Version),
-                ServiceInfoJsonContext.Default.ServiceInfoCommandResult);
+                ServerInfoJsonContext.Default.ServiceInfoCommandResult);
         }
         catch (Exception ex)
         {
@@ -49,7 +48,5 @@ public sealed class ServiceInfoCommand(IOptions<McpServerConfiguration> serverOp
         return Task.FromResult(context.Response);
     }
 
-    protected override EmptyOptions BindOptions(ParseResult parseResult) => EmptyOptions;
-
-    internal record ServiceInfoCommandResult(string Name, string Version);
+    public sealed record ServiceInfoCommandResult(string Name, string Version);
 }

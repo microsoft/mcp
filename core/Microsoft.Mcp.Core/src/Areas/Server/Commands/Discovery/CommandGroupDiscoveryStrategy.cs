@@ -15,10 +15,10 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 /// <param name="commandFactory">The command factory used to access available command groups.</param>
 /// <param name="options">Options for configuring the service behavior.</param>
 /// <param name="logger">Logger instance for this discovery strategy.</param>
-public sealed class CommandGroupDiscoveryStrategy(ICommandFactory commandFactory, IOptions<ServiceStartOptions> options, ILogger<CommandGroupDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
+public sealed class CommandGroupDiscoveryStrategy(ICommandFactory commandFactory, IOptions<ServerStartOptions> options, ILogger<CommandGroupDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
 {
     private readonly ICommandFactory _commandFactory = commandFactory;
-    private readonly IOptions<ServiceStartOptions> _options = options;
+    private readonly IOptions<ServerStartOptions> _options = options;
 
     /// <summary>
     /// Gets or sets the entry point to use for the command group servers.

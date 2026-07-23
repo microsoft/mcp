@@ -30,6 +30,4 @@ public sealed class OAuthProtectedResourceMetadata
 /// JSON serializer context for AOT-safe serialization.
 /// </summary>
 [JsonSerializable(typeof(OAuthProtectedResourceMetadata))]
-internal partial class OAuthMetadataJsonContext : JsonSerializerContext
-{
-}
+internal partial class OAuthMetadataJsonContext : JsonSerializerContext;
