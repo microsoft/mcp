@@ -29,4 +29,15 @@ public class RunConfiguration
     /// </summary>
     [ConfigurationKeyName("buildInfo")]
     public string BuildInfo { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets the base directory for Vally artifacts, which is a subdirectory of the working directory.
+    /// </summary>
+    public string VallyBaseDirectory
+    {
+        get
+        {
+            return Path.Combine(WorkingDirectory, "vally");
+        }
+    }
 }
