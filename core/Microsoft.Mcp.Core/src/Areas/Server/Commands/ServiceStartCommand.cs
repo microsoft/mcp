@@ -626,6 +626,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         app.UseAuthentication();
         app.UseAuthorization();
 
+        app.Use(ValidateMcpRoutingHeadersMiddleware);
+
         IEndpointConventionBuilder mcpEndpointBuilder = app.MapMcp();
         // All MCP endpoints require MCP.All scope or role
         mcpEndpointBuilder.RequireAuthorization("McpAccess");
@@ -683,6 +685,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // Configure middleware pipeline
         app.UseCors("McpCorsPolicy");
         app.UseRouting();
+        app.Use(ValidateMcpRoutingHeadersMiddleware);
         app.MapMcp();
 
         return app;
@@ -732,6 +735,84 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         }
 
         return scheme;
+    }
+
+    // The 2026-07-28 protocol version string that enables the HTTP Standardization
+    // routing-header contract (SEP-2243). Older clients omit or send a different value.
+    private const string StatelessHttpProtocolVersion = "2026-07-28";
+
+    // JSON-RPC methods that name a specific tool, resource, or prompt and therefore
+    // require the Mcp-Name header under SEP-2243. All other methods (tools/list,
+    // server/discover, ping, notifications, etc.) require Mcp-Method only.
+    private static readonly HashSet<string> McpNamedMethods = new(StringComparer.Ordinal)
+    {
+        "tools/call",
+        "resources/read",
+        "prompts/get",
+    };
+
+    private static async Task ValidateMcpRoutingHeadersMiddleware(HttpContext context, Func<Task> next)
+    {
+        // Why this middleware exists alongside the SDK's own ValidateMcpHeaders:
+        //
+        // The SDK (StreamableHttpHandler.ValidateMcpHeaders) validates Mcp-Method and Mcp-Name
+        // *after* the JSON body has been parsed — its signature takes a JsonRpcMessage parameter.
+        // Validating at that point means the server has already buffered the entire request body
+        // before it can reject an invalid request. For large payloads this wastes memory and CPU,
+        // and at the Kestrel default 30 MB body limit it causes an unhandled BadHttpRequestException
+        // that aborts the connection instead of returning a clean JSON-RPC 2.0 error.
+        //
+        // This middleware validates headers first — before any body is read — so that a missing
+        // Mcp-Method or Mcp-Name is rejected immediately with a well-formed HTTP 400 + JSON-RPC
+        // error envelope, regardless of payload size. The SDK then performs its own validation
+        // for requests that pass this check, but for a well-formed request it is a no-op.
+        //
+        // SEP-2243 routing headers are only required when the client declares the
+        // 2026-07-28 protocol version. Legacy clients (missing header or an older
+        // version) must not be rejected, preserving backward-compatible interop.
+        if (HttpMethods.IsPost(context.Request.Method)
+            && IsStatelessHttpProtocolRequest(context.Request))
+        {
+            // Mcp-Method is required on every 2026-07-28 POST request.
+            if (!context.Request.Headers.TryGetValue("Mcp-Method", out var mcpMethodValues)
+                || string.IsNullOrEmpty(mcpMethodValues.ToString()))
+            {
+                await WriteMissingRoutingHeaderResponse(
+                    context,
+                    "Missing required MCP routing header. 'Mcp-Method' is required for HTTP POST requests under the 2026-07-28 protocol.");
+                return;
+            }
+
+            // Mcp-Name is only required for methods that name a tool, resource, or prompt.
+            var mcpMethod = mcpMethodValues.ToString();
+            if (McpNamedMethods.Contains(mcpMethod)
+                && (!context.Request.Headers.TryGetValue("Mcp-Name", out var mcpNameValues)
+                    || string.IsNullOrEmpty(mcpNameValues.ToString())))
+            {
+                await WriteMissingRoutingHeaderResponse(
+                    context,
+                    $"Missing required MCP routing header. 'Mcp-Name' is required for the '{mcpMethod}' method under the 2026-07-28 protocol.");
+                return;
+            }
+        }
+
+        await next();
+    }
+
+    private static bool IsStatelessHttpProtocolRequest(HttpRequest request)
+    {
+        return request.Headers.TryGetValue("MCP-Protocol-Version", out var protocolVersionValues)
+            && string.Equals(protocolVersionValues.ToString(), StatelessHttpProtocolVersion, StringComparison.Ordinal);
+    }
+
+    private static async Task WriteMissingRoutingHeaderResponse(HttpContext context, string message)
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        context.Response.ContentType = "application/json";
+        // Emit a JSON-RPC 2.0 error envelope with correct string escaping (AOT-safe).
+        var escapedMessage = JsonEncodedText.Encode(message).ToString();
+        await context.Response.WriteAsync(
+            $"{{\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{{\"code\":-32600,\"message\":\"{escapedMessage}\"}}}}");
     }
 
     /// <summary>

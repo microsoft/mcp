@@ -1,3 +1,5 @@
+#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
+#pragma warning disable MCP9005 // Deprecated Sampling/Logging APIs - backward compat during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -35,23 +37,17 @@ public class ServerToolLoaderTests
     private static RequestContext<ListToolsRequestParams> CreateRequest()
     {
         var mockServer = Substitute.For<McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsList })
-        {
-            Params = new()
-        };
+        return new(mockServer, new() { Method = RequestMethods.ToolsList }, new ListToolsRequestParams());
     }
 
     private static RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName, IDictionary<string, JsonElement>? arguments = null)
     {
         var mockServer = Substitute.For<McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsCall })
+        return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
         {
-            Params = new()
-            {
-                Name = toolName,
-                Arguments = arguments ?? new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = toolName,
+            Arguments = arguments ?? new Dictionary<string, JsonElement>()
+        });
     }
 
     [Fact]
@@ -142,30 +138,114 @@ public class ServerToolLoaderTests
     }
 
     [Fact]
+    public async Task ListToolsHandler_WithExternalServers_ExposesProxyRouterTools()
+    {
+        // Arrange
+        var providerA = Substitute.For<IMcpServerProvider>();
+        providerA.CreateMetadata().Returns(new McpServerMetadata
+        {
+            Id = "documentation",
+            Name = "documentation",
+            Description = "Docs server"
+        });
+
+        var providerB = Substitute.For<IMcpServerProvider>();
+        providerB.CreateMetadata().Returns(new McpServerMetadata
+        {
+            Id = "arm",
+            Name = "arm",
+            Description = "ARM server",
+            ToolPrefix = "arm_"
+        });
+
+        var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+        discoveryStrategy.DiscoverServersAsync(TestContext.Current.CancellationToken)
+            .Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>([providerA, providerB]));
+
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<ServerToolLoader>();
+        var toolLoader = new ServerToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+        var request = CreateRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+        Assert.Equal(2, result.Tools.Count);
+
+        var toolNames = result.Tools.Select(t => t.Name).ToList();
+        Assert.Contains("documentation", toolNames);
+        Assert.Contains("arm", toolNames);
+
+        var documentationTool = result.Tools.Single(t => t.Name == "documentation");
+        Assert.Contains("hierarchical MCP command router", documentationTool.Description, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithExternalServerCommand_AttemptsProxyRoutingAndReturnsLearnResponse()
+    {
+        // Arrange
+        var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+        discoveryStrategy.GetOrCreateClientAsync("documentation", Arg.Any<McpClientOptions>(), TestContext.Current.CancellationToken)
+            .Returns((McpClient)null!);
+
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<ServerToolLoader>();
+        var toolLoader = new ServerToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+
+        var request = CreateCallToolRequest("documentation",
+            new Dictionary<string, JsonElement>
+            {
+                { "intent", JsonDocument.Parse("\"search docs\"").RootElement },
+                { "command", JsonDocument.Parse("\"microsoft_docs_search\"").RootElement },
+                { "parameters", JsonDocument.Parse("""
+                    {
+                        "question": "how to deploy azure mcp server"
+                    }
+                    """).RootElement }
+            });
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEqual(true, result.IsError);
+        var text = result.Content.OfType<TextContentBlock>().Single();
+        Assert.Contains("available command", text.Text, StringComparison.OrdinalIgnoreCase);
+
+        await discoveryStrategy.Received()
+            .GetOrCreateClientAsync("documentation", Arg.Any<McpClientOptions>(), TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
     public async Task GetChildToolList_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
     {
         // Arrange
-        var mcpClient = Substitute.For<McpClient>();
-        mcpClient.SendRequestAsync(Arg.Is<JsonRpcRequest>(r => r.Method == RequestMethods.ToolsList), Arg.Any<CancellationToken>())
-            .Returns(new JsonRpcResponse()
-            {
-                Result = new JsonObject([
-                    new("tools", new JsonArray([
-                        new JsonObject([
-                            new("name", "storage"),
-                            new("annotations", new JsonObject([
-                                new("readOnlyHint", true)
-                            ]))
-                        ]),
-                        new JsonObject([
-                            new("name", "keyvault"),
-                            new("annotations", new JsonObject([
-                                new("readOnlyHint", false)
-                            ]))
-                        ])
+        var toolsResult = new JsonObject([
+            new("tools", new JsonArray([
+                new JsonObject([
+                    new("name", "storage"),
+                    new("inputSchema", new JsonObject { ["type"] = "object" }),
+                    new("annotations", new JsonObject([
+                        new("readOnlyHint", true)
+                    ]))
+                ]),
+                new JsonObject([
+                    new("name", "keyvault"),
+                    new("inputSchema", new JsonObject { ["type"] = "object" }),
+                    new("annotations", new JsonObject([
+                        new("readOnlyHint", false)
                     ]))
                 ])
-            });
+            ]))
+        ]);
+        var mcpClient = LoopbackMcpClient.Create(req =>
+            req.Method == RequestMethods.ToolsList
+                ? new JsonRpcResponse { Result = toolsResult }
+                : null);
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         discoveryStrategy.GetOrCreateClientAsync("storage", Arg.Any<McpClientOptions?>(), TestContext.Current.CancellationToken)
             .Returns(mcpClient);
@@ -187,39 +267,28 @@ public class ServerToolLoaderTests
     public async Task GetChildToolList_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
     {
         // Arrange
-        var storageTool = new Tool()
-        {
-            Name = "storage",
-            Meta = [new(McpHelper.LocalRequiredHintMetaKey, true)]
-        };
-        var storageClientTool = new McpClientTool(Substitute.For<McpClient>(), storageTool);
-        var keyvaultTool = new Tool()
-        {
-            Name = "keyvault",
-            Meta = [new(McpHelper.LocalRequiredHintMetaKey, false)]
-        };
-        var keyvaultClientTool = new McpClientTool(Substitute.For<McpClient>(), keyvaultTool);
-        var mcpClient = Substitute.For<McpClient>();
-        mcpClient.SendRequestAsync(Arg.Is<JsonRpcRequest>(r => r.Method == RequestMethods.ToolsList), Arg.Any<CancellationToken>())
-            .Returns(new JsonRpcResponse()
-            {
-                Result = new JsonObject([
-                    new("tools", new JsonArray([
-                        new JsonObject([
-                            new("name", "storage"),
-                            new("meta", new JsonObject([
-                                new(McpHelper.LocalRequiredHintMetaKey, true)
-                            ]))
-                        ]),
-                        new JsonObject([
-                            new("name", "keyvault"),
-                            new("meta", new JsonObject([
-                                new(McpHelper.LocalRequiredHintMetaKey, false)
-                            ]))
-                        ])
+        var toolsResult = new JsonObject([
+            new("tools", new JsonArray([
+                new JsonObject([
+                    new("name", "storage"),
+                    new("inputSchema", new JsonObject { ["type"] = "object" }),
+                    new("meta", new JsonObject([
+                        new(McpHelper.LocalRequiredHintMetaKey, true)
+                    ]))
+                ]),
+                new JsonObject([
+                    new("name", "keyvault"),
+                    new("inputSchema", new JsonObject { ["type"] = "object" }),
+                    new("meta", new JsonObject([
+                        new(McpHelper.LocalRequiredHintMetaKey, false)
                     ]))
                 ])
-            });
+            ]))
+        ]);
+        var mcpClient = LoopbackMcpClient.Create(req =>
+            req.Method == RequestMethods.ToolsList
+                ? new JsonRpcResponse { Result = toolsResult }
+                : null);
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         discoveryStrategy.GetOrCreateClientAsync("storage", Arg.Any<McpClientOptions?>(), TestContext.Current.CancellationToken)
             .Returns(mcpClient);
@@ -275,14 +344,11 @@ public class ServerToolLoaderTests
         }
 
         var mockServer = Substitute.For<McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsCall })
+        return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
         {
-            Params = new()
-            {
-                Name = serverName,
-                Arguments = arguments
-            }
-        };
+            Name = serverName,
+            Arguments = arguments
+        });
     }
 
     [Fact]

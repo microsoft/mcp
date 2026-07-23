@@ -472,7 +472,9 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
     private static bool SupportsSampling(McpServer server)
     {
+#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
         return server?.ClientCapabilities?.Sampling != null;
+#pragma warning restore MCP9005
     }
 
     private static async Task NotifyProgressAsync(RequestContext<CallToolRequestParams> request, string message, CancellationToken cancellationToken)
@@ -497,6 +499,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         List<Tool> availableTools,
         CancellationToken cancellationToken)
     {
+#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
         await NotifyProgressAsync(request, $"Learning about {tool} capabilities...", cancellationToken);
 
         JsonElement toolParams = GetParametersJsonElement(request);
@@ -569,6 +572,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         }
 
         return (null, new Dictionary<string, object?>());
+#pragma warning restore MCP9005
     }
 
     /// <summary>

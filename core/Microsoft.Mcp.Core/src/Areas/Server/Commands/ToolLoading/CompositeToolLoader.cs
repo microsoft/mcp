@@ -20,6 +20,7 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
     private readonly Dictionary<string, IToolLoader> _toolLoaderMap = [];
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
     private bool _isInitialized = false;
+    // Server-side performance cache only. This should not be treated as protocol freshness metadata.
     private List<Tool>? _cachedTools;
 
     /// <summary>
@@ -165,10 +166,11 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
             var allTools = new List<Tool>();
 
             // Create a request for listing tools to populate the tool loader map
-            var listToolsRequest = new RequestContext<ListToolsRequestParams>(server, new() { Method = RequestMethods.ToolsList })
-            {
-                Params = new ListToolsRequestParams()
-            };
+            var listToolsParams = new ListToolsRequestParams();
+            var listToolsRequest = new RequestContext<ListToolsRequestParams>(
+                server,
+                new() { Method = RequestMethods.ToolsList },
+                listToolsParams);
 
             foreach (var loader in _toolLoaders)
             {
