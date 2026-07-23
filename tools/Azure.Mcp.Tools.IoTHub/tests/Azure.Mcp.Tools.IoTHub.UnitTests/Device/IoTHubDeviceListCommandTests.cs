@@ -1,184 +1,105 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using Azure.Mcp.Core.Models.Command;
+using System.Net;
+using Azure.Mcp.Tests.Commands;
+using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Commands.Device;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.Mcp.Tools.IoTHub.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.IoTHub.UnitTests.Device;
 
-public class IoTHubDeviceListCommandTests
+public class IoTHubDeviceListCommandTests : SubscriptionCommandUnitTestsBase<IoTHubDeviceListCommand, IIoTHubDeviceService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IIoTHubDeviceService _service;
-    private readonly ILogger<IoTHubDeviceListCommand> _logger;
-    private readonly IoTHubDeviceListCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
+    private static DeviceIdentity CreateDevice(string id) =>
+        new(id, "gen1", "aaaa==", "Connected", "Enabled", null, "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z", 0, new DeviceAuthentication("SAS"), null);
 
-    public IoTHubDeviceListCommandTests()
+    [Fact]
+    public void Constructor_InitializesCommandCorrectly()
     {
-        _service = Substitute.For<IIoTHubDeviceService>();
-        _logger = Substitute.For<ILogger<IoTHubDeviceListCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_service);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new IoTHubDeviceListCommand(_service, _logger);
-        _context = new CommandContext(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
+        var command = Command.GetCommand();
+        Assert.Equal("list", command.Name);
+        Assert.NotNull(command.Description);
+        Assert.Contains("--max-count", command.Description, StringComparison.Ordinal);
+        Assert.Contains("default 100", command.Description, StringComparison.Ordinal);
+        Assert.Contains("maximum 100", command.Description, StringComparison.Ordinal);
+        Assert.Contains("truncated=true", command.Description, StringComparison.Ordinal);
     }
 
     [Fact]
     public async Task ExecuteAsync_ListDevices_Success()
     {
-        // Arrange
-        var name = "test-hub";
-        var resourceGroup = "test-rg";
-        var subscription = "sub-id";
+        var devices = new List<DeviceIdentity> { CreateDevice("device1"), CreateDevice("device2") };
 
-        var expectedDevices = new List<DeviceIdentity>
-        {
-            new DeviceIdentity("device1", "gen1", "aaaa==", "Connected", "Enabled", null, "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z", 0, new DeviceAuthentication("SAS"), null),
-            new DeviceIdentity("device2", "gen2", "bbbb==", "Connected", "Enabled", null, "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z", 0, new DeviceAuthentication("SAS"), null)
-        };
-
-        _service.ListDevices(
-            name,
-            resourceGroup,
-            subscription,
+        Service.ListDevices(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
             Arg.Any<int?>(),
-            Arg.Any<Core.Options.RetryPolicyOptions>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new DeviceListResult(expectedDevices, false));
+            .Returns(new DeviceListResult(devices, false));
 
-        var args = _commandDefinition.Parse([
-            "--name", name,
-            "--resource-group", resourceGroup,
-            "--subscription", subscription
-        ]);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub-id",
+            "--resource-group", "test-rg",
+            "--name", "test-hub");
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_ListDevices_WithMaxCount_Success()
-    {
-        // Arrange
-        var name = "test-hub";
-        var resourceGroup = "test-rg";
-        var subscription = "sub-id";
-        var maxCount = 10;
-
-        var expectedDevices = new List<DeviceIdentity>
-        {
-            new DeviceIdentity("device1", "gen1", "aaaa==", "Connected", "Enabled", null, "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z", 0, new DeviceAuthentication("SAS"), null)
-        };
-
-        _service.ListDevices(
-            name,
-            resourceGroup,
-            subscription,
-            maxCount,
-            Arg.Any<Core.Options.RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
-            .Returns(new DeviceListResult(expectedDevices, false));
-
-        var args = _commandDefinition.Parse([
-            "--name", name,
-            "--resource-group", resourceGroup,
-            "--subscription", subscription,
-            "--max-count", maxCount.ToString()
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
-
-        // Assert
-        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 
     [Fact]
     public async Task ExecuteAsync_MaxCountGreaterThanOneHundred_CapsAtOneHundred()
     {
-        // Arrange
-        var name = "test-hub";
-        var resourceGroup = "test-rg";
-        var subscription = "sub-id";
-
-        _service.ListDevices(
-            name,
-            resourceGroup,
-            subscription,
-            100,
-            Arg.Any<Core.Options.RetryPolicyOptions>(),
+        Service.ListDevices(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new DeviceListResult([], false));
 
-        var args = _commandDefinition.Parse([
-            "--name", name,
-            "--resource-group", resourceGroup,
-            "--subscription", subscription,
-            "--max-count", "500"
-        ]);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub-id",
+            "--resource-group", "test-rg",
+            "--name", "test-hub",
+            "--max-count", "500");
 
-        // Act
-        await _command.ExecuteAsync(_context, args, CancellationToken.None);
-
-        // Assert
-        await _service.Received(1).ListDevices(
-            name,
-            resourceGroup,
-            subscription,
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListDevices(
+            "test-hub",
+            "test-rg",
+            "sub-id",
             100,
-            Arg.Any<Core.Options.RetryPolicyOptions>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_ListDevices_Truncated_SetsMessage()
     {
-        // Arrange
-        var name = "test-hub";
-        var resourceGroup = "test-rg";
-        var subscription = "sub-id";
-
-        var pageDevices = new List<DeviceIdentity>
-        {
-            new DeviceIdentity("device1", "gen1", "aaaa==", "Connected", "Enabled", null, null, null, null, 0, new DeviceAuthentication("SAS"), null)
-        };
-
-        _service.ListDevices(
-            name,
-            resourceGroup,
-            subscription,
+        Service.ListDevices(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
             Arg.Any<int?>(),
-            Arg.Any<Core.Options.RetryPolicyOptions>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new DeviceListResult(pageDevices, true));
+            .Returns(new DeviceListResult(new List<DeviceIdentity> { CreateDevice("device1") }, true));
 
-        var args = _commandDefinition.Parse([
-            "--name", name,
-            "--resource-group", resourceGroup,
-            "--subscription", subscription
-        ]);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub-id",
+            "--resource-group", "test-rg",
+            "--name", "test-hub");
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
-
-        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.NotNull(response.Message);
         Assert.Contains("truncated", response.Message, StringComparison.OrdinalIgnoreCase);
@@ -187,39 +108,60 @@ public class IoTHubDeviceListCommandTests
     [Fact]
     public async Task ExecuteAsync_MaxCountLessThanOne_ReturnsBadRequest()
     {
-        // Arrange
-        var name = "test-hub";
-        var resourceGroup = "test-rg";
-        var subscription = "sub-id";
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub-id",
+            "--resource-group", "test-rg",
+            "--name", "test-hub",
+            "--max-count", "0");
 
-        var args = _commandDefinition.Parse([
-            "--name", name,
-            "--resource-group", resourceGroup,
-            "--subscription", subscription,
-            "--max-count", "0"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
-
-        // Assert
-        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Null(response.Results);
         Assert.Contains("less than 1", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
-    public void Constructor_InitializesCommandCorrectly()
+    public async Task ExecuteAsync_DeserializationValidation()
     {
-        // Assert
-        Assert.Equal("iothub-device-list", _command.Id);
-        Assert.Equal("list", _command.Name);
-        Assert.NotNull(_command.Description);
-        Assert.Contains("--max-count", _command.Description, StringComparison.Ordinal);
-        Assert.Contains("default 100", _command.Description, StringComparison.Ordinal);
-        Assert.Contains("maximum 100", _command.Description, StringComparison.Ordinal);
-        Assert.Contains("truncated=true", _command.Description, StringComparison.Ordinal);
-        Assert.True(_command.Metadata.ReadOnly);
-        Assert.False(_command.Metadata.Secret);
+        var devices = new List<DeviceIdentity> { CreateDevice("device1") };
+
+        Service.ListDevices(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new DeviceListResult(devices, false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub-id",
+            "--resource-group", "test-rg",
+            "--name", "test-hub");
+
+        var result = ValidateAndDeserializeResponse(response, IoTHubJsonContext.Default.DeviceListResult);
+        Assert.NotNull(result);
+        Assert.Single(result.Devices);
+        Assert.False(result.Truncated);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesServiceErrors()
+    {
+        Service.ListDevices(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception("Test error"));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub-id",
+            "--resource-group", "test-rg",
+            "--name", "test-hub");
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Contains("Test error", response.Message);
     }
 }

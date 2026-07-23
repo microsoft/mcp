@@ -4,27 +4,26 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.IoTHub.Services;
 
 public class IoTHubDeviceService(
     IIoTHubService ioTHubService,
-    IHttpClientService httpClientService,
+    IHttpClientFactory httpClientFactory,
     ITenantService tenantService,
     ICacheService cacheService,
     ILogger<IoTHubDeviceService> logger)
     : BaseAzureService(tenantService), IIoTHubDeviceService
 {
     private readonly IIoTHubService _ioTHubService = ioTHubService ?? throw new ArgumentNullException(nameof(ioTHubService));
-    private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ILogger<IoTHubDeviceService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -56,14 +55,9 @@ public class IoTHubDeviceService(
         }
 
         _logger.LogInformation("Resolving IoT Hub connection details for hub {HubName} in resource group {ResourceGroup}.", name, resourceGroup);
-        var hubDetails = await _ioTHubService.GetIoTHub(name, resourceGroup, subscription, retryPolicy, cancellationToken);
-        if (hubDetails.Count == 0)
-        {
-            throw new InvalidOperationException($"IoT Hub '{name}' not found in resource group '{resourceGroup}'");
-        }
-
-        var hostname = hubDetails[0].HostName ?? throw new InvalidOperationException("IoT Hub hostname is null");
-        var keys = await _ioTHubService.GetIoTHubKeys(name, resourceGroup, subscription, retryPolicy, cancellationToken);
+        var hub = await _ioTHubService.GetIoTHub(name, resourceGroup, subscription, tenant: null, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+        var hostname = hub.HostName ?? throw new InvalidOperationException("IoT Hub hostname is null");
+        var keys = await _ioTHubService.GetIoTHubKeys(name, resourceGroup, subscription, tenant: null, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
         _logger.LogInformation("Resolved IoT Hub connection details for hub {HubName}. Hostname={Hostname}, KeyCount={KeyCount}.", name, hostname, keys.Count);
         var connection = new HubConnection(hostname, keys);
@@ -115,7 +109,7 @@ public class IoTHubDeviceService(
             var hostname = connection.Hostname;
             var key = SelectKey(connection, "RegistryRead");
 
-            using var httpClient = _httpClientService.CreateClient();
+            using var httpClient = _httpClientFactory.CreateClient();
             var apiVersion = "2021-04-12";
             // The registry API has no continuation/paging support, so over-fetch by one device to
             // detect whether more devices exist beyond the requested page size.
