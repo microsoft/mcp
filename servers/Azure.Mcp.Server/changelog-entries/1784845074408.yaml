@@ -1,0 +1,4 @@
+changes:
+  - section: "Other Changes"
+    description: "Updated ModelContextProtocol packages to 2.0.0-preview.3."
+    subsection: "Dependency Updates"
