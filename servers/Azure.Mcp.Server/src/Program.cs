@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -53,8 +53,8 @@ internal class Program
             }
 
             // The server start and plugin-telemetry containers always need full area registration.
-            ServiceStartCommand.ConfigureServices = services => ConfigureServices(services);
-            ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
+            ServerStartCommand.ConfigureServices = services => ConfigureServices(services);
+            ServerStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             PluginTelemetryCommand.ConfigureServices = services => ConfigureServices(services);
             PluginTelemetryCommand.InitializeServicesAsync = InitializeServicesAsync;
@@ -117,7 +117,7 @@ internal class Program
             int status = 0;
 
             if (command is ExtendedCommand extendedCommand &&
-                (extendedCommand.BaseCommand is ServiceStartCommand || extendedCommand.BaseCommand is PluginTelemetryCommand))
+                (extendedCommand.BaseCommand is ServerStartCommand || extendedCommand.BaseCommand is PluginTelemetryCommand))
             {
                 // One of the special commands that need to be handled differently.
                 status = await parseResult.InvokeAsync();
@@ -269,12 +269,12 @@ internal class Program
     /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http).
     /// </item>
     /// <item>
-    /// <see cref="ServiceStartCommand"/>'s execution: The container is created by some
+    /// <see cref="ServerStartCommand"/>'s execution: The container is created by some
     /// dynamically created <c>Microsoft.Extensions.Hosting.IHostBuilder</c> (stdio) or
     /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http). While the
-    /// <see cref="IBaseCommand.ExecuteAsync"/>instance of <see cref="ServiceStartCommand"/>
+    /// <see cref="IBaseCommand.ExecuteAsync"/>instance of <see cref="ServerStartCommand"/>
     /// is created by the first container, this second container it creates and runs is
-    /// built separately during <see cref="ServiceStartCommand.ExecuteAsync"/>. Thus, this
+    /// built separately during <see cref="ServerStartCommand.ExecuteAsync"/>. Thus, this
     /// container is built and this <see cref="ConfigureServices"/> method is called sometime
     /// during that method execution.
     /// </item>
@@ -290,7 +290,7 @@ internal class Program
     /// transport-specific implementations. This method can add the stdio-specific
     /// implementation to allow the first container (used for command picking) to work,
     /// but such transport-specific registrations must be overridden within
-    /// <see cref="ServiceStartCommand.ExecuteAsync"/> with the appropriate
+    /// <see cref="ServerStartCommand.ExecuteAsync"/> with the appropriate
     /// transport-specific implementation based on command line arguments.
     /// </para>
     /// <para>
@@ -385,7 +385,7 @@ internal class Program
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)
     {
-        ServiceStartOptions? options = serviceProvider.GetService<IOptions<ServiceStartOptions>>()?.Value;
+        ServerStartOptions? options = serviceProvider.GetService<IOptions<ServerStartOptions>>()?.Value;
 
         if (options != null)
         {

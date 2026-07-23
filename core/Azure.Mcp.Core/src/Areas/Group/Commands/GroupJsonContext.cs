@@ -8,7 +8,4 @@ namespace Azure.Mcp.Core.Areas.Group.Commands;
 [JsonSerializable(typeof(GroupListCommand.Result))]
 [JsonSerializable(typeof(ResourceListCommand.ResourceListCommandResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal partial class GroupJsonContext : JsonSerializerContext
-{
-
-}
+internal partial class GroupJsonContext : JsonSerializerContext;

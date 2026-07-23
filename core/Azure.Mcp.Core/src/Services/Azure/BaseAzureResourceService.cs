@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.ClientModel.Primitives;
+using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Subscription;
