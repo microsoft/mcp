@@ -27,7 +27,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Migrated Azure Terraform tools to new tool pattern. [[#3101](https://github.com/microsoft/mcp/pull/3101)]
 - Migrated Cloud Architect tools to new tool design. [[#3130](https://github.com/microsoft/mcp/pull/3130)]
-- Migrated Azure MCP Server to the MCP 2026-07-28 stateless protocol (SDK 2.0.0-preview.1). HTTP clients using the new protocol must now include Mcp-Method and Mcp-Name routing headers on every POST request. Clients on the previous 2025-11-25 protocol are unaffected — the server auto-negotiates backward compatibility. [[#3016](https://github.com/microsoft/mcp/pull/3016)]
+- Migrated Azure MCP Server to the MCP 2026-07-28 stateless protocol (SDK 2.0.0-preview.1). HTTP clients using the new protocol must now include `Mcp-Method` and `Mcp-Name` routing headers on every POST request. Clients on the previous 2025-11-25 protocol are unaffected — the server auto-negotiates backward compatibility. [[#3016](https://github.com/microsoft/mcp/pull/3016)]
 - Added a server usage rule instructing agents to consult the troubleshooting guide (https://aka.ms/azmcp/troubleshooting) when an Azure MCP tool call fails, including retrying with the correct `tenant` and/or `subscription` parameter for authentication, authorization, tenant, or subscription context errors. [[#3054](https://github.com/microsoft/mcp/pull/3054)]
 
 ## 3.0.0-beta.28 (2026-07-21)
