@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue.Lock;
@@ -34,6 +35,8 @@ public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logge
     private readonly ILogger<KeyValueLockSetCommand> _logger = logger;
     private readonly IAppConfigService _appConfigService = appConfigService;
 
+    public override JsonTypeInfo<KeyValueLockSetCommandResult>? ResultTypeInfo => AppConfigJsonContext.Default.KeyValueLockSetCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, KeyValueLockSetOptions options, CancellationToken cancellationToken)
     {
         try
@@ -48,7 +51,7 @@ public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logge
                 options.Label,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(options.Key, options.Label, options.Lock ?? false), AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
+            SetResult(context, new(options.Key, options.Label, options.Lock ?? false));
         }
         catch (Exception ex)
         {

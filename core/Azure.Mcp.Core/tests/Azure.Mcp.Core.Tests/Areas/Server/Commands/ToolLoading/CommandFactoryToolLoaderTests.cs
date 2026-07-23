@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
 using ModelContextProtocol.Protocol;
@@ -677,6 +678,173 @@ public class CommandFactoryToolLoaderTests
             Assert.True(IsStringType(typeProperty),
                 $"'sample-level' enum option should be exported as a string type but was '{typeProperty}'.");
         }
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_CommandWithResultTypeInfo_EmitsObjectOutputSchema()
+    {
+        // Arrange
+        // A fake command that advertises a source-generated result type. GetTool should surface that type as
+        // the tool's outputSchema.
+        var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
+        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+
+        var fakeCommand = Substitute.For<IBaseCommand>();
+        fakeCommand.GetCommand().Returns(new Command("fake-output-get", "A fake command that advertises a result type."));
+        fakeCommand.Title.Returns("Fake Output Get");
+        fakeCommand.Metadata.Returns(new ToolMetadata());
+        fakeCommand.ResultTypeInfo.Returns(OutputSchemaTestJsonContext.Default.OutputSchemaSampleResult);
+
+        var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
+        var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
+        commandMap["fake-output-get"] = fakeCommand;
+
+        var toolLoader = new CommandFactoryToolLoader(serviceProvider, commandFactory, toolLoaderOptions, logger);
+        var request = CreateRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        // A migrated command (where ResultTypeInfo != null) must surface an MCP outputSchema whose root is an
+        // object exposing the result record's own properties.
+        var tool = result.Tools.FirstOrDefault(t => t.Name == "fake-output-get");
+        Assert.NotNull(tool);
+        Assert.NotNull(tool.OutputSchema);
+
+        var outputSchema = tool.OutputSchema!.Value;
+        Assert.Equal(JsonValueKind.Object, outputSchema.ValueKind);
+
+        Assert.True(outputSchema.TryGetProperty("type", out var typeProperty), "outputSchema is missing 'type'.");
+        Assert.Equal("object", typeProperty.GetString());
+
+        Assert.True(outputSchema.TryGetProperty("properties", out var properties), "outputSchema is missing 'properties'.");
+        Assert.True(properties.TryGetProperty("name", out _), "outputSchema should expose the result record's 'name' property.");
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_CommandWithoutResultTypeInfo_OmitsOutputSchema()
+    {
+        // Arrange
+        // A fake command that does not advertise a result type (ResultTypeInfo == null, the default value).
+        // GetTool should leave the tool's outputSchema unset so the command gracefully advertises
+        // no structured output.
+        var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
+        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+
+        var fakeCommand = Substitute.For<IBaseCommand>();
+        fakeCommand.GetCommand().Returns(new Command("fake-noschema-get", "A fake command with no result type."));
+        fakeCommand.Title.Returns("Fake No Schema Get");
+        fakeCommand.Metadata.Returns(new ToolMetadata());
+
+        var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
+        var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
+        commandMap["fake-noschema-get"] = fakeCommand;
+
+        var toolLoader = new CommandFactoryToolLoader(serviceProvider, commandFactory, toolLoaderOptions, logger);
+        var request = CreateRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        var tool = result.Tools.FirstOrDefault(t => t.Name == "fake-noschema-get");
+        Assert.NotNull(tool);
+        Assert.Null(tool.OutputSchema);
+    }
+
+    [Fact]
+    public void TryBuildStructuredContent_ObjectResult_IsUnwrapped()
+    {
+        // An object-root command result already satisfies MCP's "structuredContent must be an object" rule,
+        // so it included as-is: its own properties are surfaced directly rather than nested under a
+        // wrapper. This stays aligned with CreateOutputSchema, which leaves object roots unwrapped.
+        var json = SerializeResponse(ResponseResult.Create(
+            new OutputSchemaSampleResult("alpha", 3),
+            OutputSchemaTestJsonContext.Default.OutputSchemaSampleResult));
+
+        var structuredContent = CommandFactoryToolLoader.TryBuildStructuredContent(json);
+
+        Assert.NotNull(structuredContent);
+        var value = structuredContent!.Value;
+        Assert.Equal(JsonValueKind.Object, value.ValueKind);
+        Assert.Equal("alpha", value.GetProperty("name").GetString());
+        Assert.Equal(3, value.GetProperty("count").GetInt32());
+        Assert.False(value.TryGetProperty("value", out _), "Object results must not be wrapped under a 'value' property.");
+    }
+
+    [Fact]
+    public void TryBuildStructuredContent_ArrayResult_IsWrappedUnderValue()
+    {
+        // A non-object payload (array) cannot be the structuredContent root, so it is wrapped under a single
+        // 'value' property - mirroring the wrapping CreateOutputSchema applies to the advertised schema so the
+        // payload validates against it.
+        var json = SerializeResponse(ResponseResult.Create(
+            new[] { "one", "two" },
+            OutputSchemaTestJsonContext.Default.StringArray));
+
+        var structuredContent = CommandFactoryToolLoader.TryBuildStructuredContent(json);
+
+        Assert.NotNull(structuredContent);
+        var value = structuredContent!.Value;
+        Assert.Equal(JsonValueKind.Object, value.ValueKind);
+        Assert.True(value.TryGetProperty("value", out var wrapped), "Array results must be wrapped under a 'value' property.");
+        Assert.Equal(JsonValueKind.Array, wrapped.ValueKind);
+        Assert.Equal(2, wrapped.GetArrayLength());
+    }
+
+    [Fact]
+    public void TryBuildStructuredContent_ScalarResult_IsWrappedUnderValue()
+    {
+        // A scalar payload likewise cannot be the root object, so it is wrapped under 'value' to match the
+        // advertised schema.
+        var json = SerializeResponse(ResponseResult.Create(
+            42,
+            OutputSchemaTestJsonContext.Default.Int32));
+
+        var structuredContent = CommandFactoryToolLoader.TryBuildStructuredContent(json);
+
+        Assert.NotNull(structuredContent);
+        var value = structuredContent!.Value;
+        Assert.Equal(JsonValueKind.Object, value.ValueKind);
+        Assert.True(value.TryGetProperty("value", out var wrapped), "Scalar results must be wrapped under a 'value' property.");
+        Assert.Equal(42, wrapped.GetInt32());
+    }
+
+    [Fact]
+    public void TryBuildStructuredContent_NoResult_ReturnsNull()
+    {
+        // A command that sets no result serializes without a 'results' property (JsonIgnore-when-null), so
+        // there is nothing to mirror and structuredContent is left unset.
+        var json = SerializeResponse(results: null);
+
+        var structuredContent = CommandFactoryToolLoader.TryBuildStructuredContent(json);
+
+        Assert.Null(structuredContent);
+    }
+
+    [Fact]
+    public void TryBuildStructuredContent_NullResultsProperty_ReturnsNull()
+    {
+        // Even if a 'results' property is present but null, there is no payload to mirror.
+        // The realistic serializer path omits null results, so this uses a hand-built response to exercise it.
+        var structuredContent = CommandFactoryToolLoader.TryBuildStructuredContent("{\"results\":null}");
+
+        Assert.Null(structuredContent);
+    }
+
+    // Serializes a CommandResponse exactly as CallToolHandler does, so the structuredContent tests exercise
+    // the real 'results' property name and shape rather than a hand-rolled approximation.
+    private static string SerializeResponse(ResponseResult? results)
+    {
+        var response = new CommandResponse { Status = HttpStatusCode.OK, Results = results };
+        return JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse);
     }
 
     // A self-contained enum + options POCO used only by ListToolsHandler_EnumOption_IsExportedAsStringType.

@@ -210,7 +210,7 @@ public sealed class CommandFactoryToolLoader(
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
-            return McpHelper.InjectToolIdMetadata(new CallToolResult
+            var callToolResult = new CallToolResult
             {
                 Content = [
                     new TextContentBlock {
@@ -218,7 +218,22 @@ public sealed class CommandFactoryToolLoader(
                     }
                 ],
                 IsError = isError
-            }, command.Id);
+            };
+
+            // When the command advertises an output schema, set its payload as structuredContent so
+            // clients can consume it against the schema. Object payloads are used as-is;
+            // array or scalar payloads are wrapped under a single 'value' property to match the
+            // wrapping applied by OptionSchemaGenerator.CreateOutputSchema
+            if (!isError && command.ResultTypeInfo != null)
+            {
+                var structuredContent = TryBuildStructuredContent(jsonResponse);
+                if (structuredContent != null)
+                {
+                    callToolResult.StructuredContent = structuredContent;
+                }
+            }
+
+            return McpHelper.InjectToolIdMetadata(callToolResult, command.Id);
         }
         catch (Exception ex)
         {
@@ -270,6 +285,13 @@ public sealed class CommandFactoryToolLoader(
         }
         tool.Meta = meta;
 
+        var resultTypeInfo = command.ResultTypeInfo;
+        if (resultTypeInfo != null)
+        {
+            var outputSchema = OptionSchemaGenerator.CreateOutputSchema(resultTypeInfo);
+            tool.OutputSchema = JsonSerializer.SerializeToElement(outputSchema, ServerJsonContext.Default.JsonObject);
+        }
+
         var options = command.GetCommand().Options
             .Where(o => !CommandFactory.IsLearnOption(o))
             .ToList();
@@ -285,6 +307,37 @@ public sealed class CommandFactoryToolLoader(
         tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.JsonObject);
 
         return tool;
+    }
+
+    /// <summary>
+    /// Extracts the command result payload from a serialized <see cref="CommandResponse"/> and shapes it
+    /// into the <c>structuredContent</c> value. Object payloads are used as-is; array or scalar payloads
+    /// are wrapped under a single <c>value</c> property to match the wrapping applied by
+    /// <see cref="OptionSchemaGenerator.CreateOutputSchema"/>. Returns <see langword="null"/> when there
+    /// is no result payload.
+    /// </summary>
+    /// <remarks><see langword="internal"/> (rather than <see langword="private"/>) so the payload-shaping
+    /// contract can be unit tested directly without exercising the full call-tool pipeline.</remarks>
+    internal static JsonElement? TryBuildStructuredContent(string jsonResponse)
+    {
+        using var document = JsonDocument.Parse(jsonResponse);
+
+        if (!document.RootElement.TryGetProperty("results", out var results))
+        {
+            return null;
+        }
+
+        switch (results.ValueKind)
+        {
+            case JsonValueKind.Object:
+                return results.Clone();
+            case JsonValueKind.Null:
+            case JsonValueKind.Undefined:
+                return null;
+            default:
+                var wrapper = new JsonObject { ["value"] = JsonNode.Parse(results.GetRawText()) };
+                return JsonSerializer.SerializeToElement(wrapper, ServerJsonContext.Default.JsonObject);
+        }
     }
 
     /// <summary>
