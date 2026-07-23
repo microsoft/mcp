@@ -730,6 +730,11 @@ public class CommandFactoryToolLoaderTests
 
         Assert.True(outputSchema.TryGetProperty("properties", out var properties), "outputSchema is missing 'properties'.");
         Assert.True(properties.TryGetProperty("name", out _), "outputSchema should expose the result record's 'name' property.");
+
+        var inputProperties = tool.InputSchema.GetProperty("properties");
+        Assert.True(inputProperties.TryGetProperty(CommandFactoryToolLoader.LegacyContentArgumentName, out var legacyContent));
+        Assert.Equal("boolean", legacyContent.GetProperty("type").GetString());
+        Assert.False(legacyContent.GetProperty("default").GetBoolean());
     }
 
     [Fact]
@@ -764,21 +769,24 @@ public class CommandFactoryToolLoaderTests
         var tool = result.Tools.FirstOrDefault(t => t.Name == "fake-noschema-get");
         Assert.NotNull(tool);
         Assert.Null(tool.OutputSchema);
+        Assert.False(tool.InputSchema.GetProperty("properties")
+            .TryGetProperty(CommandFactoryToolLoader.LegacyContentArgumentName, out _));
     }
 
     [Theory]
     [InlineData(null, false)]                 // No version negotiated yet -> fail safe.
     [InlineData("", false)]                   // Empty version -> fail safe.
     [InlineData("2024", false)]               // Malformed/partial version -> fail safe.
+    [InlineData("not-a-date", false)]         // Lexically later but malformed -> fail safe.
+    [InlineData("2025-13-40", false)]         // Correct shape but invalid date -> fail safe.
     [InlineData("2024-11-05", false)]         // Pre-structuredContent protocol version.
     [InlineData("2025-03-26", false)]         // Pre-structuredContent protocol version.
     [InlineData("2025-06-18", true)]          // First version that includes structuredContent.
     [InlineData("2025-11-25", true)]          // Newer protocol version.
     public void SupportsStructuredOutput_GatesOnNegotiatedProtocolVersion(string? negotiatedProtocolVersion, bool expected)
     {
-        // structuredContent/outputSchema only entered the spec in 2025-06-18. Protocol versions are
-        // zero-padded YYYY-MM-DD strings, so an ordinal comparison against that floor matches chronological
-        // order; anything null, empty, malformed, or older falls back to the legacy content-only shape.
+        // structuredContent/outputSchema only entered the spec in 2025-06-18. Anything null, empty,
+        // malformed, or older falls back to the legacy content-only shape.
         Assert.Equal(expected, CommandFactoryToolLoader.SupportsStructuredOutput(negotiatedProtocolVersion));
     }
 
@@ -815,6 +823,8 @@ public class CommandFactoryToolLoaderTests
         var tool = result.Tools.FirstOrDefault(t => t.Name == "fake-output-get");
         Assert.NotNull(tool);
         Assert.Null(tool.OutputSchema);
+        Assert.False(tool.InputSchema.GetProperty("properties")
+            .TryGetProperty(CommandFactoryToolLoader.LegacyContentArgumentName, out _));
     }
 
     [Fact]
@@ -849,6 +859,8 @@ public class CommandFactoryToolLoaderTests
         var tool = result.Tools.FirstOrDefault(t => t.Name == "fake-output-get");
         Assert.NotNull(tool);
         Assert.Null(tool.OutputSchema);
+        Assert.False(tool.InputSchema.GetProperty("properties")
+            .TryGetProperty(CommandFactoryToolLoader.LegacyContentArgumentName, out _));
     }
 
     [Fact]
@@ -875,7 +887,7 @@ public class CommandFactoryToolLoaderTests
     public void TryBuildStructuredContent_ArrayResult_IsWrappedUnderValue()
     {
         // A non-object payload (array) cannot be the structuredContent root, so it is wrapped under a single
-        // 'value' property - mirroring the wrapping CreateOutputSchema applies to the advertised schema so the
+        // 'value' property, matching the wrapping CreateOutputSchema applies to the advertised schema so the
         // payload validates against it.
         var json = SerializeResponse(ResponseResult.Create(
             new[] { "one", "two" },
@@ -913,7 +925,7 @@ public class CommandFactoryToolLoaderTests
     public void TryBuildStructuredContent_NoResult_ReturnsNull()
     {
         // A command that sets no result serializes without a 'results' property (JsonIgnore-when-null), so
-        // there is nothing to mirror and structuredContent is left unset.
+        // there is no payload to set as structuredContent.
         var json = SerializeResponse(results: null);
 
         var structuredContent = CommandFactoryToolLoader.TryBuildStructuredContent(json);
@@ -924,7 +936,7 @@ public class CommandFactoryToolLoaderTests
     [Fact]
     public void TryBuildStructuredContent_NullResultsProperty_ReturnsNull()
     {
-        // Even if a 'results' property is present but null, there is no payload to mirror.
+        // Even if a 'results' property is present but null, there is no payload to set as structuredContent.
         // The realistic serializer path omits null results, so this uses a hand-built response to exercise it.
         var structuredContent = CommandFactoryToolLoader.TryBuildStructuredContent("{\"results\":null}");
 
@@ -936,8 +948,7 @@ public class CommandFactoryToolLoaderTests
     {
         // Arrange
         // A non-secret command that advertises a result type and returns a payload. A client on a protocol
-        // version that supports structuredContent should receive the payload as structuredContent in addition
-        // to the content block.
+        // version that supports structuredContent should receive the payload there and compact text content.
         var (toolLoader, commandFactory) = CreateToolLoader();
 
         var fakeCommand = Substitute.For<IBaseCommand>();
@@ -972,6 +983,7 @@ public class CommandFactoryToolLoaderTests
 
         // Assert
         Assert.False(result.IsError);
+        Assert.Equal(CommandFactoryToolLoader.CompactStructuredContentMessage, GetTextContent(result));
         Assert.NotNull(result.StructuredContent);
         var structured = result.StructuredContent!.Value;
         Assert.Equal("alpha", structured.GetProperty("name").GetString());
@@ -1019,7 +1031,263 @@ public class CommandFactoryToolLoaderTests
         // Assert
         Assert.False(result.IsError);
         Assert.Null(result.StructuredContent);
-        Assert.NotEmpty(result.Content);
+        var text = GetTextContent(result);
+        using var document = JsonDocument.Parse(text);
+        Assert.Equal("alpha", document.RootElement.GetProperty("results").GetProperty("name").GetString());
+    }
+
+    [Fact]
+    public async Task CallToolHandler_MalformedProtocolVersion_DoesNotEmitStructuredContent()
+    {
+        var response = CreateSuccessfulStructuredResponse();
+        var (toolLoader, _) = CreateStructuredToolLoader(response);
+
+        var result = await toolLoader.CallToolHandler(
+            CreateCallRequest(protocolVersion: "not-a-date"),
+            TestContext.Current.CancellationToken);
+
+        Assert.Null(result.StructuredContent);
+        Assert.Equal(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse), GetTextContent(result));
+    }
+
+    [Fact]
+    public async Task CallToolHandler_LegacyContentFalse_UsesCompactContent()
+    {
+        var response = CreateSuccessfulStructuredResponse();
+        var executionCount = 0;
+        var (toolLoader, _) = CreateStructuredToolLoader(response, onExecute: _ => executionCount++);
+        var arguments = new Dictionary<string, JsonElement>
+        {
+            [CommandFactoryToolLoader.LegacyContentArgumentName] = JsonSerializer.SerializeToElement(false)
+        };
+
+        var result = await toolLoader.CallToolHandler(
+            CreateCallRequest(arguments: arguments),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(CommandFactoryToolLoader.CompactStructuredContentMessage, GetTextContent(result));
+        Assert.NotNull(result.StructuredContent);
+        Assert.Equal(1, executionCount);
+        Assert.True(arguments.ContainsKey(CommandFactoryToolLoader.LegacyContentArgumentName));
+    }
+
+    [Fact]
+    public async Task CallToolHandler_LegacyContentTrue_UsesFullContentAndRetainsStructuredContent()
+    {
+        var response = CreateSuccessfulStructuredResponse();
+        var (toolLoader, _) = CreateStructuredToolLoader(response);
+        var arguments = new Dictionary<string, JsonElement>
+        {
+            [CommandFactoryToolLoader.LegacyContentArgumentName] = JsonSerializer.SerializeToElement(true)
+        };
+
+        var result = await toolLoader.CallToolHandler(
+            CreateCallRequest(arguments: arguments),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse), GetTextContent(result));
+        Assert.NotNull(result.StructuredContent);
+        Assert.True(arguments.ContainsKey(CommandFactoryToolLoader.LegacyContentArgumentName));
+    }
+
+    [Theory]
+    [InlineData("\"true\"")]
+    [InlineData("1")]
+    [InlineData("null")]
+    public async Task CallToolHandler_InvalidLegacyContentValue_ReturnsErrorWithoutExecutingCommand(string jsonValue)
+    {
+        var response = CreateSuccessfulStructuredResponse();
+        var executionCount = 0;
+        var (toolLoader, _) = CreateStructuredToolLoader(response, onExecute: _ => executionCount++);
+        using var valueDocument = JsonDocument.Parse(jsonValue);
+        var arguments = new Dictionary<string, JsonElement>
+        {
+            [CommandFactoryToolLoader.LegacyContentArgumentName] = valueDocument.RootElement.Clone()
+        };
+
+        var result = await toolLoader.CallToolHandler(
+            CreateCallRequest(arguments: arguments),
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.Null(result.StructuredContent);
+        Assert.Equal(
+            $"The '{CommandFactoryToolLoader.LegacyContentArgumentName}' argument must be a Boolean.",
+            GetTextContent(result));
+        Assert.Equal(0, executionCount);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_CommandError_UsesFullContentWithoutStructuredContent()
+    {
+        var response = new CommandResponse
+        {
+            Status = HttpStatusCode.InternalServerError,
+            Message = "Command failed."
+        };
+        var (toolLoader, _) = CreateStructuredToolLoader(response);
+
+        var result = await toolLoader.CallToolHandler(
+            CreateCallRequest(),
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.Null(result.StructuredContent);
+        Assert.Equal(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse), GetTextContent(result));
+    }
+
+    [Fact]
+    public async Task CallToolHandler_SuccessWithoutResults_UsesFullContentWithoutStructuredContent()
+    {
+        var response = new CommandResponse
+        {
+            Status = HttpStatusCode.OK,
+            Message = "Success"
+        };
+        var (toolLoader, _) = CreateStructuredToolLoader(response);
+
+        var result = await toolLoader.CallToolHandler(
+            CreateCallRequest(),
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.Null(result.StructuredContent);
+        Assert.Equal(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse), GetTextContent(result));
+    }
+
+    [Fact]
+    public async Task RawMcpToolInput_LegacyContentArgument_IsAdvertisedAndStrippedBeforeParsing()
+    {
+        var rawCommand = new Command("fake-structured-get");
+        rawCommand.Options.Add(new Option<string>("--raw-mcp-tool-input")
+        {
+            Description = """
+                {
+                  "type": "object",
+                  "properties": {
+                    "payload": {
+                      "type": "object"
+                    }
+                  },
+                  "required": ["payload"],
+                  "additionalProperties": false
+                }
+                """,
+            Required = true
+        });
+        ParseResult? receivedParseResult = null;
+        var response = CreateSuccessfulStructuredResponse();
+        var (toolLoader, _) = CreateStructuredToolLoader(
+            response,
+            rawCommand,
+            onExecute: parseResult => receivedParseResult = parseResult);
+
+        var tools = await toolLoader.ListToolsHandler(CreateRequest(), TestContext.Current.CancellationToken);
+        var tool = Assert.Single(tools.Tools, tool => tool.Name == "fake-structured-get");
+        var schemaProperties = tool.InputSchema.GetProperty("properties");
+        Assert.True(schemaProperties.TryGetProperty("payload", out _));
+        Assert.True(schemaProperties.TryGetProperty(CommandFactoryToolLoader.LegacyContentArgumentName, out var legacyContentSchema));
+        Assert.Equal("boolean", legacyContentSchema.GetProperty("type").GetString());
+
+        var arguments = new Dictionary<string, JsonElement>
+        {
+            ["payload"] = JsonSerializer.SerializeToElement(new { Name = "test" }),
+            [CommandFactoryToolLoader.LegacyContentArgumentName] = JsonSerializer.SerializeToElement(true)
+        };
+        var result = await toolLoader.CallToolHandler(
+            CreateCallRequest(arguments: arguments),
+            TestContext.Current.CancellationToken);
+
+        Assert.NotNull(receivedParseResult);
+        var rawInput = receivedParseResult.GetValue<string>("--raw-mcp-tool-input");
+        using var rawInputDocument = JsonDocument.Parse(Assert.IsType<string>(rawInput));
+        Assert.True(rawInputDocument.RootElement.TryGetProperty("payload", out _));
+        Assert.False(rawInputDocument.RootElement.TryGetProperty(CommandFactoryToolLoader.LegacyContentArgumentName, out _));
+        Assert.Equal(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse), GetTextContent(result));
+        Assert.NotNull(result.StructuredContent);
+        Assert.True(arguments.ContainsKey(CommandFactoryToolLoader.LegacyContentArgumentName));
+    }
+
+    [Theory]
+    [InlineData("--legacy-content")]
+    [InlineData("--Legacy-Content")]
+    public async Task ListToolsHandler_CommandDeclaresReservedLegacyContentArgument_Throws(string optionName)
+    {
+        var command = new Command("fake-structured-get");
+        command.Options.Add(new Option<bool>(optionName));
+        var (toolLoader, _) = CreateStructuredToolLoader(CreateSuccessfulStructuredResponse(), command);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await toolLoader.ListToolsHandler(CreateRequest(), TestContext.Current.CancellationToken));
+
+        Assert.Contains(CommandFactoryToolLoader.LegacyContentArgumentName, exception.Message);
+    }
+
+    private static string GetTextContent(CallToolResult result)
+    {
+        var content = Assert.Single(result.Content);
+        return Assert.IsType<TextContentBlock>(content).Text;
+    }
+
+    private static CommandResponse CreateSuccessfulStructuredResponse()
+    {
+        return new CommandResponse
+        {
+            Status = HttpStatusCode.OK,
+            Results = ResponseResult.Create(
+                new OutputSchemaSampleResult("alpha", 3),
+                OutputSchemaTestJsonContext.Default.OutputSchemaSampleResult)
+        };
+    }
+
+    private static (CommandFactoryToolLoader ToolLoader, IBaseCommand Command) CreateStructuredToolLoader(
+        CommandResponse response,
+        Command? systemCommand = null,
+        string commandName = "fake-structured-get",
+        Action<ParseResult>? onExecute = null)
+    {
+        var (toolLoader, commandFactory) = CreateToolLoader();
+        var fakeCommand = Substitute.For<IBaseCommand>();
+        fakeCommand.GetCommand().Returns(systemCommand ?? new Command(commandName));
+        fakeCommand.Title.Returns("Fake Structured Get");
+        fakeCommand.Metadata.Returns(new ToolMetadata { Destructive = false });
+        fakeCommand.ResultTypeInfo.Returns(OutputSchemaTestJsonContext.Default.OutputSchemaSampleResult);
+        fakeCommand.ExecuteAsync(
+                Arg.Any<CommandContext>(),
+                Arg.Any<ParseResult>(),
+                Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                onExecute?.Invoke(callInfo.ArgAt<ParseResult>(1));
+                return Task.FromResult(response);
+            });
+
+        var commandMapField = typeof(CommandFactory).GetField(
+            "_commandMap",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
+        commandMap[commandName] = fakeCommand;
+
+        return (toolLoader, fakeCommand);
+    }
+
+    private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallRequest(
+        Dictionary<string, JsonElement>? arguments = null,
+        string protocolVersion = CommandFactoryToolLoader.StructuredContentMinProtocolVersion,
+        string commandName = "fake-structured-get")
+    {
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        mockServer.NegotiatedProtocolVersion.Returns(protocolVersion);
+        return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(
+            mockServer,
+            new() { Method = RequestMethods.ToolsCall })
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = commandName,
+                Arguments = arguments ?? new Dictionary<string, JsonElement>()
+            }
+        };
     }
 
     // Serializes a CommandResponse exactly as CallToolHandler does, so the structuredContent tests exercise

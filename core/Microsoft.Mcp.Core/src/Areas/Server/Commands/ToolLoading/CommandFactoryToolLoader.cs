@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Globalization;
 using System.Net;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
@@ -160,6 +161,23 @@ public sealed class CommandFactoryToolLoader(
             }, command.Id);
         }
 
+        var supportsStructuredOutput = command.ResultTypeInfo != null
+            && SupportsStructuredOutput(request.Server.NegotiatedProtocolVersion);
+        var commandArguments = request.Params.Arguments;
+        var legacyContent = false;
+        if (supportsStructuredOutput
+            && !TryExtractLegacyContentArgument(request.Params.Arguments, out commandArguments, out legacyContent))
+        {
+            return McpHelper.InjectToolIdMetadata(new CallToolResult
+            {
+                Content = [new TextContentBlock
+                {
+                    Text = $"The '{LegacyContentArgumentName}' argument must be a Boolean."
+                }],
+                IsError = true
+            }, command.Id);
+        }
+
         var commandContext = new CommandContext(_serviceProvider, activity)
         {
             McpServer = request.Server,
@@ -189,11 +207,11 @@ public sealed class CommandFactoryToolLoader(
 
         if (effectiveOptions.Count == 1 && IsRawMcpToolInputOption(effectiveOptions[0]))
         {
-            commandOptions = realCommand.ParseFromRawMcpToolInput(request.Params.Arguments);
+            commandOptions = realCommand.ParseFromRawMcpToolInput(commandArguments);
         }
         else
         {
-            commandOptions = realCommand.ParseFromDictionary(request.Params.Arguments);
+            commandOptions = realCommand.ParseFromDictionary(commandArguments);
         }
 
         _logger.LogTrace("Invoking '{Tool}'.", realCommand.Name);
@@ -211,31 +229,25 @@ public sealed class CommandFactoryToolLoader(
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
+            // Successful structured responses use a compact text block by default. The complete historical
+            // response remains available on request for clients that do not expose structuredContent.
+            var structuredContent = !isError && supportsStructuredOutput
+                ? TryBuildStructuredContent(jsonResponse)
+                : null;
+            var contentText = structuredContent != null && !legacyContent
+                ? CompactStructuredContentMessage
+                : jsonResponse;
+
             var callToolResult = new CallToolResult
             {
                 Content = [
                     new TextContentBlock {
-                        Text = jsonResponse
+                        Text = contentText
                     }
                 ],
+                StructuredContent = structuredContent,
                 IsError = isError
             };
-
-            // When the command advertises an output schema, set its payload as structuredContent so
-            // clients can consume it against the schema. Object payloads are used as-is; array or scalar
-            // payloads are wrapped under a single 'value' property to match the wrapping applied by
-            // OptionSchemaGenerator.CreateOutputSchema. structuredContent only became part of the MCP
-            // specification in 2025-06-18, so it is only emitted for clients that negotiated that protocol
-            // version or newer; older clients receive the same payload through the content block alone.
-            if (!isError && command.ResultTypeInfo != null
-                && SupportsStructuredOutput(request.Server.NegotiatedProtocolVersion))
-            {
-                var structuredContent = TryBuildStructuredContent(jsonResponse);
-                if (structuredContent != null)
-                {
-                    callToolResult.StructuredContent = structuredContent;
-                }
-            }
 
             return McpHelper.InjectToolIdMetadata(callToolResult, command.Id);
         }
@@ -289,8 +301,10 @@ public sealed class CommandFactoryToolLoader(
         }
         tool.Meta = meta;
 
-        var resultTypeInfo = command.ResultTypeInfo;
-        if (supportsStructuredOutput && resultTypeInfo != null)
+        var resultTypeInfo = supportsStructuredOutput
+            ? command.ResultTypeInfo
+            : null;
+        if (resultTypeInfo != null)
         {
             var outputSchema = OptionSchemaGenerator.CreateOutputSchema(resultTypeInfo);
             tool.OutputSchema = JsonSerializer.SerializeToElement(outputSchema, ServerJsonContext.Default.JsonObject);
@@ -300,15 +314,16 @@ public sealed class CommandFactoryToolLoader(
             .Where(o => !CommandFactory.IsLearnOption(o))
             .ToList();
 
-        if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
+        var inputSchema = options.Count == 1 && IsRawMcpToolInputOption(options[0])
+            ? JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? []
+            : OptionSchemaGenerator.CreateInputSchema(options);
+
+        if (resultTypeInfo != null)
         {
-            var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? [];
-            tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
-            return tool;
+            AddLegacyContentArgument(inputSchema);
         }
 
-        var schema = OptionSchemaGenerator.CreateInputSchema(options);
-        tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.JsonObject);
+        tool.InputSchema = JsonSerializer.SerializeToElement(inputSchema, ServerJsonContext.Default.JsonObject);
 
         return tool;
     }
@@ -319,17 +334,99 @@ public sealed class CommandFactoryToolLoader(
     /// </summary>
     internal const string StructuredContentMinProtocolVersion = "2025-06-18";
 
+    internal const string LegacyContentArgumentName = "legacy-content";
+    internal const string CompactStructuredContentMessage =
+        "Response successful. See structuredContent for details. If structuredContent is unavailable, retry with \"legacy-content\": true.";
+    private const string LegacyContentArgumentDescription =
+        "Return the complete response in content for clients that do not expose structuredContent.";
+    private static readonly DateOnly StructuredContentMinProtocolDate = new(2025, 6, 18);
+
     /// <summary>
     /// Determines whether a client that negotiated <paramref name="negotiatedProtocolVersion"/> can be sent
-    /// <c>outputSchema</c> and <c>structuredContent</c>. MCP protocol versions are zero-padded
-    /// <c>YYYY-MM-DD</c> strings, so an ordinal comparison matches chronological order. A null, empty, or
-    /// unrecognized value is treated as unsupported so the server falls back to the legacy shape.
+    /// <c>outputSchema</c> and <c>structuredContent</c>. MCP protocol versions must be valid
+    /// <c>YYYY-MM-DD</c> dates. A null, empty, malformed, or older value is treated as unsupported so the
+    /// server falls back to the legacy shape.
     /// </summary>
     /// <remarks><see langword="internal"/> (rather than <see langword="private"/>) so the version gate can be
     /// unit tested directly without exercising the full tool-loading pipeline.</remarks>
     internal static bool SupportsStructuredOutput(string? negotiatedProtocolVersion) =>
-        !string.IsNullOrEmpty(negotiatedProtocolVersion)
-        && string.CompareOrdinal(negotiatedProtocolVersion, StructuredContentMinProtocolVersion) >= 0;
+        DateOnly.TryParseExact(
+            negotiatedProtocolVersion,
+            "yyyy-MM-dd",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out var protocolDate)
+        && protocolDate >= StructuredContentMinProtocolDate;
+
+    private static void AddLegacyContentArgument(JsonObject inputSchema)
+    {
+        if (inputSchema["properties"] is not JsonObject properties)
+        {
+            properties = [];
+            inputSchema["properties"] = properties;
+        }
+
+        if (properties.Any(property =>
+            string.Equals(property.Key, LegacyContentArgumentName, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidOperationException(
+                $"Command input schema already defines the reserved '{LegacyContentArgumentName}' argument.");
+        }
+
+        properties[LegacyContentArgumentName] = new JsonObject
+        {
+            ["type"] = "boolean",
+            ["description"] = LegacyContentArgumentDescription,
+            ["default"] = false
+        };
+    }
+
+    private static bool TryExtractLegacyContentArgument(
+        IDictionary<string, JsonElement>? arguments,
+        out IDictionary<string, JsonElement>? commandArguments,
+        out bool legacyContent)
+    {
+        commandArguments = arguments;
+        legacyContent = false;
+
+        if (arguments is null)
+        {
+            return true;
+        }
+
+        string? argumentKey = null;
+        foreach (var key in arguments.Keys)
+        {
+            if (!string.Equals(key, LegacyContentArgumentName, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (argumentKey is not null)
+            {
+                return false;
+            }
+
+            argumentKey = key;
+        }
+
+        if (argumentKey is null)
+        {
+            return true;
+        }
+
+        var value = arguments[argumentKey];
+        if (value.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+        {
+            return false;
+        }
+
+        legacyContent = value.GetBoolean();
+        var filteredArguments = new Dictionary<string, JsonElement>(arguments);
+        filteredArguments.Remove(argumentKey);
+        commandArguments = filteredArguments;
+        return true;
+    }
 
     /// <summary>
     /// Extracts the command result payload from a serialized <see cref="CommandResponse"/> and shapes it
