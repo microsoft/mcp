@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
-using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Options.Models;
@@ -23,7 +22,4 @@ public sealed class ResourceGetOptions : ISubscriptionOption
 
     [OptionContainer(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
-
-    [Option(Description = OptionDescriptions.AuthMethod)]
-    public AuthMethod? AuthMethod { get; set; }
 }
