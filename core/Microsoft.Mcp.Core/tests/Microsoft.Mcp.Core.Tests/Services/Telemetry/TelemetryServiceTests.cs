@@ -567,8 +567,8 @@ public class TelemetryServiceTests
         var activity = new Activity("test").Start();
         var clientInfo = new Implementation { Name = "VS-Code", Version = "1.2.3" };
         TelemetryService.SetClientNameAndVersion(activity, clientInfo, null);
-        Assert.Equal("VS-Code",  activity.TagObjects.Single(t => t.Key == TagName.ClientName).Value);
-        Assert.Equal("1.2.3",   activity.TagObjects.Single(t => t.Key == TagName.ClientVersion).Value);
+        Assert.Equal("VS-Code", activity.TagObjects.Single(t => t.Key == TagName.ClientName).Value);
+        Assert.Equal("1.2.3", activity.TagObjects.Single(t => t.Key == TagName.ClientVersion).Value);
         activity.Stop();
     }
 
@@ -580,14 +580,14 @@ public class TelemetryServiceTests
         {
             [McpHelper.ClientInfoMetaKey] = new JsonObject
             {
-                [McpHelper.ClientInfoNameKey]    = "CopilotChat",
+                [McpHelper.ClientInfoNameKey] = "CopilotChat",
                 [McpHelper.ClientInfoVersionKey] = "4.0.0"
             }
         };
         var requestParams = new ListToolsRequestParams { Meta = meta };
         TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
         Assert.Equal("CopilotChat", activity.TagObjects.Single(t => t.Key == TagName.ClientName).Value);
-        Assert.Equal("4.0.0",       activity.TagObjects.Single(t => t.Key == TagName.ClientVersion).Value);
+        Assert.Equal("4.0.0", activity.TagObjects.Single(t => t.Key == TagName.ClientVersion).Value);
         activity.Stop();
     }
 
@@ -603,14 +603,14 @@ public class TelemetryServiceTests
         {
             [McpHelper.ClientInfoMetaKey] = new JsonObject
             {
-                [McpHelper.ClientInfoNameKey]    = "NewClient",
+                [McpHelper.ClientInfoNameKey] = "NewClient",
                 [McpHelper.ClientInfoVersionKey] = "9.9.9"
             }
         };
         var requestParams = new ListToolsRequestParams { Meta = meta };
         TelemetryService.SetClientNameAndVersion(activity, clientInfo, requestParams);
         Assert.Equal("NewClient", activity.TagObjects.Single(t => t.Key == TagName.ClientName).Value);
-        Assert.Equal("9.9.9",    activity.TagObjects.Single(t => t.Key == TagName.ClientVersion).Value);
+        Assert.Equal("9.9.9", activity.TagObjects.Single(t => t.Key == TagName.ClientVersion).Value);
         activity.Stop();
     }
 
@@ -622,7 +622,7 @@ public class TelemetryServiceTests
         {
             [McpHelper.ClientInfoMetaKey] = new JsonObject
             {
-                [McpHelper.ClientInfoNameKey]    = JsonValue.Create(42),    // number, not string
+                [McpHelper.ClientInfoNameKey] = JsonValue.Create(42),    // number, not string
                 [McpHelper.ClientInfoVersionKey] = JsonValue.Create(true)   // bool, not string
             }
         };
