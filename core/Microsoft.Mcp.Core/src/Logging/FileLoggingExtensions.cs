@@ -21,8 +21,7 @@ public static class FileLoggingExtensions
     /// <returns>The logging builder for chaining.</returns>
     public static ILoggingBuilder AddSupportFileLogging(this ILoggingBuilder builder, string logFolderPath)
     {
-        builder.Services.AddSingleton<ILoggerProvider>(sp =>
-            new FileLoggerProvider(logFolderPath));
+        builder.Services.AddSingleton<ILoggerProvider>(sp => new FileLoggerProvider(logFolderPath));
 
         return builder;
     }

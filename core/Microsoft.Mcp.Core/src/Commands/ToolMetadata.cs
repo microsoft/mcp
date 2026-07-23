@@ -13,19 +13,6 @@ namespace Microsoft.Mcp.Core.Commands;
 [JsonConverter(typeof(ToolMetadataConverter))]
 public sealed class ToolMetadata
 {
-    private bool _destructive = true;
-    private bool _idempotent = false;
-    private bool _openWorld = true;
-    private bool _readOnly = false;
-    private bool _secret = false;
-    private bool _localRequired = false;
-
-    private MetadataDefinition? _destructiveProperty;
-    private MetadataDefinition? _idempotentProperty;
-    private MetadataDefinition? _openWorldProperty;
-    private MetadataDefinition? _readOnlyProperty;
-    private MetadataDefinition? _secretProperty;
-    private MetadataDefinition? _localRequiredProperty;
     /// <summary>
     /// Gets or sets whether the tool may perform destructive updates to its environment.
     /// </summary>
@@ -40,18 +27,14 @@ public sealed class ToolMetadata
     /// </para>
     /// </remarks>
     [JsonIgnore]
-    public bool Destructive
-    {
-        get => _destructive;
-        init => _destructive = value;
-    }
+    public bool Destructive { get; init; } = true;
 
 
     [JsonPropertyName("destructive")]
-    public MetadataDefinition DestructiveProperty => _destructiveProperty ??= new MetadataDefinition
+    public MetadataDefinition DestructiveProperty => field ??= new MetadataDefinition
     {
-        Value = _destructive,
-        Description = _destructive
+        Value = Destructive,
+        Description = Destructive
             ? "This tool may delete or modify existing resources in its environment."
             : "This tool performs only additive updates without deleting or modifying existing resources."
     };
@@ -69,17 +52,13 @@ public sealed class ToolMetadata
     /// </para>
     /// </remarks>
     [JsonIgnore]
-    public bool Idempotent
-    {
-        get => _idempotent;
-        init => _idempotent = value;
-    }
+    public bool Idempotent { get; init; } = false;
 
     [JsonPropertyName("idempotent")]
-    public MetadataDefinition IdempotentProperty => _idempotentProperty ??= new MetadataDefinition
+    public MetadataDefinition IdempotentProperty => field ??= new MetadataDefinition
     {
-        Value = _idempotent,
-        Description = _idempotent
+        Value = Idempotent,
+        Description = Idempotent
             ? "Running this operation multiple times with the same arguments produces the same result without additional effects."
             : "Running this operation multiple times with the same arguments may have additional effects or produce different results."
     };
@@ -97,17 +76,13 @@ public sealed class ToolMetadata
     /// </para>
     /// </remarks>
     [JsonIgnore]
-    public bool OpenWorld
-    {
-        get => _openWorld;
-        init => _openWorld = value;
-    }
+    public bool OpenWorld { get; init; } = true;
 
     [JsonPropertyName("openWorld")]
-    public MetadataDefinition OpenWorldProperty => _openWorldProperty ??= new MetadataDefinition
+    public MetadataDefinition OpenWorldProperty => field ??= new MetadataDefinition
     {
-        Value = _openWorld,
-        Description = _openWorld
+        Value = OpenWorld,
+        Description = OpenWorld
             ? "This tool may interact with an unpredictable or dynamic set of entities (like web search)."
             : "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities (like memory access)."
     };
@@ -129,17 +104,13 @@ public sealed class ToolMetadata
     /// </para>
     /// </remarks>
     [JsonIgnore]
-    public bool ReadOnly
-    {
-        get => _readOnly;
-        init => _readOnly = value;
-    }
+    public bool ReadOnly { get; init; } = false;
 
     [JsonPropertyName("readOnly")]
-    public MetadataDefinition ReadOnlyProperty => _readOnlyProperty ??= new MetadataDefinition
+    public MetadataDefinition ReadOnlyProperty => field ??= new MetadataDefinition
     {
-        Value = _readOnly,
-        Description = _readOnly
+        Value = ReadOnly,
+        Description = ReadOnly
             ? "This tool only performs read operations without modifying any state or data."
             : "This tool may modify its environment and perform write operations (create, update, delete)."
     };
@@ -161,17 +132,13 @@ public sealed class ToolMetadata
     /// </para>
     /// </remarks>
     [JsonIgnore]
-    public bool Secret
-    {
-        get => _secret;
-        init => _secret = value;
-    }
+    public bool Secret { get; init; } = false;
 
     [JsonPropertyName("secret")]
-    public MetadataDefinition SecretProperty => _secretProperty ??= new MetadataDefinition
+    public MetadataDefinition SecretProperty => field ??= new MetadataDefinition
     {
-        Value = _secret,
-        Description = _secret
+        Value = Secret,
+        Description = Secret
             ? "This tool handles sensitive data such as secrets, credentials, keys, or other confidential information."
             : "This tool does not handle sensitive or secret information."
     };
@@ -193,20 +160,16 @@ public sealed class ToolMetadata
     /// </para>
     /// </remarks>
     [JsonIgnore]
-    public bool LocalRequired
-    {
-        get => _localRequired;
-        init => _localRequired = value;
-    }
+    public bool LocalRequired { get; init; } = false;
 
     /// <summary>
     /// Gets the localRequired metadata property with value and description for serialization.
     /// </summary>
     [JsonPropertyName("localRequired")]
-    public MetadataDefinition LocalRequiredProperty => _localRequiredProperty ??= new MetadataDefinition
+    public MetadataDefinition LocalRequiredProperty => field ??= new MetadataDefinition
     {
-        Value = _localRequired,
-        Description = _localRequired
+        Value = LocalRequired,
+        Description = LocalRequired
             ? "This tool is only available when the Azure MCP server is configured to run as a Local MCP Server (STDIO)."
             : "This tool is available in both local and remote server modes."
     };
@@ -228,12 +191,11 @@ public sealed class ToolMetadata
         MetadataDefinition secret,
         MetadataDefinition localRequired)
     {
-        _destructive = destructive?.Value ?? true;
-        _idempotent = idempotent?.Value ?? false;
-        _openWorld = openWorld?.Value ?? true;
-        _readOnly = readOnly?.Value ?? false;
-        _secret = secret?.Value ?? false;
-        _localRequired = localRequired?.Value ?? false;
+        Destructive = destructive?.Value ?? true;
+        Idempotent = idempotent?.Value ?? false;
+        OpenWorld = openWorld?.Value ?? true;
+        ReadOnly = readOnly?.Value ?? false;
+        Secret = secret?.Value ?? false;
+        LocalRequired = localRequired?.Value ?? false;
     }
-
 }
