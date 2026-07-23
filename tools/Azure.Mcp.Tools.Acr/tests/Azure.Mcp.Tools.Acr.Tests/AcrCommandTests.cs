@@ -131,7 +131,6 @@ public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
     [Fact]
     public async Task Should_handle_empty_subscription_gracefully()
     {
-        // Empty subscription should trigger validation failure (400) -> null results
         var result = await CallToolAsync(
             "acr_registry_list",
             new()
@@ -139,7 +138,20 @@ public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
                 { "subscription", "" }
             });
 
-        Assert.Null(result);
+        if (TestMode == TestMode.Playback)
+        {
+            // Without a default subscription configured, an empty subscription triggers
+            // validation failure (400) -> null results.
+            Assert.Null(result);
+        }
+        else
+        {
+            // In live runs the server is configured with a default subscription
+            // (AZURE_SUBSCRIPTION_ID), so an empty subscription falls back to it and
+            // returns a registries list.
+            var registries = result.AssertProperty("registries");
+            Assert.Equal(JsonValueKind.Array, registries.ValueKind);
+        }
     }
 
     [Fact]
@@ -161,9 +173,21 @@ public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
     [Fact]
     public async Task Should_validate_required_subscription_parameter()
     {
-        // Missing subscription option entirely should behave like other areas (validation -> null)
         var result = await CallToolAsync("acr_registry_list", []);
 
-        Assert.Null(result);
+        if (TestMode == TestMode.Playback)
+        {
+            // Without a default subscription configured, a missing subscription option
+            // behaves like other areas (validation -> null).
+            Assert.Null(result);
+        }
+        else
+        {
+            // In live runs the server is configured with a default subscription
+            // (AZURE_SUBSCRIPTION_ID), so a missing subscription falls back to it and
+            // returns a registries list.
+            var registries = result.AssertProperty("registries");
+            Assert.Equal(JsonValueKind.Array, registries.ValueKind);
+        }
     }
 }

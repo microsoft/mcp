@@ -117,7 +117,9 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync();
-        _storageAccountName = $"{Settings.ResourceBaseName}mon";
+        // The bicep template appends a uniqueString suffix to the storage account name,
+        // so use the deployed name from the deployment outputs rather than reconstructing it.
+        _storageAccountName = Settings.DeploymentOutputs.GetValueOrDefault("STORAGEACCOUNTNAME", $"{Settings.ResourceBaseName}mon");
         _appInsightsName = $"{Settings.ResourceBaseName}-ai";
         _bingWebTestName = $"{Settings.ResourceBaseName}-bing-test";
         _healthModelParentName = $"{Settings.ResourceBaseName}-hm-a";
@@ -647,20 +649,25 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         Assert.True(enabled.GetBoolean());
     }
 
-    [Theory]
-    [InlineData("--invalid-param")]
-    [InlineData("--subscription invalidSub")]
-    [InlineData("--subscription sub --resource-group rg")] // Missing required params for get
-    public async Task Should_Return400_WithInvalidWebTestInput(string args)
+    [Fact]
+    public async Task Should_Return400_WithInvalidWebTestInput()
     {
-        var result = await CallToolAsync(
+        // Specifying --webtest-resource without --resource-group is invalid for the get command.
+        // This exercises the command's validator deterministically, independent of whether a
+        // default subscription is available via AZURE_SUBSCRIPTION_ID / the Azure CLI profile.
+        // Use a result processor that returns the full response envelope so we can assert on
+        // the status code (the default processor only returns the "results" payload).
+        var response = await CallToolAsync(
             "monitor_webtests_get",
             new()
             {
-                { "args", args }
-            });
+                { "subscription", Settings.SubscriptionId },
+                { "webtest-resource", "some-webtest" }
+            },
+            resultProcessor: root => root);
 
-        Assert.NotEqual(200, result?.GetProperty("status").GetInt32() ?? 500);
+        Assert.NotNull(response);
+        Assert.Equal(400, response.Value.GetProperty("status").GetInt32());
     }
 
     [Fact]
@@ -670,6 +677,12 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         var webTestName = $"test-webtest-{DateTime.UtcNow:yyyyMMddHHmmss}";
         var appInsightsComponentId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Insights/components/{_appInsightsName}";
 
+        // microsoft.insights/webtests is only available in cloud-specific regions, and the
+        // test runner geo-locations differ per cloud. Mirror the values used in
+        // test-resources.webtests.module.bicep so the test works in sovereign clouds.
+        var webTestRegion = Settings.IsAzureUSGovernment ? "usgovvirginia" : "West US";
+        var webTestGeoLocation = Settings.IsAzureUSGovernment ? "usgov-va-azr" : "us-ca-sjc-azr";
+
         var result = await CallToolAsync(
             "monitor_webtests_createorupdate",
             new()
@@ -678,8 +691,8 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
                 { "resource-group", Settings.ResourceGroupName },
                 { "webtest-resource", webTestName },
                 { "appinsights-component", appInsightsComponentId },
-                { "location", "West US" },
-                { "webtest-locations", "us-ca-sjc-azr" },
+                { "location", webTestRegion },
+                { "webtest-locations", webTestGeoLocation },
                 { "request-url", "https://example.com" },
                 { "webtest", "Test Web Test" },
                 { "description", "Integration test web test" },

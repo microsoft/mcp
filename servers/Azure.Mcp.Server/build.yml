@@ -16,6 +16,12 @@ parameters:
   default: 90
 - name: RunVSCodeIntegrationTests
   displayName: Run VS Code Integration Tests (Outerloop Playwright)
+- name: GovTest
+  displayName: Run Gov Test
+  type: boolean
+  default: false
+- name: RunAllLiveTests
+  displayName: Run All Live Tests
   type: boolean
   default: false
 
@@ -36,3 +42,5 @@ extends:
     IncludeNative: ${{ parameters.IncludeNative }}
     TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
     BuildTimeoutInMinutes: ${{ parameters.BuildTimeoutInMinutes }}
+    GovTest: ${{ parameters.GovTest }}
+    RunAllLiveTests: ${{ parameters.RunAllLiveTests }}

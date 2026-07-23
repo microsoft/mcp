@@ -35,7 +35,7 @@ resource workspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
 
 // Create a storage account to monitor
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
-  name: '${baseName}mon'
+  name: take('${baseName}mon${uniqueString(resourceGroup().id)}', 24)
   location: location
   sku: {
     name: 'Standard_LRS'
@@ -234,3 +234,4 @@ module healthModelsModule 'test-resources.healthmodels.module.bicep' = {
 
 output healthModelParentName string = healthModelsModule.outputs.healthModelAName
 output healthModelChildName string = healthModelsModule.outputs.healthModelBName
+output storageAccountName string = storageAccount.name

@@ -25,6 +25,17 @@ var staticResourceGroupName = 'mcp-static-${staticSuffix}'
 var isTmeTenant = tenantId == '70a036f6-8e4d-4615-bad6-149c02e7720d'
 var embeddingDeploymentName = 'embedding-model'
 
+// text-embedding-3-small is not available in sovereign clouds (e.g. usgovvirginia),
+// so fall back to text-embedding-ada-002 there. Both emit 1536-dimensional vectors,
+// matching the vector container's embedding policy below.
+var embeddingModelName = environment().name == 'AzureUSGovernment' ? 'text-embedding-ada-002' : 'text-embedding-3-small'
+
+// Sovereign clouds have tight Cognitive Services quotas (e.g. the shared
+// text-embedding-ada-002 quota in usgovvirginia), so request a smaller TPM
+// capacity there to stay within the available quota while still satisfying the
+// deployment's minimum requirements.
+var embeddingDeploymentCapacity = environment().name == 'AzureUSGovernment' ? 10 : 50
+
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
   name: baseName
   location: location
@@ -254,12 +265,12 @@ resource openai 'Microsoft.CognitiveServices/accounts@2023-05-01' = if (!isTmeTe
     name: embeddingDeploymentName
     sku: {
       name: 'Standard'
-      capacity: 50
+      capacity: embeddingDeploymentCapacity
     }
     properties: {
       model: {
         format: 'OpenAI'
-        name: 'text-embedding-3-small'
+        name: embeddingModelName
       }
     }
   }

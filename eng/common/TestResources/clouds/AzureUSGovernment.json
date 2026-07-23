@@ -2,6 +2,7 @@
     "azConfigEndpointSuffix": ".azconfig.azure.us",
     "azureAuthorityHost": "https://login.microsoftonline.us/",
     "cognitiveServicesEndpointSuffix": ".cognitiveservices.azure.us",
+    "dataLocation": "usgov",
     "containerRegistryEndpointSuffix": ".azurecr.us",
     "cosmosEndpointSuffix": "cosmos.azure.us",
     "enableStorageVersioning": false,
