@@ -36,7 +36,7 @@ public class TelemetryServiceTests
     };
     private readonly IOptions<McpServerConfiguration> _mockOptions;
     private readonly IMachineInformationProvider _mockInformationProvider;
-    private readonly IOptions<ServiceStartOptions> _mockServiceOptions;
+    private readonly IOptions<ServerStartOptions> _mockServiceOptions;
     private readonly IAzureCloudConfiguration _mockCloudConfiguration;
     private readonly ILogger<TelemetryService> _logger;
 
@@ -45,8 +45,8 @@ public class TelemetryServiceTests
         _mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
         _mockOptions.Value.Returns(_testConfiguration);
 
-        _mockServiceOptions = Substitute.For<IOptions<ServiceStartOptions>>();
-        _mockServiceOptions.Value.Returns(new ServiceStartOptions());
+        _mockServiceOptions = Substitute.For<IOptions<ServerStartOptions>>();
+        _mockServiceOptions.Value.Returns(new ServerStartOptions());
 
         _mockInformationProvider = Substitute.For<IMachineInformationProvider>();
         _mockInformationProvider.GetMacAddressHash().Returns(Task.FromResult(TestMacAddressHash));
@@ -139,7 +139,7 @@ public class TelemetryServiceTests
         // Arrange
         _testConfiguration.IsTelemetryEnabled = false;
 
-        var serviceStartOptions = new ServiceStartOptions
+        var serviceStartOptions = new ServerStartOptions
         {
             Mode = "test-mode",
             Debug = true,
@@ -263,7 +263,7 @@ public class TelemetryServiceTests
     public async Task StartActivity_ReturnsActivityWhenEnabled()
     {
         // Arrange
-        var serviceStartOptions = new ServiceStartOptions
+        var serviceStartOptions = new ServerStartOptions
         {
             Mode = "test-mode",
             Debug = true,
@@ -345,7 +345,7 @@ public class TelemetryServiceTests
     public async Task StartActivity_HasCloudBasedOnServiceStartOptions(string? cloud, AzureCloud expectedCloud)
     {
         // Arrange
-        var serviceStartOptions = new ServiceStartOptions
+        var serviceStartOptions = new ServerStartOptions
         {
             Mode = "test-mode",
             Debug = true,
@@ -391,7 +391,7 @@ public class TelemetryServiceTests
     public async Task StartActivity_HasCloudBasedOnConfiguration(string configName, string? cloud, AzureCloud expectedCloud)
     {
         // Arrange
-        var serviceStartOptions = new ServiceStartOptions
+        var serviceStartOptions = new ServerStartOptions
         {
             Mode = "test-mode",
             Debug = true,
@@ -457,7 +457,7 @@ public class TelemetryServiceTests
     public async Task StartActivity_NoCloudWhenAzureCloudConfigurationIsNull()
     {
         // Arrange
-        var serviceStartOptions = new ServiceStartOptions
+        var serviceStartOptions = new ServerStartOptions
         {
             Mode = "test-mode",
             Debug = true,
@@ -498,7 +498,7 @@ public class TelemetryServiceTests
     private static void AssertDefaultTags<T>(
         IEnumerable<KeyValuePair<string, T?>> tags,
         McpServerConfiguration? expectedOptions,
-        ServiceStartOptions? expectedServiceOptions,
+        ServerStartOptions? expectedServiceOptions,
         Action<Dictionary<string, T?>>? additionalAsserts = null)
     {
         var dictionary = tags.ToDictionary();

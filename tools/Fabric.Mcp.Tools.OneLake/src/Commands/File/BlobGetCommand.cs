@@ -28,11 +28,11 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 public sealed class BlobGetCommand(
     ILogger<BlobGetCommand> logger,
     IOneLakeService oneLakeService,
-    IOptions<ServiceStartOptions> serviceOptions) : AuthenticatedCommand<BlobGetOptions, BlobGetCommand.BlobGetCommandResult>
+    IOptions<ServerStartOptions> serviceOptions) : AuthenticatedCommand<BlobGetOptions, BlobGetCommand.BlobGetCommandResult>
 {
     private readonly ILogger<BlobGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-    private readonly IOptions<ServiceStartOptions> _serviceOptions = serviceOptions ?? throw new ArgumentNullException(nameof(serviceOptions));
+    private readonly IOptions<ServerStartOptions> _serviceOptions = serviceOptions ?? throw new ArgumentNullException(nameof(serviceOptions));
 
     private const long InlineContentLimitBytes = 1 * 1024 * 1024; // 1 MiB inline payload limit
 

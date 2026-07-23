@@ -9,12 +9,10 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Microsoft.Mcp.Core.Models;
 
 [JsonSerializable(typeof(List<CommandInfo>))]
+[JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(CommandResponse))]
 [JsonSerializable(typeof(ETag), TypeInfoPropertyName = "McpETag")]
 [JsonSerializable(typeof(ToolMetadata))]
-[JsonSerializable(typeof(ToolsListCommand.ToolNamesResult))]
+[JsonSerializable(typeof(ToolsListCommand.ToolsListResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-public sealed partial class ModelsJsonContext : JsonSerializerContext
-{
-    // This class is intentionally left empty. It is used for source generation of JSON serialization.
-}
+public sealed partial class ModelsJsonContext : JsonSerializerContext;

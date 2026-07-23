@@ -27,7 +27,7 @@ public static class TestHttpClientFactoryProvider
         var services = new ServiceCollection();
         services.AddOptions();
         services.Configure<HttpClientOptions>(_ => { });
-        services.Configure<ServiceStartOptions>(_ => { });
+        services.Configure<ServerStartOptions>(_ => { });
         services.AddHttpClient();
 
         services.ConfigureDefaultHttpClient(recordingProxyResolver);

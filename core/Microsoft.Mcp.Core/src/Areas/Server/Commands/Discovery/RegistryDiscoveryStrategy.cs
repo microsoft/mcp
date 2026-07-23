@@ -16,9 +16,9 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 /// <param name="logger">Logger instance for this discovery strategy.</param>
 /// <param name="httpClientFactory">Factory that can create HttpClient objects.</param>
 /// <param name="registryRoot">Manifest of all the MCP server registries.</param>
-public sealed class RegistryDiscoveryStrategy(IOptions<ServiceStartOptions> options, ILogger<RegistryDiscoveryStrategy> logger, IHttpClientFactory httpClientFactory, IRegistryRoot registryRoot) : BaseDiscoveryStrategy(logger)
+public sealed class RegistryDiscoveryStrategy(IOptions<ServerStartOptions> options, ILogger<RegistryDiscoveryStrategy> logger, IHttpClientFactory httpClientFactory, IRegistryRoot registryRoot) : BaseDiscoveryStrategy(logger)
 {
-    private readonly IOptions<ServiceStartOptions> _options = options;
+    private readonly IOptions<ServerStartOptions> _options = options;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     /// <inheritdoc/>

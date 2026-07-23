@@ -4,6 +4,7 @@
 using System.Text.Json.Nodes;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Elicitation;
+using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Extensions;
 
