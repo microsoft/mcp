@@ -6,11 +6,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -19,6 +21,8 @@ namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
 public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 {
+    private const string LegacyProtocolVersion = "2025-03-26";
+
     private readonly ServiceProvider _serviceProvider;
     private readonly ICommandFactory _commandFactory;
     private readonly IOptions<ServiceStartOptions> _options;
@@ -114,6 +118,98 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         Assert.Same(result1.Tools, result2.Tools);
     }
 
+    [Theory]
+    [InlineData(StructuredOutputMode.Legacy, false, false)]
+    [InlineData(StructuredOutputMode.Duplicated, true, false)]
+    [InlineData(StructuredOutputMode.Compact, true, true)]
+    public async Task ListToolsHandler_StructuredOutputModeControlsAggregateSchema(
+        StructuredOutputMode mode,
+        bool expectsOutputSchema,
+        bool expectsLegacyContentArgument)
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            Mode = ModeTypes.NamespaceProxy,
+            StructuredOutputMode = mode
+        });
+        var loader = new NamespaceToolLoader(_commandFactory, options, _serviceProvider, _logger);
+
+        var result = await loader.ListToolsHandler(
+            CreateListToolsRequest(),
+            TestContext.Current.CancellationToken);
+
+        Assert.NotEmpty(result.Tools);
+        Assert.All(result.Tools, tool =>
+        {
+            Assert.Equal(expectsOutputSchema, tool.OutputSchema.HasValue);
+            Assert.Equal(
+                expectsLegacyContentArgument,
+                tool.InputSchema.GetProperty("properties")
+                    .TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out _));
+
+            if (expectsOutputSchema)
+            {
+                Assert.Equal("object", tool.OutputSchema!.Value.GetProperty("type").GetString());
+                Assert.Equal(3, tool.OutputSchema.Value.GetProperty("oneOf").GetArrayLength());
+            }
+        });
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_CompactModeCachesLegacyAndStructuredSchemasSeparately()
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            Mode = ModeTypes.NamespaceProxy,
+            StructuredOutputMode = StructuredOutputMode.Compact
+        });
+        var loader = new NamespaceToolLoader(_commandFactory, options, _serviceProvider, _logger);
+
+        var legacyResult = await loader.ListToolsHandler(
+            CreateListToolsRequest(LegacyProtocolVersion),
+            TestContext.Current.CancellationToken);
+        var structuredResult = await loader.ListToolsHandler(
+            CreateListToolsRequest(),
+            TestContext.Current.CancellationToken);
+        var cachedStructuredResult = await loader.ListToolsHandler(
+            CreateListToolsRequest(),
+            TestContext.Current.CancellationToken);
+
+        Assert.All(legacyResult.Tools, tool => Assert.False(tool.OutputSchema.HasValue));
+        Assert.All(structuredResult.Tools, tool => Assert.True(tool.OutputSchema.HasValue));
+        Assert.NotSame(legacyResult.Tools, structuredResult.Tools);
+        Assert.Same(structuredResult.Tools, cachedStructuredResult.Tools);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_CompactModeDoesNotEnableConsolidatedMode()
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            Mode = ModeTypes.ConsolidatedProxy,
+            StructuredOutputMode = StructuredOutputMode.Compact
+        });
+        var loader = new NamespaceToolLoader(
+            _commandFactory,
+            options,
+            _serviceProvider,
+            _logger,
+            applyFilter: false);
+
+        var result = await loader.ListToolsHandler(
+            CreateListToolsRequest(),
+            TestContext.Current.CancellationToken);
+
+        Assert.NotEmpty(result.Tools);
+        Assert.All(result.Tools, tool =>
+        {
+            Assert.False(tool.OutputSchema.HasValue);
+            Assert.False(
+                tool.InputSchema.GetProperty("properties")
+                    .TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out _));
+        });
+    }
+
     [Fact]
     public async Task ListToolsHandler_FiltersNamespacesWhenConfigured()
     {
@@ -123,7 +219,9 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
         var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
         {
-            Namespace = ["storage", "keyvault"]
+            Namespace = ["storage", "keyvault"],
+            Mode = ModeTypes.NamespaceProxy,
+            StructuredOutputMode = StructuredOutputMode.Compact
         });
         var logger = serviceProvider.GetRequiredService<ILogger<NamespaceToolLoader>>();
 
@@ -136,7 +234,10 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         // Assert
         Assert.NotNull(result.Tools);
         Assert.All(result.Tools, tool =>
-            Assert.True(tool.Name == "storage" || tool.Name == "keyvault"));
+        {
+            Assert.True(tool.Name == "storage" || tool.Name == "keyvault");
+            Assert.True(tool.OutputSchema.HasValue);
+        });
     }
 
     [Fact]
@@ -233,6 +334,98 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var textContent = result.Content[0] as TextContentBlock;
         Assert.NotNull(textContent);
         Assert.Contains("available command", textContent.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData(StructuredOutputMode.Duplicated, false)]
+    [InlineData(StructuredOutputMode.Compact, true)]
+    public async Task CallToolHandler_LearnReturnsAggregateToolList(
+        StructuredOutputMode mode,
+        bool expectsCompactContent)
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            Mode = ModeTypes.NamespaceProxy,
+            StructuredOutputMode = mode
+        });
+        var loader = new NamespaceToolLoader(_commandFactory, options, _serviceProvider, _logger);
+        var request = CreateCallToolRequest(GetFirstAvailableNamespace(), new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["intent"] = "list resources"
+        });
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.True(result.StructuredContent.HasValue);
+        Assert.Equal("tool-list", result.StructuredContent.Value.GetProperty("kind").GetString());
+        Assert.NotEmpty(result.StructuredContent.Value.GetProperty("tools").EnumerateArray());
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        if (expectsCompactContent)
+        {
+            Assert.Equal(StructuredOutputHelper.CompactContentMessage, text);
+        }
+        else
+        {
+            Assert.Contains("available command", text, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [Fact]
+    public async Task CallToolHandler_CompactLearnLegacyContentFallbackPreservesStructuredContent()
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            Mode = ModeTypes.NamespaceProxy,
+            StructuredOutputMode = StructuredOutputMode.Compact
+        });
+        var loader = new NamespaceToolLoader(_commandFactory, options, _serviceProvider, _logger);
+        var arguments = new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["intent"] = "list resources",
+            [StructuredOutputHelper.LegacyContentArgumentName] = true
+        };
+
+        var result = await loader.CallToolHandler(
+            CreateCallToolRequest(GetFirstAvailableNamespace(), arguments),
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.True(result.StructuredContent.HasValue);
+        Assert.Equal("tool-list", result.StructuredContent.Value.GetProperty("kind").GetString());
+        Assert.Contains(
+            "available command",
+            Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_CompactModeWithLegacyProtocolReturnsLegacyLearnResponse()
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            Mode = ModeTypes.NamespaceProxy,
+            StructuredOutputMode = StructuredOutputMode.Compact
+        });
+        var loader = new NamespaceToolLoader(_commandFactory, options, _serviceProvider, _logger);
+        var request = CreateCallToolRequest(
+            GetFirstAvailableNamespace(),
+            new Dictionary<string, object?>
+            {
+                ["learn"] = true,
+                ["intent"] = "list resources"
+            },
+            LegacyProtocolVersion);
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.StructuredContent.HasValue);
+        Assert.Contains(
+            "available command",
+            Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text,
+            StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -337,6 +530,120 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         Assert.NotNull(textContent);
         Assert.Contains("command", textContent.Text, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("learn", textContent.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_CompactHelpReturnsAggregateMessage()
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            Mode = ModeTypes.NamespaceProxy,
+            StructuredOutputMode = StructuredOutputMode.Compact
+        });
+        var loader = new NamespaceToolLoader(_commandFactory, options, _serviceProvider, _logger);
+
+        var result = await loader.CallToolHandler(
+            CreateCallToolRequest(GetFirstAvailableNamespace(), []),
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.Equal(
+            StructuredOutputHelper.CompactContentMessage,
+            Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+        Assert.True(result.StructuredContent.HasValue);
+        Assert.Equal("message", result.StructuredContent.Value.GetProperty("kind").GetString());
+        Assert.Contains(
+            "command",
+            result.StructuredContent.Value.GetProperty("message").GetString(),
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData(StructuredOutputMode.Legacy, false, false)]
+    [InlineData(StructuredOutputMode.Duplicated, true, false)]
+    [InlineData(StructuredOutputMode.Compact, true, true)]
+    public async Task CallToolHandler_ChildResultUsesAggregateEnvelope(
+        StructuredOutputMode mode,
+        bool expectsStructuredContent,
+        bool expectsCompactContent)
+    {
+        var response = CreateSuccessfulCommandResponse();
+        var loader = CreateLoaderWithCommand(mode, response);
+        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        {
+            ["intent"] = "read data",
+            ["command"] = "read-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.Equal(expectsStructuredContent, result.StructuredContent.HasValue);
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        Assert.Equal(expectsCompactContent, text == StructuredOutputHelper.CompactContentMessage);
+        if (expectsStructuredContent)
+        {
+            var structuredContent = result.StructuredContent!.Value;
+            Assert.Equal("tool-result", structuredContent.GetProperty("kind").GetString());
+            Assert.Equal("read-cmd", structuredContent.GetProperty("command").GetString());
+            Assert.Equal("alpha", structuredContent.GetProperty("result").GetProperty("name").GetString());
+            Assert.Equal(3, structuredContent.GetProperty("result").GetProperty("count").GetInt32());
+        }
+        else
+        {
+            Assert.Contains("\"results\"", text, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public async Task CallToolHandler_CompactChildErrorOmitsStructuredContent()
+    {
+        var response = CreateSuccessfulCommandResponse();
+        response.Status = System.Net.HttpStatusCode.BadRequest;
+        response.Message = "Invalid request.";
+        var loader = CreateLoaderWithCommand(StructuredOutputMode.Compact, response);
+        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        {
+            ["intent"] = "read data",
+            ["command"] = "read-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.False(result.StructuredContent.HasValue);
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        Assert.Contains("Invalid request.", text, StringComparison.Ordinal);
+        Assert.NotEqual(StructuredOutputHelper.CompactContentMessage, text);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_CompactModeRejectsInvalidLegacyContentArgument()
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            Mode = ModeTypes.NamespaceProxy,
+            StructuredOutputMode = StructuredOutputMode.Compact
+        });
+        var loader = new NamespaceToolLoader(_commandFactory, options, _serviceProvider, _logger);
+
+        var result = await loader.CallToolHandler(
+            CreateCallToolRequest(GetFirstAvailableNamespace(), new Dictionary<string, object?>
+            {
+                ["intent"] = "list resources",
+                ["learn"] = true,
+                [StructuredOutputHelper.LegacyContentArgumentName] = "true"
+            }),
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.False(result.StructuredContent.HasValue);
+        Assert.Contains(
+            "must be a Boolean",
+            Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text,
+            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -878,6 +1185,46 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
     // Helper methods
 
+    private NamespaceToolLoader CreateLoaderWithCommand(
+        StructuredOutputMode mode,
+        CommandResponse response)
+    {
+        var command = Substitute.For<IBaseCommand>();
+        command.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
+        command.GetCommand().Returns(new System.CommandLine.Command("read-cmd", "Reads data."));
+        command.ExecuteAsync(default!, default!, default!)
+            .ReturnsForAnyArgs(response);
+
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+        storageGroup.AddCommand("read-cmd", command);
+        var rootGroup = new CommandGroup("root", "Root command group");
+        rootGroup.SubGroup.Add(storageGroup);
+
+        var commandFactory = Substitute.For<ICommandFactory>();
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["read-cmd"] = command });
+
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            Mode = ModeTypes.NamespaceProxy,
+            StructuredOutputMode = mode
+        });
+        return new NamespaceToolLoader(commandFactory, options, _serviceProvider, _logger);
+    }
+
+    private static CommandResponse CreateSuccessfulCommandResponse()
+    {
+        using var document = JsonDocument.Parse("""{"name":"alpha","count":3}""");
+        return new CommandResponse
+        {
+            Status = System.Net.HttpStatusCode.OK,
+            Results = ResponseResult.Create(
+                document.RootElement.Clone(),
+                ServerJsonContext.Default.JsonElement)
+        };
+    }
+
     private string GetFirstAvailableNamespace()
     {
         var namespaces = _commandFactory.RootGroup.SubGroup
@@ -888,9 +1235,11 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         return namespaces.FirstOrDefault() ?? "storage";
     }
 
-    private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateListToolsRequest()
+    private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateListToolsRequest(
+        string negotiatedProtocolVersion = StructuredOutputHelper.MinProtocolVersion)
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        mockServer.NegotiatedProtocolVersion.Returns(negotiatedProtocolVersion);
         return new(mockServer, new() { Method = RequestMethods.ToolsList })
         {
             Params = new()
@@ -899,13 +1248,15 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
     private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequest(
         string toolName,
-        Dictionary<string, object?> arguments)
+        Dictionary<string, object?> arguments,
+        string negotiatedProtocolVersion = StructuredOutputHelper.MinProtocolVersion)
     {
         var jsonArguments = arguments.ToDictionary(
             kvp => kvp.Key,
             kvp => JsonSerializer.SerializeToElement(kvp.Value));
 
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        mockServer.NegotiatedProtocolVersion.Returns(negotiatedProtocolVersion);
         return new(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new()
@@ -918,9 +1269,11 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
     private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequestWithJsonElements(
         string toolName,
-        Dictionary<string, JsonElement> arguments)
+        Dictionary<string, JsonElement> arguments,
+        string negotiatedProtocolVersion = StructuredOutputHelper.MinProtocolVersion)
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        mockServer.NegotiatedProtocolVersion.Returns(negotiatedProtocolVersion);
         return new(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new()

@@ -48,6 +48,23 @@ Clients that negotiate an older protocol version always receive the legacy shape
 eligible tools advertise the reserved Boolean `legacy-content` argument. Setting it to `true` retains
 `structuredContent` but returns the complete historical response in `content`.
 
+### Namespace mode
+
+In `namespace` mode, each selected in-process namespace tool advertises one stable aggregate
+`outputSchema`; individual child-command schemas are not combined into a large union. Successful
+responses use one of three tagged envelopes:
+
+| `kind` | Fields | Used for |
+|---|---|---|
+| `tool-list` | `tools` | `learn=true` command discovery |
+| `tool-result` | `command`, `result` | A routed child-command result |
+| `message` | `message` | Namespace-level guidance |
+
+This aggregate contract applies even when a routed child command has not yet been migrated to
+`BaseCommand<TOptions, TResult>`. Namespace selection still applies: only namespaces enabled with
+`--namespace` are listed and receive the aggregate schema. `single` and `consolidated` mode support is
+deferred.
+
 ## Prerequisites
 
 Before migrating a command, verify both of these. If either is false, resolve it first.
