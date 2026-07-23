@@ -47,6 +47,7 @@ param(
     [string]$EvalsDirectory,
     [string]$BuildInfoPath,
     [string]$OutputPath,
+    [int]$NumberOfRuns = 1,
     [switch]$IsDebug
 )
 
@@ -98,7 +99,7 @@ $results | ForEach-Object { $commandArg += "--eval-spec '$($_)' " }
 Write-Host "Getting eval paths from VallyEvaluator"
 $(Get-ChildItem "$EvalsDirectory/**/eval.yaml") | ForEach-Object { $commandArg += "--eval-spec '$($_.FullName)' " }
 
-$expression = "vally eval --work-dir '$WorkDirectory' --output-dir '$OutputPath'"
+$expression = "vally eval --work-dir '$WorkDirectory' --output-dir '$OutputPath' --runs $NumberOfRuns"
 
 if ($IsDebug) {
     $expression += " --verbose"
