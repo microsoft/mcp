@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.Versioning;
 using Azure.Core;
@@ -31,7 +32,7 @@ public abstract class BaseAzureService
     private static readonly string s_framework;
     private static readonly string s_platform;
     private static readonly string s_defaultUserAgent;
-    private static readonly TimeSpan? s_defaultPollInterval = null;
+    private static TimeSpan? s_defaultPollInterval = null;
 
     static BaseAzureService()
     {
@@ -44,12 +45,16 @@ public abstract class BaseAzureService
         s_defaultUserAgent = $"azmcp/{s_version} ({s_framework}; {s_platform})";
         s_sharedUserAgentPolicy = new UserAgentPolicy(s_defaultUserAgent);
 
-#if DEBUG
+        SetDefaultPollInterval();
+    }
+
+    [Conditional("DEBUG")]
+    private static void SetDefaultPollInterval()
+    {
         if (EnvironmentHelpers.IsPlaybackTesting())
         {
             s_defaultPollInterval = TimeSpan.Zero;
         }
-#endif
     }
 
     /// <summary>

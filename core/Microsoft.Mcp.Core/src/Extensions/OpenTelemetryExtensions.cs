@@ -52,14 +52,7 @@ public static class OpenTelemetryExtensions
 
     private static void EnableAzureMonitor(this IServiceCollection services)
     {
-#if DEBUG
-        services.AddSingleton(sp =>
-        {
-            var forwarder = new AzureEventSourceLogForwarder(sp.GetRequiredService<ILoggerFactory>());
-            forwarder.Start();
-            return forwarder;
-        });
-#endif
+        ConfigureAzureEventSourceLogForwarder(services);
 
         services.ConfigureOpenTelemetryTracerProvider((sp, builder) =>
         {
@@ -113,6 +106,17 @@ public static class OpenTelemetryExtensions
                 .WithMetrics(metrics => metrics.AddOtlpExporter())
                 .WithLogging(logging => logging.AddOtlpExporter());
         }
+    }
+
+    [Conditional("DEBUG")]
+    private static void ConfigureAzureEventSourceLogForwarder(this IServiceCollection services)
+    {
+        services.AddSingleton(sp =>
+        {
+            var forwarder = new AzureEventSourceLogForwarder(sp.GetRequiredService<ILoggerFactory>());
+            forwarder.Start();
+            return forwarder;
+        });
     }
 
     /// <summary>
