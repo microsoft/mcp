@@ -18,14 +18,14 @@
 
 .PARAMETER EvalsDirectory
     Directory containing additional eval.yaml files to include. Defaults to
-    `<repo-root>/.work/evals`.
+    `<repo-root>/.work/vally/evals`.
 
 .PARAMETER BuildInfoPath
     Path to the build_info.json file produced by New-BuildInfo.ps1. Defaults to
     `<repo-root>/.work/build_info.json`.
 
 .PARAMETER OutputPath
-    Optional path for Vally output. Defaults to `<repo-root>/.work/vally-results`.
+    Optional path for Vally output. Defaults to `<repo-root>/.work/vally/vally-results`.
 
 .PARAMETER IsDebug
     When specified, adds `--verbose` to the `vally eval` invocation for
@@ -44,8 +44,8 @@
 
 param(
     [string]$WorkDirectory,
-    [string]$EvalsDirectory,
     [string]$BuildInfoPath,
+    [string]$EvalsDirectory,
     [string]$OutputPath,
     [int]$NumberOfRuns = 1,
     [switch]$IsDebug
@@ -60,17 +60,29 @@ if (!$WorkDirectory) {
     $WorkDirectory = $RepoRoot
 }
 
+$workArtifactsDirectory = Join-Path $WorkDirectory ".work"
+$vallyArtifactsDirectory = Join-Path $workArtifactsDirectory "vally"
+
 if (!$EvalsDirectory) {
-    $EvalsDirectory = "$RepoRoot/.work/evals"
+    $EvalsDirectory = Join-Path $vallyArtifactsDirectory "evals"
+}
+
+if (!(Test-Path $EvalsDirectory)) {
+    Write-Warning "Evals directory not found at $EvalsDirectory. Please run VallyEvaluator to generate eval.yaml files first."
+    exit 1
 }
 
 if (!$OutputPath) {
-    $OutputPath = "$RepoRoot/.work/vally-results"
+    $OutputPath = Join-Path $vallyArtifactsDirectory "vally-results"
+}
+
+if (!(Test-Path $OutputPath)) {
+    New-Item -ItemType Directory -Path $OutputPath | Out-Null
 }
 
 # build_info.json is initialized with all buildable platforms
 if (!$BuildInfoPath) {
-    $BuildInfoPath = "$RepoRoot/.work/build_info.json"
+    $BuildInfoPath = Join-Path $workArtifactsDirectory "build_info.json"
 }
 
 if (!(Test-Path $BuildInfoPath)) {
