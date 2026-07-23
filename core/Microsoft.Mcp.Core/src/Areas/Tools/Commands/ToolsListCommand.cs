@@ -89,7 +89,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                     if (subgroup is not null)
                     {
                         List<CommandInfo> foundCommands = [];
-                        searchCommandInCommandGroup("", subgroup, foundCommands);
+                        SearchCommandInCommandGroup("", subgroup, foundCommands);
                         namespaceCommands.AddRange(foundCommands);
                     }
                 }
@@ -188,14 +188,15 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
     }
 
     public record ToolNamesResult(List<string> Names);
-    private void searchCommandInCommandGroup(string commandPrefix, CommandGroup searchedGroup, List<CommandInfo> foundCommands)
+
+    private void SearchCommandInCommandGroup(string commandPrefix, CommandGroup searchedGroup, List<CommandInfo> foundCommands)
     {
         var commands = CommandFactory.GetVisibleCommands(searchedGroup.Commands).Select(kvp =>
         {
             var command = kvp.Value.GetCommand();
             return new CommandInfo
             {
-                Name = $"{commandPrefix.Replace(" ", "_")}{searchedGroup.Name}_{command.Name}",
+                Name = $"{commandPrefix.Replace(' ', CommandFactory.Separator)}{searchedGroup.Name}{CommandFactory.Separator}{command.Name}",
                 Description = command.Description ?? string.Empty,
                 Command = $"{(!string.IsNullOrEmpty(commandPrefix) ? commandPrefix : "")}{searchedGroup.Name} {command.Name}"
                 // Omit Options and Subcommands for surfaced commands as well.
@@ -204,7 +205,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         foundCommands.AddRange(commands);
         foreach (CommandGroup nextLevelSubGroup in searchedGroup.SubGroup)
         {
-            searchCommandInCommandGroup($"{commandPrefix}{searchedGroup.Name} ", nextLevelSubGroup, foundCommands);
+            SearchCommandInCommandGroup($"{commandPrefix}{searchedGroup.Name} ", nextLevelSubGroup, foundCommands);
         }
     }
 }
