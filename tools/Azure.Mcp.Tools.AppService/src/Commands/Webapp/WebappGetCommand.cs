@@ -10,7 +10,6 @@ using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp;
 
@@ -42,7 +41,7 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger, IAppServi
 
         if (!string.IsNullOrWhiteSpace(options.App) && string.IsNullOrWhiteSpace(options.ResourceGroup))
         {
-            validationResult.Errors.Add($"When specifying '{AppServiceOptionDefinitions.AppName}', you must also specify '{OptionDefinitions.Common.ResourceGroupName}'.");
+            validationResult.Errors.Add($"When specifying '{AppServiceOptionDefinitions.AppName}', you must also specify 'resource-group'.");
         }
     }
 

@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Migrated Azure MCP Server to the MCP 2026-07-28 stateless protocol (SDK 2.0.0-preview.1). HTTP clients using the new protocol must now include Mcp-Method and Mcp-Name routing headers on every POST request. Clients on the previous 2025-11-25 protocol are unaffected — the server auto-negotiates backward compatibility."

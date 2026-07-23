@@ -24,8 +24,8 @@ public sealed class ServerSetup : IAreaSetup
     /// <param name="services">The service collection to add services to.</param>
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton<ServiceStartCommand>();
-        services.AddSingleton<ServiceInfoCommand>();
+        services.AddSingleton<ServerStartCommand>();
+        services.AddSingleton<ServerInfoCommand>();
         services.AddSingleton<PluginTelemetryCommand>();
     }
 
@@ -40,8 +40,8 @@ public sealed class ServerSetup : IAreaSetup
         var mcpServer = new CommandGroup(Name, "MCP Server operations - Commands for managing and interacting with the MCP Server.", Title);
 
         // Register MCP Server commands
-        mcpServer.AddCommand<ServiceStartCommand>(serviceProvider);
-        mcpServer.AddCommand<ServiceInfoCommand>(serviceProvider);
+        mcpServer.AddCommand<ServerStartCommand>(serviceProvider);
+        mcpServer.AddCommand<ServerInfoCommand>(serviceProvider);
         mcpServer.AddCommand<PluginTelemetryCommand>(serviceProvider);
 
         return mcpServer;

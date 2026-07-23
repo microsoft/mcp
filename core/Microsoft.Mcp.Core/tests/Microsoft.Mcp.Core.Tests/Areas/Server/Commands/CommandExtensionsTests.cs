@@ -43,7 +43,7 @@ public sealed class CommandExtensionsTests
         var result = command.ParseFromDictionary(args);
 
         // Assert
-        Assert.Equal("myRg", result.GetValueOrDefault(ResourceGroupOption));
+        Assert.Equal("myRg", result.CommandResult.GetValueOrDefault(ResourceGroupOption));
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public sealed class CommandExtensionsTests
         var result = command.ParseFromDictionary(args);
 
         // Assert
-        Assert.Equal("myRg", result.GetValueOrDefault(ResourceGroupOption));
+        Assert.Equal("myRg", result.CommandResult.GetValueOrDefault(ResourceGroupOption));
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public sealed class CommandExtensionsTests
         var result = command.ParseFromDictionary(args);
 
         // Assert
-        Assert.Equal("myRg", result.GetValueOrDefault(ResourceGroupOption));
+        Assert.Equal("myRg", result.CommandResult.GetValueOrDefault(ResourceGroupOption));
     }
 
     [Fact]
@@ -94,7 +94,7 @@ public sealed class CommandExtensionsTests
         var result = command.ParseFromDictionary(args);
 
         // Assert
-        Assert.Equal(42, result.GetValueOrDefault(RetryMaxDelayOption));
+        Assert.Equal(42, result.CommandResult.GetValueOrDefault(RetryMaxDelayOption));
     }
 
     [Fact]
@@ -112,7 +112,7 @@ public sealed class CommandExtensionsTests
         var result = command.ParseFromDictionary(args);
 
         // Assert — subscription should match, nonExistentOption should be ignored
-        Assert.Equal("sub-123", result.GetValueOrDefault(SubscriptionOption));
+        Assert.Equal("sub-123", result.CommandResult.GetValueOrDefault(SubscriptionOption));
         Assert.Empty(result.Errors);
     }
 
@@ -157,7 +157,7 @@ public sealed class CommandExtensionsTests
         var result = command.ParseFromDictionary(args);
 
         // Assert
-        Assert.Equal("sub-abc", result.GetValueOrDefault(SubscriptionOption));
+        Assert.Equal("sub-abc", result.CommandResult.GetValueOrDefault(SubscriptionOption));
     }
 
     [Fact]
@@ -175,6 +175,6 @@ public sealed class CommandExtensionsTests
         var result = command.ParseFromDictionary(args);
 
         // Assert — subscription should match, null resource-group should be skipped
-        Assert.Equal("sub-123", result.GetValueOrDefault(SubscriptionOption));
+        Assert.Equal("sub-123", result.CommandResult.GetValueOrDefault(SubscriptionOption));
     }
 }

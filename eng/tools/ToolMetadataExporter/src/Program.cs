@@ -48,7 +48,7 @@ public class Program
             .Bind(configuration);
 
         services.AddOptions<AppConfiguration>()
-            .Bind<AppConfiguration>(configuration.GetSection("AppConfig"))
+            .Bind(configuration.GetSection("AppConfig"))
             .Configure<IOptions<CommandLineOptions>>((existing, commandLineOptions) =>
             {
                 // Command-line IsDryRun overrides appsettings.json file value.

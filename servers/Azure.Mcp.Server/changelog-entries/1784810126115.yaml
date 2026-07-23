@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Removed legacy tool design creation."

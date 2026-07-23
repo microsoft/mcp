@@ -40,7 +40,7 @@ internal class TelemetryService : ITelemetryService
 
     public TelemetryService(IMachineInformationProvider informationProvider,
         IOptions<McpServerConfiguration> options,
-        IOptions<ServiceStartOptions> serverOptions,
+        IOptions<ServerStartOptions> serverOptions,
         ILogger<TelemetryService> logger,
         IAzureCloudConfiguration? cloudConfiguration = null)
     {

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
@@ -10,10 +11,9 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
 
@@ -24,7 +24,7 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
 public sealed class McpRuntime : IMcpRuntime
 {
     private readonly IToolLoader _toolLoader;
-    private readonly IOptions<ServiceStartOptions> _options;
+    private readonly IOptions<ServerStartOptions> _options;
     private readonly ILogger<McpRuntime> _logger;
 
     private readonly ITelemetryService _telemetry;
@@ -39,7 +39,7 @@ public sealed class McpRuntime : IMcpRuntime
     /// <exception cref="ArgumentNullException">Thrown if any required dependencies are null.</exception>
     public McpRuntime(
         IToolLoader toolLoader,
-        IOptions<ServiceStartOptions> options,
+        IOptions<ServerStartOptions> options,
         ITelemetryService telemetry,
         ILogger<McpRuntime> logger)
     {
@@ -84,10 +84,8 @@ public sealed class McpRuntime : IMcpRuntime
 
         activity?.AddTag(TagName.ToolName, request.Params.Name);
 
-        var normalizedSubscriptionName = NameNormalization.NormalizeOptionName(OptionDefinitions.Common.Subscription.Name);
-
         var subscriptionArgument = request.Params?.Arguments?
-            .Where(kvp => string.Equals(kvp.Key, normalizedSubscriptionName, StringComparison.OrdinalIgnoreCase))
+            .Where(kvp => string.Equals(kvp.Key, "subscription", StringComparison.OrdinalIgnoreCase))
             .Select(kvp => kvp.Value)
             .FirstOrDefault();
         if (subscriptionArgument != null

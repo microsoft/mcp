@@ -45,7 +45,7 @@ public static class HttpClientFactoryConfigurator
             var httpClientOptions = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
             client.Timeout = httpClientOptions.DefaultTimeout;
 
-            var transport = serviceProvider.GetRequiredService<IOptions<ServiceStartOptions>>().Value.Transport;
+            var transport = serviceProvider.GetRequiredService<IOptions<ServerStartOptions>>().Value.Transport;
             client.DefaultRequestHeaders.UserAgent.ParseAdd(BuildUserAgent(transport));
         });
 

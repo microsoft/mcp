@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Added a server usage rule instructing agents to consult the troubleshooting guide (https://aka.ms/azmcp/troubleshooting) when an Azure MCP tool call fails, including retrying with the correct `tenant` and/or `subscription` parameter for authentication, authorization, tenant, or subscription context errors."

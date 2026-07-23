@@ -26,14 +26,14 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
     ICommandFactory commandFactory,
     IServiceProvider serviceProvider,
     IConsolidatedToolDefinitionProvider definitionProvider,
-    IOptions<ServiceStartOptions> options,
+    IOptions<ServerStartOptions> options,
     IOptions<McpServerConfiguration> configurationOptions,
     ILogger<ConsolidatedToolDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
 {
     private readonly ICommandFactory _commandFactory = commandFactory;
     private readonly IServiceProvider _serviceProvider = serviceProvider;
     private readonly IConsolidatedToolDefinitionProvider _definitionProvider = definitionProvider;
-    private readonly IOptions<ServiceStartOptions> _options = options;
+    private readonly IOptions<ServerStartOptions> _options = options;
     private readonly IOptions<McpServerConfiguration> _configurationOptions = configurationOptions;
     private ICommandFactory? _consolidatedCommandFactory;
 

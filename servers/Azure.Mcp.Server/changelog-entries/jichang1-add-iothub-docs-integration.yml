@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added Azure IoT Hub integration updates including command docs, e2e prompts, README service coverage, consolidated tool mapping, and CODEOWNERS ownership."

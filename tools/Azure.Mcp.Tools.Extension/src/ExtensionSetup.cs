@@ -63,7 +63,7 @@ public sealed class ExtensionSetup : IAreaSetup
     /// <returns>True if external process commands should be exposed; false otherwise.</returns>
     private static bool ShouldExposeExternalProcessCommands(IServiceProvider serviceProvider)
     {
-        if (serviceProvider.GetService<ServiceStartOptions>() is ServiceStartOptions startOptions)
+        if (serviceProvider.GetService<ServerStartOptions>() is ServerStartOptions startOptions)
         {
             return !startOptions.IsHttpMode;
         }

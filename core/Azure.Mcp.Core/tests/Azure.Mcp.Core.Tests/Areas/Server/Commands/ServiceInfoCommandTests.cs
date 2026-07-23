@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands;
 
-public class ServiceInfoCommandTests : CommandUnitTestsBase<ServiceInfoCommand, object>
+public class ServiceInfoCommandTests : CommandUnitTestsBase<ServerInfoCommand, object>
 {
     private readonly McpServerConfiguration _mcpServerConfiguration;
 
@@ -33,7 +33,7 @@ public class ServiceInfoCommandTests : CommandUnitTestsBase<ServiceInfoCommand, 
         var response = await ExecuteCommandAsync([]);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ServiceInfoJsonContext.Default.ServiceInfoCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ServerInfoJsonContext.Default.ServiceInfoCommandResult);
 
         Assert.Equal(_mcpServerConfiguration.Name, result.Name);
         Assert.Equal(_mcpServerConfiguration.Version, result.Version);
