@@ -44,7 +44,7 @@ internal static class CommandResultExtensions
     }
 
     /// <summary>
-    /// Attempts to retrieve the ParseReult value for the Option. If found it is returned, otherwise the default
+    /// Attempts to retrieve the commandResult value for the Option. If found it is returned, otherwise the default
     /// value for T is returned.
     /// </summary>
     /// <typeparam name="T">The type of the option value</typeparam>
