@@ -32,12 +32,12 @@
     additional diagnostic output.
 
 .EXAMPLE
-    ./eng/scripts/Invoke-Vally.ps1
+    ./eng/scripts/Invoke-VallyEvalTests.ps1
 
     Runs Vally using default paths derived from the repository root.
 
 .EXAMPLE
-    ./eng/scripts/Invoke-Vally.ps1 -BuildInfoPath '.work/custom_build_info.json' -IsDebug
+    ./eng/scripts/Invoke-VallyEvalTests.ps1 -BuildInfoPath '.work/custom_build_info.json' -IsDebug
 
     Runs Vally with a custom build info file and verbose output enabled.
 #>
