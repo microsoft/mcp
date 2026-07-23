@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>3.0.0-beta.29</Version>
+    <Version>3.0.0-beta.28</Version>
     <CliName>azmcp</CliName>
     <AssemblyTitle>Azure MCP Server</AssemblyTitle>
     <Description>Azure MCP Server - Model Context Protocol implementation for Azure</Description>
@@ -66,7 +66,63 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
-    <ProjectReference Include="$(RepoRoot)\tools\Azure.*\src\*.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Acr\src\Azure.Mcp.Tools.Acr.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Advisor\src\Azure.Mcp.Tools.Advisor.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Aks\src\Azure.Mcp.Tools.Aks.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.AppConfig\src\Azure.Mcp.Tools.AppConfig.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.AppLens\src\Azure.Mcp.Tools.AppLens.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.ApplicationInsights\src\Azure.Mcp.Tools.ApplicationInsights.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.AppService\src\Azure.Mcp.Tools.AppService.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Authorization\src\Azure.Mcp.Tools.Authorization.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.AzureBackup\src\Azure.Mcp.Tools.AzureBackup.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.AzureBestPractices\src\Azure.Mcp.Tools.AzureBestPractices.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.AzureIsv\src\Azure.Mcp.Tools.AzureIsv.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.AzureMigrate\src\Azure.Mcp.Tools.AzureMigrate.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.AzureTerraformBestPractices\src\Azure.Mcp.Tools.AzureTerraformBestPractices.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.AzureTerraform\src\Azure.Mcp.Tools.AzureTerraform.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.BicepSchema\src\Azure.Mcp.Tools.BicepSchema.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.CloudArchitect\src\Azure.Mcp.Tools.CloudArchitect.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Communication\src\Azure.Mcp.Tools.Communication.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Compute\src\Azure.Mcp.Tools.Compute.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.ConfidentialLedger\src\Azure.Mcp.Tools.ConfidentialLedger.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.ContainerApps\src\Azure.Mcp.Tools.ContainerApps.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Cosmos\src\Azure.Mcp.Tools.Cosmos.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Deploy\src\Azure.Mcp.Tools.Deploy.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.DeviceRegistry\src\Azure.Mcp.Tools.DeviceRegistry.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.EventGrid\src\Azure.Mcp.Tools.EventGrid.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.EventHubs\src\Azure.Mcp.Tools.EventHubs.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Extension\src\Azure.Mcp.Tools.Extension.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.FileShares\src\Azure.Mcp.Tools.FileShares.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.FoundryExtensions\src\Azure.Mcp.Tools.FoundryExtensions.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.FunctionApp\src\Azure.Mcp.Tools.FunctionApp.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Functions\src\Azure.Mcp.Tools.Functions.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Grafana\src\Azure.Mcp.Tools.Grafana.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.KeyVault\src\Azure.Mcp.Tools.KeyVault.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Kusto\src\Azure.Mcp.Tools.Kusto.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.LoadTesting\src\Azure.Mcp.Tools.LoadTesting.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.ManagedLustre\src\Azure.Mcp.Tools.ManagedLustre.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Marketplace\src\Azure.Mcp.Tools.Marketplace.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Monitor\src\Azure.Mcp.Tools.Monitor.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.MySql\src\Azure.Mcp.Tools.MySql.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Policy\src\Azure.Mcp.Tools.Policy.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Postgres\src\Azure.Mcp.Tools.Postgres.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Pricing\src\Azure.Mcp.Tools.Pricing.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Quota\src\Azure.Mcp.Tools.Quota.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Redis\src\Azure.Mcp.Tools.Redis.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.ResilienceManagement\src\Azure.Mcp.Tools.ResilienceManagement.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.ResourceHealth\src\Azure.Mcp.Tools.ResourceHealth.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Search\src\Azure.Mcp.Tools.Search.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.ServiceBus\src\Azure.Mcp.Tools.ServiceBus.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.ServiceFabric\src\Azure.Mcp.Tools.ServiceFabric.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.SignalR\src\Azure.Mcp.Tools.SignalR.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Speech\src\Azure.Mcp.Tools.Speech.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Sql\src\Azure.Mcp.Tools.Sql.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.SreAgent\src\Azure.Mcp.Tools.SreAgent.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.StorageSync\src\Azure.Mcp.Tools.StorageSync.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Storage\src\Azure.Mcp.Tools.Storage.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.VirtualDesktop\src\Azure.Mcp.Tools.VirtualDesktop.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.WellArchitectedFramework\src\Azure.Mcp.Tools.WellArchitectedFramework.csproj" />
+    <ProjectReference Include="C:\Users\masalama\mcp\tools\Azure.Mcp.Tools.Workbooks\src\Azure.Mcp.Tools.Workbooks.csproj" />
   </ItemGroup>
 
   <ItemGroup>

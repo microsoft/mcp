@@ -3,6 +3,32 @@
 
 
 
+
+## 3.0.29 (2026-07-23) (pre-release)
+
+### Added
+
+- Added Azure IoT Hub integration updates including command docs, e2e prompts, README service coverage, consolidated tool mapping, and CODEOWNERS ownership. [[#3005](https://github.com/microsoft/mcp/pull/3005)]
+
+### Changed
+
+- **Breaking:** Removed unused parameters from Quota tools. [[#3066](https://github.com/microsoft/mcp/pull/3066)]
+- **Breaking:** Removed unused parameters from Confidential Ledger tools. [[#3092](https://github.com/microsoft/mcp/pull/3092)]
+- **Breaking:** Removed unused parameters from Compute tools. [[#3096](https://github.com/microsoft/mcp/pull/3096)]
+- **Breaking:** Removed unused parameters from Communication tools. [[#3099](https://github.com/microsoft/mcp/pull/3099)]
+- **Breaking:** Removed unused parameters from Azure Migrate tools. [[#3102](https://github.com/microsoft/mcp/pull/3102)]
+- **Breaking:** Removed unused parameters from Azure ISV tools. [[#3103](https://github.com/microsoft/mcp/pull/3103)]
+- **Breaking:** Removed unused parameters from Advisor tools. [[#3111](https://github.com/microsoft/mcp/pull/3111)]
+- Migrated Azure Terraform tools to new tool pattern. [[#3101](https://github.com/microsoft/mcp/pull/3101)]
+- Migrated Cloud Architect tools to new tool design. [[#3130](https://github.com/microsoft/mcp/pull/3130)]
+- Migrated Azure MCP Server to the MCP 2026-07-28 stateless protocol (SDK 2.0.0-preview.1). HTTP clients using the new protocol must now include Mcp-Method and Mcp-Name routing headers on every POST request. Clients on the previous 2025-11-25 protocol are unaffected — the server auto-negotiates backward compatibility. [[#3016](https://github.com/microsoft/mcp/pull/3016)]
+- Added a server usage rule instructing agents to consult the troubleshooting guide (https://aka.ms/azmcp/troubleshooting) when an Azure MCP tool call fails, including retrying with the correct `tenant` and/or `subscription` parameter for authentication, authorization, tenant, or subscription context errors. [[#3054](https://github.com/microsoft/mcp/pull/3054)]
+
+### Fixed
+
+- Properly pass `tenant` and `retry options` in Azure Migrate tools. [[#3102](https://github.com/microsoft/mcp/pull/3102)]
+- Authenticated commands now return a clear, actionable error message when Azure credentials are unavailable (CredentialUnavailableException), guiding users to run `az login` instead of surfacing a generic authentication failure. [[#3056](https://github.com/microsoft/mcp/pull/3056)]
+
 ## 3.0.28 (2026-07-21) (pre-release)
 
 ### Changed
