@@ -30,7 +30,16 @@ public class CommandContext
     public Activity? Activity { get; }
 
     /// <summary>
-    /// The MCP server handling the current tool call
+    /// The MCP server handling the current tool call. Used by commands that need to send
+    /// progress notifications or invoke sampling (deprecated in MCP 2026-07-28).
+    /// <para>
+    /// Note: in the <c>2026-07-28</c> stateless protocol there is no <c>initialize</c> handshake,
+    /// so <see cref="McpServer.ClientInfo"/> will be <see langword="null"/> on every request.
+    /// Per-request client identity is instead available via
+    /// <c>_meta["io.modelcontextprotocol/clientInfo"]</c> — see
+    /// <see cref="Microsoft.Mcp.Core.Helpers.McpHelper.ClientInfoMetaKey"/>. The <c>McpServer</c>
+    /// reference itself is still populated by the tool loaders on every request.
+    /// </para>
     /// </summary>
     public McpServer? McpServer { get; init; }
 

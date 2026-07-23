@@ -198,8 +198,7 @@ public sealed class SingleProxyToolLoader(
                 Description = serverMetadata.Description,
             });
         }
-        var toolsResult = new ListToolsResult { Tools = tools };
-        var toolsJson = JsonSerializer.Serialize(toolsResult, ServerJsonContext.Default.ListToolsResult);
+        var toolsJson = JsonSerializer.Serialize(tools, ServerJsonContext.Default.IEnumerableTool);
         _cachedRootToolsJson = toolsJson;
 
         return toolsJson;
@@ -415,7 +414,9 @@ public sealed class SingleProxyToolLoader(
 
     private static bool SupportsSampling(McpServer server)
     {
+#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
         return server?.ClientCapabilities?.Sampling != null;
+#pragma warning restore MCP9005
     }
 
     private static async Task NotifyProgressAsync(RequestContext<CallToolRequestParams> request, string message, CancellationToken cancellationToken)
@@ -436,6 +437,7 @@ public sealed class SingleProxyToolLoader(
 
     private async Task<string?> GetToolNameFromIntentAsync(RequestContext<CallToolRequestParams> request, string intent, string toolsJson, CancellationToken cancellationToken)
     {
+#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
         await NotifyProgressAsync(request, $"Learning about {_displayName} capabilities...", cancellationToken);
 
         var samplingRequest = new CreateMessageRequestParams
@@ -480,6 +482,7 @@ public sealed class SingleProxyToolLoader(
         }
 
         return null;
+#pragma warning restore MCP9005
     }
 
     private async Task<(string? commandName, Dictionary<string, object?> parameters)> GetCommandAndParametersFromIntentAsync(
@@ -489,6 +492,7 @@ public sealed class SingleProxyToolLoader(
         string toolsJson,
         CancellationToken cancellationToken)
     {
+#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
         await NotifyProgressAsync(request, $"Learning about {tool} capabilities...", cancellationToken);
 
         JsonElement toolParams = GetParametersJsonElement(request);
@@ -560,6 +564,7 @@ public sealed class SingleProxyToolLoader(
         }
 
         return (null, new Dictionary<string, object?>());
+#pragma warning restore MCP9005
     }
 
     /// <summary>

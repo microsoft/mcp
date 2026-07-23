@@ -17,6 +17,13 @@ public static class McpHelper
     public const string LocalRequiredHintMetaKey = "LocalRequiredHint";
     public const string ToolIdMetaKey = "MicrosoftMcpToolId";
 
+    // In the MCP 2026-07-28 stateless protocol there is no initialize handshake, so
+    // request.Server.ClientInfo is null for every request. Clients that support the new
+    // spec embed their identity in each request's _meta field under this key.
+    public const string ClientInfoMetaKey = "io.modelcontextprotocol/clientInfo";
+    public const string ClientInfoNameKey = "name";
+    public const string ClientInfoVersionKey = "version";
+
     /// <summary>
     /// Determines whether the tool has the hint in its metadata and is true.
     /// </summary>

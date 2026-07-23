@@ -679,7 +679,9 @@ public sealed class NamespaceToolLoader(
 
     private static bool SupportsSampling(McpServer server)
     {
+#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
         return server?.ClientCapabilities?.Sampling != null;
+#pragma warning restore MCP9005
     }
 
     private static async Task NotifyProgressAsync(RequestContext<CallToolRequestParams> request, string message, CancellationToken cancellationToken)
@@ -705,6 +707,7 @@ public sealed class NamespaceToolLoader(
         List<Tool> availableTools,
         CancellationToken cancellationToken)
     {
+#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
         await NotifyProgressAsync(request, $"Learning about {namespaceName} capabilities...", cancellationToken);
 
         JsonElement toolParams = GetParametersJsonElement(request);
@@ -779,6 +782,7 @@ public sealed class NamespaceToolLoader(
         }
 
         return (null, new Dictionary<string, JsonElement>());
+#pragma warning restore MCP9005
     }
 
     /// <summary>

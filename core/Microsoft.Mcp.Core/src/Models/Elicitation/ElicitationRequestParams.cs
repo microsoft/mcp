@@ -19,7 +19,7 @@ public sealed class ElicitationRequestParams
 
     /// <summary>
     /// Gets or sets the JSON schema defining the structure of the expected response.
-    /// This property is optional and currently not used by the elicitation implementation.
+    /// This property is optional and is forwarded to the MCP protocol elicitation request when provided.
     /// </summary>
     [JsonPropertyName("requestedSchema")]
     public JsonObject? RequestedSchema { get; set; }
