@@ -109,14 +109,16 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.ToolParameters, request.Params.Arguments?.Select(kvp => kvp.Key).ToArray());
+
         if (string.IsNullOrWhiteSpace(request.Params?.Name))
         {
             throw new ArgumentNullException(nameof(request.Params.Name), "Tool name cannot be null or empty.");
         }
 
         string tool = request.Params.Name;
-        var args = request.Params?.Arguments;
+        var args = request.Params.Arguments;
         string? intent = null;
         string? command = null;
         bool learn = false;
@@ -235,6 +237,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
         try
         {
+            Activity.Current?.SetTag(TagName.ToolSource, "external." + client.ServerInfo.Name);
             var availableTools = await GetChildToolListAsync(request, tool, cancellationToken);
 
             // When the specified command is not available, we try to learn about the tool's capabilities
@@ -379,7 +382,8 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string tool, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.IsLearn, true);
         var toolsJson = await GetChildToolListJsonAsync(request, tool, cancellationToken);
 
         var learnResponse = new CallToolResult

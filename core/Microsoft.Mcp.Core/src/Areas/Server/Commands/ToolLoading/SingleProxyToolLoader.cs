@@ -114,8 +114,10 @@ public sealed class SingleProxyToolLoader(
     /// <returns>A <see cref="CallToolResult"/> representing the result of the operation.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
-        var args = request.Params?.Arguments;
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.ToolParameters, request.Params.Arguments?.Select(kvp => kvp.Key).ToArray());
+
+        var args = request.Params.Arguments;
         string? intent = null;
         bool learn = false;
         string? tool = null;
@@ -251,7 +253,8 @@ public sealed class SingleProxyToolLoader(
 
     private async Task<CallToolResult> RootLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.IsLearn, true);
         var toolsJson = await GetRootToolsJsonAsync(cancellationToken);
         var learnResponse = new CallToolResult
         {
@@ -283,6 +286,7 @@ public sealed class SingleProxyToolLoader(
     private async Task<CallToolResult> ToolLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, string tool, CancellationToken cancellationToken)
     {
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.IsLearn, true)
             .SetTag(TagName.ToolArea, tool);
 
         var toolsJson = await GetToolListJsonAsync(request, tool, cancellationToken);

@@ -182,14 +182,16 @@ public sealed class NamespaceToolLoader(
 
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
-        if (string.IsNullOrWhiteSpace(request.Params?.Name))
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.ToolParameters, request.Params.Arguments?.Select(kvp => kvp.Key).ToArray());
+
+        if (string.IsNullOrWhiteSpace(request.Params.Name))
         {
             throw new ArgumentNullException(nameof(request.Params.Name), "Tool name cannot be null or empty.");
         }
 
         string tool = request.Params.Name;
-        var args = request.Params?.Arguments;
+        var args = request.Params.Arguments;
         string? intent = null;
         string? command = null;
         bool learn = false;
@@ -443,6 +445,7 @@ public sealed class NamespaceToolLoader(
             // this case, which will be executed.
             currentActivity?.SetTag(TagName.ToolName, command)
                 .SetTag(TagName.ToolId, cmd.Id)
+                .SetTag(TagName.ToolSource, "internal")
                 .SetTag(TagName.IsServerCommandInvoked, true);
 
             var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions, cancellationToken);
@@ -516,7 +519,8 @@ public sealed class NamespaceToolLoader(
 
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string namespaceName, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.IsLearn, true);
         var toolsJson = GetChildToolListJson(request, namespaceName);
 
         var learnResponse = new CallToolResult
