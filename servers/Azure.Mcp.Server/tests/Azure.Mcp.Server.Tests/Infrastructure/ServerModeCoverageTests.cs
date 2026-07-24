@@ -115,6 +115,7 @@ public class ServerModeCoverageTests
     public async Task AllMode_Should_List_Tools_Without_Initialize()
     {
         // "all" mode exposes every individual Azure tool directly.
+        // Uses a longer timeout because registering all tools takes more time on slow CI runners.
         Assert.True(File.Exists(AzmcpPath), $"Executable not found at {AzmcpPath}. Please build the Azure.Mcp.Server project first.");
 
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
@@ -141,7 +142,8 @@ public class ServerModeCoverageTests
             await process.StandardInput.WriteLineAsync(listToolsRequest);
             await process.StandardInput.FlushAsync(TestContext.Current.CancellationToken);
 
-            var response = await ReadResponseAsync(process.StandardOutput);
+            // Allow up to 60 s: "all" mode registers every tool and is slower on macOS CI runners.
+            var response = await ReadResponseAsync(process.StandardOutput, TimeSpan.FromSeconds(60));
 
             Assert.NotNull(response);
             Assert.Contains("\"result\"", response, StringComparison.OrdinalIgnoreCase);
@@ -156,9 +158,9 @@ public class ServerModeCoverageTests
         }
     }
 
-    private static async Task<string?> ReadResponseAsync(StreamReader reader)
+    private static async Task<string?> ReadResponseAsync(StreamReader reader, TimeSpan? timeout = null)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        using var cts = new CancellationTokenSource(timeout ?? TimeSpan.FromSeconds(15));
         try
         {
             return await reader.ReadLineAsync(cts.Token);
