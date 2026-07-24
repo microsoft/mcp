@@ -2383,11 +2383,10 @@ azmcp deploy pipeline guidance get [--is-azd-project <is-azd-project>] \
 
 # Get a deployment plan for a specific project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp deploy plan get --workspace-folder <workspace-folder> \
-                      --project-name <project-name> \
-                      --target-app-service <target-app-service> \
-                      --provisioning-tool <provisioning-tool> \
-                      --source-type <source-type> \
+azmcp deploy plan get --project-name <project-name> \
+                      [--target-app-service <target-app-service>] \
+                      [--provisioning-tool <provisioning-tool>] \
+                      [--source-type <source-type>] \
                       [--iac-options <iac-options>] \
                       [--deploy-option <deploy-option>] \
                       [--resource-group <resource-group>] \
