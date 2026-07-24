@@ -320,6 +320,7 @@ public class CommandFactory : ICommandFactory
 
             using var activity = _telemetryService.StartActivity(ActivityName.ToolExecuted);
             activity?.SetTag(TagName.ToolId, implementation.Id)
+                .SetTag(TagName.ToolSource, "internal")
                 .SetTag(TagName.ServerMode, "cli");
             InjectToolAreaAndName(activity, parseResult);
             var cmdContext = new CommandContext(_serviceProvider, activity);

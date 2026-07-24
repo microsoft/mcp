@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Added new telemetry collection for 'IsLearn' (indicates if the tool call attempted learning), 'ToolScope' (indication on where the invoked tool is from), and 'ToolParameters' (the names of the tool parameters)"
