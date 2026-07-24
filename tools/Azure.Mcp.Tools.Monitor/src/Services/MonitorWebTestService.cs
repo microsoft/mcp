@@ -10,7 +10,6 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.ResourceManager.ApplicationInsights;
 using Azure.ResourceManager.ApplicationInsights.Models;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
@@ -19,13 +18,11 @@ namespace Azure.Mcp.Tools.Monitor.Services;
 public class MonitorWebTestService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    IResourceGroupService resourceGroupService,
-    ILogger<MonitorWebTestService> logger)
+    IResourceGroupService resourceGroupService)
     : BaseAzureService(tenantService), IMonitorWebTestService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
-    private readonly ILogger<MonitorWebTestService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<WebTestSummaryInfo>> ListWebTests(
         string subscription,

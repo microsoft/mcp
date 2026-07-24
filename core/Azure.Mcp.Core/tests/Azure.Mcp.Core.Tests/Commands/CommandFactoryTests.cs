@@ -5,13 +5,13 @@ using System.CommandLine;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
+using ExtensionsOptions = Microsoft.Extensions.Options;
 
 namespace Azure.Mcp.Core.Tests.Commands;
 
@@ -26,7 +26,7 @@ public class CommandFactoryTests
     private readonly ILogger<CommandFactory> _logger;
     private readonly ITelemetryService _telemetryService;
     private readonly McpServerConfiguration _serverConfiguration;
-    private readonly IOptions<McpServerConfiguration> _configurationOptions;
+    private readonly ExtensionsOptions.IOptions<McpServerConfiguration> _configurationOptions;
 
     public CommandFactoryTests()
     {
@@ -46,7 +46,7 @@ public class CommandFactoryTests
         _serviceProvider = services.BuildServiceProvider();
         _logger = Substitute.For<ILogger<CommandFactory>>();
         _telemetryService = Substitute.For<ITelemetryService>();
-        _configurationOptions = Microsoft.Extensions.Options.Options.Create(_serverConfiguration);
+        _configurationOptions = ExtensionsOptions.Options.Create(_serverConfiguration);
     }
 
     [Fact]

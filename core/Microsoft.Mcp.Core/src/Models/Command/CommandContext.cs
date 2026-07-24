@@ -37,7 +37,7 @@ public class CommandContext
     /// so <see cref="McpServer.ClientInfo"/> will be <see langword="null"/> on every request.
     /// Per-request client identity is instead available via
     /// <c>_meta["io.modelcontextprotocol/clientInfo"]</c> — see
-    /// <see cref="Microsoft.Mcp.Core.Helpers.McpHelper.ClientInfoMetaKey"/>. The <c>McpServer</c>
+    /// <see cref="Helpers.McpHelper.ClientInfoMetaKey"/>. The <c>McpServer</c>
     /// reference itself is still populated by the tool loaders on every request.
     /// </para>
     /// </summary>
@@ -54,6 +54,7 @@ public class CommandContext
     /// Creates a new command context
     /// </summary>
     /// <param name="serviceProvider">The service provider for dependency injection</param>
+    /// <param name="activity">Optional telemetry activity for the command execution</param>
     public CommandContext(IServiceProvider serviceProvider, Activity? activity = default)
     {
         _serviceProvider = serviceProvider;

@@ -18,7 +18,11 @@ public static class DeploymentPlanTemplateUtil
     /// <param name="projectName">The name of the project. Can be null or empty.</param>
     /// <param name="targetAppService">The target Azure service.</param>
     /// <param name="provisioningTool">The provisioning tool.</param>
+    /// <param name="sourceType">The source type.</param>
+    /// <param name="deployOption">The deployment option.</param>
     /// <param name="iacOptions">The Infrastructure as Code options for AZD.</param>
+    /// <param name="subscriptionId">The subscription ID for the deployment.</param>
+    /// <param name="resourceGroupName">The resource group name for the deployment.</param>
     /// <returns>A formatted deployment plan template string.</returns>
     public static string GetPlanTemplate(string projectName, string targetAppService, string provisioningTool, string sourceType, string deployOption, string? iacOptions, string? subscriptionId, string? resourceGroupName)
     {

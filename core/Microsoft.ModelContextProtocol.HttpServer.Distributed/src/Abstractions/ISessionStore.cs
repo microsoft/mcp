@@ -13,7 +13,7 @@ public interface ISessionStore
     /// </summary>
     /// <param name="sessionId">The session identifier.</param>
     /// <param name="ownerInfoFactory">A factory function that creates the owner information if the session is unclaimed.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The current or newly claimed owner information for the session.</returns>
     Task<SessionOwnerInfo> GetOrClaimOwnershipAsync(
         string sessionId,
@@ -25,7 +25,7 @@ public interface ISessionStore
     /// Removes a session from the store.
     /// </summary>
     /// <param name="sessionId">The session identifier to remove.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task RemoveAsync(string sessionId, CancellationToken cancellationToken = default);
 }

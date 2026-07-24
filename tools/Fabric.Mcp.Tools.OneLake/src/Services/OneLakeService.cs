@@ -184,7 +184,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     {
         var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items";
         var jsonContent = JsonSerializer.Serialize(request, OneLakeJsonContext.Default.CreateItemRequest);
-        var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, null, cancellationToken);
+        var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, cancellationToken);
         return await JsonSerializer.DeserializeAsync<OneLakeItem>(response, OneLakeJsonContext.Default.OneLakeItem, cancellationToken) ?? new OneLakeItem();
     }
 
@@ -700,55 +700,6 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         var fileSystemItems = ParsePathListResponse(content);
 
         return fileSystemItems.OrderBy(f => f.Type == "directory" ? 0 : 1).ThenBy(f => f.Name).ToList();
-    }
-
-    private List<FileSystemItem> BuildHierarchicalStructure(List<FileSystemItem> flatItems, string basePath)
-    {
-        var root = new List<FileSystemItem>();
-        var pathPrefix = basePath.TrimEnd('/') + "/";
-
-        // Group items by their immediate parent directory
-        var grouped = flatItems
-            .Where(item => item.Path.StartsWith(pathPrefix, StringComparison.OrdinalIgnoreCase) || item.Path == basePath.TrimEnd('/'))
-            .GroupBy(item =>
-            {
-                var relativePath = item.Path.Substring(pathPrefix.Length);
-                var firstSlash = relativePath.IndexOf('/');
-                return firstSlash == -1 ? "" : relativePath.Substring(0, firstSlash);
-            });
-
-        foreach (var group in grouped)
-        {
-            if (string.IsNullOrEmpty(group.Key))
-            {
-                // Direct children of the base path
-                root.AddRange(group);
-            }
-            else
-            {
-                // Create directory entry with children
-                var dirPath = $"{pathPrefix}{group.Key}";
-                var directoryItem = group.FirstOrDefault(item => item.Path == dirPath && item.Type == "directory");
-
-                if (directoryItem == null)
-                {
-                    directoryItem = new FileSystemItem
-                    {
-                        Name = group.Key,
-                        Path = dirPath,
-                        Type = "directory",
-                        Size = null,
-                        LastModified = null,
-                        ContentType = "application/x-directory"
-                    };
-                }
-
-                directoryItem.Children = group.Where(item => item.Path != dirPath).ToList();
-                root.Add(directoryItem);
-            }
-        }
-
-        return root.OrderBy(f => f.Type == "directory" ? 0 : 1).ThenBy(f => f.Name).ToList();
     }
 
     public async Task<IEnumerable<OneLakeItem>> ListOneLakeItemsAsync(string workspaceId, string? continuationToken = null, CancellationToken cancellationToken = default)
@@ -1642,9 +1593,9 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         }
     }
 
-    private async Task<Stream> SendFabricApiRequestAsync(HttpMethod method, string url, string? jsonContent = null, string? tenant = null, CancellationToken cancellationToken = default)
+    private async Task<Stream> SendFabricApiRequestAsync(HttpMethod method, string url, string? jsonContent = null, CancellationToken cancellationToken = default)
     {
-        var tokenContext = new TokenRequestContext(new[] { OneLakeEndpoints.GetFabricScope() });
+        var tokenContext = new TokenRequestContext([OneLakeEndpoints.GetFabricScope()]);
         var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
 
         using var request = new HttpRequestMessage(method, url);
@@ -1791,15 +1742,15 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         return await response.Content.ReadAsStreamAsync(cancellationToken);
     }
 
-    private async Task<HttpResponseMessage> SendDataPlaneRequestAsync(HttpMethod method, string url, string? tenant = null, CancellationToken cancellationToken = default)
+    private async Task<HttpResponseMessage> SendDataPlaneRequestAsync(HttpMethod method, string url, CancellationToken cancellationToken = default)
     {
         using var request = new HttpRequestMessage(method, url);
-        return await SendDataPlaneRequestAsync(request, tenant, cancellationToken);
+        return await SendDataPlaneRequestAsync(request, cancellationToken);
     }
 
-    private async Task<HttpResponseMessage> SendDataPlaneRequestAsync(HttpRequestMessage request, string? tenant = null, CancellationToken cancellationToken = default)
+    private async Task<HttpResponseMessage> SendDataPlaneRequestAsync(HttpRequestMessage request, CancellationToken cancellationToken = default)
     {
-        var tokenContext = new TokenRequestContext(new[] { OneLakeEndpoints.StorageScope });
+        var tokenContext = new TokenRequestContext([OneLakeEndpoints.StorageScope]);
         var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
 
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
@@ -2246,17 +2197,6 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         {
             return null;
         }
-    }
-
-    private static string ExtractWarehouseQueryValue(string warehousePrefix)
-    {
-        const string WarehousePrefixRoot = "warehouse/";
-        if (warehousePrefix.StartsWith(WarehousePrefixRoot, StringComparison.OrdinalIgnoreCase))
-        {
-            return warehousePrefix[WarehousePrefixRoot.Length..];
-        }
-
-        return warehousePrefix;
     }
 
     private async Task<(string WorkspaceId, string ItemIdentifier, string WarehousePrefix, string WarehouseQueryValue)> GetWarehousePrefixAsync(string workspaceIdentifier, string itemIdentifier, CancellationToken cancellationToken)

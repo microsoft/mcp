@@ -14,21 +14,15 @@ using Azure.Mcp.Tools.Storage.Services.Models;
 using Azure.ResourceManager;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Storage.Services;
 
-public sealed class StorageService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ILogger<StorageService> logger)
+public sealed class StorageService(ISubscriptionService subscriptionService, ITenantService tenantService)
     : BaseAzureResourceService(subscriptionService, tenantService), IStorageService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private readonly ILogger<StorageService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private static readonly HashSet<string> s_validSkus = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -431,7 +425,6 @@ public sealed class StorageService(
 
     private async Task<TableServiceClient> CreateTableServiceClient(
         string account,
-        string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -456,7 +449,6 @@ public sealed class StorageService(
         // First attempt with requested auth method
         var tableServiceClient = await CreateTableServiceClient(
             account,
-            subscription,
             tenant,
             retryPolicy,
             cancellationToken);
@@ -495,7 +487,7 @@ public sealed class StorageService(
     {
         account = account.ToLowerInvariant();
         ValidateStorageAccountName(account);
-        return _tenantService.CloudConfiguration.CloudType switch
+        return TenantService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.blob.core.windows.net",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{account}.blob.core.chinacloudapi.cn",
@@ -508,7 +500,7 @@ public sealed class StorageService(
     {
         account = account.ToLowerInvariant();
         ValidateStorageAccountName(account);
-        return _tenantService.CloudConfiguration.CloudType switch
+        return TenantService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.table.core.windows.net",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{account}.table.core.chinacloudapi.cn",

@@ -27,7 +27,7 @@ public interface IMonitorMetricsService
     /// <param name="metricNamespace">Required metric namespace</param>
     /// <param name="tenant">Optional tenant ID for multi-tenant scenarios</param>
     /// <param name="retryPolicy">Optional retry policy parameters</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>List of metric results with time series data</returns>
     Task<List<MetricResult>> QueryMetricsAsync(
         string subscription,
@@ -56,7 +56,7 @@ public interface IMonitorMetricsService
     /// <param name="searchString">Optional search string to filter metric definitions by name and description</param>
     /// <param name="tenant">Optional tenant ID for multi-tenant scenarios</param>
     /// <param name="retryPolicy">Optional retry policy parameters</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>List of metric definitions</returns>
     Task<List<MetricDefinition>> ListMetricDefinitionsAsync(
         string subscription,
@@ -79,7 +79,7 @@ public interface IMonitorMetricsService
     /// <param name="searchString">Optional search string to filter namespaces</param>
     /// <param name="tenant">Optional tenant ID for multi-tenant scenarios</param>
     /// <param name="retryPolicy">Optional retry policy parameters</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>List of metric namespaces</returns>
     Task<List<MetricNamespace>> ListMetricNamespacesAsync(
         string subscription,

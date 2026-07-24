@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 using Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
-using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
 using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
 

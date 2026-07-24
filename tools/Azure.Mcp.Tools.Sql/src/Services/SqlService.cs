@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -28,7 +27,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// </summary>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
-    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The resolved subscription ID</returns>
     private async Task<string> ResolveSubscriptionIdAsync(
         string subscription,
@@ -47,7 +46,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
-    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The SQL Server resource</returns>
     private async Task<SqlServerResource> GetSqlServerResourceAsync(
         string serverName,
@@ -69,7 +68,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
-    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The SQL database if found, otherwise throws KeyNotFoundException</returns>
     /// <exception cref="KeyNotFoundException">Thrown when the specified database is not found</exception>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
@@ -118,7 +117,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="zoneRedundant">Optional zone redundancy setting</param>
     /// <param name="readScale">Optional read scale setting</param>
     /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
-    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The created SQL database information</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
     public async Task<SqlDatabase> CreateDatabaseAsync(
@@ -226,7 +225,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="zoneRedundant">Optional zone redundancy setting</param>
     /// <param name="readScale">Optional read scale setting</param>
     /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
-    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The updated SQL database information</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
     public async Task<SqlDatabase> UpdateDatabaseAsync(
@@ -324,7 +323,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
-    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The renamed SQL database information</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
     public async Task<SqlDatabase> RenameDatabaseAsync(
@@ -381,7 +380,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
-    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A list of SQL databases on the specified server</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
     public async Task<List<SqlDatabase>> ListDatabasesAsync(
@@ -420,7 +419,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
-    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A list of Entra ID administrators configured for the SQL server</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
     public async Task<List<SqlServerEntraAdministrator>> GetEntraAdministratorsAsync(
@@ -467,7 +466,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
-    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A list of elastic pools configured on the SQL server</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
     public async Task<List<SqlElasticPool>> GetElasticPoolsAsync(
@@ -506,7 +505,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
-    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A list of firewall rules configured on the SQL server</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
     public async Task<List<SqlServerFirewallRule>> ListFirewallRulesAsync(
@@ -553,7 +552,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="startIpAddress">The start IP address of the firewall rule range</param>
     /// <param name="endIpAddress">The end IP address of the firewall rule range</param>
     /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
-    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The created firewall rule</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
     public async Task<SqlServerFirewallRule> CreateFirewallRuleAsync(
@@ -607,7 +606,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="firewallRuleName">The name of the firewall rule to delete</param>
     /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
-    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>True if the firewall rule was successfully deleted</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
     public async Task<bool> DeleteFirewallRuleAsync(
@@ -616,7 +615,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string subscription,
         string firewallRuleName,
         RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(serverName), serverName),
@@ -662,7 +661,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="version">The version of SQL Server to create (optional, defaults to latest)</param>
     /// <param name="publicNetworkAccess">Whether public network access is enabled (optional)</param>
     /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
-    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The created SQL server</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
     public async Task<SqlServer> CreateServerAsync(
@@ -675,7 +674,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string? version,
         string? publicNetworkAccess,
         RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(serverName), serverName),
@@ -731,7 +730,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
-    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The SQL server if found, otherwise throws KeyNotFoundException</returns>
     /// <exception cref="KeyNotFoundException">Thrown when the specified server is not found</exception>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
@@ -769,7 +768,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="resourceGroup">The name of the resource group containing the servers</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
-    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A list of SQL servers found in the specified resource group</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
     public async Task<List<SqlServer>> ListServersAsync(
@@ -846,7 +845,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
-    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>True if the database was successfully deleted</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
     public async Task<bool> DeleteDatabaseAsync(
@@ -916,36 +915,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             ReadScale: data.ReadScale?.ToString(),
             ZoneRedundant: data.IsZoneRedundant
         );
-    }
-
-    private static SqlDatabase ConvertToSqlDatabaseModel(JsonElement item)
-    {
-        Models.SqlDatabaseData? sqlDatabase = Models.SqlDatabaseData.FromJson(item)
-            ?? throw new InvalidOperationException("Failed to parse SQL database data");
-
-        return new(
-                Name: sqlDatabase.ResourceName ?? "Unknown",
-                Id: sqlDatabase.ResourceId ?? "Unknown",
-                Type: sqlDatabase.ResourceType ?? "Unknown",
-                Location: sqlDatabase.Location,
-                Sku: sqlDatabase.Sku != null ? new(
-                    Name: sqlDatabase.Sku.Name,
-                    Tier: sqlDatabase.Sku.Tier,
-                    Capacity: sqlDatabase.Sku.Capacity,
-                    Family: sqlDatabase.Sku.Family,
-                    Size: sqlDatabase.Sku.Size
-                ) : null,
-                Status: sqlDatabase.Properties?.Status,
-                Collation: sqlDatabase.Properties?.Collation,
-                CreationDate: sqlDatabase.Properties?.CreatedOn,
-                MaxSizeBytes: sqlDatabase.Properties?.MaxSizeBytes,
-                ServiceLevelObjective: sqlDatabase.Properties?.CurrentServiceObjectiveName,
-                Edition: sqlDatabase.Properties?.CurrentSku?.Name,
-                ElasticPoolName: sqlDatabase.Properties?.ElasticPoolId?.ToString().Split('/').LastOrDefault(),
-                EarliestRestoreDate: sqlDatabase.Properties?.EarliestRestoreOn,
-                ReadScale: sqlDatabase.Properties?.ReadScale,
-                ZoneRedundant: sqlDatabase.Properties?.IsZoneRedundant
-            );
     }
 
     private static SqlServer ConvertToSqlServerModel(SqlServerResource serverResource)

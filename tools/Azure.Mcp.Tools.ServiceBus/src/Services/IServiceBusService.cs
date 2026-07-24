@@ -17,6 +17,7 @@ public interface IServiceBusService
     /// <param name="subscriptionName">The subscription name to get details for</param>
     /// <param name="tenantId">Optional tenant ID</param>
     /// <param name="retryPolicy">Optional retry policy</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>Subscription details</returns>
     /// <exception cref="RequestFailedException">When the service request fails</exception>
     Task<SubscriptionDetails> GetSubscriptionDetails(
@@ -32,9 +33,9 @@ public interface IServiceBusService
     /// </summary>
     /// <param name="namespaceName">The Service Bus namespace name</param>
     /// <param name="queueName">The queue name to get details for</param>
-    /// <param name="subscription">Subscription ID or name</param>
     /// <param name="tenantId">Optional tenant ID</param>
     /// <param name="retryPolicy">Optional retry policy</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>Queue details</returns>
     /// <exception cref="RequestFailedException">When the service request fails</exception>
     Task<QueueDetails> GetQueueDetails(
@@ -51,6 +52,7 @@ public interface IServiceBusService
     /// <param name="topicName">The topic name to get details for</param>
     /// <param name="tenantId">Optional tenant ID</param>
     /// <param name="retryPolicy">Optional retry policy</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>Topic details</returns>
     /// <exception cref="RequestFailedException">When the service request fails</exception>
     Task<TopicDetails> GetTopicDetails(
@@ -66,9 +68,9 @@ public interface IServiceBusService
     /// <param name="namespaceName">The Service Bus namespace name</param>
     /// <param name="queueName">The queue name to peek messages from</param>
     /// <param name="maxMessages">Maximum number of messages to peek (default: 1)</param>
-    /// <param name="subscription">Subscription ID or name</param>
     /// <param name="tenantId">Optional tenant ID</param>
     /// <param name="retryPolicy">Optional retry policy</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>List of peeked messages</returns>
     /// <exception cref="RequestFailedException">When the service request fails</exception>
     Task<List<ServiceBusReceivedMessage>> PeekQueueMessages(
@@ -86,9 +88,9 @@ public interface IServiceBusService
     /// <param name="topicName">The topic name containing the subscription</param>
     /// <param name="subscriptionName">The subscription name to peek messages from</param>
     /// <param name="maxMessages">Maximum number of messages to peek (default: 1)</param>
-    /// <param name="subscription">Subscription ID or name</param>
     /// <param name="tenantId">Optional tenant ID</param>
     /// <param name="retryPolicy">Optional retry policy</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>List of peeked messages</returns>
     /// <exception cref="RequestFailedException">When the service request fails</exception>
     Task<List<ServiceBusReceivedMessage>> PeekSubscriptionMessages(

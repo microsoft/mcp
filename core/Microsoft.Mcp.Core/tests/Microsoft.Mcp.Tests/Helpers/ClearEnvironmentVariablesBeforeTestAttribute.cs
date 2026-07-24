@@ -4,18 +4,18 @@
 using System.Reflection;
 using Xunit.v3;
 
-namespace Microsoft.Mcp.Tests.Helpers
+namespace Microsoft.Mcp.Tests.Helpers;
+
+/// <summary>
+/// Xunit attribute to clear known environment variables before each test is run.
+/// Live tests should not use this attribute, as they may need environment variables to configure authentication and proxy.
+/// </summary>
+public class ClearEnvironmentVariablesBeforeTestAttribute : BeforeAfterTestAttribute
 {
-    /// <summary>
-    /// Xunit attribute to clear known environment variables before each test is run.
-    /// Live tests should not use this attribute, as they may need environment variables to configure authentication and proxy.
-    /// </summary>
-    public class ClearEnvironmentVariablesBeforeTestAttribute : BeforeAfterTestAttribute
-    {
-        // These are all the known environment variables that our server may use.
-        // Proper test initialization should clear all of these, then set only the ones needed for the test.
-        private static readonly List<string> _variablesToClear = [
-            "ALL_PROXY",
+    // These are all the known environment variables that our server may use.
+    // Proper test initialization should clear all of these, then set only the ones needed for the test.
+    private static readonly List<string> _variablesToClear = [
+        "ALL_PROXY",
             "ALLOW_INSECURE_EXTERNAL_BINDING",
             "APPLICATIONINSIGHTS_CONNECTION_STRING",
             "ASPNETCORE_URLS",
@@ -34,12 +34,11 @@ namespace Microsoft.Mcp.Tests.Helpers
             "NO_PROXY",
         ];
 
-        public override void Before(MethodInfo methodUnderTest, IXunitTest test)
+    public override void Before(MethodInfo methodUnderTest, IXunitTest test)
+    {
+        foreach (var envVar in _variablesToClear)
         {
-            foreach (var envVar in _variablesToClear)
-            {
-                Environment.SetEnvironmentVariable(envVar, null);
-            }
+            Environment.SetEnvironmentVariable(envVar, null);
         }
     }
 }

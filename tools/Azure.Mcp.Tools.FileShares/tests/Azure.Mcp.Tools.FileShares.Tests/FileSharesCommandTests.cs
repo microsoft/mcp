@@ -615,6 +615,4 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
             Assert.Equal("Approved", connectionState.GetString());
         }
     }
-
-    private new const string TenantNameReason = "Tenant name resolution is not supported for service principals";
 }

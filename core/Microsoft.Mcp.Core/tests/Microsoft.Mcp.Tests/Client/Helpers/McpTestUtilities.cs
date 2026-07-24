@@ -51,6 +51,7 @@ public static class McpTestUtilities
     /// <param name="output">Optional test output helper for logging.</param>
     /// <param name="testPackage">Optional NPM test package name for STDIO mode.</param>
     /// <param name="settingsDirectory">Optional settings directory for NPM test package.</param>
+    /// <param name="disableAuthentication">Whether to disable authentication for the MCP client.</param>
     /// <returns>A tuple containing the initialized MCP client and optional server URL (for HTTP transport).</returns>
     public static async Task<(McpClient? Client, string? ServerUrl)> CreateMcpClientAsync(
         string executablePath,
@@ -119,6 +120,7 @@ public static class McpTestUtilities
     /// <param name="environmentVariables">Environment variables to set for the server process.</param>
     /// <param name="startHttpServerProcess">Callback to store the started process instance.</param>
     /// <param name="output">Optional test output helper for logging.</param>
+    /// <param name="disableAuthentication">Whether to disable authentication for the HTTP server.</param>
     /// <returns>The server URL.</returns>
     private static async Task<string> StartHttpServerAsync(
         string executablePath,
@@ -310,12 +312,14 @@ public static class McpTestUtilities
     /// <param name="processArguments">Command-line arguments for the server process.</param>
     /// <param name="environmentVariables">Environment variables to set for the server process.</param>
     /// <param name="output">Optional test output helper for logging.</param>
+    /// <param name="disableAuthentication">Whether to disable authentication for the HTTP server.</param>
     /// <returns>The started Process instance.</returns>
     public static Process StartHttpServerProcess(
         string executablePath,
         List<string> processArguments,
         Dictionary<string, string?> environmentVariables,
-        ITestOutputHelper? output = null, bool disableAuthentication = true)
+        ITestOutputHelper? output = null,
+        bool disableAuthentication = true)
     {
         processArguments.AddRange(["--transport", "http", "--outgoing-auth-strategy", "UseHostingEnvironmentIdentity"]);
         if (disableAuthentication)

@@ -649,12 +649,4 @@ public static class PolicyCreateValidator
             issues.Add(new PolicyValidationIssue(flag, $"{flag} is supported only for {requiredLabel} workloads."));
         }
     }
-
-    private static void EnsureDpp(string? value, string flag, WorkloadFamily actual, List<PolicyValidationIssue> issues)
-    {
-        if (!string.IsNullOrWhiteSpace(value) && IsRsvFamily(actual))
-        {
-            issues.Add(new PolicyValidationIssue(flag, $"{flag} is supported only for DPP (Backup vault) workloads."));
-        }
-    }
 }

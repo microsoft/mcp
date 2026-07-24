@@ -33,6 +33,7 @@ public class MarketplaceService(ITenantService tenantService)
     /// <param name="includeServiceInstructionTemplates">Include service instruction templates.</param>
     /// <param name="tenantId">Optional. The Azure tenant ID for authentication.</param>
     /// <param name="retryPolicy">Optional. Policy parameters for retrying failed requests.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A JSON node containing the product information.</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are missing or invalid.</exception>
     /// <exception cref="Exception">Thrown when parsing the product response fails.</exception>
@@ -73,6 +74,7 @@ public class MarketplaceService(ITenantService tenantService)
     /// <param name="expand">OData expand expression to include related data.</param>
     /// <param name="tenantId">Optional. The Azure tenant ID for authentication.</param>
     /// <param name="retryPolicy">Optional. Policy parameters for retrying failed requests.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A list of ProductSummary objects containing the marketplace products.</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are missing or invalid.</exception>
     /// <exception cref="Exception">Thrown when parsing the products response fails.</exception>

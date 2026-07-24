@@ -22,7 +22,6 @@ public class MonitorMetricsServiceTests
     private const string TestResourceType = "Microsoft.Storage/storageAccounts";
     private const string TestResourceName = "test";
     private const string TestResourceId = "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/test";
-    private const string TestTenant = "tenant-123";
 
     public MonitorMetricsServiceTests()
     {

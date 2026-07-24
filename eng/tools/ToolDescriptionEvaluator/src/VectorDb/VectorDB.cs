@@ -3,7 +3,7 @@
 
 using System.Numerics.Tensors;
 
-namespace ToolSelection.VectorDb;
+namespace ToolDescriptionEvaluator.VectorDb;
 
 public record Entry(string Id, object? Metadata, float[] Vector);
 

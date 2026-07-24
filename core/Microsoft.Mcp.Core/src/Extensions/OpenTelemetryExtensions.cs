@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Monitor.OpenTelemetry.Exporter;
@@ -51,14 +52,7 @@ public static class OpenTelemetryExtensions
 
     private static void EnableAzureMonitor(this IServiceCollection services)
     {
-#if DEBUG
-        services.AddSingleton(sp =>
-        {
-            var forwarder = new AzureEventSourceLogForwarder(sp.GetRequiredService<ILoggerFactory>());
-            forwarder.Start();
-            return forwarder;
-        });
-#endif
+        ConfigureAzureEventSourceLogForwarder(services);
 
         services.ConfigureOpenTelemetryTracerProvider((sp, builder) =>
         {
@@ -93,19 +87,8 @@ public static class OpenTelemetryExtensions
             ConfigureUserProvidedAzureMonitorExporter(otelBuilder, userProvidedAppInsightsConnectionString);
         }
 
-        // Configure Microsoft-owned telemetry only in RELEASE builds to avoid polluting telemetry during development.
-#if RELEASE
-        // This environment variable can be used to disable Microsoft telemetry collection.
-        // By default, Microsoft telemetry is enabled.
-        var microsoftTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT");
-
-        bool shouldCollectMicrosoftTelemetry = string.IsNullOrWhiteSpace(microsoftTelemetry) || (bool.TryParse(microsoftTelemetry, out var shouldCollect) && shouldCollect);
-
-        if (shouldCollectMicrosoftTelemetry)
-        {
-            ConfigureMicrosoftAzureMonitorExporter(otelBuilder, MicrosoftOwnedAppInsightsConnectionString);
-        }
-#endif
+        // Configure Microsoft-owned telemetry.
+        ConfigureMicrosoftAzureMonitorExporter(otelBuilder, MicrosoftOwnedAppInsightsConnectionString);
 
         var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
         if (!string.IsNullOrEmpty(enableOtlp) && bool.TryParse(enableOtlp, out var shouldEnable) && shouldEnable)
@@ -125,13 +108,35 @@ public static class OpenTelemetryExtensions
         }
     }
 
+    [Conditional("DEBUG")]
+    private static void ConfigureAzureEventSourceLogForwarder(this IServiceCollection services)
+    {
+        services.AddSingleton(sp =>
+        {
+            var forwarder = new AzureEventSourceLogForwarder(sp.GetRequiredService<ILoggerFactory>());
+            forwarder.Start();
+            return forwarder;
+        });
+    }
+
     /// <summary>
     /// Configures OpenTelemetry to use Azure Monitor exporters with Microsoft's Application Insights instance.
     /// </summary>
     /// <param name="otelBuilder">The OpenTelemetry builder to configure.</param>
     /// <param name="appInsightsConnectionString">The Application Insights connection string for Microsoft's telemetry instance.</param>
+    [Conditional("RELEASE")]
     private static void ConfigureMicrosoftAzureMonitorExporter(OpenTelemetry.OpenTelemetryBuilder otelBuilder, string appInsightsConnectionString)
     {
+        // This environment variable can be used to disable Microsoft telemetry collection.
+        // By default, Microsoft telemetry is enabled.
+        var microsoftTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT");
+
+        bool shouldCollectMicrosoftTelemetry = string.IsNullOrWhiteSpace(microsoftTelemetry) || (bool.TryParse(microsoftTelemetry, out var shouldCollect) && shouldCollect);
+        if (!shouldCollectMicrosoftTelemetry)
+        {
+            return;
+        }
+
         // We don't configure logging for Microsoft telemetry to avoid sending potentially sensitive log data to Microsoft.
         otelBuilder.WithMetrics(metrics =>
         {

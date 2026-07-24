@@ -147,7 +147,7 @@ namespace AzureRetailPrices
         /// Supported with API version 2021-10-01 and later.
         /// </param>
         /// <param name="skip"> Number of records to skip (for pagination). </param>
-        /// <param name="cancellationToken"> The cancellation token that can be used to cancel the operation. </param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
         /// <exception cref="ClientResultException"> Service returned a non-success status code. </exception>
         public virtual CollectionResult<RetailPriceItem> GetPrices(string currencyCode = default, string filter = default, string meterRegion = default, long? skip = default, CancellationToken cancellationToken = default)
         {
@@ -185,7 +185,7 @@ namespace AzureRetailPrices
         /// Supported with API version 2021-10-01 and later.
         /// </param>
         /// <param name="skip"> Number of records to skip (for pagination). </param>
-        /// <param name="cancellationToken"> The cancellation token that can be used to cancel the operation. </param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
         /// <exception cref="ClientResultException"> Service returned a non-success status code. </exception>
         public virtual AsyncCollectionResult<RetailPriceItem> GetPricesAsync(string currencyCode = default, string filter = default, string meterRegion = default, long? skip = default, CancellationToken cancellationToken = default)
         {

@@ -3,13 +3,13 @@
 
 using System.Diagnostics;
 using System.Text.Json;
-using ToolSelection.Models;
-using ToolSelection.Services;
-using ToolSelection.VectorDb;
+using ToolDescriptionEvaluator.Models;
+using ToolDescriptionEvaluator.Services;
+using ToolDescriptionEvaluator.VectorDb;
 
-namespace ToolSelection;
+namespace ToolDescriptionEvaluator;
 
-class Program
+internal class Program
 {
     private static readonly HttpClient HttpClient = new();
 
@@ -380,7 +380,7 @@ class Program
                 }
             }
 
-            await PerformAnalysis(toolNameAndPrompts!, embeddingService, db, executionTime, writer, maxResultsPerTest, isCiMode);
+            await PerformAnalysis(toolNameAndPrompts!, embeddingService, db, executionTime, writer, maxResultsPerTest);
 
             stopwatchTotal.Stop();
 
@@ -825,7 +825,7 @@ class Program
         }
     }
 
-    private static async Task PerformAnalysis(Dictionary<string, List<string>> toolNameWithPrompts, EmbeddingService embeddingService, VectorDB db, TimeSpan databaseSetupTime, StreamWriter writer, int maxResultsPerTest = 5, bool isCiMode = false)
+    private static async Task PerformAnalysis(Dictionary<string, List<string>> toolNameWithPrompts, EmbeddingService embeddingService, VectorDB db, TimeSpan databaseSetupTime, StreamWriter writer, int maxResultsPerTest = 5)
     {
         var stopwatch = Stopwatch.StartNew();
         int promptCount = 0;

@@ -5,7 +5,7 @@ using System.Net.Http.Headers;
 using Azure.Core;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
-namespace Azure.Mcp.Core;
+namespace Microsoft.Mcp.Core;
 
 /// <summary>
 /// <see cref="DelegatingHandler"/> that adds a Bearer access token to each outgoing request.
@@ -32,8 +32,8 @@ public sealed class AccessTokenHandler : DelegatingHandler
     /// Sends an HTTP request with a Bearer access token fetched using the embedded <see cref="IAzureTokenCredentialProvider"/>.
     /// This method will overwrite the Authorization header if it already exist on the request.
     /// </summary>
-    /// <param name="request"></param>
-    /// <param name="cancellationToken"></param>
+    /// <param name="request">The HTTP request message to send.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         TokenCredential credential = _credential

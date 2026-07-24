@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using ToolMetadataExporter.Services;
+
 namespace ToolMetadataExporter.Models;
 
 /// <summary>

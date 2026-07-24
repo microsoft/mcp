@@ -1,11 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Tests.Client.Helpers;
+using NSubstitute;
 using Xunit;
+using ExtensionsOptions = Microsoft.Extensions.Options;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.Discovery;
 
@@ -17,8 +23,8 @@ public class CommandGroupDiscoveryStrategyTests
         string? entryPoint = null)
     {
         var factory = commandFactory ?? CommandFactoryHelpers.CreateCommandFactory();
-        var startOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServerStartOptions());
-        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
+        var startOptions = ExtensionsOptions.Options.Create(options ?? new ServerStartOptions());
+        var logger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
         var strategy = new CommandGroupDiscoveryStrategy(factory, startOptions, logger);
         if (entryPoint != null)
         {
@@ -31,8 +37,8 @@ public class CommandGroupDiscoveryStrategyTests
     public void Constructor_WithNullCommandFactory_DoesNotThrow()
     {
         // Arrange
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
-        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
+        var options = ExtensionsOptions.Options.Create(new ServerStartOptions());
+        var logger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
 
         // Act & Assert
         // Primary constructor syntax doesn't automatically validate null parameters
@@ -45,7 +51,7 @@ public class CommandGroupDiscoveryStrategyTests
     {
         // Arrange
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
-        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
+        var logger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
 
         // Act & Assert
         // Primary constructor syntax doesn't automatically validate null parameters
@@ -58,8 +64,8 @@ public class CommandGroupDiscoveryStrategyTests
     {
         // Arrange
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
-        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
+        var options = ExtensionsOptions.Options.Create(new ServerStartOptions());
+        var logger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
 
         // Act
         var strategy = new CommandGroupDiscoveryStrategy(commandFactory, options, logger);
@@ -211,7 +217,7 @@ public class CommandGroupDiscoveryStrategyTests
         // Assert
         Assert.NotEmpty(result);
         // When EntryPoint is set to null, CommandGroupServerProvider defaults to current process executable
-        var currentProcessPath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+        var currentProcessPath = Process.GetCurrentProcess().MainModule?.FileName;
         Assert.All(result, provider =>
         {
             var actualEntryPoint = ((CommandGroupServerProvider)provider).EntryPoint;
@@ -232,7 +238,7 @@ public class CommandGroupDiscoveryStrategyTests
 
         // Assert
         Assert.NotEmpty(result);
-        var currentProcessPath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+        var currentProcessPath = Process.GetCurrentProcess().MainModule?.FileName;
         Assert.All(result, provider =>
         {
             var actualEntryPoint = ((CommandGroupServerProvider)provider).EntryPoint;
@@ -252,7 +258,7 @@ public class CommandGroupDiscoveryStrategyTests
 
         // Assert
         Assert.NotEmpty(result);
-        var currentProcessPath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+        var currentProcessPath = Process.GetCurrentProcess().MainModule?.FileName;
         Assert.All(result, provider =>
         {
             var actualEntryPoint = ((CommandGroupServerProvider)provider).EntryPoint;
@@ -446,8 +452,8 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task ShouldDiscoverServers()
     {
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
-        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
+        var options = ExtensionsOptions.Options.Create(new ServerStartOptions());
+        var logger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
         var strategy = new CommandGroupDiscoveryStrategy(commandFactory, options, logger);
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
@@ -457,9 +463,9 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task ShouldDiscoverServers_ExcludesIgnoredGroupsAndSetsProperties()
     {
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { ReadOnly = true });
+        var options = ExtensionsOptions.Options.Create(new ServerStartOptions { ReadOnly = true });
         var azmcpEntryPoint = McpTestUtilities.GetAzMcpExecutablePath();
-        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
+        var logger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
         var strategy = new CommandGroupDiscoveryStrategy(commandFactory, options, logger)
         {
             EntryPoint = azmcpEntryPoint
@@ -490,8 +496,8 @@ public class CommandGroupDiscoveryStrategyTests
         Assert.NotEmpty(azmcpPath);
 
         // Should end with the correct executable name for the current OS
-        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
-            System.Runtime.InteropServices.OSPlatform.Windows))
+        if (RuntimeInformation.IsOSPlatform(
+            OSPlatform.Windows))
         {
             Assert.EndsWith("azmcp.exe", azmcpPath);
         }
@@ -502,7 +508,7 @@ public class CommandGroupDiscoveryStrategyTests
         }
 
         // Should be in the same directory as the test assembly
-        var testAssemblyPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+        var testAssemblyPath = Assembly.GetExecutingAssembly().Location;
         var testDirectory = Path.GetDirectoryName(testAssemblyPath);
         var expectedDirectory = Path.GetDirectoryName(azmcpPath);
         Assert.Equal(testDirectory, expectedDirectory);

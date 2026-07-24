@@ -43,7 +43,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     /// Handles requests to list all tools available in the MCP server.
     /// </summary>
     /// <param name="request">The request context containing metadata and parameters.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A result containing the list of available tools.</returns>
     public abstract ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken);
 
@@ -51,7 +51,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     /// Handles requests to call a specific tool with the provided parameters.
     /// </summary>
     /// <param name="request">The request context containing the tool name and parameters.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A result containing the output of the tool invocation.</returns>
     public abstract ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken);
 
@@ -190,7 +190,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     /// <param name="command">The tool command being invoked.</param>
     /// <param name="dangerouslyDisableElicitation">Whether elicitation has been disabled via dangerous option.</param>
     /// <param name="logger">Logger instance for recording elicitation events.</param>
-    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>
     /// Null if elicitation was accepted or bypassed (operation should proceed).
     /// A CallToolResult with IsError=true if elicitation was rejected or failed (operation should not proceed).

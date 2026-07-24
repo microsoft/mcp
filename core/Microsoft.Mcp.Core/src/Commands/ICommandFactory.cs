@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Microsoft.Mcp.Core.Commands;
 
