@@ -37,7 +37,7 @@ public class ConsolidatedModeTests
             using var client = new HttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = new StringContent("{" + "\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}" + "}", System.Text.Encoding.UTF8, "application/json")
+                Content = new StringContent("{" + "\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{\"_meta\":{\"io.modelcontextprotocol/protocolVersion\":\"2026-07-28\",\"io.modelcontextprotocol/clientInfo\":{\"name\":\"test-client\",\"version\":\"1.0\"},\"io.modelcontextprotocol/clientCapabilities\":{}}}" + "}", System.Text.Encoding.UTF8, "application/json")
             };
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
             request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
@@ -95,7 +95,7 @@ public class ConsolidatedModeTests
             {
                 Content = new StringContent(
                     "{" +
-                    "\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{\"_meta\":{\"protocolVersion\":\"2026-07-28\",\"traceparent\":\"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01\",\"clientId\":\"phase2-hardening-test\"}}" +
+                    "\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{\"_meta\":{\"io.modelcontextprotocol/protocolVersion\":\"2026-07-28\",\"io.modelcontextprotocol/clientInfo\":{\"name\":\"test-client\",\"version\":\"1.0\"},\"io.modelcontextprotocol/clientCapabilities\":{},\"traceparent\":\"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01\",\"clientId\":\"phase2-hardening-test\"}}" +
                     "}",
                     System.Text.Encoding.UTF8,
                     "application/json")
@@ -154,7 +154,7 @@ public class ConsolidatedModeTests
             {
                 Content = new StringContent(
                     "{" +
-                    "\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"server/discover\",\"params\":{\"_meta\":{\"protocolVersion\":\"2026-07-28\"}}" +
+                    "\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"server/discover\",\"params\":{\"_meta\":{\"io.modelcontextprotocol/protocolVersion\":\"2026-07-28\",\"io.modelcontextprotocol/clientInfo\":{\"name\":\"test-client\",\"version\":\"1.0\"},\"io.modelcontextprotocol/clientCapabilities\":{}}}" +
                     "}",
                     System.Text.Encoding.UTF8,
                     "application/json")
@@ -213,7 +213,7 @@ public class ConsolidatedModeTests
 
             using var request1 = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = new StringContent("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{\"_meta\":{\"protocolVersion\":\"2026-07-28\"}}}", System.Text.Encoding.UTF8, "application/json")
+                Content = new StringContent("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{\"_meta\":{\"io.modelcontextprotocol/protocolVersion\":\"2026-07-28\",\"io.modelcontextprotocol/clientInfo\":{\"name\":\"test-client\",\"version\":\"1.0\"},\"io.modelcontextprotocol/clientCapabilities\":{}}}}", System.Text.Encoding.UTF8, "application/json")
             };
             request1.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
             request1.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
@@ -225,7 +225,7 @@ public class ConsolidatedModeTests
 
             using var request2 = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = new StringContent("{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\",\"params\":{\"_meta\":{\"protocolVersion\":\"2026-07-28\"}}}", System.Text.Encoding.UTF8, "application/json")
+                Content = new StringContent("{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\",\"params\":{\"_meta\":{\"io.modelcontextprotocol/protocolVersion\":\"2026-07-28\",\"io.modelcontextprotocol/clientInfo\":{\"name\":\"test-client\",\"version\":\"1.0\"},\"io.modelcontextprotocol/clientCapabilities\":{}}}}", System.Text.Encoding.UTF8, "application/json")
             };
             request2.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
             request2.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
@@ -345,7 +345,9 @@ public class ConsolidatedModeTests
                     "{" +
                     "\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{" +
                     "\"_meta\":{" +
-                    "\"protocolVersion\":\"2026-07-28\"," +
+                    "\"io.modelcontextprotocol/protocolVersion\":\"2026-07-28\"," +
+                    "\"io.modelcontextprotocol/clientInfo\":{\"name\":\"test-client\",\"version\":\"1.0\"}," +
+                    "\"io.modelcontextprotocol/clientCapabilities\":{}," +
                     "\"traceparent\":\"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01\"," +
                     "\"tracestate\":\"vendor1=opaquevalue1,vendor2=opaquevalue2\"," +
                     "\"baggage\":\"userId=alice,serverNode=DF:28,isProduction=false\"" +
@@ -635,7 +637,7 @@ public class ConsolidatedModeTests
             using var client = new HttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = new StringContent("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{\"_meta\":{\"protocolVersion\":\"2026-07-28\"}}}", System.Text.Encoding.UTF8, "application/json")
+                Content = new StringContent("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{\"_meta\":{\"io.modelcontextprotocol/protocolVersion\":\"2026-07-28\",\"io.modelcontextprotocol/clientInfo\":{\"name\":\"test-client\",\"version\":\"1.0\"},\"io.modelcontextprotocol/clientCapabilities\":{}}}}", System.Text.Encoding.UTF8, "application/json")
             };
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
             request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");

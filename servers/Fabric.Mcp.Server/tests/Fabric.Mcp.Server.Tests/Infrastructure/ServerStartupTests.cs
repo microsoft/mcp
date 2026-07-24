@@ -47,7 +47,7 @@ public class ServerStartupTests
             using var client = new HttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = new StringContent("{" + "\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{\"_meta\":{\"protocolVersion\":\"2026-07-28\"}}" + "}", System.Text.Encoding.UTF8, "application/json")
+                Content = new StringContent("{" + "\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{\"_meta\":{\"io.modelcontextprotocol/protocolVersion\":\"2026-07-28\",\"io.modelcontextprotocol/clientInfo\":{\"name\":\"test-client\",\"version\":\"1.0\"},\"io.modelcontextprotocol/clientCapabilities\":{}}}" + "}", System.Text.Encoding.UTF8, "application/json")
             };
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
             request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
