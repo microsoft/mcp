@@ -336,9 +336,9 @@ resource sqlVmNic 'Microsoft.Network/networkInterfaces@2024-01-01' = {
   }
 }
 
-// Test-only password — VM has no public IP or public inbound access.
-#disable-next-line secure-secrets-in-params
-var sqlVmAdminPwd = 'McpT3st!${uniqueString(resourceGroup().id, baseName)}'
+@secure()
+@description('Admin password for the SQL VM used in testing.')
+param sqlVmAdminPwd string = 'McpT3st!${uniqueString(resourceGroup().id, baseName)}'
 
 resource sqlVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
   name: '${baseName}-sqlvm'

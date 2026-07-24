@@ -1656,7 +1656,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
         var items = new List<ProtectableItemInfo>();
 
-        // Query AzureWorkload protectable items (SQL, HANA, SAP ASE)
+        // Query protectable items: AzureWorkload (SQL, HANA, SAP ASE) and AzureStorage (file shares)
         string[] filters = ["backupManagementType eq 'AzureWorkload'", "backupManagementType eq 'AzureStorage'"];
 
         foreach (var filter in filters)
@@ -1669,7 +1669,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                     items.Add(MapToProtectableItemInfo(item));
                 }
             }
-            catch (RequestFailedException ex) when (ex.Status is 404 or 400)
+            catch (RequestFailedException ex) when (ex.Status is 404)
             {
                 // Vault may not have registered containers for this backup management type — skip
             }

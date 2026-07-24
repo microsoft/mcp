@@ -91,7 +91,8 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         "Microsoft.ContainerService/managedClusters",
         "Microsoft.Compute/disks",
         "Microsoft.ElasticSan/elasticSans/volumeGroups",
-        "Microsoft.DocumentDB/databaseAccounts"
+        "Microsoft.DocumentDB/databaseAccounts",
+        "Microsoft.SqlVirtualMachine/sqlVirtualMachines"
     ];
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string vaultType,
