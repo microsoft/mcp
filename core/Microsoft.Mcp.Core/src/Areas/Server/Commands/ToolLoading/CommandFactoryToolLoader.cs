@@ -76,9 +76,6 @@ public sealed class CommandFactoryToolLoader(
     /// <returns>The result of the tool call operation.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
-            .SetTag(TagName.ToolParameters, request.Params.Arguments?.Select(kvp => kvp.Key).ToArray());
-
         if (request.Params == null)
         {
             var content = new TextContentBlock
@@ -92,6 +89,9 @@ public sealed class CommandFactoryToolLoader(
                 IsError = true,
             };
         }
+
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.ToolParameters, request.Params.Arguments?.Select(kvp => kvp.Key).ToArray());
 
         var toolName = request.Params.Name;
 

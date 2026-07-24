@@ -182,9 +182,6 @@ public sealed class NamespaceToolLoader(
 
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
-            .SetTag(TagName.ToolParameters, request.Params.Arguments?.Select(kvp => kvp.Key).ToArray());
-
         if (string.IsNullOrWhiteSpace(request.Params.Name))
         {
             throw new ArgumentNullException(nameof(request.Params.Name), "Tool name cannot be null or empty.");
@@ -197,7 +194,9 @@ public sealed class NamespaceToolLoader(
         bool learn = false;
 
         // In namespace mode, the name of the tool is also its IAreaSetup name.
-        Activity.Current?.SetTag(TagName.ToolArea, tool);
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.ToolParameters, request.Params.Arguments?.Select(kvp => kvp.Key).ToArray())
+            .SetTag(TagName.ToolArea, tool);
 
         if (args != null)
         {

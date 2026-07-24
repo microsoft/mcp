@@ -83,9 +83,6 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
     /// <returns>A result containing the output of the tool invocation, or an error result if the tool is not found or initialization fails.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
-            .SetTag(TagName.ToolParameters, request.Params.Arguments?.Select(kvp => kvp.Key).ToArray());
-
         if (request.Params == null)
         {
             var content = new TextContentBlock
@@ -101,6 +98,9 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
                 IsError = true,
             };
         }
+
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.ToolParameters, request.Params.Arguments?.Select(kvp => kvp.Key).ToArray());
 
         // Ensure tool loader map is populated before attempting tool lookup
         try
