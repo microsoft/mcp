@@ -225,4 +225,5 @@ public class SqlServiceTests
         await _subscriptionService.DidNotReceive().GetSubscriptionIdByName(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
+
 }
