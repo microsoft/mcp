@@ -33,15 +33,9 @@ public class CommandFactoryToolLoaderTests
         return (toolLoader, commandFactory);
     }
 
-    // A protocol version that predates structuredContent/outputSchema (added in 2025-06-18), used to
-    // assert the version gate falls back to the legacy content-only shape.
-    private const string LegacyProtocolVersion = "2025-03-26";
-
-    private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateRequest(
-        string? negotiatedProtocolVersion = StructuredOutputHelper.MinProtocolVersion)
+    private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateRequest()
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        mockServer.NegotiatedProtocolVersion.Returns(negotiatedProtocolVersion);
         return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList })
         {
             Params = new ListToolsRequestParams()
@@ -736,9 +730,7 @@ public class CommandFactoryToolLoaderTests
         Assert.True(properties.TryGetProperty("name", out _), "outputSchema should expose the result record's 'name' property.");
 
         var inputProperties = tool.InputSchema.GetProperty("properties");
-        Assert.True(inputProperties.TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out var legacyContent));
-        Assert.Equal("boolean", legacyContent.GetProperty("type").GetString());
-        Assert.False(legacyContent.GetProperty("default").GetBoolean());
+        Assert.Empty(inputProperties.EnumerateObject());
     }
 
     [Fact]
@@ -773,18 +765,13 @@ public class CommandFactoryToolLoaderTests
         var tool = result.Tools.FirstOrDefault(t => t.Name == "fake-noschema-get");
         Assert.NotNull(tool);
         Assert.Null(tool.OutputSchema);
-        Assert.False(tool.InputSchema.GetProperty("properties")
-            .TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out _));
     }
 
     [Theory]
-    [InlineData(StructuredOutputMode.Legacy, false, false)]
-    [InlineData(StructuredOutputMode.Duplicated, true, false)]
-    [InlineData(StructuredOutputMode.Compact, true, true)]
-    public async Task ListToolsHandler_StructuredOutputMode_ControlsSchemaAndFallbackArgument(
-        StructuredOutputMode mode,
-        bool expectsOutputSchema,
-        bool expectsLegacyContentArgument)
+    [InlineData(StructuredOutputMode.Duplicated)]
+    [InlineData(StructuredOutputMode.Compact)]
+    public async Task ListToolsHandler_StructuredOutputMode_EmitsSchemaWithoutChangingInputSchema(
+        StructuredOutputMode mode)
     {
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var logger = serviceProvider.GetRequiredService<ILoggerFactory>()
@@ -817,44 +804,17 @@ public class CommandFactoryToolLoaderTests
             TestContext.Current.CancellationToken);
 
         var tool = Assert.Single(result.Tools, tool => tool.Name == "fake-output-get");
-        Assert.Equal(expectsOutputSchema, tool.OutputSchema.HasValue);
-        Assert.Equal(
-            expectsLegacyContentArgument,
-            tool.InputSchema.GetProperty("properties")
-                .TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out _));
-    }
-
-    [Theory]
-    [InlineData(null, false)]                 // No version negotiated yet -> fail safe.
-    [InlineData("", false)]                   // Empty version -> fail safe.
-    [InlineData("2024", false)]               // Malformed/partial version -> fail safe.
-    [InlineData("not-a-date", false)]         // Lexically later but malformed -> fail safe.
-    [InlineData("2025-13-40", false)]         // Correct shape but invalid date -> fail safe.
-    [InlineData("2024-11-05", false)]         // Pre-structuredContent protocol version.
-    [InlineData("2025-03-26", false)]         // Pre-structuredContent protocol version.
-    [InlineData("2025-06-18", true)]          // First version that includes structuredContent.
-    [InlineData("2025-11-25", true)]          // Newer protocol version.
-    public void SupportsStructuredOutput_GatesOnNegotiatedProtocolVersion(string? negotiatedProtocolVersion, bool expected)
-    {
-        // structuredContent/outputSchema only entered the spec in 2025-06-18. Anything null, empty,
-        // malformed, or older falls back to the legacy content-only shape.
-        Assert.Equal(expected, StructuredOutputHelper.SupportsProtocolVersion(negotiatedProtocolVersion));
+        Assert.True(tool.OutputSchema.HasValue);
+        Assert.Empty(tool.InputSchema.GetProperty("properties").EnumerateObject());
     }
 
     [Fact]
-    public async Task ListToolsHandler_LegacyProtocolVersion_OmitsOutputSchema()
+    public async Task ListToolsHandler_DisabledStructuredOutput_OmitsOutputSchema()
     {
-        // Arrange
-        // The same fake command that advertises a result type, but a client that negotiated a protocol
-        // version predating structuredContent. The version gate should suppress the outputSchema so the
-        // command advertises the legacy shape older clients understand.
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions
-        {
-            StructuredOutputMode = StructuredOutputMode.Compact
-        });
+        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
 
         var fakeCommand = Substitute.For<IBaseCommand>();
         fakeCommand.GetCommand().Returns(new Command("fake-output-get", "A fake command that advertises a result type."));
@@ -868,56 +828,13 @@ public class CommandFactoryToolLoaderTests
         commandMap["fake-output-get"] = fakeCommand;
 
         var toolLoader = new CommandFactoryToolLoader(serviceProvider, commandFactory, toolLoaderOptions, logger);
-        var request = CreateRequest(LegacyProtocolVersion);
+        var request = CreateRequest();
 
-        // Act
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
-        // Assert
         var tool = result.Tools.FirstOrDefault(t => t.Name == "fake-output-get");
         Assert.NotNull(tool);
         Assert.Null(tool.OutputSchema);
-        Assert.False(tool.InputSchema.GetProperty("properties")
-            .TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out _));
-    }
-
-    [Fact]
-    public async Task ListToolsHandler_NoNegotiatedProtocolVersion_OmitsOutputSchema()
-    {
-        // Arrange
-        // A result-type command exposed to a client that has not negotiated a protocol version. The gate
-        // treats an unknown version as unsupported, so the outputSchema is suppressed.
-        var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions
-        {
-            StructuredOutputMode = StructuredOutputMode.Compact
-        });
-
-        var fakeCommand = Substitute.For<IBaseCommand>();
-        fakeCommand.GetCommand().Returns(new Command("fake-output-get", "A fake command that advertises a result type."));
-        fakeCommand.Title.Returns("Fake Output Get");
-        fakeCommand.Metadata.Returns(new ToolMetadata());
-        fakeCommand.ResultTypeInfo.Returns(OutputSchemaTestJsonContext.Default.OutputSchemaSampleResult);
-
-        var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
-        var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
-        commandMap["fake-output-get"] = fakeCommand;
-
-        var toolLoader = new CommandFactoryToolLoader(serviceProvider, commandFactory, toolLoaderOptions, logger);
-        var request = CreateRequest(negotiatedProtocolVersion: null);
-
-        // Act
-        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
-
-        // Assert
-        var tool = result.Tools.FirstOrDefault(t => t.Name == "fake-output-get");
-        Assert.NotNull(tool);
-        Assert.Null(tool.OutputSchema);
-        Assert.False(tool.InputSchema.GetProperty("properties")
-            .TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out _));
     }
 
     [Fact]
@@ -1001,11 +918,11 @@ public class CommandFactoryToolLoaderTests
     }
 
     [Fact]
-    public async Task CallToolHandler_SupportedProtocolVersion_EmitsStructuredContent()
+    public async Task CallToolHandler_CompactMode_EmitsStructuredContent()
     {
         // Arrange
-        // A non-secret command that advertises a result type and returns a payload. A client on a protocol
-        // version that supports structuredContent should receive the payload there and compact text content.
+        // A non-secret command that advertises a result type and returns a payload should receive the
+        // payload in structuredContent and compact text when the operator opts into compact mode.
         var (toolLoader, commandFactory) = CreateToolLoader(new ToolLoaderOptions
         {
             StructuredOutputMode = StructuredOutputMode.Compact
@@ -1028,7 +945,6 @@ public class CommandFactoryToolLoaderTests
         commandMap["fake-structured-get"] = fakeCommand;
 
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        mockServer.NegotiatedProtocolVersion.Returns(StructuredOutputHelper.MinProtocolVersion);
         var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
@@ -1051,77 +967,25 @@ public class CommandFactoryToolLoaderTests
     }
 
     [Fact]
-    public async Task CallToolHandler_LegacyProtocolVersion_OmitsStructuredContent()
-    {
-        // Arrange
-        // The same result-type command, but a client on a protocol version that predates structuredContent.
-        // The version gate should suppress structuredContent while the payload still flows through content.
-        var (toolLoader, commandFactory) = CreateToolLoader(new ToolLoaderOptions
-        {
-            StructuredOutputMode = StructuredOutputMode.Compact
-        });
-
-        var fakeCommand = Substitute.For<IBaseCommand>();
-        fakeCommand.GetCommand().Returns(new Command("fake-structured-get", "A fake command that returns a structured payload."));
-        fakeCommand.Title.Returns("Fake Structured Get");
-        fakeCommand.Metadata.Returns(new ToolMetadata { Destructive = false });
-        fakeCommand.ResultTypeInfo.Returns(OutputSchemaTestJsonContext.Default.OutputSchemaSampleResult);
-        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
-                   .Returns(new CommandResponse
-                   {
-                       Status = HttpStatusCode.OK,
-                       Results = ResponseResult.Create(new OutputSchemaSampleResult("alpha", 3), OutputSchemaTestJsonContext.Default.OutputSchemaSampleResult)
-                   });
-
-        var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
-        commandMap["fake-structured-get"] = fakeCommand;
-
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        mockServer.NegotiatedProtocolVersion.Returns(LegacyProtocolVersion);
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
-        {
-            Params = new CallToolRequestParams
-            {
-                Name = "fake-structured-get",
-                Arguments = new Dictionary<string, JsonElement>()
-            }
-        };
-
-        // Act
-        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.False(result.IsError);
-        Assert.Null(result.StructuredContent);
-        var text = GetTextContent(result);
-        using var document = JsonDocument.Parse(text);
-        Assert.Equal("alpha", document.RootElement.GetProperty("results").GetProperty("name").GetString());
-    }
-
-    [Fact]
-    public async Task CallToolHandler_MalformedProtocolVersion_DoesNotEmitStructuredContent()
+    public async Task CallToolHandler_DisabledStructuredOutput_OmitsStructuredContent()
     {
         var response = CreateSuccessfulStructuredResponse();
-        var (toolLoader, _) = CreateStructuredToolLoader(response);
+        var (toolLoader, _) = CreateStructuredToolLoader(response, mode: null);
 
         var result = await toolLoader.CallToolHandler(
-            CreateCallRequest(protocolVersion: "not-a-date"),
+            CreateCallRequest(),
             TestContext.Current.CancellationToken);
 
+        Assert.False(result.IsError);
         Assert.Null(result.StructuredContent);
         Assert.Equal(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse), GetTextContent(result));
     }
 
-    [Theory]
-    [InlineData(StructuredOutputMode.Legacy, false)]
-    [InlineData(StructuredOutputMode.Duplicated, true)]
-    public async Task CallToolHandler_NonCompactMode_UsesFullContent(
-        StructuredOutputMode mode,
-        bool expectsStructuredContent)
+    [Fact]
+    public async Task CallToolHandler_DuplicatedMode_UsesFullContentAndStructuredContent()
     {
         var response = CreateSuccessfulStructuredResponse();
-        var (toolLoader, _) = CreateStructuredToolLoader(response, mode: mode);
+        var (toolLoader, _) = CreateStructuredToolLoader(response, mode: StructuredOutputMode.Duplicated);
 
         var result = await toolLoader.CallToolHandler(
             CreateCallRequest(),
@@ -1130,74 +994,7 @@ public class CommandFactoryToolLoaderTests
         Assert.Equal(
             JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse),
             GetTextContent(result));
-        Assert.Equal(expectsStructuredContent, result.StructuredContent.HasValue);
-    }
-
-    [Fact]
-    public async Task CallToolHandler_LegacyContentFalse_UsesCompactContent()
-    {
-        var response = CreateSuccessfulStructuredResponse();
-        var executionCount = 0;
-        var (toolLoader, _) = CreateStructuredToolLoader(response, onExecute: _ => executionCount++);
-        var arguments = new Dictionary<string, JsonElement>
-        {
-            [StructuredOutputHelper.LegacyContentArgumentName] = JsonSerializer.SerializeToElement(false)
-        };
-
-        var result = await toolLoader.CallToolHandler(
-            CreateCallRequest(arguments: arguments),
-            TestContext.Current.CancellationToken);
-
-        Assert.Equal(StructuredOutputHelper.CompactContentMessage, GetTextContent(result));
         Assert.NotNull(result.StructuredContent);
-        Assert.Equal(1, executionCount);
-        Assert.True(arguments.ContainsKey(StructuredOutputHelper.LegacyContentArgumentName));
-    }
-
-    [Fact]
-    public async Task CallToolHandler_LegacyContentTrue_UsesFullContentAndRetainsStructuredContent()
-    {
-        var response = CreateSuccessfulStructuredResponse();
-        var (toolLoader, _) = CreateStructuredToolLoader(response);
-        var arguments = new Dictionary<string, JsonElement>
-        {
-            [StructuredOutputHelper.LegacyContentArgumentName] = JsonSerializer.SerializeToElement(true)
-        };
-
-        var result = await toolLoader.CallToolHandler(
-            CreateCallRequest(arguments: arguments),
-            TestContext.Current.CancellationToken);
-
-        Assert.Equal(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse), GetTextContent(result));
-        Assert.NotNull(result.StructuredContent);
-        Assert.True(arguments.ContainsKey(StructuredOutputHelper.LegacyContentArgumentName));
-    }
-
-    [Theory]
-    [InlineData("\"true\"")]
-    [InlineData("1")]
-    [InlineData("null")]
-    public async Task CallToolHandler_InvalidLegacyContentValue_ReturnsErrorWithoutExecutingCommand(string jsonValue)
-    {
-        var response = CreateSuccessfulStructuredResponse();
-        var executionCount = 0;
-        var (toolLoader, _) = CreateStructuredToolLoader(response, onExecute: _ => executionCount++);
-        using var valueDocument = JsonDocument.Parse(jsonValue);
-        var arguments = new Dictionary<string, JsonElement>
-        {
-            [StructuredOutputHelper.LegacyContentArgumentName] = valueDocument.RootElement.Clone()
-        };
-
-        var result = await toolLoader.CallToolHandler(
-            CreateCallRequest(arguments: arguments),
-            TestContext.Current.CancellationToken);
-
-        Assert.True(result.IsError);
-        Assert.Null(result.StructuredContent);
-        Assert.Equal(
-            $"The '{StructuredOutputHelper.LegacyContentArgumentName}' argument must be a Boolean.",
-            GetTextContent(result));
-        Assert.Equal(0, executionCount);
     }
 
     [Fact]
@@ -1238,74 +1035,6 @@ public class CommandFactoryToolLoaderTests
         Assert.Equal(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse), GetTextContent(result));
     }
 
-    [Fact]
-    public async Task RawMcpToolInput_LegacyContentArgument_IsAdvertisedAndStrippedBeforeParsing()
-    {
-        var rawCommand = new Command("fake-structured-get");
-        rawCommand.Options.Add(new Option<string>("--raw-mcp-tool-input")
-        {
-            Description = """
-                {
-                  "type": "object",
-                  "properties": {
-                    "payload": {
-                      "type": "object"
-                    }
-                  },
-                  "required": ["payload"],
-                  "additionalProperties": false
-                }
-                """,
-            Required = true
-        });
-        ParseResult? receivedParseResult = null;
-        var response = CreateSuccessfulStructuredResponse();
-        var (toolLoader, _) = CreateStructuredToolLoader(
-            response,
-            rawCommand,
-            onExecute: parseResult => receivedParseResult = parseResult);
-
-        var tools = await toolLoader.ListToolsHandler(CreateRequest(), TestContext.Current.CancellationToken);
-        var tool = Assert.Single(tools.Tools, tool => tool.Name == "fake-structured-get");
-        var schemaProperties = tool.InputSchema.GetProperty("properties");
-        Assert.True(schemaProperties.TryGetProperty("payload", out _));
-        Assert.True(schemaProperties.TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out var legacyContentSchema));
-        Assert.Equal("boolean", legacyContentSchema.GetProperty("type").GetString());
-
-        var arguments = new Dictionary<string, JsonElement>
-        {
-            ["payload"] = JsonSerializer.SerializeToElement(new { Name = "test" }),
-            [StructuredOutputHelper.LegacyContentArgumentName] = JsonSerializer.SerializeToElement(true)
-        };
-        var result = await toolLoader.CallToolHandler(
-            CreateCallRequest(arguments: arguments),
-            TestContext.Current.CancellationToken);
-
-        Assert.NotNull(receivedParseResult);
-        var rawInput = receivedParseResult.GetValue<string>("--raw-mcp-tool-input");
-        using var rawInputDocument = JsonDocument.Parse(Assert.IsType<string>(rawInput));
-        Assert.True(rawInputDocument.RootElement.TryGetProperty("payload", out _));
-        Assert.False(rawInputDocument.RootElement.TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out _));
-        Assert.Equal(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse), GetTextContent(result));
-        Assert.NotNull(result.StructuredContent);
-        Assert.True(arguments.ContainsKey(StructuredOutputHelper.LegacyContentArgumentName));
-    }
-
-    [Theory]
-    [InlineData("--legacy-content")]
-    [InlineData("--Legacy-Content")]
-    public async Task ListToolsHandler_CommandDeclaresReservedLegacyContentArgument_Throws(string optionName)
-    {
-        var command = new Command("fake-structured-get");
-        command.Options.Add(new Option<bool>(optionName));
-        var (toolLoader, _) = CreateStructuredToolLoader(CreateSuccessfulStructuredResponse(), command);
-
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await toolLoader.ListToolsHandler(CreateRequest(), TestContext.Current.CancellationToken));
-
-        Assert.Contains(StructuredOutputHelper.LegacyContentArgumentName, exception.Message);
-    }
-
     private static string GetTextContent(CallToolResult result)
     {
         var content = Assert.Single(result.Content);
@@ -1328,7 +1057,7 @@ public class CommandFactoryToolLoaderTests
         Command? systemCommand = null,
         string commandName = "fake-structured-get",
         Action<ParseResult>? onExecute = null,
-        StructuredOutputMode mode = StructuredOutputMode.Compact)
+        StructuredOutputMode? mode = StructuredOutputMode.Compact)
     {
         var (toolLoader, commandFactory) = CreateToolLoader(new ToolLoaderOptions
         {
@@ -1360,11 +1089,9 @@ public class CommandFactoryToolLoaderTests
 
     private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallRequest(
         Dictionary<string, JsonElement>? arguments = null,
-        string protocolVersion = StructuredOutputHelper.MinProtocolVersion,
         string commandName = "fake-structured-get")
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        mockServer.NegotiatedProtocolVersion.Returns(protocolVersion);
         return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(
             mockServer,
             new() { Method = RequestMethods.ToolsCall })

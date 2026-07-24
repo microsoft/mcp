@@ -109,7 +109,6 @@ public class ServiceStartCommandTests
     }
 
     [Theory]
-    [InlineData("legacy", StructuredOutputMode.Legacy)]
     [InlineData("duplicated", StructuredOutputMode.Duplicated)]
     [InlineData("compact", StructuredOutputMode.Compact)]
     public void StructuredOutputModeOption_ParsesCaseInsensitiveValues(
@@ -124,15 +123,13 @@ public class ServiceStartCommandTests
     }
 
     [Fact]
-    public void StructuredOutputModeOption_DefaultsToLegacy()
+    public void StructuredOutputModeOption_DefaultsToDisabled()
     {
         var parseResult = _command.GetCommand().Parse([]);
 
         Assert.Empty(parseResult.Errors);
-        Assert.Equal(
-            StructuredOutputMode.Legacy,
-            parseResult.GetValue(ServiceOptionDefinitions.StructuredOutputMode));
-        Assert.Equal(StructuredOutputMode.Legacy, GetBoundOptions(parseResult).StructuredOutputMode);
+        Assert.Null(parseResult.GetValue(ServiceOptionDefinitions.StructuredOutputMode));
+        Assert.Null(GetBoundOptions(parseResult).StructuredOutputMode);
     }
 
     [Theory]

@@ -32,13 +32,6 @@ public class ServiceStartOptions
     public string? Mode { get; set; } = ModeTypes.NamespaceProxy;
 
     /// <summary>
-    /// Gets or sets how tools advertise and return structured output.
-    /// Defaults to legacy content-only responses.
-    /// </summary>
-    [JsonPropertyName("structuredOutputMode")]
-    public StructuredOutputMode StructuredOutputMode { get; set; } = StructuredOutputMode.Legacy;
-
-    /// <summary>
     /// Gets or sets the specific tool names to expose.
     /// When specified, only these tools will be available.
     /// </summary>
@@ -115,4 +108,11 @@ public class ServiceStartOptions
     /// </summary>
     [JsonPropertyName("disableCaching")]
     public bool DisableCaching { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets how tools advertise and return structured output.
+    /// A <see langword="null"/> value preserves content-only responses.
+    /// </summary>
+    [JsonPropertyName("structuredOutputMode")]
+    public StructuredOutputMode? StructuredOutputMode { get; set; } = null;
 }

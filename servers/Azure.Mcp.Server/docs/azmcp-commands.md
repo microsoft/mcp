@@ -257,7 +257,6 @@ The `azmcp server start` command supports the following options:
 |--------|----------|---------|-------------|
 | `--transport` | No | `stdio` | Transport mechanism to use. Valid values: `stdio` (default, supported in all distributions) or `http` (supported only in the Docker image distribution and other builds with HTTP enabled; may not be available in local CLI builds). |
 | `--mode` | No | `namespace` | Server mode: `namespace` (default), `consolidated`, `all`, or `single` |
-| `--structured-output-mode` | No | `legacy` | Structured output mode for eligible tools in `all` and `namespace` modes: `legacy` returns the historical content-only response, `duplicated` retains the complete historical `content` and also returns the result in `structuredContent`, and `compact` returns concise `content` with the complete result in `structuredContent`. Structured output requires MCP protocol version `2025-06-18` or later. |
 | `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all existing modes to filter tools. |
 | `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |
@@ -268,6 +267,7 @@ The `azmcp server start` command supports the following options:
 | `--dangerously-write-support-logs-to-dir` | No | - | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs. |
 | `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
 | `--disable-caching` | No | `false` | Disable caching of resource responses, requiring repeated requests to fetch fresh data each time. |
+| `--structured-output-mode` | No | Disabled | Enables structured output for eligible tools in `all` and `namespace` modes. `duplicated` retains the complete historical `content` and also returns the result in `structuredContent`; `compact` returns concise `content` with the complete result in `structuredContent`. Enable this only when the client supports `outputSchema` and `structuredContent`. |
 
 > **⚠️ Security Warning for `--dangerously-disable-elicitation`:**
 >

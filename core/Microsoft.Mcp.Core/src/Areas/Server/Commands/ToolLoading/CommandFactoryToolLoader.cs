@@ -28,6 +28,7 @@ public sealed class CommandFactoryToolLoader(
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     private readonly ICommandFactory _commandFactory = commandFactory;
     private readonly IOptions<ToolLoaderOptions> _options = options;
+    private bool StructuredOutputEnabled => _options.Value.StructuredOutputMode != null;
     private IReadOnlyDictionary<string, IBaseCommand> _toolCommands =
         (options.Value.Namespace == null || options.Value.Namespace.Length == 0)
             ? commandFactory.AllCommands
@@ -53,16 +54,10 @@ public sealed class CommandFactoryToolLoader(
             });
         }
 
-        var structuredOutputEnabled = StructuredOutputHelper.IsEnabled(
-            _options.Value.StructuredOutputMode,
-            request.Server.NegotiatedProtocolVersion);
-        var compactOutputEnabled = structuredOutputEnabled
-            && _options.Value.StructuredOutputMode == StructuredOutputMode.Compact;
-
         var tools = visibleCommands
             .Where(kvp => !_options.Value.ReadOnly || kvp.Value.Metadata.ReadOnly)
             .Where(kvp => !_options.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
-            .Select(kvp => GetTool(kvp.Key, kvp.Value, structuredOutputEnabled, compactOutputEnabled))
+            .Select(kvp => GetTool(kvp.Key, kvp.Value, StructuredOutputEnabled))
             .ToList();
 
         var listToolsResult = new ListToolsResult { Tools = tools };
@@ -163,29 +158,7 @@ public sealed class CommandFactoryToolLoader(
             }, command.Id);
         }
 
-        var structuredOutputEnabled = command.ResultTypeInfo != null
-            && StructuredOutputHelper.IsEnabled(
-                _options.Value.StructuredOutputMode,
-                request.Server.NegotiatedProtocolVersion);
-        var compactOutputEnabled = structuredOutputEnabled
-            && _options.Value.StructuredOutputMode == StructuredOutputMode.Compact;
         var commandArguments = request.Params.Arguments;
-        var legacyContent = false;
-        if (compactOutputEnabled
-            && !StructuredOutputHelper.TryExtractLegacyContentArgument(
-                request.Params.Arguments,
-                out commandArguments,
-                out legacyContent))
-        {
-            return McpHelper.InjectToolIdMetadata(new CallToolResult
-            {
-                Content = [new TextContentBlock
-                {
-                    Text = $"The '{StructuredOutputHelper.LegacyContentArgumentName}' argument must be a Boolean."
-                }],
-                IsError = true
-            }, command.Id);
-        }
 
         var commandContext = new CommandContext(_serviceProvider, activity)
         {
@@ -238,12 +211,10 @@ public sealed class CommandFactoryToolLoader(
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
-            // Successful structured responses use a compact text block by default. The complete historical
-            // response remains available on request for clients that do not expose structuredContent.
-            var structuredContent = !isError && structuredOutputEnabled
+            var structuredContent = !isError && StructuredOutputEnabled && command.ResultTypeInfo != null
                 ? StructuredOutputHelper.TryBuildStructuredContent(jsonResponse)
                 : null;
-            var contentText = structuredContent != null && compactOutputEnabled && !legacyContent
+            var contentText = structuredContent != null && StructuredOutputMode.Compact == _options.Value.StructuredOutputMode
                 ? StructuredOutputHelper.CompactContentMessage
                 : jsonResponse;
 
@@ -280,8 +251,7 @@ public sealed class CommandFactoryToolLoader(
     private static Tool GetTool(
         string fullName,
         IBaseCommand command,
-        bool structuredOutputEnabled,
-        bool compactOutputEnabled)
+        bool structuredOutputEnabled)
     {
         var underlyingCommand = command.GetCommand();
         var tool = new Tool
@@ -330,11 +300,6 @@ public sealed class CommandFactoryToolLoader(
         var inputSchema = options.Count == 1 && IsRawMcpToolInputOption(options[0])
             ? JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? []
             : OptionSchemaGenerator.CreateInputSchema(options);
-
-        if (resultTypeInfo != null && compactOutputEnabled)
-        {
-            StructuredOutputHelper.AddLegacyContentArgument(inputSchema);
-        }
 
         tool.InputSchema = JsonSerializer.SerializeToElement(inputSchema, ServerJsonContext.Default.JsonObject);
 

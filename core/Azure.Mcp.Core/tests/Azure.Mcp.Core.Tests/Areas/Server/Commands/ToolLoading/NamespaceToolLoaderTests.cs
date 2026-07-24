@@ -21,8 +21,6 @@ namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
 public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 {
-    private const string LegacyProtocolVersion = "2025-03-26";
-
     private readonly ServiceProvider _serviceProvider;
     private readonly ICommandFactory _commandFactory;
     private readonly IOptions<ServiceStartOptions> _options;
@@ -100,6 +98,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             Assert.True(properties.TryGetProperty("command", out _));
             Assert.True(properties.TryGetProperty("parameters", out _));
             Assert.True(properties.TryGetProperty("learn", out _));
+            Assert.False(tool.OutputSchema.HasValue);
         }
     }
 
@@ -119,13 +118,10 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     }
 
     [Theory]
-    [InlineData(StructuredOutputMode.Legacy, false, false)]
-    [InlineData(StructuredOutputMode.Duplicated, true, false)]
-    [InlineData(StructuredOutputMode.Compact, true, true)]
-    public async Task ListToolsHandler_StructuredOutputModeControlsAggregateSchema(
-        StructuredOutputMode mode,
-        bool expectsOutputSchema,
-        bool expectsLegacyContentArgument)
+    [InlineData(StructuredOutputMode.Duplicated)]
+    [InlineData(StructuredOutputMode.Compact)]
+    public async Task ListToolsHandler_StructuredOutputModeEmitsAggregateSchemaWithoutChangingInputSchema(
+        StructuredOutputMode mode)
     {
         var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
         {
@@ -141,44 +137,11 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         Assert.NotEmpty(result.Tools);
         Assert.All(result.Tools, tool =>
         {
-            Assert.Equal(expectsOutputSchema, tool.OutputSchema.HasValue);
-            Assert.Equal(
-                expectsLegacyContentArgument,
-                tool.InputSchema.GetProperty("properties")
-                    .TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out _));
-
-            if (expectsOutputSchema)
-            {
-                Assert.Equal("object", tool.OutputSchema!.Value.GetProperty("type").GetString());
-                Assert.Equal(3, tool.OutputSchema.Value.GetProperty("oneOf").GetArrayLength());
-            }
+            Assert.True(tool.OutputSchema.HasValue);
+            Assert.Equal(4, tool.InputSchema.GetProperty("properties").EnumerateObject().Count());
+            Assert.Equal("object", tool.OutputSchema.Value.GetProperty("type").GetString());
+            Assert.Equal(3, tool.OutputSchema.Value.GetProperty("oneOf").GetArrayLength());
         });
-    }
-
-    [Fact]
-    public async Task ListToolsHandler_CompactModeCachesLegacyAndStructuredSchemasSeparately()
-    {
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
-        {
-            Mode = ModeTypes.NamespaceProxy,
-            StructuredOutputMode = StructuredOutputMode.Compact
-        });
-        var loader = new NamespaceToolLoader(_commandFactory, options, _serviceProvider, _logger);
-
-        var legacyResult = await loader.ListToolsHandler(
-            CreateListToolsRequest(LegacyProtocolVersion),
-            TestContext.Current.CancellationToken);
-        var structuredResult = await loader.ListToolsHandler(
-            CreateListToolsRequest(),
-            TestContext.Current.CancellationToken);
-        var cachedStructuredResult = await loader.ListToolsHandler(
-            CreateListToolsRequest(),
-            TestContext.Current.CancellationToken);
-
-        Assert.All(legacyResult.Tools, tool => Assert.False(tool.OutputSchema.HasValue));
-        Assert.All(structuredResult.Tools, tool => Assert.True(tool.OutputSchema.HasValue));
-        Assert.NotSame(legacyResult.Tools, structuredResult.Tools);
-        Assert.Same(structuredResult.Tools, cachedStructuredResult.Tools);
     }
 
     [Fact]
@@ -201,13 +164,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             TestContext.Current.CancellationToken);
 
         Assert.NotEmpty(result.Tools);
-        Assert.All(result.Tools, tool =>
-        {
-            Assert.False(tool.OutputSchema.HasValue);
-            Assert.False(
-                tool.InputSchema.GetProperty("properties")
-                    .TryGetProperty(StructuredOutputHelper.LegacyContentArgumentName, out _));
-        });
+        Assert.All(result.Tools, tool => Assert.False(tool.OutputSchema.HasValue));
     }
 
     [Fact]
@@ -373,62 +330,6 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task CallToolHandler_CompactLearnLegacyContentFallbackPreservesStructuredContent()
-    {
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
-        {
-            Mode = ModeTypes.NamespaceProxy,
-            StructuredOutputMode = StructuredOutputMode.Compact
-        });
-        var loader = new NamespaceToolLoader(_commandFactory, options, _serviceProvider, _logger);
-        var arguments = new Dictionary<string, object?>
-        {
-            ["learn"] = true,
-            ["intent"] = "list resources",
-            [StructuredOutputHelper.LegacyContentArgumentName] = true
-        };
-
-        var result = await loader.CallToolHandler(
-            CreateCallToolRequest(GetFirstAvailableNamespace(), arguments),
-            TestContext.Current.CancellationToken);
-
-        Assert.False(result.IsError);
-        Assert.True(result.StructuredContent.HasValue);
-        Assert.Equal("tool-list", result.StructuredContent.Value.GetProperty("kind").GetString());
-        Assert.Contains(
-            "available command",
-            Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text,
-            StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task CallToolHandler_CompactModeWithLegacyProtocolReturnsLegacyLearnResponse()
-    {
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
-        {
-            Mode = ModeTypes.NamespaceProxy,
-            StructuredOutputMode = StructuredOutputMode.Compact
-        });
-        var loader = new NamespaceToolLoader(_commandFactory, options, _serviceProvider, _logger);
-        var request = CreateCallToolRequest(
-            GetFirstAvailableNamespace(),
-            new Dictionary<string, object?>
-            {
-                ["learn"] = true,
-                ["intent"] = "list resources"
-            },
-            LegacyProtocolVersion);
-
-        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
-
-        Assert.False(result.StructuredContent.HasValue);
-        Assert.Contains(
-            "available command",
-            Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text,
-            StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
     public async Task CallToolHandler_WithLearnTrue_CachesCommandList()
     {
         // Arrange
@@ -559,7 +460,6 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     }
 
     [Theory]
-    [InlineData(StructuredOutputMode.Legacy, false, false)]
     [InlineData(StructuredOutputMode.Duplicated, true, false)]
     [InlineData(StructuredOutputMode.Compact, true, true)]
     public async Task CallToolHandler_ChildResultUsesAggregateEnvelope(
@@ -617,33 +517,6 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
         Assert.Contains("Invalid request.", text, StringComparison.Ordinal);
         Assert.NotEqual(StructuredOutputHelper.CompactContentMessage, text);
-    }
-
-    [Fact]
-    public async Task CallToolHandler_CompactModeRejectsInvalidLegacyContentArgument()
-    {
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
-        {
-            Mode = ModeTypes.NamespaceProxy,
-            StructuredOutputMode = StructuredOutputMode.Compact
-        });
-        var loader = new NamespaceToolLoader(_commandFactory, options, _serviceProvider, _logger);
-
-        var result = await loader.CallToolHandler(
-            CreateCallToolRequest(GetFirstAvailableNamespace(), new Dictionary<string, object?>
-            {
-                ["intent"] = "list resources",
-                ["learn"] = true,
-                [StructuredOutputHelper.LegacyContentArgumentName] = "true"
-            }),
-            TestContext.Current.CancellationToken);
-
-        Assert.True(result.IsError);
-        Assert.False(result.StructuredContent.HasValue);
-        Assert.Contains(
-            "must be a Boolean",
-            Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text,
-            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -1235,11 +1108,9 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         return namespaces.FirstOrDefault() ?? "storage";
     }
 
-    private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateListToolsRequest(
-        string negotiatedProtocolVersion = StructuredOutputHelper.MinProtocolVersion)
+    private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateListToolsRequest()
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        mockServer.NegotiatedProtocolVersion.Returns(negotiatedProtocolVersion);
         return new(mockServer, new() { Method = RequestMethods.ToolsList })
         {
             Params = new()
@@ -1248,15 +1119,13 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
     private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequest(
         string toolName,
-        Dictionary<string, object?> arguments,
-        string negotiatedProtocolVersion = StructuredOutputHelper.MinProtocolVersion)
+        Dictionary<string, object?> arguments)
     {
         var jsonArguments = arguments.ToDictionary(
             kvp => kvp.Key,
             kvp => JsonSerializer.SerializeToElement(kvp.Value));
 
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        mockServer.NegotiatedProtocolVersion.Returns(negotiatedProtocolVersion);
         return new(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new()
@@ -1269,11 +1138,9 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
     private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequestWithJsonElements(
         string toolName,
-        Dictionary<string, JsonElement> arguments,
-        string negotiatedProtocolVersion = StructuredOutputHelper.MinProtocolVersion)
+        Dictionary<string, JsonElement> arguments)
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        mockServer.NegotiatedProtocolVersion.Returns(negotiatedProtocolVersion);
         return new(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new()

@@ -75,7 +75,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.Transport);
         command.Options.Add(ServiceOptionDefinitions.Namespace);
         command.Options.Add(ServiceOptionDefinitions.Mode);
-        command.Options.Add(ServiceOptionDefinitions.StructuredOutputMode);
         command.Options.Add(ServiceOptionDefinitions.Tool);
         command.Options.Add(ServiceOptionDefinitions.ReadOnly);
         command.Options.Add(ServiceOptionDefinitions.Debug);
@@ -86,6 +85,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableRetryLimits);
         command.Options.Add(ServiceOptionDefinitions.Cloud);
         command.Options.Add(ServiceOptionDefinitions.DisableCaching);
+        command.Options.Add(ServiceOptionDefinitions.StructuredOutputMode);
         command.Validators.Add(commandResult =>
         {
             string transport = ResolveTransport(commandResult);
@@ -156,7 +156,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             Transport = ResolveTransport(parseResult),
             Namespace = parseResult.GetValueOrDefault(ServiceOptionDefinitions.Namespace),
             Mode = mode,
-            StructuredOutputMode = parseResult.GetValueOrDefault(ServiceOptionDefinitions.StructuredOutputMode),
             Tool = tools,
             ReadOnly = parseResult.GetValueOrDefault(ServiceOptionDefinitions.ReadOnly),
             Debug = parseResult.GetValueOrDefault(ServiceOptionDefinitions.Debug),
@@ -166,7 +165,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             SupportLoggingFolder = parseResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir),
             DangerouslyDisableRetryLimits = parseResult.GetValueOrDefault(ServiceOptionDefinitions.DangerouslyDisableRetryLimits),
             Cloud = parseResult.GetValueOrDefault(ServiceOptionDefinitions.Cloud),
-            DisableCaching = parseResult.GetValueOrDefault(ServiceOptionDefinitions.DisableCaching)
+            DisableCaching = parseResult.GetValueOrDefault(ServiceOptionDefinitions.DisableCaching),
+            StructuredOutputMode = parseResult.GetValueOrDefault(ServiceOptionDefinitions.StructuredOutputMode),
         };
         return options;
     }

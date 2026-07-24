@@ -24,8 +24,7 @@ Two things happen once a command opts in, both driven by the command exposing it
    the advertised `outputSchema`.
 
 The plumbing already exists in `Microsoft.Mcp.Core`. You do **not** touch it when migrating a toolset.
-For clients that negotiate MCP protocol version `2025-06-18` or later, it activates automatically for
-any command that exposes a result type when the server starts with
+It activates for any command that exposes a result type when the server starts with
 `--structured-output-mode duplicated` or `--structured-output-mode compact`:
 
 - ``Commands/BaseCommand`2.cs`` — defines the `ResultTypeInfo` hook and the `SetResult(...)` helper.
@@ -40,13 +39,12 @@ command store the result.**
 
 | Mode | `outputSchema` | `structuredContent` | Text `content` |
 |---|---|---|---|
-| `legacy` (default) | Omitted | Omitted | Complete historical response |
+| Option omitted (default) | Omitted | Omitted | Complete historical response |
 | `duplicated` | Emitted | Complete result payload | Complete historical response |
-| `compact` | Emitted | Complete result payload | Concise pointer with a `legacy-content` retry instruction |
+| `compact` | Emitted | Complete result payload | Concise pointer to `structuredContent` |
 
-Clients that negotiate an older protocol version always receive the legacy shape. In compact mode,
-eligible tools advertise the reserved Boolean `legacy-content` argument. Setting it to `true` retains
-`structuredContent` but returns the complete historical response in `content`.
+Structured output is an explicit operator opt-in. Enable it only when the target client supports
+`outputSchema` and `structuredContent`.
 
 ### Namespace mode
 
@@ -215,8 +213,8 @@ Run these from the repository root, scoped to the toolset you migrated (App Conf
    dotnet build tools/Azure.Mcp.Tools.AppConfig/src
    ```
 
-2. **Run the toolset's unit tests.** Existing tests must stay green — the text `content` is unchanged,
-   so no assertions should need updating.
+2. **Run the toolset's unit tests.** Existing tests must stay green. Duplicated mode preserves the
+   historical text `content`; compact mode replaces successful structured responses with concise text.
    ```powershell
    ./eng/scripts/Test-Code.ps1 -Paths AppConfig
    ```
@@ -261,6 +259,6 @@ Run these from the repository root, scoped to the toolset you migrated (App Conf
 | `using` directives | — | `+ using System.Text.Json.Serialization.Metadata;` |
 | Tool `outputSchema` | Absent | Generated from `ResultTypeInfo` when structured output is enabled |
 | Response `structuredContent` | Absent | Result payload, same wrapping as the schema, when enabled |
-| Text `content` block | Complete response | Complete in `legacy`/`duplicated`; concise by default in `compact` |
-| CLI options / `inputSchema` | Unchanged | `compact` adds the reserved `legacy-content` MCP argument |
+| Text `content` block | Complete response | Complete when disabled or in `duplicated`; concise in `compact` |
+| CLI options / `inputSchema` | Unchanged | Unchanged |
 | Error handling | `HandleException(context, ex)` | `HandleException(context, ex)` (unchanged) |

@@ -8,7 +8,6 @@ public static class ServiceOptionDefinitions
     public const string TransportName = "transport";
     public const string NamespaceName = "namespace";
     public const string ModeName = "mode";
-    public const string StructuredOutputModeName = "structured-output-mode";
     public const string ToolName = "tool";
     public const string ReadOnlyName = "read-only";
     public const string DebugName = "debug";
@@ -19,6 +18,7 @@ public static class ServiceOptionDefinitions
     public const string DangerouslyDisableRetryLimitsName = "dangerously-disable-retry-limits";
     public const string CloudName = "cloud";
     public const string DisableCachingName = "disable-caching";
+    public const string StructuredOutputModeName = "structured-output-mode";
 
     public static readonly Option<string> Transport = new($"--{TransportName}")
     {
@@ -42,13 +42,6 @@ public static class ServiceOptionDefinitions
         Required = false,
         Arity = ArgumentArity.ZeroOrOne,
         DefaultValueFactory = _ => (string?)ModeTypes.NamespaceProxy
-    };
-
-    public static readonly Option<StructuredOutputMode> StructuredOutputMode = new($"--{StructuredOutputModeName}")
-    {
-        Description = "Structured output mode. 'legacy' (default) returns content only. 'duplicated' returns complete content and structuredContent. 'compact' returns concise content and complete structuredContent.",
-        Required = false,
-        DefaultValueFactory = _ => Options.StructuredOutputMode.Legacy
     };
 
     public static readonly Option<string[]?> Tool = new($"--{ToolName}")
@@ -119,5 +112,12 @@ public static class ServiceOptionDefinitions
         Required = false,
         Description = "Disable caching of resource responses, requiring repeated requests to fetch fresh data each time.",
         DefaultValueFactory = _ => false
+    };
+
+    public static readonly Option<StructuredOutputMode?> StructuredOutputMode = new($"--{StructuredOutputModeName}")
+    {
+        Description = "Enable structured output using 'duplicated' to retain complete content or 'compact' to return concise content. Both modes return complete structuredContent.",
+        Required = false,
+        DefaultValueFactory = _ => null
     };
 }
