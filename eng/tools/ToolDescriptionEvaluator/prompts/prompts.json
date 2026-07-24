@@ -813,7 +813,6 @@
     "How can I use Bicep to create an Azure OpenAI service?"
   ],
   "cloudarchitect_design": [
-    "Please help me design an architecture for a large-scale file upload, storage, and retrieval service",
     "Help me design an Azure cloud service that will serve as an ATM for users",
     "I want to design a cloud app for ordering groceries",
     "How can I design a cloud service in Azure that will store and present videos for users?"
@@ -852,7 +851,7 @@
   "foundry_models_list": [
     "List all Microsoft Foundry models",
     "Show me the available Microsoft Foundry models"
-  ],  
+  ],
   "foundryextensions_openai_chat-completions-create": [
     "Create a chat completion with the message \"Hello, how are you today?\" using my Microsoft Foundry resource"
   ],
