@@ -2128,7 +2128,7 @@
     },
     {
       "name": "get_azure_iot_hub",
-      "description": "Get details about an Azure IoT Hub.",
+      "description": "Get details about an Azure IoT Hub and list devices registered in its device registry.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -2156,7 +2156,8 @@
         }
       },
       "mappedToolList": [
-        "iothub_hub_get"
+        "iothub_hub_get",
+        "iothub_device_list"
       ]
     },
     {
