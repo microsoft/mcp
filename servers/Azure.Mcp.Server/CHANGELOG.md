@@ -156,6 +156,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - `eventhubs namespace-get` now correctly supports subscription-wide listing when `--resource-group` is omitted, and treats a whitespace resource group as not provided for robust scope handling. [[#2961](https://github.com/microsoft/mcp/pull/2961)]
 - `foundryextensions resource-get` routing and terminology were clarified to improve namespace tool selection confidence, and validation now fails fast when `--resource-name` is provided without `--resource-group`. [[#2961](https://github.com/microsoft/mcp/pull/2961)]
 
+### Other Changes
+
+- Added a [vally](https://microsoft.github.io/vally) evaluation harness under `servers/Azure.Mcp.Server/tests/Vally` with a first experiment for the `eventhubs_eventhub_get` and `eventhubs_namespace_get` tools. A discovery-based runner script (`Invoke-VallyEval.ps1`) walks the directory for evaluations organized by area (namespace subfolder) and tool (`<tool>.experiment.yaml`). Each experiment runs a shared eval spec (`<tool>.eval.yaml`) as two variants—baseline (without the Azure MCP server) and treatment (with it)—to isolate the server's contribution. Both variants are graded identically on task outcome using outcome-based LLM-judge graders, ensuring a fair comparison regardless of whether the baseline succeeds through other means (e.g. Azure CLI). Each area may supply `New-*Resources.ps1` / `Remove-*Resources.ps1` provisioning scripts (auto-discovered and run per area); the Event Hubs pair creates the required resources (tagged with `DeleteAfter` as a clean-up safety net, with local auth disabled for Safe Secrets Standard compliance) and deletes them afterwards.
+
 ## 3.0.0-beta.21 (2026-06-23)
 
 ### Features Added

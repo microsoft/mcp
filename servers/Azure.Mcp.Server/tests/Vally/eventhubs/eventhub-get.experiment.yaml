@@ -1,0 +1,57 @@
+# Licensed under the MIT License.
+#
+# Vally EXPERIMENT for the Azure MCP "get Event Hub" capability
+# (eventhubs_eventhub_get).
+#
+# An experiment runs one shared eval spec (eventhub-get.eval.yaml) as
+# several controlled VARIANTS and compares them. Here the only thing that
+# varies is whether the Azure MCP server is present:
+#
+#   * baseline  - the CONTROL: the shared eval's `environment.mcpServers.azure`
+#                 is deleted, so the agent has NO Azure Event Hubs tool. It
+#                 can only succeed by other means (e.g. shelling out to `az`)
+#                 or fail. This is the point of comparison.
+#   * treatment - inherits the eval spec unchanged, WITH the Azure MCP server.
+#
+# Both variants share the eval's stimuli, graders and scoring (a variant may
+# only override `overrides` and `environment`), so they are graded identically
+# on task OUTCOME. The delta between them isolates the Azure MCP server's
+# contribution.
+#
+# `vary` lists the JSON Pointer paths allowed to differ between variants;
+# anything differing outside these paths is a hard error. We only vary the
+# MCP servers map.
+#
+# Run it with the helper script (builds azmcp, provisions, compares variants):
+#   ./servers/Azure.Mcp.Server/tests/Vally/Invoke-VallyEval.ps1 -Tool eventhub-get
+#
+# ...or directly, if `azmcp` is already on your PATH:
+#   vally experiment run ./eventhub-get.experiment.yaml --output-dir ./.vally-results
+#
+# See https://microsoft.github.io/vally/
+
+name: eventhubs-eventhub-get-experiment
+
+# The shared eval spec both variants run. Path is relative to this file.
+evals:
+  - ./eventhub-get.eval.yaml
+
+# Only the MCP servers map may differ between variants.
+vary:
+  - /environment/mcpServers
+
+# The control variant used as the baseline for comparison reports.
+baseline: baseline
+
+variants:
+  # Control: remove the Azure MCP server the eval spec declares. Setting the
+  # map entry to null deletes it from the inherited environment, leaving the
+  # agent with only its built-in tools.
+  baseline:
+    environment:
+      mcpServers:
+        azure: null
+
+  # Treatment: inherit the eval spec as-is (Azure MCP server present). The
+  # empty override keeps the variant explicit and symmetric with baseline.
+  treatment: {}

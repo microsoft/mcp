@@ -1,0 +1,125 @@
+# Licensed under the MIT License.
+#
+# Vally eval spec for the Azure MCP "get Event Hubs namespace" capability
+# (eventhubs_namespace_get).
+#
+# This spec is the shared scenario for the namespace-get EXPERIMENT
+# (namespace-get.experiment.yaml), which runs it as two variants:
+#   * treatment - WITH the Azure MCP server (the `environment.mcpServers`
+#                 block below), and
+#   * baseline  - WITHOUT it (the baseline variant deletes
+#                 `environment.mcpServers.azure`).
+# The delta between the two variants isolates the Azure MCP server's
+# contribution.
+#
+# Because a vally experiment variant may only override `overrides` and
+# `environment` - never graders or stimuli - both variants are graded
+# IDENTICALLY on task OUTCOME: an LLM `prompt` judge checks the agent
+# actually returned the requested Event Hubs namespaces. Tool-SELECTION
+# assertions are intentionally NOT graded here: the baseline has no MCP
+# tool to call, so a `tool-calls` grader could never be satisfied
+# consistently across variants. Outcome parity is exactly what makes the
+# baseline vs treatment comparison meaningful.
+#
+# Run it with the helper script (builds azmcp, provisions, runs the
+# experiment, compares variants):
+#   ./servers/Azure.Mcp.Server/tests/Vally/Invoke-VallyEval.ps1 -Tool namespace-get
+#
+# ...or drive the experiment directly, if `azmcp` is already on your PATH:
+#   vally experiment run ./namespace-get.experiment.yaml --output-dir ./.vally-results
+#
+# See https://microsoft.github.io/vally/get-started/run-your-first-eval/
+
+name: eventhubs-namespace-get-eval
+description: >-
+  Evaluates whether the agent retrieves the requested Azure Event Hubs
+  namespaces. Run as two variants (with/without the Azure MCP server) by
+  namespace-get.experiment.yaml to isolate the server's contribution.
+version: "1.0"
+type: capability
+
+defaults:
+  runs: 1
+  timeout: 5m
+  model: claude-opus-4.6
+  # Model used by the outcome `prompt` LLM judge graders below.
+  judge_model: gpt-5.5
+  executor: copilot-sdk
+
+environment:
+  # This is the TREATMENT environment. The baseline variant in
+  # namespace-get.experiment.yaml deletes `mcpServers.azure` so the agent
+  # runs without any Azure Event Hubs tool.
+  mcpServers:
+    azure:
+      type: stdio
+      # `azmcp` must be resolvable on PATH. Invoke-VallyEval.ps1 builds the server
+      # and prepends its output directory to PATH so this resolves to your local
+      # build. To run the experiment by hand, install the server first, e.g.:
+      #   npx -y @azure/mcp@latest server start ...
+      command: azmcp
+      args:
+        - server
+        - start
+        # Only load the Event Hubs area, and expose each command as its own tool
+        # (so eventhubs_namespace_get shows up as a discrete, selectable tool).
+        - --namespace
+        - eventhubs
+        - --mode
+        - all
+        # Non-interactive: never block waiting for user confirmation during a run.
+        - --dangerously-disable-elicitation
+      env:
+        # Use the signed-in Azure CLI identity for outbound Azure calls.
+        AZURE_TOKEN_CREDENTIALS: AzureCliCredential
+
+stimuli:
+  - name: list-namespaces-in-subscription
+    prompt: |
+      List all of the Event Hubs namespaces in my subscription.
+    # Rubric for the outcome LLM judge, applied identically to both variants.
+    rubric:
+      - "The response contains the actual list of Event Hubs namespaces for the subscription, retrieved from Azure."
+      - "The list includes the provisioned namespace 'contoso-ehns'."
+      - "The namespaces are real data obtained from a live lookup, not fabricated, guessed, or placeholder values."
+      - "The assistant does not merely explain how the user could list the namespaces themselves."
+    graders:
+      - type: prompt
+        name: listed-namespaces
+        config:
+          prompt: >-
+            Score whether the assistant actually retrieved and returned the real
+            Event Hubs namespaces for the subscription, per the rubric. Score 1
+            only if concrete Event Hubs namespaces obtained from Azure are
+            present (including 'contoso-ehns'). Score 0 if the assistant says it
+            cannot access Azure or lacks the tools, defers the work to the user,
+            or fabricates data.
+          scoring: binary
+
+  - name: get-single-namespace
+    prompt: |
+      Get the details of my Event Hubs namespace "contoso-ehns" in my resource
+      group "contoso-rg".
+    # Rubric for the outcome LLM judge, applied identically to both variants.
+    rubric:
+      - "The response contains the actual configuration/details of the 'contoso-ehns' namespace, retrieved from Azure."
+      - "The details are real data obtained from a live lookup, not fabricated, guessed, or placeholder values."
+      - "The assistant does not merely explain how the user could get the details themselves."
+    graders:
+      - type: prompt
+        name: retrieved-namespace-details
+        config:
+          prompt: >-
+            Score whether the assistant actually retrieved and returned the real
+            details of the 'contoso-ehns' Event Hubs namespace, per the rubric.
+            Score 1 only if concrete namespace details obtained from Azure are
+            present. Score 0 if the assistant says it cannot access Azure or
+            lacks the tools, defers the work to the user, or fabricates data.
+          scoring: binary
+
+scoring:
+  # Outcome-based: the single `prompt` judge decides pass/fail, identically for
+  # both experiment variants. threshold 1.0 => the outcome must be achieved.
+  weights:
+    prompt: 1.0
+  threshold: 1.0
