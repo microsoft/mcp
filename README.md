@@ -1,5 +1,7 @@
 # 🌟 Microsoft MCP Servers
 
+[![MCP Toplist](https://mcptoplist.com/badge/com.microsoft%2Fazure.svg)](https://mcptoplist.com/server/com.microsoft%2Fazure)
+
 
 ## 📘 What is MCP?
 
