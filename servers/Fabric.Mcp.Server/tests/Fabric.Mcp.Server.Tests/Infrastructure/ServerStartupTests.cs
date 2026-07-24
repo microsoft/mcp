@@ -2,12 +2,39 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Nodes;
 using Xunit;
 
 namespace Fabric.Mcp.Server.Tests.Infrastructure;
 
 public class ServerStartupTests
 {
+    private const string StatelessProtocolVersion = "2026-07-28";
+
+    /// <summary>
+    /// Builds a <see cref="StringContent"/> for a 2026-07-28 stateless JSON-RPC request
+    /// containing the required <c>_meta</c> envelope fields.
+    /// </summary>
+    private static StringContent CreateStateless2026RequestContent(string method, int id = 1)
+    {
+        var body = new JsonObject
+        {
+            ["jsonrpc"] = "2.0",
+            ["id"] = id,
+            ["method"] = method,
+            ["params"] = new JsonObject
+            {
+                ["_meta"] = new JsonObject
+                {
+                    ["io.modelcontextprotocol/protocolVersion"] = StatelessProtocolVersion,
+                    ["io.modelcontextprotocol/clientInfo"] = new JsonObject { ["name"] = "test-client", ["version"] = "1.0" },
+                    ["io.modelcontextprotocol/clientCapabilities"] = new JsonObject()
+                }
+            }
+        };
+        return new StringContent(body.ToJsonString(), System.Text.Encoding.UTF8, "application/json");
+    }
+
     [Fact]
     public async Task Server_Should_List_Tools_Over_Http_Root_Endpoint()
     {
@@ -47,10 +74,10 @@ public class ServerStartupTests
             using var client = new HttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = new StringContent("{" + "\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{\"_meta\":{\"io.modelcontextprotocol/protocolVersion\":\"2026-07-28\",\"io.modelcontextprotocol/clientInfo\":{\"name\":\"test-client\",\"version\":\"1.0\"},\"io.modelcontextprotocol/clientCapabilities\":{}}}" + "}", System.Text.Encoding.UTF8, "application/json")
+                Content = CreateStateless2026RequestContent("tools/list")
             };
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
-            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
+            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", StatelessProtocolVersion);
             request.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
             request.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
 
