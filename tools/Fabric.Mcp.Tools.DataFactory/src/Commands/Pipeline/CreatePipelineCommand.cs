@@ -7,7 +7,6 @@ using global::DataFactory.MCP.Handlers.Pipeline;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
 
@@ -20,9 +19,8 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
     Idempotent = false,
     ReadOnly = false,
     OpenWorld = false)]
-public sealed class CreatePipelineCommand(
-    ILogger<CreatePipelineCommand> logger,
-    PipelineHandler handler) : AuthenticatedCommand<CreatePipelineOptions, CreatePipelineCommandResult>
+public sealed class CreatePipelineCommand(ILogger<CreatePipelineCommand> logger, PipelineHandler handler)
+    : AuthenticatedCommand<CreatePipelineOptions, CreatePipelineCommandResult>
 {
     private readonly ILogger<CreatePipelineCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly PipelineHandler _handler = handler ?? throw new ArgumentNullException(nameof(handler));
@@ -46,8 +44,7 @@ public sealed class CreatePipelineCommand(
                 FolderId = response.FolderId
             };
 
-            var commandResult = new CreatePipelineCommandResult(pipeline);
-            context.Response.Results = ResponseResult.Create(commandResult, DataFactoryJsonContext.Default.CreatePipelineCommandResult);
+            context.Response.Results = ResponseResult.Create(new(pipeline), DataFactoryJsonContext.Default.CreatePipelineCommandResult);
         }
         else
         {

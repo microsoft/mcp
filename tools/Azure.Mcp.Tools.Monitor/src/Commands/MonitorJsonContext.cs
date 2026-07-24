@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
+using Azure.Mcp.Tools.Monitor.Commands.HealthModels;
 using Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Commands.Table;
@@ -12,6 +13,7 @@ using Azure.Mcp.Tools.Monitor.Commands.TableType;
 using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
+using Azure.Mcp.Tools.Monitor.Models.HealthModels;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
@@ -21,6 +23,11 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(ActivityLogListResponse))]
 [JsonSerializable(typeof(ActivityLogLocalizableString))]
 [JsonSerializable(typeof(GetLearningResourceCommand.GetLearningResourceCommandResult))]
+[JsonSerializable(typeof(HealthModelDetail))]
+[JsonSerializable(typeof(HealthModelGetCommand.HealthModelGetCommandResult))]
+[JsonSerializable(typeof(HealthModelIdentity))]
+[JsonSerializable(typeof(HealthModelSummary))]
+[JsonSerializable(typeof(List<HealthModelSummary>))]
 [JsonSerializable(typeof(List<JsonNode>))]
 [JsonSerializable(typeof(MetricsDefinitionsCommand.MetricsDefinitionsCommandResult))]
 [JsonSerializable(typeof(MetricsDefinitionsCommand.MetricsDefinitionsCommandResult))]

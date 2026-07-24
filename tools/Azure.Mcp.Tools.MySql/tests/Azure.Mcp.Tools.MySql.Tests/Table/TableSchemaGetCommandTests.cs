@@ -2,17 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Table;
 using Azure.Mcp.Tools.MySql.Services;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.MySql.Tests.Table;
 
-public class TableSchemaGetCommandTests : CommandUnitTestsBase<TableSchemaGetCommand, IMySqlService>
+public class TableSchemaGetCommandTests : SubscriptionCommandUnitTestsBase<TableSchemaGetCommand, IMySqlService>
 {
     [Fact]
     public async Task ExecuteAsync_ReturnsSchema_WhenSuccessful()

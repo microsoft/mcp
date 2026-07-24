@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text;
 using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Models.Templates;
 using Azure.Mcp.Tools.Deploy.Services.Templates;
@@ -48,18 +47,13 @@ public static class IaCRulesTemplateUtil
     private static IaCRulesTemplateParameters CreateTemplateParameters(
         string deploymentTool,
         string iacType,
-        string[] resourceTypes)
-    {
-        var parameters = new IaCRulesTemplateParameters
+        string[] resourceTypes) => new()
         {
             DeploymentTool = deploymentTool,
             IacType = iacType,
             ResourceTypes = resourceTypes,
             ResourceTypesDisplay = string.Join(", ", resourceTypes)
         };
-
-        return parameters;
-    }
 
     /// <summary>
     /// Generates deployment tool specific rules.
@@ -133,7 +127,7 @@ public static class IaCRulesTemplateUtil
 
         if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureDatabaseForMySql, StringComparer.OrdinalIgnoreCase))
         {
-            rules.Add(GenerateMySqlRules(parameters));
+            rules.Add(GenerateMySqlRules());
         }
 
         if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureCosmosDb, StringComparer.OrdinalIgnoreCase))
@@ -213,15 +207,11 @@ public static class IaCRulesTemplateUtil
         });
     }
 
-    private static string GenerateMySqlRules(IaCRulesTemplateParameters parameters)
-    {
-        return TemplateService.ProcessTemplate("IaCRules/mysql-rules", new Dictionary<string, string> { { "DatabaseCommonRules", _databaseCommonRules } });
-    }
+    private static string GenerateMySqlRules() =>
+        TemplateService.ProcessTemplate("IaCRules/mysql-rules", new Dictionary<string, string> { { "DatabaseCommonRules", _databaseCommonRules } });
 
-    private static string GenerateCosmosDbRules(IaCRulesTemplateParameters parameters)
-    {
-        return TemplateService.ProcessTemplate("IaCRules/cosmosdb-rules", new Dictionary<string, string> { { "ToolSpecificRules", GetToolSpecificResourceRules(parameters.IacType, null, null, null) } });
-    }
+    private static string GenerateCosmosDbRules(IaCRulesTemplateParameters parameters) =>
+        TemplateService.ProcessTemplate("IaCRules/cosmosdb-rules", new Dictionary<string, string> { { "ToolSpecificRules", GetToolSpecificResourceRules(parameters.IacType, null, null, null) } });
 
     private static string GenerateStorageRules(IaCRulesTemplateParameters parameters)
     {
@@ -241,10 +231,8 @@ public static class IaCRulesTemplateUtil
     /// <summary>
     /// Generates final instructions for the IaC rules.
     /// </summary>
-    private static string GenerateFinalInstructions(IaCRulesTemplateParameters parameters)
-    {
-        return TemplateService.ProcessTemplate("IaCRules/final-instructions", parameters.ToDictionary());
-    }
+    private static string GenerateFinalInstructions(IaCRulesTemplateParameters parameters) =>
+        TemplateService.ProcessTemplate("IaCRules/final-instructions", parameters.ToDictionary());
 
     /// <summary>
     /// Builds the required tools list based on deployment tool and resource types.

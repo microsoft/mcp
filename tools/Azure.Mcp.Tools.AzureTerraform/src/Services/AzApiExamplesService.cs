@@ -56,12 +56,7 @@ public sealed class AzApiExamplesService(IHttpClientFactory httpClientFactory) :
             string? content = await FetchExampleContentAsync(@namespace, sample.Path, cancellationToken).ConfigureAwait(false);
             if (content != null)
             {
-                examples.Add(new AzApiExample
-                {
-                    Description = sample.Description,
-                    Content = content,
-                    SourcePath = $"settings/remarks/{@namespace}/{sample.Path}"
-                });
+                examples.Add(new(sample.Description, content, $"settings/remarks/{@namespace}/{sample.Path}"));
             }
         }
 

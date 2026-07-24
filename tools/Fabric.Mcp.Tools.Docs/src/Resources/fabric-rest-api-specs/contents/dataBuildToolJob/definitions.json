@@ -1,0 +1,194 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "DataBuildToolJob data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "DataBuildToolJob": {
+            "description": "A DataBuildToolJob object.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The DataBuildToolJob properties.",
+                    "$ref": "#/definitions/DataBuildToolJobProperties"
+                }
+            }
+        },
+        "DataBuildToolJobProperties": {
+            "description": "The DataBuildToolJob properties.",
+            "type": "object",
+            "required": ["oneLakeRootPath"],
+            "properties": {
+                "oneLakeRootPath": {
+                    "description": "OneLake path to the DataBuildToolJob root directory.",
+                    "type": "string"
+                }
+            }
+        },
+        "DataBuildToolJobs": {
+            "description": "A list of DataBuildToolJobs.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of DataBuildToolJobs.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataBuildToolJob"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateDataBuildToolJobRequest": {
+            "description": "The request payload for creating a DataBuildToolJob.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The DataBuildToolJob display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The DataBuildToolJob description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the DataBuildToolJob is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The DataBuildToolJob public definition.",
+                    "$ref": "#/definitions/DataBuildToolJobPublicDefinition",
+                    "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the DataBuildToolJob.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateDataBuildToolJobDefinitionRequest": {
+            "description": "The request payload for updating a DataBuildToolJob public definition.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/DataBuildToolJobPublicDefinition"
+                }
+            }
+        },
+        "DataBuildToolJobDefinitionResponse": {
+            "description": "The response payload for a DataBuildToolJob public definition.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/DataBuildToolJobPublicDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "DataBuildToolJobPublicDefinition" : {
+            "description": "The DataBuildToolJob public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/data-build-tool-job-definition) for more details on the structure of the DataBuildToolJob definition.",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "format": {
+                    "description": "The format of the DataBuildToolJob definition. Additional formats may be added over time.",
+                    "type": "string",
+                    "enum": [
+                        "DataBuildToolJobV1"
+                    ],
+                    "x-ms-enum": {
+                        "name": "DataBuildToolJobDefinitionFormat",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                            "value": "DataBuildToolJobV1",
+                            "description": "The format for DataBuildToolJob definitions, designed to support CI/CD scenarios in Fabric. See [DataBuildToolJob - DataBuildToolJobV1 specification](/rest/api/fabric/articles/item-management/definitions/data-build-tool-job-definition) for more details."
+                            }
+                        ]
+                    },
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataBuildToolJobPublicDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "DataBuildToolJobPublicDefinitionPart": {
+            "description": "The DataBuildToolJob definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The DataBuildToolJob public definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The DataBuildToolJob public definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateDataBuildToolJobRequest": {
+            "description": "The request payload for updating a DataBuildToolJob.",
+            "properties": {
+                "displayName": {
+                    "description": "The DataBuildToolJob display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The DataBuildToolJob description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "DataBuildToolJobExecuteSchedule": {
+            "description": "DataBuildToolJob execute schedule.",
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "../common/job_scheduling.json#/definitions/BaseItemSchedule"
+                }
+            ]
+        },
+        "CreateDataBuildToolJobExecuteScheduleRequest": {
+            "description": "Create DataBuildToolJob execute schedule plan request payload.",
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "../common/job_scheduling.json#/definitions/BaseCreateScheduleRequest"
+                }
+            ]
+        }
+    }
+}

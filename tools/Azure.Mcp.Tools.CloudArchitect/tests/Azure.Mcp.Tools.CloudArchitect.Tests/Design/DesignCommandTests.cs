@@ -4,8 +4,9 @@
 using System.Net;
 using System.Reflection;
 using Azure.Mcp.Tools.CloudArchitect.Commands.Design;
-using Azure.Mcp.Tools.CloudArchitect.Options;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Tests.Client;
+using Xunit;
 
 namespace Azure.Mcp.Tools.CloudArchitect.Tests.Design;
 
@@ -115,17 +116,9 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
             "--question-number", "2",
             "--total-questions", "10"
         };
-        var parseResult = CommandDefinition.Parse(args);
-
-        // Ensure there were no parse/validation errors
-        Assert.False(parseResult.Errors.Any());
 
         // Act
-        var response = await ExecuteCommandAsync(
-            "--question", complexQuestion,
-            "--answer", complexAnswer,
-            "--question-number", "2",
-            "--total-questions", "10");
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -133,11 +126,10 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
         Assert.Empty(response.Message);
 
         // Verify all options were parsed correctly using the canonical option definitions
-        var questionValue = parseResult.GetValue(CloudArchitectOptionDefinitions.Question);
-        var answerValue = parseResult.GetValue(CloudArchitectOptionDefinitions.Answer);
+        var options = Command.BindOptions(CommandDefinition.Parse(args));
 
-        Assert.Equal(complexQuestion, questionValue);
-        Assert.Equal(complexAnswer, answerValue);
+        Assert.Equal(complexQuestion, options.Question);
+        Assert.Equal(complexAnswer, options.Answer);
     }
 
     [Fact]
@@ -201,37 +193,29 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
             "--confidence-score", "0.9",
         };
 
-        var parseResult = CommandDefinition.Parse(args);
-
         // Act
         var response = await ExecuteCommandAsync(args);
 
         // Assert
         // Verify all options were parsed correctly
-        var command = Command.GetCommand();
-        var questionValue = parseResult.GetValue((Option<string>)command.Options.First(o => o.Name == "--question"));
-        var questionNumberValue = parseResult.GetValue((Option<int>)command.Options.First(o => o.Name == "--question-number"));
-        var totalQuestionsValue = parseResult.GetValue((Option<int>)command.Options.First(o => o.Name == "--total-questions"));
-        var answerValue = parseResult.GetValue((Option<string>)command.Options.First(o => o.Name == "--answer"));
-        var nextQuestionNeededValue = parseResult.GetValue((Option<bool>)command.Options.First(o => o.Name == "--next-question-needed"));
-        var confidenceScoreValue = parseResult.GetValue((Option<double>)command.Options.First(o => o.Name == "--confidence-score"));
+        var options = Command.BindOptions(CommandDefinition.Parse(args));
 
-        Assert.Equal("What type of application are you building?", questionValue);
-        Assert.Equal(3, questionNumberValue);
-        Assert.Equal(8, totalQuestionsValue);
-        Assert.Equal("A financial trading platform", answerValue);
-        Assert.False(nextQuestionNeededValue);
-        Assert.Equal(0.9, confidenceScoreValue);
+        Assert.Equal("What type of application are you building?", options.Question);
+        Assert.Equal(3, options.QuestionNumber);
+        Assert.Equal(8, options.TotalQuestions);
+        Assert.Equal("A financial trading platform", options.Answer);
+        Assert.False(options.NextQuestionNeeded);
+        Assert.Equal(0.9, options.ConfidenceScore);
 
         // Verify the response structure
         var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
 
         Assert.NotEmpty(responseObject.DesignArchitecture);
         Assert.NotNull(responseObject.ResponseObject);
-        Assert.Equal(questionValue, responseObject.ResponseObject.DisplayText);
-        Assert.Equal(questionNumberValue, responseObject.ResponseObject.QuestionNumber);
-        Assert.Equal(totalQuestionsValue, responseObject.ResponseObject.TotalQuestions);
-        Assert.Equal(nextQuestionNeededValue, responseObject.ResponseObject.NextQuestionNeeded);
+        Assert.Equal(options.Question, responseObject.ResponseObject.DisplayText);
+        Assert.Equal(options.QuestionNumber, responseObject.ResponseObject.QuestionNumber);
+        Assert.Equal(options.TotalQuestions, responseObject.ResponseObject.TotalQuestions);
+        Assert.Equal(options.NextQuestionNeeded, responseObject.ResponseObject.NextQuestionNeeded);
     }
 
     #region Validation Tests
@@ -244,11 +228,11 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
     public void Parse_InvalidConfidenceScore_ReturnsError(double invalidScore)
     {
         // Arrange & Act
-        var parseResult = CommandDefinition.Parse(["--confidence-score", invalidScore.ToString()]);
+        var validationResult = Validate("--confidence-score", invalidScore.ToString());
 
         // Assert
-        Assert.NotEmpty(parseResult.Errors);
-        Assert.Contains("Confidence score must be between 0.0 and 1.0", parseResult.Errors.Select(e => e.Message));
+        Assert.NotEmpty(validationResult.Errors);
+        Assert.Contains("Confidence score must be between 0.0 and 1.0", validationResult.Errors);
     }
 
     [Theory]
@@ -260,10 +244,10 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
     public void Parse_ValidConfidenceScore_NoErrors(double validScore)
     {
         // Arrange & Act
-        var parseResult = CommandDefinition.Parse(["--confidence-score", validScore.ToString()]);
+        var validationResult = Validate("--confidence-score", validScore.ToString());
 
         // Assert
-        Assert.Empty(parseResult.Errors);
+        Assert.Empty(validationResult.Errors);
     }
 
     [Theory]
@@ -273,11 +257,11 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
     public void Parse_NegativeQuestionNumber_ReturnsError(int invalidQuestionNumber)
     {
         // Arrange & Act
-        var parseResult = CommandDefinition.Parse(["--question-number", invalidQuestionNumber.ToString()]);
+        var validationResult = Validate("--question-number", invalidQuestionNumber.ToString());
 
         // Assert
-        Assert.NotEmpty(parseResult.Errors);
-        Assert.Contains("Question number cannot be negative", parseResult.Errors.Select(e => e.Message));
+        Assert.NotEmpty(validationResult.Errors);
+        Assert.Contains("Question number cannot be negative", validationResult.Errors);
     }
 
     [Theory]
@@ -288,10 +272,10 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
     public void Parse_ValidQuestionNumber_NoErrors(int validQuestionNumber)
     {
         // Arrange & Act
-        var parseResult = CommandDefinition.Parse(["--question-number", validQuestionNumber.ToString()]);
+        var validationResult = Validate("--question-number", validQuestionNumber.ToString());
 
         // Assert
-        Assert.Empty(parseResult.Errors);
+        Assert.Empty(validationResult.Errors);
     }
 
     [Theory]
@@ -301,11 +285,11 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
     public void Parse_NegativeTotalQuestions_ReturnsError(int invalidTotalQuestions)
     {
         // Arrange & Act
-        var parseResult = CommandDefinition.Parse(["--total-questions", invalidTotalQuestions.ToString()]);
+        var validationResult = Validate("--total-questions", invalidTotalQuestions.ToString());
 
         // Assert
-        Assert.NotEmpty(parseResult.Errors);
-        Assert.Contains("Total questions cannot be negative", parseResult.Errors.Select(e => e.Message));
+        Assert.NotEmpty(validationResult.Errors);
+        Assert.Contains("Total questions cannot be negative", validationResult.Errors);
     }
 
     [Theory]
@@ -316,10 +300,10 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
     public void Parse_ValidTotalQuestions_NoErrors(int validTotalQuestions)
     {
         // Arrange & Act
-        var parseResult = CommandDefinition.Parse(["--total-questions", validTotalQuestions.ToString()]);
+        var validationResult = Validate("--total-questions", validTotalQuestions.ToString());
 
         // Assert
-        Assert.Empty(parseResult.Errors);
+        Assert.Empty(validationResult.Errors);
     }
 
     [Theory]
@@ -330,28 +314,22 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
     public void Parse_QuestionNumberWithinTotalQuestions_NoErrors(int questionNumber, int totalQuestions)
     {
         // Arrange & Act
-        var parseResult = CommandDefinition.Parse([
-            "--question-number", questionNumber.ToString(),
-            "--total-questions", totalQuestions.ToString()
-        ]);
+        var validationResult = Validate("--question-number", questionNumber.ToString(), "--total-questions", totalQuestions.ToString());
 
         // Assert
-        Assert.Empty(parseResult.Errors);
+        Assert.Empty(validationResult.Errors);
     }
 
     [Fact]
     public void Parse_MultipleValidationErrors_ReturnsFirstError()
     {
         // Arrange & Act - Set both invalid confidence score and negative question number
-        var parseResult = CommandDefinition.Parse([
-            "--confidence-score", "1.5",
-            "--question-number", "-1"
-        ]);
+        var validationResult = Validate("--confidence-score", "1.5", "--question-number", "-1");
 
         // Assert
-        Assert.NotEmpty(parseResult.Errors);
+        Assert.NotEmpty(validationResult.Errors);
         // Should return the first validation error encountered
-        Assert.Contains("Confidence score must be between 0.0 and 1.0", parseResult.Errors.Select(e => e.Message));
+        Assert.Contains("Confidence score must be between 0.0 and 1.0", validationResult.Errors);
     }
 
     [Fact]
@@ -465,28 +443,28 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
     [Fact]
     public void BindOptions_WithInvalidStateJson_ThrowsException()
     {
-        // Arrange
-        var parseResult = CommandDefinition.Parse(["--state", "{ invalid json }"]);
-
-        // Act & Assert
-        var exception = Assert.Throws<TargetInvocationException>(() =>
+        // Arrange, Act, & Assert
+        var exception = Assert.Throws<InvalidOperationException>(() =>
         {
             // Access the protected BindOptions method via reflection to test state deserialization
-            var stateOption = CommandDefinition.Options.First(o => o.Name == "--state");
-            var stateValue = parseResult.GetValue((Option<string>)stateOption);
+            var options = Command.BindOptions(CommandDefinition.Parse(["--state", "{ invalid json }"]));
 
             // Manually call the state deserialization that happens in BindOptions
-            var deserializeMethod = typeof(DesignCommand).GetMethod("DeserializeState",
-                BindingFlags.NonPublic | BindingFlags.Static);
-
-            Assert.NotNull(deserializeMethod);
-            deserializeMethod.Invoke(null, [stateValue]);
+            var deserializeMethod = DesignCommand.DeserializeState(options.State);
         });
 
         // Verify the inner exception is the InvalidOperationException we expect
-        Assert.IsType<InvalidOperationException>(exception.InnerException);
-        Assert.Contains("Failed to deserialize state JSON", exception.InnerException!.Message);
+        Assert.Contains("Failed to deserialize state JSON", exception.Message);
     }
 
     #endregion
+
+    private ValidationResult Validate(params string[] args)
+    {
+        var options = Command.BindOptions(CommandDefinition.Parse(args));
+        var validationResult = new ValidationResult();
+        Command.ValidateOptions(options, validationResult);
+
+        return validationResult;
+    }
 }

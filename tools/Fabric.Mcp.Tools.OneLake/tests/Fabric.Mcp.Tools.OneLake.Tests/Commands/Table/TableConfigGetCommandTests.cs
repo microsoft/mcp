@@ -70,7 +70,6 @@ public class TableConfigGetCommandTests : CommandUnitTestsBase<TableConfigGetCom
     [Fact]
     public void Constructor_ThrowsForNullDependencies()
     {
-
         Assert.Throws<ArgumentNullException>(() => new TableConfigGetCommand(null!, Service));
         Assert.Throws<ArgumentNullException>(() => new TableConfigGetCommand(Logger, null!));
     }

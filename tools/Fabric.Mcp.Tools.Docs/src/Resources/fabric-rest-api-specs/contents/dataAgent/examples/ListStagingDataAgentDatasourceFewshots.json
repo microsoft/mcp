@@ -1,0 +1,34 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "dataAgentId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+        "datasourceId": "c1c6d12f-8d2a-4d5b-9ca1-8bb7b42d4a30"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "c3f5e2a1-9b8d-4f7e-a6b2-1d0c8e3f9a5b",
+                        "question": "How many trips were there in January?",
+                        "query": "SELECT COUNT(*) FROM dbo.Trip WHERE MONTH(start_date) = 1",
+                        "validationStatus": {
+                            "value": "Valid"
+                        }
+                    },
+                    {
+                        "id": "a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+                        "question": "What are the top 5 busiest pickup locations?",
+                        "query": "SELECT TOP 5 pickup_location_name, COUNT(*) as trip_count FROM dbo.Trip GROUP BY pickup_location_name ORDER BY trip_count DESC",
+                        "validationStatus": {
+                            "value": "Invalid",
+                            "reason": "Column 'pickup_location_name' does not exist in dbo.Trip."
+                        }
+                    }
+                ],
+                "continuationToken": null,
+                "continuationUri": null
+            }
+        }
+    }
+}

@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace Fabric.Mcp.Tools.OneLake.Models;
 
 /// <summary>GET /workspaces/{id}/onelake/settings response (swagger: GetOneLakeSettingsResponse).</summary>
-public class OneLakeSettings
+public sealed class OneLakeSettings
 {
     [JsonPropertyName("diagnostics")]
     public OneLakeDiagnosticSettings? Diagnostics { get; set; }
@@ -23,7 +23,7 @@ public class OneLakeSettings
 /// Body of POST /onelake/settings/modifyDiagnostics AND the diagnostics block in GET.
 /// Swagger: OneLakeDiagnosticSettings.
 /// </summary>
-public class OneLakeDiagnosticSettings
+public sealed class OneLakeDiagnosticSettings
 {
     [JsonPropertyName("status")]
     public string? Status { get; set; }
@@ -64,7 +64,7 @@ public sealed class ItemReferenceById
 /// Body of POST /onelake/settings/modifyImmutabilityPolicy AND items in GET response.
 /// Swagger: ImmutabilityPolicyRequest / ImmutabilityPolicy.
 /// </summary>
-public class ImmutabilityPolicy
+public sealed class ImmutabilityPolicy
 {
     [JsonPropertyName("scope")]
     public string? Scope { get; set; }
@@ -74,7 +74,7 @@ public class ImmutabilityPolicy
 }
 
 /// <summary>Lifecycle management settings for a workspace.</summary>
-public class LifecycleSettings
+public sealed class LifecycleSettings
 {
     [JsonPropertyName("defaultTier")]
     public string? DefaultTier { get; set; }

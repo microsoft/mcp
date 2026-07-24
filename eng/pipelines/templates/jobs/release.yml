@@ -51,7 +51,15 @@ jobs:
       $version = $server.version
       $tag = $server.releaseTag
 
-      gh release create $tag --title "$serverName $version"
+      if ($serverName -eq 'Azure.Mcp.Server') {
+        $templatePath = "$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/release-notes-template.md"
+        $notes = (Get-Content -Raw -Path $templatePath).Replace('[Version]', $version)
+        $notesFile = [System.IO.Path]::GetTempFileName()
+        Set-Content -Path $notesFile -Value $notes -Encoding UTF8
+        gh release create $tag --title "$serverName $version" --notes-file $notesFile
+      } else {
+        gh release create $tag --title "$serverName $version"
+      }
       gh release upload $tag $(Pipeline.Workspace)/binaries_signed_zipped/*.zip
     displayName: Create GitHub Release and upload artifacts
     env:

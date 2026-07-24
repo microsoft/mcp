@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Redis.Models;
 using Azure.Mcp.Tools.Redis.Options;
 using Azure.Mcp.Tools.Redis.Services;
@@ -25,21 +26,14 @@ namespace Azure.Mcp.Tools.Redis.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ResourceListCommand(IRedisService redisService, ILogger<ResourceListCommand> logger)
-    : SubscriptionCommand<ResourceListOptions>()
+public sealed class ResourceListCommand(IRedisService redisService, ILogger<ResourceListCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ResourceListOptions, ResourceListCommand.ResourceListCommandResult>(subscriptionResolver)
 {
     private readonly IRedisService _redisService = redisService;
     private readonly ILogger<ResourceListCommand> _logger = logger;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ResourceListOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var resources = await _redisService.ListResourcesAsync(
@@ -60,5 +54,5 @@ public sealed class ResourceListCommand(IRedisService redisService, ILogger<Reso
         return context.Response;
     }
 
-    internal record ResourceListCommandResult(IEnumerable<Resource> Resources);
+    public sealed record ResourceListCommandResult(IEnumerable<Resource> Resources);
 }

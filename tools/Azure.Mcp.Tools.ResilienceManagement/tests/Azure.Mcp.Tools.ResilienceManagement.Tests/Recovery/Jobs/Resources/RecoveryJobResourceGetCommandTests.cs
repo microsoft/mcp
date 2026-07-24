@@ -3,21 +3,20 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Tests.Recovery.Jobs.Resources;
 
-public class RecoveryJobResourceGetCommandTests : SubscriptionCommandUnitTestsBase<RecoveryJobResourceGetCommand, IResilienceManagementService>
+public class RecoveryJobResourceGetCommandTests : CommandUnitTestsBase<RecoveryJobResourceGetCommand, IResilienceManagementService>
 {
-    private const string SubscriptionId = "00000000-0000-0000-0000-000000000001";
     private const string ServiceGroup = "sg1";
     private const string RecoveryPlan = "plan1";
     private const string RecoveryJob = "job1";
@@ -29,10 +28,10 @@ public class RecoveryJobResourceGetCommandTests : SubscriptionCommandUnitTestsBa
     public async Task ExecuteAsync_ListsRecoveryJobResources_WhenNameOmitted()
     {
         var expected = new List<ResourceSummary> { new("id1", "target1"), new("id2", "target2") };
-        Service.ListRecoveryJobResourcesAsync(ServiceGroup, RecoveryPlan, RecoveryJob, SubscriptionId, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListRecoveryJobResourcesAsync(ServiceGroup, RecoveryPlan, RecoveryJob, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var response = await ExecuteCommandAsync("--subscription", SubscriptionId, "--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan, "--recovery-job", RecoveryJob);
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan, "--recovery-job", RecoveryJob);
 
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.RecoveryJobResourceGetCommandResult);
         Assert.NotNull(result.RecoveryJobResources);
@@ -42,10 +41,10 @@ public class RecoveryJobResourceGetCommandTests : SubscriptionCommandUnitTestsBa
     [Fact]
     public async Task ExecuteAsync_GetsRecoveryJobResource_WhenNameProvided()
     {
-        Service.GetRecoveryJobResourceAsync(ServiceGroup, RecoveryPlan, RecoveryJob, "target1", SubscriptionId, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetRecoveryJobResourceAsync(ServiceGroup, RecoveryPlan, RecoveryJob, "target1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Element("target1"));
 
-        var response = await ExecuteCommandAsync("--subscription", SubscriptionId, "--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan, "--recovery-job", RecoveryJob, "--name", "target1");
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan, "--recovery-job", RecoveryJob, "--name", "target1");
 
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.RecoveryJobResourceGetCommandResult);
         Assert.Null(result.RecoveryJobResources);
@@ -56,10 +55,10 @@ public class RecoveryJobResourceGetCommandTests : SubscriptionCommandUnitTestsBa
     public async Task ExecuteAsync_HandlesException()
     {
         var expectedError = "Test error";
-        Service.ListRecoveryJobResourcesAsync(ServiceGroup, RecoveryPlan, RecoveryJob, SubscriptionId, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListRecoveryJobResourcesAsync(ServiceGroup, RecoveryPlan, RecoveryJob, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var response = await ExecuteCommandAsync("--subscription", SubscriptionId, "--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan, "--recovery-job", RecoveryJob);
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan, "--recovery-job", RecoveryJob);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);

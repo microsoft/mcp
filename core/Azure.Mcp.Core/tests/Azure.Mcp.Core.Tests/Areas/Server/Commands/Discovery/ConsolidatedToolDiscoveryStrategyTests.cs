@@ -16,12 +16,12 @@ public class ConsolidatedToolDiscoveryStrategyTests
 {
     private static ConsolidatedToolDiscoveryStrategy CreateStrategy(
         ICommandFactory? commandFactory = null,
-        ServiceStartOptions? options = null,
+        ServerStartOptions? options = null,
         string? entryPoint = null)
     {
         var factory = commandFactory ?? CommandFactoryHelpers.CreateCommandFactory();
         var serviceProvider = CommandFactoryHelpers.SetupCommonServices().BuildServiceProvider();
-        var startOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
+        var startOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServerStartOptions());
         var configurationOptions = Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
         {
             Name = "Test Server",
@@ -78,7 +78,7 @@ public class ConsolidatedToolDiscoveryStrategyTests
     public void CreateConsolidatedCommandFactory_WithNamespaceFilter_FiltersCommands()
     {
         // Arrange
-        var options = new ServiceStartOptions { Namespace = ["storage"] };
+        var options = new ServerStartOptions { Namespace = ["storage"] };
         var strategy = CreateStrategy(options: options);
 
         // Act
@@ -94,7 +94,7 @@ public class ConsolidatedToolDiscoveryStrategyTests
     public void CreateConsolidatedCommandFactory_WithReadOnlyFilter_FiltersCommands()
     {
         // Arrange
-        var options = new ServiceStartOptions { ReadOnly = true };
+        var options = new ServerStartOptions { ReadOnly = true };
         var strategy = CreateStrategy(options: options);
 
         // Act
@@ -112,7 +112,7 @@ public class ConsolidatedToolDiscoveryStrategyTests
     public void CreateConsolidatedCommandFactory_HandlesEmptyNamespaceFilter()
     {
         // Arrange
-        var options = new ServiceStartOptions { Namespace = [] };
+        var options = new ServerStartOptions { Namespace = [] };
         var strategy = CreateStrategy(options: options);
 
         // Act

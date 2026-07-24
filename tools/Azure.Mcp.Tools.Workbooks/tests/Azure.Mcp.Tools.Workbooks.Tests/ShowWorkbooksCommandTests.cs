@@ -262,31 +262,6 @@ public class ShowWorkbooksCommandTests : CommandUnitTestsBase<ShowWorkbooksComma
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithAuthMethod_PassesCorrectParameters()
-    {
-        // Arrange
-        var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
-        var batchResult = new WorkbookBatchResult([], []);
-
-        Service.GetWorkbooksAsync(
-            Arg.Any<IReadOnlyList<string>>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(batchResult);
-
-        // Act
-        await ExecuteCommandAsync("--workbook-ids", workbookId, "--auth-method", "1");
-
-        // Assert
-        await Service.Received(1).GetWorkbooksAsync(
-            Arg.Is<IReadOnlyList<string>>(ids => ids.Contains(workbookId)),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
     public async Task ExecuteAsync_WithoutWorkbookIds_ReturnsError()
     {
         // Arrange & Act

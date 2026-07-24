@@ -2,18 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.Tests.Certificate;
 
-public class CertificateImportCommandTests : CommandUnitTestsBase<CertificateImportCommand, IKeyVaultService>
+public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<CertificateImportCommand, IKeyVaultService>
 {
 
     private const string _knownSubscription = "knownSubscription";
@@ -80,10 +79,6 @@ public class CertificateImportCommandTests : CommandUnitTestsBase<CertificateImp
     [Fact]
     public async Task ExecuteAsync_RejectsArguments_WhenSubscriptionMissing()
     {
-        // This case relies on no default subscription being configured (env var or Azure CLI profile).
-        // Skip when a subscription is already available to avoid false failures in dev environments.
-        TestEnvironment.SkipIfDefaultSubscriptionConfigured();
-
         var response = await ExecuteCommandAsync(
             "--vault", _knownVault,
             "--certificate", _knownCertName,

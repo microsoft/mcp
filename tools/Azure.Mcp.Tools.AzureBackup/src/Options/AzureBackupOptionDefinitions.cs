@@ -18,8 +18,6 @@ public static class AzureBackupOptionDefinitions
     internal const string WorkloadType = "Workload type: VM, SQL, SAPHANA, SAPASE, AzureFileShare (RSV types); AzureDisk, AzureBlob, AKS, ElasticSAN, PostgreSQLFlexible, ADLS, CosmosDB (DPP types). Also accepts aliases like AzureVM, SQLDatabase, etc.";
     internal const string DailyRetentionDays = "Daily recovery point retention in days. Defaults to datasource-specific value if omitted.";
 
-    public const string LocationName = "location";
-
     // Policy create  -  common schedule flags (new in policy create overhaul)
     public const string ScheduleFrequencyName = "schedule-frequency";
     public const string ScheduleDaysOfWeekName = "schedule-days-of-week";
