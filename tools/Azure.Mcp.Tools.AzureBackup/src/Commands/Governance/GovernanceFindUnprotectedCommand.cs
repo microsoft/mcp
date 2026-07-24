@@ -18,7 +18,24 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
     Title = "Find Unprotected Resources",
     Description = """
         Scans the subscription to find Azure resources that are not currently protected by any
-        backup policy. Optionally filter by resource type, resource group, or tags.
+        backup policy using two-level discovery: (1) ARM resource enumeration finds top-level
+        unprotected resources, and (2) RSV vault protectable-items enrichment discovers
+        unprotected sub-resources that vaults have discovered but not yet protected.
+        Results include a 'discoverySource' field ('arm' or 'vault') indicating how each item
+        was found. Optionally filter by resource type, resource group, or tags.
+
+        Workload coverage and discovery level:
+        - IaaS VM: ARM (VM level)
+        - SQL in IaaS VM: Vault discovery (database level)
+        - SAP HANA in IaaS VM: Vault discovery (database level)
+        - Azure File Shares: Vault discovery (file share level)
+        - Blob Storage: ARM (storage account level)
+        - ADLS Gen2: ARM (storage account level)
+        - AKS: ARM (cluster level)
+        - Managed Disks: ARM (disk level)
+        - PostgreSQL Flexible: ARM (server level)
+        - Cosmos DB: ARM (account level)
+        - Elastic SAN: ARM (volume group level)
         """,
     Destructive = false,
     Idempotent = true,
