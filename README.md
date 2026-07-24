@@ -75,6 +75,13 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **TYPE**: `Local`
 - **INSTALL**: [![Install AKS MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-kubernetes-tools.vscode-aks-tools) [![Install AKS MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-kubernetes-tools.vscode-aks-tools) [![Install AKS MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://github.com/Azure/aks-mcp)
 
+### 💻 Binlog MCP Server
+- **REPOSITORY**: [dotnet/skills](https://github.com/dotnet/skills)
+- **DESCRIPTION**: A Model Context Protocol (MCP) server for analyzing MSBuild binary logs (`.binlog` files). Exposes structured access to build errors, warnings, targets, tasks, and properties so AI agents can triage CI failures and answer build-diagnostic questions.
+- **CATEGORY**: `DEVELOPER TOOLS`
+- **TYPE**: `Local`
+- **INSTALL**: .NET global tool from [NuGet.org](https://www.nuget.org/packages/Microsoft.AITools.BinlogMcp) — `dotnet tool install --global Microsoft.AITools.BinlogMcp`
+
 ### <img height="18" width="18" src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" alt="GitHub Logo" /> GitHub
 - **REPOSITORY**: [github/github-mcp-server](https://github.com/github/github-mcp-server)
 - **DESCRIPTION**: Access GitHub repositories, issues, and pull requests through secure API integration.
