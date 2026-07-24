@@ -216,6 +216,14 @@ public interface IRsvBackupOperations
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
+    Task<List<ProtectableItemInfo>> ListDiscoveredProtectableItemsAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
     Task<OperationResult> ConfigureEncryptionAsync(
         string vaultName,
         string resourceGroup,

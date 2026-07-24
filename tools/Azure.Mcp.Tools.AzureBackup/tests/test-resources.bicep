@@ -282,4 +282,105 @@ resource appCosmosDbBackupContributorRoleAssignment 'Microsoft.Authorization/rol
 output cosmosDbAccountId string = cosmosDbAccount.id
 output cosmosDbAccountName string = cosmosDbAccount.name
 output cosmosDbAccountLocation string = cosmosLocation
+
+// ─── SQL VM for ARM-Level Discovery Testing ───
+// Lowest-cost config: Standard_B2als_v2 + SQL 2022 Developer (free license) + no public IP.
+// The find-unprotected command discovers this VM via ARM Resource Graph as an unprotected resource.
+// No RSV container registration is needed — ARM-level discovery finds VMs directly.
+
+resource testVnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
+  name: '${baseName}-vnet'
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.0.0.0/24'
+      ]
+    }
+    subnets: [
+      {
+        name: 'default'
+        properties: {
+          addressPrefix: '10.0.0.0/24'
+        }
+      }
+    ]
+  }
+  tags: {
+    Owner: 'azurebackup-mcp-tests'
+    ServiceName: 'AzureBackup'
+    Environment: 'Test'
+  }
+}
+
+resource sqlVmNic 'Microsoft.Network/networkInterfaces@2024-01-01' = {
+  name: '${baseName}-sqlvm-nic'
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          subnet: {
+            id: testVnet.properties.subnets[0].id
+          }
+          privateIPAllocationMethod: 'Dynamic'
+        }
+      }
+    ]
+  }
+  tags: {
+    Owner: 'azurebackup-mcp-tests'
+    ServiceName: 'AzureBackup'
+    Environment: 'Test'
+  }
+}
+
+// Test-only password — VM has no public IP or public inbound access.
+#disable-next-line secure-secrets-in-params
+var sqlVmAdminPwd = 'McpT3st!${uniqueString(resourceGroup().id, baseName)}'
+
+resource sqlVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
+  name: '${baseName}-sqlvm'
+  location: location
+  properties: {
+    hardwareProfile: {
+      vmSize: 'Standard_B2als_v2'
+    }
+    storageProfile: {
+      imageReference: {
+        publisher: 'MicrosoftSQLServer'
+        offer: 'sql2022-ws2022'
+        sku: 'sqldev-gen2'
+        version: 'latest'
+      }
+      osDisk: {
+        createOption: 'FromImage'
+        managedDisk: {
+          storageAccountType: 'Standard_LRS'
+        }
+      }
+    }
+    osProfile: {
+      computerName: take('${replace(baseName, '-', '')}sq', 15)
+      adminUsername: 'mcptestadmin'
+      adminPassword: sqlVmAdminPwd
+    }
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: sqlVmNic.id
+        }
+      ]
+    }
+  }
+  tags: {
+    Owner: 'azurebackup-mcp-tests'
+    ServiceName: 'AzureBackup'
+    Environment: 'Test'
+  }
+}
+
+output sqlVmId string = sqlVm.id
+output sqlVmName string = sqlVm.name
 output resourceGroupLocation string = location

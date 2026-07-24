@@ -22,6 +22,13 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         CompareBodies = false
     };
 
+    // Disable default BodyKeySanitizers that replace the ENTIRE value of JSON fields used in
+    // subsequent API URL construction. AZSDK3430 ($..id) is already disabled by the base class.
+    // AZSDK3493 ($..name) and AZSDK3436 ($..resourceGroup) would break vault discovery because
+    // vault names and resource group names parsed from listing responses are used to build
+    // per-vault API calls.
+    public override List<string> DisabledDefaultSanitizers { get; } = ["AZSDK3430", "AZSDK3493", "AZSDK3436"];
+
     // Sanitize hostnames in response body URLs to remove actual resource names
     public override List<BodyRegexSanitizer> BodyRegexSanitizers =>
     [
@@ -1511,6 +1518,194 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         {
             Assert.Equal("Microsoft.DocumentDB/databaseAccounts",
                 resource.AssertProperty("resourceType").GetString(), ignoreCase: true);
+        }
+    }
+
+    /// <summary>
+    /// Validates that every resource returned by find-unprotected includes a discoverySource
+    /// field indicating how it was found (ARM resource graph or RSV vault protectable items).
+    /// </summary>
+    [Fact]
+    public async Task GovernanceFindUnprotected_AllItems_HaveDiscoverySource()
+    {
+        var result = await CallToolAsync(
+            "azurebackup_governance_find-unprotected",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName }
+            });
+
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+
+        foreach (var resource in resources.EnumerateArray())
+        {
+            var discoverySource = resource.AssertProperty("discoverySource").GetString();
+            Assert.True(
+                discoverySource is "arm" or "vault",
+                $"Unexpected discoverySource '{discoverySource}' for resource '{resource.GetProperty("name").GetString()}'");
+        }
+    }
+
+    /// <summary>
+    /// Validates that ARM-discovered resources include the expected base fields
+    /// (id, name, resourceType, resourceGroup, location) with discoverySource "arm".
+    /// </summary>
+    [Fact]
+    public async Task GovernanceFindUnprotected_ArmDiscovery_HasExpectedFields()
+    {
+        var result = await CallToolAsync(
+            "azurebackup_governance_find-unprotected",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "resource-type-filter", "Microsoft.Compute/virtualMachines" }
+            });
+
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+
+        // VM resources are always ARM-discovered
+        foreach (var resource in resources.EnumerateArray())
+        {
+            Assert.Equal("arm", resource.AssertProperty("discoverySource").GetString());
+            resource.AssertProperty("id");
+            resource.AssertProperty("name");
+            resource.AssertProperty("resourceType");
+            resource.AssertProperty("resourceGroup");
+            resource.AssertProperty("location");
+        }
+    }
+
+    /// <summary>
+    /// Validates that vault-level discovery finds Azure File Shares as sub-resources
+    /// of registered storage accounts, with enrichment fields populated.
+    /// The test environment has a storage account registered with the RSV vault.
+    /// </summary>
+    [Fact]
+    public async Task GovernanceFindUnprotected_VaultDiscovery_DiscoversFileShares()
+    {
+        var result = await CallToolAsync(
+            "azurebackup_governance_find-unprotected",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName }
+            });
+
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+
+        // Find vault-discovered items (file shares discovered through RSV protectable items API)
+        var vaultDiscovered = new List<JsonElement>();
+        foreach (var resource in resources.EnumerateArray())
+        {
+            if (resource.TryGetProperty("discoverySource", out var ds) && ds.GetString() == "vault")
+            {
+                vaultDiscovered.Add(resource);
+            }
+        }
+
+        // The test environment has a storage account registered with the RSV vault,
+        // so we expect at least one vault-discovered file share
+        Assert.True(vaultDiscovered.Count > 0,
+            "Expected at least one vault-discovered resource (file share from registered storage account)");
+
+        foreach (var resource in vaultDiscovered)
+        {
+            // Vault-discovered items must have vaultName
+            var vaultName = resource.AssertProperty("vaultName").GetString();
+            Assert.False(string.IsNullOrEmpty(vaultName), "vaultName should not be empty for vault-discovered items");
+
+            // Vault-discovered items should have protectionState
+            resource.AssertProperty("protectionState");
+        }
+    }
+
+    /// <summary>
+    /// Validates that vault-discovered file shares reference the correct RSV vault name
+    /// from the test environment.
+    /// </summary>
+    [Fact]
+    public async Task GovernanceFindUnprotected_VaultDiscovery_FileShareReferencesCorrectVault()
+    {
+        var expectedVaultName = $"{Settings.ResourceBaseName}-rsv";
+
+        var result = await CallToolAsync(
+            "azurebackup_governance_find-unprotected",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName }
+            });
+
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+
+        // Find file share items discovered through vault enrichment
+        var fileShareItems = new List<JsonElement>();
+        foreach (var resource in resources.EnumerateArray())
+        {
+            if (resource.TryGetProperty("discoverySource", out var ds) && ds.GetString() == "vault" &&
+                resource.TryGetProperty("resourceType", out var rt) && rt.GetString() == "AzureFileShare")
+            {
+                fileShareItems.Add(resource);
+            }
+        }
+
+        Assert.True(fileShareItems.Count > 0,
+            "Expected at least one AzureFileShare from vault discovery");
+
+        foreach (var item in fileShareItems)
+        {
+            Assert.Equal(expectedVaultName, item.AssertProperty("vaultName").GetString());
+            // File shares should have parentResourceId (storage account name)
+            item.AssertProperty("parentResourceId");
+        }
+    }
+
+    /// <summary>
+    /// Validates that the SQL VM in the test environment appears as an unprotected
+    /// Virtual Machine via ARM-level discovery (no RSV registration needed).
+    /// </summary>
+    [Fact]
+    public async Task GovernanceFindUnprotected_ArmDiscovery_DiscoversVirtualMachines()
+    {
+        var result = await CallToolAsync(
+            "azurebackup_governance_find-unprotected",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName }
+            });
+
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+
+        // Find ARM-discovered virtual machines
+        var vmItems = new List<JsonElement>();
+        foreach (var resource in resources.EnumerateArray())
+        {
+            if (resource.TryGetProperty("discoverySource", out var ds) && ds.GetString() == "arm" &&
+                resource.TryGetProperty("resourceType", out var rt) &&
+                rt.GetString()!.Contains("virtualMachines", StringComparison.OrdinalIgnoreCase))
+            {
+                vmItems.Add(resource);
+            }
+        }
+
+        // The test environment has a SQL VM that should be discovered as an unprotected VM
+        Assert.True(vmItems.Count > 0,
+            "Expected at least one unprotected Virtual Machine from ARM discovery");
+
+        foreach (var item in vmItems)
+        {
+            // ARM-discovered items must have standard fields
+            Assert.False(string.IsNullOrEmpty(item.AssertProperty("id").GetString()));
+            Assert.False(string.IsNullOrEmpty(item.AssertProperty("name").GetString()));
+            Assert.False(string.IsNullOrEmpty(item.AssertProperty("resourceGroup").GetString()));
         }
     }
 
