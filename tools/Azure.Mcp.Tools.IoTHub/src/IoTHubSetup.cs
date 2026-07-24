@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.IoTHub.Commands.Device;
 using Azure.Mcp.Tools.IoTHub.Commands.IoTHub;
 using Azure.Mcp.Tools.IoTHub.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +19,10 @@ public class IoTHubSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IIoTHubService, IoTHubService>();
+        services.AddSingleton<IIoTHubDeviceService, IoTHubDeviceService>();
+
         services.AddSingleton<IoTHubGetCommand>();
+        services.AddSingleton<IoTHubDeviceListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -29,8 +33,11 @@ public class IoTHubSetup : IAreaSetup
 
         var hub = new CommandGroup("hub", "IoT Hub resource operations.");
         iothub.AddSubGroup(hub);
-
         hub.AddCommand<IoTHubGetCommand>(serviceProvider);
+
+        var device = new CommandGroup("device", "IoT Hub device registry operations.");
+        iothub.AddSubGroup(device);
+        device.AddCommand<IoTHubDeviceListCommand>(serviceProvider);
 
         return iothub;
     }

@@ -1,3 +1,8 @@
+param location string = resourceGroup().location
+param suffix string = uniqueString(resourceGroup().id)
+
+resource iothub 'Microsoft.Devices/IotHubs@2023-06-30' = {
+  name: 'iothub-${suffix}'
 targetScope = 'resourceGroup'
 
 @minLength(3)
@@ -21,6 +26,7 @@ resource iotHub 'Microsoft.Devices/IotHubs@2023-06-30' = {
   properties: {}
 }
 
+output IOTHUB_NAME string = iothub.name
 resource readerRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
   scope: subscription()
   // This is the Reader role.
