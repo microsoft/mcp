@@ -130,7 +130,8 @@ public sealed class CommandFactoryToolLoader(
             };
         }
         activity?.SetTag(TagName.ToolId, command.Id)
-            .SetTag(TagName.ToolSource, "internal");
+            .SetTag(TagName.ToolSource, "internal")
+            .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetryValue(command));
 
         // Enforce read-only mode at execution time
         if (_options.Value.ReadOnly && !command.Metadata.ReadOnly)

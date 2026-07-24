@@ -140,6 +140,10 @@ public sealed class RegistryToolLoader(
             };
         }
 
+        var toolId = McpHelper.GetToolIdFromMeta(kvp.Tool.Meta);
+        Activity.Current?.SetTag(TagName.ToolId, toolId)
+            .SetTag(TagName.ToolAnnotations, kvp.Tool);
+
         // Enforce read-only mode at execution time
         if (_options.Value.ReadOnly && kvp.Tool.Annotations?.ReadOnlyHint != true)
         {
@@ -152,7 +156,7 @@ public sealed class RegistryToolLoader(
             {
                 Content = [content],
                 IsError = true,
-            }, kvp.Tool.Meta);
+            }, toolId);
         }
 
         // Enforce HTTP mode restrictions at execution time
@@ -167,7 +171,7 @@ public sealed class RegistryToolLoader(
             {
                 Content = [content],
                 IsError = true,
-            }, kvp.Tool.Meta);
+            }, toolId);
         }
 
         // For MCP servers loaded from registry.json, the ToolArea is also its "server name".

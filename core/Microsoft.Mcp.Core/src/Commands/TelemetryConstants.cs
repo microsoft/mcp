@@ -84,6 +84,11 @@ public class TagName
     public const string ToolParameters = "ToolParameters";
 
     /// <summary>
+    /// MCP tool annotations of the tool that was executed.
+    /// </summary>
+    public const string ToolAnnotations = "ToolAnnotations";
+
+    /// <summary>
     /// The mode of the MCP server.
     /// </summary>
     public const string ServerMode = "ServerMode";

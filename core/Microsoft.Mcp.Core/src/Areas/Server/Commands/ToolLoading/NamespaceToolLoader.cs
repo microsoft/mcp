@@ -370,6 +370,8 @@ public sealed class NamespaceToolLoader(
                 return await InvokeToolLearn(request, intent, namespaceName, cancellationToken);
             }
 
+            Activity.Current?.SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetryValue(cmd));
+
             // Enforce read-only mode at execution time
             if ((_options.Value.ReadOnly ?? false) && !cmd.Metadata.ReadOnly)
             {

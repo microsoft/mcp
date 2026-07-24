@@ -271,6 +271,10 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                 return await InvokeToolLearn(request, intent, tool, cancellationToken);
             }
 
+            var toolId = McpHelper.GetToolIdFromMeta(resolvedTool.Meta);
+            Activity.Current?.SetTag(TagName.ToolId, toolId)
+                .SetTag(TagName.ToolAnnotations, resolvedTool);
+
             if ((options?.Value?.ReadOnly ?? false) && resolvedTool.Annotations?.ReadOnlyHint != true)
             {
                 return McpHelper.InjectToolIdMetadata(new CallToolResult
@@ -283,7 +287,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                         }
                     ],
                     IsError = true,
-                }, resolvedTool.Meta);
+                }, toolId);
             }
 
             if ((options?.Value?.IsHttpMode ?? false) && McpHelper.HasHint(resolvedTool, McpHelper.LocalRequiredHintMetaKey))
@@ -298,7 +302,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                         }
                     ],
                     IsError = true,
-                }, resolvedTool.Meta);
+                }, toolId);
             }
 
             // At this point we should always have a valid command (child tool) call to invoke.
@@ -351,7 +355,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                         finalResponse.Content.Add(contentBlock);
                     }
 
-                    return McpHelper.InjectToolIdMetadata(finalResponse, resolvedTool.Meta);
+                    return McpHelper.InjectToolIdMetadata(finalResponse, toolId);
                 }
             }
 
