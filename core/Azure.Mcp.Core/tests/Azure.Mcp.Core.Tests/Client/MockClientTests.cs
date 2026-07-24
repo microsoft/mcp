@@ -52,7 +52,7 @@ public class MockClientTests
                 Assert.NotNull(result);
                 Assert.Equal("Azure MCP", result.ServerInfo.Name);
                 Assert.Equal("1.0.0-beta", result.ServerInfo.Version);
-                Assert.Equal("2024", result.ProtocolVersion);
+                Assert.Equal("2025-11-25", result.ProtocolVersion);
             });
     }
 
