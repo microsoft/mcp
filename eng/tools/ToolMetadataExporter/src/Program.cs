@@ -4,6 +4,7 @@
 using Azure.Core;
 using Azure.Identity;
 using Kusto.Data;
+using Kusto.Data.Common;
 using Kusto.Data.Net.Client;
 using Kusto.Ingest;
 using Microsoft.Extensions.Configuration;
@@ -88,7 +89,7 @@ public class Program
 
             return credential;
         });
-        services.AddSingleton(sp =>
+        services.AddSingleton<ICslQueryProvider>(sp =>
         {
             var config = sp.GetRequiredService<IOptions<AppConfiguration>>();
 
@@ -98,7 +99,7 @@ public class Program
 
             return KustoClientFactory.CreateCslQueryProvider(connectionStringBuilder);
         });
-        services.AddSingleton(sp =>
+        services.AddSingleton<IKustoIngestClient>(sp =>
         {
             var config = sp.GetRequiredService<IOptions<AppConfiguration>>();
 

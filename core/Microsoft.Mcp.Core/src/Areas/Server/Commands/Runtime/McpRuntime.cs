@@ -57,7 +57,7 @@ public sealed class McpRuntime : IMcpRuntime
     /// Delegates tool invocation requests to the configured tool loader.
     /// </summary>
     /// <param name="request">The request context containing the tool name and parameters.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A result containing the output of the tool invocation.</returns>
     public async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
@@ -101,7 +101,7 @@ public sealed class McpRuntime : IMcpRuntime
 
         try
         {
-            CallToolResult callTool = await _toolLoader.CallToolHandler(request!, cancellationToken);
+            CallToolResult callTool = await _toolLoader.CallToolHandler(request, cancellationToken);
 
             var isSuccessful = !callTool.IsError.HasValue || !callTool.IsError.Value;
             if (isSuccessful)
@@ -204,7 +204,7 @@ public sealed class McpRuntime : IMcpRuntime
     /// Delegates tool discovery requests to the configured tool loader.
     /// </summary>
     /// <param name="request">The request context containing metadata and parameters.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A result containing the list of available tools.</returns>
     public async ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {

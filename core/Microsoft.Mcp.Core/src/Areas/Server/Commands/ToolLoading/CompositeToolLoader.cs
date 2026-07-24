@@ -49,7 +49,7 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
     /// Lists all tools from all tool loaders and builds a mapping of tool names to their respective loaders.
     /// </summary>
     /// <param name="request">The request context containing metadata and parameters.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A result containing the combined list of all available tools, or an empty list if initialization fails.</returns>
     public override async ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
@@ -79,7 +79,7 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
     /// Calls a tool by its name using the appropriate tool loader.
     /// </summary>
     /// <param name="request">The request context containing the tool name and parameters.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A result containing the output of the tool invocation, or an error result if the tool is not found or initialization fails.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
@@ -145,7 +145,7 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
     /// This provides thread-safe initialization using the double-checked locking pattern.
     /// </summary>
     /// <param name="server">The server context for creating list tools requests.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     private async Task InitializeAsync(McpServer server, CancellationToken cancellationToken)
     {

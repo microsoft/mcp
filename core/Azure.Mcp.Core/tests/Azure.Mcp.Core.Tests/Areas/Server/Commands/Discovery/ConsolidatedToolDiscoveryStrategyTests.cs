@@ -9,6 +9,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using NSubstitute;
 using Xunit;
+using ExtensionsOptions = Microsoft.Extensions.Options;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.Discovery;
 
@@ -21,8 +22,8 @@ public class ConsolidatedToolDiscoveryStrategyTests
     {
         var factory = commandFactory ?? CommandFactoryHelpers.CreateCommandFactory();
         var serviceProvider = CommandFactoryHelpers.SetupCommonServices().BuildServiceProvider();
-        var startOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServerStartOptions());
-        var configurationOptions = Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
+        var startOptions = ExtensionsOptions.Options.Create(options ?? new ServerStartOptions());
+        var configurationOptions = ExtensionsOptions.Options.Create(new McpServerConfiguration
         {
             Name = "Test Server",
             ShortName = "test",

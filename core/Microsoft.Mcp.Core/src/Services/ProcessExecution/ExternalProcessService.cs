@@ -605,8 +605,10 @@ internal static class ProcessExtensions
             // Official docs: "No process is associated with this object." - treat as "already gone".
             logger.LogDebug(
                 checkException,
-                "Process.HasExited reported no associated process. Treating as already exited. " +
-                "Process: {ProcessName}, PID: {Pid}", process.SafeName(), process.SafeId());
+                "Process.HasExited reported no associated process. Treating as already exited. "
+                    + "Process: {ProcessName}, PID: {Pid}",
+                process.SafeName(),
+                process.SafeId());
             return new ExitCheckResult(ExitStatus.Exited, CheckException: null);
         }
         catch (System.ComponentModel.Win32Exception checkException)

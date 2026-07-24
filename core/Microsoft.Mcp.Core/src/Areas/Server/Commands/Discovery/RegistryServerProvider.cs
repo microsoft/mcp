@@ -177,7 +177,7 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
     /// <param name="versionArgs">Arguments to pass to get version output.</param>
     /// <param name="minVersion">The minimum required version string (e.g., "1.20.0").</param>
     /// <param name="versionPattern">Regex pattern with a capture group for the version. Defaults to semver pattern.</param>
-    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>An error message if the check fails, or null if the command meets requirements.</returns>
     internal static async Task<string?> CheckCommandVersionAsync(
         string command, IList<string> versionArgs, string minVersion,
@@ -283,7 +283,7 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
     /// Creates an MCP client that communicates with the server using Server-Sent Events (SSE).
     /// </summary>
     /// <param name="clientOptions">Options to configure the client behavior.</param>
-    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A configured MCP client using SSE transport.</returns>
     /// <remarks>
     /// For servers configured with OAuth scopes, this method validates MCP 2026-07-28
@@ -325,7 +325,7 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
     /// Creates an MCP client that communicates with the server using stdio (standard input/output).
     /// </summary>
     /// <param name="clientOptions">Options to configure the client behavior.</param>
-    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A configured MCP client using stdio transport.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the server configuration doesn't specify a valid command for stdio transport.</exception>
     private async Task<McpClient> CreateStdioClientAsync(McpClientOptions clientOptions, CancellationToken cancellationToken)

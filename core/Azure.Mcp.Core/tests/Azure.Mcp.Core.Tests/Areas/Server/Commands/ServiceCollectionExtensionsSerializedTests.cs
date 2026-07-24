@@ -3,12 +3,12 @@
 
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Helpers;
 using Xunit;
+using ExtensionsOptions = Microsoft.Extensions.Options;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands;
 
@@ -37,7 +37,7 @@ public class ServiceCollectionExtensionsSerializedTests
 
         // Assert
         var provider = services.BuildServiceProvider();
-        var options = provider.GetRequiredService<IOptions<McpServerConfiguration>>();
+        var options = provider.GetRequiredService<ExtensionsOptions.IOptions<McpServerConfiguration>>();
 
         Assert.NotNull(options.Value);
 
@@ -61,14 +61,14 @@ public class ServiceCollectionExtensionsSerializedTests
         {
             Transport = TransportTypes.Http,
         };
-        var services = SetupBaseServices().AddSingleton(Microsoft.Extensions.Options.Options.Create(serviceStartOptions));
+        var services = SetupBaseServices().AddSingleton(ExtensionsOptions.Options.Create(serviceStartOptions));
 
         // Act
         services.InitializeConfigurationAndOptions(s_serverAssembly);
         var provider = services.BuildServiceProvider();
 
         // Assert
-        var options = provider.GetRequiredService<IOptions<McpServerConfiguration>>();
+        var options = provider.GetRequiredService<ExtensionsOptions.IOptions<McpServerConfiguration>>();
 
         Assert.NotNull(options.Value);
 
@@ -92,7 +92,7 @@ public class ServiceCollectionExtensionsSerializedTests
         var provider = services.BuildServiceProvider();
 
         // Assert
-        var options = provider.GetRequiredService<IOptions<McpServerConfiguration>>();
+        var options = provider.GetRequiredService<ExtensionsOptions.IOptions<McpServerConfiguration>>();
 
         Assert.NotNull(options.Value);
 
@@ -117,7 +117,7 @@ public class ServiceCollectionExtensionsSerializedTests
         {
             DangerouslyWriteSupportLogsToDir = "/tmp/logs"
         };
-        var services = SetupBaseServices().AddSingleton(Microsoft.Extensions.Options.Options.Create(serviceStartOptions));
+        var services = SetupBaseServices().AddSingleton(ExtensionsOptions.Options.Create(serviceStartOptions));
 
         // Act
         Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", null);
@@ -125,7 +125,7 @@ public class ServiceCollectionExtensionsSerializedTests
         var provider = services.BuildServiceProvider();
 
         // Assert
-        var options = provider.GetRequiredService<IOptions<McpServerConfiguration>>();
+        var options = provider.GetRequiredService<ExtensionsOptions.IOptions<McpServerConfiguration>>();
         Assert.False(options.Value.IsTelemetryEnabled, "Telemetry should be disabled when support logging folder is set");
     }
 
@@ -141,7 +141,7 @@ public class ServiceCollectionExtensionsSerializedTests
         {
             DangerouslyWriteSupportLogsToDir = "/tmp/logs"
         };
-        var services = SetupBaseServices().AddSingleton(Microsoft.Extensions.Options.Options.Create(serviceStartOptions));
+        var services = SetupBaseServices().AddSingleton(ExtensionsOptions.Options.Create(serviceStartOptions));
 
         // Act
         Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", "true");
@@ -149,7 +149,7 @@ public class ServiceCollectionExtensionsSerializedTests
         var provider = services.BuildServiceProvider();
 
         // Assert
-        var options = provider.GetRequiredService<IOptions<McpServerConfiguration>>();
+        var options = provider.GetRequiredService<ExtensionsOptions.IOptions<McpServerConfiguration>>();
         Assert.False(options.Value.IsTelemetryEnabled, "Telemetry should be disabled when support logging folder is set, regardless of environment variable");
     }
 
@@ -167,7 +167,7 @@ public class ServiceCollectionExtensionsSerializedTests
         {
             DangerouslyWriteSupportLogsToDir = folderPath
         };
-        var services = SetupBaseServices().AddSingleton(Microsoft.Extensions.Options.Options.Create(serviceStartOptions));
+        var services = SetupBaseServices().AddSingleton(ExtensionsOptions.Options.Create(serviceStartOptions));
 
         // Act
         Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", null);
@@ -175,7 +175,7 @@ public class ServiceCollectionExtensionsSerializedTests
         var provider = services.BuildServiceProvider();
 
         // Assert
-        var options = provider.GetRequiredService<IOptions<McpServerConfiguration>>();
+        var options = provider.GetRequiredService<ExtensionsOptions.IOptions<McpServerConfiguration>>();
         Assert.True(options.Value.IsTelemetryEnabled, $"Telemetry should be enabled when support logging folder is '{folderPath}'");
     }
 }

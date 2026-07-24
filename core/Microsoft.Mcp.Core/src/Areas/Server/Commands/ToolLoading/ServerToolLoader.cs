@@ -413,9 +413,9 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     /// <summary>
     /// Gets the available tools from the child MCP server and caches the result as JSON.
     /// </summary>
-    /// <param name="request"></param>
-    /// <param name="tool"></param>
-    /// <param name="cancellationToken"></param>
+    /// <param name="request">The request context containing the parameters.</param>
+    /// <param name="tool">The name of the child tool (MCP server) to query for available tools.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns></returns>
     internal async Task<List<Tool>> GetAllChildToolsAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {

@@ -18,7 +18,7 @@ public interface IInsightsService
     /// <param name="subscription">The subscription ID to aggregate.</param>
     /// <param name="tenant">The tenant ID to use for authentication; if null, the default tenant is used.</param>
     /// <param name="retryPolicy">Optional retry policy for transient failures.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <param name="progress">Progress reporter; receives a message per ARG page fetched.</param>
     /// <param name="noCache">Fetch new ARG data if true, else use cached data.</param>
     /// <returns>A SubscriptionAggregation object containing the aggregated results.</returns>
@@ -36,7 +36,7 @@ public interface IInsightsService
     /// </summary>
     /// <param name="tenant">The tenant ID to use for authentication; if null, the default tenant is used.</param>
     /// <param name="retryPolicy">Optional retry policy for transient failures.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <param name="progress">Progress reporter; receives a message per ARG page fetched.</param>
     /// <param name="noCache">Fetch new ARG data if true, else use cached data.</param>
     /// <returns>A SubscriptionAggregation object containing the aggregated results.</returns>

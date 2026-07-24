@@ -13,7 +13,7 @@ public interface IResourceHealthService
     /// </summary>
     /// <param name="resourceId">The Azure resource ID</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The availability status of the resource</returns>
     /// <exception cref="Exception">When the service request fails</exception>
     Task<AvailabilityStatus> GetAvailabilityStatusAsync(
@@ -28,7 +28,7 @@ public interface IResourceHealthService
     /// <param name="resourceGroup">Optional resource group name to filter results</param>
     /// <param name="tenant">Optional tenant ID</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>List of availability statuses for resources</returns>
     /// <exception cref="Exception">When the service request fails</exception>
     Task<List<AvailabilityStatus>> ListAvailabilityStatusesAsync(
@@ -50,7 +50,7 @@ public interface IResourceHealthService
     /// <param name="queryEndTime">Optional end time for the query</param>
     /// <param name="tenant">Optional tenant ID</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>List of service health events</returns>
     /// <exception cref="Exception">When the service request fails</exception>
     Task<List<ServiceHealthEvent>> ListServiceHealthEventsAsync(

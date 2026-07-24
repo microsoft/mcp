@@ -78,10 +78,11 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
                 }
 
                 // If --name-only is also specified, return only the names
-                context.Response.Results = options.NameOnly
-                    ? ResponseResult.Create(new(null, namespaceCommands.Select(nc => nc.Command).ToList()), ModelsJsonContext.Default.ToolsListResult)
-                    : ResponseResult.Create(new(namespaceCommands, null), ModelsJsonContext.Default.ToolsListResult);
+                var result = options.NameOnly
+                    ? new ToolsListResult(Commands: null, Names: namespaceCommands.Select(nc => nc.Command).ToList())
+                    : new ToolsListResult(Commands: namespaceCommands, Names: null);
 
+                context.Response.Results = ResponseResult.Create(result, ModelsJsonContext.Default.ToolsListResult);
                 return Task.FromResult(context.Response);
             }
 

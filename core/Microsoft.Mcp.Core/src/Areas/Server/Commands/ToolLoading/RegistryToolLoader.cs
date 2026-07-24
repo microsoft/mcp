@@ -41,7 +41,7 @@ public sealed class RegistryToolLoader(
     /// Lists all tools available from registered MCP servers.
     /// </summary>
     /// <param name="request">The request context containing parameters and metadata.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A result containing the list of available tools.</returns>
     public override async ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
@@ -84,7 +84,7 @@ public sealed class RegistryToolLoader(
     /// Handles tool calls by routing them to the appropriate MCP client.
     /// </summary>
     /// <param name="request">The request context containing parameters and metadata.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The result of the tool call operation.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
@@ -199,7 +199,7 @@ public sealed class RegistryToolLoader(
     /// <summary>
     /// Initializes the tool client map by discovering servers and populating tools.
     /// </summary>
-    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     private async Task InitializeAsync(CancellationToken cancellationToken)
     {

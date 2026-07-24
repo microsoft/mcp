@@ -25,7 +25,7 @@ public static class McpServerElicitationExtensions
     /// </remarks>
     /// <param name="server">The MCP server instance.</param>
     /// <param name="request">The elicitation request parameters.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A task that represents the asynchronous elicitation operation.</returns>
     public static async Task<ElicitationResponse> RequestElicitationAsync(
         this McpServer server,

@@ -30,7 +30,7 @@ public abstract class BaseAzureResourceService(
     /// Gets the tenant resource for the specified subscription.
     /// </summary>
     /// <param name="tenantId">The tenant ID from the subscription</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The tenant resource associated with the subscription</returns>
     private async Task<TenantResource> GetTenantResourceAsync(Guid? tenantId, CancellationToken cancellationToken = default)
     {
@@ -77,7 +77,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="tableName">Optional table name to query (default: "resources")</param>
     /// <param name="additionalFilter">Optional additional KQL filter condition</param>
     /// <param name="limit">Maximum number of results to return (default: 50)</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <param name="tenant">Optional tenant to use for the query</param>
     /// <returns>List of resources converted to the specified type</returns>
     protected async Task<ResourceQueryResults<T>> ExecuteResourceQueryAsync<T>(
@@ -160,7 +160,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="tableName">Optional table name to query (default: "resources")</param>
     /// <param name="additionalFilter">Optional additional KQL filter condition</param>
     /// <param name="tenant">Optional tenant to use for the query</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>Single resource converted to the specified type, or null if not found</returns>
     protected async Task<T?> ExecuteSingleResourceQueryAsync<T>(
         string resourceType,
@@ -186,7 +186,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="apiVersion">The API version to set for the specified resource type.</param>
     /// <param name="tenant">Optional tenant to use when creating the client.</param>
     /// <param name="retryPolicy">Optional retry policy used by token acquisition.</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>An initialized <see cref="ArmClient"/> configured with the requested API version.</returns>
     protected async Task<ArmClient> CreateArmClientWithApiVersionAsync(string resourceTypeForApiVersion, string apiVersion, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
@@ -201,7 +201,7 @@ public abstract class BaseAzureResourceService(
     /// </summary>
     /// <param name="armClient">The ArmClient to use for the call.</param>
     /// <param name="resourceIdentifier">The resource identifier of the resource to retrieve.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The <see cref="GenericResource"/> instance for the requested resource.</returns>
     /// <exception cref="ArgumentNullException">Thrown when a required parameter is null.</exception>
     protected static async Task<GenericResource> GetGenericResourceAsync(ArmClient armClient, ResourceIdentifier resourceIdentifier, CancellationToken cancellationToken = default)
@@ -228,7 +228,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="azureLocation">The Azure location for the resource.</param>
     /// <param name="content">The content to create or update the resource with.</param>
     /// <param name="jsonTypeInfo">The JSON type information for serialization.</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The <see cref="GenericResource"/> instance for the requested resource.</returns>
     /// <exception cref="ArgumentNullException">Thrown when a required parameter is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the content is invalid.</exception>

@@ -39,7 +39,7 @@ public sealed class CommandFactoryToolLoader(
     /// Lists all tools available from the command factory.
     /// </summary>
     /// <param name="request">The request context containing parameters and metadata.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A result containing the list of available tools.</returns>
     public override ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
@@ -72,7 +72,7 @@ public sealed class CommandFactoryToolLoader(
     /// Handles tool calls by executing the corresponding command from the command factory.
     /// </summary>
     /// <param name="request">The request context containing parameters and metadata.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The result of the tool call operation.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {

@@ -21,7 +21,7 @@ public interface IPricingService
     /// <param name="currency">Currency code (e.g., USD). Default is USD.</param>
     /// <param name="includeSavingsPlan">Whether to include savings plan pricing.</param>
     /// <param name="filter">Raw OData filter for advanced queries.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>List of retail price items matching the criteria.</returns>
     Task<List<PriceItem>> GetPricesAsync(
         string? sku = null,

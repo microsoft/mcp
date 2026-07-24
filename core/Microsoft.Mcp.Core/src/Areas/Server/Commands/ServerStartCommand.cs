@@ -125,7 +125,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
     /// </summary>
     /// <param name="context">The command execution context.</param>
     /// <param name="options">The parsed command options.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A command response indicating the result of the operation.</returns>
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ServerStartOptions options, CancellationToken cancellationToken)
     {

@@ -16,7 +16,7 @@ public interface IAuthorizationService
     /// <param name="scope">The scope that the resource will apply against.</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations.</param>
     /// <param name="retryPolicy">Optional retry policy for the operation.</param>
-    /// <param name="cancellationToken">Optional cancellation token for the operation.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>List of role assignments in the format "Role Definition ID: Principal ID"</returns>
     Task<ResourceQueryResults<RoleAssignment>> ListRoleAssignmentsAsync(
         string subscription,

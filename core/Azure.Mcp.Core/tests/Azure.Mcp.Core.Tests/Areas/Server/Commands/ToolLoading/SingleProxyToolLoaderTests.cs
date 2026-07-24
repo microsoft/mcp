@@ -15,16 +15,18 @@ using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 using NSubstitute;
 using Xunit;
+using ExtensionsOptions = Microsoft.Extensions.Options;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
 public class SingleProxyToolLoaderTests
 {
-    private static Microsoft.Extensions.Options.IOptions<McpServerConfiguration> CreateServerConfigurationOptions()
+    private static ExtensionsOptions.IOptions<McpServerConfiguration> CreateServerConfigurationOptions()
     {
-        return Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
+        return ExtensionsOptions.Options.Create(new McpServerConfiguration
         {
             Name = "Azure.Mcp.Server",
             ShortName = "azure",
@@ -37,9 +39,9 @@ public class SingleProxyToolLoaderTests
 
     private static RegistryDiscoveryStrategy CreateStrategy(ServerStartOptions options, ILogger<RegistryDiscoveryStrategy> logger)
     {
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServerStartOptions());
+        var serviceOptions = ExtensionsOptions.Options.Create(options ?? new ServerStartOptions());
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
-        var registryRoot = RegistryServerHelper.GetRegistryRoot(typeof(Azure.Mcp.Server.Program).Assembly, "Azure.Mcp.Server.Resources.registry.json");
+        var registryRoot = RegistryServerHelper.GetRegistryRoot(typeof(Mcp.Server.Program).Assembly, "Azure.Mcp.Server.Resources.registry.json");
         return new RegistryDiscoveryStrategy(serviceOptions, logger, httpClientFactory, registryRoot!);
     }
 
@@ -51,7 +53,7 @@ public class SingleProxyToolLoaderTests
 
         if (useRealDiscovery)
         {
-            var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
+            var options = ExtensionsOptions.Options.Create(new ServerStartOptions());
             var commandGroupLogger = serviceProvider.GetRequiredService<ILogger<CommandGroupDiscoveryStrategy>>();
             var commandGroupDiscoveryStrategy = new CommandGroupDiscoveryStrategy(
                 CommandFactoryHelpers.CreateCommandFactory(serviceProvider),
@@ -65,32 +67,32 @@ public class SingleProxyToolLoaderTests
                 commandGroupDiscoveryStrategy,
                 registryDiscoveryStrategy
             ], compositeLogger);
-            var toolLoader = new SingleProxyToolLoader(compositeDiscoveryStrategy, logger, Microsoft.Extensions.Options.Options.Create(toolLoaderOptions ?? new ToolLoaderOptions()), CreateServerConfigurationOptions());
+            var toolLoader = new SingleProxyToolLoader(compositeDiscoveryStrategy, logger, ExtensionsOptions.Options.Create(toolLoaderOptions ?? new()), CreateServerConfigurationOptions());
             return (toolLoader, compositeDiscoveryStrategy);
         }
         else
         {
             var mockDiscoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
-            var toolLoader = new SingleProxyToolLoader(mockDiscoveryStrategy, logger, Microsoft.Extensions.Options.Options.Create(toolLoaderOptions ?? new ToolLoaderOptions()), CreateServerConfigurationOptions());
+            var toolLoader = new SingleProxyToolLoader(mockDiscoveryStrategy, logger, ExtensionsOptions.Options.Create(toolLoaderOptions ?? new()), CreateServerConfigurationOptions());
             return (toolLoader, mockDiscoveryStrategy);
         }
     }
 
-    private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateListToolsRequest()
+    private static RequestContext<ListToolsRequestParams> CreateListToolsRequest()
     {
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList })
+        var mockServer = Substitute.For<McpServer>();
+        return new RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList })
         {
             Params = new ListToolsRequestParams()
         };
     }
 
-    private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequest(
+    private static RequestContext<CallToolRequestParams> CreateCallToolRequest(
         string toolName = "azure",
         Dictionary<string, JsonElement>? arguments = null)
     {
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var mockServer = Substitute.For<McpServer>();
+        return new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -250,8 +252,8 @@ public class SingleProxyToolLoaderTests
     {
         // Arrange
         var (toolLoader, _) = CreateToolLoader(useRealDiscovery: true);
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, null!);
+        var mockServer = Substitute.For<McpServer>();
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, null!);
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -295,7 +297,7 @@ public class SingleProxyToolLoaderTests
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         discoveryStrategy.GetOrCreateClientAsync("storage", Arg.Any<McpClientOptions?>(), TestContext.Current.CancellationToken)
             .Returns(mcpClient);
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions() { ReadOnly = true });
+        var toolLoaderOptions = ExtensionsOptions.Options.Create(new ToolLoaderOptions() { ReadOnly = true });
         var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
 
         var toolLoader = new SingleProxyToolLoader(discoveryStrategy, logger, toolLoaderOptions, CreateServerConfigurationOptions());
@@ -338,7 +340,7 @@ public class SingleProxyToolLoaderTests
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         discoveryStrategy.GetOrCreateClientAsync("storage", Arg.Any<McpClientOptions?>(), TestContext.Current.CancellationToken)
             .Returns(mcpClient);
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions() { IsHttpMode = true });
+        var toolLoaderOptions = ExtensionsOptions.Options.Create(new ToolLoaderOptions() { IsHttpMode = true });
         var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
 
         var toolLoader = new SingleProxyToolLoader(discoveryStrategy, logger, toolLoaderOptions, CreateServerConfigurationOptions());
@@ -391,7 +393,7 @@ public class SingleProxyToolLoaderTests
         // Arrange
         var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        var toolLoaderOptions = ExtensionsOptions.Options.Create(new ToolLoaderOptions());
         var serverConfigurationOptions = CreateServerConfigurationOptions();
 
         // Act & Assert
@@ -411,12 +413,12 @@ public class SingleProxyToolLoaderTests
             .Build();
 
         var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
-        var options = Microsoft.Extensions.Options.Options.Create(toolLoaderOptions);
+        var options = ExtensionsOptions.Options.Create(toolLoaderOptions);
 
         return new SingleProxyToolLoader(discoveryStrategy, logger, options, CreateServerConfigurationOptions());
     }
 
-    private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequestWithToolAndCommand(
+    private static RequestContext<CallToolRequestParams> CreateCallToolRequestWithToolAndCommand(
         string tool, string command)
     {
         var arguments = new Dictionary<string, JsonElement>
@@ -426,7 +428,7 @@ public class SingleProxyToolLoaderTests
             ["command"] = JsonDocument.Parse($"\"{command}\"").RootElement,
         };
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var mockServer = Substitute.For<McpServer>();
         return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
         {
             Name = "azure",

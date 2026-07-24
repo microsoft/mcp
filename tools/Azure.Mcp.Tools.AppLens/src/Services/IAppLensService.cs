@@ -20,7 +20,7 @@ public interface IAppLensService
     /// <param name="resourceGroup">Optional resource group to narrow down resource discovery.</param>
     /// <param name="resourceType">Optional resource type to narrow down resource discovery.</param>
     /// <param name="tenantId">Optional tenant ID for authentication.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A diagnostic result containing insights and solutions.</returns>
     Task<DiagnosticResult> DiagnoseResourceAsync(
         string question,

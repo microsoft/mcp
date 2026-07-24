@@ -8,7 +8,6 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
@@ -19,6 +18,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using NSubstitute;
 using Xunit;
+using ExtensionsOptions = Microsoft.Extensions.Options;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.Runtime;
 
@@ -33,8 +33,8 @@ public class McpRuntimeTests
         return services.BuildServiceProvider();
     }
 
-    private static IOptions<ServerStartOptions> CreateOptions(ServerStartOptions? options = null) =>
-        Microsoft.Extensions.Options.Options.Create(options ?? new ServerStartOptions());
+    private static ExtensionsOptions.IOptions<ServerStartOptions> CreateOptions(ServerStartOptions? options = null) =>
+        ExtensionsOptions.Options.Create(options ?? new ServerStartOptions());
 
     private static McpServer CreateMockServer() => Substitute.For<McpServer>();
 

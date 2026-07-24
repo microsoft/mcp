@@ -34,7 +34,7 @@ public interface ICommunicationService
     /// <param name="replyTo">Optional reply-to addresses.</param>
     /// <param name="tenantId">Optional tenant ID.</param>
     /// <param name="retryPolicy">Optional retry policy options.</param>
-    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The result of the email send operation.</returns>
     Task<EmailSendResult> SendEmailAsync(
         string endpoint,

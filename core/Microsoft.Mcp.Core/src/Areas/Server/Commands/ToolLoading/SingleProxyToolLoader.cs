@@ -110,9 +110,9 @@ public sealed class SingleProxyToolLoader(
     /// Handles invocation of the proxy tool, routing requests to the correct tool or command.
     /// </summary>
     /// <param name="request">The request context containing parameters and metadata.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A <see cref="CallToolResult"/> representing the result of the operation.</returns>
-    public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
+    public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         var args = request.Params?.Arguments;
@@ -209,7 +209,7 @@ public sealed class SingleProxyToolLoader(
     /// </summary>
     /// <param name="request">Calling request</param>
     /// <param name="tool">Name of the <see cref="IAreaSetup"/> to get commands for.</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>JSON serialized string representing the list of commands available in the tool's area.</returns>
     private async Task<string> GetToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {

@@ -20,7 +20,7 @@ public interface ITenantService
     /// <summary>
     /// Gets the list of all available Azure tenants.
     /// </summary>
-    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>
     /// A task representing the asynchronous operation, with a list of <see cref="TenantResource"/>
     /// instances.
@@ -31,7 +31,7 @@ public interface ITenantService
     /// Gets the tenant ID from either a tenant ID or tenant name.
     /// </summary>
     /// <param name="tenantIdOrName">The tenant ID or tenant name.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>
     /// A task representing the asynchronous operation, with the tenant ID or <see langword="null"/>
     /// if not found.
@@ -48,7 +48,7 @@ public interface ITenantService
     /// Gets the tenant ID by tenant name.
     /// </summary>
     /// <param name="tenantName">The tenant name.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>
     /// A task representing the asynchronous operation, with the tenant ID or <see langword="null"/>
     /// if not found.
@@ -65,7 +65,7 @@ public interface ITenantService
     /// Gets the tenant name by tenant ID.
     /// </summary>
     /// <param name="tenantId">The tenant ID.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>
     /// A task representing the asynchronous operation, with the tenant name or <see langword="null"/> if not found.
     /// </returns>
@@ -90,7 +90,7 @@ public interface ITenantService
     /// Gets an instance of <see cref="TokenCredential"/>.
     /// </summary>
     /// <param name="tenantId">Optional tenant ID. Use <see langword="null"/> in most cases.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>
     /// A task representing the asynchronous operation, with a value of <see cref="TokenCredential"/>.
     /// </returns>

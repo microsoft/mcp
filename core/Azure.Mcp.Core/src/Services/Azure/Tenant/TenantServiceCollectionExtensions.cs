@@ -29,7 +29,7 @@ public static class TenantServiceCollectionExtensions
     /// <list type="bullet">
     /// <item>
     /// <description>
-    /// <see cref="IAzureTokenCredentialProvider"/> via <see cref="!:AuthenticationServiceCollectionExtensions.AddSingleIdentityTokenCredentialProvider(IServiceCollection)"/>.
+    /// <see cref="IAzureTokenCredentialProvider"/> via <see cref="Microsoft.Mcp.Core.Services.Azure.Authentication.AuthenticationServiceCollectionExtensions.AddSingleIdentityTokenCredentialProvider(IServiceCollection)"/>.
     /// </description>
     /// </item>
     /// <item>

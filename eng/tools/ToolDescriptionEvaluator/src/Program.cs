@@ -380,7 +380,7 @@ internal class Program
                 }
             }
 
-            await PerformAnalysis(toolNameAndPrompts!, embeddingService, db, executionTime, writer, maxResultsPerTest, isCiMode);
+            await PerformAnalysis(toolNameAndPrompts!, embeddingService, db, executionTime, writer, maxResultsPerTest);
 
             stopwatchTotal.Stop();
 
@@ -825,9 +825,7 @@ internal class Program
         }
     }
 
-#pragma warning disable IDE0060 // Should use isCiMode parameter, but it's not used in this method.
-    private static async Task PerformAnalysis(Dictionary<string, List<string>> toolNameWithPrompts, EmbeddingService embeddingService, VectorDB db, TimeSpan databaseSetupTime, StreamWriter writer, int maxResultsPerTest = 5, bool isCiMode = false)
-#pragma warning restore IDE0060
+    private static async Task PerformAnalysis(Dictionary<string, List<string>> toolNameWithPrompts, EmbeddingService embeddingService, VectorDB db, TimeSpan databaseSetupTime, StreamWriter writer, int maxResultsPerTest = 5)
     {
         var stopwatch = Stopwatch.StartNew();
         int promptCount = 0;

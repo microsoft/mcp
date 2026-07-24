@@ -6,7 +6,6 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions;
@@ -18,6 +17,7 @@ using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using ExtensionsOptions = Microsoft.Extensions.Options;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
@@ -42,7 +42,7 @@ public static partial class ServiceCollectionExtensions
 
         // Register options for service start
         services.AddSingleton(serviceStartOptions);
-        services.AddSingleton(Microsoft.Extensions.Options.Options.Create(serviceStartOptions));
+        services.AddSingleton(ExtensionsOptions.Options.Create(serviceStartOptions));
 
         // Register default tool loader options from service start options
         var defaultToolLoaderOptions = new ToolLoaderOptions
@@ -63,7 +63,7 @@ public static partial class ServiceCollectionExtensions
         }
 
         services.AddSingleton(defaultToolLoaderOptions);
-        services.AddSingleton(Microsoft.Extensions.Options.Options.Create(defaultToolLoaderOptions));
+        services.AddSingleton(ExtensionsOptions.Options.Create(defaultToolLoaderOptions));
 
         // Register tool loader strategies
         services.AddSingleton<CommandFactoryToolLoader>();
@@ -132,7 +132,7 @@ public static partial class ServiceCollectionExtensions
                     // ServerToolLoader with RegistryDiscoveryStrategy creates proxy tools for external MCP servers.
                     new ServerToolLoader(
                         sp.GetRequiredService<RegistryDiscoveryStrategy>(),
-                        sp.GetRequiredService<IOptions<ToolLoaderOptions>>(),
+                        sp.GetRequiredService<ExtensionsOptions.IOptions<ToolLoaderOptions>>(),
                         loggerFactory.CreateLogger<ServerToolLoader>()
                     ),
                     // NamespaceToolLoader enables direct in-process execution for tools in Azure namespaces
@@ -152,7 +152,7 @@ public static partial class ServiceCollectionExtensions
                 toolLoaders.Add(new CommandFactoryToolLoader(
                     sp,
                     sp.GetRequiredService<ICommandFactory>(),
-                    Microsoft.Extensions.Options.Options.Create(utilityToolLoaderOptions),
+                    ExtensionsOptions.Options.Create(utilityToolLoaderOptions),
                     loggerFactory.CreateLogger<CommandFactoryToolLoader>()
                 ));
 
@@ -180,13 +180,13 @@ public static partial class ServiceCollectionExtensions
                     // ServerToolLoader with RegistryDiscoveryStrategy creates proxy tools for external MCP servers.
                     new ServerToolLoader(
                         sp.GetRequiredService<RegistryDiscoveryStrategy>(),
-                        sp.GetRequiredService<IOptions<ToolLoaderOptions>>(),
+                        sp.GetRequiredService<ExtensionsOptions.IOptions<ToolLoaderOptions>>(),
                         loggerFactory.CreateLogger<ServerToolLoader>()
                     ),
                     // NamespaceToolLoader enables direct in-process execution for consolidated tools
                     new NamespaceToolLoader(
                         consolidatedCommandFactory,
-                        sp.GetRequiredService<IOptions<ServerStartOptions>>(),
+                        sp.GetRequiredService<ExtensionsOptions.IOptions<ServerStartOptions>>(),
                         sp,
                         loggerFactory.CreateLogger<NamespaceToolLoader>(),
                         false
@@ -214,7 +214,7 @@ public static partial class ServiceCollectionExtensions
 
         var mcpServerOptions = services
             .AddOptions<McpServerOptions>()
-            .Configure<IMcpRuntime, IServerInstructionsProvider, IOptions<McpServerConfiguration>>((mcpServerOptions, mcpRuntime, serverInstructionsProvider, serverConfiguration) =>
+            .Configure<IMcpRuntime, IServerInstructionsProvider, ExtensionsOptions.IOptions<McpServerConfiguration>>((mcpServerOptions, mcpRuntime, serverInstructionsProvider, serverConfiguration) =>
             {
                 var configuration = serverConfiguration.Value;
 
@@ -261,7 +261,7 @@ public static partial class ServiceCollectionExtensions
         services.AddSingleton(GetConfiguration());
 
         services.AddOptions<McpServerConfiguration>()
-            .Configure<IConfiguration, IOptions<ServerStartOptions>>((options, rootConfiguration, serviceStartOptions) =>
+            .Configure<IConfiguration, ExtensionsOptions.IOptions<ServerStartOptions>>((options, rootConfiguration, serviceStartOptions) =>
             {
                 // Use a scoped IConfiguration for loading server settings.
                 var scopedConfiguration = GetConfiguration(assembly);

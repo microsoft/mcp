@@ -16,6 +16,7 @@ using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
+using ExtensionsOptions = Microsoft.Extensions.Options;
 
 namespace Azure.Mcp.Core.Tests.Areas.Tools;
 
@@ -341,7 +342,7 @@ public class ToolsListCommandTests
         var logger = tempServiceProvider.GetRequiredService<ILogger<CommandFactory>>();
         var telemetryService = Substitute.For<ITelemetryService>();
         var emptyAreaSetups = Array.Empty<IAreaSetup>();
-        var configurationOptions = Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
+        var configurationOptions = ExtensionsOptions.Options.Create(new McpServerConfiguration
         {
             Name = "Test Server",
             ShortName = "test",

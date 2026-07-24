@@ -33,12 +33,12 @@ namespace Azure.Mcp.Server;
 
 internal class Program
 {
-    private static readonly IAreaSetup[] Areas = RegisterAreas();
+    private static readonly IAreaSetup[] s_areas = RegisterAreas();
 
     // Derived from the registered ServerSetup instance so the name stays in sync
     // with the actual area registration — no magic string duplication.
-    private static readonly string ServerAreaName =
-        Array.Find(Areas, static a => a is Microsoft.Mcp.Core.Areas.Server.ServerSetup)?.Name ?? "server";
+    private static readonly string s_serverAreaName =
+        Array.Find(s_areas, static a => a is ServerSetup)?.Name ?? "server";
 
     private static async Task<int> Main(string[] args)
     {
@@ -337,7 +337,7 @@ internal class Program
         services.AddAzureTenantService();
         services.AddSingleUserCliCacheService(disabled: true);
 
-        foreach (var area in Areas)
+        foreach (var area in s_areas)
         {
             // When areaFilter is set (CLI path), skip Azure service areas that don't match the target.
             // Non-Azure-service areas (Category != AzureServices) provide shared infrastructure
@@ -357,7 +357,7 @@ internal class Program
         // Optimization: server-mode providers (registry, instructions, plugin allowlists) are only
         // used when running as an MCP server. For CLI area invocations they are never resolved, so
         // register lightweight stubs to avoid reading embedded resources on every CLI call.
-        if (areaFilter == null || string.Equals(areaFilter, ServerAreaName, StringComparison.OrdinalIgnoreCase))
+        if (areaFilter == null || string.Equals(areaFilter, s_serverAreaName, StringComparison.OrdinalIgnoreCase))
         {
             services.AddRegistryRoot(thisAssembly, $"registry.json");
 
@@ -446,7 +446,7 @@ internal class Program
         // Only apply the optimization when the first token is a known registered area.
         // If the token doesn't match any area (e.g. a typo), fall through to full initialization
         // so System.CommandLine can produce helpful "Did you mean..." suggestions.
-        if (!Array.Exists(Areas, a => string.Equals(a.Name, firstToken, StringComparison.OrdinalIgnoreCase)))
+        if (!Array.Exists(s_areas, a => string.Equals(a.Name, firstToken, StringComparison.OrdinalIgnoreCase)))
         {
             return null;
         }

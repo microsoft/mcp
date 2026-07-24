@@ -15,7 +15,7 @@ public interface IMonitorHealthModelService
     /// <param name="resourceGroup">Optional resource group to scope the listing.</param>
     /// <param name="tenant">Optional tenant ID.</param>
     /// <param name="retryPolicy">Optional retry policy.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>List health models.</returns>
     Task<List<HealthModelSummary>> ListHealthModels(
         string subscription,
@@ -32,7 +32,7 @@ public interface IMonitorHealthModelService
     /// <param name="healthModelName">The health model name.</param>
     /// <param name="tenant">Optional tenant ID.</param>
     /// <param name="retryPolicy">Optional retry policy.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The health model resource.</returns>
     Task<HealthModelDetail> GetHealthModel(
         string subscription,

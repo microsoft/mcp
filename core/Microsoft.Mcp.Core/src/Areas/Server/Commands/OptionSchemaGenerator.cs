@@ -23,13 +23,19 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 /// into build errors. Option value types come from <c>System.CommandLine</c> as
 /// runtime <see cref="Type"/> values, so this helper has to use
 /// <see cref="DefaultJsonTypeInfoResolver"/> and
-/// <see cref="JsonStringEnumConverter"/>, both annotated.
+/// <see cref="JsonStringEnumConverter"/>, both annotated. The
+/// <see cref="!:UnconditionalSuppressMessageAttribute"/> attributes below are used
+/// because this class uses the exporter only to read schema metadata (no
+/// (de)serialization, no enum materialization), and because the actual option
+/// types in use are primitives, enums, <see cref="Guid"/>, nullables of those,
+/// and arrays of those, which the default resolver handles without trimming or
+/// dynamic-codegen concerns.
 /// </remarks>
 internal static class OptionSchemaGenerator
 {
-    private static readonly JsonSerializerOptions SchemaOptions = CreateSchemaOptions();
+    private static readonly JsonSerializerOptions s_schemaOptions = CreateSchemaOptions();
 
-    private static readonly JsonSchemaExporterOptions ExporterOptions = new()
+    private static readonly JsonSchemaExporterOptions s_exporterOptions = new()
     {
         TreatNullObliviousAsNonNullable = true,
     };
@@ -61,7 +67,7 @@ internal static class OptionSchemaGenerator
     {
         ArgumentNullException.ThrowIfNull(optionType);
 
-        var schema = JsonSchemaExporter.GetJsonSchemaAsNode(SchemaOptions, optionType, ExporterOptions);
+        var schema = JsonSchemaExporter.GetJsonSchemaAsNode(s_schemaOptions, optionType, s_exporterOptions);
 
         if (schema is JsonObject schemaObject && !string.IsNullOrWhiteSpace(description))
         {

@@ -13,7 +13,7 @@ public interface IDatadogService
     /// <param name="resourceGroup">The name of the resource group containing the Datadog resource.</param>
     /// <param name="subscription">The subscription ID or name where the resource group resides.</param>
     /// <param name="datadogResource">The name of the Datadog resource to query.</param>
-    /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A list of monitored resources.</returns>
     /// <exception cref="AuthenticationFailedException">Thrown when authentication fails.</exception>
     /// <exception cref="RequestFailedException">Thrown when the service request fails.</exception>

@@ -16,7 +16,7 @@ public interface IToolLoader : IAsyncDisposable
     /// Handles requests to list all tools available in the MCP server.
     /// </summary>
     /// <param name="request">The request context containing metadata and parameters.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A result containing the list of available tools.</returns>
     ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken);
 
@@ -25,7 +25,7 @@ public interface IToolLoader : IAsyncDisposable
     /// tool, loaders should return a <see cref="TextContentBlock"/> where the contents are details of the exception.
     /// </summary>
     /// <param name="request">The request context containing the tool name and parameters.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A result containing the output of the tool invocation.</returns>
     ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken);
 }
