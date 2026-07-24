@@ -54,6 +54,10 @@ jobs:
 
   - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
+  - template: /eng/common/testproxy/test-proxy-tool.yml
+    parameters:
+      runProxy: true
+
   - task: Powershell@2
     displayName: "Build code"
     condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
@@ -107,3 +111,27 @@ jobs:
     parameters:
       ArtifactPath: $(Build.ArtifactStagingDirectory)
       ArtifactName: binaries_$(System.JobName)
+
+  # Shut down proxy to prevent file locks on the log file for auto-injected credscan
+  # steps on windows
+  - template: /eng/common/testproxy/test-proxy-tool-shutdown.yml
+
+  - pwsh: |
+      $files = Get-ChildItem -Path $(Build.SourcesDirectory) -Filter test-proxy.log
+      foreach($file in $files){
+          Write-Host "##[group]$file"
+          cat $file
+          Write-Host "##[endgroup]"
+      }
+    displayName: Dump Test-Proxy Logs
+    condition: and(succeededOrFailed(), eq(variables['RunRecordedTests'], 'true'))
+
+  - pwsh: |
+      $files = Get-ChildItem -Path $(Build.SourcesDirectory) -Filter test-proxy-error.log
+      foreach($file in $files){
+          Write-Host "##[group]$file"
+          cat $file
+          Write-Host "##[endgroup]"
+      }
+    displayName: Dump Test-Proxy Error Logs
+    condition: and(succeededOrFailed(), eq(variables['RunRecordedTests'], 'true'))
