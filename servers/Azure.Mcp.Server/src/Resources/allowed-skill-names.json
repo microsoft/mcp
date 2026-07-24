@@ -3,6 +3,8 @@
   "appinsights-instrumentation",
   "azure-ai",
   "azure-aigateway",
+  "azure-app-onboard",
+  "azure-app-onboard-prereq",
   "azure-cloud-migrate",
   "azure-compliance",
   "azure-compute",
