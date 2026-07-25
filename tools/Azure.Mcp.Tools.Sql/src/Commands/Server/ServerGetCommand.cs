@@ -31,7 +31,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.Server;
     Secret = false,
     LocalRequired = false)]
 public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCommand> logger, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<ServerGetOptions, List<SqlServer>>(subscriptionResolver)
+    : SubscriptionCommand<ServerGetOptions, ServerGetCommand.ServerGetCommandResult>(subscriptionResolver)
 {
     private readonly ISqlService _sqlService = sqlService;
     private readonly ILogger<ServerGetCommand> _logger = logger;
@@ -49,7 +49,9 @@ public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCo
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create([server], SqlJsonContext.Default.ListSqlServer);
+                context.Response.Results = ResponseResult.Create(
+                    new([server]),
+                    SqlJsonContext.Default.ServerGetCommandResult);
             }
             else
             {
@@ -59,7 +61,9 @@ public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCo
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(servers ?? [], SqlJsonContext.Default.ListSqlServer);
+                context.Response.Results = ResponseResult.Create(
+                    new(servers ?? []),
+                    SqlJsonContext.Default.ServerGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -82,4 +86,6 @@ public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCo
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
+
+    public sealed record ServerGetCommandResult(List<SqlServer> Servers);
 }

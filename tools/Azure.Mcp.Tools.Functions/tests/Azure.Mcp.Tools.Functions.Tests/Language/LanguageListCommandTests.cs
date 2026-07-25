@@ -40,7 +40,7 @@ public sealed class LanguageListCommandTests : CommandUnitTestsBase<LanguageList
     public async Task ExecuteAsync_ReturnsLanguageList()
     {
         // Arrange
-        var expectedResult = new LanguageListResult
+        var expectedResult = new LanguageListCommandResult
         {
             FunctionsRuntimeVersion = "4.x",
             ExtensionBundleVersion = "[4.*, 5.0.0)",
@@ -117,11 +117,7 @@ public sealed class LanguageListCommandTests : CommandUnitTestsBase<LanguageList
         var response = await ExecuteCommandAsync();
 
         // Assert
-        var results = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ListLanguageListResult);
-
-        Assert.Single(results);
-
-        var result = results[0];
+        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.LanguageListCommandResult);
         Assert.Equal("4.x", result.FunctionsRuntimeVersion);
         Assert.Equal("[4.*, 5.0.0)", result.ExtensionBundleVersion);
         Assert.Equal(2, result.Languages.Count);
@@ -182,11 +178,7 @@ public sealed class LanguageListCommandTests : CommandUnitTestsBase<LanguageList
         var response = await ExecuteCommandAsync();
 
         // Assert
-        var results = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ListLanguageListResult);
-
-        Assert.Single(results);
-
-        var result = results[0];
+        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.LanguageListCommandResult);
         Assert.Equal("4.x", result.FunctionsRuntimeVersion);
         Assert.Equal(6, result.Languages.Count);
 

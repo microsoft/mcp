@@ -36,17 +36,16 @@ public class FunctionsCommandTests(ITestOutputHelper output, TestProxyFixture fi
 
     #region Helper Methods
 
-    private async Task<LanguageListResult> GetLanguageListAsync()
+    private async Task<LanguageListCommandResult> GetLanguageListAsync()
     {
         var result = await CallToolAsync("functions_language_list", new());
         Assert.NotNull(result);
-        var languageResults = JsonSerializer.Deserialize(result.Value, FunctionsJsonContext.Default.ListLanguageListResult);
-        Assert.NotNull(languageResults);
-        Assert.Single(languageResults);
-        return languageResults[0];
+        var languageResult = JsonSerializer.Deserialize(result.Value, FunctionsJsonContext.Default.LanguageListCommandResult);
+        Assert.NotNull(languageResult);
+        return languageResult;
     }
 
-    private static LanguageDetails GetLanguage(LanguageListResult languageList, string languageKey)
+    private static LanguageDetails GetLanguage(LanguageListCommandResult languageList, string languageKey)
     {
         var language = languageList.Languages.FirstOrDefault(l => l.Language == languageKey);
         Assert.NotNull(language);
@@ -452,7 +451,7 @@ public class FunctionsCommandTests(ITestOutputHelper output, TestProxyFixture fi
         var langResult = await CallToolAsync("functions_language_list", new());
 
         Assert.NotNull(langResult);
-        var langList = JsonSerializer.Deserialize(langResult.Value, FunctionsJsonContext.Default.ListLanguageListResult);
+        var langList = JsonSerializer.Deserialize(langResult.Value, FunctionsJsonContext.Default.LanguageListCommandResult);
         Assert.NotNull(langList);
 
         // Act - Second call: template_get should use cached manifest (no CDN call)
@@ -478,10 +477,10 @@ public class FunctionsCommandTests(ITestOutputHelper output, TestProxyFixture fi
         // Get valid runtime version from language list
         var langResult = await CallToolAsync("functions_language_list", new());
         Assert.NotNull(langResult);
-        var langList = JsonSerializer.Deserialize(langResult.Value, FunctionsJsonContext.Default.ListLanguageListResult);
+        var langList = JsonSerializer.Deserialize(langResult.Value, FunctionsJsonContext.Default.LanguageListCommandResult);
         Assert.NotNull(langList);
 
-        var pythonLang = langList[0].Languages.FirstOrDefault(l => l.Language == "python");
+        var pythonLang = langList.Languages.FirstOrDefault(l => l.Language == "python");
         Assert.NotNull(pythonLang?.RuntimeVersions?.Supported);
         var runtimeVersion = pythonLang.RuntimeVersions.Supported[0];
 
