@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Tools.KeyVault.Options;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.KeyVault.Models;
 using Azure.Mcp.Tools.KeyVault.Options.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
@@ -23,76 +23,34 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
     ReadOnly = false,
     Secret = false,
     LocalRequired = true)]
-public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<CertificateImportOptions>
+public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> logger, IKeyVaultService keyVaultService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<CertificateImportOptions, CertificateDetails>(subscriptionResolver)
 {
     private readonly ILogger<CertificateImportCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, CertificateImportOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(KeyVaultOptionDefinitions.VaultName);
-        command.Options.Add(KeyVaultOptionDefinitions.CertificateName);
-        command.Options.Add(KeyVaultOptionDefinitions.CertificateData);
-        command.Options.Add(KeyVaultOptionDefinitions.CertificatePassword);
-    }
-
-    protected override CertificateImportOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.VaultName.Name);
-        options.CertificateName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.CertificateName.Name);
-        options.CertificateData = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.CertificateData.Name);
-        options.Password = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.CertificatePassword.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var certificate = await _keyVaultService.ImportCertificate(
-                options.VaultName!,
-                options.CertificateName!,
-                options.CertificateData!,
+                options.Vault,
+                options.Certificate,
+                options.CertificateData,
                 options.Password,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(
-                    certificate.Name,
-                    certificate.Id,
-                    certificate.KeyId,
-                    certificate.SecretId,
-                    Convert.ToBase64String(certificate.Cer),
-                    certificate.Properties.X509ThumbprintString,
-                    certificate.Properties.Enabled,
-                    certificate.Properties.NotBefore,
-                    certificate.Properties.ExpiresOn,
-                    certificate.Properties.CreatedOn,
-                    certificate.Properties.UpdatedOn,
-                    certificate.Policy.Subject,
-                    certificate.Policy.IssuerName),
-                KeyVaultJsonContext.Default.CertificateImportCommandResult);
+            context.Response.Results = ResponseResult.Create(CertificateDetails.FromCertificate(certificate), KeyVaultJsonContext.Default.CertificateDetails);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error importing certificate {CertificateName} into vault {VaultName}", options.CertificateName, options.VaultName);
+            _logger.LogError(ex, "Error importing certificate {CertificateName} into vault {VaultName}", options.Certificate, options.Vault);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
-
-    internal record CertificateImportCommandResult(string Name, Uri Id, Uri KeyId, Uri SecretId, string Cer, string Thumbprint, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn, string Subject, string IssuerName);
 }

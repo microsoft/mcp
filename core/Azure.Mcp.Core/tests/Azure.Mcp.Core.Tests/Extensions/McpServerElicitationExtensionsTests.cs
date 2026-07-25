@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
@@ -198,6 +199,124 @@ public class McpServerElicitationExtensionsTests
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(
             () => server.RequestElicitationAsync(request, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task RequestElicitationAsync_WithRequestedSchema_ForwardsSchemaToProtocolRequest()
+    {
+        // Arrange
+        var server = CreateMockServer();
+        server.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability { Form = new() } });
+
+        JsonRpcRequest? capturedRequest = null;
+        var mockResponse = new JsonRpcResponse
+        {
+            Id = new RequestId(1),
+            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "accept" })
+        };
+
+        server.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                capturedRequest = callInfo.Arg<JsonRpcRequest>();
+                return Task.FromResult(mockResponse);
+            });
+
+        var request = new ElicitationRequestParams
+        {
+            Message = "Approve operation?",
+            RequestedSchema = new JsonObject
+            {
+                ["properties"] = new JsonObject
+                {
+                    ["decision"] = new JsonObject
+                    {
+                        ["type"] = "string"
+                    }
+                },
+                ["required"] = new JsonArray("decision")
+            }
+        };
+
+        // Act
+        var result = await server.RequestElicitationAsync(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(ElicitationAction.Accept, result.Action);
+        Assert.NotNull(capturedRequest);
+        var protocolParams = JsonSerializer.Deserialize<ElicitRequestParams>(capturedRequest!.Params!.ToJsonString());
+        Assert.NotNull(protocolParams);
+        Assert.NotNull(protocolParams!.RequestedSchema);
+        Assert.NotNull(protocolParams.RequestedSchema.Properties);
+        Assert.True(protocolParams.RequestedSchema.Properties.ContainsKey("decision"));
+        Assert.NotNull(protocolParams.RequestedSchema.Required);
+        Assert.Contains("decision", protocolParams.RequestedSchema.Required);
+    }
+
+    [Fact]
+    public async Task RequestElicitationAsync_WithDeclineAction_ReturnsDecline()
+    {
+        // Arrange
+        var server = CreateMockServer();
+        server.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability { Form = new() } });
+
+        var mockResponse = new JsonRpcResponse
+        {
+            Id = new RequestId(1),
+            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "decline" })
+        };
+
+        server.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(mockResponse));
+
+        var request = new ElicitationRequestParams
+        {
+            Message = "Approve operation?",
+            RequestedSchema = new JsonObject
+            {
+                ["properties"] = new JsonObject { ["confirm"] = new JsonObject { ["type"] = "string" } },
+                ["required"] = new JsonArray("confirm")
+            }
+        };
+
+        // Act
+        var result = await server.RequestElicitationAsync(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(ElicitationAction.Decline, result.Action);
+    }
+
+    [Fact]
+    public async Task RequestElicitationAsync_WithCancelAction_ReturnsCancel()
+    {
+        // Arrange
+        var server = CreateMockServer();
+        server.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability { Form = new() } });
+
+        var mockResponse = new JsonRpcResponse
+        {
+            Id = new RequestId(1),
+            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "cancel" })
+        };
+
+        server.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(mockResponse));
+
+        var request = new ElicitationRequestParams
+        {
+            Message = "Approve operation?",
+            RequestedSchema = new JsonObject
+            {
+                ["properties"] = new JsonObject { ["confirm"] = new JsonObject { ["type"] = "string" } },
+                ["required"] = new JsonArray("confirm")
+            }
+        };
+
+        // Act
+        var result = await server.RequestElicitationAsync(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(ElicitationAction.Cancel, result.Action);
     }
 
     #region Destructive Elicitation Tests

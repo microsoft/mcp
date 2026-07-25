@@ -25,7 +25,6 @@ public static class SreAgentOptionDefinitions
     public const string TitleName = "title";
     public const string KindName = "kind";
     public const string YamlContentName = "yaml-content";
-    public const string SourceNameName = "source-name";
 
     internal const string AgentDescription = "The name of the Azure SRE Agent resource to target.";
     internal const string NameDescription = "The name of the SRE Agent item.";

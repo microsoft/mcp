@@ -4,6 +4,8 @@
     <OutputType>Exe</OutputType>
     <HasLiveTests>false</HasLiveTests>
     <HasUnitTests>true</HasUnitTests>
+    <!-- Suppress MCP9005: tests exercise sampling behaviour; migration to MRTR tracked as Phase 3. -->
+    <NoWarn>$(NoWarn);MCP9005</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)core\Azure.Mcp.Core\tests\Azure.Mcp.Tests\Azure.Mcp.Tests.csproj" />

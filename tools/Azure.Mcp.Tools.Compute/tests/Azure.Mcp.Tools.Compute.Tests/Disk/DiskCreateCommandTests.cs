@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Security;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Disk;
 using Azure.Mcp.Tools.Compute.Models;
@@ -10,7 +11,6 @@ using Azure.Mcp.Tools.Compute.Services;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -20,7 +20,7 @@ namespace Azure.Mcp.Tools.Compute.Tests.Disk;
 /// <summary>
 /// Unit tests for the DiskCreateCommand.
 /// </summary>
-public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IComputeService>
+public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreateCommand, IComputeService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -80,7 +80,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -156,7 +156,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             hyperVGeneration,
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -230,7 +230,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -300,7 +300,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -364,7 +364,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -465,7 +465,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -531,7 +531,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -603,7 +603,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             tags,
             diskEncryptionSet,
             encryptionType,
@@ -654,7 +654,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             tags,
             diskEncryptionSet,
             encryptionType,
@@ -708,7 +708,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -794,7 +794,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -877,7 +877,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -947,7 +947,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -1014,7 +1014,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -1059,7 +1059,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -1167,7 +1167,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -1217,7 +1217,7 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),

@@ -322,7 +322,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithNullNamespace_ReturnsAllServers()
     {
         // Arrange
-        var options = new ServiceStartOptions { Namespace = null };
+        var options = new ServerStartOptions { Namespace = null };
         var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
 
         // Act
@@ -339,7 +339,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithEmptyNamespace_ReturnsAllServers()
     {
         // Arrange
-        var options = new ServiceStartOptions { Namespace = [] };
+        var options = new ServerStartOptions { Namespace = [] };
         var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
 
         // Act
@@ -356,7 +356,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithMatchingNamespace_ReturnsFilteredServers()
     {
         // Arrange
-        var options = new ServiceStartOptions { Namespace = ["documentation"] };
+        var options = new ServerStartOptions { Namespace = ["documentation"] };
         var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
 
         // Act
@@ -378,7 +378,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithNonMatchingNamespace_ReturnsEmptyResult()
     {
         // Arrange
-        var options = new ServiceStartOptions { Namespace = ["nonexistent"] };
+        var options = new ServerStartOptions { Namespace = ["nonexistent"] };
         var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
 
         // Act
@@ -393,7 +393,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithMultipleNamespaces_ReturnsMatchingServers()
     {
         // Arrange
-        var options = new ServiceStartOptions { Namespace = ["documentation", "another"] };
+        var options = new ServerStartOptions { Namespace = ["documentation", "another"] };
         var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
 
         // Act
@@ -416,7 +416,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_NamespaceFilteringIsCaseInsensitive()
     {
         // Arrange
-        var options = new ServiceStartOptions { Namespace = ["DOCUMENTATION"] };
+        var options = new ServerStartOptions { Namespace = ["DOCUMENTATION"] };
         var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
 
         // Act

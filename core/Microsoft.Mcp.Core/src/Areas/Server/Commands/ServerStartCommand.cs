@@ -1,0 +1,1011 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Diagnostics;
+using System.Net;
+using System.Text.Json;
+using Azure.Monitor.OpenTelemetry.Exporter;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
+using Microsoft.Identity.Abstractions;
+using Microsoft.Identity.Web;
+using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Logging;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Caching;
+using Microsoft.Mcp.Core.Services.Telemetry;
+using OpenTelemetry;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
+
+namespace Microsoft.Mcp.Core.Areas.Server.Commands;
+
+/// <summary>
+/// Command to start the MCP server with specified configuration options.
+/// This command is hidden from the main command list.
+/// </summary>
+[HiddenCommand]
+[CommandMetadata(
+    Id = "9953ff62-e3d7-4bdf-9b70-d569e54e3df1",
+    Name = "start",
+    Title = "Start MCP Server",
+    Description = "Starts Azure MCP Server.",
+    Destructive = false,
+    ReadOnly = true)]
+public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
+{
+    private static readonly string[] s_stdioHostBuilderArgs =
+    [
+        $"--contentRoot={AppContext.BaseDirectory}",
+        "--hostBuilder:reloadConfigOnChange=false"
+    ];
+
+    internal static readonly WebApplicationOptions s_httpWebApplicationOptions = new()
+    {
+        ContentRootPath = AppContext.BaseDirectory
+    };
+
+    public static Action<IServiceCollection> ConfigureServices { get; set; } = _ => { };
+
+    public static Func<IServiceProvider, Task> InitializeServicesAsync { get; set; } = _ => Task.CompletedTask;
+
+    public override void PostBindOptions(ServerStartOptions options)
+    {
+        base.PostBindOptions(options);
+
+        // When --tool options are provided automatically change the mode to "all"
+        if (options.Tool != null && options.Tool.Length > 0)
+        {
+            options.Mode = ModeTypes.All;
+        }
+
+        options.OutgoingAuthStrategy = ResolveAuthStrategy(options);
+    }
+
+    public override void ValidateOptions(ServerStartOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+
+        ValidateMode(options.Mode, validationResult);
+        ValidateTransportConfiguration(options, validationResult);
+        ValidateNamespaceAndToolMutualExclusion(options, validationResult);
+        ValidateOutgoingAuthStrategy(options, validationResult);
+        ValidateSupportLoggingFolder(options, validationResult);
+    }
+
+    /// <summary>
+    /// Validates that the support logging folder path is valid when specified.
+    /// </summary>
+    /// <param name="options">The bound ServerStartOptions.</param>
+    /// <param name="validationResult">Validation result to update on failure.</param>
+    private static void ValidateSupportLoggingFolder(ServerStartOptions options, ValidationResult validationResult)
+    {
+        if (options.DangerouslyWriteSupportLogsToDir is null)
+        {
+            return; // Option not specified, nothing to validate
+        }
+
+        // Validate the folder path is not empty or whitespace
+        if (string.IsNullOrWhiteSpace(options.DangerouslyWriteSupportLogsToDir))
+        {
+            validationResult.Errors.Add("The --dangerously-write-support-logs-to-dir option requires a valid folder path.");
+            return;
+        }
+
+        // Validate the folder path is actually a valid path format
+        try
+        {
+            // GetFullPath will throw for invalid path characters and other path format issues
+            _ = Path.GetFullPath(options.DangerouslyWriteSupportLogsToDir);
+        }
+        catch (Exception ex) when (ex is ArgumentException or PathTooLongException or NotSupportedException)
+        {
+            validationResult.Errors.Add($"The --dangerously-write-support-logs-to-dir option contains an invalid folder path '{options.DangerouslyWriteSupportLogsToDir}': {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Executes the service start command, creating and starting the MCP server.
+    /// </summary>
+    /// <param name="context">The command execution context.</param>
+    /// <param name="options">The parsed command options.</param>
+    /// <returns>A command response indicating the result of the operation.</returns>
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ServerStartOptions options, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var tracerProvider = AddIncomingAndOutgoingHttpSpans(options);
+
+            using var host = CreateHost(options);
+
+            await InitializeServicesAsync(host.Services);
+
+            await host.StartAsync(cancellationToken);
+
+            var telemetryService = host.Services.GetRequiredService<ITelemetryService>();
+            LogStartTelemetry(telemetryService, options);
+
+            await host.WaitForShutdownAsync(cancellationToken);
+
+            return context.Response;
+        }
+        catch (Exception ex)
+        {
+            HandleException(context, ex);
+            return context.Response;
+        }
+    }
+
+    internal static void LogStartTelemetry(ITelemetryService telemetryService, ServerStartOptions options)
+    {
+        using var activity = telemetryService.StartActivity(ActivityName.ServerStarted);
+
+        if (activity != null)
+        {
+            activity.SetTag(TagName.Transport, options.Transport);
+            activity.SetTag(TagName.ServerMode, options.Mode);
+            activity.SetTag(TagName.IsReadOnly, options.ReadOnly);
+            activity.SetTag(TagName.DangerouslyDisableElicitation, options.DangerouslyDisableElicitation);
+            activity.SetTag(TagName.DangerouslyDisableHttpIncomingAuth, options.DangerouslyDisableHttpIncomingAuth);
+            activity.SetTag(TagName.IsDebug, options.Debug);
+
+            if (options.Namespace != null && options.Namespace.Length > 0)
+            {
+                activity.SetTag(TagName.Namespace, string.Join(",", options.Namespace));
+            }
+            if (options.Tool != null && options.Tool.Length > 0)
+            {
+                activity.SetTag(TagName.Tool, string.Join(",", options.Tool));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Configures support logging when a support logging folder is specified.
+    /// This enables debug-level logging for troubleshooting and support purposes.
+    /// </summary>
+    /// <param name="logging">The logging builder to configure.</param>
+    /// <param name="options">The server configuration options.</param>
+    private static void ConfigureSupportLogging(ILoggingBuilder logging, ServerStartOptions options)
+    {
+        if (options.DangerouslyWriteSupportLogsToDir is null)
+        {
+            return;
+        }
+
+        // Set minimum log level to Debug when support logging is enabled
+        logging.SetMinimumLevel(LogLevel.Debug);
+
+        // Add file logging to the specified folder
+        logging.AddSupportFileLogging(options.DangerouslyWriteSupportLogsToDir);
+    }
+
+    /// <summary>
+    /// Validates if the provided mode is a valid mode type.
+    /// </summary>
+    /// <param name="mode">The mode to validate.</param>
+    /// <param name="validationResult">Validation result to update on failure.</param>
+    private static void ValidateMode(string? mode, ValidationResult validationResult)
+    {
+        if (mode == ModeTypes.SingleToolProxy ||
+            mode == ModeTypes.NamespaceProxy ||
+            mode == ModeTypes.All ||
+            mode == ModeTypes.ConsolidatedProxy)
+        {
+            return; // Success
+        }
+
+        validationResult.Errors.Add($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}, {ModeTypes.ConsolidatedProxy}.");
+    }
+
+    /// <summary>
+    /// Validates the transport configuration, ensuring the transport type is valid and compatible with other options.
+    /// Verifies that HTTP transport is only used when available (ENABLE_HTTP), and that --dangerously-disable-http-incoming-auth
+    /// is only specified with HTTP transport.
+    /// </summary>
+    /// <param name="options">The bound ServerStartOptions.</param>
+    /// <param name="validationResult">Validation result to update on failure.</param>
+    private static void ValidateTransportConfiguration(ServerStartOptions options, ValidationResult validationResult)
+    {
+        if (options.Transport == TransportTypes.StdIo)
+        {
+            if (options.DangerouslyDisableHttpIncomingAuth)
+            {
+                validationResult.Errors.Add($"The --dangerously-disable-http-incoming-auth option cannot be used with the {TransportTypes.StdIo} transport. To use this option, specify {TransportTypes.Http} transport with --transport http.");
+            }
+            return;
+        }
+
+        if (options.Transport == TransportTypes.Http)
+        {
+#if ENABLE_HTTP
+            return;
+#else
+            validationResult.Errors.Add($"{TransportTypes.Http} transport is only supported in the Docker image distribution of Azure MCP Server. Please use the Docker image or switch to {TransportTypes.StdIo} transport.");
+            return;
+#endif
+        }
+
+        validationResult.Errors.Add($"Invalid transport '{options.Transport}'. Valid transports are: {TransportTypes.StdIo}, {TransportTypes.Http}.");
+    }
+
+    /// <summary>
+    /// Validates that --namespace and --tool options are not used together.
+    /// </summary>
+    /// <param name="options">The bound ServerStartOptions.</param>
+    /// <param name="validationResult">Validation result to update on failure.</param>
+    private static void ValidateNamespaceAndToolMutualExclusion(ServerStartOptions options, ValidationResult validationResult)
+    {
+        bool hasNamespace = options.Namespace != null && options.Namespace.Length > 0;
+        bool hasTool = options.Tool != null && options.Tool.Length > 0;
+
+        if (hasNamespace && hasTool)
+        {
+            validationResult.Errors.Add("The --namespace and --tool options cannot be used together. Please specify either --namespace to filter by service namespace or --tool to filter by specific tool names, but not both.");
+        }
+    }
+
+    /// <summary>
+    /// Validates that the outgoing authentication strategy is compatible with the hosting mode.
+    /// </summary>
+    /// <param name="options">The bound ServerStartOptions.</param>
+    /// <param name="validationResult">Validation result to update on failure.</param>
+    private static void ValidateOutgoingAuthStrategy(ServerStartOptions options, ValidationResult validationResult)
+    {
+        if (options.OutgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
+        {
+#if ENABLE_HTTP
+            if (options.Transport != TransportTypes.Http || options.DangerouslyDisableHttpIncomingAuth)
+            {
+                validationResult.Errors.Add($"The {OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy requires the server to run in authenticated HTTP mode (--transport http without --dangerously-disable-http-incoming-auth).");
+            }
+            return;
+#else
+            commandResult.AddError($"{OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy is only supported in the Docker image distribution of Azure MCP Server. " +
+                "Please use the Docker image or switch to a different outgoing authentication strategy.");
+#endif
+        }
+    }
+
+    /// <summary>
+    /// Provides custom error messages for specific exception types to improve user experience.
+    /// </summary>
+    /// <param name="ex">The exception to format an error message for.</param>
+    /// <returns>A user-friendly error message.</returns>
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        ArgumentException argEx when argEx.Message.Contains("Invalid transport") =>
+            "Invalid transport option specified. Use --transport stdio for the supported transport mechanism.",
+        ArgumentException argEx when argEx.Message.Contains("Invalid mode") =>
+            "Invalid mode option specified. Use --mode single, namespace, or all for the supported modes.",
+        ArgumentException argEx when argEx.Message.Contains("--namespace and --tool options cannot be used together") =>
+            "Configuration error: The --namespace and --tool options are mutually exclusive. Use either one or the other to filter available tools.",
+        ArgumentException argEx when argEx.Message.Contains($"{OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy") =>
+            $"Configuration error: The {OutgoingAuthStrategy.UseOnBehalfOf} authentication strategy requires the server to run in authenticated HTTP mode (--transport http without --dangerously-disable-http-incoming-auth).",
+        InvalidOperationException invOpEx when invOpEx.Message.Contains("Using --dangerously-disable-http-incoming-auth") =>
+            "Configuration error to disable incoming HTTP authentication. Ensure proper authentication is configured with Managed Identity or Workload Identity.",
+        _ => base.GetErrorMessage(ex)
+    };
+
+    /// <summary>
+    /// Creates the host for the MCP server with the specified options.
+    /// </summary>
+    /// <param name="serverOptions">The server configuration options.</param>
+    /// <returns>An IHost instance configured for the MCP server.</returns>
+    private IHost CreateHost(ServerStartOptions serverOptions)
+    {
+        // Inform the credential chain which transport is active so that interactive credentials
+        // that require a user-facing terminal (e.g. DeviceCodeCredential) can refuse to activate.
+        CustomChainedCredential.ActiveTransport = serverOptions.Transport;
+
+#if ENABLE_HTTP
+        if (serverOptions.Transport == TransportTypes.Http)
+        {
+            if (serverOptions.DangerouslyDisableHttpIncomingAuth)
+            {
+                return CreateIncomingAuthDisabledHttpHost(serverOptions);
+            }
+            else
+            {
+                return CreateHttpHost(serverOptions);
+            }
+        }
+        else
+        {
+            return CreateStdioHost(serverOptions);
+        }
+#else
+        return CreateStdioHost(serverOptions);
+#endif
+    }
+
+    /// <summary>
+    /// Creates a host for STDIO transport.
+    /// </summary>
+    /// <param name="serverOptions">The server configuration options.</param>
+    /// <returns>An IHost instance configured for STDIO transport.</returns>
+    internal static IHost CreateStdioHost(ServerStartOptions serverOptions)
+    {
+        return Host.CreateDefaultBuilder(s_stdioHostBuilderArgs)
+            .ConfigureLogging(logging =>
+            {
+                logging.ClearProviders();
+                logging.AddEventSourceLogger();
+
+                if (serverOptions.Debug)
+                {
+                    // Configure console logger to emit Debug+ to stderr so tests can capture logs from StandardError
+                    logging.AddConsole(options =>
+                    {
+                        options.LogToStandardErrorThreshold = LogLevel.Debug;
+                        options.FormatterName = Microsoft.Extensions.Logging.Console.ConsoleFormatterNames.Simple;
+                    });
+                    logging.AddSimpleConsole(simple =>
+                    {
+                        simple.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Disabled;
+                        simple.IncludeScopes = false;
+                        simple.SingleLine = true;
+                        simple.TimestampFormat = "[HH:mm:ss] ";
+                    });
+                    logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", LogLevel.Debug);
+                    logging.SetMinimumLevel(LogLevel.Debug);
+                }
+
+                ConfigureSupportLogging(logging, serverOptions);
+            })
+            .ConfigureServices(services =>
+            {
+                // Configure the outgoing authentication strategy.
+                services.AddSingleIdentityTokenCredentialProvider();
+
+                // Configure Single User CLI Cache for stdio transport here, before ConfigureServices is called.
+                // ConfigureServices will also add in Single User CLI Cache tentatively, but this spot knows about
+                // server configurations and will take precedent.
+                services.AddSingleUserCliCacheService(serverOptions.DisableCaching);
+
+                ConfigureServices(services);
+                ConfigureMcpServer(services, serverOptions);
+            })
+            .Build();
+    }
+
+    /// <summary>
+    /// Creates a host for HTTP transport.
+    /// </summary>
+    /// <param name="serverOptions">The server configuration options.</param>
+    /// <returns>An IHost instance configured for HTTP transport.</returns>
+    private IHost CreateHttpHost(ServerStartOptions serverOptions)
+    {
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(s_httpWebApplicationOptions);
+
+        // Read once at host setup time — this env var is process-wide and effectively static,
+        // so there is no need to re-read it on every incoming request.
+        // Default to false; the env var must be present and parse to "true" to enable.
+        bool enableForwardedHeaders =
+            bool.TryParse(
+                Environment.GetEnvironmentVariable("AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS"),
+                out bool parsedEnvVar)
+            && parsedEnvVar;
+
+        // Configure logging
+        builder.Logging.ClearProviders();
+        builder.Logging.AddEventSourceLogger();
+        builder.Logging.AddConsole();
+        ConfigureSupportLogging(builder.Logging, serverOptions);
+
+        IServiceCollection services = builder.Services;
+
+        // Configure outgoing and incoming authentication and authorization.
+        //
+        // Configure incoming authentication and authorization.
+        var azureAdSection = builder.Configuration.GetSection(Constants.AzureAd);
+        AuthenticationBuilder authBuilder = services
+            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddMicrosoftIdentityWebApiAot(
+                options => azureAdSection.Bind(options),
+                JwtBearerDefaults.AuthenticationScheme,
+                jwtOptions =>
+                {
+                    // Only disable HTTPS metadata requirement in development environments.
+                    // Production environments should enforce HTTPS for metadata endpoints.
+                    // Note: Azure AD (login.microsoftonline.com) always uses HTTPS regardless of this setting.
+                    jwtOptions.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+
+                    // Configure JWT Bearer events for OAuth protected resource metadata
+                    jwtOptions.Events = new JwtBearerEvents
+                    {
+                        OnChallenge = context =>
+                        {
+                            // Add resource_metadata parameter to WWW-Authenticate header
+                            if (!context.Response.HasStarted)
+                            {
+                                HttpRequest request = context.Request;
+                                string scheme = GetSchemeForOAuthProtectedResourceMetadata(request, enableForwardedHeaders);
+                                string resourceMetadataUrl = $"{scheme}://{request.Host}/.well-known/oauth-protected-resource";
+
+                                context.Response.StatusCode = 401;
+
+                                var header = $"Bearer realm=\"{request.Host}\", resource_metadata=\"{resourceMetadataUrl}\"";
+                                if (!string.IsNullOrEmpty(context.Error))
+                                    header += $", error=\"{context.Error}\"";
+                                if (!string.IsNullOrEmpty(context.ErrorDescription))
+                                    header += $", error_description=\"{context.ErrorDescription}\"";
+
+                                // Modify the WWW-Authenticate header to include resource_metadata
+                                context.Response.Headers.WWWAuthenticate = header;
+                            }
+                            context.HandleResponse();
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
+
+        // Configure authorization policy for MCP access.
+        services.AddAuthorizationBuilder()
+            .SetFallbackPolicy(null)
+            .AddPolicy("McpAccess", policy =>
+            {
+                policy.RequireAuthenticatedUser();
+
+                // Naming conventions used based on well-known Microsoft services, like MS Graph:
+                // - Scopes for delegated permissions: Mcp.Tools.Verb
+                // - App roles for application permissions: Mcp.Tools.Verb.All
+                // As of Oct 2025, we only have ReadWrite as a verb, but this can be extended
+                // in the future as needed. Other scenarios that aren't "MCP" or "Tools" can
+                // also be added in the future as they become relevant.
+                policy.RequireScopeOrAppPermission(
+                    allowedScopeValues: ["Mcp.Tools.ReadWrite"],
+                    allowedAppPermissionValues: ["Mcp.Tools.ReadWrite.All"]);
+            });
+
+        // Configure outgoing authentication strategy
+        if (serverOptions.OutgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
+        {
+            services.AddHttpOnBehalfOfTokenCredentialProvider();
+        }
+        else
+        {
+            services.AddSingleIdentityTokenCredentialProvider();
+        }
+
+        // Add a multi-user, HTTP context-aware caching strategy to isolate cache entries.
+        services.AddHttpServiceCacheService(serverOptions.DisableCaching);
+
+        // Configure non-MCP controllers/endpoints/routes/etc.
+        services.AddHealthChecks();
+
+        // Configure CORS
+        // By default in development mode, we restrict to localhost origins for security.
+        // In production (authenticated mode), allow configured origins or all origins if specified.
+        // Non-browser clients are unaffected by CORS.
+        ConfigureCors(services, builder.Environment, serverOptions);
+
+        // Configure services
+        ConfigureServices(services); // Our static callback hook
+        ConfigureMcpServer(services, serverOptions);
+
+        WebApplication app = builder.Build();
+
+        UseHttpsRedirectionIfEnabled(app);
+
+        // Configure middleware pipeline
+        app.UseCors("McpCorsPolicy");
+        app.UseRouting();
+
+        // Add OAuth protected resource metadata middleware
+        //
+        app.Use(async (context, next) =>
+        {
+            if (context.Request.Path == "/.well-known/oauth-protected-resource" &&
+                context.Request.Method == "GET")
+            {
+                IOptionsMonitor<MicrosoftIdentityApplicationOptions> azureAdOptionsMonitor = context
+                    .RequestServices
+                    .GetRequiredService<IOptionsMonitor<MicrosoftIdentityApplicationOptions>>();
+                MicrosoftIdentityApplicationOptions azureAdOptions = azureAdOptionsMonitor.Get(JwtBearerDefaults.AuthenticationScheme);
+                HttpRequest request = context.Request;
+                string scheme = GetSchemeForOAuthProtectedResourceMetadata(request, enableForwardedHeaders);
+                string baseUrl = $"{scheme}://{request.Host}";
+                string? clientId = azureAdOptions.ClientId;
+                string? tenantId = azureAdOptions.TenantId;
+                string instance = azureAdOptions.Instance?.TrimEnd('/') ?? "https://login.microsoftonline.com";
+
+                var metadata = new OAuthProtectedResourceMetadata
+                {
+                    Resource = baseUrl,
+                    AuthorizationServers = [$"{instance}/{tenantId}/v2.0"],
+
+                    // Only delegated permissions for user principal authorization is listed here.
+                    // Client with users send these scopes to the identity platform to acquire an
+                    // access token.
+                    // However, special to Entra, service principals are expected to always
+                    // request the special `app-id/.default` scope because service principals use
+                    // app roles/app permissions instead of scopes. At time of writing (Oct 2025),
+                    // we don't solve this problem here. Instead we expect any service principal
+                    // clients to be hardcoded to use the `app-id/.default` scope when requesting
+                    // access tokens for our endpoint and for the owners of the client and MCP
+                    // server's service principals to ensure the necessary app roles are assigned
+                    // upfront.
+                    ScopesSupported = [$"{clientId}/Mcp.Tools.ReadWrite"],
+                    BearerMethodsSupported = ["header"],
+
+                    // Intentionally pointing to MCP repo for documentation. Could eventually
+                    // have a dedicated usage doc page, potentially provided by this service itself.
+                    ResourceDocumentation = "https://github.com/Microsoft/mcp"
+                };
+
+                context.Response.ContentType = "application/json";
+                await JsonSerializer.SerializeAsync(
+                    context.Response.Body,
+                    metadata,
+                    OAuthMetadataJsonContext.Default.OAuthProtectedResourceMetadata);
+                return;
+            }
+
+            await next(context);
+        });
+
+        // AuthN/Z are always required in the remote HTTP service scenario.
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.Use(ValidateMcpRoutingHeadersMiddleware);
+
+        IEndpointConventionBuilder mcpEndpointBuilder = app.MapMcp();
+        // All MCP endpoints require MCP.All scope or role
+        mcpEndpointBuilder.RequireAuthorization("McpAccess");
+
+        // Map non-MCP endpoints.
+        // Health checks are anonymous (no authentication required)
+        app.MapHealthChecks("/health")
+            .AllowAnonymous();
+
+        return app;
+    }
+
+    /// <summary>
+    /// Creates a host for HTTP transport without incoming authentication.
+    /// </summary>
+    /// <param name="serverOptions">The server configuration options.</param>
+    /// <returns>An IHost instance configured for HTTP transport.</returns>
+    private IHost CreateIncomingAuthDisabledHttpHost(ServerStartOptions serverOptions)
+    {
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(s_httpWebApplicationOptions);
+
+        InitializeListingUrls(builder, serverOptions);
+
+        // Configure logging
+        builder.Logging.ClearProviders();
+        builder.Logging.AddEventSourceLogger();
+        builder.Logging.AddConsole();
+        ConfigureSupportLogging(builder.Logging, serverOptions);
+
+        IServiceCollection services = builder.Services;
+
+        // Configure single identity token credential provider for outgoing authentication
+        services.AddSingleIdentityTokenCredentialProvider();
+
+        // Configure CORS
+        // By default in development mode, we restrict to localhost origins for security.
+        // In production (authenticated mode), allow configured origins or all origins if specified.
+        // Non-browser clients are unaffected by CORS.
+        ConfigureCors(services, builder.Environment, serverOptions);
+
+        // Configure services
+        ConfigureServices(services); // Our static callback hook
+        ConfigureMcpServer(services, serverOptions);
+
+        // We still use the multi-user, HTTP context-aware caching strategy here
+        // because we don't yet know what security model we want for this "insecure" mode.
+        // As a positive, it gives some isolation locally, but that's not a
+        // design strategy we've fully vetted or endorsed.
+        services.AddHttpServiceCacheService(serverOptions.DisableCaching);
+
+        WebApplication app = builder.Build();
+
+        UseHttpsRedirectionIfEnabled(app);
+
+        // Configure middleware pipeline
+        app.UseCors("McpCorsPolicy");
+        app.UseRouting();
+        app.Use(ValidateMcpRoutingHeadersMiddleware);
+        app.MapMcp();
+
+        return app;
+    }
+
+    /// <summary>
+    /// Resolves the effective HTTP scheme for use in OAuth Protected Resource Metadata URLs,
+    /// optionally honouring the <c>X-Forwarded-Proto</c> header when the server runs behind a
+    /// reverse proxy (e.g. Azure Container Apps).
+    /// </summary>
+    /// <param name="request">The current HTTP request.</param>
+    /// <param name="enableForwardedHeaders">
+    /// When <c>true</c>, the value of the <c>X-Forwarded-Proto</c> header (if present and equal
+    /// to "http" or "https", case-insensitive) overrides the request scheme.
+    /// </param>
+    /// <returns>"https" or "http".</returns>
+    /// <remarks>
+    /// Azure Container Apps setups typically use plain HTTP between the ACA platform's reverse
+    /// proxy and the application container. The OAuth claims challenge URL must match the scheme
+    /// the client will use, so in that case we inspect <c>X-Forwarded-Proto</c>.
+    /// Only "http" and "https" values are accepted; any other value is ignored.
+    /// See also: https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer
+    /// </remarks>
+    private static string GetSchemeForOAuthProtectedResourceMetadata(HttpRequest request, bool enableForwardedHeaders)
+    {
+        string scheme = request.Scheme;
+
+        if (enableForwardedHeaders
+            && request.Headers.TryGetValue("X-Forwarded-Proto", out StringValues forwardedProto))
+        {
+            if (forwardedProto.FirstOrDefault() is string forwardedProtoValue)
+            {
+                // X-Forwarded-Proto can be a comma-separated list when the request passes through
+                // multiple proxies (e.g., "https, http"). The leftmost value is the scheme used
+                // by the original client, so take the first segment and trim any whitespace before
+                // comparing. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto
+                string firstProto = forwardedProtoValue.Split(',')[0].Trim();
+                if (string.Equals(firstProto, "https", StringComparison.OrdinalIgnoreCase))
+                {
+                    scheme = "https";
+                }
+                else if (string.Equals(firstProto, "http", StringComparison.OrdinalIgnoreCase))
+                {
+                    scheme = "http";
+                }
+            }
+        }
+
+        return scheme;
+    }
+
+    // The 2026-07-28 protocol version string that enables the HTTP Standardization
+    // routing-header contract (SEP-2243). Older clients omit or send a different value.
+    private const string StatelessHttpProtocolVersion = "2026-07-28";
+
+    // JSON-RPC methods that name a specific tool, resource, or prompt and therefore
+    // require the Mcp-Name header under SEP-2243. All other methods (tools/list,
+    // server/discover, ping, notifications, etc.) require Mcp-Method only.
+    private static readonly HashSet<string> McpNamedMethods = new(StringComparer.Ordinal)
+    {
+        "tools/call",
+        "resources/read",
+        "prompts/get",
+    };
+
+    private static async Task ValidateMcpRoutingHeadersMiddleware(HttpContext context, Func<Task> next)
+    {
+        // Why this middleware exists alongside the SDK's own ValidateMcpHeaders:
+        //
+        // The SDK (StreamableHttpHandler.ValidateMcpHeaders) validates Mcp-Method and Mcp-Name
+        // *after* the JSON body has been parsed — its signature takes a JsonRpcMessage parameter.
+        // Validating at that point means the server has already buffered the entire request body
+        // before it can reject an invalid request. For large payloads this wastes memory and CPU,
+        // and at the Kestrel default 30 MB body limit it causes an unhandled BadHttpRequestException
+        // that aborts the connection instead of returning a clean JSON-RPC 2.0 error.
+        //
+        // This middleware validates headers first — before any body is read — so that a missing
+        // Mcp-Method or Mcp-Name is rejected immediately with a well-formed HTTP 400 + JSON-RPC
+        // error envelope, regardless of payload size. The SDK then performs its own validation
+        // for requests that pass this check, but for a well-formed request it is a no-op.
+        //
+        // SEP-2243 routing headers are only required when the client declares the
+        // 2026-07-28 protocol version. Legacy clients (missing header or an older
+        // version) must not be rejected, preserving backward-compatible interop.
+        if (HttpMethods.IsPost(context.Request.Method)
+            && IsStatelessHttpProtocolRequest(context.Request))
+        {
+            // Mcp-Method is required on every 2026-07-28 POST request.
+            if (!context.Request.Headers.TryGetValue("Mcp-Method", out var mcpMethodValues)
+                || string.IsNullOrEmpty(mcpMethodValues.ToString()))
+            {
+                await WriteMissingRoutingHeaderResponse(
+                    context,
+                    "Missing required MCP routing header. 'Mcp-Method' is required for HTTP POST requests under the 2026-07-28 protocol.");
+                return;
+            }
+
+            // Mcp-Name is only required for methods that name a tool, resource, or prompt.
+            var mcpMethod = mcpMethodValues.ToString();
+            if (McpNamedMethods.Contains(mcpMethod)
+                && (!context.Request.Headers.TryGetValue("Mcp-Name", out var mcpNameValues)
+                    || string.IsNullOrEmpty(mcpNameValues.ToString())))
+            {
+                await WriteMissingRoutingHeaderResponse(
+                    context,
+                    $"Missing required MCP routing header. 'Mcp-Name' is required for the '{mcpMethod}' method under the 2026-07-28 protocol.");
+                return;
+            }
+        }
+
+        await next();
+    }
+
+    private static bool IsStatelessHttpProtocolRequest(HttpRequest request)
+    {
+        return request.Headers.TryGetValue("MCP-Protocol-Version", out var protocolVersionValues)
+            && string.Equals(protocolVersionValues.ToString(), StatelessHttpProtocolVersion, StringComparison.Ordinal);
+    }
+
+    private static async Task WriteMissingRoutingHeaderResponse(HttpContext context, string message)
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        context.Response.ContentType = "application/json";
+        // Emit a JSON-RPC 2.0 error envelope with correct string escaping (AOT-safe).
+        var escapedMessage = JsonEncodedText.Encode(message).ToString();
+        await context.Response.WriteAsync(
+            $"{{\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{{\"code\":-32600,\"message\":\"{escapedMessage}\"}}}}");
+    }
+
+    /// <summary>
+    /// Configures CORS policy based on environment and configuration.
+    /// In development environment with authentication disabled, restricts to localhost for security.
+    /// In production (authenticated), allows all origins (safe due to authentication requirement).
+    /// </summary>
+    /// <param name="services">The service collection to configure.</param>
+    /// <param name="environment">The web host environment.</param>
+    /// <param name="serverOptions">The server configuration options.</param>
+    internal static void ConfigureCors(IServiceCollection services, IWebHostEnvironment environment, ServerStartOptions serverOptions)
+    {
+        // Check if running in development environment
+        bool isDevelopment = environment.IsDevelopment();
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy("McpCorsPolicy", policy =>
+            {
+                // In development environment with authentication disabled, restrict to localhost for security
+                // Allows localhost with any port to support various development scenarios:
+                // - Port 1031: Default HTTP mode (launchSettings.json)
+                // - Port 5008: SSE mode default
+                // - Port 5173: MCP Inspector tool
+                // - Custom ports: User-specified via ASPNETCORE_URLS
+                if (isDevelopment && serverOptions.DangerouslyDisableHttpIncomingAuth)
+                {
+                    policy.SetIsOriginAllowed(origin =>
+                    {
+                        if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                        {
+                            // Allow localhost and 127.0.0.1 with any port
+                            return uri.Host == "localhost" ||
+                                    uri.Host == "127.0.0.1" ||
+                                    uri.Host == "[::1]"; // IPv6 loopback
+                        }
+                        return false;
+                    })
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials(); // Required when using SetIsOriginAllowed
+                }
+                // In production or authenticated development mode, allow all origins by default
+                // This is safe because:
+                // 1. Authentication (JWT Bearer) validates all requests regardless of origin
+                // 2. CORS is a browser security mechanism, not a server security feature
+                // 3. MCP clients (GitHub Copilot in VS Code/Codespaces) need to connect from various origins
+                // 4. The server still enforces authentication and authorization on every request
+                else
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                }
+            });
+        });
+    }
+
+    /// <summary>
+    /// Configures the MCP server services.
+    /// </summary>
+    /// <param name="services">The service collection to configure.</param>
+    /// <param name="options">The server configuration options.</param>
+    private static void ConfigureMcpServer(IServiceCollection services, ServerStartOptions options)
+    {
+        services.AddAzureMcpServer(options);
+    }
+
+    /// <summary>
+    /// Initializes the URL for ASP.NET Core to bind to.
+    /// </summary>
+    private static void InitializeListingUrls(WebApplicationBuilder builder, ServerStartOptions options)
+    {
+        if (!options.DangerouslyDisableHttpIncomingAuth)
+        {
+            // When running in secured HTTP mode, allow the standard IConfiguration binding to handle
+            // the ASPNETCORE_URLS value without any additional validation.
+            return;
+        }
+
+        string url = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://127.0.0.1:5001";
+
+        if (url.Contains(';'))
+        {
+            throw new InvalidOperationException("Multiple endpoints in ASPNETCORE_URLS are not supported. Provide a single URL.");
+        }
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            throw new InvalidOperationException($"Invalid URL: '{url}'");
+        }
+
+        var scheme = uri.Scheme.ToLowerInvariant();
+        if (scheme is not ("http" or "https"))
+        {
+            throw new InvalidOperationException($"Unsupported scheme '{scheme}' in URL '{url}'.");
+        }
+
+        // loopback IP: 127.0.0.0/8 range, IPv6 (::1) and localhost when resolved to loopback addresses.
+        bool isLoopback = uri.IsLoopback;
+
+        // All interfaces, allowed only with ALLOW_INSECURE_EXTERNAL_BINDING opt-in.
+        bool isWildcard = uri.Host is "*" or "+" or "0.0.0.0" or "::" || (IPAddress.TryParse(uri.Host, out var anyIp) && (anyIp.Equals(IPAddress.Any) || anyIp.Equals(IPAddress.IPv6Any)));
+
+        if (!isLoopback && !isWildcard)
+        {
+            throw new InvalidOperationException($"Explicit external binding is not supported for '{url}'.");
+        }
+
+        if (isWildcard && !EnvironmentHelpers.GetEnvironmentVariableAsBool("ALLOW_INSECURE_EXTERNAL_BINDING"))
+        {
+            throw new InvalidOperationException(
+                $"External binding blocked for '{url}'. " +
+                $"Set ALLOW_INSECURE_EXTERNAL_BINDING=true if you intentionally want to bind beyond loopback.");
+        }
+
+        builder.WebHost.UseUrls(url);
+    }
+
+    /// <summary>
+    /// Resolves the service mode and outgoing authentication strategy based on bound ServerStartOptions, applying appropriate defaults.
+    /// </summary>
+    /// <param name="options">The bound ServerStartOptions.</param>
+    /// <returns>The resolved OutgoingAuthStrategy.</returns>
+    private static OutgoingAuthStrategy ResolveAuthStrategy(ServerStartOptions options)
+    {
+#if ENABLE_HTTP
+        if (options.OutgoingAuthStrategy == OutgoingAuthStrategy.NotSet)
+        {
+            if (options.Transport == TransportTypes.Http)
+            {
+                return options.DangerouslyDisableHttpIncomingAuth
+                    ? OutgoingAuthStrategy.UseHostingEnvironmentIdentity
+                    : OutgoingAuthStrategy.UseOnBehalfOf;
+            }
+            else
+            {
+                return OutgoingAuthStrategy.UseHostingEnvironmentIdentity;
+            }
+        }
+        return options.OutgoingAuthStrategy;
+#else
+        return OutgoingAuthStrategy.UseHostingEnvironmentIdentity;
+#endif
+    }
+
+    private static WebApplication UseHttpsRedirectionIfEnabled(WebApplication app)
+    {
+        // Some hosting environments may not need HTTPS redirection, such as:
+        // - Running behind a reverse proxy that handles TLS termination.
+        // - Local development when not using self-signed development certs.
+        // - The application or server's HTTP stack is not listening for non-HTTPS requests.
+        //
+        // Safe default to enable HTTPS redirection unless explicitly opted-out.
+        string? httpsRedirectionOptOut = Environment.GetEnvironmentVariable("AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION");
+        if (!bool.TryParse(httpsRedirectionOptOut, out bool isOptedOut) || !isOptedOut)
+        {
+            app.UseHttpsRedirection();
+        }
+
+        return app;
+    }
+
+    /// <summary>
+    /// Configures incoming and outgoing HTTP spans for self-hosted HTTP mode with Azure Monitor exporter.
+    /// </summary>
+    /// <param name="options">The server configuration options.</param>
+    /// <returns>
+    /// A <see cref="TracerProvider"/> instance if telemetry is enabled and properly configured for HTTP transport;
+    /// otherwise, <c>null</c>.
+    /// </returns>
+    /// <remarks>
+    /// Telemetry is only configured when:
+    /// <list type="bullet">
+    /// <item><description>The transport is HTTP (not STDIO)</description></item>
+    /// <item><description>AZURE_MCP_COLLECT_TELEMETRY is not explicitly set to false</description></item>
+    /// <item><description>APPLICATIONINSIGHTS_CONNECTION_STRING environment variable is set</description></item>
+    /// </list>
+    /// The tracer provider includes ASP.NET Core and HttpClient instrumentation with filtering
+    /// to avoid duplicate spans and telemetry loops.
+    /// This telemetry configuration is intended for self-hosted scenarios where
+    /// the MCP server is running in HTTP mode. This creates an independent telemetry pipeline using TracerProvider to export
+    /// traces to user-configured Application Insights instance only when the necessary environment variables are set. This also honors 
+    /// the AZURE_MCP_COLLECT_TELEMETRY environment variable to allow users to disable telemetry collection if desired. Note that this is 
+    /// in addition to the telemetry configured in <see cref="OpenTelemetryExtensions"/>.
+    /// </remarks>
+    private static TracerProvider? AddIncomingAndOutgoingHttpSpans(ServerStartOptions options)
+    {
+        if (options.Transport != TransportTypes.Http)
+        {
+            return null;
+        }
+
+        // Disable telemetry when support logging is enabled to prevent sensitive data from being sent
+        // to telemetry endpoints. Support logging captures debug-level information that may contain
+        // sensitive data, so we disable all telemetry as a safety measure.
+        if (!string.IsNullOrWhiteSpace(options.DangerouslyWriteSupportLogsToDir))
+        {
+            return null;
+        }
+
+        string? collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
+        bool isTelemetryEnabled = string.IsNullOrWhiteSpace(collectTelemetry) ||
+            (bool.TryParse(collectTelemetry, out bool shouldCollectTelemetry) && shouldCollectTelemetry);
+
+        string? connectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
+        if (!isTelemetryEnabled || string.IsNullOrWhiteSpace(connectionString))
+        {
+            return null;
+        }
+
+        return Sdk.CreateTracerProviderBuilder()
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation(o => o.FilterHttpRequestMessage = ShouldInstrumentHttpRequest)
+            .AddAzureMonitorTraceExporter(exporterOptions => exporterOptions.ConnectionString = connectionString)
+            .Build();
+    }
+
+    /// <summary>
+    /// Determines whether an HTTP request should be instrumented for telemetry collection.
+    /// </summary>
+    /// <param name="request">The HTTP request message to evaluate.</param>
+    /// <returns>
+    /// <c>true</c> if the request should be instrumented; otherwise, <c>false</c>.
+    /// </returns>
+    /// <remarks>
+    /// This method filters out specific requests to prevent telemetry issues:
+    /// <list type="bullet">
+    /// <item><description>Application Insights ingestion endpoints (to avoid telemetry loops)</description></item>
+    /// <item><description>Requests where the parent span is from Azure SDK (to avoid duplicate spans)</description></item>
+    /// </list>
+    /// </remarks>
+    private static bool ShouldInstrumentHttpRequest(HttpRequestMessage request)
+    {
+        // Exclude Application Insights ingestion requests to skip requests that are made to AppInsights when sending telemetry.
+        // See related issue - https://github.com/Azure/azure-sdk-for-net/issues/45366#issuecomment-2278511391
+        if (request.RequestUri?.AbsoluteUri.Contains("applicationinsights.azure.com/v2.1/track", StringComparison.Ordinal) == true)
+        {
+            return false;
+        }
+
+        // **NOTE**: This check is copied from the UseAzureMonitor extension method in the Azure SDK repository:
+        // https://github.com/Azure/azure-sdk-for-net/blob/242ba3eca16d914522669ae62baac7437bf71db8/sdk/monitor/Azure.Monitor.OpenTelemetry.AspNetCore/src/OpenTelemetryBuilderExtensions.cs#L98-L108
+        // The decision to filter these out is not finalized for the product. We may revisit this in the future depending on
+        // how users want to see telemetry from Azure SDK calls made by the MCP server.
+
+        // Azure SDKs create their own client span before calling the service using HttpClient.
+        // To prevent duplicate spans (Azure SDK + HttpClient), filter HttpClient spans when
+        // the parent span is from Azure SDK, as it contains all relevant information.
+        Activity? parentActivity = Activity.Current?.Parent;
+        if (parentActivity?.Source.Name == "Azure.Core.Http")
+        {
+            return false;
+        }
+        return true;
+    }
+}

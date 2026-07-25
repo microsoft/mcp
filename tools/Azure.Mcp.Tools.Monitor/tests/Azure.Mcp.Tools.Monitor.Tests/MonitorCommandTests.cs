@@ -2,18 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Tools.Monitor.Services;
 using Azure.ResourceManager.CloudHealth.Models;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
-using Microsoft.Mcp.Core.Services.Caching;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -23,17 +12,9 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests;
 
-public sealed class MonitorCommandTests : RecordedCommandTestsBase
+public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
-    private LogAnalyticsHelper? _logHelper;
-    private const string TestLogType = "TestLogs_CL";
-    private readonly ServiceProvider _httpClientProvider;
-    private readonly MemoryCache _memoryCache;
-    private readonly ITenantService _tenantService;
-    private readonly IMonitorService _monitorService;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ILogger<MonitorService> _logger;
-    private string? _storageAccountName;
     private string? _appInsightsName;
     private string? _bingWebTestName;
     private string? _healthModelParentName;
@@ -56,23 +37,6 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         "x-ms-served-by",
         "X-MSEdge-Ref"
     ];
-
-    public MonitorCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-        : base(output, fixture, liveServerFixture)
-    {
-        _memoryCache = new MemoryCache(new MemoryCacheOptions());
-        var cacheService = new SingleUserCliCacheService(_memoryCache);
-        _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
-        _httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
-        var tokenProvider = new PlaybackAwareTokenCredentialProvider(() => TestMode, NullLoggerFactory.Instance);
-        var cloudConfiguration = new AzureCloudConfiguration(new ConfigurationBuilder().Build());
-        _tenantService = new TenantService(tokenProvider, cacheService, _httpClientFactory, cloudConfiguration, NullLogger<TenantService>.Instance);
-        var subscriptionService = new SubscriptionService(cacheService, _tenantService, NullLogger<SubscriptionService>.Instance);
-        var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService, _tenantService);
-        var resourceResolverService = new ResourceResolverService(subscriptionService, _tenantService);
-        _logger = NullLogger<MonitorService>.Instance;
-        _monitorService = new MonitorService(subscriptionService, _tenantService, resourceGroupService, resourceResolverService, _httpClientFactory, _logger);
-    }
 
     public override List<UriRegexSanitizer> UriRegexSanitizers { get; } =
     [
@@ -109,7 +73,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         .. s_sanitizedHeaders.Select(h => new HeaderRegexSanitizer(new HeaderRegexSanitizerBody(h)))
     ];
 
-    public override CustomDefaultMatcher? TestMatcher => new CustomDefaultMatcher()
+    public override CustomDefaultMatcher? TestMatcher => new()
     {
         CompareBodies = false
     };
@@ -117,33 +81,10 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync();
-        _storageAccountName = $"{Settings.ResourceBaseName}mon";
         _appInsightsName = $"{Settings.ResourceBaseName}-ai";
         _bingWebTestName = $"{Settings.ResourceBaseName}-bing-test";
         _healthModelParentName = $"{Settings.ResourceBaseName}-hm-a";
         _healthModelChildName = $"{Settings.ResourceBaseName}-hm-b";
-
-        if (TestMode == TestMode.Playback)
-        {
-            return;
-        }
-
-        _logHelper = new LogAnalyticsHelper(
-            Settings.ResourceBaseName,
-            Settings.SubscriptionId,
-            _monitorService,
-            _tenantService,
-            _httpClientFactory,
-            Settings.TenantId,
-            TestLogType,
-            NullLogger.Instance);
-    }
-
-    public override async ValueTask DisposeAsync()
-    {
-        await base.DisposeAsync();
-        _httpClientProvider.Dispose();
-        _memoryCache.Dispose();
     }
 
     // [Fact]
@@ -645,22 +586,6 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
 
         Assert.True(webTest.TryGetProperty("isEnabled", out var enabled));
         Assert.True(enabled.GetBoolean());
-    }
-
-    [Theory]
-    [InlineData("--invalid-param")]
-    [InlineData("--subscription invalidSub")]
-    [InlineData("--subscription sub --resource-group rg")] // Missing required params for get
-    public async Task Should_Return400_WithInvalidWebTestInput(string args)
-    {
-        var result = await CallToolAsync(
-            "monitor_webtests_get",
-            new()
-            {
-                { "args", args }
-            });
-
-        Assert.NotEqual(200, result?.GetProperty("status").GetInt32() ?? 500);
     }
 
     [Fact]

@@ -15,7 +15,6 @@ public class GetCommandTests : CommandUnitTestsBase<GetCommand, object>
     {
         // arrange & act
         var result = await ExecuteCommandAsync(
-            "--workspace-folder", "C:/",
             "--project-name", "django",
             "--target-app-service", "ContainerApp",
             "--provisioning-tool", "AZD",
@@ -34,7 +33,6 @@ public class GetCommandTests : CommandUnitTestsBase<GetCommand, object>
     {
         // arrange & act
         var result = await ExecuteCommandAsync(
-            "--workspace-folder", "C:/test",
             "--project-name", "myapp",
             "--target-app-service", "WebApp",
             "--provisioning-tool", "azd");
@@ -52,7 +50,6 @@ public class GetCommandTests : CommandUnitTestsBase<GetCommand, object>
     {
         // arrange & act
         var result = await ExecuteCommandAsync(
-            "--workspace-folder", "C:/k8s-project",
             "--project-name", "k8s-app",
             "--target-app-service", "AKS",
             "--provisioning-tool", "azcli");
@@ -73,7 +70,6 @@ public class GetCommandTests : CommandUnitTestsBase<GetCommand, object>
     {
         // arrange & act
         var result = await ExecuteCommandAsync(
-            "--workspace-folder", "C:/",
             "--project-name", "default-app",
             "--target-app-service", "unknown-service", // This should default to Container Apps
             "--provisioning-tool", "AZD");
@@ -90,7 +86,6 @@ public class GetCommandTests : CommandUnitTestsBase<GetCommand, object>
     public async Task Should_get_deploy_only_plan()
     {
         var result = await ExecuteCommandAsync(
-            "--workspace-folder", "C:/",
             "--project-name", "default-app",
             "--target-app-service", "ContainerApp",
             "--provisioning-tool", "AzCli",

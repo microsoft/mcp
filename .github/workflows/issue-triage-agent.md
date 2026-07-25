@@ -27,7 +27,7 @@ tools:
   github:
     toolsets: [issues, labels]
     min-integrity: none
-    allowed-repos: "${{ github.repository }}"
+    allowed-repos: ["microsoft/mcp"]
 
 network:
   allowed:

@@ -7,7 +7,6 @@ using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.Core.Commands;
 
@@ -22,9 +21,8 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false)]
-public sealed class CatalogSearchCommand(
-    ILogger<CatalogSearchCommand> logger,
-    IFabricCoreService fabricCoreService) : AuthenticatedCommand<CatalogSearchOptions, CatalogSearchCommandResult>
+public sealed class CatalogSearchCommand(ILogger<CatalogSearchCommand> logger, IFabricCoreService fabricCoreService)
+    : AuthenticatedCommand<CatalogSearchOptions, CatalogSearchCommandResult>
 {
     private readonly ILogger<CatalogSearchCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
@@ -56,8 +54,7 @@ public sealed class CatalogSearchCommand(
             _logger.LogInformation("Catalog search for '{Search}' returned {Count} entries.",
                 options.Search, searchResults.Value?.Count ?? 0);
 
-            var result = new CatalogSearchCommandResult(searchResults);
-            context.Response.Results = ResponseResult.Create(result, CoreJsonContext.Default.CatalogSearchCommandResult);
+            context.Response.Results = ResponseResult.Create(new(searchResults), CoreJsonContext.Default.CatalogSearchCommandResult);
         }
         catch (Exception ex)
         {

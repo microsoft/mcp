@@ -1886,8 +1886,6 @@ public ContainerRegistryResource Resource { get; set; }
 ❌ **Don't copy using blocks from other files:**
 ```csharp
 // Copied from another file but not all are needed
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Tools.Acr.Commands;         // ← May not be needed
 using Azure.Mcp.Tools.Acr.Options;          // ← May not be needed
 using Azure.Mcp.Tools.Acr.Options.Registry; // ← May not be needed

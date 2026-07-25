@@ -40,7 +40,7 @@ public class SmsSendCommandTests : CommandUnitTestsBase<SmsSendCommand, ICommuni
     public async Task ExecuteAsync_WithValidParameters_CallsServiceAndReturnsResults(string endpoint, string from, string[] to, string message, bool enableDeliveryReport, string? tag)
     {
         var results = new List<Models.SmsResult> {
-            new() { MessageId = "msg1", To = to.First(), Successful = true, HttpStatusCode = 202 }
+            new(MessageId: "msg1", To: to.First(), Successful: true, HttpStatusCode: 202, ErrorMessage: null)
         };
         Service.SendSmsAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())

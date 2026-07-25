@@ -17,6 +17,4 @@ namespace Azure.Mcp.Tools.Quota.Commands;
 [JsonSerializable(typeof(AvailabilityListCommand.RegionCheckCommandResult))]
 [JsonSerializable(typeof(UsageInfo))]
 [JsonSerializable(typeof(Dictionary<string, List<UsageInfo>>))]
-internal sealed partial class QuotaJsonContext : JsonSerializerContext
-{
-}
+internal sealed partial class QuotaJsonContext : JsonSerializerContext;

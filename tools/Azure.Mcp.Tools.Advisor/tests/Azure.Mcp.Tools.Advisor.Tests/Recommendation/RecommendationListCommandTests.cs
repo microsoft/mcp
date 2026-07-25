@@ -3,18 +3,18 @@
 
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Advisor.Tests.Recommendation;
 
-public class RecommendationListCommandTests : CommandUnitTestsBase<RecommendationListCommand, IAdvisorService>
+public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<RecommendationListCommand, IAdvisorService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -40,6 +40,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<Models.RecommendationFilters?>(),
                 Arg.Any<int>(),
+                Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
         }
@@ -76,6 +77,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<Models.RecommendationFilters?>(),
             Arg.Any<int>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<Models.Recommendation>(expectedRecommendations, false));
 
@@ -97,6 +99,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<Models.RecommendationFilters?>(),
             Arg.Any<int>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -110,6 +113,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<Models.RecommendationFilters?>(),
             Arg.Any<int>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
 
@@ -132,6 +136,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<Models.RecommendationFilters?>(),
             Arg.Any<int>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -149,7 +154,14 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
     {
         // Arrange
         var forbiddenException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
-        Service.ListRecommendationsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<Models.RecommendationFilters?>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 
         // Act
@@ -171,6 +183,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
             Arg.Any<RetryPolicyOptions>(),
             Arg.Do<Models.RecommendationFilters?>(f => captured = f),
             Arg.Any<int>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
 
@@ -204,6 +217,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
             Arg.Any<RetryPolicyOptions>(),
             Arg.Do<Models.RecommendationFilters?>(f => captured = f),
             Arg.Any<int>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
 
@@ -235,6 +249,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<Models.RecommendationFilters?>(),
             Arg.Do<int>(t => capturedTop = t),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
 
