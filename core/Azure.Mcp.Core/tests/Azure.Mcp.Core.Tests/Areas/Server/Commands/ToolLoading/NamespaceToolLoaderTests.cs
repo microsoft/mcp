@@ -118,17 +118,25 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     }
 
     [Theory]
-    [InlineData(StructuredOutputMode.Duplicated)]
-    [InlineData(StructuredOutputMode.Compact)]
+    [InlineData(ModeTypes.NamespaceProxy, StructuredOutputMode.Duplicated)]
+    [InlineData(ModeTypes.NamespaceProxy, StructuredOutputMode.Compact)]
+    [InlineData(ModeTypes.ConsolidatedProxy, StructuredOutputMode.Duplicated)]
+    [InlineData(ModeTypes.ConsolidatedProxy, StructuredOutputMode.Compact)]
     public async Task ListToolsHandler_StructuredOutputModeEmitsAggregateSchemaWithoutChangingInputSchema(
+        string executionMode,
         StructuredOutputMode mode)
     {
         var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
         {
-            Mode = ModeTypes.NamespaceProxy,
+            Mode = executionMode,
             StructuredOutputMode = mode
         });
-        var loader = new NamespaceToolLoader(_commandFactory, options, _serviceProvider, _logger);
+        var loader = new NamespaceToolLoader(
+            _commandFactory,
+            options,
+            _serviceProvider,
+            _logger,
+            applyFilter: executionMode != ModeTypes.ConsolidatedProxy);
 
         var result = await loader.ListToolsHandler(
             CreateListToolsRequest(),
@@ -142,29 +150,6 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             Assert.Equal("object", tool.OutputSchema.Value.GetProperty("type").GetString());
             Assert.Equal(3, tool.OutputSchema.Value.GetProperty("oneOf").GetArrayLength());
         });
-    }
-
-    [Fact]
-    public async Task ListToolsHandler_CompactModeDoesNotEnableConsolidatedMode()
-    {
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
-        {
-            Mode = ModeTypes.ConsolidatedProxy,
-            StructuredOutputMode = StructuredOutputMode.Compact
-        });
-        var loader = new NamespaceToolLoader(
-            _commandFactory,
-            options,
-            _serviceProvider,
-            _logger,
-            applyFilter: false);
-
-        var result = await loader.ListToolsHandler(
-            CreateListToolsRequest(),
-            TestContext.Current.CancellationToken);
-
-        Assert.NotEmpty(result.Tools);
-        Assert.All(result.Tools, tool => Assert.False(tool.OutputSchema.HasValue));
     }
 
     [Fact]
@@ -460,15 +445,17 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     }
 
     [Theory]
-    [InlineData(StructuredOutputMode.Duplicated, true, false)]
-    [InlineData(StructuredOutputMode.Compact, true, true)]
+    [InlineData(ModeTypes.NamespaceProxy, StructuredOutputMode.Duplicated, false)]
+    [InlineData(ModeTypes.NamespaceProxy, StructuredOutputMode.Compact, true)]
+    [InlineData(ModeTypes.ConsolidatedProxy, StructuredOutputMode.Duplicated, false)]
+    [InlineData(ModeTypes.ConsolidatedProxy, StructuredOutputMode.Compact, true)]
     public async Task CallToolHandler_ChildResultUsesAggregateEnvelope(
+        string executionMode,
         StructuredOutputMode mode,
-        bool expectsStructuredContent,
         bool expectsCompactContent)
     {
         var response = CreateSuccessfulCommandResponse();
-        var loader = CreateLoaderWithCommand(mode, response);
+        var loader = CreateLoaderWithCommand(executionMode, mode, response);
         var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
         {
             ["intent"] = "read data",
@@ -479,21 +466,14 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         Assert.False(result.IsError);
-        Assert.Equal(expectsStructuredContent, result.StructuredContent.HasValue);
+        Assert.True(result.StructuredContent.HasValue);
         var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
         Assert.Equal(expectsCompactContent, text == StructuredOutputHelper.CompactContentMessage);
-        if (expectsStructuredContent)
-        {
-            var structuredContent = result.StructuredContent!.Value;
-            Assert.Equal("tool-result", structuredContent.GetProperty("kind").GetString());
-            Assert.Equal("read-cmd", structuredContent.GetProperty("command").GetString());
-            Assert.Equal("alpha", structuredContent.GetProperty("result").GetProperty("name").GetString());
-            Assert.Equal(3, structuredContent.GetProperty("result").GetProperty("count").GetInt32());
-        }
-        else
-        {
-            Assert.Contains("\"results\"", text, StringComparison.Ordinal);
-        }
+        var structuredContent = result.StructuredContent.Value;
+        Assert.Equal("tool-result", structuredContent.GetProperty("kind").GetString());
+        Assert.Equal("read-cmd", structuredContent.GetProperty("command").GetString());
+        Assert.Equal("alpha", structuredContent.GetProperty("result").GetProperty("name").GetString());
+        Assert.Equal(3, structuredContent.GetProperty("result").GetProperty("count").GetInt32());
     }
 
     [Fact]
@@ -502,7 +482,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var response = CreateSuccessfulCommandResponse();
         response.Status = System.Net.HttpStatusCode.BadRequest;
         response.Message = "Invalid request.";
-        var loader = CreateLoaderWithCommand(StructuredOutputMode.Compact, response);
+        var loader = CreateLoaderWithCommand(ModeTypes.NamespaceProxy, StructuredOutputMode.Compact, response);
         var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
         {
             ["intent"] = "read data",
@@ -1059,6 +1039,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     // Helper methods
 
     private NamespaceToolLoader CreateLoaderWithCommand(
+        string executionMode,
         StructuredOutputMode mode,
         CommandResponse response)
     {
@@ -1080,10 +1061,15 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
         var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
         {
-            Mode = ModeTypes.NamespaceProxy,
+            Mode = executionMode,
             StructuredOutputMode = mode
         });
-        return new NamespaceToolLoader(commandFactory, options, _serviceProvider, _logger);
+        return new NamespaceToolLoader(
+            commandFactory,
+            options,
+            _serviceProvider,
+            _logger,
+            applyFilter: executionMode != ModeTypes.ConsolidatedProxy);
     }
 
     private static CommandResponse CreateSuccessfulCommandResponse()

@@ -20,6 +20,7 @@ namespace Microsoft.Mcp.Core.Areas.Server;
 [JsonSerializable(typeof(JsonObject))]
 [JsonSerializable(typeof(Tool))]
 [JsonSerializable(typeof(IEnumerable<Tool>))]
+[JsonSerializable(typeof(CallToolResult))]
 [JsonSerializable(typeof(ToolMetadata))]
 [JsonSerializable(typeof(MetadataDefinition))]
 [JsonSerializable(typeof(ConsolidatedToolDefinition))]

@@ -51,9 +51,7 @@ public sealed class NamespaceToolLoader(
 
     internal readonly Dictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
     private ListToolsResult? _cachedListToolsResult;
-    private bool StructuredOutputEnabled =>
-        _options.Value.Mode == ModeTypes.NamespaceProxy
-        && _options.Value.StructuredOutputMode is not null;
+    private bool StructuredOutputEnabled => _options.Value.StructuredOutputMode != null;
 
     private const string ToolCallProxyInputSchema = """
         {
@@ -101,45 +99,6 @@ public sealed class NamespaceToolLoader(
         }
         """, ServerJsonContext.Default.JsonElement);
 
-    private static readonly JsonElement NamespaceOutputSchema = JsonSerializer.Deserialize("""
-        {
-          "type": "object",
-          "oneOf": [
-            {
-              "type": "object",
-              "properties": {
-                "kind": { "const": "tool-list" },
-                "tools": {
-                  "type": "array",
-                  "items": { "type": "object" }
-                }
-              },
-              "required": ["kind", "tools"],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": { "const": "tool-result" },
-                "command": { "type": "string" },
-                "result": {}
-              },
-              "required": ["kind", "command", "result"],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": { "const": "message" },
-                "message": { "type": "string" }
-              },
-              "required": ["kind", "message"],
-              "additionalProperties": false
-            }
-          ]
-        }
-        """, ServerJsonContext.Default.JsonElement);
-
     public override ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
         if (_cachedListToolsResult != null)
@@ -180,7 +139,7 @@ public sealed class NamespaceToolLoader(
                     Set "learn=true" to discover available sub commands.
                     """,
                 InputSchema = ToolInputSchema,
-                OutputSchema = StructuredOutputEnabled ? NamespaceOutputSchema : null,
+                OutputSchema = StructuredOutputEnabled ? AggregateStructuredOutput.NamespaceOutputSchema : null,
                 Annotations = new ToolAnnotations()
                 {
                     Title = group.Title ?? namespaceName,
@@ -220,44 +179,6 @@ public sealed class NamespaceToolLoader(
             StructuredContent = useStructuredContent ? structuredContentFactory() : null,
             IsError = isError
         };
-    }
-
-    private static JsonElement CreateToolListStructuredContent(IEnumerable<Tool> tools)
-    {
-        var envelope = new JsonObject
-        {
-            ["kind"] = "tool-list",
-            ["tools"] = JsonSerializer.SerializeToNode(tools, ServerJsonContext.Default.IEnumerableTool)
-        };
-        return JsonSerializer.SerializeToElement(envelope, ServerJsonContext.Default.JsonObject);
-    }
-
-    private static JsonElement CreateToolResultStructuredContent(string command, string jsonResponse)
-    {
-        using var document = JsonDocument.Parse(jsonResponse);
-        JsonNode? result = null;
-        if (document.RootElement.TryGetProperty("results", out var results))
-        {
-            result = JsonNode.Parse(results.GetRawText());
-        }
-
-        var envelope = new JsonObject
-        {
-            ["kind"] = "tool-result",
-            ["command"] = command,
-            ["result"] = result
-        };
-        return JsonSerializer.SerializeToElement(envelope, ServerJsonContext.Default.JsonObject);
-    }
-
-    private static JsonElement CreateMessageStructuredContent(string message)
-    {
-        var envelope = new JsonObject
-        {
-            ["kind"] = "message",
-            ["message"] = message
-        };
-        return JsonSerializer.SerializeToElement(envelope, ServerJsonContext.Default.JsonObject);
     }
 
     private static bool AllToolsInGroupMatch(Predicate<ToolMetadata> predicate, CommandGroup group)
@@ -396,7 +317,7 @@ public sealed class NamespaceToolLoader(
             """;
         return CreateNamespaceCallResult(
             helpMessage,
-            () => CreateMessageStructuredContent(helpMessage),
+            () => AggregateStructuredOutput.CreateMessage(helpMessage),
             isError: false);
     }
 
@@ -593,7 +514,7 @@ public sealed class NamespaceToolLoader(
 
             var result = CreateNamespaceCallResult(
                 jsonResponse,
-                () => CreateToolResultStructuredContent(command, jsonResponse),
+                () => AggregateStructuredOutput.CreateToolResult(command, jsonResponse),
                 isError);
             return McpHelper.InjectToolIdMetadata(result, cmd.Id);
         }
@@ -638,7 +559,7 @@ public sealed class NamespaceToolLoader(
             """;
         var learnResponse = CreateNamespaceCallResult(
             contentText,
-            () => CreateToolListStructuredContent(tools),
+            () => AggregateStructuredOutput.CreateToolList(tools),
             isError: false);
         var response = learnResponse;
         if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))

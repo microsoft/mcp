@@ -46,22 +46,27 @@ command store the result.**
 Structured output is an explicit operator opt-in. Enable it only when the target client supports
 `outputSchema` and `structuredContent`.
 
-### Namespace mode
+### Aggregate execution modes
 
-In `namespace` mode, each selected in-process namespace tool advertises one stable aggregate
-`outputSchema`; individual child-command schemas are not combined into a large union. Successful
-responses use one of three tagged envelopes:
+`namespace`, `consolidated`, and `single` modes advertise stable aggregate `outputSchema` contracts;
+individual child-command schemas are not combined into a large union.
+
+In `namespace` and `consolidated` modes, each in-process aggregate tool uses one of three tagged
+envelopes:
 
 | `kind` | Fields | Used for |
 |---|---|---|
 | `tool-list` | `tools` | `learn=true` command discovery |
 | `tool-result` | `command`, `result` | A routed child-command result |
-| `message` | `message` | Namespace-level guidance |
+| `message` | `message` | Aggregate-level guidance |
 
 This aggregate contract applies even when a routed child command has not yet been migrated to
-`BaseCommand<TOptions, TResult>`. Namespace selection still applies: only namespaces enabled with
-`--namespace` are listed and receive the aggregate schema. `single` and `consolidated` mode support is
-deferred.
+`BaseCommand<TOptions, TResult>`. Namespace selection still applies in `namespace` mode: only
+namespaces enabled with `--namespace` are listed and receive the aggregate schema.
+
+In `single` mode, the server's one aggregate tool uses the same three variants, with an additional
+`tool` field on `tool-result` to identify the routed service. Its `result` field contains the complete
+downstream MCP `CallToolResult`, including content, structured content, error state, and metadata.
 
 ## Prerequisites
 
@@ -200,9 +205,12 @@ migrated with exactly these three edits.
   advertised schema — that is out of scope for this migration.
 - **Commands with no result payload.** A command that never sets `context.Response.Results` on success
   has nothing to describe — leave it alone (do not add an empty `ResultTypeInfo`).
-- **Proxy / namespace mode is already handled.** `RegistryToolLoader` forwards `outputSchema` when it
-  re-exposes prefixed tools, so migrated tools keep their schema in namespace-proxy mode. No action
-  needed.
+- **Aggregate modes are handled centrally.** `namespace` and `consolidated` wrap in-process command
+  results in their shared aggregate contract, while `single` wraps the complete downstream MCP result.
+  No per-command schema migration is needed for those aggregate envelopes.
+- **External proxy declarations are separate.** `RegistryToolLoader` forwards schemas for individually
+  exposed external tools in `all` mode. External tools exposed alongside namespace or consolidated
+  routers are not normalized into the in-process aggregate contract.
 
 ## Verification
 
@@ -219,7 +227,8 @@ Run these from the repository root, scoped to the toolset you migrated (App Conf
    ./eng/scripts/Test-Code.ps1 -Paths AppConfig
    ```
 
-3. **Confirm the schema appears (optional but recommended).** Start the server with
+3. **Confirm the schema appears (optional but recommended).** Start the server in the execution mode
+   you are validating with
    `--structured-output-mode duplicated` or `--structured-output-mode compact`, regenerate the
    tools-list snapshot, and
    confirm each migrated tool now carries an `outputSchema`, while `name`, `description`, and
