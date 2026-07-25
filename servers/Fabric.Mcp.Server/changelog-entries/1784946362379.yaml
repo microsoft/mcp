@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Normalized affected Fabric Docs and OneLake tool results to use consistent object-root payloads."

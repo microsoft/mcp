@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Normalized affected tool results to use consistent object-root payloads and consolidated variant-specific result shapes."
