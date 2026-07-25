@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.Extension.Tests;
 
 public sealed class ExtensionSetupTests
 {
-    private static IServiceProvider BuildServiceProvider(ServiceStartOptions? startOptions)
+    private static IServiceProvider BuildServiceProvider(ServerStartOptions? startOptions)
     {
         var services = new ServiceCollection();
         services.AddLogging(b => b.AddConsole());
@@ -42,7 +42,7 @@ public sealed class ExtensionSetupTests
     public void RegisterCommands_RemoteHttpOboMode_ExcludesAzqrCommand()
     {
         // Arrange: HTTP (remote) + OBO auth mode
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.Http,
             OutgoingAuthStrategy = OutgoingAuthStrategy.UseOnBehalfOf,
@@ -64,7 +64,7 @@ public sealed class ExtensionSetupTests
     public void RegisterCommands_RemoteHttpHostIdentityMode_ExcludesAzqrCommand()
     {
         // Arrange: HTTP (remote) + HostIdentity auth mode
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.Http,
             OutgoingAuthStrategy = OutgoingAuthStrategy.UseHostingEnvironmentIdentity,
@@ -85,7 +85,7 @@ public sealed class ExtensionSetupTests
     public void RegisterCommands_LocalStdioMode_IncludesAzqrCommand()
     {
         // Arrange: stdio transport
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
         };

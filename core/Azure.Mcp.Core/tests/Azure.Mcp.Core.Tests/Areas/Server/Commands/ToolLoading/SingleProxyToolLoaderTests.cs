@@ -1,3 +1,5 @@
+#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
+#pragma warning disable MCP9005 // Deprecated Sampling/Logging APIs - backward compat during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -33,9 +35,9 @@ public class SingleProxyToolLoaderTests
         });
     }
 
-    private static RegistryDiscoveryStrategy CreateStrategy(ServiceStartOptions options, ILogger<RegistryDiscoveryStrategy> logger)
+    private static RegistryDiscoveryStrategy CreateStrategy(ServerStartOptions options, ILogger<RegistryDiscoveryStrategy> logger)
     {
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServerStartOptions());
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
         var registryRoot = RegistryServerHelper.GetRegistryRoot(typeof(Azure.Mcp.Server.Program).Assembly, "Azure.Mcp.Server.Resources.registry.json");
         return new RegistryDiscoveryStrategy(serviceOptions, logger, httpClientFactory, registryRoot!);
@@ -49,7 +51,7 @@ public class SingleProxyToolLoaderTests
 
         if (useRealDiscovery)
         {
-            var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
+            var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
             var commandGroupLogger = serviceProvider.GetRequiredService<ILogger<CommandGroupDiscoveryStrategy>>();
             var commandGroupDiscoveryStrategy = new CommandGroupDiscoveryStrategy(
                 CommandFactoryHelpers.CreateCommandFactory(serviceProvider),
@@ -249,10 +251,7 @@ public class SingleProxyToolLoaderTests
         // Arrange
         var (toolLoader, _) = CreateToolLoader(useRealDiscovery: true);
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
-        {
-            Params = null
-        };
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, null!);
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -271,27 +270,28 @@ public class SingleProxyToolLoaderTests
     public async Task GetChildToolList_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
     {
         // Arrange
-        var mcpClient = Substitute.For<McpClient>();
-        mcpClient.SendRequestAsync(Arg.Is<JsonRpcRequest>(r => r.Method == RequestMethods.ToolsList), Arg.Any<CancellationToken>())
-            .Returns(new JsonRpcResponse()
-            {
-                Result = new JsonObject([
-                    new("tools", new JsonArray([
-                        new JsonObject([
-                            new("name", "storage"),
-                            new("annotations", new JsonObject([
-                                new("readOnlyHint", true)
-                            ]))
-                        ]),
-                        new JsonObject([
-                            new("name", "keyvault"),
-                            new("annotations", new JsonObject([
-                                new("readOnlyHint", false)
-                            ]))
-                        ])
+        var toolsResult = new JsonObject([
+            new("tools", new JsonArray([
+                new JsonObject([
+                    new("name", "storage"),
+                    new("inputSchema", new JsonObject { ["type"] = "object" }),
+                    new("annotations", new JsonObject([
+                        new("readOnlyHint", true)
+                    ]))
+                ]),
+                new JsonObject([
+                    new("name", "keyvault"),
+                    new("inputSchema", new JsonObject { ["type"] = "object" }),
+                    new("annotations", new JsonObject([
+                        new("readOnlyHint", false)
                     ]))
                 ])
-            });
+            ]))
+        ]);
+        var mcpClient = LoopbackMcpClient.Create(req =>
+            req.Method == RequestMethods.ToolsList
+                ? new JsonRpcResponse { Result = toolsResult }
+                : null);
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         discoveryStrategy.GetOrCreateClientAsync("storage", Arg.Any<McpClientOptions?>(), TestContext.Current.CancellationToken)
             .Returns(mcpClient);
@@ -313,39 +313,28 @@ public class SingleProxyToolLoaderTests
     public async Task GetChildToolList_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
     {
         // Arrange
-        var storageTool = new Tool()
-        {
-            Name = "storage",
-            Meta = new([new(McpHelper.LocalRequiredHintMetaKey, true)])
-        };
-        var storageClientTool = new McpClientTool(Substitute.For<McpClient>(), storageTool);
-        var keyvaultTool = new Tool()
-        {
-            Name = "keyvault",
-            Meta = new([new(McpHelper.LocalRequiredHintMetaKey, false)])
-        };
-        var keyvaultClientTool = new McpClientTool(Substitute.For<McpClient>(), keyvaultTool);
-        var mcpClient = Substitute.For<McpClient>();
-        mcpClient.SendRequestAsync(Arg.Is<JsonRpcRequest>(r => r.Method == RequestMethods.ToolsList), Arg.Any<CancellationToken>())
-            .Returns(new JsonRpcResponse()
-            {
-                Result = new JsonObject([
-                    new("tools", new JsonArray([
-                        new JsonObject([
-                            new("name", "storage"),
-                            new("meta", new JsonObject([
-                                new(McpHelper.LocalRequiredHintMetaKey, true)
-                            ]))
-                        ]),
-                        new JsonObject([
-                            new("name", "keyvault"),
-                            new("meta", new JsonObject([
-                                new(McpHelper.LocalRequiredHintMetaKey, false)
-                            ]))
-                        ])
+        var toolsResult = new JsonObject([
+            new("tools", new JsonArray([
+                new JsonObject([
+                    new("name", "storage"),
+                    new("inputSchema", new JsonObject { ["type"] = "object" }),
+                    new("meta", new JsonObject([
+                        new(McpHelper.LocalRequiredHintMetaKey, true)
+                    ]))
+                ]),
+                new JsonObject([
+                    new("name", "keyvault"),
+                    new("inputSchema", new JsonObject { ["type"] = "object" }),
+                    new("meta", new JsonObject([
+                        new(McpHelper.LocalRequiredHintMetaKey, false)
                     ]))
                 ])
-            });
+            ]))
+        ]);
+        var mcpClient = LoopbackMcpClient.Create(req =>
+            req.Method == RequestMethods.ToolsList
+                ? new JsonRpcResponse { Result = toolsResult }
+                : null);
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         discoveryStrategy.GetOrCreateClientAsync("storage", Arg.Any<McpClientOptions?>(), TestContext.Current.CancellationToken)
             .Returns(mcpClient);
@@ -438,14 +427,11 @@ public class SingleProxyToolLoaderTests
         };
 
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsCall })
+        return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
         {
-            Params = new CallToolRequestParams
-            {
-                Name = "azure",
-                Arguments = arguments
-            }
-        };
+            Name = "azure",
+            Arguments = arguments
+        });
     }
 
     [Fact]

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Models.Metadata;
@@ -24,7 +25,7 @@ public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
                 return new MetadataDefinition { Value = defaultValue, Description = string.Empty };
 
             var meta = JsonSerializer.Deserialize(prop.GetRawText(), CoreJsonContext.Default.MetadataDefinition)
-                       ?? new MetadataDefinition { Value = defaultValue, Description = string.Empty };
+                ?? new MetadataDefinition { Value = defaultValue, Description = string.Empty };
             return meta;
         }
         return new ToolMetadata(

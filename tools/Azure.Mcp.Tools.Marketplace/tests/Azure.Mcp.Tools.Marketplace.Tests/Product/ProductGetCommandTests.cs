@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Marketplace.Commands.Product;
 using Azure.Mcp.Tools.Marketplace.Models;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -63,10 +62,7 @@ public class ProductGetCommandTests : SubscriptionCommandUnitTestsBase<ProductGe
     [Fact]
     public async Task ExecuteAsync_WithMissingSubscription_ReturnsValidationError()
     {
-        // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-
-        // Act
+        // Arrange & Act
         var response = await ExecuteCommandAsync("--product-id", "test-product");
 
         // Assert

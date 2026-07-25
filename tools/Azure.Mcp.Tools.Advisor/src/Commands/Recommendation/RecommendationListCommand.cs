@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tools.Advisor.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 
@@ -31,49 +30,18 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IAdvisorService advisorService)
-    : BaseAdvisorCommand<RecommendationListOptions>(logger)
+public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IAdvisorService advisorService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<RecommendationListOptions, RecommendationListCommand.RecommendationListResult>(subscriptionResolver)
 {
     private const int MinTop = 1;
     private const int MaxTop = 100;
     private const int DefaultTop = 50;
 
     private readonly IAdvisorService _advisorService = advisorService;
+    private readonly ILogger<RecommendationListCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecommendationListOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AdvisorOptionDefinitions.Category.AsOptional());
-        command.Options.Add(AdvisorOptionDefinitions.Impact.AsOptional());
-        command.Options.Add(AdvisorOptionDefinitions.ResourceType.AsOptional());
-        command.Options.Add(AdvisorOptionDefinitions.Resource.AsOptional());
-        command.Options.Add(AdvisorOptionDefinitions.Search.AsOptional());
-        command.Options.Add(AdvisorOptionDefinitions.Top.AsOptional());
-    }
-
-    protected override RecommendationListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Category = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.Category);
-        options.Impact = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.Impact);
-        options.ResourceType = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.ResourceType);
-        options.Resource = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.Resource);
-        options.Search = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.Search);
-        options.Top = parseResult.CommandResult.HasOptionResult(AdvisorOptionDefinitions.Top)
-            ? parseResult.GetValueOrDefault(AdvisorOptionDefinitions.Top)
-            : (int?)null;
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         var top = Math.Clamp(options.Top ?? DefaultTop, MinTop, MaxTop);
 
         try
@@ -91,6 +59,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 options.RetryPolicy,
                 filters,
                 top,
+                options.Tenant,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(recommendations?.Results ?? [], recommendations?.AreResultsTruncated ?? false),
@@ -125,5 +94,5 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record RecommendationListResult(List<Models.Recommendation> Recommendations, bool AreResultsTruncated);
+    public sealed record RecommendationListResult(List<Models.Recommendation> Recommendations, bool AreResultsTruncated);
 }

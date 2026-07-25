@@ -4,7 +4,6 @@
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
-using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -50,7 +49,7 @@ public class NamespaceGetCommandTests : SubscriptionCommandUnitTestsBase<Namespa
         if (shouldSucceed)
         {
             // Set up appropriate service method based on arguments
-            if (args.Contains($"--namespace") && args.Contains($"{OptionDefinitions.Common.ResourceGroup.Name}"))
+            if (args.Contains($"--namespace") && args.Contains($"--resource-group"))
             {
                 // Single namespace request
                 var namespaceDetails = new Models.Namespace(

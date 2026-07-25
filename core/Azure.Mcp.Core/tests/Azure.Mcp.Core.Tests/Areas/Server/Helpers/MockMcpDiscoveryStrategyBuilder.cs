@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Nodes;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using ModelContextProtocol.Client;
+using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
 
@@ -43,8 +45,11 @@ public sealed class MockMcpDiscoveryStrategyBuilder
         }
         else
         {
-            // If no client is provided, create a basic substitute
-            var defaultClient = Substitute.For<McpClient>();
+            // If no client is provided, create a real loopback client that reports no tools.
+            var defaultClient = LoopbackMcpClient.Create(request =>
+                request.Method == "tools/list"
+                    ? new JsonRpcResponse { Result = new JsonObject { ["tools"] = new JsonArray() } }
+                    : null);
             mockProvider.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(defaultClient));
         }
 

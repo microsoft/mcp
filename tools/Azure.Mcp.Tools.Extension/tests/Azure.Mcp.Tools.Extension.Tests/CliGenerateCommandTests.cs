@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using Azure.Core;
 using Azure.Mcp.Tools.Extension.Commands;
