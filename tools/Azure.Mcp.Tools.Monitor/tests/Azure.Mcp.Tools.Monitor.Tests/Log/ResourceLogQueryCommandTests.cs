@@ -4,6 +4,7 @@
 using System.Net;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Tests.Commands;
+using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Mcp.Core.Options;
@@ -99,7 +100,11 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(
+            response,
+            MonitorJsonContext.Default.ResourceLogQueryCommandResult);
+        Assert.Equal(3, result.Results.Count);
+        Assert.Equal("Error", result.Results[2]!["Level"]!.GetValue<string>());
 
         // Verify the mock was called
         await Service.Received(1).QueryResourceLogs(

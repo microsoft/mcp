@@ -26,7 +26,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels;
     Secret = false,
     LocalRequired = false)]
 public sealed class HealthModelListCommand(IMonitorHealthModelService healthModelService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<HealthModelListOptions, List<HealthModelSummary>>(subscriptionResolver)
+    : SubscriptionCommand<HealthModelListOptions, HealthModelListCommand.HealthModelListCommandResult>(subscriptionResolver)
 {
     private readonly IMonitorHealthModelService _healthModelService = healthModelService;
 
@@ -41,7 +41,9 @@ public sealed class HealthModelListCommand(IMonitorHealthModelService healthMode
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(models, MonitorJsonContext.Default.ListHealthModelSummary);
+            context.Response.Results = ResponseResult.Create(
+                new(models),
+                MonitorJsonContext.Default.HealthModelListCommandResult);
         }
         catch (Exception ex)
         {
@@ -50,4 +52,6 @@ public sealed class HealthModelListCommand(IMonitorHealthModelService healthMode
 
         return context.Response;
     }
+
+    public sealed record HealthModelListCommandResult(List<HealthModelSummary> HealthModels);
 }

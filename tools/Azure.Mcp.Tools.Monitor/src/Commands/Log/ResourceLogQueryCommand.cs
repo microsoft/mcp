@@ -31,7 +31,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Log;
     Secret = false,
     LocalRequired = false)]
 public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> logger, IMonitorService monitorService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<ResourceLogQueryOptions, List<JsonNode>>(subscriptionResolver)
+    : SubscriptionCommand<ResourceLogQueryOptions, ResourceLogQueryCommand.ResourceLogQueryCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ResourceLogQueryCommand> _logger = logger;
     private readonly IMonitorService _monitorService = monitorService;
@@ -51,7 +51,9 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(results, MonitorJsonContext.Default.ListJsonNode);
+            context.Response.Results = ResponseResult.Create(
+                new(results),
+                MonitorJsonContext.Default.ResourceLogQueryCommandResult);
         }
         catch (Exception ex)
         {
@@ -61,4 +63,6 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
 
         return context.Response;
     }
+
+    public sealed record ResourceLogQueryCommandResult(List<JsonNode> Results);
 }

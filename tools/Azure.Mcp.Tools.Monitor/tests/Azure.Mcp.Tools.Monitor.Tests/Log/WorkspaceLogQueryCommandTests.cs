@@ -4,6 +4,7 @@
 using System.Net;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Tests.Commands;
+using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Mcp.Core.Options;
@@ -99,7 +100,11 @@ public sealed class WorkspaceLogQueryCommandTests : SubscriptionCommandUnitTests
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(
+            response,
+            MonitorJsonContext.Default.WorkspaceLogQueryCommandResult);
+        Assert.Equal(3, result.Results.Count);
+        Assert.Equal("Error occurred", result.Results[2]!["Message"]!.GetValue<string>());
 
         // Verify the mock was called
         await Service.Received(1).QueryWorkspaceLogs(
