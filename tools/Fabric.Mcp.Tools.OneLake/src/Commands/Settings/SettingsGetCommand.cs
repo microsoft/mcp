@@ -25,7 +25,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Settings;
     ReadOnly = true,
     Secret = false)]
 public sealed class SettingsGetCommand(ILogger<SettingsGetCommand> logger, IOneLakeService oneLakeService)
-    : AuthenticatedCommand<SettingsGetOptions, OneLakeSettings>()
+    : AuthenticatedCommand<SettingsGetOptions, SettingsGetCommand.SettingsGetCommandResult>()
 {
     private readonly ILogger<SettingsGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -52,7 +52,9 @@ public sealed class SettingsGetCommand(ILogger<SettingsGetCommand> logger, IOneL
         try
         {
             var result = await _oneLakeService.GetSettingsAsync(workspaceId!, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeSettings);
+            context.Response.Results = ResponseResult.Create(
+                new SettingsGetCommandResult(result),
+                OneLakeJsonContext.Default.SettingsGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -62,4 +64,6 @@ public sealed class SettingsGetCommand(ILogger<SettingsGetCommand> logger, IOneL
 
         return context.Response;
     }
+
+    public sealed record SettingsGetCommandResult(OneLakeSettings Settings);
 }

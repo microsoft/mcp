@@ -26,7 +26,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
     ReadOnly = false,
     Secret = false)]
 public sealed class ShortcutCreateAzureBlobCommand(ILogger<ShortcutCreateAzureBlobCommand> logger, IOneLakeService oneLakeService)
-    : AuthenticatedCommand<ShortcutCreateAzureBlobOptions, OneLakeShortcut>()
+    : AuthenticatedCommand<ShortcutCreateAzureBlobOptions, ShortcutCreateAzureBlobCommand.ShortcutCreateAzureBlobCommandResult>()
 {
     private readonly ILogger<ShortcutCreateAzureBlobCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -51,7 +51,9 @@ public sealed class ShortcutCreateAzureBlobCommand(ILogger<ShortcutCreateAzureBl
             };
 
             var result = await _oneLakeService.CreateShortcutAsync(options.WorkspaceId, options.ItemId, shortcut, options.ShortcutConflictPolicy, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeShortcut);
+            context.Response.Results = ResponseResult.Create(
+                new ShortcutCreateAzureBlobCommandResult(result),
+                OneLakeJsonContext.Default.ShortcutCreateAzureBlobCommandResult);
         }
         catch (Exception ex)
         {
@@ -61,4 +63,6 @@ public sealed class ShortcutCreateAzureBlobCommand(ILogger<ShortcutCreateAzureBl
 
         return context.Response;
     }
+
+    public sealed record ShortcutCreateAzureBlobCommandResult(OneLakeShortcut Shortcut);
 }

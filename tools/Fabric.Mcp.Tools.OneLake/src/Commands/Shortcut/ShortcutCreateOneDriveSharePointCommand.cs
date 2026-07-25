@@ -26,7 +26,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
     ReadOnly = false,
     Secret = false)]
 public sealed class ShortcutCreateOneDriveSharePointCommand(ILogger<ShortcutCreateOneDriveSharePointCommand> logger, IOneLakeService oneLakeService)
-    : AuthenticatedCommand<ShortcutCreateOneDriveSharePointOptions, OneLakeShortcut>()
+    : AuthenticatedCommand<ShortcutCreateOneDriveSharePointOptions, ShortcutCreateOneDriveSharePointCommand.ShortcutCreateOneDriveSharePointCommandResult>()
 {
     private readonly ILogger<ShortcutCreateOneDriveSharePointCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -52,7 +52,9 @@ public sealed class ShortcutCreateOneDriveSharePointCommand(ILogger<ShortcutCrea
             };
 
             var result = await _oneLakeService.CreateShortcutAsync(options.WorkspaceId, options.ItemId, shortcut, options.ShortcutConflictPolicy, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeShortcut);
+            context.Response.Results = ResponseResult.Create(
+                new ShortcutCreateOneDriveSharePointCommandResult(result),
+                OneLakeJsonContext.Default.ShortcutCreateOneDriveSharePointCommandResult);
         }
         catch (Exception ex)
         {
@@ -62,4 +64,6 @@ public sealed class ShortcutCreateOneDriveSharePointCommand(ILogger<ShortcutCrea
 
         return context.Response;
     }
+
+    public sealed record ShortcutCreateOneDriveSharePointCommandResult(OneLakeShortcut Shortcut);
 }

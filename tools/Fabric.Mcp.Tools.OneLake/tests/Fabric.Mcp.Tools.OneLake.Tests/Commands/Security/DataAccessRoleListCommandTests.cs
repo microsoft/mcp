@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 
 using Fabric.Mcp.Tools.OneLake.Commands.Security;
+using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Tests.Client;
+using NSubstitute;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Security;
 
@@ -58,5 +60,28 @@ public class DataAccessRoleListCommandTests : CommandUnitTestsBase<DataAccessRol
         Assert.False(metadata.OpenWorld);
         Assert.True(metadata.ReadOnly);
         Assert.False(metadata.Secret);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsRolesWrapper()
+    {
+        const string workspaceId = "32c6efb2-ca3a-4598-83b0-8abe799830cd";
+        Service.ListDataAccessRolesAsync(workspaceId, "item1", null, Arg.Any<CancellationToken>())
+            .Returns(new DataAccessRoleListResponse
+            {
+                Value = [new DataAccessRole { Name = "TestRole" }],
+                ContinuationToken = "next-token",
+                ContinuationUri = "https://example.test/roles"
+            });
+
+        var response = await ExecuteCommandAsync(
+            "--workspace-id", workspaceId,
+            "--item-id", "item1");
+
+        var result = ValidateAndDeserializeResponse(response, OneLakeJsonContext.Default.DataAccessRoleListCommandResult);
+
+        Assert.Collection(result.Roles, role => Assert.Equal("TestRole", role.Name));
+        Assert.Equal("next-token", result.ContinuationToken);
+        Assert.Equal("https://example.test/roles", result.ContinuationUri);
     }
 }

@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
@@ -30,6 +32,8 @@ public class ShortcutCreateCommandVariantsTests
             "--target-path", "Files/data");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = DeserializeResponse(response, OneLakeJsonContext.Default.ShortcutCreateOneLakeCommandResult);
+        Assert.Equal("shortcut1", result.Shortcut.Name);
         await service.Received(1).CreateShortcutAsync(
             "ws1",
             "item1",
@@ -59,6 +63,8 @@ public class ShortcutCreateCommandVariantsTests
             "--target-connection-id", "connection-1");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = DeserializeResponse(response, OneLakeJsonContext.Default.ShortcutCreateAdlsGen2CommandResult);
+        Assert.Equal("shortcut1", result.Shortcut.Name);
         await service.Received(1).CreateShortcutAsync(
             "ws1",
             "item1",
@@ -86,6 +92,8 @@ public class ShortcutCreateCommandVariantsTests
             "--target-connection-id", "connection-1");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = DeserializeResponse(response, OneLakeJsonContext.Default.ShortcutCreateAmazonS3CommandResult);
+        Assert.Equal("shortcut1", result.Shortcut.Name);
         await service.Received(1).CreateShortcutAsync(
             "ws1",
             "item1",
@@ -113,6 +121,8 @@ public class ShortcutCreateCommandVariantsTests
             "--target-connection-id", "connection-1");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = DeserializeResponse(response, OneLakeJsonContext.Default.ShortcutCreateAzureBlobCommandResult);
+        Assert.Equal("shortcut1", result.Shortcut.Name);
         await service.Received(1).CreateShortcutAsync(
             "ws1",
             "item1",
@@ -140,6 +150,8 @@ public class ShortcutCreateCommandVariantsTests
             "--target-connection-id", "connection-1");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = DeserializeResponse(response, OneLakeJsonContext.Default.ShortcutCreateGcsCommandResult);
+        Assert.Equal("shortcut1", result.Shortcut.Name);
         await service.Received(1).CreateShortcutAsync(
             "ws1",
             "item1",
@@ -168,6 +180,8 @@ public class ShortcutCreateCommandVariantsTests
             "--target-bucket", "bucket-1");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = DeserializeResponse(response, OneLakeJsonContext.Default.ShortcutCreateS3CompatibleCommandResult);
+        Assert.Equal("shortcut1", result.Shortcut.Name);
         await service.Received(1).CreateShortcutAsync(
             "ws1",
             "item1",
@@ -197,6 +211,8 @@ public class ShortcutCreateCommandVariantsTests
             "--target-table-name", "account");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = DeserializeResponse(response, OneLakeJsonContext.Default.ShortcutCreateDataverseCommandResult);
+        Assert.Equal("shortcut1", result.Shortcut.Name);
         await service.Received(1).CreateShortcutAsync(
             "ws1",
             "item1",
@@ -225,6 +241,8 @@ public class ShortcutCreateCommandVariantsTests
             "--target-update-fabric-item-sensitivity", "true");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = DeserializeResponse(response, OneLakeJsonContext.Default.ShortcutCreateOneDriveSharePointCommandResult);
+        Assert.Equal("shortcut1", result.Shortcut.Name);
         await service.Received(1).CreateShortcutAsync(
             "ws1",
             "item1",
@@ -267,5 +285,13 @@ public class ShortcutCreateCommandVariantsTests
         using var serviceProvider = new ServiceCollection().BuildServiceProvider();
         var context = new CommandContext(serviceProvider);
         return await command.ExecuteAsync(context, command.GetCommand().Parse(args), CancellationToken.None);
+    }
+
+    private static T DeserializeResponse<T>(CommandResponse response, JsonTypeInfo<T> jsonTypeInfo)
+    {
+        Assert.NotNull(response.Results);
+        var result = JsonSerializer.Deserialize(JsonSerializer.Serialize(response.Results), jsonTypeInfo);
+        Assert.NotNull(result);
+        return result;
     }
 }
