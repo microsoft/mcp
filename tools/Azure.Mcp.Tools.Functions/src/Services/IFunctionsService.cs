@@ -7,9 +7,9 @@ namespace Azure.Mcp.Tools.Functions.Services;
 
 public interface IFunctionsService
 {
-    Task<LanguageListCommandResult> GetLanguageListAsync(CancellationToken cancellationToken = default);
+    Task<LanguageListResult> GetLanguageListAsync(CancellationToken cancellationToken = default);
 
-    Task<ProjectGetCommandResult> GetProjectTemplateAsync(SupportedLanguages language, CancellationToken cancellationToken = default);
+    Task<ProjectTemplateResult> GetProjectTemplateAsync(SupportedLanguages language, CancellationToken cancellationToken = default);
 
     Task<TemplateListResult> GetTemplateListAsync(SupportedLanguages language, CancellationToken cancellationToken = default);
 

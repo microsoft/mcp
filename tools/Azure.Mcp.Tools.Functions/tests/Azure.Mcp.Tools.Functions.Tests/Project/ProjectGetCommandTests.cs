@@ -48,7 +48,7 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
     public async Task ExecuteAsync_ReturnsProjectTemplate_ForPython()
     {
         // Arrange
-        var expectedResult = new ProjectGetCommandResult
+        var expectedResult = new ProjectTemplateResult
         {
             Language = "python",
             InitInstructions = "## Python Azure Functions Project Setup",
@@ -61,7 +61,7 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
         var response = await ExecuteCommandAsync("--language", "python");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ProjectGetCommandResult);
+        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ProjectTemplateResult);
         Assert.Equal("python", result.Language);
         Assert.NotEmpty(result.InitInstructions);
         Assert.Equal(4, result.ProjectStructure.Count);
@@ -71,7 +71,7 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
     public async Task ExecuteAsync_ReturnsStaticMetadata_NoHttpCalls()
     {
         // Arrange - project get should return static metadata without HTTP calls
-        var expectedResult = new ProjectGetCommandResult
+        var expectedResult = new ProjectTemplateResult
         {
             Language = "typescript",
             InitInstructions = "## TypeScript Azure Functions Project Setup",
@@ -84,7 +84,7 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
         var response = await ExecuteCommandAsync("--language", "typescript");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ProjectGetCommandResult);
+        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ProjectTemplateResult);
         Assert.Equal("typescript", result.Language);
     }
 
@@ -120,7 +120,7 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange - use representative project template data to verify serialization
-        var expectedResult = new ProjectGetCommandResult
+        var expectedResult = new ProjectTemplateResult
         {
             Language = "python",
             InitInstructions = "## Python Azure Functions Project Setup\n\n1. Create virtual environment\n2. Install dependencies",
@@ -133,7 +133,7 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
         var response = await ExecuteCommandAsync("--language", "python");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ProjectGetCommandResult);
+        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ProjectTemplateResult);
         Assert.Equal("python", result.Language);
         Assert.Contains("virtual environment", result.InitInstructions);
         Assert.True(result.ProjectStructure.Count > 0);
@@ -149,7 +149,7 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
     public async Task ExecuteAsync_ReturnsTemplateForAllLanguages(SupportedLanguages language)
     {
         // Arrange - use representative mocked data per language
-        var expectedResult = new ProjectGetCommandResult
+        var expectedResult = new ProjectTemplateResult
         {
             Language = language.ToString(),
             InitInstructions = $"## {language} Azure Functions Project Setup",
@@ -162,7 +162,7 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
         var response = await ExecuteCommandAsync("--language", language.ToString());
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ProjectGetCommandResult);
+        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ProjectTemplateResult);
         Assert.Equal(language.ToString(), result.Language);
         Assert.True(result.ProjectStructure.Count > 0);
     }

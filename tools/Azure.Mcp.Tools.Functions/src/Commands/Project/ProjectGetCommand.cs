@@ -23,7 +23,7 @@ namespace Azure.Mcp.Tools.Functions.Commands.Project;
     Secret = false,
     LocalRequired = false)]
 public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger, IFunctionsService functionsService)
-    : BaseCommand<ProjectGetOptions, ProjectGetCommandResult>
+    : BaseCommand<ProjectGetOptions, ProjectTemplateResult>
 {
     private readonly ILogger<ProjectGetCommand> _logger = logger;
     private readonly IFunctionsService _functionsService = functionsService;
@@ -38,7 +38,7 @@ public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger, IFuncti
             var result = await _functionsService.GetProjectTemplateAsync(options.Language, cancellationToken);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, FunctionsJsonContext.Default.ProjectGetCommandResult);
+            context.Response.Results = ResponseResult.Create(result, FunctionsJsonContext.Default.ProjectTemplateResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
