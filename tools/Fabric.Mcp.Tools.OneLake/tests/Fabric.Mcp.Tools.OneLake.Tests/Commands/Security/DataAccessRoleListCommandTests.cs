@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Fabric.Mcp.Tools.OneLake.Commands.Security;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
@@ -83,5 +84,22 @@ public class DataAccessRoleListCommandTests : CommandUnitTestsBase<DataAccessRol
         Assert.Collection(result.Roles, role => Assert.Equal("TestRole", role.Name));
         Assert.Equal("next-token", result.ContinuationToken);
         Assert.Equal("https://example.test/roles", result.ContinuationUri);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OmitsEmptyContinuationFields()
+    {
+        const string workspaceId = "32c6efb2-ca3a-4598-83b0-8abe799830cd";
+        Service.ListDataAccessRolesAsync(workspaceId, "item1", null, Arg.Any<CancellationToken>())
+            .Returns(new DataAccessRoleListResponse { Value = [] });
+
+        var response = await ExecuteCommandAsync(
+            "--workspace-id", workspaceId,
+            "--item-id", "item1");
+
+        var json = JsonSerializer.Serialize(response.Results);
+
+        Assert.DoesNotContain("continuationToken", json);
+        Assert.DoesNotContain("continuationUri", json);
     }
 }

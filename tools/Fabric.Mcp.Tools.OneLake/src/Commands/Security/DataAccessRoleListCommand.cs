@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
@@ -77,6 +78,6 @@ public sealed class DataAccessRoleListCommand(ILogger<DataAccessRoleListCommand>
 
     public sealed record DataAccessRoleListCommandResult(
         List<DataAccessRole> Roles,
-        string? ContinuationToken,
-        string? ContinuationUri);
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ContinuationToken,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ContinuationUri);
 }
