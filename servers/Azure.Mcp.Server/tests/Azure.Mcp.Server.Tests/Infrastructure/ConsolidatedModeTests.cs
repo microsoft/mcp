@@ -2,12 +2,51 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Nodes;
 using Xunit;
 
 namespace Azure.Mcp.Server.Tests.Infrastructure;
 
 public class ConsolidatedModeTests
 {
+    private const string StatelessProtocolVersion = "2026-07-28";
+
+    /// <summary>
+    /// Builds a <see cref="StringContent"/> for a 2026-07-28 stateless JSON-RPC request
+    /// containing the required <c>_meta</c> envelope fields. Optional extra <c>_meta</c>
+    /// entries (e.g. W3C trace context) can be merged in via <paramref name="extraMeta"/>.
+    /// </summary>
+    private static StringContent CreateStateless2026RequestContent(
+        string method,
+        int id = 1,
+        JsonObject? extraMeta = null)
+    {
+        var meta = new JsonObject
+        {
+            ["io.modelcontextprotocol/protocolVersion"] = StatelessProtocolVersion,
+            ["io.modelcontextprotocol/clientInfo"] = new JsonObject { ["name"] = "test-client", ["version"] = "1.0" },
+            ["io.modelcontextprotocol/clientCapabilities"] = new JsonObject()
+        };
+
+        if (extraMeta != null)
+        {
+            foreach (var (key, value) in extraMeta)
+            {
+                meta[key] = value?.DeepClone();
+            }
+        }
+
+        var body = new JsonObject
+        {
+            ["jsonrpc"] = "2.0",
+            ["id"] = id,
+            ["method"] = method,
+            ["params"] = new JsonObject { ["_meta"] = meta }
+        };
+
+        return new StringContent(body.ToJsonString(), System.Text.Encoding.UTF8, "application/json");
+    }
+
     [Fact]
     public async Task ConsolidatedMode_HttpTransport_Should_List_Tools_On_Root_Endpoint()
     {
@@ -37,10 +76,10 @@ public class ConsolidatedModeTests
             using var client = new HttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = new StringContent("{" + "\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}" + "}", System.Text.Encoding.UTF8, "application/json")
+                Content = CreateStateless2026RequestContent("tools/list")
             };
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
-            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
+            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", StatelessProtocolVersion);
             request.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
             request.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
 
@@ -93,16 +132,17 @@ public class ConsolidatedModeTests
             using var client = new HttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = new StringContent(
-                    "{" +
-                    "\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{\"_meta\":{\"traceparent\":\"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01\",\"clientId\":\"phase2-hardening-test\"}}" +
-                    "}",
-                    System.Text.Encoding.UTF8,
-                    "application/json")
+                Content = CreateStateless2026RequestContent(
+                    "tools/list",
+                    extraMeta: new JsonObject
+                    {
+                        ["traceparent"] = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+                        ["clientId"] = "phase2-hardening-test"
+                    })
             };
 
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
-            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
+            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", StatelessProtocolVersion);
             request.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
             request.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
 
@@ -152,16 +192,11 @@ public class ConsolidatedModeTests
             using var client = new HttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = new StringContent(
-                    "{" +
-                    "\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"server/discover\",\"params\":{}" +
-                    "}",
-                    System.Text.Encoding.UTF8,
-                    "application/json")
+                Content = CreateStateless2026RequestContent("server/discover")
             };
 
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
-            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
+            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", StatelessProtocolVersion);
             request.Headers.TryAddWithoutValidation("Mcp-Method", "server/discover");
             request.Headers.TryAddWithoutValidation("Mcp-Name", "server/discover");
 
@@ -213,10 +248,10 @@ public class ConsolidatedModeTests
 
             using var request1 = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = new StringContent("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}", System.Text.Encoding.UTF8, "application/json")
+                Content = CreateStateless2026RequestContent("tools/list", id: 1)
             };
             request1.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
-            request1.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
+            request1.Headers.TryAddWithoutValidation("MCP-Protocol-Version", StatelessProtocolVersion);
             request1.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
             request1.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
 
@@ -225,10 +260,10 @@ public class ConsolidatedModeTests
 
             using var request2 = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = new StringContent("{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\",\"params\":{}}", System.Text.Encoding.UTF8, "application/json")
+                Content = CreateStateless2026RequestContent("tools/list", id: 2)
             };
             request2.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
-            request2.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
+            request2.Headers.TryAddWithoutValidation("MCP-Protocol-Version", StatelessProtocolVersion);
             request2.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
             request2.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
 
@@ -341,22 +376,18 @@ public class ConsolidatedModeTests
             using var client = new HttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = new StringContent(
-                    "{" +
-                    "\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{" +
-                    "\"_meta\":{" +
-                    "\"traceparent\":\"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01\"," +
-                    "\"tracestate\":\"vendor1=opaquevalue1,vendor2=opaquevalue2\"," +
-                    "\"baggage\":\"userId=alice,serverNode=DF:28,isProduction=false\"" +
-                    "}" +
-                    "}" +
-                    "}",
-                    System.Text.Encoding.UTF8,
-                    "application/json")
+                Content = CreateStateless2026RequestContent(
+                    "tools/list",
+                    extraMeta: new JsonObject
+                    {
+                        ["traceparent"] = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+                        ["tracestate"] = "vendor1=opaquevalue1,vendor2=opaquevalue2",
+                        ["baggage"] = "userId=alice,serverNode=DF:28,isProduction=false"
+                    })
             };
 
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
-            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
+            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", StatelessProtocolVersion);
             request.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
             request.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
 
@@ -634,10 +665,10 @@ public class ConsolidatedModeTests
             using var client = new HttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = new StringContent("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}", System.Text.Encoding.UTF8, "application/json")
+                Content = CreateStateless2026RequestContent("tools/list")
             };
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
-            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
+            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", StatelessProtocolVersion);
             request.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
             // Intentionally omit Mcp-Name — valid for a non-named method
 
