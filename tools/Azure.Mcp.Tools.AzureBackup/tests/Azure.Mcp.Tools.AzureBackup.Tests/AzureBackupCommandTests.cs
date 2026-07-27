@@ -1667,8 +1667,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     /// <summary>
-    /// Validates that the SQL VM in the test environment appears as an unprotected
-    /// Virtual Machine via ARM-level discovery (no RSV registration needed).
+    /// Validates that VMs in the test environment appear as unprotected resources
+    /// via ARM-level discovery (Microsoft.Compute/virtualMachines).
     /// </summary>
     [Fact]
     public async Task GovernanceFindUnprotected_ArmDiscovery_DiscoversVirtualMachines()
@@ -1696,7 +1696,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
             }
         }
 
-        // The test environment has a SQL VM that should be discovered as an unprotected VM
+        // The test environment has a VM that should be discovered as an unprotected VM
         Assert.True(vmItems.Count > 0,
             "Expected at least one unprotected Virtual Machine from ARM discovery");
 

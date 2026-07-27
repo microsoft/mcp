@@ -80,8 +80,10 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     /// Resource types that Azure Backup can protect.
     /// RSV: IaasVM, SQL-in-IaasVM (workload on VM), SAP HANA (workload on VM), SAP ASE (workload on VM), Azure FileShare.
     /// DPP: Disk, Blob, AKS, ElasticSAN, ADLS, PostgreSQL Flexible, CosmosDB.
-    /// Note: SQL/SAP HANA/SAP ASE are in-guest workloads on VMs, so VMs covers them.
+    /// Note: SQL/SAP HANA/SAP ASE are in-guest workloads on VMs discovered via RSV
+    /// protectable-items enrichment (Step 4), not via ARM resource enumeration.
     /// Blob and ADLS share the storageAccounts ARM type.
+    /// ElasticSAN backup DatasourceId is at the volume-group level.
     /// </summary>
     private static readonly string[] s_protectableResourceTypes =
     [
@@ -91,8 +93,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         "Microsoft.ContainerService/managedClusters",
         "Microsoft.Compute/disks",
         "Microsoft.ElasticSan/elasticSans/volumeGroups",
-        "Microsoft.DocumentDB/databaseAccounts",
-        "Microsoft.SqlVirtualMachine/sqlVirtualMachines"
+        "Microsoft.DocumentDB/databaseAccounts"
     ];
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string vaultType,
@@ -705,12 +706,17 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             return unprotected;
         }
 
+        // Limit concurrent vault queries to avoid ARM throttling (429) in subscriptions with many vaults
+        const int maxConcurrency = 5;
+        var throttle = new SemaphoreSlim(maxConcurrency);
+
         var enrichmentTasks = rsvVaults
             .Where(v => v.Name is not null && v.ResourceGroup is not null)
             .Where(v => string.IsNullOrEmpty(resourceGroup) ||
                 string.Equals(v.ResourceGroup, resourceGroup, StringComparisons.ResourceGroup))
             .Select(async v =>
             {
+                await throttle.WaitAsync(cancellationToken);
                 try
                 {
                     return (Vault: v, Items: await rsvOps.ListDiscoveredProtectableItemsAsync(
@@ -724,6 +730,10 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
                 {
                     logger.LogWarning(ex, "Failed to list protectable items for RSV vault '{VaultName}' in resource group '{ResourceGroup}'. Skipping vault enrichment.", v.Name, v.ResourceGroup);
                     return (Vault: v, Items: new List<ProtectableItemInfo>());
+                }
+                finally
+                {
+                    throttle.Release();
                 }
             });
 

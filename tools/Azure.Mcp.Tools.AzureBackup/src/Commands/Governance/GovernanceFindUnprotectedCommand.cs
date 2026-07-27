@@ -22,7 +22,11 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
         unprotected resources, and (2) RSV vault protectable-items enrichment discovers
         unprotected sub-resources that vaults have discovered but not yet protected.
         Results include a 'discoverySource' field ('arm' or 'vault') indicating how each item
-        was found. Optionally filter by resource type, resource group, or tags.
+        was found, and vault-discovered items include 'protectionState' to distinguish
+        never-protected items from items where protection was stopped.
+        Optionally filter by resource type, resource group, or tags.
+        Note: tag filtering applies only to ARM-discovered resources; vault-discovered
+        sub-resources do not carry ARM tags and are not filtered by the tag parameter.
 
         Workload coverage and discovery level:
         - IaaS VM: ARM (VM level)
