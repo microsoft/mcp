@@ -1,5 +1,5 @@
 name: Azure App Configuration evaluations
-description: Evaluation of prompts in the section Azure App Configuration
+description: Evaluation prompts for Azure App Configuration
 type: capability
 stimuli:
   - name: List stores
