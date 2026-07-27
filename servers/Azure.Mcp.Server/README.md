@@ -19,6 +19,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 [![GitHub](https://img.shields.io/badge/github-microsoft/mcp-blue.svg?style=flat-square&logo=github&color=2787B7)](https://github.com/microsoft/mcp)
 [![GitHub Release](https://img.shields.io/github/v/release/microsoft/mcp?include_prereleases&filter=Azure.Mcp.*&style=flat-square&color=2787B7)](https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square&color=2787B7)](https://github.com/microsoft/mcp/blob/main/LICENSE)
+[![MCP Toplist](https://mcptoplist.com/badge/com.microsoft%2Fazure.svg)](https://mcptoplist.com/server/com.microsoft%2Fazure)
 
 <!-- remove-section: end remove_install_links -->
 ## Table of Contents

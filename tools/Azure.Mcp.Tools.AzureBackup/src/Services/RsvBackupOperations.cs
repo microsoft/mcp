@@ -1640,6 +1640,44 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         return items;
     }
 
+    public async Task<List<ProtectableItemInfo>> ListDiscoveredProtectableItemsAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+
+        var items = new List<ProtectableItemInfo>();
+
+        // Query protectable items: AzureWorkload (SQL, HANA, SAP ASE) and AzureStorage (file shares)
+        string[] filters = ["backupManagementType eq 'AzureWorkload'", "backupManagementType eq 'AzureStorage'"];
+
+        foreach (var filter in filters)
+        {
+            try
+            {
+                await foreach (var item in rgResource.GetBackupProtectableItemsAsync(
+                    vaultName, filter: filter, cancellationToken: cancellationToken))
+                {
+                    items.Add(MapToProtectableItemInfo(item));
+                }
+            }
+            catch (RequestFailedException ex) when (ex.Status is 404)
+            {
+                // Vault may not have registered containers for this backup management type — skip
+            }
+        }
+
+        return items;
+    }
+
     /// <summary>
     /// Normalizes user-provided workload type values to the API filter format.
     /// The REST API filter expects specific types like "SAPHanaDatabase" but users
@@ -1688,6 +1726,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                 VmWorkloadSapHanaDatabaseProtectableItem => "SAPHanaDatabase",
                 VmWorkloadSqlInstanceProtectableItem => "SQLInstance",
                 VmWorkloadSapHanaSystemProtectableItem => "SAPHanaSystem",
+                FileShareProtectableItem => "AzureFileShare",
                 _ => workloadItem.GetType().Name
             };
             workloadType = workloadItem.WorkloadType;
@@ -1703,6 +1742,11 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             {
                 serverName = hanaDb.ServerName;
                 parentName = hanaDb.ParentName;
+            }
+            else if (workloadItem is FileShareProtectableItem fileShare)
+            {
+                parentName = fileShare.ParentContainerFriendlyName;
+                containerName = fileShare.ParentContainerFabricId;
             }
         }
 
