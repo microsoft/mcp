@@ -339,4 +339,54 @@ public class ProtectedItemProtectCommandTests : SubscriptionCommandUnitTestsBase
         // Assert: accepted, service was called
         Assert.Equal(HttpStatusCode.OK, response.Status);
     }
+
+    [Theory]
+    [InlineData("AzureDisk", "rsv")]
+    [InlineData("aks", "rsv")]
+    [InlineData("Microsoft.Compute/disks", "rsv")]
+    public async Task ExecuteAsync_RejectsDppDatasourceType_WhenVaultTypeIsRsv(string datasourceType, string vaultType)
+    {
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--datasource-id", "/subscriptions/.../disk1",
+            "--policy", "DefaultPolicy",
+            "--datasource-type", datasourceType,
+            "--vault-type", vaultType);
+
+        // Assert: validation error (400), service never called
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("not valid for RSV", response.Message);
+
+        await Service.DidNotReceive().ProtectItemAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("vm", "dpp")]
+    [InlineData("SQL", "dpp")]
+    [InlineData("AzureFileShare", "dpp")]
+    public async Task ExecuteAsync_RejectsRsvDatasourceType_WhenVaultTypeIsDpp(string datasourceType, string vaultType)
+    {
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--datasource-id", "/subscriptions/.../vm1",
+            "--policy", "DefaultPolicy",
+            "--datasource-type", datasourceType,
+            "--vault-type", vaultType);
+
+        // Assert: validation error (400), service never called
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("not valid for DPP", response.Message);
+
+        await Service.DidNotReceive().ProtectItemAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+    }
 }
