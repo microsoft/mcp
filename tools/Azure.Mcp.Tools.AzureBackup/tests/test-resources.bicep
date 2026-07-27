@@ -14,6 +14,10 @@ param cosmosLocation string = location
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
+@description('Admin password for the SQL VM used in testing.')
+@secure()
+param sqlVmAdminPwd string = 'P${newGuid()}!'
+
 // Recovery Services Vault (RSV) - GeoRedundant for CRR support
 resource rsvVault 'Microsoft.RecoveryServices/vaults@2024-04-01' = {
   name: '${baseName}-rsv'
@@ -335,10 +339,6 @@ resource sqlVmNic 'Microsoft.Network/networkInterfaces@2024-01-01' = {
     Environment: 'Test'
   }
 }
-
-@secure()
-@description('Admin password for the SQL VM used in testing.')
-param sqlVmAdminPwd string = 'McpT3st!${uniqueString(resourceGroup().id, baseName)}'
 
 resource sqlVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
   name: '${baseName}-sqlvm'

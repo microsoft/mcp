@@ -728,6 +728,8 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             });
 
         var enrichmentResults = await Task.WhenAll(enrichmentTasks);
+        var seenVaultItemIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var (vault, items) in enrichmentResults)
         {
             foreach (var item in items)
@@ -741,6 +743,12 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
                 // Skip if this item's ID is already in the protected set
                 if (!string.IsNullOrEmpty(item.Id) && protectedIds.Contains(item.Id))
+                {
+                    continue;
+                }
+
+                // Skip duplicate vault-discovered items (same item registered in multiple vaults)
+                if (!string.IsNullOrEmpty(item.Id) && !seenVaultItemIds.Add(item.Id))
                 {
                     continue;
                 }
