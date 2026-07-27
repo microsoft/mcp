@@ -182,7 +182,7 @@ public sealed class NamespaceToolLoader(
 
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Params.Name))
+        if (string.IsNullOrWhiteSpace(request.Params?.Name))
         {
             throw new ArgumentNullException(nameof(request.Params.Name), "Tool name cannot be null or empty.");
         }
@@ -195,7 +195,7 @@ public sealed class NamespaceToolLoader(
 
         // In namespace mode, the name of the tool is also its IAreaSetup name.
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
-            .SetTag(TagName.ToolParameters, request.Params.Arguments?.Select(kvp => kvp.Key).ToArray())
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request))
             .SetTag(TagName.ToolArea, tool);
 
         if (args != null)
@@ -369,7 +369,7 @@ public sealed class NamespaceToolLoader(
                 return await InvokeToolLearn(request, intent, namespaceName, cancellationToken);
             }
 
-            Activity.Current?.SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetryValue(cmd));
+            Activity.Current?.SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(cmd));
 
             // Enforce read-only mode at execution time
             if ((_options.Value.ReadOnly ?? false) && !cmd.Metadata.ReadOnly)

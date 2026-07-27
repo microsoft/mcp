@@ -115,9 +115,9 @@ public sealed class SingleProxyToolLoader(
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
-            .SetTag(TagName.ToolParameters, request.Params.Arguments?.Select(kvp => kvp.Key).ToArray());
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request));
 
-        var args = request.Params.Arguments;
+        var args = request.Params?.Arguments;
         string? intent = null;
         bool learn = false;
         string? tool = null;
@@ -357,7 +357,7 @@ public sealed class SingleProxyToolLoader(
             {
                 var tooldId = McpHelper.GetToolIdFromMeta(resolvedTool.ProtocolTool.Meta);
                 Activity.Current?.SetTag(TagName.ToolId, tooldId)
-                    .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetryValue(resolvedTool.ProtocolTool));
+                    .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(resolvedTool.ProtocolTool));
 
                 if (_options.Value.ReadOnly && resolvedTool.ProtocolTool.Annotations?.ReadOnlyHint != true)
                 {

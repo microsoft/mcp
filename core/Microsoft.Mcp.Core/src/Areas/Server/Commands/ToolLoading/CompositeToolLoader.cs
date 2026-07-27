@@ -4,6 +4,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
@@ -100,7 +101,7 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
         }
 
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
-            .SetTag(TagName.ToolParameters, request.Params.Arguments?.Select(kvp => kvp.Key).ToArray());
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request));
 
         // Ensure tool loader map is populated before attempting tool lookup
         try

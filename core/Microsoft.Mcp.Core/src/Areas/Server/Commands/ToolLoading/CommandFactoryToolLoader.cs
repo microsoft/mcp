@@ -91,7 +91,7 @@ public sealed class CommandFactoryToolLoader(
         }
 
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
-            .SetTag(TagName.ToolParameters, request.Params.Arguments?.Select(kvp => kvp.Key).ToArray());
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request));
 
         var toolName = request.Params.Name;
 
@@ -131,7 +131,7 @@ public sealed class CommandFactoryToolLoader(
         }
         activity?.SetTag(TagName.ToolId, command.Id)
             .SetTag(TagName.ToolSource, "internal")
-            .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetryValue(command));
+            .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(command));
 
         // Enforce read-only mode at execution time
         if (_options.Value.ReadOnly && !command.Metadata.ReadOnly)

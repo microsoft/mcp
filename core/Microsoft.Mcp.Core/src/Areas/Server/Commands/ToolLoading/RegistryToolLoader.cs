@@ -103,7 +103,7 @@ public sealed class RegistryToolLoader(
         }
 
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
-            .SetTag(TagName.ToolParameters, request.Params.Arguments?.Select(kvp => kvp.Key).ToArray());
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request));
 
         // Initialize the tool client map if not already done
         await InitializeAsync(cancellationToken);

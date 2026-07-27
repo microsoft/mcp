@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Helpers;
 
@@ -71,11 +72,19 @@ public static class McpHelper
     }
 
     /// <summary>
+    /// Creates a telemetry-friendly string array representation of the tool's parameter names.
+    /// </summary>
+    /// <param name="request">The tool call request parameters.</param>
+    /// <returns>A string array representing the parameter names, or null if there wasn't parameters.</returns>
+    public static string[]? CreateToolParametersTelemetry(RequestContext<CallToolRequestParams> request)
+        => request?.Params.Arguments?.Select(kvp => kvp.Key).ToArray();
+
+    /// <summary>
     /// Creates a telemetry-friendly string representation of the tool's annotations.
     /// </summary>
     /// <param name="tool">The MCP tool definition.</param>
     /// <returns>A telemetry-friendly string of the tool's annotations.</returns>
-    public static string CreateToolAnnotationTelemetryValue(Tool tool)
+    public static string CreateToolAnnotationTelemetry(Tool tool)
     {
         var sb = new StringBuilder();
         if (tool.Annotations != null)
@@ -95,7 +104,7 @@ public static class McpHelper
     /// </summary>
     /// <param name="command">The IBaseCommand-based tool.</param>
     /// <returns>A telemetry-friendly string of the IBaseCommand-based tool.</returns>
-    public static string CreateToolAnnotationTelemetryValue(IBaseCommand command) =>
+    public static string CreateToolAnnotationTelemetry(IBaseCommand command) =>
         $"destructive:{command.Metadata.Destructive},idempotent:{command.Metadata.Idempotent},openworld:{command.Metadata.OpenWorld},"
             + $"readonly:{command.Metadata.ReadOnly},secret:{command.Metadata.Secret},localrequired:{command.Metadata.LocalRequired}";
 }
