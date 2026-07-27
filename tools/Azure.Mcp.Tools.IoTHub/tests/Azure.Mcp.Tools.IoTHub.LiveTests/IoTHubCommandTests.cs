@@ -18,9 +18,10 @@ public class IoTHubCommandTests(
     [Fact]
     public async Task IoTHubDevice_ListDevices()
     {
-        var hubName =
-            Environment.GetEnvironmentVariable("IOTHUB_NAME")
-            ?? throw new InvalidOperationException("IOTHUB_NAME not set");
+        // ResourceBaseName equals the deployed hub name and is available in both Record and
+        // Playback (sanitized to match the recording). The IOTHUB_NAME env var is only set
+        // during Record, so relying on it would break playback in CI.
+        var hubName = Settings.ResourceBaseName;
 
         await CallToolAsync("iothub_device_list", new()
         {
