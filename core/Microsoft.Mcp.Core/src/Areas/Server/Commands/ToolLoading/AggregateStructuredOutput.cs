@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 
