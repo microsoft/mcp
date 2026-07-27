@@ -1,4 +1,7 @@
-﻿using VallyEvaluator.Models;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using VallyEvaluator.Models;
 using YamlDotNet.Serialization;
 
 namespace VallyEvaluator;

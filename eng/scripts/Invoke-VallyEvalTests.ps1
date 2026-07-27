@@ -27,6 +27,9 @@
 .PARAMETER OutputPath
     Optional path for Vally output. Defaults to `<repo-root>/.work/vally/vally-results`.
 
+.PARAMETER NumberOfRuns
+    The number of times to run each eval spec. Defaults to 1.
+
 .PARAMETER IsDebug
     When specified, adds `--verbose` to the `vally eval` invocation for
     additional diagnostic output.
@@ -90,6 +93,16 @@ if (!(Test-Path $BuildInfoPath)) {
     exit 1
 }
 
+$environment = "";
+if ($IsWindows) {
+    $environment = "windows"
+} elseif ($IsLinux) {
+    $environment = "linux"
+} else {
+    Write-Error "Unsupported platform. This script only supports Windows, Linux, and macOS."
+    exit 1
+}
+
 $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
 
 $results = [System.Collections.ArrayList]::new()
@@ -111,7 +124,7 @@ $results | ForEach-Object { $commandArg += "--eval-spec '$($_)' " }
 Write-Host "Getting eval paths from VallyEvaluator"
 $(Get-ChildItem "$EvalsDirectory/**/eval.yaml") | ForEach-Object { $commandArg += "--eval-spec '$($_.FullName)' " }
 
-$expression = "vally eval --work-dir '$WorkDirectory' --output-dir '$OutputPath' --runs $NumberOfRuns"
+$expression = "vally eval --work-dir '$WorkDirectory' --output-dir '$OutputPath' --runs $NumberOfRuns --param ENVIRONMENT=$environment"
 
 if ($IsDebug) {
     $expression += " --verbose"

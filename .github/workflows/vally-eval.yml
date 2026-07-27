@@ -1,12 +1,9 @@
 name: Vally evaluations
-description: |
-  Evaluates E2E prompts to ensure they still pass when tools are changed.
 
 on:
   pull_request:
     paths:
       - 'tools/Azure.Mcp.*/**'
-      - '.vally.yaml'
   workflow_dispatch:
     inputs:
       logLevel:
@@ -90,7 +87,7 @@ jobs:
       - name: Run vally
         run: |
           $isDebug = '${{ github.event.inputs.logLevel }}' -eq 'true'
-          $numberOfRuns = ${{ github.event.inputs.numberOfRuns }}
+          $numberOfRuns = [int]'${{ inputs.numberOfRuns || 1 }}'
           $buildInfo = '${{ github.workspace }}/.work/build_info.json'
 
           $baseVallyDirectory = '${{ github.workspace }}/.work/vally'

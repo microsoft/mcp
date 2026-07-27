@@ -1,4 +1,7 @@
-﻿namespace VallyEvaluator.Models;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace VallyEvaluator.Models;
 
 public class Evaluation
 {

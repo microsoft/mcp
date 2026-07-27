@@ -1,4 +1,7 @@
-﻿using McpToolEvaluator.Core.Models;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using McpToolEvaluator.Core.Models;
 
 namespace McpToolEvaluator.Core;
 
@@ -10,8 +13,9 @@ public class PromptDatastore
     public PromptDatastore(string promptFilePath)
     {
         prompts = PromptParser.ParseFile(promptFilePath);
-        promptsByNamespace = prompts.GroupBy(x => x.Namespace)
-                                    .ToDictionary(g => g.Key, g => g.ToList());
+        promptsByNamespace = prompts
+            .GroupBy(x => x.Namespace, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
     }
 
     public List<string> GetNamespaces()
