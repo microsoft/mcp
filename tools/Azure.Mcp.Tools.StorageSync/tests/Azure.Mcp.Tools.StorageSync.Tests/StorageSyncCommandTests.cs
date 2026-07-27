@@ -173,7 +173,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "name", $"{Settings.ResourceBaseName}-test" },
                 { "incoming-traffic-policy", "AllowVirtualNetworksOnly" },
-                { "tags", "{\"Environment\":\"Test\"}" },
+                { "tags", "Environment=Test" },
                 { "identity-type", "SystemAssigned" }
             });
         Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("result").ValueKind);

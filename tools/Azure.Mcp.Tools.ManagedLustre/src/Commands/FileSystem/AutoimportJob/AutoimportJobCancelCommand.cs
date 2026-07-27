@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.ManagedLustre.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoimportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 
@@ -30,47 +29,21 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class AutoimportJobCancelCommand(IManagedLustreService service, ILogger<AutoimportJobCancelCommand> logger)
-    : BaseManagedLustreCommand<AutoimportJobCancelOptions>(logger)
+public sealed class AutoimportJobCancelCommand(IManagedLustreService service, ILogger<AutoimportJobCancelCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<AutoimportJobCancelOptions, AutoimportJobCancelCommand.AutoimportJobCancelResult>(subscriptionResolver)
 {
-
     private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<AutoimportJobCancelCommand> _logger = logger;
+    private readonly ILogger<AutoimportJobCancelCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AutoimportJobCancelOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(ManagedLustreOptionDefinitions.FileSystemNameOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.JobNameOption);
-    }
-
-    protected override AutoimportJobCancelOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileSystemName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.FileSystemNameOption.Name);
-        options.JobName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.JobNameOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             await _service.CancelAutoimportJobAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.FileSystemName!,
-                options.JobName!,
+                options.ResourceGroup,
+                options.FilesystemName,
+                options.JobName,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -80,12 +53,12 @@ public sealed class AutoimportJobCancelCommand(IManagedLustreService service, IL
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error cancelling autoimport job {JobName} for AMLFS filesystem {FileSystem}.",
-                options.JobName, options.FileSystemName);
+                options.JobName, options.FilesystemName);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record AutoimportJobCancelResult(string JobName, string Status);
+    public sealed record AutoimportJobCancelResult(string JobName, string Status);
 }

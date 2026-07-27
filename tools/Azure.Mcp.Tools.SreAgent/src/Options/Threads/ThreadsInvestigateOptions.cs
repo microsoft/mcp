@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.SreAgent.Options.Threads;
 
-public class ThreadsInvestigateOptions : BaseSreAgentOptions
+public sealed class ThreadsInvestigateOptions : BaseSreAgentOptions
 {
-    [JsonPropertyName("message")]
-    public string? Message { get; set; }
+    [Option(Description = SreAgentOptionDefinitions.MessageDescription)]
+    public required string Message { get; set; }
 
-    [JsonPropertyName("max-iterations")]
-    public int MaxIterations { get; set; } = 20;
+    [Option(Description = SreAgentOptionDefinitions.MaxIterationsDescription)]
+    public int? MaxIterations { get; set; }
 
-    [JsonPropertyName("timeout-seconds")]
-    public int TimeoutSeconds { get; set; } = 600;
+    [Option(Description = SreAgentOptionDefinitions.TimeoutSecondsDescription)]
+    public int? TimeoutSeconds { get; set; }
 }

@@ -1,0 +1,81 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "AppBackend data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "AppBackend": {
+            "description": "An AppBackend object.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ]
+        },
+        "AppBackends": {
+            "description": "A list of AppBackends.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of AppBackends.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AppBackend"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateAppBackendRequest": {
+            "description": "Create an AppBackend request payload.",
+            "required": ["displayName"],
+            "properties": {
+              "displayName": {
+                "description": "The AppBackend display name. The name can't exceed 91 characters, can't use special characters (< > * % & : \\ / ? # ! [ ] = @ ^ \" ' ; ( ) `), can't end with a period or space, and can't be a reserved name (master, msdb, model, tempdb, resource).",
+                "type": "string",
+                "readOnly": false
+              },
+                "description": {
+                    "description": "The AppBackend description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the AppBackend is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the AppBackend.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateAppBackendRequest": {
+            "description": "The update AppBackend request payload.",
+            "properties": {
+              "displayName": {
+                "description": "The AppBackend display name. The name can't exceed 91 characters, can't use special characters (< > * % & : \\ / ? # ! [ ] = @ ^ \" ' ; ( ) `), can't end with a period or space, and can't be a reserved name (master, msdb, model, tempdb, resource).",
+                "type": "string",
+                "readOnly": false
+              },
+                "description": {
+                    "description": "The AppBackend description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        }
+    }
+}

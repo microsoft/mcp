@@ -2,16 +2,16 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AzureIsv.Commands.Datadog;
 using Azure.Mcp.Tools.AzureIsv.Services;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureIsv.Tests.Datadog;
 
-public class MonitoredResourcesListCommandTests : CommandUnitTestsBase<MonitoredResourcesListCommand, IDatadogService>
+public class MonitoredResourcesListCommandTests : SubscriptionCommandUnitTestsBase<MonitoredResourcesListCommand, IDatadogService>
 {
     [Fact]
     public async Task ExecuteAsync_ReturnsResources_WhenResourcesExist()

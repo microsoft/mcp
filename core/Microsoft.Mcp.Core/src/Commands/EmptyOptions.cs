@@ -6,6 +6,4 @@ namespace Microsoft.Mcp.Core.Commands;
 /// <summary>
 /// Empty options class for commands that don't need specific options.
 /// </summary>
-public sealed class EmptyOptions
-{
-}
+public sealed class EmptyOptions;

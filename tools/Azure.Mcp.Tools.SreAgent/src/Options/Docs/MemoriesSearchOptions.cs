@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Options;
+
 namespace Azure.Mcp.Tools.SreAgent.Options.Docs;
 
-public class MemoriesSearchOptions : BaseSreAgentOptions
+public sealed class MemoriesSearchOptions : BaseSreAgentOptions
 {
-    public string? Query { get; set; }
+    [Option(Description = SreAgentOptionDefinitions.QueryDescription)]
+    public required string Query { get; set; }
 }

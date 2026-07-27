@@ -3,14 +3,13 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Options.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 
@@ -30,52 +29,21 @@ namespace Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logger, IMonitorService monitorService)
-    : SubscriptionCommand<ActivityLogListOptions>
+public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logger, IMonitorService monitorService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ActivityLogListOptions, ActivityLogListCommand.ActivityLogListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ActivityLogListCommand> _logger = logger;
     private readonly IMonitorService _monitorService = monitorService;
-    internal record ActivityLogListCommandResult(List<ActivityLogEventData> ActivityLogs);
+    public sealed record ActivityLogListCommandResult(List<ActivityLogEventData> ActivityLogs);
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ActivityLogListOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(ActivityLogOptionDefinitions.ResourceName);
-        command.Options.Add(ActivityLogOptionDefinitions.ResourceType);
-        command.Options.Add(ActivityLogOptionDefinitions.Hours);
-        command.Options.Add(ActivityLogOptionDefinitions.EventLevel);
-        command.Options.Add(ActivityLogOptionDefinitions.Top);
-    }
-
-    protected override ActivityLogListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.ResourceName = parseResult.GetValueOrDefault<string>(ActivityLogOptionDefinitions.ResourceName.Name);
-        options.ResourceType = parseResult.GetValueOrDefault<string>(ActivityLogOptionDefinitions.ResourceType.Name);
-        options.Hours = parseResult.GetValueOrDefault<double>(ActivityLogOptionDefinitions.Hours.Name);
-        options.EventLevel = parseResult.GetValueOrDefault<ActivityLogEventLevel?>(ActivityLogOptionDefinitions.EventLevel.Name);
-        options.Top = parseResult.GetValueOrDefault<int>(ActivityLogOptionDefinitions.Top.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        // Required validation step
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             // Call service operation with required parameters
             var results = await _monitorService.ListActivityLogs(
                 options.Subscription!,
-                options.ResourceName!,
+                options.ResourceName,
                 options.ResourceGroup,
                 options.ResourceType,
                 options.Hours ?? 24.0,
@@ -111,14 +79,14 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
             "Resource not found. Verify the resource name and that you have access to it.",
         HttpRequestException httpEx when httpEx.Message.Contains("403") =>
             "Authorization failed accessing the resource activity logs. Ensure you have appropriate permissions to view activity logs.",
-        Azure.RequestFailedException reqEx => reqEx.Message,
+        RequestFailedException reqEx => reqEx.Message,
         HttpRequestException httpEx => httpEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
+        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
         HttpRequestException httpEx when httpEx.Message.Contains("404") => (HttpStatusCode)404,
         HttpRequestException httpEx when httpEx.Message.Contains("403") => (HttpStatusCode)403,
         _ => base.GetStatusCode(ex)

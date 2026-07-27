@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
-
 namespace Azure.Mcp.Core.Services.Azure.Subscription;
 
 /// <summary>
@@ -18,8 +16,19 @@ public interface ISubscriptionResolver
     string? ResolveSubscription(string? subscription);
 
     /// <summary>
-    /// Checks if a subscription is available from the command option, Azure CLI profile,
-    /// or AZURE_SUBSCRIPTION_ID environment variable.
+    /// Gets the default subscription from the Azure CLI profile (~/.azure/azureProfile.json),
+    /// falling back to the AZURE_SUBSCRIPTION_ID environment variable.
     /// </summary>
-    bool HasSubscriptionAvailable(CommandResult commandResult);
+    string? GetDefaultSubscriptionId();
+
+    /// <summary>
+    /// Gets the subscription ID from the Azure CLI profile (~/.azure/azureProfile.json).
+    /// The CLI profile read is cached for the lifetime of the process to avoid redundant file I/O.
+    /// </summary>
+    string? GetProfileSubscriptionId();
+
+    /// <summary>
+    /// Gets the subscription ID from the AZURE_SUBSCRIPTION_ID environment variable.
+    /// </summary>
+    string? GetEnvironmentSubscriptionId();
 }

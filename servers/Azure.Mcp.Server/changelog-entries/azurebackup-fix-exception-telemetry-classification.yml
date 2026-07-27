@@ -1,3 +1,0 @@
-changes:
-  - section: "Bug Fixes"
-    description: "Azure Backup: Replace InvalidOperationException with ArgumentException/KeyNotFoundException for user-input validation errors so the telemetry classifier correctly categorizes them as Customer errors instead of MCP Tool Bugs"

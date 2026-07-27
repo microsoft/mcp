@@ -1,25 +1,43 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.StorageSync.Options;
+using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
+
+namespace Azure.Mcp.Tools.StorageSync.Options.StorageSyncService;
 
 /// <summary>
 /// Options for StorageSyncServiceCreateCommand.
 /// </summary>
-public class StorageSyncServiceCreateOptions : BaseStorageSyncOptions
+public sealed class StorageSyncServiceCreateOptions : ISubscriptionOption
 {
     /// <summary>
-    /// Gets or sets the name of the storage sync service to create.
+    /// Gets or sets the storage sync service name.
     /// </summary>
-    public string? Name { get; set; }
+    [Option(Description = StorageSyncOptionDescriptions.StorageSyncService.NameDescription, Aliases = ["n"])]
+    public required string Name { get; set; }
 
     /// <summary>
     /// Gets or sets the location for the service.
     /// </summary>
-    public string? Location { get; set; }
+    [Option(Description = "The Azure region/location name (e.g., EastUS, WestEurope)", Aliases = ["l"])]
+    public required string Location { get; set; }
 
     /// <summary>
     /// Gets or sets tags for the resource.
     /// </summary>
-    public Dictionary<string, string>? Tags { get; set; }
+    [Option(Description = StorageSyncOptionDescriptions.StorageSyncService.TagsDescription)]
+    public string? Tags { get; set; }
+
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public required string ResourceGroup { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [OptionContainer(Prefix = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

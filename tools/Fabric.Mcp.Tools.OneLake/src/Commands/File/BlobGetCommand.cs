@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using System.Text;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -12,6 +11,8 @@ using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+
+namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 [CommandMetadata(
     Id = "75d6cb4c-4e81-4e69-a4ec-eca53a7dacd9",
@@ -27,11 +28,11 @@ using Microsoft.Mcp.Core.Options;
 public sealed class BlobGetCommand(
     ILogger<BlobGetCommand> logger,
     IOneLakeService oneLakeService,
-    IOptions<ServiceStartOptions> serviceOptions) : AuthenticatedCommand<BlobGetOptions, BlobGetCommand.BlobGetCommandResult>
+    IOptions<ServerStartOptions> serviceOptions) : AuthenticatedCommand<BlobGetOptions, BlobGetCommand.BlobGetCommandResult>
 {
     private readonly ILogger<BlobGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-    private readonly IOptions<ServiceStartOptions> _serviceOptions = serviceOptions ?? throw new ArgumentNullException(nameof(serviceOptions));
+    private readonly IOptions<ServerStartOptions> _serviceOptions = serviceOptions ?? throw new ArgumentNullException(nameof(serviceOptions));
 
     private const long InlineContentLimitBytes = 1 * 1024 * 1024; // 1 MiB inline payload limit
 
@@ -120,13 +121,8 @@ public sealed class BlobGetCommand(
 
             var finalMessage = messageBuilder.ToString();
 
-            var commandResult = new BlobGetCommandResult(
-                result,
-                finalMessage);
-
-            context.Response.Status = HttpStatusCode.OK;
             context.Response.Message = finalMessage;
-            context.Response.Results = ResponseResult.Create(commandResult, OneLakeJsonContext.Default.BlobGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new(result, finalMessage), OneLakeJsonContext.Default.BlobGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -139,31 +135,25 @@ public sealed class BlobGetCommand(
     }
 
     public sealed record BlobGetCommandResult(BlobGetResult Blob, string Message);
-
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
-    };
 }
 
 public sealed class BlobGetOptions
 {
-    [Option("The ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.WorkspaceId)]
     public string? WorkspaceId { get; set; }
 
-    [Option("The name or ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.Workspace)]
     public string? Workspace { get; set; }
 
-    [Option("The ID of the Fabric item.")]
+    [Option(Description = OneLakeOptionDescriptions.ItemId)]
     public string? ItemId { get; set; }
 
-    [Option("The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').")]
+    [Option(Description = OneLakeOptionDescriptions.Item)]
     public string? Item { get; set; }
 
-    [Option("The path to the file in OneLake.")]
+    [Option(Description = OneLakeOptionDescriptions.FilePath)]
     public required string FilePath { get; set; }
 
-    [Option("Local path to save the downloaded content when running locally.")]
+    [Option(Description = OneLakeOptionDescriptions.DownloadFilePath)]
     public string? DownloadFilePath { get; set; }
 }

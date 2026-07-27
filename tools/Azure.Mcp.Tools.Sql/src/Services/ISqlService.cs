@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Sql.Models;
 using Microsoft.Mcp.Core.Options;
 
@@ -125,7 +124,7 @@ public interface ISqlService
     /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A list of SQL databases</returns>
-    Task<ResourceQueryResults<SqlDatabase>> ListDatabasesAsync(
+    Task<List<SqlDatabase>> ListDatabasesAsync(
         string serverName,
         string resourceGroup,
         string subscription,
@@ -157,7 +156,7 @@ public interface ISqlService
     /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A list of SQL elastic pools</returns>
-    Task<ResourceQueryResults<SqlElasticPool>> GetElasticPoolsAsync(
+    Task<List<SqlElasticPool>> GetElasticPoolsAsync(
         string serverName,
         string resourceGroup,
         string subscription,

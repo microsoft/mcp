@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
@@ -11,7 +12,4 @@ namespace Microsoft.Mcp.Core.Commands;
 [JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(List<JsonNode>))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal partial class JsonSourceGenerationContext : JsonSerializerContext
-{
-
-}
+internal partial class JsonSourceGenerationContext : JsonSerializerContext;

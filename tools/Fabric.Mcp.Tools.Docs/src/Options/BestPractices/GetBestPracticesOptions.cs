@@ -5,8 +5,8 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.Docs.Options.BestPractices;
 
-public class GetBestPracticesOptions
+public sealed class GetBestPracticesOptions
 {
-    [Option("The best practice topic to retrieve documentation for.")]
+    [Option(Description = "The best practice topic to retrieve documentation for.")]
     public required string Topic { get; set; }
 }

@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Tools.AzureTerraform.Models;
-using Azure.Mcp.Tools.AzureTerraform.Options;
 using Azure.Mcp.Tools.AzureTerraform.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -16,8 +14,10 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     Name = "list",
     Title = "List AVM Modules",
     Description = """
-        Retrieves all available Azure Verified Modules (AVM) for Terraform.
-        Returns a list of modules with their name, description, source reference, and repository URL.
+        Retrieves all available Azure Verified Modules (AVM) for Terraform, including both
+        resource modules (avm-res-*) and pattern modules (avm-ptn-*).
+        Returns a list of modules with their name, description, source reference, repository URL,
+        and moduleType ('resource' or 'pattern').
         The source field can be used directly in Terraform module blocks.
         """,
     Destructive = false,
@@ -26,28 +26,22 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class AvmModuleListCommand(
-    ILogger<AvmModuleListCommand> logger,
-    IAvmDocsService avmDocsService) : BaseCommand<AvmModuleListOptions>
+public sealed class AvmModuleListCommand(ILogger<AvmModuleListCommand> logger, IAvmDocsService avmDocsService)
+    : BaseCommand<EmptyOptions, AvmModuleListResult>
 {
     private readonly ILogger<AvmModuleListCommand> _logger = logger;
     private readonly IAvmDocsService _avmDocsService = avmDocsService;
 
-    protected override AvmModuleListOptions BindOptions(ParseResult parseResult) => new();
-
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        EmptyOptions options,
         CancellationToken cancellationToken)
     {
         try
         {
             var modules = await _avmDocsService.ListModulesAsync(cancellationToken).ConfigureAwait(false);
 
-            var result = new Models.AvmModuleListResult { Modules = modules };
-            context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AvmModuleListResult);
-            context.Response.Message = string.Empty;
+            context.Response.Results = ResponseResult.Create(new(modules), AzureTerraformJsonContext.Default.AvmModuleListResult);
 
             context.Activity?.AddTag(AzureTerraformTelemetryTags.ToolArea, "avm");
         }

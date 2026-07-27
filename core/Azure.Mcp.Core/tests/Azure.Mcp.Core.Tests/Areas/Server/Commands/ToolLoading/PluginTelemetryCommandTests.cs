@@ -53,7 +53,7 @@ public class PluginTelemetryCommandTests
         }));
         services.AddSingleton(Substitute.For<ITelemetryService>());
         services.AddSingleton<ILogger<CommandFactory>>(NullLogger<CommandFactory>.Instance);
-        services.AddSingleton<ILogger<ServiceInfoCommand>>(NullLogger<ServiceInfoCommand>.Instance);
+        services.AddSingleton<ILogger<ServerInfoCommand>>(NullLogger<ServerInfoCommand>.Instance);
         services.AddSingleton(_fileReferenceProvider);
         services.AddSingleton(_skillNameProvider);
 

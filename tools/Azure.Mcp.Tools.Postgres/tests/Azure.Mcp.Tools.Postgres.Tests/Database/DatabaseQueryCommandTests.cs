@@ -22,12 +22,10 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
     {
         var expectedResults = new List<string> { "result1", "result2" };
 
-        Service.ExecuteQueryAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "SELECT * FROM test;", Arg.Any<CancellationToken>())
+        Service.ExecuteQueryAsync(AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "SELECT * FROM test;", Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub123",
-            "--resource-group", "rg1",
             $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
             "--user", "user1",
             "--server", "server1",
@@ -41,12 +39,10 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenQueryFails()
     {
-        Service.ExecuteQueryAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "SELECT * FROM test;", Arg.Any<CancellationToken>())
+        Service.ExecuteQueryAsync(AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "SELECT * FROM test;", Arg.Any<CancellationToken>())
             .Returns([]);
 
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub123",
-            "--resource-group", "rg1",
             $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
             "--user", "user1",
             "--server", "server1",
@@ -58,8 +54,6 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
     }
 
     [Theory]
-    [InlineData("--subscription")]
-    [InlineData("--resource-group")]
     [InlineData("--user")]
     [InlineData("--server")]
     [InlineData("--database")]
@@ -67,8 +61,6 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
         var response = await ExecuteCommandAsync(ArgBuilder.BuildArgs(missingParameter,
-            ("--subscription", "sub123"),
-            ("--resource-group", "rg1"),
             ($"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra),
             ("--user", "user1"),
             ("--server", "server123"),
@@ -78,7 +70,19 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
+        Assert.Contains($"Missing Required options: {missingParameter}", response.Message);
+    }
+
+    [Fact]
+    public void Command_DoesNotExposeArmScopingOptions()
+    {
+        var optionNames = CommandDefinition.Options.Select(o => o.Name.TrimStart('-')).ToList();
+
+        Assert.DoesNotContain("subscription", optionNames);
+        Assert.DoesNotContain("resource-group", optionNames);
+        Assert.Contains("user", optionNames);
+        Assert.Contains("server", optionNames);
+        Assert.Contains("database", optionNames);
     }
 
     [Theory]
@@ -126,8 +130,6 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
     public async Task ExecuteAsync_InvalidQuery_ValidationError(string badQuery)
     {
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub123",
-            "--resource-group", "rg1",
             $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
             "--user", "user1",
             "--server", "server1",
@@ -137,7 +139,7 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status); // CommandValidationException => 400
         // Service should never be called for invalid queries.
-        await Service.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -145,8 +147,6 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
     {
         var longSelect = "SELECT " + new string('a', 6000) + " FROM test"; // exceeds max length
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub123",
-            "--resource-group", "rg1",
             $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
             "--user", "user1",
             "--server", "server1",
@@ -155,6 +155,7 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        await Service.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 }
+

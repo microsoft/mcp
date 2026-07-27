@@ -7,21 +7,21 @@ namespace Fabric.Mcp.Tools.OneLake.Options;
 
 public sealed class TableListOptions
 {
-    [Option("The ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.WorkspaceId)]
     public string? WorkspaceId { get; set; }
 
-    [Option("The name or ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.Workspace)]
     public string? Workspace { get; set; }
 
-    [Option("The ID of the Fabric item.")]
+    [Option(Description = OneLakeOptionDescriptions.ItemId)]
     public string? ItemId { get; set; }
 
-    [Option("The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').")]
+    [Option(Description = OneLakeOptionDescriptions.Item)]
     public string? Item { get; set; }
 
-    [Option("The table namespace (schema) to inspect within the OneLake table API.")]
+    [Option(Description = OneLakeOptionDescriptions.Namespace)]
     public string? Namespace { get; set; }
 
-    [Option("Alias for --namespace when specifying table schemas in the OneLake table API.")]
+    [Option(Description = OneLakeOptionDescriptions.Schema)]
     public string? Schema { get; set; }
 }

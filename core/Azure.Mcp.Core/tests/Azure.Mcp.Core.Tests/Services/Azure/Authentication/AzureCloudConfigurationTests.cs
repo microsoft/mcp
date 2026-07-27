@@ -129,7 +129,7 @@ public class AzureCloudConfigurationTests
     public void ConfigurationPriority_CommandLineOverridesAppsettings()
     {
         // Arrange - ServiceStartOptions takes priority
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { Cloud = "AzureChinaCloud" });
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { Cloud = "AzureChinaCloud" });
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = "AzureUSGovernment" })
             .Build();
@@ -292,7 +292,7 @@ public class AzureCloudConfigurationTests
     public void ConfigurationPriority_FullPriorityChain()
     {
         // Arrange - Set up multiple configuration sources
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { Cloud = "AzureChinaCloud" });
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { Cloud = "AzureChinaCloud" });
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {

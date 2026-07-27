@@ -25,7 +25,7 @@ public sealed class TableSchemaCommand(
     ILogger<TableSchemaCommand> logger,
     IKustoService kustoService,
     ISubscriptionResolver subscriptionResolver)
-    : BaseTableCommand<TableSchemaOptions, TableSchemaCommand.TableSchemaCommandResult>(subscriptionResolver)
+    : BaseClusterCommand<TableSchemaOptions, TableSchemaCommand.TableSchemaCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TableSchemaOptions options, CancellationToken cancellationToken)
     {
@@ -40,7 +40,6 @@ public sealed class TableSchemaCommand(
                     options.Database,
                     options.Table,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }
@@ -48,11 +47,10 @@ public sealed class TableSchemaCommand(
             {
                 tableSchema = await kustoService.GetTableSchemaAsync(
                     options.Subscription!,
-                    options.ClusterName!,
+                    options.Cluster!,
                     options.Database,
                     options.Table,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }
@@ -61,7 +59,7 @@ public sealed class TableSchemaCommand(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An exception occurred getting table schema. Cluster: {Cluster}, Table: {Table}.", options.ClusterUri ?? options.ClusterName, options.Table);
+            logger.LogError(ex, "An exception occurred getting table schema. Cluster: {Cluster}, Table: {Table}.", options.ClusterUri ?? options.Cluster, options.Table);
             HandleException(context, ex);
         }
         return context.Response;

@@ -1,4 +1,7 @@
-namespace Azure.Mcp.Tools.Monitor.Models;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace Azure.Mcp.Tools.Monitor.Models.Instrumentation;
 
 /// <summary>
 /// Extension methods for converting between typed details and dictionary
@@ -37,9 +40,9 @@ public static class ActionDetailsExtensions
             ManualStepDetails msd => new Dictionary<string, object>
             {
                 ["instructions"] = msd.Instructions,
-                ["links"] = msd.Links ?? new List<string>()
+                ["links"] = msd.Links ?? []
             },
-            _ => new Dictionary<string, object>()
+            _ => []
         };
     }
 

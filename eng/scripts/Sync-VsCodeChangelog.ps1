@@ -67,6 +67,10 @@ $MainChangelogPath = $ChangelogPath
 $mainChangelogFile = Join-Path $RepoRoot $MainChangelogPath
 $vscodeChangelogFile = Join-Path $RepoRoot $VsCodeChangelogPath
 
+# VS Code changelog entries are marked "(pre-release)" by default. The Fabric
+# extension omits this suffix, so detect it from the changelog path.
+$preReleaseSuffix = if ($ChangelogPath -like '*Fabric.Mcp.Server*') { '' } else { ' (pre-release)' }
+
 # Validate files exist
 if (-not (Test-Path $mainChangelogFile)) {
     LogError "Main CHANGELOG not found: $mainChangelogFile"
@@ -155,7 +159,7 @@ if ($currentSection -and $currentEntries.Count -gt 0) {
 
 # Build VS Code changelog entry
 $vscodeEntry = @()
-$vscodeEntry += "## $Version ($(Get-Date -Format 'yyyy-MM-dd')) (pre-release)"
+$vscodeEntry += "## $Version ($(Get-Date -Format 'yyyy-MM-dd'))$preReleaseSuffix"
 $vscodeEntry += ""
 
 # Helper function to add section if it has content

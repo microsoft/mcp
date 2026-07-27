@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Services;
 using Azure.ResourceManager.AppService.Models;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -16,7 +16,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.Tests.Commands.Webapp.Diagnostic;
 
 [Trait("Command", "DetectorDiagnose")]
-public class DetectorDiagnoseCommandTests : CommandUnitTestsBase<DetectorDiagnoseCommand, IAppServiceService>
+public class DetectorDiagnoseCommandTests : SubscriptionCommandUnitTestsBase<DetectorDiagnoseCommand, IAppServiceService>
 {
     [Theory]
     [InlineData(null, null, null)]

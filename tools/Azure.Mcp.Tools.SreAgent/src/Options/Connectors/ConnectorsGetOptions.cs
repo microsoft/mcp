@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Options;
+
 namespace Azure.Mcp.Tools.SreAgent.Options.Connectors;
 
-public class ConnectorsGetOptions : BaseSreAgentOptions
+public sealed class ConnectorsGetOptions : BaseSreAgentOptions
 {
-    public string Name { get; set; } = string.Empty;
+    [Option(Description = SreAgentOptionDefinitions.NameDescription)]
+    public required string Name { get; set; }
 }

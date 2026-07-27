@@ -110,7 +110,7 @@ public sealed class ServiceFabricService(
         string clusterName,
         string nodeType,
         string[] nodes,
-        string updateType = "Default",
+        UpdateType updateType = UpdateType.Default,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -140,7 +140,7 @@ public sealed class ServiceFabricService(
         var requestBody = new RestartNodeRequest
         {
             Nodes = [.. nodes],
-            UpdateType = updateType
+            UpdateType = updateType.ToString()
         };
 
         using var jsonContent = new StringContent(

@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.Agents;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Tests.Client;
 using Xunit;
 
 namespace Azure.Mcp.Tools.SreAgent.Tests.Agents;
 
-public class AgentsToolsListCommandTests : CommandUnitTestsBase<AgentsToolsListCommand, ISreAgentService>
+public class AgentsToolsListCommandTests : SubscriptionCommandUnitTestsBase<AgentsToolsListCommand, ISreAgentService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()

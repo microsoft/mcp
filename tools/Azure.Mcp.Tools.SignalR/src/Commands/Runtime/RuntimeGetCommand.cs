@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.SignalR.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SignalR.Options.Runtime;
 using Azure.Mcp.Tools.SignalR.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.SignalR.Commands.Runtime;
@@ -29,34 +29,14 @@ namespace Azure.Mcp.Tools.SignalR.Commands.Runtime;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger, ISignalRService signalRService)
-    : BaseSignalRCommand<RuntimeGetOptions>
+public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger, ISignalRService signalRService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<RuntimeGetOptions, RuntimeGetCommand.RuntimeGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<RuntimeGetCommand> _logger = logger;
     private readonly ISignalRService _signalRService = signalRService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RuntimeGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SignalROptionDefinitions.SignalR);
-    }
-
-    protected override RuntimeGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.SignalR ??= parseResult.GetValueOrDefault<string>(SignalROptionDefinitions.SignalR.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var runtimes = await _signalRService.GetRuntimeAsync(
@@ -64,7 +44,6 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger, ISignal
                 options.ResourceGroup,
                 options.SignalR,
                 options.Tenant,
-                options.AuthMethod,
                 options.RetryPolicy,
                 cancellationToken);
 
@@ -82,5 +61,5 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger, ISignal
         return context.Response;
     }
 
-    internal record RuntimeGetCommandResult(IEnumerable<Models.Runtime> Runtimes);
+    public sealed record RuntimeGetCommandResult(IEnumerable<Models.Runtime> Runtimes);
 }

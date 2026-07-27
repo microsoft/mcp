@@ -5,7 +5,7 @@
 
 ## Global Options
 
-The following options are available for all commands:
+The following options are available for most commands:
 
 | Option | Required | Default | Description |
 |-----------|----------|---------|-------------|
@@ -327,13 +327,41 @@ azmcp server info
 ### Azure Advisor Operations
 
 ```bash
-# List Advisor recommendations in a subscription
+# List Advisor recommendations in a subscription, with optional server-side filters
+# Only active recommendations (status 'New') are returned; dismissed and postponed ones are excluded
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation list --subscription <subscription>
+azmcp advisor recommendation list --subscription <subscription> \
+                                  [--top <top>] \
+                                  [--category <category>] \
+                                  [--impact <impact>] \
+                                  [--resource-type <resource-type>] \
+                                  [--resource <resource>] \
+                                  [--search <search>]
+
+# Summarize Advisor recommendations grouped by a chosen field (recommendation-type, category, impact, or resource-type)
+# --group-by is optional and defaults to 'category' when omitted
+# Only active recommendations (status 'New') are aggregated; dismissed and postponed ones are excluded
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor recommendation summary --subscription <subscription> \
+                                     [--group-by <group-by>] \
+                                     [--top <top>] \
+                                     [--category <category>] \
+                                     [--impact <impact>] \
+                                     [--resource-type <resource-type>] \
+                                     [--resource <resource>] \
+                                     [--search <search>]
 
 # Apply Advisor recommendation to create or modify IaaC files (like ARM, Terraform) for Azure resources
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation apply --resource <resource>
+
+# List the catalog of Advisor recommendation types — every recommendation Advisor can generate, with its category,
+# impact, target resource type, and sub-category. Results sorted by impact (High → Medium → Low). Use for greenfield
+# (empty environments) or brownfield (onboarding a new resource type into an existing subscription) scenarios.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor recommendation-type list [--resource-type <resource-type>] \
+                                       [--impact <High|Medium|Low>] \
+                                       [--category <category>]
 ```
 
 ### Azure AI Search Operations
@@ -525,14 +553,17 @@ azmcp appconfig kv set --subscription <subscription> \
 
 ### Azure App Lens Operations
 
+> [!NOTE]
+> The `applens resource diagnose` command does not support `--auth-method` or any `--retry-*` options.
+
 ```bash
 # Diagnose resource using Azure App Lens
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp applens resource diagnose --subscription <subscription> \
-                                --resource-group <resource-group> \
-                                --question <question> \
-                                --resource-type <resource-type> \
-                                --resource <resource>
+azmcp applens resource diagnose --question <question> \
+                                --resource <resource> \
+                                [--subscription <subscription>] \
+                                [--resource-group <resource-group>] \
+                                [--resource-type <resource-type>]
 ```
 
 ### Azure Application Insights Operations
@@ -2052,6 +2083,9 @@ azmcp containerapps list --subscription <subscription> \
 
 ### Azure Container Registry (ACR) Operations
 
+> [!NOTE]
+> The `acr registry list` and `acr registry repository list` commands do not support `--auth-method`.
+
 ```bash
 # List Azure Container Registries in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2082,12 +2116,13 @@ azmcp acr registry repository list --subscription <subscription> \
 
 ```bash
 # List Cosmos DB resources (accounts, databases, or containers) in a subscription.
-# Omit --account to list accounts. Provide --account to list databases.
-# Provide --account and --database to list containers.
+# Omit --account to list accounts; add --resource-group to scope the account list to a resource group.
+# Provide --account to list databases. Provide --account and --database to list containers.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cosmos list --subscription <subscription> \
                   [--account <account>] \
-                  [--database <database>]
+                  [--database <database>] \
+                  [--resource-group <resource-group>]
 
 # Query items in a Cosmos DB container
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2144,6 +2179,9 @@ azmcp cosmos database container item text-search --subscription <subscription> \
 # support custom dimensions like "text-embedding-3-small" or "text-embedding-3-large". Optionally pass
 # --properties-to-select to project specific fields; when omitted the full document is returned with the vector
 # property stripped so the embedding doesn't bloat the response. Requires a vector index on the vector property.
+# The --openai-endpoint must use HTTPS and point to a trusted Azure first-party domain (e.g. *.openai.azure.com,
+# *.cognitiveservices.azure.com, *.services.ai.azure.com, or their US Government / China sovereign cloud
+# equivalents); any other endpoint is rejected with a 400 Bad Request before the service is called.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cosmos database container item vector-search --subscription <subscription> \
                                                    --account <account> \
@@ -2151,7 +2189,7 @@ azmcp cosmos database container item vector-search --subscription <subscription>
                                                    --container <container> \
                                                    --vector-property <vector-property> \
                                                    --search-text "free-form text" \
-                                                   --openai-endpoint <endpoint> \
+                                                   --openai-endpoint <azure-openai-endpoint> \
                                                    --embedding-deployment <deployment> \
                                                    [--properties-to-select <p1,p2,...>] \
                                                    [--count 10] \
@@ -2193,7 +2231,11 @@ azmcp kusto table schema [--cluster-uri <cluster-uri> | --subscription <subscrip
                          --database <database> \
                          --table <table>
 
-# Query Azure Data Explorer database
+# Query Azure Data Explorer database.
+# KQL queries are validated for safety: max 10,000 characters; tautology patterns
+# (e.g., 'or 1==1', 'or true') and management commands (.drop, .alter, .create,
+# .delete, .set, .append, .set-or-append, .set-or-replace, .ingest, .purge, .execute)
+# are rejected.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> --cluster <cluster>] \
                   --database <database> \
@@ -2264,28 +2306,27 @@ azmcp mysql server param set --subscription <subscription> \
 # Hierarchical list command for PostgreSQL resources
 # Without parameters: lists all PostgreSQL servers in the resource group
 # With --server: lists all databases on that server
-# With --server and --database: lists all tables in that database
+# With --server and --database: lists all tables in that database (optionally scoped to a --schema, defaults to 'public')
+# Database and table results are capped at 10,000 entries. When the results are truncated,
+# the response includes "resultsTruncated": true.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres list --subscription <subscription> \
                     --resource-group <resource-group> \
                     --user <user> \
                     [--server <server>] \
-                    [--database <database>]
+                    [--database <database>] \
+                    [--schema <schema>]
 
 # Execute a query on a PostgreSQL database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp postgres database query --subscription <subscription> \
-                              --resource-group <resource-group> \
-                              --user <user> \
+azmcp postgres database query --user <user> \
                               --server <server> \
                               --database <database> \
                               --query <query>
 
 # Get the schema of a specific table in a PostgreSQL database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp postgres table schema get --subscription <subscription> \
-                                --resource-group <resource-group> \
-                                --user <user> \
+azmcp postgres table schema get --user <user> \
                                 --server <server> \
                                 --database <database> \
                                 --table <table>
@@ -2324,7 +2365,7 @@ azmcp deploy app logs get --workspace-folder <workspace-folder> \
                           --azd-env-name <azd-env-name> \
                           [--limit <limit>]
 
-# Generate a mermaid architecture diagram for the application topology follow the schema defined in [deploy-app-topology-schema.json](../areas/deploy/src/AzureMcp.Deploy/Schemas/deploy-app-topology-schema.json)
+# Generate a mermaid architecture diagram for the application topology follow the schema defined in [DeployAppTopologySchema.cs](../../../tools/Azure.Mcp.Deploy/src/Schemas/DeployAppTopologySchema.cs)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp deploy architecture diagram generate --raw-mcp-tool-input <app-topology>
 
@@ -2462,7 +2503,7 @@ azmcp eventhubs namespace update --subscription <subscription> \
                                  --namespace <namespace> \
                                  [--location <location>] \
                                  [--sku-name <sku-name>] \
-                                 [--sku-tier <sku-tier>] \
+                                 [--sku-tier <Basic|Standard|Premium>] \
                                  [--sku-capacity <sku-capacity>] \
                                  [--is-auto-inflate-enabled <true/false>] \
                                  [--maximum-throughput-units <units>] \
@@ -2676,6 +2717,39 @@ azmcp functions template get --language <language> \
                              [--runtime-version <runtime-version>]
 ```
 
+### Azure Insights Operations
+
+```bash
+# Get architectural insights for a subscription or tenant based on existing resources (via Azure Resource Graph + MCP sampling)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp insights get [--scope <subscription|tenant>] \
+                   [--subscription <subscription>] \
+                   [--query <user-intent>] \
+                   [--nocache]
+
+# Example:
+# Get subscription-scoped insights with an user intent
+ azmcp insights get --scope subscription \
+                    --subscription <subscription> \
+                    --query "Prioritise cost and reliability patterns" \
+
+# Get tenant-scoped insights with an user intent; force data re-fetch
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp insights get --scope tenant \
+                   --query "Prioritise cost and reliability patterns" \
+                   --nocache
+```
+
+### Azure IoT Hub Operations
+
+```bash
+# Get IoT Hub details by hub name in a specific resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub hub get --subscription <subscription> \
+                     --resource-group <resource-group> \
+                     --hub-name <iot-hub-name>
+```                     
+
 ### Azure Key Vault Operations
 
 #### Administration
@@ -2759,6 +2833,9 @@ azmcp keyvault secret get --subscription <subscription> \
 ```
 
 ### Azure Kubernetes Service (AKS) Operations
+
+> [!NOTE]
+> The `aks cluster get` and `aks nodepool get` commands do not support `--auth-method` (the `--retry-*` options are still supported).
 
 ```bash
 # Gets Azure Kubernetes Service (AKS) cluster details
@@ -2986,7 +3063,11 @@ azmcp monitor table list --subscription <subscription> \
 azmcp monitor workspace list --subscription <subscription> \
                             [--resource-group <resource-group>]
 
-# Query logs from Azure Monitor using KQL
+# Query logs from Azure Monitor using KQL.
+# KQL queries are validated for safety: max 10,000 characters; tautology patterns
+# (e.g., 'or 1==1', 'or true') and management commands (.drop, .alter, .create,
+# .delete, .set, .append, .set-or-append, .set-or-replace, .ingest, .purge, .execute)
+# are rejected.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor resource log query --subscription <subscription> \
                                  --resource-id <resource-id> \
@@ -2995,6 +3076,11 @@ azmcp monitor resource log query --subscription <subscription> \
                                  [--hours <hours>] \
                                  [--limit <limit>]
 
+# Query logs from a Log Analytics workspace using KQL.
+# KQL queries are validated for safety: max 10,000 characters; tautology patterns
+# (e.g., 'or 1==1', 'or true') and management commands (.drop, .alter, .create,
+# .delete, .set, .append, .set-or-append, .set-or-replace, .ingest, .purge, .execute)
+# are rejected.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor workspace log query --subscription <subscription> \
                                   --workspace <workspace> \
@@ -3015,12 +3101,16 @@ azmcp monitor workspace log query --subscription <subscription> \
 #### Health Models
 
 ```bash
-# Get the health of an entity
+# List health models in a subscription (optionally scoped to a resource group)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor healthmodels entity get --subscription <subscription> \
-                                      --resource-group <resource-group> \
-                                      --health-model <health-model-name> \
-                                      --entity <entity-id>
+azmcp monitor healthmodels list --subscription <subscription> \
+                                [--resource-group <resource-group>]
+
+# Get (show) a single health model by name
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor healthmodels get --subscription <subscription> \
+                               --resource-group <resource-group> \
+                               --health-model <health-model-name>
 ```
 
 #### Metrics
@@ -3554,7 +3644,7 @@ azmcp role assignment list --subscription <subscription> \
 ### Azure Redis Operations
 
 ```bash
-# Creates a new Azure Managed Redis resource
+# Creates a new Azure Managed Redis resource (asynchronous; poll provisioningState until 'Succeeded')
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp redis create --subscription <subscription> \
                    --resource-group <resource-group> \
@@ -3568,6 +3658,70 @@ azmcp redis create --subscription <subscription> \
 # Lists all Redis resources
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp redis list --subscription <subscription>
+```
+
+### Azure Resilience Management Operations
+
+```bash
+# Get a resilience goal template, or list all goal templates in a service group (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience goal template get --subscription <subscription> \
+                                   --service-group <service-group> \
+                                   [--name <name>]
+
+# Get a resilience goal assignment, or list all goal assignments in a service group (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience goal assignment get --subscription <subscription> \
+                                     --service-group <service-group> \
+                                     [--name <name>]
+
+# Get a resource (member) of a goal assignment, or list all resources of the assignment (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience goal resource get --subscription <subscription> \
+                                   --service-group <service-group> \
+                                   --goal-assignment <goal-assignment> \
+                                   [--name <name>]
+
+# Get a resilience usage plan, or list usage plans (omit --name; omit --resource-group to list across the subscription)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan get --subscription <subscription> \
+                               [--resource-group <resource-group>] \
+                               [--name <name>]
+
+# Get a usage plan enrollment, or list all enrollments of a usage plan (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan enrollment get --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --usage-plan <usage-plan> \
+                                          [--name <name>]
+
+# Get a resilience recovery plan, or list all recovery plans in a service group (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recovery plan get --subscription <subscription> \
+                                   --service-group <service-group> \
+                                   [--name <name>]
+
+# Get a resource (member) of a recovery plan, or list all resources of the plan (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recovery plan resource get --subscription <subscription> \
+                                            --service-group <service-group> \
+                                            --recovery-plan <recovery-plan> \
+                                            [--name <name>]
+
+# Get a recovery job, or list all recovery jobs of a recovery plan (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recovery job get --subscription <subscription> \
+                                  --service-group <service-group> \
+                                  --recovery-plan <recovery-plan> \
+                                  [--name <name>]
+
+# Get a resource (target) of a recovery job, or list all resources of the job (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recovery job resource get --subscription <subscription> \
+                                           --service-group <service-group> \
+                                           --recovery-plan <recovery-plan> \
+                                           --recovery-job <recovery-job> \
+                                           [--name <name>]
 ```
 
 ### Azure Resource Group Operations
@@ -4409,7 +4563,7 @@ azmcp azureterraform azapi get --resource-type <resource-type> \
 #### Azure Verified Modules (AVM)
 
 ```bash
-# List all available Azure Verified Modules (AVM) for Terraform
+# List all available Azure Verified Modules (AVM) for Terraform (both resource and pattern modules)
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azureterraform avm list
 
@@ -4590,6 +4744,9 @@ azmcp bicepschema get --resource-type <resource-type> \
 
 ### Cloud Architect
 
+> [!NOTE]
+> The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant-id`, `--auth-method`, or any `--retry-*` options.
+
 ```bash
 # Design Azure cloud architectures through guided questions
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4599,7 +4756,7 @@ azmcp cloudarchitect design [--question <question>] \
                             [--answer <answer>] \
                             [--next-question-needed <true/false>] \
                             [--confidence-score <confidence-score>] \
-                            [--architecture-component <architecture-component>]
+                            [--state <state>]
 
 # Example:
 # Start an interactive architecture design session

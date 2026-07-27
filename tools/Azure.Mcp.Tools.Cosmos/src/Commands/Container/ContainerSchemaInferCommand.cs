@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Cosmos.Options;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Cosmos.Options.Container;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 
@@ -23,48 +22,30 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Container;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ContainerSchemaInferCommand(ILogger<ContainerSchemaInferCommand> logger, ICosmosService cosmosService)
-    : BaseContainerCommand<ContainerSchemaInferOptions>()
+public sealed class ContainerSchemaInferCommand(ILogger<ContainerSchemaInferCommand> logger, ICosmosService cosmosService, ISubscriptionResolver subscriptionResolver)
+    : BaseCosmosCommand<ContainerSchemaInferOptions, ContainerSchemaInferCommand.ContainerSchemaInferCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ContainerSchemaInferCommand> _logger = logger;
     private readonly ICosmosService _cosmosService = cosmosService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(ContainerSchemaInferOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(CosmosOptionDefinitions.SampleSize);
-        command.Validators.Add(result =>
-        {
-            var size = result.GetValueOrDefault<int>(CosmosOptionDefinitions.SampleSize.Name);
-            if (size < 1 || size > 20)
-            {
-                result.AddError("--sample-size must be between 1 and 20.");
-            }
-        });
-    }
+        base.ValidateOptions(options, validationResult);
 
-    protected override ContainerSchemaInferOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.SampleSize = parseResult.GetValueOrDefault<int>(CosmosOptionDefinitions.SampleSize.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        if (options.SampleSize != null && (options.SampleSize < 1 || options.SampleSize > 20))
         {
-            return context.Response;
+            validationResult.Errors.Add("--sample-size must be between 1 and 20.");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ContainerSchemaInferOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             var schema = await _cosmosService.GetApproximateSchema(
-                options.Account!,
-                options.Database!,
-                options.Container!,
+                options.Account,
+                options.Database,
+                options.Container,
                 options.SampleSize ?? 10,
                 options.Subscription!,
                 options.AuthMethod ?? AuthMethod.Credential,
@@ -86,5 +67,5 @@ public sealed class ContainerSchemaInferCommand(ILogger<ContainerSchemaInferComm
         return context.Response;
     }
 
-    internal record ContainerSchemaInferCommandResult(int SampleSize, IReadOnlyList<Models.SchemaProperty> Properties);
+    public sealed record ContainerSchemaInferCommandResult(int SampleSize, IReadOnlyList<Models.SchemaProperty> Properties);
 }

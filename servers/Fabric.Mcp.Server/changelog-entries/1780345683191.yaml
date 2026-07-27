@@ -1,3 +1,0 @@
-changes:
-  - section: "Breaking Changes"
-    description: "Changed appsetting.json property names to be scope to MicrosoftMcp instead of direct property names."

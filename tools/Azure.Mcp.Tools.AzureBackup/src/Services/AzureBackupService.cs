@@ -7,11 +7,11 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.ResourceManager;
 using Azure.ResourceManager.RecoveryServicesBackup;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
 using SdkBackupStatusResult = Azure.ResourceManager.RecoveryServicesBackup.Models.BackupStatusResult;
@@ -135,7 +135,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         List<BackupVaultInfo> FilterByResourceGroup(List<BackupVaultInfo> vaults) =>
             string.IsNullOrEmpty(resourceGroup)
                 ? vaults
-                : vaults.Where(v => string.Equals(v.ResourceGroup, resourceGroup, StringComparison.OrdinalIgnoreCase)).ToList();
+                : vaults.Where(v => string.Equals(v.ResourceGroup, resourceGroup, StringComparisons.ResourceGroup)).ToList();
 
         if (VaultTypeResolver.IsRsv(vaultType))
         {
@@ -658,7 +658,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
                 // Apply optional resource group filter
                 if (!string.IsNullOrEmpty(resourceGroup) &&
-                    !string.Equals(resource.Id?.ResourceGroupName, resourceGroup, StringComparison.OrdinalIgnoreCase))
+                    !string.Equals(resource.Id?.ResourceGroupName, resourceGroup, StringComparisons.ResourceGroup))
                 {
                     continue;
                 }

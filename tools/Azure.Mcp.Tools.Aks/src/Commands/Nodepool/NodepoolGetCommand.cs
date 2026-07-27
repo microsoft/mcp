@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Aks.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Aks.Options.Nodepool;
 using Azure.Mcp.Tools.Aks.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Aks.Commands.Nodepool;
 
@@ -23,44 +22,21 @@ namespace Azure.Mcp.Tools.Aks.Commands.Nodepool;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksService aksService) : BaseAksCommand<NodepoolGetOptions>
+public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksService aksService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<NodepoolGetOptions, NodepoolGetCommand.NodepoolGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<NodepoolGetCommand> _logger = logger;
     private readonly IAksService _aksService = aksService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, NodepoolGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(AksOptionDefinitions.Cluster.AsRequired());
-        command.Options.Add(AksOptionDefinitions.Nodepool);
-    }
-
-    protected override NodepoolGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
-        options.ClusterName = parseResult.GetValueOrDefault(AksOptionDefinitions.Cluster);
-        options.NodepoolName = parseResult.GetValueOrDefault(AksOptionDefinitions.Nodepool);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var nodePools = await _aksService.GetNodePools(
                 options.Subscription!,
                 options.ResourceGroup!,
-                options.ClusterName!,
-                options.NodepoolName,
+                options.Cluster!,
+                options.Nodepool,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -71,13 +47,13 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksS
         {
             _logger.LogError(ex,
                 "Error getting AKS node pool. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ClusterName: {ClusterName}, Nodepool: {Nodepool}.",
-                options.Subscription, options.ResourceGroup, options.ClusterName, options.NodepoolName);
+                options.Subscription, options.ResourceGroup, options.Cluster, options.Nodepool);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record NodepoolGetCommandResult(List<Models.NodePool> NodePools);
+    public sealed record NodepoolGetCommandResult(List<Models.NodePool> NodePools);
 }
 

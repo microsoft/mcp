@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 using Azure.Mcp.Tools.VirtualDesktop.Models;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Tests.Hostpool;
 
-public class HostpoolListCommandTests : CommandUnitTestsBase<HostpoolListCommand, IVirtualDesktopService>
+public class HostpoolListCommandTests : SubscriptionCommandUnitTestsBase<HostpoolListCommand, IVirtualDesktopService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()

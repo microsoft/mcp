@@ -70,17 +70,6 @@ public sealed class SignalRCommandTests(ITestOutputHelper output, TestProxyFixtu
     }
 
     [Fact]
-    public async Task Should_handle_empty_subscription_gracefully()
-    {
-        // Empty subscription should trigger validation failure (400) -> null results
-        var result = await CallToolAsync(
-            "signalr_runtime_get",
-            new() { { "subscription", "" } });
-
-        Assert.Null(result);
-    }
-
-    [Fact]
     public async Task Should_handle_invalid_subscription_gracefully()
     {
         // Invalid identifier should reach execution and return structured error details (HasValue)

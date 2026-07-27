@@ -166,7 +166,7 @@
                     "description": "The parameter list for run on-demand job request. Per-run, user-defined inputs to tailor this invocation. Note: parameter names are case-insensitive, but the casing must match the parameter name used in the code cell.",
                     "type": "array",
                     "items": {
-                        "$ref": "../platform/definitions/platform.json#/definitions/Parameter"
+                        "$ref": "../common/job_scheduling.json#/definitions/Parameter"
                     }
                 }
             }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Models;
@@ -9,14 +10,13 @@ using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests.Metrics;
 
-public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand, IMonitorMetricsService>
+public class MetricsQueryCommandTests : SubscriptionCommandUnitTestsBase<MetricsQueryCommand, IMonitorMetricsService>
 {
     #region Constructor and Properties Tests
 
@@ -198,7 +198,7 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
         if (!shouldBeValid)
         {
             Assert.NotNull(result.Message);
-            Assert.Contains("Invalid format for --metric-names", result.Message);
+            Assert.Contains("Invalid format for '--metric-names'", result.Message);
             Assert.Equal(HttpStatusCode.BadRequest, result.Status);
         }
         else

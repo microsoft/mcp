@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppConfig.Models;
-using Azure.Mcp.Tools.AppConfig.Options;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 
@@ -29,53 +28,31 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger, IAppConfigService appConfigService)
-    : BaseAppConfigCommand<KeyValueGetOptions>()
+public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger, IAppConfigService appConfigService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<KeyValueGetOptions, KeyValueGetCommand.KeyValueGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<KeyValueGetCommand> _logger = logger;
     private readonly IAppConfigService _appConfigService = appConfigService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(KeyValueGetOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AppConfigOptionDefinitions.Key.AsOptional());
-        command.Options.Add(AppConfigOptionDefinitions.Label);
-        command.Options.Add(AppConfigOptionDefinitions.KeyFilter);
-        command.Options.Add(AppConfigOptionDefinitions.LabelFilter);
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+        if (!string.IsNullOrEmpty(options.Key) && !string.IsNullOrEmpty(options.KeyFilter))
         {
-            var key = result.GetValueOrDefault<string>(AppConfigOptionDefinitions.Key.Name);
-            var keyFilter = result.GetValueOrDefault(AppConfigOptionDefinitions.KeyFilter);
-            if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(keyFilter))
-            {
-                result.AddError("Cannot specify both --key and --key-filter options together. Use only one to get a specific key-value or to filter the list of key-values.");
-            }
-        });
-    }
-
-    protected override KeyValueGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Key = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.Key.Name);
-        options.Label = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.Label.Name);
-        options.KeyFilter = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.KeyFilter.Name);
-        options.LabelFilter = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.LabelFilter.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("Cannot specify both --key and --key-filter options together. Use only one to get a specific key-value or to filter the list of key-values.");
         }
+        if (!string.IsNullOrEmpty(options.Label) && !string.IsNullOrEmpty(options.LabelFilter))
+        {
+            validationResult.Errors.Add("Cannot specify both --label and --label-filter options together. Use only one to get a specific key-value or to filter the list of key-values.");
+        }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, KeyValueGetOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             var settings = await _appConfigService.GetKeyValues(
-                options.Account!,
+                options.Account,
                 options.Subscription!,
                 options.Key,
                 options.Label,
@@ -96,5 +73,5 @@ public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger, IAppC
         return context.Response;
     }
 
-    internal record KeyValueGetCommandResult(List<KeyValueSetting> Settings);
+    public sealed record KeyValueGetCommandResult(List<KeyValueSetting> Settings);
 }

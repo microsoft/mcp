@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.FileShares.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FileShares.Options.FileShare;
 using Azure.Mcp.Tools.FileShares.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
@@ -25,40 +25,22 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheckNameAvailabilityCommand> logger, IFileSharesService fileSharesService)
-    : BaseFileSharesCommand<FileShareCheckNameAvailabilityOptions>(logger, fileSharesService)
+public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheckNameAvailabilityCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<FileShareCheckNameAvailabilityOptions, FileShareCheckNameAvailabilityCommand.FileShareCheckNameAvailabilityCommandResult>(subscriptionResolver)
 {
-
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FileShareCheckNameAvailabilityOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(FileSharesOptionDefinitions.FileShare.Name.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.FileShare.Location.AsRequired());
-    }
-
-    protected override FileShareCheckNameAvailabilityOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Name.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Location.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        var options = BindOptions(parseResult);
-
         try
         {
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Checking name availability for file share {FileShareName} in location {Location}",
-                options.FileShareName,
+                options.Name,
                 options.Location);
 
-            var availabilityResult = await _fileSharesService.CheckNameAvailabilityAsync(
+            var availabilityResult = await fileSharesService.CheckNameAvailabilityAsync(
                 options.Subscription!,
-                options.FileShareName!,
-                options.Location!,
+                options.Name,
+                options.Location,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -67,19 +49,19 @@ public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheck
                 new(availabilityResult.IsAvailable, availabilityResult.Reason, availabilityResult.Message),
                 FileSharesJsonContext.Default.FileShareCheckNameAvailabilityCommandResult);
 
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Name availability check completed. File share name {FileShareName} is {Status}",
-                options.FileShareName,
+                options.Name,
                 availabilityResult.IsAvailable ? "available" : "not available");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking file share name availability. FileShareName: {FileShareName}, Location: {Location}.", options.FileShareName, options.Location);
+            logger.LogError(ex, "Error checking file share name availability. FileShareName: {FileShareName}, Location: {Location}.", options.Name, options.Location);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record FileShareCheckNameAvailabilityCommandResult(bool IsAvailable, string? Reason, string? Message);
+    public sealed record FileShareCheckNameAvailabilityCommandResult(bool IsAvailable, string? Reason, string? Message);
 }

@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.ManagedLustre.Options;
-using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.SubnetSize;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
+namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.SubnetSize;
 
 [CommandMetadata(
     Id = "b6317bba-e28c-445b-9133-9cfbfe677698",
@@ -22,64 +22,42 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class SubnetSizeValidateCommand(IManagedLustreService service, ILogger<SubnetSizeValidateCommand> logger)
-    : BaseManagedLustreCommand<SubnetSizeValidateOptions>(logger)
+public sealed class SubnetSizeValidateCommand(IManagedLustreService service, ILogger<SubnetSizeValidateCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<SubnetSizeValidateOptions, SubnetSizeValidateCommand.FileSystemCheckSubnetResult>(subscriptionResolver)
 {
-
     private readonly IManagedLustreService _service = service;
+    private readonly ILogger<SubnetSizeValidateCommand> _logger = logger;
 
-    private static readonly string[] AllowedSkus = [
+    private static readonly string[] s_allowedSkus = [
         "AMLFS-Durable-Premium-40",
         "AMLFS-Durable-Premium-125",
         "AMLFS-Durable-Premium-250",
         "AMLFS-Durable-Premium-500"
     ];
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(SubnetSizeValidateOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(ManagedLustreOptionDefinitions.SkuOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.SizeOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.SubnetIdOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.LocationOption);
-        command.Validators.Add(commandResult =>
-            {
-                var sku = commandResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.SkuOption);
-                if (!string.IsNullOrWhiteSpace(sku) && !AllowedSkus.Contains(sku))
-                {
-                    commandResult.AddError($"Invalid SKU '{sku}'. Allowed values: {string.Join(", ", AllowedSkus)}");
-                }
-            }
-        );
+        base.ValidateOptions(options, validationResult);
+
+        if (!s_allowedSkus.Contains(options.Sku))
+        {
+            validationResult.Errors.Add($"Invalid SKU '{options.Sku}'. Allowed values: {string.Join(", ", s_allowedSkus)}");
+        }
     }
 
-    protected override SubnetSizeValidateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Sku = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.SkuOption.Name);
-        options.Size = parseResult.GetValueOrDefault<int>(ManagedLustreOptionDefinitions.SizeOption.Name);
-        options.SubnetId = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.SubnetIdOption.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.LocationOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SubnetSizeValidateOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-                return context.Response;
-
-            var options = BindOptions(parseResult);
             var subnetIsValid = await _service.CheckAmlFSSubnetAsync(
-                                options.Subscription!,
-                                options.Sku!,
-                                options.Size,
-                                options.SubnetId!,
-                                options.Location!,
-                                options.Tenant,
-                                options.RetryPolicy,
-                                cancellationToken);
+                options.Subscription!,
+                options.Sku,
+                options.Size,
+                options.SubnetId,
+                options.Location,
+                options.Tenant,
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(subnetIsValid), ManagedLustreJsonContext.Default.FileSystemCheckSubnetResult);
         }
@@ -91,5 +69,5 @@ public sealed class SubnetSizeValidateCommand(IManagedLustreService service, ILo
         return context.Response;
     }
 
-    internal record FileSystemCheckSubnetResult(bool Valid);
+    public sealed record FileSystemCheckSubnetResult(bool Valid);
 }

@@ -3,18 +3,18 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Cosmos.Commands;
 using Azure.Mcp.Tools.Cosmos.Commands.Item;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Cosmos.Tests.Item;
 
-public class ItemTextSearchCommandTests : CommandUnitTestsBase<ItemTextSearchCommand, ICosmosService>
+public class ItemTextSearchCommandTests : SubscriptionCommandUnitTestsBase<ItemTextSearchCommand, ICosmosService>
 {
     [Fact]
     public void Name_IsCorrect() => Assert.Equal("text-search", Command.Name);

@@ -1,12 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Options;
+
 namespace Azure.Mcp.Tools.SreAgent.Options.Incidents;
 
-public class IncidentCreateOptions : BaseSreAgentOptions
+public sealed class IncidentCreateOptions : BaseSreAgentOptions
 {
-    public string? Severity { get; set; }
-    public string? Title { get; set; }
-    public string? Description { get; set; }
-    public string[]? Services { get; set; }
+    [Option(Description = SreAgentOptionDefinitions.SeverityDescription)]
+    public required string Severity { get; set; }
+
+    [Option(Description = "Incident title.")]
+    public required string Title { get; set; }
+
+    [Option(Description = SreAgentOptionDefinitions.DescriptionDescription)]
+    public required string Description { get; set; }
+
+    [Option(Description = SreAgentOptionDefinitions.ServicesDescription)]
+    public required string[] Services { get; set; }
 }

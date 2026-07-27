@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.ProtectableItem;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectableItem;
@@ -29,58 +28,39 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectableItem;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectableItemListOptions>()
+public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : BaseAzureBackupCommand<ProtectableItemListOptions, ProtectableItemListCommand.ProtectableItemListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ProtectableItemListCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(ProtectableItemListOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.WorkloadType);
-        command.Options.Add(AzureBackupOptionDefinitions.Container);
-        command.Validators.Add(commandResult =>
-        {
-            // NEW-4: reject unknown --workload-type at the command boundary so it surfaces
-            // as a 400 ValidationError instead of leaking the inner ArgumentException
-            // from the service layer as a 500.
-            //
-            // Read the value directly (no HasOptionResult gate) so whitespace-only inputs --
-            // which System.CommandLine may report as "no result" -- still fail validation
-            // here instead of slipping past and being rejected by the service layer.
-            var value = commandResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.WorkloadType.Name);
-            if (value is not null && !WorkloadTypeNormalizer.IsSupported(value))
-            {
-                commandResult.AddError(WorkloadTypeNormalizer.FormatUnknownMessage(value));
-            }
-        });
-    }
+        base.ValidateOptions(options, validationResult);
 
-    protected override ProtectableItemListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.WorkloadType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.WorkloadType.Name);
-        options.Container = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Container.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        // NEW-4: reject unknown --workload-type at the command boundary so it surfaces
+        // as a 400 ValidationError instead of leaking the inner ArgumentException
+        // from the service layer as a 500.
+        //
+        // Read the value directly (no HasOptionResult gate) so whitespace-only inputs --
+        // which System.CommandLine may report as "no result" -- still fail validation
+        // here instead of slipping past and being rejected by the service layer.
+        if (options.WorkloadType != null && !WorkloadTypeNormalizer.IsSupported(options.WorkloadType))
         {
-            return context.Response;
+            validationResult.Errors.Add(WorkloadTypeNormalizer.FormatUnknownMessage(options.WorkloadType));
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ProtectableItemListOptions options, CancellationToken cancellationToken)
+    {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultAndWorkloadTags(context.Activity, options.VaultType ?? "rsv", options.WorkloadType);
 
         try
         {
             var result = await _azureBackupService.ListProtectableItemsAsync(
-                options.Vault!,
-                options.ResourceGroup!,
+                options.Vault,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.WorkloadType,
                 options.Container,
@@ -109,5 +89,5 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record ProtectableItemListCommandResult(List<ProtectableItemInfo> Items);
+    public sealed record ProtectableItemListCommandResult(List<ProtectableItemInfo> Items);
 }

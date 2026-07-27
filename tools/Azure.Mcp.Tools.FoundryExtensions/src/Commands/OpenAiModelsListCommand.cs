@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
-using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
@@ -29,48 +28,26 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class OpenAiModelsListCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiModelsListOptions>
+public sealed class OpenAiModelsListCommand(IFoundryExtensionsService foundryExtensionsService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<OpenAiModelsListOptions, OpenAiModelsListCommand.OpenAiModelsListCommandResult>(subscriptionResolver)
 {
     private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(FoundryExtensionsOptionDefinitions.ResourceNameOption);
-    }
-
-    protected override OpenAiModelsListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.ResourceName = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.ResourceNameOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, OpenAiModelsListOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
-            var options = BindOptions(parseResult);
-
-            var foundryService = _foundryExtensionsService;
-            var result = await foundryService.ListOpenAiModelsAsync(
-                options.ResourceName!,
+            var result = await _foundryExtensionsService.ListOpenAiModelsAsync(
+                options.ResourceName,
                 options.Subscription!,
-                options.ResourceGroup!,
+                options.ResourceGroup,
                 options.Tenant,
                 options.AuthMethod ?? AuthMethod.Credential,
                 options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new(result, options.ResourceName!),
+                new(result, options.ResourceName),
                 FoundryExtensionsJsonContext.Default.OpenAiModelsListCommandResult);
         }
         catch (Exception ex)
@@ -81,5 +58,5 @@ public sealed class OpenAiModelsListCommand(IFoundryExtensionsService foundryExt
         return context.Response;
     }
 
-    internal record OpenAiModelsListCommandResult(OpenAiModelsListResult ModelsListResult, string ResourceName);
+    public sealed record OpenAiModelsListCommandResult(OpenAiModelsListResult ModelsListResult, string ResourceName);
 }

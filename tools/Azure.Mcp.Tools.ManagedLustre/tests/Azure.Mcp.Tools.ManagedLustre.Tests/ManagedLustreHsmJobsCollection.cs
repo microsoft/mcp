@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Xunit;
+
 namespace Azure.Mcp.Tools.ManagedLustre.Tests;
 
 /// <summary>

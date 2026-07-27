@@ -1,13 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Options;
+
 namespace Azure.Mcp.Tools.SreAgent.Options.Skills;
 
-public class SkillsCreateOptions : BaseSreAgentOptions
+public sealed class SkillsCreateOptions : BaseSreAgentOptions
 {
-    public string Name { get; set; } = string.Empty;
+    [Option(Description = SreAgentOptionDefinitions.NameDescription)]
+    public required string Name { get; set; }
 
-    public string? Content { get; set; }
+    [Option(Description = SreAgentOptionDefinitions.ContentDescription)]
+    public required string Content { get; set; }
 
+    [Option(Description = SreAgentOptionDefinitions.DescriptionDescription)]
     public string? Description { get; set; }
 }

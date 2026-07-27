@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using System.Text;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -31,11 +30,11 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 public sealed class FileReadCommand(
     ILogger<FileReadCommand> logger,
     IOneLakeService oneLakeService,
-    IOptions<ServiceStartOptions> serviceOptions) : AuthenticatedCommand<FileReadOptions, FileReadCommand.FileReadCommandResult>
+    IOptions<ServerStartOptions> serviceOptions) : AuthenticatedCommand<FileReadOptions, FileReadCommand.FileReadCommandResult>
 {
     private readonly ILogger<FileReadCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-    private readonly IOptions<ServiceStartOptions> _serviceOptions = serviceOptions ?? throw new ArgumentNullException(nameof(serviceOptions));
+    private readonly IOptions<ServerStartOptions> _serviceOptions = serviceOptions ?? throw new ArgumentNullException(nameof(serviceOptions));
 
     private const long InlineContentLimitBytes = 1 * 1024 * 1024; // 1 MiB inline payload limit
 
@@ -171,31 +170,25 @@ public sealed class FileReadCommand(
         long? ContentLength,
         string? ContentType,
         string? Charset);
-
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
-    };
 }
 
 public sealed class FileReadOptions
 {
-    [Option("The ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.WorkspaceId)]
     public string? WorkspaceId { get; set; }
 
-    [Option("The name or ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.Workspace)]
     public string? Workspace { get; set; }
 
-    [Option("The ID of the Fabric item.")]
+    [Option(Description = OneLakeOptionDescriptions.ItemId)]
     public string? ItemId { get; set; }
 
-    [Option("The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').")]
+    [Option(Description = OneLakeOptionDescriptions.Item)]
     public string? Item { get; set; }
 
-    [Option("The path to the file in OneLake.")]
+    [Option(Description = OneLakeOptionDescriptions.FilePath)]
     public required string FilePath { get; set; }
 
-    [Option("Local path to save the downloaded content when running locally.")]
+    [Option(Description = OneLakeOptionDescriptions.DownloadFilePath)]
     public string? DownloadFilePath { get; set; }
 }

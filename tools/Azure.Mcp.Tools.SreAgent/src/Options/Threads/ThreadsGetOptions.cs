@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.SreAgent.Options.Threads;
 
-public class ThreadsGetOptions : BaseSreAgentOptions
+public sealed class ThreadsGetOptions : BaseSreAgentOptions
 {
-    [JsonPropertyName("thread-id")]
-    public string? ThreadId { get; set; }
+    [Option(Description = SreAgentOptionDefinitions.ThreadIdDescription)]
+    public required string ThreadId { get; set; }
 }

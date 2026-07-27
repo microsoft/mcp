@@ -2,8 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.FileShares.Models;
 using Azure.ResourceManager.FileShares;
 using Azure.ResourceManager.Resources;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FileShares.Services;
@@ -435,7 +441,7 @@ public sealed class FileSharesService(
 
         await foreach (var snapshotResource in snapshotCollection.WithCancellation(cancellationToken))
         {
-            if (snapshotResource.Data.Name.Equals(snapshotId, StringComparison.OrdinalIgnoreCase) ||
+            if (snapshotResource.Data.Name.Equals(snapshotId, StringComparisons.ResourceName) ||
                 snapshotResource.Data.Id.ToString().Equals(snapshotId, StringComparison.OrdinalIgnoreCase))
             {
                 return FileShareSnapshotInfo.FromResource(snapshotResource);
@@ -597,9 +603,8 @@ public sealed class FileSharesService(
             "Retrieved limits. MaxFileShares: {MaxFileShares}, Subscription: {Subscription}, Location: {Location}",
             output.Limits.MaxFileShares, subscription, location);
 
-        return new()
-        {
-            Limits = new()
+        return new(
+            Limits: new()
             {
                 MaxFileShares = output.Limits.MaxFileShares,
                 MaxFileShareSnapshots = output.Limits.MaxFileShareSnapshots,
@@ -612,14 +617,11 @@ public sealed class FileSharesService(
                 MinProvisionedThroughputMiBPerSec = output.Limits.MinProvisionedThroughputMiBPerSec,
                 MaxProvisionedThroughputMiBPerSec = output.Limits.MaxProvisionedThroughputMiBPerSec
             },
-            ProvisioningConstants = new()
-            {
-                BaseIOPerSec = output.ProvisioningConstants.BaseIOPerSec,
-                ScalarIOPerSec = output.ProvisioningConstants.ScalarIOPerSec,
-                BaseThroughputMiBPerSec = output.ProvisioningConstants.BaseThroughputMiBPerSec,
-                ScalarThroughputMiBPerSec = output.ProvisioningConstants.ScalarThroughputMiBPerSec
-            }
-        };
+            ProvisioningConstants: new(
+                BaseIOPerSec: output.ProvisioningConstants.BaseIOPerSec,
+                ScalarIOPerSec: output.ProvisioningConstants.ScalarIOPerSec,
+                BaseThroughputMiBPerSec: output.ProvisioningConstants.BaseThroughputMiBPerSec,
+                ScalarThroughputMiBPerSec: output.ProvisioningConstants.ScalarThroughputMiBPerSec));
     }
 
     public async Task<FileShareUsageDataResult> GetUsageDataAsync(
@@ -644,13 +646,7 @@ public sealed class FileSharesService(
                 "Retrieved usage data. FileShareCount: {Count}, Subscription: {Subscription}, Location: {Location}",
                 result.LiveSharesFileShareCount, subscription, location);
 
-            return new()
-            {
-                LiveShares = new()
-                {
-                    FileShareCount = result.LiveSharesFileShareCount
-                }
-            };
+            return new(new(result.LiveSharesFileShareCount));
         }
         catch (Exception ex)
         {
@@ -683,12 +679,10 @@ public sealed class FileSharesService(
             "Retrieved provisioning recommendation. StorageGiB: {Storage}, IOPerSec: {IO}, ThroughputMiBPerSec: {Throughput}, Location: {Location}",
             provisionedStorageGiB, output.ProvisionedIOPerSec, output.ProvisionedThroughputMiBPerSec, location);
 
-        return new()
-        {
-            ProvisionedIOPerSec = output.ProvisionedIOPerSec,
-            ProvisionedThroughputMiBPerSec = output.ProvisionedThroughputMiBPerSec,
-            AvailableRedundancyOptions = output.AvailableRedundancyOptions?.Select(r => r.ToString()).ToList() ?? []
-        };
+        return new(
+            ProvisionedIOPerSec: output.ProvisionedIOPerSec,
+            ProvisionedThroughputMiBPerSec: output.ProvisionedThroughputMiBPerSec,
+            AvailableRedundancyOptions: output.AvailableRedundancyOptions?.Select(r => r.ToString()).ToList() ?? []);
     }
 
     public async Task<PrivateEndpointConnectionInfo> GetPrivateEndpointConnectionAsync(

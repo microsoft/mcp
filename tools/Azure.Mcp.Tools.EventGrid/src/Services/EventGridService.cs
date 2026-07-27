@@ -4,10 +4,17 @@
 using System.Net.Mime;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.EventGrid.Commands;
+using Azure.Mcp.Tools.EventGrid.Models;
+using Azure.Messaging.EventGrid;
 using Azure.ResourceManager.EventGrid;
 using Azure.ResourceManager.EventGrid.Models;
 using Azure.ResourceManager.Resources;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.EventGrid.Services;
@@ -127,11 +134,9 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             var publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential, clientOptions);
 
             // Serialize each event individually to JSON using source-generated context
-            var eventsData = eventGridEventSchemas.Select(eventSchema =>
-            {
-                var jsonString = JsonSerializer.Serialize(eventSchema, EventGridJsonContext.Default.EventGridEventSchema);
-                return BinaryData.FromString(jsonString);
-            }).ToArray();
+            var eventsData = eventGridEventSchemas
+                .Select(eventSchema => BinaryData.FromObjectAsJson(eventSchema, EventGridJsonContext.Default.EventGridEventSchema))
+                .ToArray();
 
             var eventCount = eventsData.Length;
             _logger.LogInformation("Publishing {EventCount} events to topic '{TopicName}' with operation ID: {OperationId}",
@@ -217,45 +222,39 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
                 }
             }
 
-            return new()
-            {
-                Id = cloudEvent.Id ?? Guid.NewGuid().ToString(),
-                Subject = cloudEvent.Source ?? cloudEvent.Subject ?? "/default/subject",
-                EventType = cloudEvent.Type ?? "CustomEvent",
-                DataVersion = cloudEvent.SpecVersion ?? "1.0",
-                Data = cloudEvent.Data.HasValue ? JsonNode.Parse(cloudEvent.Data.Value.GetRawText()) : null,
-                EventTime = cloudEvent.Time ?? DateTimeOffset.UtcNow
-            };
+            return new(
+                Id: cloudEvent.Id ?? Guid.NewGuid().ToString(),
+                Subject: cloudEvent.Source ?? cloudEvent.Subject ?? "/default/subject",
+                EventType: cloudEvent.Type ?? "CustomEvent",
+                DataVersion: cloudEvent.SpecVersion ?? "1.0",
+                Data: cloudEvent.Data.HasValue ? JsonNode.Parse(cloudEvent.Data.Value.GetRawText()) : null,
+                EventTime: cloudEvent.Time ?? DateTimeOffset.UtcNow);
         }
         else if (eventSchema.Equals("EventGrid", StringComparison.OrdinalIgnoreCase))
         {
             var eventGridEvent = JsonSerializer.Deserialize(eventJson, EventGridJsonContext.Default.EventGridEventInput)
                 ?? throw new ArgumentException("Failed to deserialize EventGrid event");
 
-            return new()
-            {
-                Id = eventGridEvent.Id ?? Guid.NewGuid().ToString(),
-                Subject = eventGridEvent.Subject ?? "/default/subject",
-                EventType = eventGridEvent.EventType ?? "CustomEvent",
-                DataVersion = eventGridEvent.DataVersion ?? "1.0",
-                Data = eventGridEvent.Data.HasValue ? JsonNode.Parse(eventGridEvent.Data.Value.GetRawText()) : null,
-                EventTime = eventGridEvent.EventTime ?? DateTimeOffset.UtcNow
-            };
+            return new(
+                Id: eventGridEvent.Id ?? Guid.NewGuid().ToString(),
+                Subject: eventGridEvent.Subject ?? "/default/subject",
+                EventType: eventGridEvent.EventType ?? "CustomEvent",
+                DataVersion: eventGridEvent.DataVersion ?? "1.0",
+                Data: eventGridEvent.Data.HasValue ? JsonNode.Parse(eventGridEvent.Data.Value.GetRawText()) : null,
+                EventTime: eventGridEvent.EventTime ?? DateTimeOffset.UtcNow);
         }
         else // Custom schema - try both CloudEvents and EventGrid field names
         {
             var flexibleEvent = JsonSerializer.Deserialize(eventJson, EventGridJsonContext.Default.CustomEvent)
                 ?? throw new ArgumentException("Failed to deserialize custom event");
 
-            return new()
-            {
-                Id = flexibleEvent.Id ?? Guid.NewGuid().ToString(),
-                Subject = flexibleEvent.Subject ?? flexibleEvent.Source ?? "/default/subject",
-                EventType = flexibleEvent.EventType ?? flexibleEvent.Type ?? "CustomEvent",
-                DataVersion = flexibleEvent.DataVersion ?? flexibleEvent.SpecVersion ?? "1.0",
-                Data = flexibleEvent.Data.HasValue ? JsonNode.Parse(flexibleEvent.Data.Value.GetRawText()) : null,
-                EventTime = flexibleEvent.EventTime ?? flexibleEvent.Time ?? DateTimeOffset.UtcNow
-            };
+            return new(
+                Id: flexibleEvent.Id ?? Guid.NewGuid().ToString(),
+                Subject: flexibleEvent.Subject ?? flexibleEvent.Source ?? "/default/subject",
+                EventType: flexibleEvent.EventType ?? flexibleEvent.Type ?? "CustomEvent",
+                DataVersion: flexibleEvent.DataVersion ?? flexibleEvent.SpecVersion ?? "1.0",
+                Data: flexibleEvent.Data.HasValue ? JsonNode.Parse(flexibleEvent.Data.Value.GetRawText()) : null,
+                EventTime: flexibleEvent.EventTime ?? flexibleEvent.Time ?? DateTimeOffset.UtcNow);
         }
     }
 
@@ -374,7 +373,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
 
             await foreach (var topic in resourceGroupResource.Value.GetEventGridTopics().GetAllAsync(cancellationToken: cancellationToken))
             {
-                if (topic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                if (topic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
                 {
                     return topic;
                 }
@@ -385,7 +384,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             // Search in all resource groups
             await foreach (var topic in subscriptionResource.GetEventGridTopicsAsync(cancellationToken: cancellationToken))
             {
-                if (topic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                if (topic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
                 {
                     return topic;
                 }
@@ -408,7 +407,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
 
             await foreach (var systemTopic in resourceGroupResource.Value.GetSystemTopics().GetAllAsync(cancellationToken: cancellationToken))
             {
-                if (systemTopic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                if (systemTopic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
                 {
                     return systemTopic;
                 }
@@ -419,7 +418,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             // Search in all resource groups
             await foreach (var systemTopic in subscriptionResource.GetSystemTopicsAsync(cancellationToken: cancellationToken))
             {
-                if (systemTopic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                if (systemTopic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
                 {
                     return systemTopic;
                 }
@@ -429,16 +428,13 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         return null;
     }
 
-    private static EventGridTopicInfo CreateTopicInfo(EventGridTopicData topicData)
-    {
-        return new(
-            Name: topicData.Name,
-            Location: topicData.Location.ToString(),
-            Endpoint: topicData.Endpoint?.ToString(),
-            ProvisioningState: topicData.ProvisioningState?.ToString(),
-            PublicNetworkAccess: topicData.PublicNetworkAccess?.ToString(),
-            InputSchema: topicData.InputSchema?.ToString());
-    }
+    private static EventGridTopicInfo CreateTopicInfo(EventGridTopicData topicData) => new(
+        Name: topicData.Name,
+        Location: topicData.Location.ToString(),
+        Endpoint: topicData.Endpoint?.ToString(),
+        ProvisioningState: topicData.ProvisioningState?.ToString(),
+        PublicNetworkAccess: topicData.PublicNetworkAccess?.ToString(),
+        InputSchema: topicData.InputSchema?.ToString());
 
     private static EventGridSubscriptionInfo CreateSubscriptionInfo(EventGridSubscriptionData subscriptionData)
     {
@@ -497,8 +493,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             MaxDeliveryAttempts: subscriptionData.RetryPolicy?.MaxDeliveryAttempts,
             EventTimeToLiveInMinutes: subscriptionData.RetryPolicy?.EventTimeToLiveInMinutes,
             CreatedDateTime: subscriptionData.SystemData?.CreatedOn?.ToString("yyyy-MM-ddTHH:mm:ssZ"),
-            UpdatedDateTime: subscriptionData.SystemData?.LastModifiedOn?.ToString("yyyy-MM-ddTHH:mm:ssZ")
-        );
+            UpdatedDateTime: subscriptionData.SystemData?.LastModifiedOn?.ToString("yyyy-MM-ddTHH:mm:ssZ"));
     }
 
     private static async Task AddSubscriptionsFromTopic(

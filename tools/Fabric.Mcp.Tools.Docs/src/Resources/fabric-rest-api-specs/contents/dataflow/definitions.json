@@ -207,8 +207,42 @@
           "description": "A list of parameters to override during execution.",
           "type": "array",
           "items": {
-            "$ref": "../platform/definitions/platform.json#/definitions/ItemJobParameter"
+            "$ref": "#/definitions/ItemJobParameter"
           }
+        }
+      }
+    },
+    "ItemJobParameter": {
+      "description": "Parameter details.",
+      "type": "object",
+      "required": [
+        "parameterName",
+        "type",
+        "value"
+      ],
+      "properties": {
+        "parameterName": {
+          "description": "Name of the parameter.",
+          "type": "string"
+        },
+        "type": {
+          "description": "The parameter type. Additional parameter types may be added over time.",
+          "type": "string",
+          "enum": [ "Automatic" ],
+          "x-ms-enum": {
+            "name": "Type",
+            "modelAsString": true,
+            "values": [
+              {
+                "value": "Automatic",
+                "description": "Value must be Automatic"
+              }
+            ]
+          }
+        },
+        "value": {
+          "description": "The value of the parameter to override during execution.",
+          "type": "object"
         }
       }
     },
