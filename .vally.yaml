@@ -3,7 +3,7 @@ paths:
   results: ".work/vally-results/"
 
 environments:
-  development:
+  linux:
     mcpServers:
       azmcp:
         type: stdio
