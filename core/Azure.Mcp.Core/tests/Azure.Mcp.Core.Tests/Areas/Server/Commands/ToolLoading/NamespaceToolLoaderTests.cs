@@ -128,7 +128,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         string executionMode,
         StructuredOutputMode mode)
     {
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
         {
             Mode = executionMode,
             StructuredOutputMode = mode
@@ -287,7 +287,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         StructuredOutputMode mode,
         bool expectsCompactContent)
     {
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
         {
             Mode = ModeTypes.NamespaceProxy,
             StructuredOutputMode = mode
@@ -423,7 +423,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     [Fact]
     public async Task CallToolHandler_CompactHelpReturnsAggregateMessage()
     {
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
         {
             Mode = ModeTypes.NamespaceProxy,
             StructuredOutputMode = StructuredOutputMode.Compact
@@ -1061,7 +1061,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         commandFactory.GroupCommands(Arg.Any<string[]>())
             .Returns(new Dictionary<string, IBaseCommand> { ["read-cmd"] = command });
 
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
         {
             Mode = executionMode,
             StructuredOutputMode = mode
