@@ -214,7 +214,7 @@ internal class VallyUtilities
 
     public static async Task WritePromptsAsync(List<TestPrompt> prompts,
         string outputFile,
-        string environment = "development",
+        string environment = "linux",
         bool force = false)
     {
         var stimuli = new List<Stimulus>();
