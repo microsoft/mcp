@@ -11,7 +11,7 @@
             "body": {
                 "id": "7a0369b2-58c4-4b67-b3f3-92156a95f1cd",
                 "connectivityType": "PersonalCloud",
-                "connectionDetails":{
+                "connectionDetails": {
                     "type": "SQL",
                     "path": "contoso.database.windows.net;finances"
                 },
@@ -21,6 +21,13 @@
                     "singleSignOnType": "None",
                     "connectionEncryption": "NotEncrypted",
                     "skipTestConnection": false
+                },
+                "connectionRecency": {
+                    "createdDateTime": "2023-05-23T16:22:20Z",
+                    "lastBoundDateTime": "2023-05-26T16:22:20Z",
+                    "lastCredentialUsedDateTime": "2023-05-27T16:22:20Z",
+                    "myLastBoundDateTime": "2023-05-24T16:22:20Z",
+                    "myLastCredentialUsedDateTime": "2023-05-25T16:22:20Z"
                 }
             }
         }

@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.FileShares.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.Snapshot;
 using Azure.Mcp.Tools.FileShares.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
@@ -22,84 +23,59 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFileSharesService service)
-    : BaseFileSharesCommand<SnapshotGetOptions>(logger, service)
+public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<SnapshotGetOptions, SnapshotGetCommand.SnapshotGetCommandResult>(subscriptionResolver)
 {
-
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SnapshotGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.Snapshot.FileShareName.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.Snapshot.SnapshotName.AsOptional());
-    }
-
-    protected override SnapshotGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.FileShareName.Name);
-        options.SnapshotName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.SnapshotName.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             // If snapshot name is provided, get specific snapshot
             if (!string.IsNullOrEmpty(options.SnapshotName))
             {
-                _logger.LogInformation("Getting snapshot. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}, SnapshotName: {SnapshotName}",
+                logger.LogInformation("Getting snapshot. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}, SnapshotName: {SnapshotName}",
                     options.Subscription, options.ResourceGroup, options.FileShareName, options.SnapshotName);
 
-                var snapshot = await _fileSharesService.GetSnapshotAsync(
+                var snapshot = await fileSharesService.GetSnapshotAsync(
                     options.Subscription!,
-                    options.ResourceGroup!,
-                    options.FileShareName!,
-                    options.SnapshotName!,
+                    options.ResourceGroup,
+                    options.FileShareName,
+                    options.SnapshotName,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new([snapshot]), FileSharesJsonContext.Default.SnapshotGetCommandResult);
 
-                _logger.LogInformation("Successfully retrieved snapshot. SnapshotName: {SnapshotName}", options.SnapshotName);
+                logger.LogInformation("Successfully retrieved snapshot. SnapshotName: {SnapshotName}", options.SnapshotName);
             }
             else
             {
                 // List all snapshots
-                _logger.LogInformation("Listing snapshots. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}",
+                logger.LogInformation("Listing snapshots. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}",
                     options.Subscription, options.ResourceGroup, options.FileShareName);
 
-                var snapshots = await _fileSharesService.ListSnapshotsAsync(
+                var snapshots = await fileSharesService.ListSnapshotsAsync(
                     options.Subscription!,
-                    options.ResourceGroup!,
-                    options.FileShareName!,
+                    options.ResourceGroup,
+                    options.FileShareName,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(snapshots ?? []), FileSharesJsonContext.Default.SnapshotGetCommandResult);
 
-                _logger.LogInformation("Successfully listed {Count} snapshots for file share {FileShareName}", snapshots?.Count ?? 0, options.FileShareName);
+                logger.LogInformation("Successfully listed {Count} snapshots for file share {FileShareName}", snapshots?.Count ?? 0, options.FileShareName);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get snapshot(s)");
+            logger.LogError(ex, "Failed to get snapshot(s)");
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record SnapshotGetCommandResult(List<FileShareSnapshotInfo> Snapshots);
+    public sealed record SnapshotGetCommandResult(List<FileShareSnapshotInfo> Snapshots);
 }

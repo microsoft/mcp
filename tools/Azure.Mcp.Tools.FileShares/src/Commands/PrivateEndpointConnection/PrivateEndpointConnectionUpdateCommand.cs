@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.FileShares.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.PrivateEndpointConnection;
 using Azure.Mcp.Tools.FileShares.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
 
@@ -22,52 +23,23 @@ namespace Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class PrivateEndpointConnectionUpdateCommand(ILogger<PrivateEndpointConnectionUpdateCommand> logger, IFileSharesService service)
-    : BaseFileSharesCommand<PrivateEndpointConnectionUpdateOptions>(logger, service)
+public sealed class PrivateEndpointConnectionUpdateCommand(ILogger<PrivateEndpointConnectionUpdateCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<PrivateEndpointConnectionUpdateOptions, PrivateEndpointConnectionUpdateCommand.PrivateEndpointConnectionUpdateCommandResult>(subscriptionResolver)
 {
-
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, PrivateEndpointConnectionUpdateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.PrivateEndpointConnection.FileShareName.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.PrivateEndpointConnection.ConnectionName.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.PrivateEndpointConnection.Status.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.PrivateEndpointConnection.Description.AsOptional());
-    }
-
-    protected override PrivateEndpointConnectionUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PrivateEndpointConnection.FileShareName.Name);
-        options.ConnectionName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PrivateEndpointConnection.ConnectionName.Name);
-        options.Status = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PrivateEndpointConnection.Status.Name);
-        options.Description = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PrivateEndpointConnection.Description.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Updating private endpoint connection. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShare: {FileShareName}, Connection: {ConnectionName}, Status: {Status}",
                 options.Subscription, options.ResourceGroup, options.FileShareName, options.ConnectionName, options.Status);
 
-            var connection = await _fileSharesService.UpdatePrivateEndpointConnectionAsync(
+            var connection = await fileSharesService.UpdatePrivateEndpointConnectionAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.FileShareName!,
-                options.ConnectionName!,
-                options.Status!,
+                options.ResourceGroup,
+                options.FileShareName,
+                options.ConnectionName,
+                options.Status,
                 options.Description,
                 options.Tenant,
                 options.RetryPolicy,
@@ -75,18 +47,18 @@ public sealed class PrivateEndpointConnectionUpdateCommand(ILogger<PrivateEndpoi
 
             context.Response.Results = ResponseResult.Create(new(connection), FileSharesJsonContext.Default.PrivateEndpointConnectionUpdateCommandResult);
 
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Successfully updated private endpoint connection. Connection: {ConnectionName}, Status: {Status}",
                 options.ConnectionName, options.Status);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to update private endpoint connection");
+            logger.LogError(ex, "Failed to update private endpoint connection");
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record PrivateEndpointConnectionUpdateCommandResult(PrivateEndpointConnectionInfo Connection);
+    public sealed record PrivateEndpointConnectionUpdateCommandResult(PrivateEndpointConnectionInfo Connection);
 }

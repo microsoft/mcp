@@ -1,0 +1,20 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "copyJobId": "5b218778-e7a5-4d73-8187-f10824047715",
+        "resetCopyJobRequest": {
+            "resetAllCopyJobEntities": false,
+            "copyJobEntitiesToReset": [
+                {
+                    "copyJobEntityId": "b1b04262-1a57-412b-8b92-117832e4dad0"
+                },
+                {
+                    "copyJobEntityId": "7351d4be-fc32-4799-a6a4-f2b9572e1674"
+                }
+            ]
+        }
+    },
+    "responses": {
+        "200": {}
+    }
+}

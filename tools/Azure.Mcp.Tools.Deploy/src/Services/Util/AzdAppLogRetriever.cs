@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using Azure.Monitor.Query.Logs;
 using Azure.Monitor.Query.Logs.Models;
 using Azure.ResourceManager;
@@ -12,9 +15,8 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
 {
     private readonly string _subscriptionId = subscriptionId;
     private readonly string _azdEnvName = azdEnvName;
-    private readonly Dictionary<string, string> _apps = new();
-    private readonly Dictionary<string, string> _logs = new();
-    private readonly List<string> _logAnalyticsWorkspaceIds = new();
+    private readonly Dictionary<string, string> _logs = [];
+    private readonly List<string> _logAnalyticsWorkspaceIds = [];
     private string _resourceGroupName = string.Empty;
 
     private readonly ArmClient _armClient = armClient ?? throw new ArgumentNullException(nameof(armClient));
@@ -222,15 +224,10 @@ public static class ResourceTypeExtensions
         { ResourceType.FunctionApp, "Microsoft.Web/sites|functionapp" }
     };
 
-    public static ResourceType GetResourceTypeFromHost(string host)
-    {
-        return HostToResourceType.TryGetValue(host, out var resourceType)
+    public static ResourceType GetResourceTypeFromHost(string host) =>
+        HostToResourceType.TryGetValue(host, out var resourceType)
             ? resourceType
             : throw new ArgumentException($"Unknown host type: {host}");
-    }
 
-    public static string GetResourceTypeString(this ResourceType resourceType)
-    {
-        return ResourceTypeToString[resourceType];
-    }
+    public static string GetResourceTypeString(this ResourceType resourceType) => ResourceTypeToString[resourceType];
 }

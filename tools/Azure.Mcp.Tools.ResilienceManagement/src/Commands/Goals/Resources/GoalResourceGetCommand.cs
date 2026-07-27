@@ -2,9 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Goals.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
@@ -30,8 +27,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Resources;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class GoalResourceGetCommand(ILogger<GoalResourceGetCommand> logger, IResilienceManagementService resilienceManagementService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<GoalResourceGetOptions, GoalResourceGetCommand.GoalResourceGetCommandResult>(subscriptionResolver)
+public sealed class GoalResourceGetCommand(ILogger<GoalResourceGetCommand> logger, IResilienceManagementService resilienceManagementService)
+    : AuthenticatedCommand<GoalResourceGetOptions, GoalResourceGetCommand.GoalResourceGetCommandResult>
 {
     private readonly ILogger<GoalResourceGetCommand> _logger = logger;
     private readonly IResilienceManagementService _resilienceManagementService = resilienceManagementService;
@@ -46,7 +43,6 @@ public sealed class GoalResourceGetCommand(ILogger<GoalResourceGetCommand> logge
                 var goalResources = await _resilienceManagementService.ListGoalResourcesAsync(
                     options.ServiceGroup,
                     options.GoalAssignment,
-                    options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -58,7 +54,6 @@ public sealed class GoalResourceGetCommand(ILogger<GoalResourceGetCommand> logge
                     options.ServiceGroup,
                     options.GoalAssignment,
                     options.Name,
-                    options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -72,8 +67,8 @@ public sealed class GoalResourceGetCommand(ILogger<GoalResourceGetCommand> logge
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting goal resource(s). ServiceGroup: {ServiceGroup}, GoalAssignment: {GoalAssignment}, Name: {Name}, Subscription: {Subscription}.",
-                options.ServiceGroup, options.GoalAssignment, options.Name, options.Subscription);
+                "Error getting goal resource(s). ServiceGroup: {ServiceGroup}, GoalAssignment: {GoalAssignment}, Name: {Name}.",
+                options.ServiceGroup, options.GoalAssignment, options.Name);
             HandleException(context, ex);
         }
 
@@ -82,7 +77,7 @@ public sealed class GoalResourceGetCommand(ILogger<GoalResourceGetCommand> logge
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        KeyNotFoundException => "Goal resource not found. Verify the goal resource name, goal assignment, service group, subscription, and that you have access.",
+        KeyNotFoundException => "Goal resource not found. Verify the goal resource name, goal assignment, service group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed getting the goal resource. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
@@ -91,5 +86,5 @@ public sealed class GoalResourceGetCommand(ILogger<GoalResourceGetCommand> logge
         _ => base.GetErrorMessage(ex)
     };
 
-    public record GoalResourceGetCommandResult(List<ResourceSummary>? GoalResources = null, GoalResourceInfo? GoalResource = null);
+    public sealed record GoalResourceGetCommandResult(List<ResourceSummary>? GoalResources = null, GoalResourceInfo? GoalResource = null);
 }

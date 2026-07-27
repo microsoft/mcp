@@ -3,9 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Recovery.Jobs.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
@@ -30,8 +27,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs.Resources;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class RecoveryJobResourceGetCommand(ILogger<RecoveryJobResourceGetCommand> logger, IResilienceManagementService resilienceManagementService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<RecoveryJobResourceGetOptions, RecoveryJobResourceGetCommand.RecoveryJobResourceGetCommandResult>(subscriptionResolver)
+public sealed class RecoveryJobResourceGetCommand(ILogger<RecoveryJobResourceGetCommand> logger, IResilienceManagementService resilienceManagementService)
+    : AuthenticatedCommand<RecoveryJobResourceGetOptions, RecoveryJobResourceGetCommand.RecoveryJobResourceGetCommandResult>
 {
     private readonly ILogger<RecoveryJobResourceGetCommand> _logger = logger;
     private readonly IResilienceManagementService _resilienceManagementService = resilienceManagementService;
@@ -47,7 +44,6 @@ public sealed class RecoveryJobResourceGetCommand(ILogger<RecoveryJobResourceGet
                     options.ServiceGroup,
                     options.RecoveryPlan,
                     options.RecoveryJob,
-                    options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -60,7 +56,6 @@ public sealed class RecoveryJobResourceGetCommand(ILogger<RecoveryJobResourceGet
                     options.RecoveryPlan,
                     options.RecoveryJob,
                     options.Name,
-                    options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -74,8 +69,8 @@ public sealed class RecoveryJobResourceGetCommand(ILogger<RecoveryJobResourceGet
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting recovery job resource(s). ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}, RecoveryJob: {RecoveryJob}, Name: {Name}, Subscription: {Subscription}.",
-                options.ServiceGroup, options.RecoveryPlan, options.RecoveryJob, options.Name, options.Subscription);
+                "Error getting recovery job resource(s). ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}, RecoveryJob: {RecoveryJob}, Name: {Name}.",
+                options.ServiceGroup, options.RecoveryPlan, options.RecoveryJob, options.Name);
             HandleException(context, ex);
         }
 
@@ -84,7 +79,7 @@ public sealed class RecoveryJobResourceGetCommand(ILogger<RecoveryJobResourceGet
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        KeyNotFoundException => "Recovery job resource not found. Verify the recovery job resource name, recovery job, recovery plan, service group, subscription, and that you have access.",
+        KeyNotFoundException => "Recovery job resource not found. Verify the recovery job resource name, recovery job, recovery plan, service group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed getting the recovery job resource. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
@@ -93,5 +88,5 @@ public sealed class RecoveryJobResourceGetCommand(ILogger<RecoveryJobResourceGet
         _ => base.GetErrorMessage(ex)
     };
 
-    public record RecoveryJobResourceGetCommandResult(List<ResourceSummary>? RecoveryJobResources = null, JsonElement RecoveryJobResource = default);
+    public sealed record RecoveryJobResourceGetCommandResult(List<ResourceSummary>? RecoveryJobResources = null, JsonElement RecoveryJobResource = default);
 }

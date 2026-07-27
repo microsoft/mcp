@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
@@ -22,33 +22,14 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class FileSystemListCommand(IManagedLustreService service, ILogger<FileSystemListCommand> logger)
-    : BaseManagedLustreCommand<FileSystemListOptions>(logger)
+public sealed class FileSystemListCommand(IManagedLustreService service, ILogger<FileSystemListCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<FileSystemListOptions, FileSystemListCommand.FileSystemListResult>(subscriptionResolver)
 {
     private readonly IManagedLustreService _service = service;
+    private readonly ILogger<FileSystemListCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FileSystemListOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-    }
-
-    protected override FileSystemListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var fileSystems = await _service.ListFileSystemsAsync(
@@ -71,5 +52,5 @@ public sealed class FileSystemListCommand(IManagedLustreService service, ILogger
         return context.Response;
     }
 
-    internal record FileSystemListResult(List<Models.LustreFileSystem> FileSystems);
+    public sealed record FileSystemListResult(List<Models.LustreFileSystem> FileSystems);
 }

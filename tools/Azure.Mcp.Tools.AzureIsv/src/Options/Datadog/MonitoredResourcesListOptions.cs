@@ -1,13 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureIsv.Options.Datadog;
 
-public class MonitoredResourcesListOptions : SubscriptionOptions
+public sealed class MonitoredResourcesListOptions : ISubscriptionOption
 {
-    [JsonPropertyName(DatadogOptionDefinitions.DatadogResourceParam)]
-    public string? DatadogResource { get; set; }
+    [Option(Description = "The name of the Datadog resource to use. This is the unique name you chose for your Datadog resource in Azure.")]
+    public required string DatadogResource { get; set; }
+
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public required string ResourceGroup { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
 }

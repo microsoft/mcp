@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tools.FileShares.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.Snapshot;
 using Azure.Mcp.Tools.FileShares.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
@@ -23,41 +24,14 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger, IFileSharesService service)
-    : BaseFileSharesCommand<SnapshotCreateOptions>(logger, service)
+public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<SnapshotCreateOptions, SnapshotCreateCommand.SnapshotCreateCommandResult>(subscriptionResolver)
 {
-
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SnapshotCreateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.Snapshot.FileShareName.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.Snapshot.SnapshotName.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.Snapshot.Metadata.AsOptional());
-    }
-
-    protected override SnapshotCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.FileShareName.Name);
-        options.SnapshotName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.SnapshotName.Name);
-        options.Metadata = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.Metadata.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            _logger.LogInformation("Creating snapshot. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}, SnapshotName: {SnapshotName}",
+            logger.LogInformation("Creating snapshot. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}, SnapshotName: {SnapshotName}",
                 options.Subscription, options.ResourceGroup, options.FileShareName, options.SnapshotName);
 
             // Parse metadata if provided
@@ -74,11 +48,11 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
                 }
             }
 
-            var snapshot = await _fileSharesService.CreateSnapshotAsync(
+            var snapshot = await fileSharesService.CreateSnapshotAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.FileShareName!,
-                options.SnapshotName!,
+                options.ResourceGroup,
+                options.FileShareName,
+                options.SnapshotName,
                 metadata,
                 options.Tenant,
                 options.RetryPolicy,
@@ -86,16 +60,16 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
 
             context.Response.Results = ResponseResult.Create(new(snapshot), FileSharesJsonContext.Default.SnapshotCreateCommandResult);
 
-            _logger.LogInformation("Snapshot created successfully. SnapshotName: {SnapshotName}", options.SnapshotName);
+            logger.LogInformation("Snapshot created successfully. SnapshotName: {SnapshotName}", options.SnapshotName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to create snapshot");
+            logger.LogError(ex, "Failed to create snapshot");
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record SnapshotCreateCommandResult(FileShareSnapshotInfo Snapshot);
+    public sealed record SnapshotCreateCommandResult(FileShareSnapshotInfo Snapshot);
 }

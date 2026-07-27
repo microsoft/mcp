@@ -1,13 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Workbooks.Options.Workbook;
 
-public class DeleteWorkbookOptions : GlobalOptions
+public sealed class DeleteWorkbookOptions
 {
-    [JsonPropertyName(WorkbooksOptionDefinitions.WorkbookIdsText)]
-    public string[]? WorkbookIds { get; set; }
+    [Option(Description = WorkbooksOptionDescriptions.WorkbookIdsDescription)]
+    public required string[] WorkbookIds { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [OptionContainer(Prefix = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

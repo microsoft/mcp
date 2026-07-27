@@ -5,14 +5,13 @@ using System.Net;
 using Azure.Mcp.Tools.Functions.Commands;
 using Azure.Mcp.Tools.Functions.Commands.Template;
 using Azure.Mcp.Tools.Functions.Models;
-using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Functions.UnitTests.Template;
+namespace Azure.Mcp.Tools.Functions.Tests.Template;
 
 public sealed class TemplateGetCommandTests : CommandUnitTestsBase<TemplateGetCommand, IFunctionsService>
 {
@@ -39,10 +38,10 @@ public sealed class TemplateGetCommandTests : CommandUnitTestsBase<TemplateGetCo
     public void Command_HasLanguageRequiredAndTemplateOptional()
     {
         var options = CommandDefinition.Options.ToList();
-        var languageOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.LanguageName}");
-        var templateOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.TemplateName}");
-        var runtimeOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.RuntimeVersionName}");
-        var outputOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.OutputName}");
+        var languageOption = options.FirstOrDefault(o => o.Name == $"--language");
+        var templateOption = options.FirstOrDefault(o => o.Name == $"--template");
+        var runtimeOption = options.FirstOrDefault(o => o.Name == $"--runtime-version");
+        var outputOption = options.FirstOrDefault(o => o.Name == $"--output");
 
         Assert.NotNull(languageOption);
         Assert.True(languageOption.Required);
@@ -91,7 +90,7 @@ public sealed class TemplateGetCommandTests : CommandUnitTestsBase<TemplateGetCo
             OutputBindings = []
         };
 
-        Service.GetTemplateListAsync("python", Arg.Any<CancellationToken>()).Returns(expectedResult);
+        Service.GetTemplateListAsync(SupportedLanguages.Python, Arg.Any<CancellationToken>()).Returns(expectedResult);
 
         // Act - no --template means list mode
         var response = await ExecuteCommandAsync("--language", "python");
@@ -142,7 +141,7 @@ public sealed class TemplateGetCommandTests : CommandUnitTestsBase<TemplateGetCo
             MergeInstructions = "## Merging Template Files"
         };
 
-        Service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.New, Arg.Any<CancellationToken>())
+        Service.GetFunctionTemplateAsync(SupportedLanguages.Python, "HttpTrigger", null, TemplateOutput.New, Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act - with --template means get mode, default mode is New
@@ -192,7 +191,7 @@ public sealed class TemplateGetCommandTests : CommandUnitTestsBase<TemplateGetCo
             MergeInstructions = "## Merging Template Files"
         };
 
-        Service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.Add, Arg.Any<CancellationToken>())
+        Service.GetFunctionTemplateAsync(SupportedLanguages.Python, "HttpTrigger", null, TemplateOutput.Add, Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act - with --output Add
@@ -230,7 +229,7 @@ public sealed class TemplateGetCommandTests : CommandUnitTestsBase<TemplateGetCo
             ]
         };
 
-        Service.GetFunctionTemplateAsync("typescript", "HttpTrigger", "22", TemplateOutput.New, Arg.Any<CancellationToken>())
+        Service.GetFunctionTemplateAsync(SupportedLanguages.TypeScript, "HttpTrigger", "22", TemplateOutput.New, Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
@@ -254,14 +253,14 @@ public sealed class TemplateGetCommandTests : CommandUnitTestsBase<TemplateGetCo
 
         // Assert - validator returns error before service is called
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Invalid language 'invalid'", response.Message);
+        Assert.Contains("Invalid --language 'invalid'", response.Message);
     }
 
     [Fact]
     public async Task ExecuteAsync_GetMode_HandlesInvalidTemplate()
     {
         // Arrange
-        Service.GetFunctionTemplateAsync("python", "NonExistent", null, TemplateOutput.New, Arg.Any<CancellationToken>())
+        Service.GetFunctionTemplateAsync(SupportedLanguages.Python, "NonExistent", null, TemplateOutput.New, Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Template \"NonExistent\" not found for language \"python\"."));
 
         // Act
@@ -276,7 +275,7 @@ public sealed class TemplateGetCommandTests : CommandUnitTestsBase<TemplateGetCo
     public async Task ExecuteAsync_GetMode_HandlesInvalidRuntimeVersion()
     {
         // Arrange
-        Service.GetFunctionTemplateAsync("java", "HttpTrigger", "99", TemplateOutput.New, Arg.Any<CancellationToken>())
+        Service.GetFunctionTemplateAsync(SupportedLanguages.Java, "HttpTrigger", "99", TemplateOutput.New, Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Invalid runtime version \"99\" for java."));
 
         // Act
@@ -291,7 +290,7 @@ public sealed class TemplateGetCommandTests : CommandUnitTestsBase<TemplateGetCo
     public async Task ExecuteAsync_ListMode_HandlesServiceErrors()
     {
         // Arrange
-        Service.GetTemplateListAsync("python", Arg.Any<CancellationToken>())
+        Service.GetTemplateListAsync(SupportedLanguages.Python, Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Network error"));
 
         // Act
@@ -306,7 +305,7 @@ public sealed class TemplateGetCommandTests : CommandUnitTestsBase<TemplateGetCo
     public async Task ExecuteAsync_GetMode_HandlesServiceErrors()
     {
         // Arrange
-        Service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.New, Arg.Any<CancellationToken>())
+        Service.GetFunctionTemplateAsync(SupportedLanguages.Python, "HttpTrigger", null, TemplateOutput.New, Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Could not fetch template"));
 
         // Act
@@ -363,7 +362,7 @@ public sealed class TemplateGetCommandTests : CommandUnitTestsBase<TemplateGetCo
             ]
         };
 
-        Service.GetTemplateListAsync("typescript", Arg.Any<CancellationToken>()).Returns(expectedResult);
+        Service.GetTemplateListAsync(SupportedLanguages.TypeScript, Arg.Any<CancellationToken>()).Returns(expectedResult);
 
         // Act
         var response = await ExecuteCommandAsync("--language", "typescript");
@@ -415,7 +414,7 @@ public sealed class TemplateGetCommandTests : CommandUnitTestsBase<TemplateGetCo
             MergeInstructions = "## Merging Template Files"
         };
 
-        Service.GetFunctionTemplateAsync("java", "HttpTrigger", null, TemplateOutput.Add, Arg.Any<CancellationToken>())
+        Service.GetFunctionTemplateAsync(SupportedLanguages.Java, "HttpTrigger", null, TemplateOutput.Add, Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
@@ -443,16 +442,16 @@ public sealed class TemplateGetCommandTests : CommandUnitTestsBase<TemplateGetCo
     }
 
     [Theory]
-    [InlineData("python")]
-    [InlineData("typescript")]
-    [InlineData("java")]
-    [InlineData("csharp")]
-    public async Task ExecuteAsync_ListMode_WorksForAllLanguages(string language)
+    [InlineData(SupportedLanguages.Python)]
+    [InlineData(SupportedLanguages.TypeScript)]
+    [InlineData(SupportedLanguages.Java)]
+    [InlineData(SupportedLanguages.CSharp)]
+    public async Task ExecuteAsync_ListMode_WorksForAllLanguages(SupportedLanguages language)
     {
         // Arrange
         var expectedResult = new TemplateListResult
         {
-            Language = language,
+            Language = language.ToString(),
             Triggers =
             [
                 new()
@@ -467,13 +466,13 @@ public sealed class TemplateGetCommandTests : CommandUnitTestsBase<TemplateGetCo
         Service.GetTemplateListAsync(language, Arg.Any<CancellationToken>()).Returns(expectedResult);
 
         // Act
-        var response = await ExecuteCommandAsync("--language", language);
+        var response = await ExecuteCommandAsync("--language", language.ToString());
 
         // Assert
         var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.TemplateGetCommandResult);
 
         Assert.NotNull(result.TemplateList);
-        Assert.Equal(language, result.TemplateList.Language);
+        Assert.Equal(language.ToString(), result.TemplateList.Language);
         Assert.Single(result.TemplateList.Triggers);
     }
 
@@ -482,15 +481,11 @@ public sealed class TemplateGetCommandTests : CommandUnitTestsBase<TemplateGetCo
     {
         // Arrange & Act
         var args = CommandDefinition.Parse(["--language", "java", "--template", "HttpTrigger", "--runtime-version", "21", "--output", "Add"]);
-
-        var method = Command.GetType().GetMethod(
-            "BindOptions",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var options = (TemplateGetOptions?)method?.Invoke(Command, [args]);
+        var options = Command.BindOptions(args);
 
         // Assert
         Assert.NotNull(options);
-        Assert.Equal("java", options.Language);
+        Assert.Equal(SupportedLanguages.Java, options.Language);
         Assert.Equal("HttpTrigger", options.Template);
         Assert.Equal("21", options.RuntimeVersion);
         Assert.Equal(TemplateOutput.Add, options.Output);
@@ -501,15 +496,11 @@ public sealed class TemplateGetCommandTests : CommandUnitTestsBase<TemplateGetCo
     {
         // Arrange & Act - only language provided, no template
         var args = CommandDefinition.Parse(["--language", "python"]);
-
-        var method = Command.GetType().GetMethod(
-            "BindOptions",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var options = (TemplateGetOptions?)method?.Invoke(Command, [args]);
+        var options = Command.BindOptions(args);
 
         // Assert
         Assert.NotNull(options);
-        Assert.Equal("python", options.Language);
+        Assert.Equal(SupportedLanguages.Python, options.Language);
         Assert.Null(options.Template);
         Assert.Null(options.RuntimeVersion);
         Assert.Equal(TemplateOutput.New, options.Output); // default output

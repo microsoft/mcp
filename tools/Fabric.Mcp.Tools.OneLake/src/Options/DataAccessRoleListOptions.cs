@@ -5,10 +5,17 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Options;
 
-public sealed class DataAccessRoleListOptions : GlobalOptions
+public sealed class DataAccessRoleListOptions
 {
+    [Option(Description = OneLakeOptionDescriptions.WorkspaceId)]
     public string? WorkspaceId { get; set; }
-    public string? ItemId { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.Workspace)]
+    public string? Workspace { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.ItemId)]
+    public required string ItemId { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.ContinuationToken)]
     public string? ContinuationToken { get; set; }
 }
-

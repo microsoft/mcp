@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.EventGrid.Commands.Events;
 using Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 using Azure.Mcp.Tools.EventGrid.Commands.Topic;
+using Azure.Mcp.Tools.EventGrid.Models;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands;
 
@@ -20,6 +21,4 @@ namespace Azure.Mcp.Tools.EventGrid.Commands;
 [JsonSerializable(typeof(EventGridEventInput))] // For EventGrid schema input deserialization
 [JsonSerializable(typeof(CustomEvent))] // For custom event schema input deserialization
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-internal sealed partial class EventGridJsonContext : JsonSerializerContext
-{
-}
+internal sealed partial class EventGridJsonContext : JsonSerializerContext;

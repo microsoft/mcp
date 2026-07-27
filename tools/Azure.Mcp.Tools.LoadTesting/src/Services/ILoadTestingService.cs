@@ -39,7 +39,7 @@ public interface ILoadTestingService
         string subscription,
         string testResourceName,
         string testId,
-        string? testRunId = null,
+        string testRunId,
         string? oldTestRunId = null,
         string? resourceGroup = null,
         string? tenant = null,

@@ -141,6 +141,33 @@
           "readOnly": false
         }
       }
+    },
+    "CopyJobEntityResetPayload": {
+      "description": "A list of CopyJobEntities to reset.",
+      "type": "object",
+      "properties": {
+        "resetAllCopyJobEntities": {
+          "description": "Whether to reset all CopyJob entities.",
+          "type": "boolean"
+        },
+        "copyJobEntitiesToReset": {
+          "description": "A list of CopyJob entities to reset.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CopyJobEntityReset"
+          }
+        }
+      }
+    },
+    "CopyJobEntityReset": {
+      "description": "The Id of a CopyJobEntity to reset.",
+      "type": "object",
+      "properties": {
+        "copyJobEntityId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
     }
   }
 }

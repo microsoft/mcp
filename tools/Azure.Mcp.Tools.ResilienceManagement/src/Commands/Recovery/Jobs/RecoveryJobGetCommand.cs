@@ -3,9 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Recovery.Jobs;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
@@ -30,8 +27,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class RecoveryJobGetCommand(ILogger<RecoveryJobGetCommand> logger, IResilienceManagementService resilienceManagementService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<RecoveryJobGetOptions, RecoveryJobGetCommand.RecoveryJobGetCommandResult>(subscriptionResolver)
+public sealed class RecoveryJobGetCommand(ILogger<RecoveryJobGetCommand> logger, IResilienceManagementService resilienceManagementService)
+    : AuthenticatedCommand<RecoveryJobGetOptions, RecoveryJobGetCommand.RecoveryJobGetCommandResult>
 {
     private readonly ILogger<RecoveryJobGetCommand> _logger = logger;
     private readonly IResilienceManagementService _resilienceManagementService = resilienceManagementService;
@@ -46,7 +43,6 @@ public sealed class RecoveryJobGetCommand(ILogger<RecoveryJobGetCommand> logger,
                 var recoveryJobs = await _resilienceManagementService.ListRecoveryJobsAsync(
                     options.ServiceGroup,
                     options.RecoveryPlan,
-                    options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -58,7 +54,6 @@ public sealed class RecoveryJobGetCommand(ILogger<RecoveryJobGetCommand> logger,
                     options.ServiceGroup,
                     options.RecoveryPlan,
                     options.Name,
-                    options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -72,8 +67,8 @@ public sealed class RecoveryJobGetCommand(ILogger<RecoveryJobGetCommand> logger,
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting recovery job(s). ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}, Name: {Name}, Subscription: {Subscription}.",
-                options.ServiceGroup, options.RecoveryPlan, options.Name, options.Subscription);
+                "Error getting recovery job(s). ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}, Name: {Name}.",
+                options.ServiceGroup, options.RecoveryPlan, options.Name);
             HandleException(context, ex);
         }
 
@@ -82,7 +77,7 @@ public sealed class RecoveryJobGetCommand(ILogger<RecoveryJobGetCommand> logger,
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        KeyNotFoundException => "Recovery job not found. Verify the recovery job name, recovery plan, service group, subscription, and that you have access.",
+        KeyNotFoundException => "Recovery job not found. Verify the recovery job name, recovery plan, service group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed getting the recovery job. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
@@ -91,5 +86,5 @@ public sealed class RecoveryJobGetCommand(ILogger<RecoveryJobGetCommand> logger,
         _ => base.GetErrorMessage(ex)
     };
 
-    public record RecoveryJobGetCommandResult(List<ResourceSummary>? RecoveryJobs = null, JsonElement RecoveryJob = default);
+    public sealed record RecoveryJobGetCommandResult(List<ResourceSummary>? RecoveryJobs = null, JsonElement RecoveryJob = default);
 }
