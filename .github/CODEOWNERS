@@ -270,10 +270,10 @@ tools/Azure.Mcp.Tools.IoTHub/         @rrao @microsoft/azure-mcp
 # ServiceOwners:                       @rrao @microsoft/azure-mcp
 
 # PRLabel: %tools-IoTOperations
-/tools/Azure.Mcp.Tools.IoTOperations/ @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.IoTOperations/ @sarsoma @byronjinmsft @microsoft/azure-mcp
 
 # ServiceLabel: %tools-IoTOperations
-# ServiceOwners:                       @microsoft/azure-mcp
+# ServiceOwners:                       @sarsoma @byronjinmsft @microsoft/azure-mcp
 
 # PRLabel: %tools-KeyVault
 /tools/Azure.Mcp.Tools.KeyVault/       @JonathanCrd @vcolin7 @microsoft/azure-mcp
