@@ -10,7 +10,7 @@ vally is the evaluation framework used to test the performance/accuracy of Azure
 ## Authoring an eval spec
 
 * `.vally.yaml` at the root of the repository, it contains settings common to all vally runs.
-* The `eval.yaml` should live in under a `./tools/<<tool_namespace>>/tests/` folder to be picked up by our workflow runs.
+* The `eval.yaml` should live under a `./tools/<<tool_namespace>>/tests/` folder to be picked up by our workflow runs.
 
 To be picked up by the "vally Evaluations" workflow for automatic testing, it must contain `environment: ${ENVIRONMENT}` like the sample below.  The environments are defined in `.vally.yaml`, and instruct the framework where to find the Azure MCP server.
 
