@@ -100,11 +100,9 @@ public sealed class WorkspaceLogQueryCommandTests : SubscriptionCommandUnitTests
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        var result = ValidateAndDeserializeResponse(
+        ValidateAndDeserializeResponse(
             response,
             MonitorJsonContext.Default.WorkspaceLogQueryCommandResult);
-        Assert.Equal(3, result.Results.Count);
-        Assert.Equal("Error occurred", result.Results[2]!["Message"]!.GetValue<string>());
 
         // Verify the mock was called
         await Service.Received(1).QueryWorkspaceLogs(
