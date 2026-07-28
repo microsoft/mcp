@@ -1,3 +1,12 @@
 changes:
   - section: "Breaking Changes"
-    description: "Normalized affected Fabric Docs and OneLake tool results to use consistent object-root payloads."
+    description: |
+      Normalized result payloads for the following tools:
+      - `docs best-practices` now returns the resulting best practices in a `{ bestPractices }` object.
+      - `docs item-definitions` now returns the resulting definition string in a `{ definition }` object.
+      - `docs platform-api-spec` and `docs workload-api-spec` now return the produced public API in a `{ publicApi }` object.
+      - `onelake create or update data access role` and `onelake get data access role` now return the produced roles in a `{ roles }` object.
+      - `onelake list data access roles` now returns `{ roles }` instead of `{ value }`.
+      - `onelake get settings` now returns the produced settings in a `{ settings }` object.
+      - `onelake create shortcut` and `onelake get shortcut` now return the produced shortcut in a `{ shortcut }` object.
+      - `onelake list shortcuts` now returns `{ shortcuts }` instead of `{ value }`.
