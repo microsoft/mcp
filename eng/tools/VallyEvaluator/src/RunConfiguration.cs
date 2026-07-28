@@ -22,7 +22,7 @@ public class RunConfiguration
     public string PromptFilePath { get; set; } = string.Empty;
 
     /// <summary>
-    /// Path to working directory where eval files and workspace will be created. If not set, will default to "${repoRoot}/.work/vally"
+    /// Path to working directory where eval files and workspace will be created. If not set, will default to "${repoRoot}/.work"
     /// </summary>
     [ConfigurationKeyName("workingDirectory")]
     public string WorkingDirectory { get; set; } = string.Empty;
