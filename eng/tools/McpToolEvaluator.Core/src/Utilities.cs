@@ -1,4 +1,7 @@
-﻿namespace McpToolEvaluator.Core;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace McpToolEvaluator.Core;
 
 public static class Utilities
 {

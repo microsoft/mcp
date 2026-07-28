@@ -1,4 +1,7 @@
-﻿using McpToolEvaluator.Core.Models;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using McpToolEvaluator.Core.Models;
 using VallyEvaluator.Models;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;

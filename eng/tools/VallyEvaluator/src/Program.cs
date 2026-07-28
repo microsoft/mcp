@@ -1,4 +1,7 @@
-﻿using McpToolEvaluator.Core;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using McpToolEvaluator.Core;
 using Microsoft.Extensions.Configuration;
 
 namespace VallyEvaluator;
@@ -62,7 +65,7 @@ internal class Program
         var promptNamespaces = promptDatastore.GetNamespaces().ToHashSet(StringComparer.InvariantCultureIgnoreCase);
         var results = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-        foreach (var pathToTest in buildInfo.Data.PathsToTest)
+        foreach(var pathToTest in buildInfo.Data.PathsToTest)
         {
             var split = pathToTest.Path.Split(['/', '\\'], 2);
             if (split.Length != 2)
