@@ -7,7 +7,6 @@ using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.Core.Commands;
 
@@ -40,9 +39,7 @@ public sealed class ItemCreateCommand(
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ItemCreateOptions options, CancellationToken cancellationToken)
     {
-        var workspaceId = !string.IsNullOrWhiteSpace(options.WorkspaceId)
-            ? options.WorkspaceId
-            : options.Workspace!;
+        var workspaceId = !string.IsNullOrWhiteSpace(options.WorkspaceId) ? options.WorkspaceId : options.Workspace!;
 
         try
         {
@@ -58,8 +55,7 @@ public sealed class ItemCreateCommand(
             _logger.LogInformation("Successfully created {ItemType} '{DisplayName}' in workspace {WorkspaceId}",
                 options.ItemType, options.DisplayName, workspaceId);
 
-            var result = new ItemCreateCommandResult(item);
-            context.Response.Results = ResponseResult.Create(result, CoreJsonContext.Default.ItemCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(item), CoreJsonContext.Default.ItemCreateCommandResult);
         }
         catch (Exception ex)
         {

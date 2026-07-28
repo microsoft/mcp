@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
+using Azure.Mcp.Tools.ConfidentialLedger.Models;
 using Azure.Mcp.Tools.ConfidentialLedger.Options;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
 
@@ -24,40 +22,18 @@ namespace Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
     Secret = false,
     LocalRequired = false)]
 public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, ILogger<LedgerEntryGetCommand> logger)
-    : BaseConfidentialLedgerCommand<GetEntryOptions>
+    : AuthenticatedCommand<GetEntryOptions, LedgerEntryGetResult>
 {
     private readonly IConfidentialLedgerService _service = service;
     private readonly ILogger<LedgerEntryGetCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, GetEntryOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(ConfidentialLedgerOptionDefinitions.TransactionId.AsRequired());
-        command.Options.Add(ConfidentialLedgerOptionDefinitions.CollectionId);
-    }
-
-    protected override GetEntryOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.TransactionId = parseResult.GetValueOrDefault<string>(ConfidentialLedgerOptionDefinitions.TransactionId.Name);
-        options.CollectionId = parseResult.GetValueOrDefault<string?>(ConfidentialLedgerOptionDefinitions.CollectionId.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var result = await _service.GetLedgerEntryAsync(
-                options.LedgerName!,
-                options.TransactionId!,
+                options.Ledger,
+                options.TransactionId,
                 options.CollectionId,
                 cancellationToken).ConfigureAwait(false);
 
@@ -67,7 +43,7 @@ public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, IL
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving ledger entry. Ledger: {Ledger} Transaction: {TransactionId}", options.LedgerName, options.TransactionId);
+            _logger.LogError(ex, "Error retrieving ledger entry. Ledger: {Ledger} Transaction: {TransactionId}", options.Ledger, options.TransactionId);
             HandleException(context, ex);
         }
 

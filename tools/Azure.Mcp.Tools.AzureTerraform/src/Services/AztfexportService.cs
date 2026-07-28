@@ -210,14 +210,14 @@ public sealed class AztfexportService : IAztfexportService
         VerifyCommand = "aztfexport --version",
         InstallationMethods =
         [
-            new() { Platform = "windows", Method = "winget", Command = "winget install aztfexport", ManagesPath = true },
-            new() { Platform = "macos", Method = "brew", Command = "brew install aztfexport", ManagesPath = true },
-            new() { Platform = "linux", Method = "brew", Command = "brew install aztfexport", ManagesPath = true },
-            new() { Platform = "linux", Method = "apt", Command = "curl -sSL https://packages.microsoft.com/keys/microsoft.asc > /etc/apt/trusted.gpg.d/microsoft.asc && apt-add-repository https://packages.microsoft.com/ubuntu/22.04/prod && apt-get update && apt-get install -y aztfexport", ManagesPath = true },
-            new() { Platform = "linux", Method = "dnf", Command = "rpm --import https://packages.microsoft.com/keys/microsoft.asc && dnf install -y https://packages.microsoft.com/config/rhel/9/packages-microsoft-prod.rpm && dnf install -y aztfexport", ManagesPath = true },
-            new() { Platform = "windows", Method = "manual", Command = "Download the zip for your architecture from https://github.com/Azure/aztfexport/releases, extract it, and add the folder containing aztfexport.exe to your system PATH.", ManagesPath = false },
-            new() { Platform = "linux", Method = "manual", Command = "Download the zip for your architecture from https://github.com/Azure/aztfexport/releases, extract it, and move the aztfexport binary to a directory in your PATH (e.g., /usr/local/bin).", ManagesPath = false },
-            new() { Platform = "macos", Method = "manual", Command = "Download the zip for your architecture from https://github.com/Azure/aztfexport/releases, extract it, and move the aztfexport binary to /usr/local/bin/.", ManagesPath = false }
+            new(Platform: "windows", Method: "winget", Command: "winget install aztfexport", ManagesPath: true),
+            new(Platform: "macos", Method: "brew", Command: "brew install aztfexport", ManagesPath: true),
+            new(Platform: "linux", Method: "brew", Command: "brew install aztfexport", ManagesPath: true),
+            new(Platform: "linux", Method: "apt", Command: "curl -sSL https://packages.microsoft.com/keys/microsoft.asc > /etc/apt/trusted.gpg.d/microsoft.asc && apt-add-repository https://packages.microsoft.com/ubuntu/22.04/prod && apt-get update && apt-get install -y aztfexport", ManagesPath: true),
+            new(Platform: "linux", Method: "dnf", Command: "rpm --import https://packages.microsoft.com/keys/microsoft.asc && dnf install -y https://packages.microsoft.com/config/rhel/9/packages-microsoft-prod.rpm && dnf install -y aztfexport", ManagesPath: true),
+            new(Platform: "windows", Method: "manual", Command: "Download the zip for your architecture from https://github.com/Azure/aztfexport/releases, extract it, and add the folder containing aztfexport.exe to your system PATH.", ManagesPath: false),
+            new(Platform: "linux", Method: "manual", Command: "Download the zip for your architecture from https://github.com/Azure/aztfexport/releases, extract it, and move the aztfexport binary to a directory in your PATH (e.g., /usr/local/bin).", ManagesPath: false),
+            new(Platform: "macos", Method: "manual", Command: "Download the zip for your architecture from https://github.com/Azure/aztfexport/releases, extract it, and move the aztfexport binary to /usr/local/bin/.", ManagesPath: false)
         ],
         AdditionalNotes =
         [

@@ -3,18 +3,18 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Cosmos.Commands;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Cosmos.Tests;
+namespace Azure.Mcp.Tools.Cosmos.Tests.Item;
 
-public class ItemQueryCommandTests : CommandUnitTestsBase<ItemQueryCommand, ICosmosService>
+public class ItemQueryCommandTests : SubscriptionCommandUnitTestsBase<ItemQueryCommand, ICosmosService>
 {
     [Fact]
     public async Task ExecuteAsync_ReturnsItems_WhenQueryIsProvided()

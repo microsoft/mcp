@@ -159,6 +159,62 @@
                   "$ref": "../common/job_scheduling.json#/definitions/BaseCreateScheduleRequest"
               }
           ]
+      },
+      "UpdateDataPipelineExecuteScheduleRequest": {
+          "description": "Update data pipeline execute schedule request payload.",
+          "type": "object",
+          "allOf": [
+              {
+                  "$ref": "../common/job_scheduling.json#/definitions/BaseUpdateScheduleRequest"
+              }
+          ]
+      },
+      "DataPipelineExecuteSchedules": {
+          "description": "A list of data pipeline execute schedules.",
+          "required": ["value"],
+          "type": "object",
+          "allOf": [
+              {
+                  "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+              }
+          ],
+          "properties": {
+              "value": {
+                  "description": "A list of data pipeline execute schedules.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/DataPipelineExecuteSchedule"
+                  }
+              }
+          }
+      },
+      "DataPipelineExecuteJobInstance": {
+          "description": "A data pipeline execute job instance.",
+          "type": "object",
+          "allOf": [
+              {
+                  "$ref": "../platform/definitions/platform.json#/definitions/ItemJobInstance"
+              }
+          ]
+      },
+      "DataPipelineExecuteJobInstances": {
+          "description": "A list of data pipeline execute job instances.",
+          "required": ["value"],
+          "type": "object",
+          "allOf": [
+              {
+                  "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+              }
+          ],
+          "properties": {
+              "value": {
+                  "description": "A list of data pipeline execute job instances.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/DataPipelineExecuteJobInstance"
+                  }
+              }
+          }
       }
   }
 }

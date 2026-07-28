@@ -298,8 +298,7 @@
     "Generate the azure architecture diagram for this application",
     "Help me design an Azure cloud service that will serve as an ATM for users",
     "How can I design a cloud service in Azure that will store and present videos for users?",
-    "I want to design a cloud app for ordering groceries",
-    "Please help me design an architecture for a large-scale file upload, storage, and retrieval service"
+    "I want to design a cloud app for ordering groceries"
   ],
   "get_azure_load_testing_details": [
     "Get all the load test runs for the test with id <test-id> in the load test resource <test-resource> in resource group <resource-group>",

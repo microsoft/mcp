@@ -3,34 +3,20 @@
 
 namespace Azure.Mcp.Tools.ManagedLustre.Models;
 
-public sealed class ManagedLustreSkuInfo
-{
-    public ManagedLustreSkuInfo(
-        string name,
-        string location,
-        bool supportsZones,
+public sealed class ManagedLustreSkuInfo(
+    string name,
+    string location,
+    bool supportsZones,
     List<ManagedLustreSkuCapability> capabilities)
-    {
-        Name = name;
-        Location = location;
-        SupportsZones = supportsZones;
-        Capabilities = capabilities ?? [];
-    }
-
-    public string Name { get; }
-    public string Location { get; }
-    public bool SupportsZones { get; }
-    public List<ManagedLustreSkuCapability> Capabilities { get; }
+{
+    public string Name { get; } = name;
+    public string Location { get; } = location;
+    public bool SupportsZones { get; } = supportsZones;
+    public List<ManagedLustreSkuCapability> Capabilities { get; } = capabilities ?? [];
 }
 
-public sealed class ManagedLustreSkuCapability
+public sealed class ManagedLustreSkuCapability(string name, string value)
 {
-    public ManagedLustreSkuCapability(string name, string value)
-    {
-        Name = name;
-        Value = value;
-    }
-
-    public string Name { get; }
-    public string Value { get; }
+    public string Name { get; } = name;
+    public string Value { get; } = value;
 }

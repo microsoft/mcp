@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Mcp.Tools.Cosmos.Models;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
@@ -11,6 +12,7 @@ public interface ICosmosService : IAsyncDisposable
 {
     Task<List<string>> GetCosmosAccounts(
         string subscription,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
@@ -20,6 +22,7 @@ public interface ICosmosService : IAsyncDisposable
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
+        string? resourceGroup = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
@@ -29,6 +32,7 @@ public interface ICosmosService : IAsyncDisposable
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
+        string? resourceGroup = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 

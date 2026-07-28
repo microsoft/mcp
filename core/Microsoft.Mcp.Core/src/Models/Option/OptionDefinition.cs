@@ -33,18 +33,4 @@ public class OptionDefinition<T>(string name, string description, string? value 
     [JsonPropertyName("hidden")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Hidden { get; set; } = hidden;
-
-    public Option<T> ToOption()
-    {
-        var option = new Option<T>($"--{Name}", Description)
-        {
-            Required = Required
-        };
-        return option;
-    }
-
-    public JsonPropertyNameAttribute ToJsonAttribute()
-    {
-        return new JsonPropertyNameAttribute(Name);
-    }
 }

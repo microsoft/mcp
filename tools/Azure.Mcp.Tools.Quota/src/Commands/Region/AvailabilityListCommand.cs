@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Quota.Models;
-using Azure.Mcp.Tools.Quota.Options;
 using Azure.Mcp.Tools.Quota.Options.Region;
 using Azure.Mcp.Tools.Quota.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Region;
@@ -24,47 +23,23 @@ namespace Azure.Mcp.Tools.Quota.Commands.Region;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> logger, IQuotaService quotaService) : SubscriptionCommand<AvailabilityListOptions>()
+public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> logger, IQuotaService quotaService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<AvailabilityListOptions, AvailabilityListCommand.RegionCheckCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<AvailabilityListCommand> _logger = logger;
     private readonly IQuotaService _quotaService = quotaService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(AvailabilityListOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(QuotaOptionDefinitions.RegionCheck.ResourceTypes);
-        command.Options.Add(QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelName);
-        command.Options.Add(QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelVersion);
-        command.Options.Add(QuotaOptionDefinitions.RegionCheck.CognitiveServiceDeploymentSkuName);
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+        if (string.IsNullOrWhiteSpace(options.ResourceTypes) || !options.ResourceTypes.Split(',').Any(rt => !string.IsNullOrWhiteSpace(rt)))
         {
-            var resourceTypes = result.GetValueOrDefault<string>(QuotaOptionDefinitions.RegionCheck.ResourceTypes.Name);
-            if (string.IsNullOrWhiteSpace(resourceTypes) || !resourceTypes.Split(',').Any(rt => !string.IsNullOrWhiteSpace(rt)))
-            {
-                result.AddError("Resource types cannot be empty.");
-            }
-        });
-    }
-
-    protected override AvailabilityListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceTypes = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.RegionCheck.ResourceTypes.Name) ?? string.Empty;
-        options.CognitiveServiceModelName = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelName.Name);
-        options.CognitiveServiceModelVersion = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelVersion.Name);
-        options.CognitiveServiceDeploymentSkuName = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.RegionCheck.CognitiveServiceDeploymentSkuName.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("Resource types cannot be empty.");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AvailabilityListOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             context.Activity?.AddTag(QuotaTelemetryTags.ResourceTypes, options.ResourceTypes);
@@ -95,5 +70,5 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
         return context.Response;
     }
 
-    public record RegionCheckCommandResult(List<string> AvailableRegions);
+    public sealed record RegionCheckCommandResult(List<string> AvailableRegions);
 }

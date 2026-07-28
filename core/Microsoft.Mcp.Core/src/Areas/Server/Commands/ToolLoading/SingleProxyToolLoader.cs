@@ -3,6 +3,7 @@
 
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -13,6 +14,7 @@ using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -39,7 +41,7 @@ public sealed class SingleProxyToolLoader(
         {
           "type": "object",
           "properties": {
-            "tool": {
+            "command": {
               "type": "string",
               "description": "The name of the tool to call."
             },
@@ -416,7 +418,9 @@ public sealed class SingleProxyToolLoader(
 
     private static bool SupportsSampling(McpServer server)
     {
+#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
         return server?.ClientCapabilities?.Sampling != null;
+#pragma warning restore MCP9005
     }
 
     private static async Task NotifyProgressAsync(RequestContext<CallToolRequestParams> request, string message, CancellationToken cancellationToken)
@@ -437,6 +441,7 @@ public sealed class SingleProxyToolLoader(
 
     private async Task<string?> GetToolNameFromIntentAsync(RequestContext<CallToolRequestParams> request, string intent, List<Tool> tools, CancellationToken cancellationToken)
     {
+#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
         await NotifyProgressAsync(request, $"Learning about {_displayName} capabilities...", cancellationToken);
         var toolsJson = JsonSerializer.Serialize(tools.Select(t => new ToolCommandInfo(t, false)), ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
@@ -449,8 +454,6 @@ public sealed class SingleProxyToolLoader(
                     Role = Role.Assistant,
                     Content = [new TextContentBlock{
                         Text = $"""
-                            The following is a list of available tools for the {_displayName}.
-
                             Your task:
                             - Select a single tool that best matches the user's intent and return the name of the tool.
                             - Only return tool names that are defined in the provided list.
@@ -482,6 +485,7 @@ public sealed class SingleProxyToolLoader(
         }
 
         return null;
+#pragma warning restore MCP9005
     }
 
     private async Task<(string? commandName, Dictionary<string, object?> parameters)> GetCommandAndParametersFromIntentAsync(
@@ -491,6 +495,7 @@ public sealed class SingleProxyToolLoader(
         List<Tool> tools,
         CancellationToken cancellationToken)
     {
+#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
         await NotifyProgressAsync(request, $"Learning about {tool} capabilities...", cancellationToken);
 
         JsonElement toolParams = GetParametersJsonElement(request);
@@ -506,8 +511,6 @@ public sealed class SingleProxyToolLoader(
                     Role = Role.Assistant,
                     Content = [new TextContentBlock{
                         Text = $"""
-                            This is a list of available commands for the {tool} server.
-
                             Your task:
                             - Select the single command that best matches the user's intent.
                             - Return a valid JSON object that matches the provided result schema.
@@ -543,7 +546,7 @@ public sealed class SingleProxyToolLoader(
             {
                 using var jsonDoc = JsonDocument.Parse(toolCallJson);
                 var root = jsonDoc.RootElement;
-                if (root.TryGetProperty("tool", out var toolProp) && toolProp.ValueKind == JsonValueKind.String)
+                if (root.TryGetProperty("command", out var toolProp) && toolProp.ValueKind == JsonValueKind.String)
                 {
                     commandName = toolProp.GetString();
                 }
@@ -563,6 +566,7 @@ public sealed class SingleProxyToolLoader(
         }
 
         return (null, new Dictionary<string, object?>());
+#pragma warning restore MCP9005
     }
 
     /// <summary>

@@ -13,11 +13,11 @@ public class CommandGroupDiscoveryStrategyTests
 {
     private static CommandGroupDiscoveryStrategy CreateStrategy(
         ICommandFactory? commandFactory = null,
-        ServiceStartOptions? options = null,
+        ServerStartOptions? options = null,
         string? entryPoint = null)
     {
         var factory = commandFactory ?? CommandFactoryHelpers.CreateCommandFactory();
-        var startOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
+        var startOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServerStartOptions());
         var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
         var strategy = new CommandGroupDiscoveryStrategy(factory, startOptions, logger);
         if (entryPoint != null)
@@ -31,7 +31,7 @@ public class CommandGroupDiscoveryStrategyTests
     public void Constructor_WithNullCommandFactory_DoesNotThrow()
     {
         // Arrange
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
         var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
 
         // Act & Assert
@@ -58,7 +58,7 @@ public class CommandGroupDiscoveryStrategyTests
     {
         // Arrange
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
         var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
 
         // Act
@@ -142,7 +142,7 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithReadOnlyFalse_CreatesNonReadOnlyProviders()
     {
         // Arrange
-        var options = new ServiceStartOptions { ReadOnly = false };
+        var options = new ServerStartOptions { ReadOnly = false };
         var strategy = CreateStrategy(options: options);
 
         // Act
@@ -157,7 +157,7 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithReadOnlyTrue_CreatesReadOnlyProviders()
     {
         // Arrange
-        var options = new ServiceStartOptions { ReadOnly = true };
+        var options = new ServerStartOptions { ReadOnly = true };
         var strategy = CreateStrategy(options: options);
 
         // Act
@@ -172,7 +172,7 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithNullReadOnlyOption_DefaultsToFalse()
     {
         // Arrange
-        var options = new ServiceStartOptions { ReadOnly = null };
+        var options = new ServerStartOptions { ReadOnly = null };
         var strategy = CreateStrategy(options: options);
 
         // Act
@@ -385,7 +385,7 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_RespectsServiceStartOptionsValues()
     {
         // Arrange
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             ReadOnly = true,
         };
@@ -446,7 +446,7 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task ShouldDiscoverServers()
     {
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
         var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
         var strategy = new CommandGroupDiscoveryStrategy(commandFactory, options, logger);
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -457,7 +457,7 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task ShouldDiscoverServers_ExcludesIgnoredGroupsAndSetsProperties()
     {
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { ReadOnly = true });
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { ReadOnly = true });
         var azmcpEntryPoint = McpTestUtilities.GetAzMcpExecutablePath();
         var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
         var strategy = new CommandGroupDiscoveryStrategy(commandFactory, options, logger)
@@ -512,7 +512,7 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithNamespaceFilter_ReturnsOnlySpecifiedNamespaces()
     {
         // Arrange
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Namespace = ["storage", "keyvault"]
         };
@@ -537,7 +537,7 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithEmptyNamespaceFilter_ReturnsAllNamespaces()
     {
         // Arrange
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Namespace = []
         };
@@ -564,7 +564,7 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithNullNamespaceFilter_ReturnsAllNamespaces()
     {
         // Arrange
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Namespace = null
         };

@@ -6,6 +6,7 @@ using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
 using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
@@ -14,6 +15,47 @@ namespace Azure.Mcp.Tools.Aks.Tests;
 public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    // ARM SDK calls for GetNodePools include the cluster name in the URL path.
+    // In playback mode Settings.ResourceBaseName is "Sanitized", so the default
+    // GeneralRegexSanitizer for ResourceBaseName is a no-op. A pattern-based
+    // UriRegexSanitizer is needed, just like the resource-group one in the base class.
+    public override List<UriRegexSanitizer> UriRegexSanitizers { get; } =
+    [
+        new(new UriRegexSanitizerBody
+        {
+            Regex = "managedClusters/([^?/]+)",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        })
+    ];
+
+    // ARG query bodies contain resource group and cluster names in KQL syntax like:
+    //   resourceGroup =~ 'rg-name' and name =~ 'cluster-name'
+    // The default GeneralRegexSanitizer for ResourceBaseName is a no-op in playback
+    // (Settings.ResourceBaseName is "Sanitized"), so explicit body sanitizers are needed.
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers { get; } =
+    [
+        new(new BodyRegexSanitizerBody
+        {
+            Regex = "resourceGroup =~ '([^']+)'",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        }),
+        new(new BodyRegexSanitizerBody
+        {
+            Regex = "name =~ '([^']+)'",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        }),
+        // Also handle the path-format that appears in ARG response $id fields
+        new(new BodyRegexSanitizerBody
+        {
+            Regex = "resource[Gg]roups/([^?/\"]+)",
+            Value = "Sanitized",
+            GroupForReplace = "1"
+        }),
+    ];
+
     [Fact]
     public async Task Should_list_aks_clusters_by_subscription()
     {
@@ -122,8 +164,10 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
 
         // Get the first cluster's details
         var firstCluster = clusters.EnumerateArray().First();
-        var clusterName = RegisterOrRetrieveVariable("firstClusterName", firstCluster.GetProperty("name").GetString()!);
-        var resourceGroupName = RegisterOrRetrieveVariable("firstResourceGroupName", firstCluster.GetProperty("resourceGroupName").GetString()!);
+        // Use response values directly: in playback these are "Sanitized" (matching the recording);
+        // in record mode they are the real names which get sanitized when stored.
+        var clusterName = firstCluster.GetProperty("name").GetString()!;
+        var resourceGroupName = firstCluster.GetProperty("resourceGroupName").GetString()!;
 
         // Now test the get command
         var getResult = await CallToolAsync(
@@ -145,7 +189,7 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
 
         // Verify the cluster details
         var nameProperty = cluster.AssertProperty("name");
-        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : clusterName, nameProperty.GetString());
+        Assert.Equal(clusterName, nameProperty.GetString());
 
         var rgProperty = cluster.AssertProperty("resourceGroupName");
         Assert.Equal(resourceGroupName, rgProperty.GetString());
@@ -178,21 +222,41 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
     [Fact]
     public async Task Should_handle_nonexistent_cluster_gracefully()
     {
+        // First, get a list of clusters to find a resource group to test against
+        var listResult = await CallToolAsync(
+            "aks_cluster_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId }
+            });
+
+        var clusters = listResult.AssertProperty("clusters");
+        Assert.True(clusters.GetArrayLength() > 0, "Expected at least one AKS cluster for testing get command");
+
+        // Get the first cluster's resource group
+        var firstCluster = clusters.EnumerateArray().First();
+        // Use the response value directly: in playback this is "Sanitized" (matching the recording);
+        // in record mode it's the real name which gets sanitized when stored.
+        var resourceGroupName = firstCluster.GetProperty("resourceGroupName").GetString()!;
+
+        // Attempt to get a non-existent cluster from that resource group
+        // In playback, the recording stores the cluster name sanitized as "Sanitized", so we must use
+        // "Sanitized" in playback to match. In record/live mode we use a name that doesn't exist in Azure.
+        var nonExistentClusterName = TestMode == TestMode.Playback ? "Sanitized" : "nonexistent-cluster";
         var result = await CallToolAsync(
             "aks_cluster_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", "nonexistent-rg" },
-                { "cluster", "nonexistent-cluster" }
+                { "resource-group", resourceGroupName },
+                { "cluster", nonExistentClusterName }
             });
 
-        // Should return runtime error response with error details
+        // Should return list with zero clusters
         Assert.True(result.HasValue);
-        var errorDetails = result.Value;
-        errorDetails.AssertProperty("message");
-        var typeProperty = errorDetails.AssertProperty("type");
-        Assert.Equal("RequestFailedException", typeProperty.GetString());
+        var results = result.Value;
+        var resultsClusters = results.AssertProperty("clusters");
+        Assert.True(resultsClusters.GetArrayLength() == 0, "Expected no clusters for nonexistent cluster request");
     }
 
     [Fact]
@@ -353,6 +417,7 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
         var errorDetails = result.Value;
         errorDetails.AssertProperty("message");
         var typeProperty = errorDetails.AssertProperty("type");
+
         Assert.Equal("RequestFailedException", typeProperty.GetString());
     }
 

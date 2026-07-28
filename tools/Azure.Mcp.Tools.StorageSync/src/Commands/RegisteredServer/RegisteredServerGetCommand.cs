@@ -2,15 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.StorageSync.Models;
-using Azure.Mcp.Tools.StorageSync.Options;
+using Azure.Mcp.Tools.StorageSync.Options.RegisteredServer;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
 
@@ -25,50 +24,27 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<RegisteredServerGetOptions>
+public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetCommand> logger, IStorageSyncService service, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<RegisteredServerGetOptions, RegisteredServerGetCommand.RegisteredServerGetCommandResult>(subscriptionResolver)
 {
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<RegisteredServerGetCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RegisteredServerGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.RegisteredServer.ServerId.AsOptional());
-    }
-
-    protected override RegisteredServerGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.StorageSyncServiceName = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.Name.Name);
-        options.RegisteredServerId = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.RegisteredServer.ServerId.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             // If server ID is provided, get specific server
-            if (!string.IsNullOrEmpty(options.RegisteredServerId))
+            if (!string.IsNullOrEmpty(options.ServerId))
             {
                 _logger.LogInformation("Getting registered server. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}, ServerId: {ServerId}",
-                    options.Subscription, options.ResourceGroup, options.StorageSyncServiceName, options.RegisteredServerId);
+                    options.Subscription, options.ResourceGroup, options.Name, options.ServerId);
 
                 var server = await _service.GetRegisteredServerAsync(
                     options.Subscription!,
-                    options.ResourceGroup!,
-                    options.StorageSyncServiceName!,
-                    options.RegisteredServerId!,
+                    options.ResourceGroup,
+                    options.Name,
+                    options.ServerId,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -86,12 +62,12 @@ public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetComman
             {
                 // List all registered servers
                 _logger.LogInformation("Listing registered servers. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}",
-                    options.Subscription, options.ResourceGroup, options.StorageSyncServiceName);
+                    options.Subscription, options.ResourceGroup, options.Name);
 
                 var servers = await _service.ListRegisteredServersAsync(
                     options.Subscription!,
-                    options.ResourceGroup!,
-                    options.StorageSyncServiceName!,
+                    options.ResourceGroup,
+                    options.Name,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -108,6 +84,5 @@ public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetComman
         return context.Response;
     }
 
-    [JsonSerializable(typeof(RegisteredServerGetCommandResult))]
-    internal record RegisteredServerGetCommandResult(List<RegisteredServerDataSchema> Results);
+    public sealed record RegisteredServerGetCommandResult(List<RegisteredServerDataSchema> Results);
 }

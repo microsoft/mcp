@@ -1,0 +1,41 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "dataAgentId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "70f9282b-1b64-4f08-9e4e-2ab9f0e20e01",
+                        "instructions": "Use this for document retrieval queries.",
+                        "type": "FabricItem",
+                        "displayName": "SalesWarehouse",
+                        "description": "Sales data warehouse with order and customer information.",
+                        "itemReference": {
+                            "referenceType": "ById",
+                            "itemId": "01234372-7fd9-44d3-bd75-a2718645a82a",
+                            "workspaceId": "abdd0d48-2eed-4066-adc4-321a9f6a628e"
+                        },
+                        "fabricItemType": "Warehouse"
+                    },
+                    {
+                        "id": "c1c6d12f-8d2a-4d5b-9ca1-8bb7b42d4a30",
+                        "instructions": "Use this for customer engagement analysis.",
+                        "type": "LakehouseTables",
+                        "displayName": "CustomerLakehouse",
+                        "description": "Customer interaction history and support activity.",
+                        "lakehouseReference": {
+                            "referenceType": "ById",
+                            "itemId": "b5e7c3a1-2d4f-4890-9a1b-3c5d7e9f0a2b",
+                            "workspaceId": "e1f2a3b4-5c6d-7e8f-9a0b-1c2d3e4f5a6b"
+                        }
+                    }
+                ],
+                "continuationToken": null,
+                "continuationUri": null
+            }
+        }
+    }
+}

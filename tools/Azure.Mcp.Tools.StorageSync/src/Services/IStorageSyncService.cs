@@ -56,7 +56,7 @@ public interface IStorageSyncService
         string resourceGroup,
         string storageSyncServiceName,
         string? incomingTrafficPolicy = null,
-        Dictionary<string, object>? tags = null,
+        Dictionary<string, string>? tags = null,
         string? identityType = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,

@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests.WebTests;
 
-public class WebTestsCreateOrUpdateCommandTests : CommandUnitTestsBase<WebTestsCreateOrUpdateCommand, IMonitorWebTestService>
+public class WebTestsCreateOrUpdateCommandTests : SubscriptionCommandUnitTestsBase<WebTestsCreateOrUpdateCommand, IMonitorWebTestService>
 {
     #region Constructor and Properties Tests
 

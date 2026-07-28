@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Services;
@@ -26,34 +28,22 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger, IAppServiceService appServiceService)
-    : BaseAppServiceCommand<BaseAppServiceOptions>(resourceGroupRequired: true, appRequired: true)
+public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger, IAppServiceService appServiceService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<BaseAppServiceOptions, DetectorListCommand.DetectorListResult>(subscriptionResolver)
 {
     private readonly ILogger<DetectorListCommand> _logger = logger;
     private readonly IAppServiceService _appServiceService = appServiceService;
 
-    protected override void RegisterOptions(Command command) => base.RegisterOptions(command);
-
-    protected override BaseAppServiceOptions BindOptions(ParseResult parseResult) => base.BindOptions(parseResult);
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseAppServiceOptions options, CancellationToken cancellationToken)
     {
-        // Validate first, then bind
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
             var detectors = await _appServiceService.ListDetectorsAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.AppName!,
+                options.ResourceGroup,
+                options.App,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -62,13 +52,13 @@ public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger, IAp
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get diagnostic detectors for Web App '{AppName}' in subscription {Subscription} and resource group {ResourceGroup}",
-                options.AppName, options.Subscription, options.ResourceGroup);
+            _logger.LogError(ex, "Failed to get diagnostic detectors for Web App '{App}' in subscription {Subscription} and resource group {ResourceGroup}",
+                options.App, options.Subscription, options.ResourceGroup);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    public record DetectorListResult(List<DetectorDetails> Detectors);
+    public sealed record DetectorListResult(List<DetectorDetails> Detectors);
 }

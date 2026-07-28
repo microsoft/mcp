@@ -2,20 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.CommonPrompts;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.SreAgent.Tests.CommonPrompts;
 
-public class CommonPromptsDeleteCommandTests : CommandUnitTestsBase<CommonPromptsDeleteCommand, ISreAgentService>
+public class CommonPromptsDeleteCommandTests : SubscriptionCommandUnitTestsBase<CommonPromptsDeleteCommand, ISreAgentService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -42,7 +41,6 @@ public class CommonPromptsDeleteCommandTests : CommandUnitTestsBase<CommonPrompt
     [InlineData("--subscription sub --agent myagent", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
             Service.GetAgentAsync(

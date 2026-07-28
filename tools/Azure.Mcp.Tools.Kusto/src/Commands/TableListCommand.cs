@@ -25,7 +25,7 @@ public sealed class TableListCommand(
     ILogger<TableListCommand> logger,
     IKustoService kustoService,
     ISubscriptionResolver subscriptionResolver)
-    : BaseDatabaseCommand<TableListOptions, TableListCommand.TableListCommandResult>(subscriptionResolver)
+    : BaseClusterCommand<TableListOptions, TableListCommand.TableListCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TableListOptions options, CancellationToken cancellationToken)
     {
@@ -39,7 +39,6 @@ public sealed class TableListCommand(
                     options.ClusterUri!,
                     options.Database,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }
@@ -47,10 +46,9 @@ public sealed class TableListCommand(
             {
                 tableNames = await kustoService.ListTablesAsync(
                     options.Subscription!,
-                    options.ClusterName!,
+                    options.Cluster!,
                     options.Database,
                     options.Tenant,
-                    options.AuthMethod,
                     options.RetryPolicy,
                     cancellationToken);
             }
@@ -59,7 +57,7 @@ public sealed class TableListCommand(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An exception occurred listing tables. Cluster: {Cluster}, Database: {Database}.", options.ClusterUri ?? options.ClusterName, options.Database);
+            logger.LogError(ex, "An exception occurred listing tables. Cluster: {Cluster}, Database: {Database}.", options.ClusterUri ?? options.Cluster, options.Database);
             HandleException(context, ex);
         }
         return context.Response;

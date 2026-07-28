@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Models;
+namespace Azure.Mcp.Tools.Monitor.Models.Instrumentation;
 
 /// <summary>
 /// Constants for Azure Monitor onboarding specifications

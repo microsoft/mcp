@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Vault;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 
@@ -32,69 +30,34 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<VaultCreateOptions>()
+public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : BaseAzureBackupCommand<VaultCreateOptions, VaultCreateCommand.VaultCreateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<VaultCreateCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(VaultCreateOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.Location.AsRequired());
-        command.Options.Add(AzureBackupOptionDefinitions.Sku);
-        command.Options.Add(AzureBackupOptionDefinitions.StorageType);
-        command.Validators.Add(commandResult =>
-        {
-            if (!commandResult.HasOptionResult(AzureBackupOptionDefinitions.VaultType.Name))
-            {
-                commandResult.AddError("--vault-type is required for vault creation. Specify 'rsv' or 'dpp'.");
-            }
-            else
-            {
-                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.VaultType.Name);
-                if (!string.IsNullOrEmpty(value) &&
-                    !value.Equals("rsv", StringComparison.OrdinalIgnoreCase) &&
-                    !value.Equals("dpp", StringComparison.OrdinalIgnoreCase))
-                {
-                    commandResult.AddError("--vault-type must be 'rsv' (Recovery Services vault) or 'dpp' (Backup vault).");
-                }
-            }
-        });
+        base.ValidateOptions(options, validationResult);
 
-        command.Validators.Add(commandResult =>
+        if (string.IsNullOrEmpty(options.VaultType) ||
+            (!options.VaultType.Equals("rsv", StringComparison.OrdinalIgnoreCase) &&
+            !options.VaultType.Equals("dpp", StringComparison.OrdinalIgnoreCase)))
         {
-            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.StorageType.Name))
-            {
-                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.StorageType.Name);
-                if (!string.IsNullOrEmpty(value) &&
-                    !value.Equals("GeoRedundant", StringComparison.OrdinalIgnoreCase) &&
-                    !value.Equals("LocallyRedundant", StringComparison.OrdinalIgnoreCase) &&
-                    !value.Equals("ZoneRedundant", StringComparison.OrdinalIgnoreCase))
-                {
-                    commandResult.AddError("--storage-type must be 'GeoRedundant', 'LocallyRedundant', or 'ZoneRedundant'.");
-                }
-            }
-        });
-    }
-
-    protected override VaultCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Location = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Location.Name);
-        options.Sku = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Sku.Name);
-        options.StorageType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.StorageType.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("--vault-type must be 'rsv' (Recovery Services vault) or 'dpp' (Backup vault).");
         }
 
-        var options = BindOptions(parseResult);
+        if (!string.IsNullOrEmpty(options.StorageType) &&
+            !options.StorageType.Equals("GeoRedundant", StringComparison.OrdinalIgnoreCase) &&
+            !options.StorageType.Equals("LocallyRedundant", StringComparison.OrdinalIgnoreCase) &&
+            !options.StorageType.Equals("ZoneRedundant", StringComparison.OrdinalIgnoreCase))
+        {
+            validationResult.Errors.Add("--storage-type must be 'GeoRedundant', 'LocallyRedundant', or 'ZoneRedundant'.");
+        }
+    }
 
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VaultCreateOptions options, CancellationToken cancellationToken)
+    {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
 
@@ -137,5 +100,5 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VaultCreateCommandResult(VaultCreateResult Vault);
+    public sealed record VaultCreateCommandResult(VaultCreateResult Vault);
 }

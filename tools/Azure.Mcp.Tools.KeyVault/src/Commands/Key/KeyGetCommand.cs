@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Tools.KeyVault.Options;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.KeyVault.Models;
 using Azure.Mcp.Tools.KeyVault.Options.Key;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Key;
 
@@ -24,84 +23,52 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Key;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<KeyGetOptions>
+public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultService keyVaultService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<KeyGetOptions, KeyGetCommand.KeyGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<KeyGetCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, KeyGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(KeyVaultOptionDefinitions.VaultName);
-        command.Options.Add(KeyVaultOptionDefinitions.KeyName.AsOptional());
-        command.Options.Add(KeyVaultOptionDefinitions.IncludeManagedKeys);
-    }
-
-    protected override KeyGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.VaultName.Name);
-        options.KeyName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.KeyName.Name);
-        options.IncludeManagedKeys = parseResult.GetValueOrDefault<bool>(KeyVaultOptionDefinitions.IncludeManagedKeys.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            if (string.IsNullOrEmpty(options.KeyName))
+            if (string.IsNullOrEmpty(options.Key))
             {
                 // List all keys
                 var keys = await _keyVaultService.ListKeys(
-                    options.VaultName!,
-                    options.IncludeManagedKeys,
+                    options.Vault,
+                    options.IncludeManaged,
                     options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(Keys: keys ?? [], Key: null), KeyVaultJsonContext.Default.KeyGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(keys ?? [], null), KeyVaultJsonContext.Default.KeyGetCommandResult);
             }
             else
             {
                 // Get specific key
                 var key = await _keyVaultService.GetKey(
-                    options.VaultName!,
-                    options.KeyName,
+                    options.Vault,
+                    options.Key,
                     options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
 
-                var keyDetails = new KeyDetails(
-                    key.Name,
-                    key.KeyType.ToString(),
-                    key.Properties.Enabled,
-                    key.Properties.NotBefore,
-                    key.Properties.ExpiresOn,
-                    key.Properties.CreatedOn,
-                    key.Properties.UpdatedOn);
-
-                context.Response.Results = ResponseResult.Create(new(Keys: null, Key: keyDetails), KeyVaultJsonContext.Default.KeyGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(null, KeyDetails.FromKey(key)), KeyVaultJsonContext.Default.KeyGetCommandResult);
             }
         }
         catch (Exception ex)
         {
-            if (string.IsNullOrEmpty(options.KeyName))
+            if (string.IsNullOrEmpty(options.Key))
             {
-                _logger.LogError(ex, "Error listing keys from vault {VaultName}", options.VaultName);
+                _logger.LogError(ex, "Error listing keys from vault {VaultName}", options.Vault);
             }
             else
             {
-                _logger.LogError(ex, "Error getting key {KeyName} from vault {VaultName}", options.KeyName, options.VaultName);
+                _logger.LogError(ex, "Error getting key {KeyName} from vault {VaultName}", options.Key, options.Vault);
             }
             HandleException(context, ex);
         }
@@ -109,6 +76,5 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultServic
         return context.Response;
     }
 
-    internal record KeyDetails(string Name, string KeyType, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn);
-    internal record KeyGetCommandResult(List<string>? Keys, KeyDetails? Key);
+    public sealed record KeyGetCommandResult(List<string>? Keys, KeyDetails? Key);
 }

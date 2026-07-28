@@ -6,12 +6,11 @@
     <InternalsVisibleTo Include="Fabric.Mcp.Tools.DataFactory.Tests" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\core\Fabric.Mcp.Core\src\Fabric.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)core\Fabric.Mcp.Core\src\Fabric.Mcp.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.DataFactory.MCP.Core" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
-    <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 </Project>

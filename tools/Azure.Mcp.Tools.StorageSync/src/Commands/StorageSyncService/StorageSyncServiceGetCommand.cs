@@ -2,15 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.StorageSync.Models;
-using Azure.Mcp.Tools.StorageSync.Options;
+using Azure.Mcp.Tools.StorageSync.Options.StorageSyncService;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
@@ -25,54 +24,36 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceGetOptions>
+public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCommand> logger, IStorageSyncService service, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<StorageSyncServiceGetOptions, StorageSyncServiceGetCommand.StorageSyncServiceGetCommandResult>(subscriptionResolver)
 {
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<StorageSyncServiceGetCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(StorageSyncServiceGetOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsOptional());
-    }
+        base.ValidateOptions(options, validationResult);
 
-    protected override StorageSyncServiceGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.Name.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        if (string.IsNullOrEmpty(options.ResourceGroup) && !string.IsNullOrEmpty(options.Name))
         {
-            return context.Response;
+            validationResult.Errors.Add("Missing Required options: --resource-group is required when --name is specified");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, StorageSyncServiceGetOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             // If name is provided, get specific service
             if (!string.IsNullOrEmpty(options.Name))
             {
-                if (string.IsNullOrEmpty(options.ResourceGroup))
-                {
-                    context.Response.Status = HttpStatusCode.BadRequest;
-                    context.Response.Message = "Resource group is required when getting a specific storage sync service by name";
-                    return context.Response;
-                }
-
                 _logger.LogInformation("Getting storage sync service. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}",
                     options.Subscription, options.ResourceGroup, options.Name);
 
                 var service = await _service.GetStorageSyncServiceAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
-                    options.Name!,
+                    options.Name,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -111,6 +92,5 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
         return context.Response;
     }
 
-    [JsonSerializable(typeof(StorageSyncServiceGetCommandResult))]
-    internal record StorageSyncServiceGetCommandResult(List<StorageSyncServiceDataSchema> Results);
+    public sealed record StorageSyncServiceGetCommandResult(List<StorageSyncServiceDataSchema> Results);
 }

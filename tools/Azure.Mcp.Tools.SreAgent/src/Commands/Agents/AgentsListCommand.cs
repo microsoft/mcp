@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options.Agents;
 using Azure.Mcp.Tools.SreAgent.Services;
@@ -25,21 +27,14 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Agents;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class AgentsListCommand(ILogger<AgentsListCommand> logger, ISreAgentService sreAgentService)
-    : BaseSreAgentCommand<AgentsListOptions>
+public sealed class AgentsListCommand(ILogger<AgentsListCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<AgentsListOptions, AgentsListCommand.AgentsListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<AgentsListCommand> _logger = logger;
     private readonly ISreAgentService _sreAgentService = sreAgentService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AgentsListOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var agents = await _sreAgentService.ListAgentsAsync(
@@ -62,5 +57,5 @@ public sealed class AgentsListCommand(ILogger<AgentsListCommand> logger, ISreAge
         return context.Response;
     }
 
-    internal record AgentsListCommandResult(List<SreAgentResource> Agents);
+    public sealed record AgentsListCommandResult(List<SreAgentResource> Agents);
 }

@@ -42,14 +42,19 @@ Latest values for the source type (Additional source types may be added over tim
 
 | Name | Description |
 |--|--|
-| `Snowflake` | Represents a Snowflake source. |
+| `AzureMySql` | Represents an Azure Database for MySQL source. |
+| `AzurePostgreSql` | Represents an Azure Database for PostgreSQL source. |
 | `AzureSqlDatabase` | Represents an Azure SQL Database source. |
 | `AzureSqlMI` | Represents an Azure SQL Managed Instance source. |
-| `AzurePostgreSql` | Represents an Azure PostgreSQL source. |
 | `CosmosDb` | Represents a Cosmos DB source. |
-| `SqlServer2025` | Represents a SQL Server 2025 source. |
-| `MSSQL` | Represents a Microsoft SQL Server 2016-2022 source. |
 | `GenericMirror` | Represents an open mirroring source. |
+| `GoogleBigQuery` | Represents a Google BigQuery source. |
+| `MSSQL` | Represents a Microsoft SQL Server 2016-2022 source. |
+| `Oracle` | Represents an Oracle source. |
+| `SAP` | Represents an SAP source. |
+| `SharePointList` | Represents a SharePoint List source. |
+| `Snowflake` | Represents a Snowflake source. |
+| `SqlServer2025` | Represents a SQL Server 2025 source. |
 
 ### SourceTypeProperties
 
@@ -57,8 +62,48 @@ Describes the source type properties.
 
 | Name | Type | Required | Description |
 |--|--|--|--|
-| `connection` | Guid | false | The connection identifier for the source database. Not required for `GenericMirror` source type. |
-| `database` | String | false | The name of the source database. Not required for `GenericMirror`, `AzureSqlDatabase`, `AzureSqlMI`, or `AzurePostgreSql` source types. |
+| `connection` | Guid | false | The connection identifier for the source database. Not required for `GenericMirror` or `SAP` source types. |
+| `database` | String | false | The name of the source database. Required only for `Snowflake` and `CosmosDb` source types. |
+| `externalStorages` | [ExternalStorageProperties[]](#externalstorageproperties) | false | The external storage configuration for Snowflake sources, such as Amazon S3. |
+| `subType` | String | false | The SAP subtype for the source. For example, `Datasphere`. |
+| `landingZone` | [LandingZoneProperties](#landingzoneproperties) | false | The landing zone configuration for SAP mirror sources. |
+
+### ExternalStorageProperties
+
+Describes an external storage configuration for a Snowflake mirror source.
+
+| Name | Type | Required | Description |
+|--|--|--|--|
+| `type` | String | true | The external storage type. For example, `AmazonS3`. |
+| `typeProperties` | [ExternalStorageTypeProperties](#externalstoragetypeproperties) | true | Properties for the external storage connection. |
+
+### ExternalStorageTypeProperties
+
+Describes the external storage connection properties.
+
+| Name | Type | Required | Description |
+|--|--|--|--|
+| `connection` | Guid | true | The connection identifier for the external storage. |
+
+### LandingZoneProperties
+
+Describes the landing zone configuration for an SAP mirror source.
+
+| Name | Type | Required | Description |
+|--|--|--|--|
+| `type` | String | true | The landing zone type. For example, `Lakehouse`. |
+| `typeProperties` | [LandingZoneTypeProperties](#landingzonetypeproperties) | true | Properties for the landing zone connection. |
+
+### LandingZoneTypeProperties
+
+Describes the landing zone connection properties.
+
+| Name | Type | Required | Description |
+|--|--|--|--|
+| `connection` | Guid | true | The connection identifier for the landing zone. |
+| `workspaceId` | Guid | true | The Fabric workspace identifier for the landing zone. |
+| `artifactId` | Guid | true | The Fabric item identifier for the landing zone. |
+| `rootFolder` | String | true | The root folder path within the landing zone. |
 
 ### TargetProperties
 
@@ -76,7 +121,9 @@ Describes the properties for the target.
 | Name | Type | Required | Description |
 |--|--|--|--|
 | `defaultSchema` | String | false | The default schema for the target. |
+| `enableDeltaChangeDataFeed` | Boolean | false | Enables the Delta Change Data Feed for the mirrored database when set to `true`. |
 | `format` | String | true | The format for the target (currently only `Delta` is supported). |
+| `retentionInDays` | Integer | false | The number of days to retain mirrored data. Supported values are from 1 through 30; the default value is 7. |
 
 ### MountedTable
 
@@ -113,15 +160,24 @@ To see how to create a JSON file describing a mirrored database item for various
         "source": {
             "type": "Snowflake",
             "typeProperties": {
-                "connection": "a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1",
-                "database": "TESTDB"
+                "connection": "1d6e9b5e-bdf8-453a-a17e-372c293c7b8a",
+                "database": "test",
+                "externalStorages": [
+                    {
+                        "type": "AmazonS3",
+                        "typeProperties": {
+                            "connection": "71bbebff-149c-4832-920c-7e1aabdabb2a"
+                        }
+                    }
+                ]
             }
         },
         "target": {
             "type": "MountedRelationalDatabase",
             "typeProperties": {
                 "defaultSchema": "dbo",
-                "format": "Delta"
+                "format": "Delta",
+                "retentionInDays": 1
             }
         },
         "mountedTables": [
@@ -135,6 +191,37 @@ To see how to create a JSON file describing a mirrored database item for various
             }
         ]
     }
+}
+```
+
+The following example shows the SAP mirror model with `subType` and `landingZone`:
+
+```json
+{
+  "properties": {
+    "source": {
+      "type": "SAP",
+      "typeProperties": {
+        "subType": "Datasphere",
+        "landingZone": {
+          "type": "Lakehouse",
+          "typeProperties": {
+            "connection": "11111111-2222-3333-4444-555555555555",
+            "workspaceId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+            "artifactId": "ffffffff-0000-1111-2222-333333333333",
+            "rootFolder": "Files/test"
+          }
+        }
+      }
+    },
+    "target": {
+      "type": "MountedRelationalDatabase",
+      "typeProperties": {
+        "defaultSchema": "dbo",
+        "format": "Delta"
+      }
+    }
+  }
 }
 ```
 

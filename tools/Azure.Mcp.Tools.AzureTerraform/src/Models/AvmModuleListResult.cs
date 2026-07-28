@@ -3,7 +3,4 @@
 
 namespace Azure.Mcp.Tools.AzureTerraform.Models;
 
-public sealed class AvmModuleListResult
-{
-    public List<AvmModule> Modules { get; set; } = [];
-}
+public sealed record AvmModuleListResult(List<AvmModule> Modules);

@@ -564,6 +564,81 @@
           }
         }
       }
+    },
+    "/workspaces/{workspaceId}/copyJobs/{copyJobId}/resetCopyJob": {
+      "post": {
+        "summary": "Resets the specified CopyJob.",
+        "description": "Resets the specified CopyJob. If `resetAllCopyJobEntities` is true, all entities are reset. Otherwise, only the specified entities are reset.\n\n## Permissions\n\n The caller must have *contributor* workspace role. \n\n## Required Delegated Scopes\n\n CopyJob.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_ResetCopyJob",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "copyJobId",
+            "description": "The CopyJob ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "resetCopyJobRequest",
+            "description": "The CopyJobReset payload.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CopyJobEntityResetPayload"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item. \n\n* CorruptedPayload - The provided payload is corrupted.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Reset all entities example": {
+            "$ref": "./examples/ResetCopyJob_AllCopyJobEntities.json"
+          },
+          "Reset selected copyJobEntities example": {
+            "$ref": "./examples/ResetCopyJob_SelectedCopyJobEntities.json"
+          }
+        }
+      }
     }
   },
   "responses": {},

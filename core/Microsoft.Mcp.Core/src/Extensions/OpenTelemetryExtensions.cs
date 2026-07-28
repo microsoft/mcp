@@ -68,7 +68,12 @@ public static class OpenTelemetryExtensions
                 return;
             }
 
-            builder.AddSource(serverConfig.Value.Name);
+            // Register our own ActivitySource plus the MCP SDK's source so that SDK-created
+            // request spans (which become parents of ListToolsHandler/ToolExecuted spans) are
+            // also exported. Without the SDK source, child spans appear orphaned and are dropped.
+            builder.AddSource(serverConfig.Value.Name)
+                   .AddSource("ModelContextProtocol")
+                   .AddSource("ModelContextProtocol.Server");
         });
 
         var otelBuilder = services.AddOpenTelemetry()
@@ -105,7 +110,16 @@ public static class OpenTelemetryExtensions
         var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
         if (!string.IsNullOrEmpty(enableOtlp) && bool.TryParse(enableOtlp, out var shouldEnable) && shouldEnable)
         {
-            otelBuilder.WithTracing(tracing => tracing.AddOtlpExporter())
+            // AddAspNetCoreInstrumentation captures the inbound HTTP POST / as a root span,
+            // which becomes the parent of the SDK's request handling spans and our
+            // ListToolsHandler/ToolExecuted child spans.
+            // Without it, the parent span is unsampled and the entire trace is dropped.
+            otelBuilder.WithTracing(tracing => tracing
+                    .AddAspNetCoreInstrumentation()
+                    .AddSource("Azure.Mcp.Server")
+                    .AddSource("ModelContextProtocol")
+                    .AddSource("ModelContextProtocol.Server")
+                    .AddOtlpExporter())
                 .WithMetrics(metrics => metrics.AddOtlpExporter())
                 .WithLogging(logging => logging.AddOtlpExporter());
         }

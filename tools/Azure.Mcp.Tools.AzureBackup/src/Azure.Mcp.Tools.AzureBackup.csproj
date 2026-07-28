@@ -14,6 +14,5 @@
     <PackageReference Include="Azure.ResourceManager.DataProtectionBackup" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
-    <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 </Project>

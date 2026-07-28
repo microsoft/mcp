@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Helpers;
@@ -23,8 +21,8 @@ public sealed class AzureHttpHelper(IHttpClientFactory httpClientFactory, ITenan
         var client = httpClientFactory.CreateClient();
         var credential = await tenantService.GetTokenCredentialAsync(null, cancellationToken);
         var token = await credential.GetTokenAsync(
-            new TokenRequestContext([tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]), cancellationToken);
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+            new([tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]), cancellationToken);
+        client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
         return client;
     }
 

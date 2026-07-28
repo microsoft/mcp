@@ -26,7 +26,7 @@ namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand> logger) : BaseCommand<EmptyOptions>
+public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand> logger) : BaseCommand<EmptyOptions, List<string>>
 {
     private readonly ILogger<AIAppBestPracticesCommand> _logger = logger;
     private static readonly string s_bestPracticesText = LoadBestPracticesText();
@@ -51,9 +51,7 @@ public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand>
         return EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
     }
 
-    protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
     {
         try
         {

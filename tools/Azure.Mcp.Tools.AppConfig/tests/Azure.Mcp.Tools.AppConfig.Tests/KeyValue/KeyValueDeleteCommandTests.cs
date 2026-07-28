@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.Tests.KeyValue;
 
-public class KeyValueDeleteCommandTests : CommandUnitTestsBase<KeyValueDeleteCommand, IAppConfigService>
+public class KeyValueDeleteCommandTests : SubscriptionCommandUnitTestsBase<KeyValueDeleteCommand, IAppConfigService>
 {
     [Fact]
     public async Task ExecuteAsync_DeletesKeyValue_WhenValidParametersProvided()

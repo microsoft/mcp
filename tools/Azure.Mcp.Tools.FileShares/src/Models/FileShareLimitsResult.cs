@@ -6,11 +6,7 @@ namespace Azure.Mcp.Tools.FileShares.Models;
 /// <summary>
 /// Result containing file share limits and provisioning constants.
 /// </summary>
-public class FileShareLimitsResult
-{
-    public FileShareLimits Limits { get; set; } = new();
-    public FileShareProvisioningConstants ProvisioningConstants { get; set; } = new();
-}
+public sealed record FileShareLimitsResult(FileShareLimits Limits, FileShareProvisioningConstants ProvisioningConstants);
 
 /// <summary>
 /// File share limits for a subscription and location.
@@ -32,10 +28,8 @@ public class FileShareLimits
 /// <summary>
 /// Constants used for calculating recommended values of file share provisioning properties.
 /// </summary>
-public class FileShareProvisioningConstants
-{
-    public int BaseIOPerSec { get; set; }
-    public double ScalarIOPerSec { get; set; }
-    public int BaseThroughputMiBPerSec { get; set; }
-    public double ScalarThroughputMiBPerSec { get; set; }
-}
+public sealed record FileShareProvisioningConstants(
+    int BaseIOPerSec,
+    double ScalarIOPerSec,
+    int BaseThroughputMiBPerSec,
+    double ScalarThroughputMiBPerSec);

@@ -10,13 +10,11 @@
   "azure-deploy",
   "azure-diagnostics",
   "azure-enterprise-infra-planner",
-  "azure-hosted-copilot-sdk",
   "azure-kubernetes",
   "azure-kusto",
   "azure-messaging",
   "azure-prepare",
   "azure-quotas",
-  "azure-rbac",
   "azure-reliability",
   "azure-resource-lookup",
   "azure-resource-visualizer",
@@ -25,5 +23,6 @@
   "azure-validate",
   "entra-agent-id",
   "entra-app-registration",
-  "microsoft-foundry"
+  "microsoft-foundry",
+  "python-appservice-deploy"
 ]

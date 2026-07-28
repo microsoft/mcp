@@ -1,12 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Postgres.Options.Table;
 
-public class TableSchemaGetOptions : BasePostgresOptions
+public sealed class TableSchemaGetOptions
 {
-    [JsonPropertyName(PostgresOptionDefinitions.TableName)]
-    public string? Table { get; set; }
+    [Option(Description = "The PostgreSQL table to be accessed.")]
+    public required string Table { get; set; }
+
+    [Option(Description = PostgresOptionDefinitions.AuthTypeDescription)]
+    public required string AuthType { get; set; }
+
+    [Option(Description = PostgresOptionDefinitions.UserDescription)]
+    public required string User { get; set; }
+
+    [Option(Description = PostgresOptionDefinitions.PasswordDescription)]
+    public string? Password { get; set; }
+
+    [Option(Description = PostgresOptionDefinitions.ServerDescription)]
+    public required string Server { get; set; }
+
+    [Option(Description = PostgresOptionDefinitions.DatabaseDescription)]
+    public required string Database { get; set; }
 }

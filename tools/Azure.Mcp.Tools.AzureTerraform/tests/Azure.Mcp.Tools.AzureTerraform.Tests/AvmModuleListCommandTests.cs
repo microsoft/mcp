@@ -31,20 +31,18 @@ public class AvmModuleListCommandTests : CommandUnitTestsBase<AvmModuleListComma
     {
         var expectedModules = new List<AvmModule>
         {
-            new()
-            {
-                ModuleName = "avm-res-storage-storageaccount",
-                Description = "Azure Storage Account module",
-                Source = "Azure/avm-res-storage-storageaccount/azurerm",
-                RepoUrl = "https://github.com/Azure/terraform-azurerm-avm-res-storage-storageaccount"
-            },
-            new()
-            {
-                ModuleName = "avm-res-compute-virtualmachine",
-                Description = "Azure Virtual Machine module",
-                Source = "Azure/avm-res-compute-virtualmachine/azurerm",
-                RepoUrl = "https://github.com/Azure/terraform-azurerm-avm-res-compute-virtualmachine"
-            }
+            new(
+                ModuleName: "avm-res-storage-storageaccount",
+                Description: "Azure Storage Account module",
+                Source: "Azure/avm-res-storage-storageaccount/azurerm",
+                RepoUrl: "https://github.com/Azure/terraform-azurerm-avm-res-storage-storageaccount",
+                ModuleType: "resource"),
+            new(
+                ModuleName: "avm-ptn-aiml-ai-foundry",
+                Description: "AI Foundry pattern module",
+                Source: "Azure/avm-ptn-aiml-ai-foundry/azurerm",
+                RepoUrl: "https://github.com/Azure/terraform-azurerm-avm-ptn-aiml-ai-foundry",
+                ModuleType: "pattern")
         };
 
         Service.ListModulesAsync(Arg.Any<CancellationToken>())
@@ -54,6 +52,11 @@ public class AvmModuleListCommandTests : CommandUnitTestsBase<AvmModuleListComma
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
+
+        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AvmModuleListResult);
+        Assert.Equal(2, result.Modules.Count);
+        Assert.Contains(result.Modules, m => m.ModuleType == "resource");
+        Assert.Contains(result.Modules, m => m.ModuleType == "pattern");
     }
 
     [Fact]
@@ -73,8 +76,7 @@ public class AvmModuleListCommandTests : CommandUnitTestsBase<AvmModuleListComma
     {
         if (shouldSucceed)
         {
-            Service.ListModulesAsync(Arg.Any<CancellationToken>())
-                .Returns(new List<AvmModule>());
+            Service.ListModulesAsync(Arg.Any<CancellationToken>()).Returns([]);
         }
 
         var response = await ExecuteCommandAsync(args);
@@ -94,13 +96,12 @@ public class AvmModuleListCommandTests : CommandUnitTestsBase<AvmModuleListComma
     {
         var expectedModules = new List<AvmModule>
         {
-            new()
-            {
-                ModuleName = "avm-res-storage-storageaccount",
-                Description = "Azure Storage Account module",
-                Source = "Azure/avm-res-storage-storageaccount/azurerm",
-                RepoUrl = "https://github.com/Azure/terraform-azurerm-avm-res-storage-storageaccount"
-            }
+            new(
+                ModuleName: "avm-res-storage-storageaccount",
+                Description: "Azure Storage Account module",
+                Source: "Azure/avm-res-storage-storageaccount/azurerm",
+                RepoUrl: "https://github.com/Azure/terraform-azurerm-avm-res-storage-storageaccount",
+                ModuleType: string.Empty)
         };
 
         Service.ListModulesAsync(Arg.Any<CancellationToken>())

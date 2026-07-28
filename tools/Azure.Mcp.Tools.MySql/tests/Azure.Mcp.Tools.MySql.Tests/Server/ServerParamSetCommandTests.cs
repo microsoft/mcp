@@ -2,28 +2,27 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Server;
 using Azure.Mcp.Tools.MySql.Services;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.MySql.Tests.Server;
 
-public class ServerParamSetCommandTests : CommandUnitTestsBase<ServerParamSetCommand, IMySqlService>
+public class ServerParamSetCommandTests : SubscriptionCommandUnitTestsBase<ServerParamSetCommand, IMySqlService>
 {
     [Fact]
     public async Task ExecuteAsync_SetsParameter_WhenSuccessful()
     {
         var newValue = "100";
-        Service.SetServerParameterAsync("sub123", "rg1", "user1", "test-server", "max_connections", newValue, Arg.Any<CancellationToken>()).Returns(newValue);
+        Service.SetServerParameterAsync("sub123", "rg1", "test-server", "max_connections", newValue, Arg.Any<CancellationToken>()).Returns(newValue);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1",
             "--server", "test-server",
             "--param", "max_connections",
             "--value", newValue);
@@ -36,13 +35,12 @@ public class ServerParamSetCommandTests : CommandUnitTestsBase<ServerParamSetCom
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenServiceThrows()
     {
-        Service.SetServerParameterAsync("sub123", "rg1", "user1", "test-server", "invalid_param", "100", Arg.Any<CancellationToken>())
+        Service.SetServerParameterAsync("sub123", "rg1", "test-server", "invalid_param", "100", Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Parameter 'invalid_param' not found."));
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1",
             "--server", "test-server",
             "--param", "invalid_param",
             "--value", "100");

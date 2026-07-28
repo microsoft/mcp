@@ -2,12 +2,10 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AppLens.Models;
-using Azure.Mcp.Tools.AppLens.Options;
 using Azure.Mcp.Tools.AppLens.Options.Resource;
 using Azure.Mcp.Tools.AppLens.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppLens.Commands.Resource;
@@ -29,43 +27,15 @@ namespace Azure.Mcp.Tools.AppLens.Commands.Resource;
     Secret = false,
     LocalRequired = false)]
 public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> logger, IAppLensService appLensService)
-    : GlobalCommand<ResourceDiagnoseOptions>
+    : BaseCommand<ResourceDiagnoseOptions, ResourceDiagnoseCommandResult>
 {
     private readonly ILogger<ResourceDiagnoseCommand> _logger = logger;
     private readonly IAppLensService _appLensService = appLensService;
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(AppLensOptionDefinitions.Subscription);
-        command.Options.Add(AppLensOptionDefinitions.ResourceGroup);
-        command.Options.Add(AppLensOptionDefinitions.ResourceType);
-        command.Options.Add(AppLensOptionDefinitions.Resource);
-        command.Options.Add(AppLensOptionDefinitions.Question);
-    }
-
-    protected override ResourceDiagnoseOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Subscription = parseResult.GetValueOrDefault<string>(AppLensOptionDefinitions.Subscription.Name);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(AppLensOptionDefinitions.ResourceGroup.Name);
-        options.Question = parseResult.GetValueOrDefault<string>(AppLensOptionDefinitions.Question.Name) ?? string.Empty;
-        options.Resource = parseResult.GetValueOrDefault<string>(AppLensOptionDefinitions.Resource.Name) ?? string.Empty;
-        options.ResourceType = parseResult.GetValueOrDefault<string>(AppLensOptionDefinitions.ResourceType.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ResourceDiagnoseOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
-            ResourceDiagnoseOptions options = BindOptions(parseResult);
-
             _logger.LogInformation("Diagnosing resource. Question: {Question}, Resource: {Resource}, Options: {Options}",
                 options.Question, options.Resource, options);
 

@@ -46,15 +46,14 @@ internal static class SreAgentCommandHelpers
         BaseSreAgentOptions options,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(options);
         ArgumentException.ThrowIfNullOrWhiteSpace(options.Subscription);
         ArgumentException.ThrowIfNullOrWhiteSpace(options.Agent);
 
         return ResolveAgentEndpointAsync(
             sreAgentService,
-            options.Subscription!,
+            options.Subscription,
             options.ResourceGroup,
-            options.Agent!,
+            options.Agent,
             options.Tenant,
             options.RetryPolicy,
             cancellationToken);
@@ -70,10 +69,6 @@ internal static class SreAgentCommandHelpers
         BaseSreAgentOptions options,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentException.ThrowIfNullOrWhiteSpace(options.Subscription);
-        ArgumentException.ThrowIfNullOrWhiteSpace(options.Agent);
-
         if (!string.IsNullOrWhiteSpace(options.ResourceGroup))
         {
             return options.ResourceGroup!;
@@ -81,7 +76,7 @@ internal static class SreAgentCommandHelpers
 
         return await sreAgentService.ResolveAgentResourceGroupAsync(
             options.Subscription!,
-            options.Agent!,
+            options.Agent,
             options.Tenant,
             options.RetryPolicy,
             cancellationToken);

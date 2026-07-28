@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tools.Monitor.Detectors;
-using Azure.Mcp.Tools.Monitor.Generators;
-using Azure.Mcp.Tools.Monitor.Models;
-using Azure.Mcp.Tools.Monitor.Pipeline;
-using Azure.Mcp.Tools.Monitor.Tools;
+using Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
+using Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
+using Azure.Mcp.Tools.Monitor.Instrumentation.Pipeline;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using Azure.Mcp.Tools.Monitor.Tools.Instrumentation;
 using NSubstitute;
 using Xunit;
 

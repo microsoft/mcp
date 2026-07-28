@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.ProtectedItem;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 
@@ -34,49 +32,63 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectedItemProtectOptions>()
+public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : BaseAzureBackupCommand<ProtectedItemProtectOptions, ProtectedItemProtectCommand.ProtectedItemProtectCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ProtectedItemProtectCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(ProtectedItemProtectOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.DatasourceId.AsRequired());
-        command.Options.Add(AzureBackupOptionDefinitions.Policy.AsRequired());
-        command.Options.Add(AzureBackupOptionDefinitions.Container);
-        command.Options.Add(AzureBackupOptionDefinitions.DatasourceType);
-        command.Options.Add(AzureBackupOptionDefinitions.AksSnapshotResourceGroup);
-        command.Options.Add(AzureBackupOptionDefinitions.AksIncludedNamespaces);
-        command.Options.Add(AzureBackupOptionDefinitions.AksExcludedNamespaces);
-        command.Options.Add(AzureBackupOptionDefinitions.AksLabelSelectors);
-        command.Options.Add(AzureBackupOptionDefinitions.AksIncludeClusterScopeResources);
-    }
+        base.ValidateOptions(options, validationResult);
 
-    protected override ProtectedItemProtectOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.DatasourceId = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DatasourceId.Name);
-        options.Policy = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Policy.Name);
-        options.Container = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Container.Name);
-        options.DatasourceType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DatasourceType.Name);
-        options.AksSnapshotResourceGroup = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksSnapshotResourceGroup.Name);
-        options.AksIncludedNamespaces = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksIncludedNamespaces.Name);
-        options.AksExcludedNamespaces = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksExcludedNamespaces.Name);
-        options.AksLabelSelectors = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksLabelSelectors.Name);
-        options.AksIncludeClusterScopeResources = parseResult.GetValueOrDefault<bool>(AzureBackupOptionDefinitions.AksIncludeClusterScopeResources.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        if (options.DatasourceType is null)
         {
-            return context.Response;
+            return;
         }
 
-        var options = BindOptions(parseResult);
+        var value = options.DatasourceType.Trim();
+        if (value.Length == 0)
+        {
+            validationResult.Errors.Add(
+                $"Unknown datasource type '{options.DatasourceType}'. " +
+                $"RSV types: {string.Join(", ", RsvDatasourceRegistry.KnownTypeNames)}. " +
+                $"DPP types: {string.Join(", ", DppDatasourceRegistry.KnownTypeNames)}.");
+            return;
+        }
 
+        var isRsv = RsvDatasourceRegistry.Resolve(value) is not null;
+        var isDpp = IsDppDatasourceType(value);
+
+        if (!isRsv && !isDpp)
+        {
+            validationResult.Errors.Add(
+                $"Unknown datasource type '{options.DatasourceType}'. " +
+                $"RSV types: {string.Join(", ", RsvDatasourceRegistry.KnownTypeNames)}. " +
+                $"DPP types: {string.Join(", ", DppDatasourceRegistry.KnownTypeNames)}.");
+            return;
+        }
+
+        // Validate datasource type is compatible with the specified vault type
+        if (!string.IsNullOrEmpty(options.VaultType))
+        {
+            if (options.VaultType.Equals("rsv", StringComparison.OrdinalIgnoreCase) && !isRsv)
+            {
+                validationResult.Errors.Add(
+                    $"Datasource type '{options.DatasourceType}' is not valid for RSV (Recovery Services) vaults. " +
+                    $"RSV types: {string.Join(", ", RsvDatasourceRegistry.KnownTypeNames)}.");
+            }
+            else if (options.VaultType.Equals("dpp", StringComparison.OrdinalIgnoreCase) && !isDpp)
+            {
+                validationResult.Errors.Add(
+                    $"Datasource type '{options.DatasourceType}' is not valid for DPP (Backup) vaults. " +
+                    $"DPP types: {string.Join(", ", DppDatasourceRegistry.KnownTypeNames)}.");
+            }
+        }
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ProtectedItemProtectOptions options, CancellationToken cancellationToken)
+    {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
         context.Activity?.AddTag(AzureBackupTelemetryTags.DatasourceType, AzureBackupTelemetryTags.NormalizeWorkloadType(options.DatasourceType));
@@ -84,8 +96,8 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
         try
         {
             var result = await _azureBackupService.ProtectItemAsync(
-                options.Vault!,
-                options.ResourceGroup!,
+                options.Vault,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.DatasourceId!,
                 options.Policy!,
@@ -126,5 +138,18 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record ProtectedItemProtectCommandResult(ProtectResult Result);
+    public sealed record ProtectedItemProtectCommandResult(ProtectResult Result);
+
+    private static bool IsDppDatasourceType(string value)
+    {
+        try
+        {
+            DppDatasourceRegistry.Resolve(value);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return DppDatasourceRegistry.TryAutoDetect(value) is not null;
+        }
+    }
 }

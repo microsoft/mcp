@@ -3,6 +3,7 @@
 
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -12,6 +13,7 @@ using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -399,7 +401,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             ]
         };
         var response = learnResponse;
-        if (request.Server.ClientCapabilities?.Sampling != null && !string.IsNullOrWhiteSpace(intent))
+        if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
         {
             var availableTools = await GetChildToolListAsync(request, tool, cancellationToken);
             (string? commandName, Dictionary<string, object?> parameters) = await GetCommandAndParametersFromIntentAsync(request, intent, tool, availableTools, cancellationToken);
@@ -461,6 +463,13 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         return tools.First(t => string.Equals(t.Name, commandName, StringComparison.OrdinalIgnoreCase));
     }
 
+    private static bool SupportsSampling(McpServer server)
+    {
+#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
+        return server?.ClientCapabilities?.Sampling != null;
+#pragma warning restore MCP9005
+    }
+
     private static async Task NotifyProgressAsync(RequestContext<CallToolRequestParams> request, string message, CancellationToken cancellationToken)
     {
         var progressToken = request.Params?.ProgressToken;
@@ -483,6 +492,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         List<Tool> availableTools,
         CancellationToken cancellationToken)
     {
+#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
         await NotifyProgressAsync(request, $"Learning about {tool} capabilities...", cancellationToken);
 
         JsonElement toolParams = GetParametersJsonElement(request);
@@ -498,8 +508,6 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                     Role = Role.Assistant,
                     Content = [new TextContentBlock{
                         Text = $"""
-                            This is a list of available commands for the {tool} server.
-
                             Your task:
                             - Select the single command that best matches the user's intent.
                             - Return a valid JSON object that matches the provided result schema.
@@ -555,6 +563,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         }
 
         return (null, new Dictionary<string, object?>());
+#pragma warning restore MCP9005
     }
 
     /// <summary>

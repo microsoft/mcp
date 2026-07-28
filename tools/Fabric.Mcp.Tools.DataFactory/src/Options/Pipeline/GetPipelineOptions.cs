@@ -5,11 +5,11 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.DataFactory.Options.Pipeline;
 
-public class GetPipelineOptions
+public sealed class GetPipelineOptions
 {
-    [Option("The ID of the Microsoft Fabric workspace.")]
+    [Option(Description = "The ID of the Microsoft Fabric workspace.")]
     public required string WorkspaceId { get; set; }
 
-    [Option("The ID of the pipeline.")]
+    [Option(Description = "The ID of the pipeline.")]
     public required string PipelineId { get; set; }
 }

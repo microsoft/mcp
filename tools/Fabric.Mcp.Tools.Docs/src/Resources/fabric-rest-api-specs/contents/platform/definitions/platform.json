@@ -76,6 +76,11 @@
                   "$ref": "../../common/definitions.json#/definitions/WorkspaceAppliedTag"
           },
           "readOnly": true
+        },
+        "capacityRegion": {
+          "description": "The region of the capacity associated with this workspace.",
+          "$ref": "#/definitions/CapacityRegion",
+          "readOnly": true
         }
       },
       "readOnly": true
@@ -98,11 +103,6 @@
         "workspaceIdentity": {
           "description": "The workspace identity.",
           "$ref": "#/definitions/WorkspaceIdentity",
-          "readOnly": true
-        },
-        "capacityRegion": {
-          "description": "The region of the capacity associated with this workspace.",
-          "$ref": "#/definitions/CapacityRegion",
           "readOnly": true
         },
         "oneLakeEndpoints": {
@@ -1969,82 +1969,6 @@
         }
       }
     },
-    "ItemJobParameterType": {
-        "description": "A string that represents the parameter's type. Additional types may be added over time.",
-        "type": "string",
-        "enum": [
-            "VariableReference",
-            "Integer",
-            "Number",
-            "Text",
-            "Boolean",
-            "DateTime",
-            "Guid",
-            "Automatic"
-        ],
-        "x-ms-enum": {
-            "name": "ItemJobParameterType",
-            "modelAsString": true,
-            "values": [
-                {
-                    "value": "VariableReference",
-                    "description": "The type of parameter is a variable reference."
-                },
-                {
-                    "value": "Integer",
-                    "description": "The type of parameter is an integer."
-                },
-                {
-                    "value": "Number",
-                    "description": "The type of parameter is a number, it accepts both integer and float values."
-                },
-                {
-                    "value": "Text",
-                    "description": "The type of parameter is a text."
-                },
-                {
-                    "value": "Boolean",
-                    "description": "The type of parameter is a boolean."
-                },
-                {
-                    "value": "DateTime",
-                    "description": "The type of parameter is a datetime in UTC, using the YYYY-MM-DDTHH:mm:ssZ format."
-                },
-                {
-                    "value": "Guid",
-                    "description": "The parameter type is a string representation of a GUID, using 00000000-0000-0000-0000-000000000000 format. See https://learn.microsoft.com/dotnet/api/system.guid.tostring for formatting details, and please use the default format: \"D\"."
-                },
-                {
-                    "value": "Automatic",
-                    "description": "The parameter type is automatically determined. Note: this type may not be supported for all item job types."
-                }
-            ]
-        }
-    },
-    "Parameter": {
-        "description": "An item job parameter.",
-        "type": "object",
-        "required": [
-            "name",
-            "type",
-            "value"
-        ],
-        "properties": {
-            "name": {
-                "description": "The parameter name, specified by the caller, must be unique (case-insensitive check) and no longer than 256 characters.",
-                "type": "string"
-            },
-            "type": {
-                "description": "The parameter type.",
-                "type": "string",
-                "$ref": "#/definitions/ItemJobParameterType"
-            },
-            "value": {
-                "description": "The parameter value based on the parameter type.",
-                "type": "object"
-            }
-        }
-    },
     "RunOnDemandItemJobRequest": {
       "description": "Run on demand item job instance payload",
       "properties": {
@@ -2056,7 +1980,7 @@
             "description": "The parameter list for an on-demand job. These are per-run, user-defined inputs that tailor this invocation. Note: This property is not broadly supported. If the API returns an error with errorCode `FeatureNotAvailable` and errorMessage `Parameter is not allowed for this item type or this item job type`, the `parameters` property is not supported for the specified item type or item job type.",
             "type": "array",
             "items": {
-                "$ref": "#/definitions/Parameter"
+                "$ref": "../../common/job_scheduling.json#/definitions/Parameter"
             }
         }
       }
@@ -2296,40 +2220,6 @@
       "properties": {
         "executionData": {
           "description": "The execution data for a scheduled job. This is fixed static data, defined by the specific item job type.",
-          "type": "object"
-        }
-      }
-    },
-    "ItemJobParameter": {
-      "description": "Parameter details.",
-      "type": "object",
-      "required": [
-        "parameterName",
-        "type",
-        "value"
-      ],
-      "properties": {
-        "parameterName": {
-          "description": "Name of the parameter.",
-          "type": "string"
-        },
-        "type": {
-          "description": "The parameter type. Additional parameter types may be added over time.",
-          "type": "string",
-          "enum": [ "Automatic" ],
-          "x-ms-enum": {
-            "name": "Type",
-            "modelAsString": true,
-            "values": [
-              {
-                "value": "Automatic",
-                "description": "Value must be Automatic"
-              }
-            ]
-          }
-        },
-        "value": {
-          "description": "The value of the parameter to override during execution.",
           "type": "object"
         }
       }

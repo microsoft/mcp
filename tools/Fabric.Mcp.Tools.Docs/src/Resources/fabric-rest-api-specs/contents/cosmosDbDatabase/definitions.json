@@ -14,7 +14,13 @@
                 {
                     "$ref": "../common/definitions.json#/definitions/Item"
                 }
-            ]
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The CosmosDBDatabase properties.",
+                    "$ref": "#/definitions/CosmosDBDatabaseProperties"
+                }
+            }
         },
         "CosmosDBDatabases": {
             "description": "A list of Cosmos DB databases.",
@@ -34,6 +40,21 @@
                     "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
                 }
             ]
+        },
+        "CosmosDBDatabaseProperties": {
+            "required": ["serverFqdn", "databaseName"],
+            "description": "The Cosmos DB database properties.",
+            "type": "object",
+            "properties": {
+                "serverFqdn": {
+                    "description": "The Cosmos DB database server fully qualified domain name (FQDN).",
+                    "type": "string"
+                },
+                "databaseName": {
+                    "description": "The name of the Cosmos DB database, automatically set from the display name during creation. This property is read-only and cannot be changed.",
+                    "type": "string"
+                }
+            }
         },
 		"CreateCosmosDBDatabaseRequest": {
             "description": "Create Cosmos DB database request payload.",

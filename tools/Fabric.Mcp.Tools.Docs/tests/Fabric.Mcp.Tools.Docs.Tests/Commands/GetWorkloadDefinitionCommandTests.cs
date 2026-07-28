@@ -53,7 +53,7 @@ public class GetWorkloadDefinitionCommandTests : CommandUnitTestsBase<GetWorkloa
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
-        Assert.Equal("Missing Required options: --workload-type", result.Message);
+        Assert.Contains("Missing Required options: --workload-type", result.Message);
         Service.DidNotReceive().GetWorkloadItemDefinition(Arg.Any<string>());
     }
 

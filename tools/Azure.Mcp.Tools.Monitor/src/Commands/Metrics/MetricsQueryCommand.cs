@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Monitor.Models;
-using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Options.Metrics;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
@@ -27,75 +27,51 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger, IMonitorMetricsService metricsService)
-    : BaseMetricsCommand<MetricsQueryOptions>
+public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger, IMonitorMetricsService metricsService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<MetricsQueryOptions, MetricsQueryCommand.MetricsQueryCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<MetricsQueryCommand> _logger = logger;
     private readonly IMonitorMetricsService _metricsService = metricsService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(MetricsQueryOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(MonitorOptionDefinitions.Metrics.MetricNames);
-        command.Options.Add(MonitorOptionDefinitions.Metrics.StartTime);
-        command.Options.Add(MonitorOptionDefinitions.Metrics.EndTime);
-        command.Options.Add(MonitorOptionDefinitions.Metrics.Interval);
-        command.Options.Add(MonitorOptionDefinitions.Metrics.Aggregation);
-        command.Options.Add(MonitorOptionDefinitions.Metrics.Filter);
-        command.Options.Add(MonitorOptionDefinitions.Metrics.MetricNamespace);
-        command.Options.Add(MonitorOptionDefinitions.Metrics.MaxBuckets);
-        command.Validators.Add(commandResult =>
+        base.ValidateOptions(options, validationResult);
+
+        if (string.IsNullOrWhiteSpace(options.MetricNames))
         {
-            commandResult.TryGetValue(MonitorOptionDefinitions.Metrics.MetricNames, out string? metricNamesValue);
+            validationResult.Errors.Add($"Invalid format for '--metric-names'. Provide a comma-separated list of metric names to query (e.g. CPU,memory).");
+        }
+        else
+        {
+            // Validate the metric names
+            string[] metricNames = [.. options.MetricNames.Split(',').Select(t => t.Trim())];
 
-            if (string.IsNullOrWhiteSpace(metricNamesValue))
+            if (metricNames.Length == 0 || metricNames.Any(s => string.IsNullOrWhiteSpace(s)))
             {
-                commandResult.AddError($"Invalid format for {MonitorOptionDefinitions.Metrics.MetricNames.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).");
+                validationResult.Errors.Add($"Invalid format for '--metric-names'. Provide a comma-separated list of metric names to query (e.g. CPU,memory).");
             }
-            else
-            {
-                // Validate the metric names
-                string[] metricNames = [.. metricNamesValue.Split(',').Select(t => t.Trim())];
-
-                if (metricNames.Length == 0 || metricNames.Any(s => string.IsNullOrWhiteSpace(s)))
-                {
-                    commandResult.AddError($"Invalid format for {MonitorOptionDefinitions.Metrics.MetricNames.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).");
-                }
-            }
-        });
+        }
     }
 
-    protected override MetricsQueryOptions BindOptions(ParseResult parseResult)
+    public override void PostBindOptions(MetricsQueryOptions options)
     {
-        var options = base.BindOptions(parseResult);
-        options.MetricNames = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.MetricNames.Name);
-        options.StartTime = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.StartTime.Name);
-        options.EndTime = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.EndTime.Name);
-        options.Interval = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.Interval.Name);
-        options.Aggregation = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.Aggregation.Name);
-        options.Filter = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.Filter.Name);
-        options.MetricNamespace = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.MetricNamespace.Name);
-        options.MaxBuckets = parseResult.GetValueOrDefault<int>(MonitorOptionDefinitions.Metrics.MaxBuckets.Name);
-        return options;
+        base.PostBindOptions(options);
+        options.StartTime ??= DateTime.UtcNow.AddHours(-24).ToString("o"); // Default to 24 hours ago if not specified
+        options.EndTime ??= DateTime.UtcNow.ToString("o"); // Default to now if not specified
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, MetricsQueryOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            return context.Response;
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            string[] metricNames = [.. options.MetricNames!.Split(',').Select(t => t.Trim())];
+            string[] metricNames = [.. options.MetricNames.Split(',').Select(t => t.Trim())];
 
             var results = await _metricsService.QueryMetricsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.ResourceType,
-                options.ResourceName!,
-                options.MetricNamespace!,
+                options.Resource,
+                options.MetricNamespace,
                 metricNames,
                 options.StartTime,
                 options.EndTime,
@@ -154,7 +130,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger, IMo
         {            // Log error with all relevant context
             _logger.LogError(ex,
                 "Error querying metrics. ResourceGroup: {ResourceGroup}, ResourceType: {ResourceType}, ResourceName: {ResourceName}, MetricNames: {@MetricNames}.",
-                options.ResourceGroup, options.ResourceType, options.ResourceName, options.MetricNames);
+                options.ResourceGroup, options.ResourceType, options.Resource, options.MetricNames);
             HandleException(context, ex);
         }
 
@@ -162,5 +138,5 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger, IMo
     }
 
     // Strongly-typed result records
-    internal record MetricsQueryCommandResult(List<MetricResult> Results);
+    public sealed record MetricsQueryCommandResult(List<MetricResult> Results);
 }

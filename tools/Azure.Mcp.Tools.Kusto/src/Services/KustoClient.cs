@@ -263,7 +263,7 @@ public sealed class KustoClient(
         return httpRequest;
     }
 
-    private async Task<KustoResult> SendRequestAsync(HttpClient httpClient, HttpRequestMessage httpRequest, CancellationToken cancellationToken)
+    private static async Task<KustoResult> SendRequestAsync(HttpClient httpClient, HttpRequestMessage httpRequest, CancellationToken cancellationToken)
     {
         var httpResponse = await httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseContentRead, cancellationToken);
         if (!httpResponse.IsSuccessStatusCode)
