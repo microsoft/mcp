@@ -6,6 +6,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added Azure IoT Operations toolset with `iotoperations instance list` and `iotoperations instance get` commands to list and get Azure IoT Operations instances (Microsoft.IoTOperations/instances) in a subscription or resource group.
+
 ### Breaking Changes
 
 ### Bugs Fixed

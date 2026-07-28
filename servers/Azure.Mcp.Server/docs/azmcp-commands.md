@@ -2753,6 +2753,21 @@ azmcp iothub hub get --subscription <subscription> \
                      --hub-name <iot-hub-name>
 ```                     
 
+### Azure IoT Operations Operations
+
+```bash
+# List Azure IoT Operations instances in a subscription or resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iotoperations instance list --subscription <subscription> \
+                                  [--resource-group <resource-group>]
+
+# Get details of a specific Azure IoT Operations instance
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iotoperations instance get --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --instance <instance-name>
+```
+
 ### Azure Key Vault Operations
 
 #### Administration

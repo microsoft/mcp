@@ -1127,6 +1127,11 @@ Example prompts that generate Azure CLI commands:
 * "Show me IoT Hub 'my-iot-hub' in resource group 'my-resource-group' of my subscription 'my-subscription'"
 * "Get details for IoT Hub 'my-iot-hub' in resource group 'my-resource-group' of my subscription 'my-subscription'"
 
+### 🏭 Azure IoT Operations
+
+* "List all Azure IoT Operations instances in my subscription"
+* "Get details for Azure IoT Operations instance 'my-instance' in resource group 'my-resource-group'"
+
 ### 🔑 Azure Key Vault
 
 * "List all secrets in my key vault 'my-vault'"
@@ -1290,6 +1295,7 @@ The Azure MCP Server provides tools for interacting with **44+ Azure service are
 - ⚡ **Azure Functions** - Function App management and functions project files, language support, and templates source code
 - 💡 **Azure Insights** - Derive infrastructure insights from Azure Resource Graph patterns
 - 🌐 **Azure IoT Hub** - IoT Hub resource discovery and details
+- 🏭 **Azure IoT Operations** - IoT Operations instance discovery and details
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
 - 📦 **Azure Load Testing** - Performance testing
