@@ -25,7 +25,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 ## Table of Contents
 - [Overview](#overview)
 - [Local Setup](#local-setup)<!-- remove-section: start nuget;vsix;npm;pypi remove_installation_sub_sections -->
-    - [IDE](#ide)
+    - [Developer Tools](#developer-tools)
         - [VS Code (Recommended)](#vs-code-recommended)
         - [Visual Studio 2026](#visual-studio-2026)
         - [Visual Studio 2022](#visual-studio-2022)
@@ -33,6 +33,8 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [Eclipse IDE](#eclipse-ide)
         - [Claude Code](#claude-code)
         - [Manual Setup](#manual-setup)
+        - [GitHub Copilot CLI Configuration](#github-copilot-cli-configuration)
+        - [GitHub Copilot SDK Configuration](#github-copilot-sdk-configuration)
     - [Package Manager](#package-manager)
         - [NuGet](#nuget)
         - [NPM](#npm)
@@ -115,7 +117,7 @@ Install Azure MCP Server using either an IDE extension or package manager. Choos
 > [!IMPORTANT]
 > Authenticate to Azure before running the Azure MCP server. See the [Authentication guide](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md) for authentication methods and instructions.
 
-## IDE
+## Developer Tools
 
 Start using Azure MCP with your favorite IDE.  We recommend VS Code:
 
