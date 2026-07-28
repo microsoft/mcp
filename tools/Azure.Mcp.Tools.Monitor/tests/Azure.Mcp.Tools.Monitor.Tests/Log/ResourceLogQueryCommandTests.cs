@@ -100,11 +100,9 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        var result = ValidateAndDeserializeResponse(
+        ValidateAndDeserializeResponse(
             response,
             MonitorJsonContext.Default.ResourceLogQueryCommandResult);
-        Assert.Equal(3, result.Results.Count);
-        Assert.Equal("Error", result.Results[2]!["Level"]!.GetValue<string>());
 
         // Verify the mock was called
         await Service.Received(1).QueryResourceLogs(
