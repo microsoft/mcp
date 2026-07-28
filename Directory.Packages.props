@@ -77,6 +77,7 @@
     <PackageVersion Include="Microsoft.Extensions.AI.Evaluation.Quality" Version="10.2.0" />
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.2.0-preview.1.26063.2" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.VectorData.Abstractions" Version="10.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.2" />
@@ -90,8 +91,8 @@
     <PackageVersion Include="Microsoft.DataFactory.MCP.Core" Version="0.21.0-beta" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
-    <PackageVersion Include="ModelContextProtocol" Version="2.0.0-preview.1" />
-    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.0.0-preview.1" />
+    <PackageVersion Include="ModelContextProtocol" Version="2.0.0-preview.3" />
+    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.0.0-preview.3" />
     <PackageVersion Include="MySqlConnector" Version="2.4.0" />
     <PackageVersion Include="Npgsql" Version="10.0.1" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />

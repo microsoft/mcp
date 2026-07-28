@@ -38,6 +38,55 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
     private readonly ILogger<ProtectedItemProtectCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
+    public override void ValidateOptions(ProtectedItemProtectOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+
+        if (options.DatasourceType is null)
+        {
+            return;
+        }
+
+        var value = options.DatasourceType.Trim();
+        if (value.Length == 0)
+        {
+            validationResult.Errors.Add(
+                $"Unknown datasource type '{options.DatasourceType}'. " +
+                $"RSV types: {string.Join(", ", RsvDatasourceRegistry.KnownTypeNames)}. " +
+                $"DPP types: {string.Join(", ", DppDatasourceRegistry.KnownTypeNames)}.");
+            return;
+        }
+
+        var isRsv = RsvDatasourceRegistry.Resolve(value) is not null;
+        var isDpp = IsDppDatasourceType(value);
+
+        if (!isRsv && !isDpp)
+        {
+            validationResult.Errors.Add(
+                $"Unknown datasource type '{options.DatasourceType}'. " +
+                $"RSV types: {string.Join(", ", RsvDatasourceRegistry.KnownTypeNames)}. " +
+                $"DPP types: {string.Join(", ", DppDatasourceRegistry.KnownTypeNames)}.");
+            return;
+        }
+
+        // Validate datasource type is compatible with the specified vault type
+        if (!string.IsNullOrEmpty(options.VaultType))
+        {
+            if (options.VaultType.Equals("rsv", StringComparison.OrdinalIgnoreCase) && !isRsv)
+            {
+                validationResult.Errors.Add(
+                    $"Datasource type '{options.DatasourceType}' is not valid for RSV (Recovery Services) vaults. " +
+                    $"RSV types: {string.Join(", ", RsvDatasourceRegistry.KnownTypeNames)}.");
+            }
+            else if (options.VaultType.Equals("dpp", StringComparison.OrdinalIgnoreCase) && !isDpp)
+            {
+                validationResult.Errors.Add(
+                    $"Datasource type '{options.DatasourceType}' is not valid for DPP (Backup) vaults. " +
+                    $"DPP types: {string.Join(", ", DppDatasourceRegistry.KnownTypeNames)}.");
+            }
+        }
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ProtectedItemProtectOptions options, CancellationToken cancellationToken)
     {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
@@ -90,4 +139,17 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
     };
 
     public sealed record ProtectedItemProtectCommandResult(ProtectResult Result);
+
+    private static bool IsDppDatasourceType(string value)
+    {
+        try
+        {
+            DppDatasourceRegistry.Resolve(value);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return DppDatasourceRegistry.TryAutoDetect(value) is not null;
+        }
+    }
 }
