@@ -142,7 +142,7 @@ public sealed class RegistryToolLoader(
 
         var toolId = McpHelper.GetToolIdFromMeta(kvp.Tool.Meta);
         Activity.Current?.SetTag(TagName.ToolId, toolId)
-            .SetTag(TagName.ToolAnnotations, kvp.Tool);
+            .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(kvp.Tool));
 
         // Enforce read-only mode at execution time
         if (_options.Value.ReadOnly && kvp.Tool.Annotations?.ReadOnlyHint != true)

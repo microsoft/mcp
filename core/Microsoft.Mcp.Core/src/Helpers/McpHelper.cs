@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
@@ -76,35 +77,43 @@ public static class McpHelper
     /// </summary>
     /// <param name="request">The tool call request parameters.</param>
     /// <returns>A string array representing the parameter names, or null if there wasn't parameters.</returns>
-    public static string[]? CreateToolParametersTelemetry(RequestContext<CallToolRequestParams> request)
-        => request?.Params.Arguments?.Select(kvp => kvp.Key).ToArray();
+    public static string? CreateToolParametersTelemetry(RequestContext<CallToolRequestParams> request)
+    {
+        if (request?.Params?.Arguments == null || request.Params.Arguments.Count == 0)
+        {
+            return null;
+        }
+
+        return JsonSerializer.Serialize(request.Params.Arguments.Keys.ToList(), ModelsJsonContext.Default.ListString);
+    }
 
     /// <summary>
     /// Creates a telemetry-friendly string representation of the tool's annotations.
     /// </summary>
     /// <param name="tool">The MCP tool definition.</param>
     /// <returns>A telemetry-friendly string of the tool's annotations.</returns>
-    public static string CreateToolAnnotationTelemetry(Tool tool)
+    public static string CreateToolAnnotationTelemetry(Tool tool) => JsonSerializer.Serialize(new()
     {
-        var sb = new StringBuilder();
-        if (tool.Annotations != null)
-        {
-            sb.Append($"destructive:{tool.Annotations.DestructiveHint},");
-            sb.Append($"idempotent:{tool.Annotations.IdempotentHint},");
-            sb.Append($"openworld:{tool.Annotations.OpenWorldHint},");
-            sb.Append($"readonly:{tool.Annotations.ReadOnlyHint},");
-        }
-        sb.Append($"secret:{HasHint(tool, SecretHintMetaKey)},");
-        sb.Append($"localrequired:{HasHint(tool, LocalRequiredHintMetaKey)}");
-        return sb.ToString();
-    }
+        ["destructive"] = tool.Annotations?.DestructiveHint ?? false,
+        ["idempotent"] = tool.Annotations?.IdempotentHint ?? false,
+        ["openworld"] = tool.Annotations?.OpenWorldHint ?? false,
+        ["readonly"] = tool.Annotations?.ReadOnlyHint ?? false,
+        ["secret"] = HasHint(tool, SecretHintMetaKey),
+        ["localrequired"] = HasHint(tool, LocalRequiredHintMetaKey),
+    }, ModelsJsonContext.Default.DictionaryStringBoolean);
 
     /// <summary>
     /// Creates a telemetry-friendly string representation of the IBaseCommand-based tool.
     /// </summary>
     /// <param name="command">The IBaseCommand-based tool.</param>
     /// <returns>A telemetry-friendly string of the IBaseCommand-based tool.</returns>
-    public static string CreateToolAnnotationTelemetry(IBaseCommand command) =>
-        $"destructive:{command.Metadata.Destructive},idempotent:{command.Metadata.Idempotent},openworld:{command.Metadata.OpenWorld},"
-            + $"readonly:{command.Metadata.ReadOnly},secret:{command.Metadata.Secret},localrequired:{command.Metadata.LocalRequired}";
+    public static string CreateToolAnnotationTelemetry(IBaseCommand command) => JsonSerializer.Serialize(new()
+    {
+        ["destructive"] = command.Metadata.Destructive,
+        ["idempotent"] = command.Metadata.Idempotent,
+        ["openworld"] = command.Metadata.OpenWorld,
+        ["readonly"] = command.Metadata.ReadOnly,
+        ["secret"] = command.Metadata.Secret,
+        ["localrequired"] = command.Metadata.LocalRequired,
+    }, ModelsJsonContext.Default.DictionaryStringBoolean);
 }

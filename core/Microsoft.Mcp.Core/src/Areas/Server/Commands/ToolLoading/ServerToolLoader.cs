@@ -273,7 +273,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
             var toolId = McpHelper.GetToolIdFromMeta(resolvedTool.Meta);
             Activity.Current?.SetTag(TagName.ToolId, toolId)
-                .SetTag(TagName.ToolAnnotations, resolvedTool);
+                .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(resolvedTool));
 
             if ((options?.Value?.ReadOnly ?? false) && resolvedTool.Annotations?.ReadOnlyHint != true)
             {
