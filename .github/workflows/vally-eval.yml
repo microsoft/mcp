@@ -1,6 +1,4 @@
 name: Vally evaluations
-description: |
-  Evaluates E2E prompts to ensure they still pass when tools are changed.
 
 on:
   pull_request:
