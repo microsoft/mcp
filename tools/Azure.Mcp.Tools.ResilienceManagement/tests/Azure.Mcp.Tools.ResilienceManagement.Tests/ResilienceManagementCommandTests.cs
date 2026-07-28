@@ -195,4 +195,58 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
 
         Assert.Equal(JsonValueKind.Array, result.AssertProperty("recoveryJobResources").ValueKind);
     }
+
+    [Fact]
+    public async Task Should_create_usage_plan()
+    {
+        var resourceGroupName = RegisterOrRetrieveDeploymentOutputVariable("createResourceGroupName", "CREATERESOURCEGROUPNAME");
+        const string usagePlanName = "mcp-usage-plan";
+
+        var result = await CallToolAsync(
+            "resilience_usageplan_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "usage-plan", usagePlanName },
+                { "plan-type", "Basic" }
+            });
+
+        var usagePlan = result.AssertProperty("usagePlan");
+        Assert.False(string.IsNullOrEmpty(usagePlan.AssertProperty("name").GetString()));
+    }
+
+    [Fact]
+    public async Task Should_create_usage_plan_enrollment()
+    {
+        var resourceGroupName = RegisterOrRetrieveDeploymentOutputVariable("createResourceGroupName", "CREATERESOURCEGROUPNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("createServiceGroupName", "CREATESERVICEGROUPNAME");
+        const string usagePlanName = "mcp-enroll-plan";
+        const string enrollmentName = "mcp-enrollment";
+
+        // An enrollment requires an existing usage plan; create one first so the test is self-contained.
+        await CallToolAsync(
+            "resilience_usageplan_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "usage-plan", usagePlanName },
+                { "plan-type", "Basic" }
+            });
+
+        var result = await CallToolAsync(
+            "resilience_usageplan_enrollment_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "usage-plan", usagePlanName },
+                { "enrollment", enrollmentName },
+                { "service-group", serviceGroup }
+            });
+
+        var enrollment = result.AssertProperty("enrollment");
+        Assert.False(string.IsNullOrEmpty(enrollment.AssertProperty("name").GetString()));
+    }
 }
