@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Xunit;
@@ -13,6 +14,7 @@ public class IoTOperationsCommandTests(ITestOutputHelper output, TestProxyFixtur
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     [Fact]
+    [LiveTestOnly]
     public async Task Should_list_iotoperations_instances_by_subscription()
     {
         var result = await CallToolAsync(
@@ -29,6 +31,7 @@ public class IoTOperationsCommandTests(ITestOutputHelper output, TestProxyFixtur
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_return_instance_with_required_properties()
     {
         var result = await CallToolAsync(
@@ -62,6 +65,7 @@ public class IoTOperationsCommandTests(ITestOutputHelper output, TestProxyFixtur
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_get_iotoperations_instance()
     {
         var listResult = await CallToolAsync(

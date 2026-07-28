@@ -16,9 +16,13 @@ param location string = resourceGroup().location
 
 // NOTE: An Azure IoT Operations instance (Microsoft.IoTOperations/instances) is a projection of
 // a deployment onto an Azure Arc-enabled Kubernetes cluster and cannot be provisioned directly
-// via a standalone Bicep/ARM template. The list/get commands query Azure Resource Graph, so the
-// only infrastructure required for the recorded tests is read access to the target subscription.
-// This template assigns the Reader role to the test application at the resource group scope.
+// via a standalone Bicep/ARM template. The list/get commands query Azure Resource Graph, which
+// requires the test application to have read (Reader) access at the scope being queried:
+//   - `instance get` and `instance list --resource-group <rg>` query at resource group scope.
+//   - `instance list` without a resource group queries at subscription scope and therefore also
+//     requires a subscription-scoped Reader assignment (granted by the test harness, not here).
+// This template deploys at resource group scope, so it assigns the Reader role to the test
+// application at the resource group scope.
 
 // Reader (acdd72a7-3385-48ef-bd42-f606fba81ae7)
 resource readerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {

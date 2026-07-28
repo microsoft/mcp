@@ -2753,7 +2753,7 @@ azmcp iothub hub get --subscription <subscription> \
                      --hub-name <iot-hub-name>
 ```                     
 
-### Azure IoT Operations Operations
+### Azure IoT Operations
 
 ```bash
 # List Azure IoT Operations instances in a subscription or resource group
