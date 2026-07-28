@@ -683,10 +683,10 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
                 { "resource-group", Settings.ResourceGroupName }
             });
 
-        Assert.NotNull(result);
-        Assert.Equal(JsonValueKind.Array, result.Value.ValueKind);
+        var healthModels = result.AssertProperty("healthModels");
+        Assert.Equal(JsonValueKind.Array, healthModels.ValueKind);
 
-        var models = result.Value.EnumerateArray().ToList();
+        var models = healthModels.EnumerateArray().ToList();
         Assert.NotEmpty(models);
 
         Assert.All(models, model =>

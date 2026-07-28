@@ -155,9 +155,9 @@ public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
                 { "query", "*" }
             });
 
-        Assert.NotNull(result);
-        Assert.Equal(JsonValueKind.Array, result.Value.ValueKind);
-        Assert.True(result.Value.GetArrayLength() > 0);
+        var results = result.AssertProperty("results");
+        Assert.Equal(JsonValueKind.Array, results.ValueKind);
+        Assert.True(results.GetArrayLength() > 0);
     }
 
     [Fact]
