@@ -19,7 +19,7 @@ internal class Program
 
         if (!string.IsNullOrEmpty(runConfig.NamespacesValue))
         {
-            runConfig.Namespaces = [.. runConfig.NamespacesValue.Split(',')];
+            runConfig.Namespaces = [.. runConfig.NamespacesValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
         }
 
         var repoRoot = Utilities.FindRepoRoot(AppContext.BaseDirectory);
