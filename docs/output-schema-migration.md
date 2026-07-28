@@ -76,7 +76,7 @@ Before migrating a command, verify both of these. If either is false, resolve it
    subclass such as `SubscriptionCommand<TOptions, TResult>`). The `ResultTypeInfo` hook and the
    `SetResult` helper only exist on the two-generic base. If the command is still on the legacy
    one-generic `BaseCommand<TOptions>`, convert it first — see
-   [`option-conversion.md`](./option-conversion.md) — then come back here.
+   [`option-conversion.md`](https://github.com/microsoft/mcp/blob/1e188cfd2b24ce7cea9120b443b2204148e6c37e/docs/option-conversion.md) — then come back here.
 
 2. **The result type is registered in the toolset's `JsonSerializerContext`.** This is effectively
    guaranteed: the pre-migration code already passed `XxxJsonContext.Default.<TResult>` to
@@ -244,7 +244,7 @@ Run these from the repository root, scoped to the toolset you migrated (App Conf
 
 5. **Changelog.** The core infrastructure ships its own changelog entry. If your namespace opt-in is a
    user-facing change worth calling out, add a changelog entry per
-   [`changelog-entries.md`](./changelog-entries.md), using the appropriate `-ChangelogPath`.
+   [`changelog-entries.md`](https://github.com/microsoft/mcp/blob/1e188cfd2b24ce7cea9120b443b2204148e6c37e/docs/changelog-entries.md#L4), using the appropriate `-ChangelogPath`.
 
 ## Per-command checklist
 
