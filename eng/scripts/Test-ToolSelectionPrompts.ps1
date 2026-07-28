@@ -139,13 +139,13 @@ if (!$OutputPath) {
 
 # Use the build infrastructure - New-BuildInfo.ps1 and Build-Code.ps1
 $buildInfoPath = "$RepoRoot/.work/build_info.json"
-$buildOutputPath = "$RepoRoot/.work/build"
+$buildOutputPath = $OutputPath
 
 
 if ($ServerName) {
-    Write-Host "Validating tool name length for $ServerName"
+    Write-Host "Validating tool selection prompts for $ServerName"
 } else {
-    Write-Host "Validating tool name length for all servers"
+    Write-Host "Validating tool selection prompts for all servers"
 }
 
 # Clean up previous build artifacts
@@ -164,8 +164,7 @@ if ($LASTEXITCODE -ne 0) {
 
 # Build the servers
 $platformName = Get-PlatformName
-& "$RepoRoot/eng/scripts/Build-Code.ps1" -BuildInfoPath $buildInfoPath -PlatformName $platformName
-
+& "$RepoRoot/eng/scripts/Build-Code.ps1" -BuildInfoPath $buildInfoPath -PlatformName $platformName -OutputPath $buildOutputPath
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Failed to build servers."
     exit 1

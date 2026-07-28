@@ -66,6 +66,7 @@ try {
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "❌ E2E tool prompt validation failed."
+        $hasErrors = $true
     } else {
         Write-Host "✅ E2E tool prompt validation did not detect any issues."
     }
