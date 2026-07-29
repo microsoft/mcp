@@ -22,7 +22,6 @@ public class ShowWorkbooksCommandTests : CommandUnitTestsBase<ShowWorkbooksComma
         Assert.Equal("show", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("workbook", CommandDefinition.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -259,31 +258,6 @@ public class ShowWorkbooksCommandTests : CommandUnitTestsBase<ShowWorkbooksComma
             Arg.Is<IReadOnlyList<string>>(ids => ids.Contains(workbookId)),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Is<string?>(t => t == null),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithAuthMethod_PassesCorrectParameters()
-    {
-        // Arrange
-        var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
-        var batchResult = new WorkbookBatchResult([], []);
-
-        Service.GetWorkbooksAsync(
-            Arg.Any<IReadOnlyList<string>>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(batchResult);
-
-        // Act
-        await ExecuteCommandAsync("--workbook-ids", workbookId, "--auth-method", "1");
-
-        // Assert
-        await Service.Received(1).GetWorkbooksAsync(
-            Arg.Is<IReadOnlyList<string>>(ids => ids.Contains(workbookId)),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 

@@ -2,16 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Tests.FileSystem.AutoexportJob;
 
-public class AutoexportJobGetCommandTests : CommandUnitTestsBase<AutoexportJobGetCommand, IManagedLustreService>
+public class AutoexportJobGetCommandTests : SubscriptionCommandUnitTestsBase<AutoexportJobGetCommand, IManagedLustreService>
 {
     private readonly string _subscription = "sub123";
     private readonly string _resourceGroup = "rg1";

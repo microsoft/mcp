@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using System.Text.Json;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
@@ -12,14 +11,17 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.Tests;
 
+[Trait("Command", "EmailSendCommand")]
 [Trait("Command", "SmsSendCommand")]
 public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
-    private string? endpointRecorded;
-    private string? fromSms;
-    private string? toSms;
+    private string? _endpointRecorded;
+    private string? _fromSms;
+    private string? _toSms;
+    private string? _fromEmail;
+    private string? _toEmail;
     public override bool EnableDefaultSanitizerAdditions => false;
 
     public override async ValueTask InitializeAsync()
@@ -27,17 +29,21 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
         await LoadSettingsAsync();
         if (TestMode == TestMode.Playback)
         {
-            endpointRecorded = "https://sanitized.communication.azure.com";
-            fromSms = "12345678900";
-            toSms = "12345678901";
+            _endpointRecorded = "https://sanitized.communication.azure.com";
+            _fromSms = "12345678900";
+            _toSms = "12345678901";
+            _fromEmail = "DoNotReply@domain.com";
+            _toEmail = "placeholder@microsoft.com";
         }
         else
         {
-            Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_ENDPOINT", out endpointRecorded);
+            Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_ENDPOINT", out _endpointRecorded);
             Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_FROM_PHONE", out var tempFromSms);
-            fromSms = tempFromSms?.Substring(1); // Remove '+' for regex matching
+            _fromSms = tempFromSms?.Substring(1); // Remove '+' for regex matching
             Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_TO_PHONE", out var tempToSms);
-            toSms = tempToSms?.Substring(1); // Remove '+' for regex matching
+            _toSms = tempToSms?.Substring(1); // Remove '+' for regex matching
+            Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_SENDER_EMAIL", out _fromEmail);
+            Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_TEST_EMAIL", out _toEmail);
         }
 
         await base.InitializeAsync();
@@ -58,8 +64,18 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
         }),
         new(new()
         {
-            Regex = endpointRecorded,
+            Regex = _endpointRecorded,
             Value = "https://sanitized.communication.azure.com",
+        }),
+        new(new()
+        {
+            Regex = _fromEmail,
+            Value = "DoNotReply@domain.com",
+        }),
+        new(new()
+        {
+            Regex = _toEmail,
+            Value = "placeholder@microsoft.com",
         })
     ];
 
@@ -99,18 +115,18 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
 
         if (TestMode != TestMode.Playback)
         {
-            Assert.SkipWhen(string.IsNullOrEmpty(endpointRecorded), "Communication Services endpoint not configured for live testing");
-            Assert.SkipWhen(string.IsNullOrEmpty(fromSms), "From phone number not configured for live testing");
-            Assert.SkipWhen(string.IsNullOrEmpty(toSms), "To phone number not configured for live testing");
+            Assert.SkipWhen(string.IsNullOrEmpty(_endpointRecorded), "Communication Services endpoint not configured for live testing");
+            Assert.SkipWhen(string.IsNullOrEmpty(_fromSms), "From phone number not configured for live testing");
+            Assert.SkipWhen(string.IsNullOrEmpty(_toSms), "To phone number not configured for live testing");
         }
 
         var result = await CallToolAsync(
             "communication_sms_send",
             new()
             {
-                { "endpoint", endpointRecorded },
-                { "from", fromSms },
-                { "to", new[] { toSms } },
+                { "endpoint", _endpointRecorded },
+                { "from", _fromSms },
+                { "to", new[] { _toSms } },
                 { "message", "Test SMS from Azure MCP Live Test" },
                 { "enable-delivery-report", true },
                 { "tag", "live-test" }
@@ -137,69 +153,89 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
 
         // Verify the result values
         Assert.NotNull(messageId);
-        Assert.Equal(toSms, to);
+        Assert.Equal(_toSms, to);
         Assert.True(successful, "SMS was not sent successfully");
         Assert.True(Guid.TryParse(messageId, out _), "MessageId should be a valid GUID");
 
         Output.WriteLine($"SMS successfully sent to {to} with message ID {messageId}");
     }
 
-    [Theory]
-    [InlineData("--invalid-endpoint test")]
-    [InlineData("--endpoint")]
-    [InlineData("--endpoint https://mycomm.communication.azure.com --from")]
-    [InlineData("--endpoint https://mycomm.communication.azure.com --from +1234567890")]
-    [InlineData("--endpoint https://mycomm.communication.azure.com --from +1234567890 --to +1987654321")]
-    public async Task Should_Return400_WithInvalidInput(string args)
+    [Fact]
+    public async Task Should_SendEmail_WithValidParameters()
     {
+        // Output the values for debugging
+        Output.WriteLine($"Endpoint: {_endpointRecorded ?? "null"}");
+        Output.WriteLine($"Sender Email: {_fromEmail ?? "null"}");
+        Output.WriteLine($"Test Email: {_toEmail ?? "null"}");
+
+        if (TestMode != TestMode.Playback)
+        {
+            Assert.SkipWhen(string.IsNullOrEmpty(_endpointRecorded), "Communication Services endpoint not configured for live testing");
+            Assert.SkipWhen(string.IsNullOrEmpty(_fromEmail), "Sender email not configured for live testing");
+            Assert.SkipWhen(string.IsNullOrEmpty(_toEmail), "Test recipient email not configured for live testing");
+        }
         var result = await CallToolAsync(
-            "communication_sms_send",
+            "communication_email_send",
             new()
             {
-                { "args", args }
+                { "endpoint", _endpointRecorded },
+                { "from", _fromEmail },
+                { "to", new[] { _toEmail } },
+                { "subject", "Test Email from Azure MCP Live Test" },
+                { "message", "This is a test email sent from Azure MCP Live Test." },
+                { "is-html", false }
+                // Using default Azure authentication (Managed Identity or az login)
             });
 
-        Output.WriteLine($"Error result: {result}");
+        // Assert that we have a result
+        Assert.NotNull(result);
 
-        // Check if the response is valid
-        if (result == null)
+        // Check if we got a success response (has 'result' property) or error response
+        if (result.Value.TryGetProperty("result", out var resultProperty))
         {
-            // If result is null, the test is considered a success because we expected an error
-            // In this case, there's nothing more to validate
-            return;
+            // Success response - get the result property
+            var emailResult = resultProperty;
+            Assert.Equal(JsonValueKind.Object, emailResult.ValueKind);
+
+            // Verify expected properties
+            var messageIdElement = emailResult.AssertProperty("messageId");
+            var messageId = messageIdElement.GetString();
+
+            Assert.True(emailResult.TryGetProperty("status", out var messageStatusElement));
+            var messageStatus = messageStatusElement.GetString();
+
+            // Verify values
+            Assert.NotNull(messageId);
+            Assert.NotEmpty(messageId);
+            Assert.NotNull(messageStatus);
+            Assert.NotEmpty(messageStatus);
+
+            Output.WriteLine($"Email successfully sent with message ID {messageId} and status {messageStatus}");
         }
-
-        // If result is not null, let's check the status
-        if (result.Value.TryGetProperty("status", out var statusElement))
+        else if (result.Value.TryGetProperty("status", out var statusElement))
         {
+            // This is an error response
             var status = statusElement.GetInt32();
-            Output.WriteLine($"Status code: {status}");
+            Output.WriteLine($"Error status code: {status}");
 
-            // We expect error 400 for validation failures
-            Assert.Equal((int)HttpStatusCode.BadRequest, status);
-        }
-
-        // Check if message property exists and get the message
-        string? message = null;
-        if (result.Value.TryGetProperty("message", out var messageElement))
-        {
-            message = messageElement.GetString();
-
-            // If message is not null, log it
-            if (message != null)
+            if (result.Value.TryGetProperty("message", out var messageElement))
             {
+                var message = messageElement.GetString();
                 Output.WriteLine($"Error message: {message}");
             }
-        }
 
-        // Verify the message exists and contains expected text
-        if (message != null)
+            // Skip the test due to auth error
+            if (status == 401)
+            {
+                Output.WriteLine("Skipping test due to authentication error. Make sure Azure Managed Identity is configured properly.");
+                Output.WriteLine("To run this test, ensure your Azure environment has the proper RBAC permissions set up for Communication Services.");
+            }
+
+            Assert.Fail($"Email sending failed with status code {status}");
+        }
+        else
         {
-            Assert.True(
-                message.Contains("Missing", StringComparison.OrdinalIgnoreCase) ||
-                message.Contains("Required", StringComparison.OrdinalIgnoreCase) ||
-                message.Contains("validation", StringComparison.OrdinalIgnoreCase),
-                $"Error message did not contain expected text: {message}");
+            Assert.Fail("Unexpected response format - no 'result' or 'status' property found");
         }
     }
 }

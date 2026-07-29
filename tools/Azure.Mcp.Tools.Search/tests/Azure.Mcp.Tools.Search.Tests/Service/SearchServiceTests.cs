@@ -7,7 +7,6 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Search.Services;
 using Azure.ResourceManager;
 using Azure.Search.Documents.KnowledgeBases.Models;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
@@ -35,11 +34,7 @@ public class SearchServiceCacheTests
         cloudConfig.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
         _tenantService.CloudConfiguration.Returns(cloudConfig);
 
-        _service = new SearchService(
-            _subscriptionService,
-            _cacheService,
-            _tenantService,
-            Substitute.For<ILogger<SearchService>>());
+        _service = new SearchService(_subscriptionService, _cacheService, _tenantService);
     }
 
     [Fact]

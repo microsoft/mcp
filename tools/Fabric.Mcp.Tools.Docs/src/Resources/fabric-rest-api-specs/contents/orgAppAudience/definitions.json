@@ -1,0 +1,192 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "OrgAppAudience data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "OrgAppAudience": {
+            "description": "An OrgAppAudience object.",
+
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The OrgAppAudience properties.",
+                    "$ref": "#/definitions/OrgAppAudienceProperties"
+                }
+            }
+        },
+        "OrgAppAudienceProperties": {
+            "description": "The OrgAppAudience properties.",
+            "type": "object",
+            "required": [
+                "oneLakeRootPath"
+            ],
+            "properties": {
+                "oneLakeRootPath": {
+                    "description": "OneLake path to the OrgAppAudience root directory.",
+                    "type": "string"
+                }
+            }
+        },
+        "OrgAppAudiences": {
+            "description": "A list of OrgAppAudiences.",
+
+            "required": [
+                "value"
+            ],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "The list of OrgAppAudiences.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/OrgAppAudience"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateOrgAppAudienceRequest": {
+            "description": "Create OrgAppAudience request payload.",
+            "required": [
+                "displayName"
+            ],
+            "properties": {
+                "displayName": {
+                    "description": "The OrgAppAudience display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The OrgAppAudience description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the OrgAppAudience is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The OrgAppAudience public definition.",
+                    "$ref": "#/definitions/OrgAppAudiencePublicDefinition",
+                    "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the OrgAppAudience.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateOrgAppAudienceDefinitionRequest": {
+            "description": "Update OrgAppAudience public definition request payload.",
+            "required": [
+                "definition"
+            ],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/OrgAppAudiencePublicDefinition"
+                }
+            }
+        },
+        "OrgAppAudienceDefinitionResponse": {
+            "description": "OrgAppAudience public definition response.",
+            "required": [
+                "definition"
+            ],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/OrgAppAudiencePublicDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "OrgAppAudiencePublicDefinition": {
+            "description": "OrgAppAudience public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/org-app-audience-definition) for more details on the structure of the OrgAppAudience definition.",
+            "type": "object",
+            "required": [
+                "parts"
+            ],
+            "properties": {
+                "format": {
+                    "description": "The format of the item definition. Additional `format` types may be added over time.",
+                    "type": "string",
+                    "enum": [
+                        "OrgAppAudienceV1"
+                    ],
+                    "x-ms-enum": {
+                        "name": "OrgAppAudienceDefinitionFormat",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "OrgAppAudienceV1",
+                                "description": "The V1 JSON format for the OrgAppAudience public definition, specifically designed to support CI/CD scenarios in Fabric. See [OrgAppAudience - OrgAppAudienceV1 specification](/rest/api/fabric/articles/item-management/definitions/org-app-audience-definition/OrgAppAudienceV1) for more details."
+                            }
+                        ]
+                    },
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/OrgAppAudiencePublicDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "OrgAppAudiencePublicDefinitionPart": {
+            "description": "OrgAppAudience definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The OrgAppAudience public definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The OrgAppAudience public definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType": {
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateOrgAppAudienceRequest": {
+            "description": "Update OrgAppAudience request.",
+            "properties": {
+                "displayName": {
+                    "description": "The OrgAppAudience display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The OrgAppAudience description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        }
+    }
+}

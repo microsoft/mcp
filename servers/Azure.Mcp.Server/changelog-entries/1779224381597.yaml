@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Upgraded Azure.ResourceManager.FileShares SDK to GA 1.0.0 (api-version 2026-06-01) and added nfsEncryptionInTransit option to file share create/update commands."

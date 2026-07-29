@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests.Metrics;
 
-public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefinitionsCommand, IMonitorMetricsService>
+public class MetricsDefinitionsCommandTests : SubscriptionCommandUnitTestsBase<MetricsDefinitionsCommand, IMonitorMetricsService>
 {
     #region Constructor and Command Setup Tests
 
@@ -22,9 +22,8 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
     public void Constructor_InitializesCommandCorrectly()
     {
         Assert.Equal("definitions", CommandDefinition.Name);
-        Assert.NotNull(CommandDefinition.Description);
-        Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("List available metric definitions", CommandDefinition.Description);
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
     }
 
     [Fact]

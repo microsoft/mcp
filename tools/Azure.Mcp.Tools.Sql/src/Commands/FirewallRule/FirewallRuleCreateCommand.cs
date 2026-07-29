@@ -3,13 +3,13 @@
 
 using System.Net;
 using System.Net.Sockets;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Sql.Models;
-using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.FirewallRule;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
@@ -30,52 +30,36 @@ namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<FirewallRuleCreateCommand> logger)
-    : BaseSqlCommand<FirewallRuleCreateOptions>(logger)
+public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<FirewallRuleCreateCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<FirewallRuleCreateOptions, FirewallRuleCreateCommand.FirewallRuleCreateResult>(subscriptionResolver)
 {
     private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<FirewallRuleCreateCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(FirewallRuleCreateOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SqlOptionDefinitions.FirewallRuleNameOption);
-        command.Options.Add(SqlOptionDefinitions.StartIpAddressOption);
-        command.Options.Add(SqlOptionDefinitions.EndIpAddressOption);
-        command.Validators.Add(commandResult =>
+        base.ValidateOptions(options, validationResult);
+
+        var startIpIsValid = !string.IsNullOrEmpty(options.StartIpAddress) && IsValidIpAddress(options.StartIpAddress);
+        var endIpIsValid = !string.IsNullOrEmpty(options.EndIpAddress) && IsValidIpAddress(options.EndIpAddress);
+
+        if (!startIpIsValid)
         {
-            var startIp = commandResult.GetValueOrDefault(SqlOptionDefinitions.StartIpAddressOption);
-            var endIp = commandResult.GetValueOrDefault(SqlOptionDefinitions.EndIpAddressOption);
+            validationResult.Errors.Add($"Invalid start IP address format: '{options.StartIpAddress}'. Must be a valid IPv4 address.");
+        }
 
-            var startIpIsValid = !string.IsNullOrEmpty(startIp) && IsValidIpAddress(startIp);
-            var endIpIsValid = !string.IsNullOrEmpty(endIp) && IsValidIpAddress(endIp);
+        if (!endIpIsValid)
+        {
+            validationResult.Errors.Add($"Invalid end IP address format: '{options.EndIpAddress}'. Must be a valid IPv4 address.");
+        }
 
-            if (!startIpIsValid)
-            {
-                commandResult.AddError($"Invalid start IP address format: '{startIp}'. Must be a valid IPv4 address.");
-            }
-
-            if (!endIpIsValid)
-            {
-                commandResult.AddError($"Invalid end IP address format: '{endIp}'. Must be a valid IPv4 address.");
-            }
-
-            if (startIpIsValid && endIpIsValid && IsDangerousRange(startIp!, endIp!))
-            {
-                commandResult.AddError(
-                    "The specified IP range is not allowed. A range of 0.0.0.0 to 0.0.0.0 enables access from all Azure services, and a range of 0.0.0.0 to 255.255.255.255 opens access to the entire internet. " +
-                    "These overly permissive rules are blocked for security. Specify a narrower IP range instead."
-                );
-            }
-        });
-    }
-
-    protected override FirewallRuleCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.FirewallRuleName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.FirewallRuleNameOption.Name);
-        options.StartIpAddress = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.StartIpAddressOption.Name);
-        options.EndIpAddress = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.EndIpAddressOption.Name);
-        return options;
+        if (startIpIsValid && endIpIsValid && IsDangerousRange(options.StartIpAddress, options.EndIpAddress))
+        {
+            validationResult.Errors.Add(
+                "The specified IP range is not allowed. A range of 0.0.0.0 to 0.0.0.0 enables access from all Azure services, and a range of 0.0.0.0 to 255.255.255.255 opens access to the entire internet. " +
+                "These overly permissive rules are blocked for security. Specify a narrower IP range instead."
+            );
+        }
     }
 
     // IP address must be a dotted-quad IPv4 format (e.g. 10.0.0.1).
@@ -100,24 +84,17 @@ public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<Fi
         return false;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FirewallRuleCreateOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var firewallRule = await _sqlService.CreateFirewallRuleAsync(
-                options.Server!,
-                options.ResourceGroup!,
+                options.Server,
+                options.ResourceGroup,
                 options.Subscription!,
-                options.FirewallRuleName!,
-                options.StartIpAddress!,
-                options.EndIpAddress!,
+                options.FirewallRuleName,
+                options.StartIpAddress,
+                options.EndIpAddress,
                 options.RetryPolicy,
                 cancellationToken);
 
@@ -147,12 +124,5 @@ public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<Fi
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
-    };
-
-    internal record FirewallRuleCreateResult(SqlServerFirewallRule FirewallRule);
+    public sealed record FirewallRuleCreateResult(SqlServerFirewallRule FirewallRule);
 }

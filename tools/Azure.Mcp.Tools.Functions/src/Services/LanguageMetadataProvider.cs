@@ -341,8 +341,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
     public IEnumerable<string> SupportedLanguages => s_languageInfo.Keys;
 
     /// <inheritdoc />
-    public bool IsValidLanguage(string language) =>
-        s_languageInfo.ContainsKey(language);
+    public bool IsValidLanguage(string language) => s_languageInfo.ContainsKey(language);
 
     /// <inheritdoc />
     public LanguageInfo? GetLanguageInfo(string language, IReadOnlyDictionary<string, RuntimeVersionInfo>? manifestRuntimeVersions = null)
@@ -425,7 +424,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
     /// <summary>
     /// Gets runtime versions for a language, preferring manifest data over fallback.
     /// </summary>
-    private RuntimeVersionInfo GetRuntimeVersions(string language, IReadOnlyDictionary<string, RuntimeVersionInfo>? manifestRuntimeVersions)
+    private static RuntimeVersionInfo GetRuntimeVersions(string language, IReadOnlyDictionary<string, RuntimeVersionInfo>? manifestRuntimeVersions)
     {
         // Try manifest first using the PascalCase key mapping
         if (manifestRuntimeVersions is not null &&

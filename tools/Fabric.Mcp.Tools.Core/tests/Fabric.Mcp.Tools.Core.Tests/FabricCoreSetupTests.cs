@@ -46,7 +46,8 @@ public class FabricCoreSetupTests
 
         // Assert
         Assert.True(rootGroup.Commands.ContainsKey("create-item"), "Should have create-item command");
-        Assert.Single(rootGroup.Commands);
+        Assert.True(rootGroup.Commands.ContainsKey("search-catalog"), "Should have search-catalog command");
+        Assert.Equal(2, rootGroup.Commands.Count);
     }
 
     [Fact]

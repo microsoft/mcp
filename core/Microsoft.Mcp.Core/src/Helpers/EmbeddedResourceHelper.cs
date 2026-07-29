@@ -52,7 +52,10 @@ public static class EmbeddedResourceHelper
 
         if (matches.Length > 1)
         {
-            throw new ArgumentException($"Multiple resources match pattern '{resourcePattern}'. Please refine your pattern.", nameof(resourcePattern));
+            // When multiple resources match, pick the shortest name (most specific match).
+            // This handles cases where a broad pattern like "mirrored...catalog" could match
+            // both "mirrored-catalog-definition.md" and "mirrored-azuredatabricks-unitycatalog-definition.md".
+            return matches.OrderBy(m => m.Length).First();
         }
 
         return matches[0];

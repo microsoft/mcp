@@ -3,12 +3,12 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -16,7 +16,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.Tests.Commands.Webapp;
 
 [Trait("Command", "WebappGet")]
-public class WebappGetCommandTests : CommandUnitTestsBase<WebappGetCommand, IAppServiceService>
+public class WebappGetCommandTests : SubscriptionCommandUnitTestsBase<WebappGetCommand, IAppServiceService>
 {
     [Theory]
     [InlineData("sub123", null, null)]

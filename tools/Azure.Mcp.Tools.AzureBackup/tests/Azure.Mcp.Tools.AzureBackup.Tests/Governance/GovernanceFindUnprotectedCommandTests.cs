@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.Tests.Governance;
 
-public class GovernanceFindUnprotectedCommandTests : CommandUnitTestsBase<GovernanceFindUnprotectedCommand, IAzureBackupService>
+public class GovernanceFindUnprotectedCommandTests : SubscriptionCommandUnitTestsBase<GovernanceFindUnprotectedCommand, IAzureBackupService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -175,5 +175,78 @@ public class GovernanceFindUnprotectedCommandTests : CommandUnitTestsBase<Govern
         Assert.Equal("Microsoft.Compute/virtualMachines", result.Resources[0].ResourceType);
         Assert.Equal("rg1", result.Resources[0].ResourceGroup);
         Assert.Equal("eastus", result.Resources[0].Location);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithEnrichedVaultResources_ReturnsEnrichmentFields()
+    {
+        // Arrange - simulate mixed ARM + vault-discovered resources
+        var expectedResources = new List<UnprotectedResourceInfo>
+        {
+            new("/subscriptions/.../vm1", "vm1", "Microsoft.Compute/virtualMachines", "rg1", "eastus", null, DiscoverySource: "arm"),
+            new("/subscriptions/.../sqldb1", "master", "SQLDataBase", "rg1", null, null,
+                ParentResourceId: "myserver", DiscoverySource: "vault", VaultName: "myvault", ProtectionState: "NotProtected"),
+            new("/subscriptions/.../fileshare1", "share1", "AzureFileShare", "rg1", null, null,
+                ParentResourceId: "mystorageaccount", DiscoverySource: "vault", VaultName: "myvault", ProtectionState: "NotProtected")
+        };
+
+        Service.FindUnprotectedResourcesAsync(
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(expectedResources);
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.GovernanceFindUnprotectedCommandResult);
+
+        Assert.Equal(3, result.Resources.Count);
+
+        // ARM-discovered resource
+        var armResource = result.Resources[0];
+        Assert.Equal("arm", armResource.DiscoverySource);
+        Assert.Null(armResource.VaultName);
+        Assert.Null(armResource.ParentResourceId);
+
+        // Vault-discovered SQL database
+        var sqlDb = result.Resources[1];
+        Assert.Equal("vault", sqlDb.DiscoverySource);
+        Assert.Equal("myvault", sqlDb.VaultName);
+        Assert.Equal("myserver", sqlDb.ParentResourceId);
+        Assert.Equal("NotProtected", sqlDb.ProtectionState);
+        Assert.Equal("SQLDataBase", sqlDb.ResourceType);
+
+        // Vault-discovered file share
+        var fileShare = result.Resources[2];
+        Assert.Equal("vault", fileShare.DiscoverySource);
+        Assert.Equal("mystorageaccount", fileShare.ParentResourceId);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_EnrichmentFieldsDefaultToNull_ForBackwardCompatibility()
+    {
+        // Arrange - resource without enrichment fields (backward-compatible construction)
+        var expectedResources = new List<UnprotectedResourceInfo>
+        {
+            new("/subscriptions/.../vm1", "vm1", "Microsoft.Compute/virtualMachines", "rg1", "eastus", null)
+        };
+
+        Service.FindUnprotectedResourcesAsync(
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(expectedResources);
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.GovernanceFindUnprotectedCommandResult);
+
+        Assert.Single(result.Resources);
+        Assert.Null(result.Resources[0].ParentResourceId);
+        Assert.Null(result.Resources[0].DiscoverySource);
+        Assert.Null(result.Resources[0].VaultName);
+        Assert.Null(result.Resources[0].ProtectionState);
     }
 }

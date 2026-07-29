@@ -3,17 +3,17 @@
 
 using System.Net;
 using System.Text.Json.Nodes;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests.Log;
 
-public sealed class WorkspaceLogQueryCommandTests : CommandUnitTestsBase<WorkspaceLogQueryCommand, IMonitorService>
+public sealed class WorkspaceLogQueryCommandTests : SubscriptionCommandUnitTestsBase<WorkspaceLogQueryCommand, IMonitorService>
 {
     private const string _knownSubscription = "knownSubscription";
     private const string _knownWorkspace = "knownWorkspace";
@@ -25,9 +25,8 @@ public sealed class WorkspaceLogQueryCommandTests : CommandUnitTestsBase<Workspa
     private const string _knownQuery = "| limit 10";
 
     [Theory]
-    [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query \"{_knownQuery}\"", true)]
-    [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query \"{_knownQuery}\" --hours {_knownHours} --limit {_knownLimit}", true)]
-    [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --table {_knownTable} --query \"{_knownQuery}\"", false)] // missing resource-group
+    [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --table {_knownTable} --query \"{_knownQuery}\"", true)]
+    [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --table {_knownTable} --query \"{_knownQuery}\" --hours {_knownHours} --limit {_knownLimit}", true)]
     [InlineData($"--subscription {_knownSubscription}", false)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
@@ -95,7 +94,6 @@ public sealed class WorkspaceLogQueryCommandTests : CommandUnitTestsBase<Workspa
         var response = await ExecuteCommandAsync(
             "--subscription", _knownSubscription,
             "--workspace", _knownWorkspace,
-            "--resource-group", _knownResourceGroup,
             "--table", _knownTable,
             "--query", _knownQuery);
 
@@ -137,7 +135,6 @@ public sealed class WorkspaceLogQueryCommandTests : CommandUnitTestsBase<Workspa
         var response = await ExecuteCommandAsync(
             "--subscription", _knownSubscription,
             "--workspace", _knownWorkspace,
-            "--resource-group", _knownResourceGroup,
             "--table", _knownTable,
             "--query", _knownQuery,
             "--hours", _knownHours,
@@ -179,7 +176,6 @@ public sealed class WorkspaceLogQueryCommandTests : CommandUnitTestsBase<Workspa
         var response = await ExecuteCommandAsync(
             "--subscription", _knownSubscription,
             "--workspace", _knownWorkspace,
-            "--resource-group", _knownResourceGroup,
             "--table", _knownTable,
             "--query", _knownQuery);
 
@@ -217,7 +213,6 @@ public sealed class WorkspaceLogQueryCommandTests : CommandUnitTestsBase<Workspa
         var response = await ExecuteCommandAsync(
             "--subscription", _knownSubscription,
             "--workspace", _knownWorkspace,
-            "--resource-group", _knownResourceGroup,
             "--table", _knownTable,
             "--query", _knownQuery);
 

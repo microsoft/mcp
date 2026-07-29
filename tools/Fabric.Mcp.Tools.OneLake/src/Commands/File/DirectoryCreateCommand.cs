@@ -7,8 +7,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
@@ -27,84 +26,50 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     OpenWorld = false,
     ReadOnly = false,
     Secret = false)]
-public sealed class DirectoryCreateCommand(
-    ILogger<DirectoryCreateCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<DirectoryCreateOptions>()
+public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logger, IOneLakeService oneLakeService)
+    : AuthenticatedCommand<DirectoryCreateOptions, DirectoryCreateCommand.DirectoryCreateCommandResult>
 {
     private readonly ILogger<DirectoryCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(DirectoryCreateOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.DirectoryPath);
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+        if (string.IsNullOrWhiteSpace(options.WorkspaceId) && string.IsNullOrWhiteSpace(options.Workspace))
         {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-
-            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
-            {
-                result.AddError("Item identifier is required. Provide --item or --item-id.");
-            }
-        });
-    }
-
-    protected override DirectoryCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
-            ? workspaceId!
-            : workspaceName ?? string.Empty;
-
-        var itemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-        var itemName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-        options.ItemId = !string.IsNullOrWhiteSpace(itemId)
-            ? itemId!
-            : itemName ?? string.Empty;
-
-        options.DirectoryPath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DirectoryPath.Name) ?? string.Empty;
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("Workspace identifier is required. Provide --workspace or --workspace-id.");
         }
 
-        var options = BindOptions(parseResult);
+        if (string.IsNullOrWhiteSpace(options.ItemId) && string.IsNullOrWhiteSpace(options.Item))
+        {
+            validationResult.Errors.Add("Item identifier is required. Provide --item or --item-id.");
+        }
+    }
 
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DirectoryCreateOptions options, CancellationToken cancellationToken)
+    {
         try
         {
+            var workspaceIdentifier = !string.IsNullOrWhiteSpace(options.WorkspaceId)
+                ? options.WorkspaceId
+                : options.Workspace!;
+
+            var itemIdentifier = !string.IsNullOrWhiteSpace(options.ItemId)
+                ? options.ItemId
+                : options.Item!;
+
             await _oneLakeService.CreateDirectoryAsync(
-                options.WorkspaceId,
-                options.ItemId,
+                workspaceIdentifier,
+                itemIdentifier,
                 options.DirectoryPath,
                 cancellationToken);
 
-            var result = new DirectoryCreateCommandResult
-            {
-                WorkspaceId = options.WorkspaceId,
-                ItemId = options.ItemId,
-                DirectoryPath = options.DirectoryPath,
-                Success = true,
-                Message = $"Directory '{options.DirectoryPath}' created successfully"
-            };
+            var result = new DirectoryCreateCommandResult(
+                WorkspaceId: options.WorkspaceId ?? options.Workspace ?? string.Empty,
+                ItemId: options.ItemId ?? options.Item ?? string.Empty,
+                DirectoryPath: options.DirectoryPath,
+                Success: true,
+                Message: $"Directory '{options.DirectoryPath}' created successfully");
 
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.DirectoryCreateCommandResult);
         }
@@ -118,37 +83,29 @@ public sealed class DirectoryCreateCommand(
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        ArgumentException argEx => $"Invalid argument: {argEx.Message}",
-        InvalidOperationException opEx => $"Operation failed: {opEx.Message}",
-        HttpRequestException httpEx => $"HTTP request failed: {httpEx.Message}",
-        _ => base.GetErrorMessage(ex)
-    };
+    protected override string GetErrorMessage(Exception ex) =>
+        OneLakeCommandValidators.GetErrorMessage(ex, base.GetErrorMessage);
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        InvalidOperationException => HttpStatusCode.InternalServerError,
-        HttpRequestException httpEx when httpEx.Message.Contains("404") => HttpStatusCode.NotFound,
-        HttpRequestException httpEx when httpEx.Message.Contains("403") => HttpStatusCode.Forbidden,
-        HttpRequestException httpEx when httpEx.Message.Contains("401") => HttpStatusCode.Unauthorized,
-        _ => base.GetStatusCode(ex)
-    };
+    protected override HttpStatusCode GetStatusCode(Exception ex) =>
+        OneLakeCommandValidators.GetStatusCode(ex, base.GetStatusCode);
 
-    public sealed record DirectoryCreateCommandResult
-    {
-        public string WorkspaceId { get; init; } = string.Empty;
-        public string ItemId { get; init; } = string.Empty;
-        public string DirectoryPath { get; init; } = string.Empty;
-        public bool Success { get; init; }
-        public string Message { get; init; } = string.Empty;
-    }
+    public sealed record DirectoryCreateCommandResult(string WorkspaceId, string ItemId, string DirectoryPath, bool Success, string Message);
 }
 
-public sealed class DirectoryCreateOptions : GlobalOptions
+public sealed class DirectoryCreateOptions
 {
-    public string WorkspaceId { get; set; } = string.Empty;
-    public string ItemId { get; set; } = string.Empty;
-    public string DirectoryPath { get; set; } = string.Empty;
+    [Option(Description = OneLakeOptionDescriptions.WorkspaceId)]
+    public string? WorkspaceId { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.Workspace)]
+    public string? Workspace { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.ItemId)]
+    public string? ItemId { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.Item)]
+    public string? Item { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.DirectoryPath)]
+    public required string DirectoryPath { get; set; }
 }

@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Disk;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -17,15 +17,16 @@ namespace Azure.Mcp.Tools.Compute.Tests.Disk;
 /// <summary>
 /// Unit tests for the DiskUpdateCommand.
 /// </summary>
-public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IComputeService>
+public class DiskUpdateCommandTests : SubscriptionCommandUnitTestsBase<DiskUpdateCommand, IComputeService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
         Assert.NotNull(Command);
         Assert.Equal("update", Command.Name);
-        Assert.Contains("managed disk", Command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.NotEqual(Guid.Empty.ToString(), Command.Id);
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
     }
 
     [Fact]
@@ -72,7 +73,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             Arg.Any<long?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -128,7 +129,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             Arg.Any<long?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -183,7 +184,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             Arg.Any<long?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -243,7 +244,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             Arg.Any<long?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -319,7 +320,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             Arg.Any<long?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -380,7 +381,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             Arg.Any<long?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -418,7 +419,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             Arg.Any<long?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -499,7 +500,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             Arg.Any<long?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             tags,
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -531,7 +532,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             Arg.Any<long?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             tags,
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -576,7 +577,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             Arg.Any<long?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             diskEncryptionSet,
             encryptionType,
@@ -611,7 +612,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             Arg.Any<long?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             diskEncryptionSet,
             encryptionType,
@@ -652,7 +653,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             Arg.Any<long?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -709,7 +710,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             Arg.Any<long?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),

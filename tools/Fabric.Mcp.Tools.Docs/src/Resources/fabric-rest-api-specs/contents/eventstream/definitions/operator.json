@@ -392,7 +392,59 @@
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "The Azure Stream Analytics & Eventstream Query to execute. Language reference documentation can be found [here](https://learn.microsoft.com/en-us/stream-analytics-query/stream-analytics-query-language-reference)."
+                    "description": "The Azure Stream Analytics and Eventstream query to execute. Language reference documentation is available [here](https://learn.microsoft.com/en-us/stream-analytics-query/stream-analytics-query-language-reference)."
+
+                },
+                "advancedSettings": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/SqlAdvancedSettings"
+                        }
+                    ],
+                    "description": "The advanced settings for the SQL operator."
+                }
+
+            }
+        },
+        "SqlAdvancedSettings": {
+            "type": "object",
+            "description": "Advanced settings for the SQL operator.",
+            "properties": {
+                "eventsOutOfOrderPolicy": {
+                    "type": "string",
+                    "description": "The policy for handling events that arrive out of order. Additional policies may be added over time.",
+                    "enum": [
+                        "Adjust",
+                        "Drop"
+                    ],
+                    "x-ms-enum": {
+                        "name": "EventsOutOfOrderPolicy",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Adjust",
+                                "description": "Adjust the timestamp of out-of-order events."
+                            },
+                            {
+                                "value": "Drop",
+                                "description": "Drop out-of-order events."
+                            }
+                        ]
+                    }
+                },
+                "eventsOutOfOrderMaxDelayInSeconds": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "The maximum delay in seconds for out-of-order events. The value must be between 0 and 3600.",
+                    "minimum": 0,
+                    "maximum": 3600
+                },
+                "eventsLateArrivalMaxDelayInSeconds": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "The maximum delay in seconds for late arrival events. The value must be between 0 and 1814400.",
+                    "minimum": 0,
+                    "maximum": 1814400
                 }
             }
         }

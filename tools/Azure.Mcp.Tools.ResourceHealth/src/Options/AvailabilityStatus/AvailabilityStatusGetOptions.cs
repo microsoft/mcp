@@ -1,12 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Options.AvailabilityStatus;
 
-public class AvailabilityStatusGetOptions : BaseResourceHealthOptions
+public sealed class AvailabilityStatusGetOptions : ISubscriptionOption
 {
-    [JsonPropertyName(ResourceHealthOptionDefinitions.ResourceIdName)]
+    [Option(Description = "The Azure resource ID to get health status for (e.g., /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{vm}).", Name = "resourceId")]
     public string? ResourceId { get; set; }
+
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public string? ResourceGroup { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [OptionContainer(Prefix = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

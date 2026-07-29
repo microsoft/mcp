@@ -14,6 +14,27 @@ public static class AzureBackupTelemetryTags
     public static readonly string DatasourceType = AddPrefix("DatasourceType");
     public static readonly string OperationScope = AddPrefix("OperationScope");
 
+    // Unprefixed tag name shared with Microsoft.Mcp.Core's AzureTagName.SubscriptionGuid.
+    // Duplicated here as a string literal because AzureTagName is internal to that assembly.
+    // Emitted directly from each AzureBackup tool to ensure per-subscription telemetry is
+    // captured even in namespace server mode, where the central McpRuntime tag emission
+    // does not see the nested `subscription` parameter.
+    public const string SubscriptionGuid = "AzSubscriptionGuid";
+
+    /// <summary>
+    /// Adds the AzSubscriptionGuid tag to the activity. Matches McpRuntime.CallToolHandler
+    /// behavior by emitting any non-null subscription value (including empty string).
+    /// </summary>
+    public static void AddSubscriptionTag(Activity? activity, string? subscription)
+    {
+        if (activity is null || subscription is null)
+        {
+            return;
+        }
+
+        activity.SetTag(SubscriptionGuid, subscription);
+    }
+
     /// <summary>
     /// Normalizes the vault type to canonical lowercase values (rsv/dpp).
     /// Returns "auto" when the input is null or empty (user didn't specify --vault-type).

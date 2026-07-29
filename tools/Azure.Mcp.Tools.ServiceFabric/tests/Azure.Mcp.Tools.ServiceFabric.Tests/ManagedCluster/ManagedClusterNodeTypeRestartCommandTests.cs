@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ServiceFabric.Commands;
 using Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
 using Azure.Mcp.Tools.ServiceFabric.Models;
 using Azure.Mcp.Tools.ServiceFabric.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Tests.ManagedCluster;
 
-public class ManagedClusterNodeTypeRestartCommandTests : CommandUnitTestsBase<ManagedClusterNodeTypeRestartCommand, IServiceFabricService>
+public class ManagedClusterNodeTypeRestartCommandTests : SubscriptionCommandUnitTestsBase<ManagedClusterNodeTypeRestartCommand, IServiceFabricService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -45,7 +45,7 @@ public class ManagedClusterNodeTypeRestartCommandTests : CommandUnitTestsBase<Ma
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string[]>(),
-                Arg.Any<string>(),
+                Arg.Any<UpdateType>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
@@ -85,7 +85,7 @@ public class ManagedClusterNodeTypeRestartCommandTests : CommandUnitTestsBase<Ma
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string[]>(),
-            Arg.Any<string>(),
+            Arg.Any<UpdateType>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -107,7 +107,7 @@ public class ManagedClusterNodeTypeRestartCommandTests : CommandUnitTestsBase<Ma
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string[]>(),
-            Arg.Any<string>(),
+            Arg.Any<UpdateType>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
@@ -129,7 +129,7 @@ public class ManagedClusterNodeTypeRestartCommandTests : CommandUnitTestsBase<Ma
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string[]>(),
-            Arg.Is("ByUpgradeDomain"),
+            Arg.Is(UpdateType.ByUpgradeDomain),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -152,7 +152,7 @@ public class ManagedClusterNodeTypeRestartCommandTests : CommandUnitTestsBase<Ma
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string[]>(),
-            Arg.Is("ByUpgradeDomain"),
+            Arg.Is(UpdateType.ByUpgradeDomain),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
@@ -168,7 +168,7 @@ public class ManagedClusterNodeTypeRestartCommandTests : CommandUnitTestsBase<Ma
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string[]>(),
-            Arg.Any<string>(),
+            Arg.Any<UpdateType>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -198,7 +198,7 @@ public class ManagedClusterNodeTypeRestartCommandTests : CommandUnitTestsBase<Ma
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string[]>(),
-            Arg.Any<string>(),
+            Arg.Any<UpdateType>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -228,7 +228,7 @@ public class ManagedClusterNodeTypeRestartCommandTests : CommandUnitTestsBase<Ma
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string[]>(),
-            Arg.Any<string>(),
+            Arg.Any<UpdateType>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -257,7 +257,7 @@ public class ManagedClusterNodeTypeRestartCommandTests : CommandUnitTestsBase<Ma
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string[]>(),
-            Arg.Any<string>(),
+            Arg.Any<UpdateType>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -281,7 +281,7 @@ public class ManagedClusterNodeTypeRestartCommandTests : CommandUnitTestsBase<Ma
             Arg.Is("cluster1"),
             Arg.Is("Worker"),
             Arg.Is<string[]>(n => n.Length == 2 && n[0] == "Worker_0" && n[1] == "Worker_1"),
-            Arg.Is("ByUpgradeDomain"),
+            Arg.Is(UpdateType.ByUpgradeDomain),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());

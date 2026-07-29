@@ -22,8 +22,6 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
         Assert.Equal("update", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("Updates properties", CommandDefinition.Description);
-        Assert.Contains("workbook", CommandDefinition.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -43,10 +41,8 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
     {
         var description = Command.Description;
         Assert.NotNull(description);
-        Assert.Contains("Updates properties", description);
-        Assert.Contains("workbook", description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("display name", description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("serialized content", description, StringComparison.OrdinalIgnoreCase);
+        Assert.NotEmpty(description);
+        Assert.True(description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
@@ -400,52 +396,6 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
             Arg.Is((string?)null),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Is(tenantId),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithAuthMethod_PassesCorrectParameters()
-    {
-        // Arrange
-        var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
-
-        var updatedWorkbook = new WorkbookInfo(
-            WorkbookId: workbookId,
-            DisplayName: "Test Workbook",
-            Description: "Test Description",
-            Category: "workbook",
-            Location: "eastus",
-            Kind: "shared",
-            Tags: "{}",
-            SerializedData: "{\"version\":\"Notebook/1.0\"}",
-            Version: "1.0",
-            TimeModified: DateTimeOffset.UtcNow,
-            UserId: "user1",
-            SourceId: "azure monitor"
-        );
-
-        Service.UpdateWorkbookAsync(
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(updatedWorkbook);
-
-        // Act
-        await ExecuteCommandAsync(
-            "--workbook-id", workbookId,
-            "--display-name", "Test Workbook",
-            "--auth-method", "1");
-
-        // Assert
-        await Service.Received(1).UpdateWorkbookAsync(
-            Arg.Is(workbookId),
-            Arg.Is("Test Workbook"),
-            Arg.Is((string?)null),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 

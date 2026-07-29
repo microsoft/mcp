@@ -33,7 +33,7 @@ public class GetSchemaTests(ITestOutputHelper output)
         SchemaGenerator.ConfigureServices(serviceCollection);
         IServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
 
-        var exception = Assert.Throws<Exception>(() =>
+        var exception = Assert.Throws<InvalidDataException>(() =>
         {
             TypesDefinitionResult result = SchemaGenerator.GetResourceTypeDefinitions(serviceProvider, "Microsoft.Unknown/virtualRandom");
             _ = SchemaGenerator.GetResponse(result);

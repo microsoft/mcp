@@ -61,5 +61,19 @@ public class FabricOneLakeSetupTests
         Assert.True(rootGroup.Commands.ContainsKey("get_table"), "Should have get_table command");
         Assert.True(rootGroup.Commands.ContainsKey("list_table_namespaces"), "Should have list_table_namespaces command");
         Assert.True(rootGroup.Commands.ContainsKey("get_table_namespace"), "Should have get_table_namespace command");
+
+        // Shortcut commands
+        Assert.True(rootGroup.Commands.ContainsKey("list_shortcuts"), "Should have list_shortcuts command");
+        Assert.True(rootGroup.Commands.ContainsKey("get_shortcut"), "Should have get_shortcut command");
+        Assert.True(rootGroup.Commands.ContainsKey("delete_shortcut"), "Should have delete_shortcut command");
+        Assert.True(rootGroup.Commands.ContainsKey("reset_shortcut_cache"), "Should have reset_shortcut_cache command");
+        Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_onelake"), "Should have create_shortcut_onelake command");
+        Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_adls_gen2"), "Should have create_shortcut_adls_gen2 command");
+        Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_amazon_s3"), "Should have create_shortcut_amazon_s3 command");
+        Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_azure_blob"), "Should have create_shortcut_azure_blob command");
+        Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_gcs"), "Should have create_shortcut_gcs command");
+        Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_s3_compatible"), "Should have create_shortcut_s3_compatible command");
+        Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_dataverse"), "Should have create_shortcut_dataverse command");
+        Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_onedrive_sharepoint"), "Should have create_shortcut_onedrive_sharepoint command");
     }
 }

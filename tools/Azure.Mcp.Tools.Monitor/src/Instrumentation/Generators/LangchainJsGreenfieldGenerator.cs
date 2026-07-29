@@ -1,7 +1,10 @@
-using Azure.Mcp.Tools.Monitor.Models;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 
 /// <summary>
 /// Generator for LangChain.js greenfield projects (no existing telemetry)
@@ -12,11 +15,10 @@ public class LangchainJsGreenfieldGenerator : IGenerator
     {
         // Single LangChain.js project, greenfield
         var langchainProjects = analysis.Projects
-            .Where(p => p.AppType == AppType.LangchainJs)
-            .ToList();
+            .Count(p => p.AppType == AppType.LangchainJs);
 
         return analysis.Language == Language.NodeJs
-            && langchainProjects.Count == 1
+            && langchainProjects == 1
             && analysis.State == InstrumentationState.Greenfield;
     }
 
@@ -82,7 +84,7 @@ public class LangchainJsGreenfieldGenerator : IGenerator
         return builder.Build();
     }
 
-    private bool IsEsModuleProject(string packageJsonPath)
+    private static bool IsEsModuleProject(string packageJsonPath)
     {
         try
         {
@@ -100,7 +102,7 @@ public class LangchainJsGreenfieldGenerator : IGenerator
         return false;
     }
 
-    private string GenerateTracingFileContent(bool isEsModule)
+    private static string GenerateTracingFileContent(bool isEsModule)
     {
         if (isEsModule)
         {
@@ -128,15 +130,6 @@ useAzureMonitor({
         }
     }
 
-    private string GenerateTracingImport(bool isEsModule, string tracingFileName)
-    {
-        if (isEsModule)
-        {
-            return $"import './{tracingFileName}';";
-        }
-        else
-        {
-            return $"require('./{tracingFileName}');";
-        }
-    }
+    private static string GenerateTracingImport(bool isEsModule, string tracingFileName)
+        => isEsModule ? $"import './{tracingFileName}';" : $"require('./{tracingFileName}');";
 }

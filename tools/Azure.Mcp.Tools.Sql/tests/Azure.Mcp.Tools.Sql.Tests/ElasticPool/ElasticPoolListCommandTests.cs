@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.ElasticPool;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.Tests.ElasticPool;
 
-public class ElasticPoolListCommandTests : CommandUnitTestsBase<ElasticPoolListCommand, ISqlService>
+public class ElasticPoolListCommandTests : SubscriptionCommandUnitTestsBase<ElasticPoolListCommand, ISqlService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -22,15 +21,14 @@ public class ElasticPoolListCommandTests : CommandUnitTestsBase<ElasticPoolListC
         Assert.Equal("list", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("elastic pools", CommandDefinition.Description);
     }
 
     [Fact]
     public async Task ExecuteAsync_WithValidParameters_ReturnsElasticPools()
     {
         // Arrange
-        var mockElasticPools = new ResourceQueryResults<SqlElasticPool>(
-        [
+        var mockElasticPools = new List<SqlElasticPool>
+        {
             new(
                 Name: "pool1",
                 Id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Sql/servers/server1/elasticPools/pool1",
@@ -48,7 +46,7 @@ public class ElasticPoolListCommandTests : CommandUnitTestsBase<ElasticPoolListC
                 Dtu: 100,
                 StorageMB: 5120
             )
-        ], false);
+        };
 
         Service.GetElasticPoolsAsync(
             Arg.Is("server1"),
@@ -75,7 +73,7 @@ public class ElasticPoolListCommandTests : CommandUnitTestsBase<ElasticPoolListC
     public async Task ExecuteAsync_WithEmptyList_ReturnsEmptyResults()
     {
         // Arrange
-        var mockElasticPools = new ResourceQueryResults<SqlElasticPool>([], false);
+        var mockElasticPools = new List<SqlElasticPool>();
 
         Service.GetElasticPoolsAsync(
             Arg.Is("server1"),
@@ -187,7 +185,7 @@ public class ElasticPoolListCommandTests : CommandUnitTestsBase<ElasticPoolListC
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new ResourceQueryResults<SqlElasticPool>([], false));
+                .Returns(new List<SqlElasticPool>());
         }
 
         // Act

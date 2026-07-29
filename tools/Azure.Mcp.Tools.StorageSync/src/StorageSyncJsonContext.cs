@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
 using Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
@@ -43,6 +42,4 @@ namespace Azure.Mcp.Tools.StorageSync;
 [JsonSerializable(typeof(StorageSyncServiceIdentitySchema))]
 [JsonSerializable(typeof(StorageSyncServicePropertiesSchema))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal partial class StorageSyncJsonContext : JsonSerializerContext
-{
-}
+internal partial class StorageSyncJsonContext : JsonSerializerContext;

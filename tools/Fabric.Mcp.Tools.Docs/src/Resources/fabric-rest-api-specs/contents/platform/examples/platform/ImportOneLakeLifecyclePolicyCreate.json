@@ -1,0 +1,65 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff227",
+    "importOneLakeWorkspaceLifecyclePolicyRequest": {
+      "properties": {
+        "policy": {
+          "rules": [
+            {
+              "name": "BasicCoolTier",
+              "enabled": true,
+              "type": "Lifecycle",
+              "definition": {
+                "actions": {
+                  "baseBlob": {
+                    "tierToCool": {
+                      "daysAfterLastAccessTimeGreaterThan": 30.0
+                    }
+                  }
+                },
+                "filters": {
+                  "blobTypes": [
+                    "blockBlob"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "properties": {
+          "lastModifiedTime": "2026-02-27T00:10:45.123456Z",
+          "policy": {
+            "rules": [
+              {
+                "name": "BasicCoolTier",
+                "enabled": true,
+                "type": "Lifecycle",
+                "definition": {
+                  "actions": {
+                    "baseBlob": {
+                      "tierToCool": {
+                        "daysAfterLastAccessTimeGreaterThan": 30.0
+                      }
+                    }
+                  },
+                  "filters": {
+                    "blobTypes": [
+                      "blockBlob"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "type": "Microsoft.Storage/storageAccounts/managementPolicies"
+      }
+    }
+  }
+}

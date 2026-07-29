@@ -99,7 +99,7 @@
                     "type": "boolean"
                 },
                 "defaultPool": {
-                    "$ref": "#/definitions/InstancePool",
+                    "$ref": "../common/spark_definitions.json#/definitions/InstancePool",
                     "description": "Default pool for workspace. It should be a valid custom pool name. \"Starter Pool\" means use starter pool."
                 },
                 "starterPool": {
@@ -137,43 +137,6 @@
                     "minimum": 1,
                     "maximum": 20160
                 }
-            }
-        },
-        "InstancePool": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "description": "Instance pool name.",
-                    "type": "string"
-                },
-                "type": {
-                    "description": "Instance pool type.",
-                    "$ref": "#/definitions/CustomPoolType"
-                },
-                "id": {
-                    "format": "uuid",
-                    "description": "Instance pool ID.",
-                    "type": "string"
-                }
-            }
-        },
-        "CustomPoolType": {
-            "type": "string",
-            "description": "Custom pool type. Additional `CustomPoolType` types may be added over time.",
-            "enum": ["Workspace", "Capacity"],
-            "x-ms-enum": {
-                "name": "CustomPoolType",
-                "modelAsString": true,
-                "values": [
-                    {
-                        "value": "Workspace",
-                        "description": "Workspace level custom pool"
-                    },
-                    {
-                        "value": "Capacity",
-                        "description": "Capacity level custom pool"
-                    }
-                ]
             }
         },
         "StarterPoolProperties": {
@@ -342,7 +305,7 @@
                 },
                 "type": {
                     "description": "Custom pool type.",
-                    "$ref": "#/definitions/CustomPoolType"
+                    "$ref": "../common/spark_definitions.json#/definitions/CustomPoolType"
                 },
                 "nodeFamily": {
                     "description": "Node family.",
@@ -404,6 +367,61 @@
                     "$ref": "#/definitions/DynamicExecutorAllocationProperties",
                     "description": "Dynamic executor allocation."
                 }
+            }
+        },
+        "CapacitySparkSettings": {
+            "type": "object",
+            "description": "Capacity Spark settings.",
+            "properties": {
+                "workspaceCustomPoolsSupport": {
+                    "$ref": "#/definitions/Enablement",
+                    "description": "Allow workspace admins to create custom Spark pools based on their compute needs."
+                },
+                "workspaceStarterPoolStatus": {
+                    "$ref": "#/definitions/Enablement",
+                    "description": "Disable starter pools in the workspaces attached to the capacity."
+                },
+                "jobBurstSupport": {
+                    "$ref": "#/definitions/Enablement",
+                    "description": "Allow a single job to use the maximum available VCores with burst factor. When this is off, each job will be limited to the max VCores without burst factor."
+                }
+            }
+        },
+        "UpdateCapacitySparkSettingsRequest": {
+            "type": "object",
+            "description": "Update capacity Spark settings request payload.",
+            "properties": {
+                "workspaceCustomPoolsSupport": {
+                    "$ref": "#/definitions/Enablement",
+                    "description": "Allow workspace admins to create custom Spark pools based on their compute needs."
+                },
+                "workspaceStarterPoolStatus": {
+                    "$ref": "#/definitions/Enablement",
+                    "description": "Disable starter pools in the workspaces attached to the capacity."
+                },
+                "jobBurstSupport": {
+                    "$ref": "#/definitions/Enablement",
+                    "description": "Allow a single job to use the maximum available VCores with burst factor. When this is off, each job will be limited to the max VCores without burst factor."
+                }
+            }
+        },
+        "Enablement": {
+            "type": "string",
+            "description": "Feature enablement. Additional `Enablement` types may be added over time.",
+            "enum": [ "Enabled", "Disabled" ],
+            "x-ms-enum": {
+                "name": "Enablement",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Enabled",
+                        "description": "Feature is enabled."
+                    },
+                    {
+                        "value": "Disabled",
+                        "description": "Feature is disabled."
+                    }
+                ]
             }
         }
     }

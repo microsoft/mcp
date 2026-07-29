@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.Diagnostics;
 using System.Net;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
-using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
@@ -15,6 +16,7 @@ using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -25,13 +27,13 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// </summary>
 public sealed class NamespaceToolLoader(
     ICommandFactory commandFactory,
-    IOptions<ServiceStartOptions> options,
+    IOptions<ServerStartOptions> options,
     IServiceProvider serviceProvider,
     ILogger<NamespaceToolLoader> logger,
     bool applyFilter = true) : BaseToolLoader(logger)
 {
     private readonly ICommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
-    private readonly IOptions<ServiceStartOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
+    private readonly IOptions<ServerStartOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
     private readonly Lazy<IReadOnlyList<string>> _availableNamespaces = new(() =>
@@ -413,7 +415,11 @@ public sealed class NamespaceToolLoader(
             }
 
             var currentActivity = Activity.Current;
-            var commandContext = new CommandContext(_serviceProvider, currentActivity);
+            var commandContext = new CommandContext(_serviceProvider, currentActivity)
+            {
+                McpServer = request.Server,
+                ProgressToken = request.Params?.ProgressToken
+            };
             var realCommand = cmd.GetCommand();
 
             ParseResult commandOptions;
@@ -632,44 +638,20 @@ public sealed class NamespaceToolLoader(
         }
         tool.Meta = meta;
 
-        var schema = new ToolInputSchema();
         var options = command.GetCommand().Options
             .Where(o => !CommandFactory.IsLearnOption(o))
             .ToList();
 
-        if (options.Count > 0)
+        if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
         {
-            if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
-            {
-                var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? new JsonObject();
-                tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
-                return tool;
-            }
-            else
-            {
-                foreach (var option in options)
-                {
-                    var propName = NameNormalization.NormalizeOptionName(option.Name);
-                    schema.Properties.Add(propName, TypeToJsonTypeMapper.CreatePropertySchema(option.ValueType, option.Description));
-                }
-                schema.Required = [.. options.Where(p => p.Required).Select(p => NameNormalization.NormalizeOptionName(p.Name))];
-            }
+            var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? new JsonObject();
+            tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
+            return tool;
         }
 
-        tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.ToolInputSchema);
+        var schema = OptionSchemaGenerator.CreateInputSchema(options);
+        tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.JsonObject);
         return tool;
-    }
-
-    private static bool IsRawMcpToolInputOption(Option option)
-    {
-        const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
-        if (string.Equals(NameNormalization.NormalizeOptionName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        return option.Aliases.Any(alias =>
-            string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase));
     }
 
     internal static Dictionary<string, JsonElement> GetParametersFromArgs(IDictionary<string, JsonElement>? args)
@@ -697,7 +679,9 @@ public sealed class NamespaceToolLoader(
 
     private static bool SupportsSampling(McpServer server)
     {
+#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
         return server?.ClientCapabilities?.Sampling != null;
+#pragma warning restore MCP9005
     }
 
     private static async Task NotifyProgressAsync(RequestContext<CallToolRequestParams> request, string message, CancellationToken cancellationToken)
@@ -723,6 +707,7 @@ public sealed class NamespaceToolLoader(
         List<Tool> availableTools,
         CancellationToken cancellationToken)
     {
+#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
         await NotifyProgressAsync(request, $"Learning about {namespaceName} capabilities...", cancellationToken);
 
         JsonElement toolParams = GetParametersJsonElement(request);
@@ -797,6 +782,7 @@ public sealed class NamespaceToolLoader(
         }
 
         return (null, new Dictionary<string, JsonElement>());
+#pragma warning restore MCP9005
     }
 
     /// <summary>

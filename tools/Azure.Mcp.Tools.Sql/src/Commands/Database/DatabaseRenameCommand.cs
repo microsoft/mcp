@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Sql.Models;
-using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Database;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
@@ -28,40 +28,21 @@ namespace Azure.Mcp.Tools.Sql.Commands.Database;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class DatabaseRenameCommand(ISqlService sqlService, ILogger<DatabaseRenameCommand> logger)
-    : BaseDatabaseCommand<DatabaseRenameOptions>(logger)
+public sealed class DatabaseRenameCommand(ISqlService sqlService, ILogger<DatabaseRenameCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<DatabaseRenameOptions, DatabaseRenameCommand.DatabaseRenameResult>(subscriptionResolver)
 {
     private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<DatabaseRenameCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DatabaseRenameOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SqlOptionDefinitions.NewDatabaseNameOption);
-    }
-
-    protected override DatabaseRenameOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.NewDatabaseName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.NewDatabaseNameOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var database = await _sqlService.RenameDatabaseAsync(
-                options.Server!,
-                options.Database!,
-                options.NewDatabaseName!,
-                options.ResourceGroup!,
+                options.Server,
+                options.Database,
+                options.NewDatabaseName,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.RetryPolicy,
                 cancellationToken);
@@ -93,5 +74,5 @@ public sealed class DatabaseRenameCommand(ISqlService sqlService, ILogger<Databa
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseRenameResult(SqlDatabase Database);
+    public sealed record DatabaseRenameResult(SqlDatabase Database);
 }

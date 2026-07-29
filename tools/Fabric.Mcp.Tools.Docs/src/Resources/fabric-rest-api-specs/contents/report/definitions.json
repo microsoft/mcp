@@ -107,7 +107,7 @@
           "required": ["parts"],
           "properties": {
               "format": {
-                  "description": "The format of the item definition.",
+                  "description": "The format of the report definition.",
                   "type": "string",
                   "readOnly": false
               },

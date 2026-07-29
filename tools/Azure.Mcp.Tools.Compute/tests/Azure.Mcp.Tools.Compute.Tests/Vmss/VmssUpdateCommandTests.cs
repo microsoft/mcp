@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.Tests.Vmss;
 
-public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IComputeService>
+public class VmssUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmssUpdateCommand, IComputeService>
 {
     private readonly string _knownSubscription = "sub123";
     private readonly string _knownResourceGroup = "test-rg";
@@ -131,6 +131,59 @@ public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IC
         Assert.Equal(_knownVmssName, result.Vmss.Name);
         Assert.NotNull(result.Vmss.Tags);
         Assert.Equal("prod", result.Vmss.Tags["env"]);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ClearTagsWithBareOption_PassesEmptyTagsToService()
+    {
+        var expectedResult = new VmssUpdateResult(
+            Name: _knownVmssName,
+            Id: "/subscriptions/sub123/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachineScaleSets/test-vmss",
+            Location: "eastus",
+            VmSize: "Standard_D2s_v3",
+            ProvisioningState: "Succeeded",
+            Capacity: 5,
+            UpgradePolicy: "Manual",
+            Zones: null,
+            Tags: new Dictionary<string, string>());
+
+        Service.UpdateVmssAsync(
+            Arg.Is(_knownVmssName),
+            Arg.Is(_knownResourceGroup),
+            Arg.Is(_knownSubscription),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Is(string.Empty),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedResult);
+
+        var response = await ExecuteCommandAsync(
+            "--vmss-name", _knownVmssName,
+            "--resource-group", _knownResourceGroup,
+            "--subscription", _knownSubscription,
+            "--tags", "");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).UpdateVmssAsync(
+            _knownVmssName,
+            _knownResourceGroup,
+            _knownSubscription,
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            string.Empty,
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

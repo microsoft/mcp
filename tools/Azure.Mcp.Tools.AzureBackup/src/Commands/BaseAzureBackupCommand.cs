@@ -3,45 +3,24 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Options;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands;
 
-public abstract class BaseAzureBackupCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>
-    : SubscriptionCommand<T>
-    where T : BaseAzureBackupOptions, new()
+public abstract class BaseAzureBackupCommand<[DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<TOptions, TResult>(subscriptionResolver) where TOptions : BaseAzureBackupOptions
 {
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(TOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(AzureBackupOptionDefinitions.Vault.AsRequired());
-        command.Options.Add(AzureBackupOptionDefinitions.VaultType);
-        command.Validators.Add(commandResult =>
-        {
-            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.VaultType.Name))
-            {
-                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.VaultType.Name);
-                if (!string.IsNullOrEmpty(value) &&
-                    !value.Equals("rsv", StringComparison.OrdinalIgnoreCase) &&
-                    !value.Equals("dpp", StringComparison.OrdinalIgnoreCase))
-                {
-                    commandResult.AddError("--vault-type must be 'rsv' (Recovery Services vault) or 'dpp' (Backup vault).");
-                }
-            }
-        });
-    }
+        base.ValidateOptions(options, validationResult);
 
-    protected override T BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Vault = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Vault.Name);
-        options.VaultType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.VaultType.Name);
-        return options;
+        if (!string.IsNullOrEmpty(options.VaultType) &&
+            !options.VaultType.Equals("rsv", StringComparison.OrdinalIgnoreCase) &&
+            !options.VaultType.Equals("dpp", StringComparison.OrdinalIgnoreCase))
+        {
+            validationResult.Errors.Add("--vault-type must be 'rsv' (Recovery Services vault) or 'dpp' (Backup vault).");
+        }
     }
 }

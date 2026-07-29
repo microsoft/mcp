@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.Database;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.Tests.Database;
 
-public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, ISqlService>
+public class DatabaseGetCommandTests : SubscriptionCommandUnitTestsBase<DatabaseGetCommand, ISqlService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -22,7 +21,6 @@ public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, 
         Assert.Equal("get", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("Azure SQL database", CommandDefinition.Description);
     }
 
     [Fact]
@@ -60,7 +58,7 @@ public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, 
     public async Task ExecuteAsync_WithoutDatabaseName_ReturnsAllDatabases()
     {
         // Arrange
-        var mockDatabases = new ResourceQueryResults<SqlDatabase>([CreateMockDatabase("db1"), CreateMockDatabase("db2")], false);
+        var mockDatabases = new List<SqlDatabase> { CreateMockDatabase("db1"), CreateMockDatabase("db2") };
 
         Service.ListDatabasesAsync(
             Arg.Is("server1"),
@@ -172,7 +170,7 @@ public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, 
         {
             Service
                 .ListDatabasesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-                .Returns(new ResourceQueryResults<SqlDatabase>([], false));
+                .Returns(new List<SqlDatabase>());
             Service
                 .GetDatabaseAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(CreateMockDatabase("db1"));

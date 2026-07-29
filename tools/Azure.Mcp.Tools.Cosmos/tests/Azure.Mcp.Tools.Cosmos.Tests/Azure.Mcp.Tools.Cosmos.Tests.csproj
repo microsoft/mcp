@@ -2,6 +2,8 @@
   <PropertyGroup>
     <IsTestProject>true</IsTestProject>
     <OutputType>Exe</OutputType>
+    <HasLiveTests>true</HasLiveTests>
+    <HasUnitTests>true</HasUnitTests>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj" />

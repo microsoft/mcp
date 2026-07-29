@@ -9,6 +9,25 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | advisor_recommendation_list | List all recommendations in my subscription |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription <subscription> |
 | advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> |
+| advisor_recommendation_list | Show me high-impact Security recommendations in subscription <subscription> |
+| advisor_recommendation_list | List Cost recommendations for storage accounts in subscription <subscription> |
+| advisor_recommendation_list | Find Advisor recommendations mentioning "right-size" in subscription <subscription> |
+| advisor_recommendation_list | Show me the top 10 Advisor recommendations in subscription <subscription> |
+| advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations in subscription <subscription> |
+| advisor_recommendation_summary | Summarize Advisor recommendations in subscription <subscription> by category |
+| advisor_recommendation_summary | Show the top 10 most common Advisor recommendations in subscription <subscription> |
+| advisor_recommendation_summary | Group Advisor recommendations by impact in subscription <subscription> |
+| advisor_recommendation_summary | Which resource types have the most high-impact recommendations in subscription <subscription>? |
+| advisor_recommendation_summary | Summarize high-impact Security recommendations by resource-type in subscription <subscription> |
+| advisor_recommendation_summary | Group Cost recommendations for storage accounts by impact in subscription <subscription> |
+| advisor_recommendation_summary | Summarize Advisor recommendations mentioning "encryption" by category in subscription <subscription> |
+| advisor_recommendation_apply | Apply Advisor recommendations to this ARM template |
+| advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account |
+| advisor_recommendation-type_list | List the catalog of Advisor recommendation types available in my tenant |
+| advisor_recommendation-type_list | Before I deploy any virtual machines, what kinds of recommendations could Advisor produce for them? |
+| advisor_recommendation-type_list | What recommendation types does Advisor have for microsoft.sql/servers/databases, filtered to high impact? |
+| advisor_recommendation-type_list | Show me the catalog of cost recommendations Advisor can generate for storage accounts |
+| advisor_recommendation-type_list | My tenant is brand new and has no Advisor recommendations yet — what kinds of recommendations could Advisor make? |
 
 ## Azure AI Search
 
@@ -142,6 +161,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> |
 | azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription |
 | azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> |
+| azurebackup_governance_find-unprotected | Find unprotected SQL databases and file shares discovered by backup vaults in my subscription |
+| azurebackup_governance_find-unprotected | Show all resources and sub-resources that need backup protection in resource group <resource_group> |
 | azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> |
 | azurebackup_governance_immutability | Set immutability to Enabled on vault <vault_name> in resource group <resource_group> |
 | azurebackup_governance_soft-delete | Configure soft delete on vault <vault_name> in resource group <resource_group> |
@@ -356,11 +377,23 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | cosmos_list | List all cosmosdb accounts in my subscription |
 | cosmos_list | Show me my cosmosdb accounts |
 | cosmos_list | Show me the cosmosdb accounts in my subscription |
+| cosmos_list | List all the cosmosdb accounts in resource group <resource_group> |
 | cosmos_list | List all the databases in the cosmosdb account <account_name> |
+| cosmos_list | List all the databases in the cosmosdb account <account_name> in resource group <resource_group> |
 | cosmos_list | Show me the databases in the cosmosdb account <account_name> |
 | cosmos_list | List all the containers in the database <database_name> for the cosmosdb account <account_name> |
 | cosmos_list | Show me the containers in the database <database_name> for the cosmosdb account <account_name> |
 | cosmos_database_container_item_query | Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name> |
+| cosmos_database_container_item_get | Get the document with id <document_id> from container <container_name> in database <database_name> of the cosmosdb account <account_name> |
+| cosmos_database_container_item_get | Find the document <document_id> in container <container_name> from database <database_name> of the cosmosdb account <account_name> using partition key <partition_key> |
+| cosmos_database_container_item_list-recent | Show me the 15 most recent documents in container <container_name> of database <database_name> in cosmosdb account <account_name> |
+| cosmos_database_container_item_list-recent | Get the latest documents from <container_name> in <database_name> for cosmosdb account <account_name> |
+| cosmos_database_container_item_text-search | Search documents in container <container_name> from database <database_name> of the cosmosdb account <account_name> where <search_property> contains "<search_phrase>" |
+| cosmos_database_container_item_text-search | Run a full-text search for the word "<search_phrase>" against property <search_property> in container <container_name> of database <database_name> for cosmosdb account <account_name> |
+| cosmos_database_container_item_vector-search | Find documents similar to "<text_to_search>" in container <container_name> of database <database_name> in cosmosdb account <account_name> using vector property <vector_property> with Azure OpenAI endpoint <endpoint> and deployment <deployment> |
+| cosmos_database_container_item_vector-search | Show me the top <count> documents in container <container_name> of database <database_name> for cosmosdb account <account_name> most similar to "<text_to_search>" using vector property <vector_property>, embedding deployment <deployment> at endpoint <endpoint> with <embedding_dimensions> dimensions, and project only <properties_to_select> |
+| cosmos_database_container_schema_infer | Infer the schema of container <container_name> in database <database_name> for cosmosdb account <account_name> |
+| cosmos_database_container_schema_infer | Sample <sample_size> documents from container <container_name> in database <database_name> of the cosmosdb account <account_name> and tell me the property names and types |
 
 ## Azure Data Explorer
 
@@ -406,6 +439,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | postgres_list | Show me the PostgreSQL databases in server \<server> |
 | postgres_list | List all tables in the PostgreSQL database \<database> in server \<server> |
 | postgres_list | Show me the tables in the PostgreSQL database \<database> in server \<server> |
+| postgres_list | List all tables in the \<schema> schema of the PostgreSQL database \<database> in server \<server> |
 | postgres_database_query | Show me all items that contain the word \<search_term> in the PostgreSQL database \<database> in server \<server> |
 | postgres_server_config_get | Show me the configuration of PostgreSQL server \<server> |
 | postgres_server_param_get | Show me if the parameter my PostgreSQL server \<server> has replication enabled |
@@ -488,9 +522,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | fileshares_limits | Get the file share limits for subscription <subscription> in location <location> |
 | fileshares_limits | What are the file share limits in my subscription for location <location>? |
 | fileshares_limits | Show me the file share service limits in location <location> |
-| fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in subscription <subscription> |
-| fileshares_fileshare_check-name-availability | Is the file share name <file_share_name> available? |
-| fileshares_fileshare_check-name-availability | Verify availability of file share name <file_share_name> |
+| fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in <location> in subscription <subscription> |
+| fileshares_fileshare_check-name-availability | Is the file share name <file_share_name> available in <location>? |
+| fileshares_fileshare_check-name-availability | Verify availability of file share name <file_share_name> in <location> |
 | fileshares_rec | Get provisioning recommendations for file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_rec | Show me provisioning recommendations for file share <file_share_name> |
 | fileshares_rec | What are the recommended provisioning settings for file share <file_share_name>? |
@@ -551,6 +585,27 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | functions_template_get | Create a Timer trigger function in C# that runs every 5 minutes |
 | functions_template_get | Show me a Cosmos DB trigger with an output binding in Java |
 | functions_template_get | Generate a MCP Tool trigger in TypeScript for Node.js 22 |
+
+## Azure Insights
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| insights_get | Generate insights from my current subscription |
+| insights_get | Summarize what's deployed across my Azure environment and highlight notable patterns |
+| insights_get | Analyze my tenant and give me insights about the overall infrastructure |
+| insights_get | What can you tell me about my existing Azure environment? |
+| insights_get | Analyze subscription <subscription_id> for architectural patterns |
+| insights_get | Analyze my Azure infrastructure and surface patterns to help me plan my next project |
+| insights_get | Generate insights about my Azure environment to help me plan a new data analytics platform |
+| insights_get | What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS? |
+
+## Azure IoT Hub
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| iothub_hub_get | Get details for IoT Hub <hub_name> in resource group <resource_group_name> |
+| iothub_hub_get | Show IoT Hub <hub_name> in resource group <resource_group_name> for subscription <subscription_id> |
+| iothub_hub_get | Retrieve IoT Hub <hub_name> metadata from resource group <resource_group_name> |
 
 ## Azure Key Vault
 
@@ -736,7 +791,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | monitor_activitylog_list | List the activity logs of the last month for <resource_name> |
-| monitor_healthmodels_entity_get | Show me the health status of entity <entity_id> using the health model <health_model_name> |
+| monitor_healthmodels_get | Show me the health model <health_model_name> in resource group <resource_group> |
+| monitor_healthmodels_list | List the Azure Monitor health models in my subscription |
+| monitor_healthmodels_list | What health models are in resource group <resource_group>? |
 | monitor_instrumentation_get-learning-resource | Get the onboarding learning resource at path <resource_path> |
 | monitor_instrumentation_get-learning-resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource_path> |
 | monitor_instrumentation_get-learning-resource | Get the content of the Azure Monitor learning resource file at path <resource_path> |
@@ -771,9 +828,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | monitor_table_type_list | Show me the available table types in the Log Analytics workspace <workspace_name> |
 | monitor_webtests_createorupdate | Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
 | monitor_webtests_createorupdate | Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
-| monitor_webtests_get | Get Web Test details for <webtest_resource_name> in my subscription in <resource_group> |
-| monitor_webtests_get | List all Web Test resources in my subscription |
-| monitor_webtests_get | List all Web Test resources in my subscription in <resource_group> |
 | monitor_workspace_list | List all Log Analytics workspaces in my subscription |
 | monitor_workspace_list | Show me my Log Analytics workspaces |
 | monitor_workspace_list | Show me the Log Analytics workspaces in my subscription |
@@ -821,6 +875,30 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | redis_list | Show me the Redis resources in my subscription |
 | redis_list | Show me my Redis caches |
 | redis_list | Get Redis clusters |
+
+## Azure Resilience Management
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| resilience_goal_assignment_get | List all resilience goal assignments in service group <service_group> |
+| resilience_goal_assignment_get | Get the details of goal assignment <goal_assignment_name> in service group <service_group> |
+| resilience_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> |
+| resilience_goal_resource_get | Get the goal resource <resource_name> for goal assignment <goal_assignment_name> in service group <service_group> |
+| resilience_goal_template_get | List all resilience goal templates in service group <service_group> |
+| resilience_goal_template_get | Get the details of goal template <goal_template_name> in service group <service_group> |
+| resilience_recovery_job_get | List all recovery jobs of recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_job_get | Get the details of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_job_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_job_resource_get | Get the recovery job resource <resource_name> for recovery job <recovery_job_name> of recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_plan_get | List all resilience recovery plans in service group <service_group> |
+| resilience_recovery_plan_get | Get the details of recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_plan_resource_get | List all resources (members) of recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_plan_resource_get | Get the recovery resource <resource_name> for recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_usageplan_enrollment_get | List all enrollments of usage plan <usage_plan_name> in resource group <resource_group_name> |
+| resilience_usageplan_enrollment_get | Get the details of usage plan enrollment <enrollment_name> for usage plan <usage_plan_name> in resource group <resource_group_name> |
+| resilience_usageplan_get | List all resilience usage plans in my subscription |
+| resilience_usageplan_get | List all resilience usage plans in resource group <resource_group_name> |
+| resilience_usageplan_get | Get the details of usage plan <usage_plan_name> in resource group <resource_group_name> |
 
 ## Azure Resource Group
 
@@ -953,6 +1031,66 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | sql_server_get | Get Azure SQL server <server_name> info |
 | sql_server_get | Display the properties of Azure SQL server <server_name> |
 
+## Azure SRE Agent
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| sreagent_agents_list | List all Azure SRE Agent resources in my subscription |
+| sreagent_agents_get | Show me the details of SRE Agent <agent_name> in resource group <resource_group> |
+| sreagent_agents_create | Create a sub-agent called <name> on SRE Agent <agent_name> |
+| sreagent_agents_delete | Delete the sub-agent <name> from SRE Agent <agent_name> |
+| sreagent_agents_tools_list | List the custom tools attached to SRE Agent <agent_name> |
+| sreagent_agents_tools_get | Get the definition of custom tool <tool_name> from SRE Agent <agent_name> |
+| sreagent_agents_tools_create | Create a custom tool called <tool_name> on SRE Agent <agent_name> |
+| sreagent_skills_list | List all skills available on SRE Agent <agent_name> |
+| sreagent_skills_create | Add a new skill called <skill_name> to SRE Agent <agent_name> |
+| sreagent_skills_delete | Delete the skill <skill_name> from SRE Agent <agent_name> |
+| sreagent_connectors_list | List the connectors configured on SRE Agent <agent_name> |
+| sreagent_connectors_get | Show me the details of connector <connector_name> on SRE Agent <agent_name> |
+| sreagent_connectors_create_kusto | Create a Kusto connector on SRE Agent <agent_name> |
+| sreagent_connectors_create_mcp | Create an MCP connector on SRE Agent <agent_name> |
+| sreagent_connectors_delete | Remove the connector <connector_name> from SRE Agent <agent_name> |
+| sreagent_connectors_test | Test the connector <connector_name> on SRE Agent <agent_name> and list its tools |
+| sreagent_hooks_list | List the hooks configured for SRE Agent <agent_name> |
+| sreagent_hooks_get | Show me the details of hook <hook_name> on SRE Agent <agent_name> |
+| sreagent_hooks_delete | Remove and permanently delete hook <hook_name> from SRE Agent <agent_name> |
+| sreagent_hooks_thread_list | List the hook activation states for thread <thread_id> on SRE Agent <agent_name> |
+| sreagent_hooks_thread_activate | Activate hook <hook_name> on thread <thread_id> of SRE Agent <agent_name> |
+| sreagent_hooks_thread_deactivate | Deactivate hook <hook_name> on thread <thread_id> of SRE Agent <agent_name> |
+| sreagent_threads_list | List the active threads on SRE Agent <agent_name> |
+| sreagent_threads_get | Show me thread <thread_id> on SRE Agent <agent_name> |
+| sreagent_threads_create | Start a new thread on SRE Agent <agent_name> |
+| sreagent_threads_send_message | Send a message to thread <thread_id> on SRE Agent <agent_name> |
+| sreagent_threads_investigate | Investigate the following issue with SRE Agent <agent_name>: <issue> |
+| sreagent_threads_investigate_yolo | Investigate <issue> on SRE Agent <agent_name> in yolo mode, automatically granting all pending approvals without waiting |
+| sreagent_threads_delete | Delete thread <thread_id> from SRE Agent <agent_name> |
+| sreagent_scheduledtasks_list | List the scheduled tasks on SRE Agent <agent_name> |
+| sreagent_scheduledtasks_get | Show me the scheduled task <task_id> on SRE Agent <agent_name> |
+| sreagent_scheduledtasks_create | Schedule a recurring task on SRE Agent <agent_name> that runs every Monday |
+| sreagent_scheduledtasks_pause | Pause the scheduled task <task_id> on SRE Agent <agent_name> |
+| sreagent_scheduledtasks_resume | Resume the scheduled task <task_id> on SRE Agent <agent_name> |
+| sreagent_scheduledtasks_delete | Delete the scheduled task <task_id> from SRE Agent <agent_name> |
+| sreagent_incidents_active_list | List the active incidents on SRE Agent <agent_name> |
+| sreagent_incidents_create | Create a new incident investigation for SRE Agent <agent_name> with title <title> |
+| sreagent_incidents_plans_list | List the incident response plans configured on SRE Agent <agent_name> |
+| sreagent_incidents_plans_create | Enable a new incident response plan on SRE Agent <agent_name> with alert filter <filter> and handler <handler> |
+| sreagent_incidents_setup_pagerduty | Connect SRE Agent <agent_name> to PagerDuty |
+| sreagent_incidents_setup_servicenow | Connect SRE Agent <agent_name> to ServiceNow |
+| sreagent_workflows_generate | Generate a YAML workflow for a tool named <tool_name> |
+| sreagent_workflows_validate | Validate the following SRE Agent workflow YAML |
+| sreagent_workflows_apply | Apply the workflow YAML to SRE Agent <agent_name> |
+| sreagent_docs_get | Show me the SRE Agent documentation for the topic <topic> |
+| sreagent_docs_memories_list | Get a complete list of all indexed knowledge base documents stored in SRE Agent <agent_name> memory without filtering |
+| sreagent_docs_memories_search | Search the SRE Agent knowledge base for <text> |
+| sreagent_docs_memories_add | Add a document called <name> to the SRE Agent knowledge base |
+| sreagent_docs_memories_delete | Confirm and delete knowledge base document <name> from SRE Agent <agent_name> |
+| sreagent_docs_memories_reindex | Reindex the knowledge base documents for SRE Agent <agent_name> |
+| sreagent_architecture_plan | Plan an SRE Agent architecture for the following requirements: <requirements> |
+| sreagent_commonprompts_list | List the common prompts on SRE Agent <agent_name> |
+| sreagent_commonprompts_get | Show me the common prompt <prompt_name> on SRE Agent <agent_name> |
+| sreagent_commonprompts_create | Create a common prompt called <prompt_name> on SRE Agent <agent_name> |
+| sreagent_commonprompts_delete | Permanently remove and erase common prompt <prompt_name> from SRE Agent <agent_name> |
+
 ## Azure Storage
 
 | Tool Name | Test Prompt |
@@ -1035,10 +1173,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azureterraform_azapi_get | Get AzAPI Terraform provider documentation for Microsoft.Compute/virtualMachines with API version 2024-07-01 |
 | azureterraform_avm_list | List all available Azure Verified Modules |
 | azureterraform_avm_list | Show me the available AVM modules for Terraform |
+| azureterraform_avm_list | List the AVM pattern modules available for Terraform |
 | azureterraform_avm_versions | Show all versions of avm-res-network-virtualnetwork |
 | azureterraform_avm_versions | What versions are available for avm-res-storage-storageaccount? |
+| azureterraform_avm_versions | Show all versions of the avm-ptn-aiml-ai-foundry pattern module |
 | azureterraform_avm_get | Get the documentation for avm-res-storage-storageaccount version 0.1.0 |
 | azureterraform_avm_get | Get the documentation for the latest version of Azure Verified Module avm-res-network-virtualnetwork |
+| azureterraform_avm_get | Get the documentation for the avm-ptn-aiml-ai-foundry pattern module |
 | azureterraform_aztfexport_resource | Export the resource /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/Microsoft.Storage/storageAccounts/<account> to Terraform |
 | azureterraform_aztfexport_resource | Generate an aztfexport command to export a single Azure resource to Terraform |
 | azureterraform_aztfexport_resourcegroup | Export all resources in resource group my-rg to Terraform |
@@ -1090,7 +1231,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| cloudarchitect_design | Please help me design an architecture for a large-scale file upload, storage, and retrieval service |
 | cloudarchitect_design | Help me design an Azure cloud service that will serve as an ATM for users |
 | cloudarchitect_design | I want to design a cloud app for ordering groceries |
 | cloudarchitect_design | How can I design a cloud service in Azure that will store and present videos for users? |

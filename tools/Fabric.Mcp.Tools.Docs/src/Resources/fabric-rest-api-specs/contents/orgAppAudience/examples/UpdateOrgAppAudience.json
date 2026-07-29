@@ -1,0 +1,21 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "orgAppAudienceId": "5b218778-e7a5-4d73-8187-f10824047715",
+        "updateOrgAppAudienceRequest": {
+            "displayName": "OrgAppAudience's New name",
+            "description": "OrgAppAudience's New description"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "displayName": "OrgAppAudience's New name",
+                "description": "OrgAppAudience's New description",
+                "type": "OrgAppAudience",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "id": "5b218778-e7a5-4d73-8187-f10824047715"
+            }
+        }
+    }
+}

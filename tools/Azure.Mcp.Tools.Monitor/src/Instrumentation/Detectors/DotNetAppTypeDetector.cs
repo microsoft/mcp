@@ -1,7 +1,10 @@
-using System.Xml.Linq;
-using Azure.Mcp.Tools.Monitor.Models;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Detectors;
+using System.Xml.Linq;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 
 public class DotNetAppTypeDetector : IAppTypeDetector
 {
@@ -78,7 +81,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
         };
     }
 
-    private AppType DetermineFromOutputType(XDocument doc)
+    private static AppType DetermineFromOutputType(XDocument doc)
     {
         var outputType = doc.Descendants("OutputType").FirstOrDefault()?.Value;
         return outputType?.ToLowerInvariant() switch
@@ -89,7 +92,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
         };
     }
 
-    private bool HasPackageReference(XDocument doc, string packageName)
+    private static bool HasPackageReference(XDocument doc, string packageName)
     {
         return doc.Descendants("PackageReference")
             .Any(pr => string.Equals(pr.Attribute("Include")?.Value, packageName, StringComparison.OrdinalIgnoreCase));
@@ -100,7 +103,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
     /// Supports both Host.CreateDefaultBuilder/Host.CreateApplicationBuilder (generic host)
     /// and WebApplication.CreateBuilder (minimal API) patterns.
     /// </summary>
-    private HostingPattern DetectHostingPattern(string? entryPointPath)
+    private static HostingPattern DetectHostingPattern(string? entryPointPath)
     {
         if (string.IsNullOrEmpty(entryPointPath) || !File.Exists(entryPointPath))
             return HostingPattern.Unknown;
@@ -127,7 +130,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
         }
     }
 
-    private string? FindEntryPoint(string projectDir)
+    private static string? FindEntryPoint(string projectDir)
     {
         // Look for Program.cs first
         var programCs = Path.Combine(projectDir, "Program.cs");
@@ -149,9 +152,10 @@ public class DotNetAppTypeDetector : IAppTypeDetector
         {
             throw new ArgumentException("The csprojPath must not be a root directory or null.", nameof(csprojPath));
         }
-        var appType = AppType.Unknown;
-        string? entryPoint = null;
 
+        string? entryPoint;
+
+        AppType appType;
         // Check for WCF
         if (IsWcfProject(projectDir, doc))
         {
@@ -209,7 +213,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
     private bool IsWcfProject(string projectDir, XDocument doc)
     {
         // Check for .svc files
-        if (Directory.GetFiles(projectDir, "*.svc", SearchOption.AllDirectories).Any())
+        if (Directory.GetFiles(projectDir, "*.svc", SearchOption.AllDirectories).Length != 0)
             return true;
 
         // Check for System.ServiceModel reference
@@ -372,7 +376,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
         return false;
     }
 
-    private bool HasMvcIndicators(string projectDir, XDocument doc)
+    private static bool HasMvcIndicators(string projectDir, XDocument doc)
     {
         // Check for MVC packages
         var packagesConfig = Path.Combine(projectDir, "packages.config");
@@ -397,43 +401,42 @@ public class DotNetAppTypeDetector : IAppTypeDetector
 
         // Check for Controllers folder
         var controllersDir = Path.Combine(projectDir, "Controllers");
-        if (Directory.Exists(controllersDir) && Directory.GetFiles(controllersDir, "*.cs").Any())
+        if (Directory.Exists(controllersDir) && Directory.GetFiles(controllersDir, "*.cs").Length != 0)
             return true;
 
         // Check for Views folder
         var viewsDir = Path.Combine(projectDir, "Views");
-        if (Directory.Exists(viewsDir) && Directory.GetFiles(viewsDir, "*.cshtml", SearchOption.AllDirectories).Any())
+        if (Directory.Exists(viewsDir) && Directory.GetFiles(viewsDir, "*.cshtml", SearchOption.AllDirectories).Length != 0)
             return true;
 
         return false;
     }
 
-    private bool HasWebFormsIndicators(string projectDir)
+    private static bool HasWebFormsIndicators(string projectDir)
     {
         // Check for .aspx files
-        if (Directory.GetFiles(projectDir, "*.aspx", SearchOption.AllDirectories).Any())
+        if (Directory.GetFiles(projectDir, "*.aspx", SearchOption.AllDirectories).Length != 0)
             return true;
 
         // Check for .ascx files (user controls)
-        if (Directory.GetFiles(projectDir, "*.ascx", SearchOption.AllDirectories).Any())
+        if (Directory.GetFiles(projectDir, "*.ascx", SearchOption.AllDirectories).Length != 0)
             return true;
 
         return false;
     }
 
-    private bool HasReference(XDocument doc, string referenceName)
+    private static bool HasReference(XDocument doc, string referenceName)
     {
         return doc.Descendants("Reference")
             .Any(r => r.Attribute("Include")?.Value?.StartsWith(referenceName) == true);
     }
 
-    private string? FindWcfServiceFile(string projectDir)
+    private static string? FindWcfServiceFile(string projectDir)
     {
-        var svcFiles = Directory.GetFiles(projectDir, "*.svc", SearchOption.AllDirectories);
-        return svcFiles.FirstOrDefault();
+        return Directory.GetFiles(projectDir, "*.svc", SearchOption.AllDirectories).FirstOrDefault();
     }
 
-    private string? FindGlobalAsax(string projectDir)
+    private static string? FindGlobalAsax(string projectDir)
     {
         var globalAsax = Path.Combine(projectDir, "Global.asax.cs");
         if (File.Exists(globalAsax))

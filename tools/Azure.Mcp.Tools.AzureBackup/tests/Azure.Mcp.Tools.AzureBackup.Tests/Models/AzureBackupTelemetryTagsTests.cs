@@ -107,4 +107,58 @@ public class AzureBackupTelemetryTagsTests
         Assert.Equal("azurebackup/DatasourceType", AzureBackupTelemetryTags.DatasourceType);
         Assert.Equal("azurebackup/OperationScope", AzureBackupTelemetryTags.OperationScope);
     }
+
+    [Fact]
+    public void SubscriptionGuid_MatchesGlobalAzureTagName()
+    {
+        // Must stay in sync with Microsoft.Mcp.Core's internal AzureTagName.SubscriptionGuid.
+        Assert.Equal("AzSubscriptionGuid", AzureBackupTelemetryTags.SubscriptionGuid);
+    }
+
+    [Fact]
+    public void AddSubscriptionTag_NullActivity_DoesNotThrow()
+    {
+        AzureBackupTelemetryTags.AddSubscriptionTag(null, "00000000-0000-0000-0000-000000000000");
+    }
+
+    [Fact]
+    public void AddSubscriptionTag_NullSubscription_DoesNotEmitTag()
+    {
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = _ => true,
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+        };
+        ActivitySource.AddActivityListener(listener);
+
+        using var source = new ActivitySource("test");
+        using var activity = source.StartActivity("test-op");
+        Assert.NotNull(activity);
+
+        AzureBackupTelemetryTags.AddSubscriptionTag(activity, null);
+
+        Assert.Null(activity.GetTagItem(AzureBackupTelemetryTags.SubscriptionGuid));
+    }
+
+    [Theory]
+    [InlineData("00000000-0000-0000-0000-000000000000")]
+    [InlineData("my-subscription-name")]
+    [InlineData("")]
+    public void AddSubscriptionTag_NonNullValue_EmitsTag(string subscription)
+    {
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = _ => true,
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+        };
+        ActivitySource.AddActivityListener(listener);
+
+        using var source = new ActivitySource("test");
+        using var activity = source.StartActivity("test-op");
+        Assert.NotNull(activity);
+
+        AzureBackupTelemetryTags.AddSubscriptionTag(activity, subscription);
+
+        Assert.Equal(subscription, activity.GetTagItem(AzureBackupTelemetryTags.SubscriptionGuid));
+    }
 }

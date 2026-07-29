@@ -236,9 +236,12 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenServiceThrowsInvalidOperationException()
+    public async Task ExecuteAsync_ReturnsSuccessWithMessage_WhenResourceNotFound()
     {
-        // Arrange
+        // Arrange - service returns a result with the not-found message in Insights (no exception thrown)
+        var notFoundMessage = "No resources found with name 'myapp'.";
+        var notFoundResult = new DiagnosticResult([notFoundMessage], [], string.Empty, string.Empty);
+
         Service.DiagnoseResourceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -247,7 +250,39 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new InvalidOperationException("Resource not found"));
+            .Returns(notFoundResult);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--question", "Why is my app slow?",
+            "--resource", "myapp",
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--resource-type", "Microsoft.Web/sites");
+
+        // Assert - resource not found is not a tool failure, so it should succeed
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, AppLensJsonContext.Default.ResourceDiagnoseCommandResult);
+        Assert.NotNull(result.Result);
+        Assert.Single(result.Result.Insights);
+        Assert.Contains(notFoundMessage, result.Result.Insights[0]);
+        Assert.Empty(result.Result.Solutions);
+        Assert.Empty(result.Result.ResourceId);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Returns422_WhenServiceThrowsInvalidOperationException()
+    {
+        // Arrange - this covers cases like AppLens session failure (not resource-not-found)
+        Service.DiagnoseResourceAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("AppLens session failed"));
 
         // Act
         var response = await ExecuteCommandAsync(
@@ -259,7 +294,7 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
-        Assert.Contains("Resource not found", response.Message);
+        Assert.Contains("AppLens session failed", response.Message);
     }
 
     [Fact]

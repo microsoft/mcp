@@ -40,7 +40,7 @@ public class AzureRMDocsGetCommandTests : CommandUnitTestsBase<AzureRMDocsGetCom
             ],
             Attributes =
             [
-                new() { Name = "id", Description = "The ID." }
+                new(Name: "id", Description: "The ID.")
             ],
             Examples = ["resource \"azurerm_resource_group\" \"example\" {}"],
             Notes = ["Some note"]
@@ -167,7 +167,7 @@ public class AzureRMDocsGetCommandTests : CommandUnitTestsBase<AzureRMDocsGetCom
             ],
             Attributes =
             [
-                new() { Name = "id", Description = "The ID." }
+                new(Name: "id", Description: "The ID.")
             ],
             Examples = ["resource \"azurerm_resource_group\" \"example\" {}"],
             Notes = ["Some note"]

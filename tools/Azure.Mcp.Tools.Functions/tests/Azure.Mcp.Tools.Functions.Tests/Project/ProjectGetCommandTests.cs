@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tools.Functions.Commands;
 using Azure.Mcp.Tools.Functions.Commands.Project;
 using Azure.Mcp.Tools.Functions.Models;
-using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
@@ -39,7 +38,7 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
     public void Command_HasLanguageOption()
     {
         var options = CommandDefinition.Options.ToList();
-        var languageOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.LanguageName}");
+        var languageOption = options.FirstOrDefault(o => o.Name == $"--language");
 
         Assert.NotNull(languageOption);
         Assert.True(languageOption.Required);
@@ -56,7 +55,7 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
             ProjectStructure = ["function_app.py", "host.json", "requirements.txt", ".gitignore"]
         };
 
-        Service.GetProjectTemplateAsync("python", Arg.Any<CancellationToken>()).Returns(expectedResult);
+        Service.GetProjectTemplateAsync(SupportedLanguages.Python, Arg.Any<CancellationToken>()).Returns(expectedResult);
 
         // Act
         var response = await ExecuteCommandAsync("--language", "python");
@@ -83,7 +82,7 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
             ProjectStructure = ["src/functions/", "host.json", "package.json", ".gitignore"]
         };
 
-        Service.GetProjectTemplateAsync("typescript", Arg.Any<CancellationToken>()).Returns(expectedResult);
+        Service.GetProjectTemplateAsync(SupportedLanguages.TypeScript, Arg.Any<CancellationToken>()).Returns(expectedResult);
 
         // Act
         var response = await ExecuteCommandAsync("--language", "typescript");
@@ -104,14 +103,14 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
         // Assert - validator returns error before service is called
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Invalid language 'invalid'", response.Message);
+        Assert.Contains("Invalid --language 'invalid'", response.Message);
     }
 
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        Service.GetProjectTemplateAsync("python", Arg.Any<CancellationToken>())
+        Service.GetProjectTemplateAsync(SupportedLanguages.Python, Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
         // Act
@@ -134,7 +133,7 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
             ProjectStructure = ["function_app.py", "host.json", "requirements.txt", "local.settings.json", ".gitignore"]
         };
 
-        Service.GetProjectTemplateAsync("python", Arg.Any<CancellationToken>()).Returns(expectedResult);
+        Service.GetProjectTemplateAsync(SupportedLanguages.Python, Arg.Any<CancellationToken>()).Returns(expectedResult);
 
         // Act
         var response = await ExecuteCommandAsync("--language", "python");
@@ -151,18 +150,18 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
     }
 
     [Theory]
-    [InlineData("python")]
-    [InlineData("typescript")]
-    [InlineData("java")]
-    [InlineData("csharp")]
-    [InlineData("javascript")]
-    [InlineData("powershell")]
-    public async Task ExecuteAsync_ReturnsTemplateForAllLanguages(string language)
+    [InlineData(SupportedLanguages.Python)]
+    [InlineData(SupportedLanguages.TypeScript)]
+    [InlineData(SupportedLanguages.Java)]
+    [InlineData(SupportedLanguages.CSharp)]
+    [InlineData(SupportedLanguages.JavaScript)]
+    [InlineData(SupportedLanguages.PowerShell)]
+    public async Task ExecuteAsync_ReturnsTemplateForAllLanguages(SupportedLanguages language)
     {
         // Arrange - use representative mocked data per language
         var expectedResult = new ProjectTemplateResult
         {
-            Language = language,
+            Language = language.ToString(),
             InitInstructions = $"## {language} Azure Functions Project Setup",
             ProjectStructure = ["host.json", "local.settings.json", ".gitignore"]
         };
@@ -170,13 +169,13 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
         Service.GetProjectTemplateAsync(language, Arg.Any<CancellationToken>()).Returns(expectedResult);
 
         // Act
-        var response = await ExecuteCommandAsync("--language", language);
+        var response = await ExecuteCommandAsync("--language", language.ToString());
 
         // Assert
         var results = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ListProjectTemplateResult);
 
         Assert.Single(results);
-        Assert.Equal(language, results[0].Language);
+        Assert.Equal(language.ToString(), results[0].Language);
         Assert.True(results[0].ProjectStructure.Count > 0);
     }
 
@@ -185,15 +184,10 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
     {
         // Arrange & Act
         var args = CommandDefinition.Parse(["--language", "java"]);
-
-        // Use reflection to call BindOptions since it's protected
-        var method = Command.GetType().GetMethod(
-            "BindOptions",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var options = (ProjectGetOptions?)method?.Invoke(Command, [args]);
+        var options = Command.BindOptions(args);
 
         // Assert
         Assert.NotNull(options);
-        Assert.Equal("java", options.Language);
+        Assert.Equal("java", options.Language.ToString(), true);
     }
 }

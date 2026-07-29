@@ -296,6 +296,44 @@
                     }
                 ]
             }
+        },
+        "InstancePool": {
+            "type": "object",
+            "description": "The instance pool.",
+            "properties": {
+                "name": {
+                    "description": "Instance pool name.",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Instance pool type.",
+                    "$ref": "#/definitions/CustomPoolType"
+                },
+                "id": {
+                    "format": "uuid",
+                    "description": "Instance pool ID.",
+                    "type": "string"
+                }
+            }
+        },
+        "CustomPoolType": {
+            "type": "string",
+            "description": "Custom pool type. Additional `CustomPoolType` types may be added over time.",
+            "enum": ["Workspace", "Capacity"],
+            "x-ms-enum": {
+                "name": "CustomPoolType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Workspace",
+                        "description": "Workspace level custom pool"
+                    },
+                    {
+                        "value": "Capacity",
+                        "description": "Capacity level custom pool"
+                    }
+                ]
+            }
         }
     }
 }

@@ -7,6 +7,10 @@
       "body": {
         "diagnostics": {
           "status": "Disabled"
+        },
+        "lifecycle": {
+          "defaultTier": "Hot",
+          "policy": "Inactive"
         }
       }
     }

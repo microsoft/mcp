@@ -30,8 +30,8 @@ public class AvmVersionListCommandTests : CommandUnitTestsBase<AvmVersionListCom
     {
         var expectedVersions = new List<AvmVersion>
         {
-            new() { TagName = "0.4.0", CreatedAt = "2024-12-01T00:00:00Z", TarballUrl = "https://api.github.com/repos/Azure/terraform-azurerm-avm-res-storage-storageaccount/tarball/v0.4.0" },
-            new() { TagName = "0.3.0", CreatedAt = "2024-10-01T00:00:00Z", TarballUrl = "https://api.github.com/repos/Azure/terraform-azurerm-avm-res-storage-storageaccount/tarball/v0.3.0" }
+            new(TagName: "0.4.0", CreatedAt: "2024-12-01T00:00:00Z", TarballUrl: "https://api.github.com/repos/Azure/terraform-azurerm-avm-res-storage-storageaccount/tarball/v0.4.0"),
+            new(TagName: "0.3.0", CreatedAt: "2024-10-01T00:00:00Z", TarballUrl: "https://api.github.com/repos/Azure/terraform-azurerm-avm-res-storage-storageaccount/tarball/v0.3.0")
         };
 
         Service.GetVersionsAsync("avm-res-storage-storageaccount", Arg.Any<CancellationToken>())
@@ -55,7 +55,7 @@ public class AvmVersionListCommandTests : CommandUnitTestsBase<AvmVersionListCom
     public async Task ExecuteAsync_ServiceThrows_HandlesException()
     {
         Service.GetVersionsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new InvalidOperationException("Module not found"));
+            .ThrowsAsync(new ArgumentException("Module not found", "moduleName"));
 
         var response = await ExecuteCommandAsync("--module-name", "nonexistent-module");
 
@@ -90,7 +90,7 @@ public class AvmVersionListCommandTests : CommandUnitTestsBase<AvmVersionListCom
     {
         var expectedVersions = new List<AvmVersion>
         {
-            new() { TagName = "0.4.0", CreatedAt = "2024-12-01T00:00:00Z", TarballUrl = "https://api.github.com/repos/Azure/terraform-azurerm-avm-res-storage-storageaccount/tarball/v0.4.0" }
+            new(TagName: "0.4.0", CreatedAt: "2024-12-01T00:00:00Z", TarballUrl: "https://api.github.com/repos/Azure/terraform-azurerm-avm-res-storage-storageaccount/tarball/v0.4.0")
         };
 
         Service.GetVersionsAsync("avm-res-storage-storageaccount", Arg.Any<CancellationToken>())

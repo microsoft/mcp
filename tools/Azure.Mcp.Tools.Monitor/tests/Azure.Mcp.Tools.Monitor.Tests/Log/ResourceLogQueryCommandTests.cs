@@ -3,17 +3,17 @@
 
 using System.Net;
 using System.Text.Json.Nodes;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests.Log;
 
-public sealed class ResourceLogQueryCommandTests : CommandUnitTestsBase<ResourceLogQueryCommand, IMonitorService>
+public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsBase<ResourceLogQueryCommand, IMonitorService>
 {
     private const string _knownSubscription = "knownSubscription";
     private const string _knownResourceId = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/storage1";

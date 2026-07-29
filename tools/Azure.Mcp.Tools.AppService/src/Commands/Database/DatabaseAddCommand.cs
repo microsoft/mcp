@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppService.Models;
-using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Options.Database;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Database;
@@ -27,51 +27,24 @@ namespace Azure.Mcp.Tools.AppService.Commands.Database;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger, IAppServiceService appServiceService)
-    : BaseAppServiceCommand<DatabaseAddOptions>(resourceGroupRequired: true, appRequired: true)
+public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger, IAppServiceService appServiceService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<DatabaseAddOptions, DatabaseAddCommand.DatabaseAddResult>(subscriptionResolver)
 {
     private readonly ILogger<DatabaseAddCommand> _logger = logger;
     private readonly IAppServiceService _appServiceService = appServiceService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DatabaseAddOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AppServiceOptionDefinitions.DatabaseTypeOption);
-        command.Options.Add(AppServiceOptionDefinitions.DatabaseServerOption);
-        command.Options.Add(AppServiceOptionDefinitions.DatabaseNameOption);
-        command.Options.Add(AppServiceOptionDefinitions.ConnectionStringOption);
-    }
-
-    protected override DatabaseAddOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.DatabaseType = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.DatabaseTypeOption);
-        options.DatabaseServer = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.DatabaseServerOption);
-        options.DatabaseName = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.DatabaseNameOption);
-        options.ConnectionString = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.ConnectionStringOption);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        // Validate first, then bind
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
             var connectionInfo = await _appServiceService.AddDatabaseAsync(
-                options.AppName!,
-                options.ResourceGroup!,
-                options.DatabaseType!,
-                options.DatabaseServer!,
-                options.DatabaseName!,
+                options.App,
+                options.ResourceGroup,
+                options.DatabaseType,
+                options.DatabaseServer,
+                options.Database,
                 options.ConnectionString ?? string.Empty, // connectionString - will be generated if not provided
                 options.Subscription!,
                 options.Tenant,
@@ -82,12 +55,12 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger, IAppS
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to add database connection to App Service '{AppName}'", options.AppName);
+            _logger.LogError(ex, "Failed to add database connection to App Service '{App}'", options.App);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    public record DatabaseAddResult(DatabaseConnectionInfo ConnectionInfo);
+    public sealed record DatabaseAddResult(DatabaseConnectionInfo ConnectionInfo);
 }

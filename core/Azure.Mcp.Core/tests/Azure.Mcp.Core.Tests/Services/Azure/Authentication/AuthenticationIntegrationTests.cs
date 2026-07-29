@@ -38,6 +38,7 @@ public class AuthenticationIntegrationTests : IAsyncLifetime
         services.AddSingleton(Substitute.For<ITenantService>());
         services.AddSingleton(Substitute.For<ILogger<SubscriptionService>>());
         services.AddSingleton<ISubscriptionService, SubscriptionService>();
+        services.AddSingleton<ISubscriptionResolver, SubscriptionResolver>();
 
         _serviceProvider = services.BuildServiceProvider();
         _subscriptionService = _serviceProvider.GetRequiredService<ISubscriptionService>();

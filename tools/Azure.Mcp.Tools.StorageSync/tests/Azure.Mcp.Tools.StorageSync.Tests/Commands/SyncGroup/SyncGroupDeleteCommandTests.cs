@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.StorageSync.Commands.SyncGroup;
 using Azure.Mcp.Tools.StorageSync.Services;
-using Microsoft.Mcp.Tests.Client;
 using Xunit;
 
 namespace Azure.Mcp.Tools.StorageSync.Tests.Commands.SyncGroup;
 
-public class SyncGroupDeleteCommandTests : CommandUnitTestsBase<SyncGroupDeleteCommand, IStorageSyncService>
+public class SyncGroupDeleteCommandTests : SubscriptionCommandUnitTestsBase<SyncGroupDeleteCommand, IStorageSyncService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()

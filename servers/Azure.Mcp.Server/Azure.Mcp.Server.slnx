@@ -242,6 +242,21 @@
   <Folder Name="/tools/Azure.Mcp.Tools.Grafana/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.Grafana/tests/Azure.Mcp.Tools.Grafana.Tests/Azure.Mcp.Tools.Grafana.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Insights/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.Insights/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Insights/src/Azure.Mcp.Tools.Insights.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Insights/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Insights/tests/Azure.Mcp.Tools.Insights.UnitTests/Azure.Mcp.Tools.Insights.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.IoTHub/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.IoTHub/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.IoTHub/src/Azure.Mcp.Tools.IoTHub.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.IoTHub/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.IoTHub/tests/Azure.Mcp.Tools.IoTHub.LiveTests/Azure.Mcp.Tools.IoTHub.LiveTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.IoTHub/tests/Azure.Mcp.Tools.IoTHub.UnitTests/Azure.Mcp.Tools.IoTHub.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.KeyVault/" />
   <Folder Name="/tools/Azure.Mcp.Tools.KeyVault/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.KeyVault/src/Azure.Mcp.Tools.KeyVault.csproj" />
@@ -326,6 +341,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.Redis/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.Redis/tests/Azure.Mcp.Tools.Redis.Tests/Azure.Mcp.Tools.Redis.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ResilienceManagement/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.ResilienceManagement/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.ResilienceManagement/src/Azure.Mcp.Tools.ResilienceManagement.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ResilienceManagement/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.ResilienceManagement/tests/Azure.Mcp.Tools.ResilienceManagement.Tests/Azure.Mcp.Tools.ResilienceManagement.Tests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ResourceHealth/" />
   <Folder Name="/tools/Azure.Mcp.Tools.ResourceHealth/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.ResourceHealth/src/Azure.Mcp.Tools.ResourceHealth.csproj" />
@@ -374,6 +396,13 @@
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Sql/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.Sql/tests/Azure.Mcp.Tools.Sql.Tests/Azure.Mcp.Tools.Sql.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.SreAgent/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.SreAgent/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.SreAgent/src/Azure.Mcp.Tools.SreAgent.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.SreAgent/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.SreAgent/tests/Azure.Mcp.Tools.SreAgent.Tests/Azure.Mcp.Tools.SreAgent.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Storage/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Storage/src/">

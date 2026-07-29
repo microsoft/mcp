@@ -1,0 +1,124 @@
+{
+  "rules": [
+    {
+      "ruleId": "Use_Standard_Or_Premium_App_Service_Plan",
+      "description": "Choose Standard or Premium Azure App Service Plan for robust apps with advanced scaling, high availability, better performance, and multiple slots, ensuring resilience and continuous operation.",
+      "query": "extend sku_tier = tostring(sku.tier) | where tolower(sku_tier) !contains \"standard\" and tolower(sku_tier) !contains \"premium\" and tolower(sku_tier) !contains \"isolatedv2\"",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "sku.tier",
+            "notContains": "standard"
+          },
+          {
+            "field": "sku.tier",
+            "notContains": "premium"
+          },
+          {
+            "field": "sku.tier",
+            "notContains": "isolatedv2"
+          }
+        ]
+      },
+      "fix": "Review and remediate based on recommendation",
+      "ARM_Fix": {
+        "type": "propertyUpdate",
+        "operations": [
+          {
+            "field": "sku.tier",
+            "value": "Standard"
+          },
+          {
+            "field": "sku.name",
+            "value": "S1"
+          }
+        ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_service_plan",
+        "allOf": [
+          {
+            "attribute": "sku_name",
+            "notIn": [
+              "S1",
+              "S2",
+              "S3",
+              "P0v3",
+              "P1v2",
+              "P1v3",
+              "P2v2",
+              "P2v3",
+              "P3v2",
+              "P3v3",
+              "P4mv3",
+              "P5mv3",
+              "I1",
+              "I2",
+              "I3",
+              "I1v2",
+              "I2v2",
+              "I3v2",
+              "I4v2",
+              "I5v2",
+              "I6v2"
+            ]
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "sku_name",
+            "value": "S1"
+          }
+        ]
+      }
+    },
+    {
+      "ruleId": "Set_Minimum_Two_Instances_For_App_Service",
+      "description": "App Service should be configured with a minimum of two instances for production workloads. If apps have a longer warm-up time, a minimum of three instances should be used.",
+      "query": "where sku.capacity < 2",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "sku.capacity",
+            "less": 2
+          }
+        ]
+      },
+      "fix": "Set the App Service Plan instance count to at least 2.",
+      "ARM_Fix": {
+        "type": "propertyUpdate",
+        "operations": [
+          {
+            "field": "sku.capacity",
+            "value": 2
+          }
+        ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_service_plan",
+        "anyOf": [
+          {
+            "attribute": "worker_count",
+            "exists": false
+          },
+          {
+            "attribute": "worker_count",
+            "less": 2
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "worker_count",
+            "value": 2
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+    "parameters": {
+        "capacityId": "ce6db599-0877-4fb1-aa1f-9b1b8d99dc40",
+        "beta": true
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "workspaceCustomPoolsSupport": "Enabled",
+                "workspaceStarterPoolStatus": "Disabled",
+                "jobBurstSupport": "Enabled"
+            }
+        }
+    }
+}

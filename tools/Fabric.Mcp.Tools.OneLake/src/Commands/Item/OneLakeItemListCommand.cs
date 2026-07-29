@@ -7,8 +7,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
@@ -27,60 +26,35 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false)]
-public sealed class OneLakeItemListCommand(
-    ILogger<OneLakeItemListCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<OneLakeItemListOptions>()
+public sealed class OneLakeItemListCommand(ILogger<OneLakeItemListCommand> logger, IOneLakeService oneLakeService)
+    : AuthenticatedCommand<OneLakeItemListOptions, OneLakeItemListCommand.OneLakeItemListCommandResult>
 {
     private readonly ILogger<OneLakeItemListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(OneLakeItemListOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ContinuationToken);
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+        if (string.IsNullOrWhiteSpace(options.WorkspaceId) && string.IsNullOrWhiteSpace(options.Workspace))
         {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-        });
-    }
-
-    protected override OneLakeItemListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
-            ? workspaceId!
-            : workspaceName ?? string.Empty;
-        options.ContinuationToken = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ContinuationToken.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("Workspace identifier is required. Provide --workspace or --workspace-id.");
         }
+    }
 
-        var options = BindOptions(parseResult);
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, OneLakeItemListOptions options, CancellationToken cancellationToken)
+    {
         try
         {
+            var workspaceIdentifier = !string.IsNullOrWhiteSpace(options.WorkspaceId)
+                ? options.WorkspaceId
+                : options.Workspace!;
+
             var xmlResponse = await _oneLakeService.ListOneLakeItemsXmlAsync(
-                options.WorkspaceId,
+                workspaceIdentifier,
                 continuationToken: options.ContinuationToken,
                 cancellationToken);
 
-            var result = new OneLakeItemListCommandResult { XmlResponse = xmlResponse };
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeItemListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(xmlResponse), OneLakeJsonContext.Default.OneLakeItemListCommandResult);
         }
         catch (Exception ex)
         {
@@ -91,36 +65,23 @@ public sealed class OneLakeItemListCommand(
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        ArgumentException argEx => $"Invalid argument: {argEx.Message}",
-        InvalidOperationException opEx => $"Operation failed: {opEx.Message}",
-        HttpRequestException httpEx => $"HTTP request failed: {httpEx.Message}",
-        _ => base.GetErrorMessage(ex)
-    };
+    protected override string GetErrorMessage(Exception ex) =>
+        OneLakeCommandValidators.GetErrorMessage(ex, base.GetErrorMessage);
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        InvalidOperationException => HttpStatusCode.InternalServerError,
-        HttpRequestException httpEx when httpEx.Message.Contains("404") => HttpStatusCode.NotFound,
-        HttpRequestException httpEx when httpEx.Message.Contains("403") => HttpStatusCode.Forbidden,
-        HttpRequestException httpEx when httpEx.Message.Contains("401") => HttpStatusCode.Unauthorized,
-        _ => base.GetStatusCode(ex)
-    };
+    protected override HttpStatusCode GetStatusCode(Exception ex) =>
+        OneLakeCommandValidators.GetStatusCode(ex, base.GetStatusCode);
 
-    public sealed record OneLakeItemListCommandResult
-    {
-        public List<OneLakeItem>? Items { get; init; }
-        public string? XmlResponse { get; init; }
-
-        public OneLakeItemListCommandResult() { }
-        public OneLakeItemListCommandResult(List<OneLakeItem> items) { Items = items; }
-    }
+    public sealed record OneLakeItemListCommandResult(string? XmlResponse);
 }
 
-public sealed class OneLakeItemListOptions : GlobalOptions
+public sealed class OneLakeItemListOptions
 {
-    public string WorkspaceId { get; set; } = string.Empty;
+    [Option(Description = OneLakeOptionDescriptions.WorkspaceId)]
+    public string? WorkspaceId { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.Workspace)]
+    public string? Workspace { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.ContinuationToken)]
     public string? ContinuationToken { get; set; }
 }

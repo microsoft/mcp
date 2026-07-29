@@ -9,73 +9,60 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.BicepSchema.Commands
+namespace Azure.Mcp.Tools.BicepSchema.Commands;
+
+[CommandMetadata(
+    Id = "553c003a-7cdf-4382-b833-94fe8bbb7386",
+    Name = "get",
+    Title = "Get Bicep Schema for a resource",
+    Description = "Provides the Bicep schema definition of any Azure resource type (latest service version). Use this to get the schema needed to write Bicep IaC (infrastructure as code) for Azure resources such as AI models, storage accounts, databases, virtual machines, app services, key vaults, and more. Do not use this tool for resource deployment, deployment guidelines, or getting best practices.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class BicepSchemaGetCommand(ILogger<BicepSchemaGetCommand> logger)
+    : BaseCommand<BicepSchemaOptions, BicepSchemaGetCommand.BicepSchemaGetCommandResult>
 {
-    [CommandMetadata(
-        Id = "553c003a-7cdf-4382-b833-94fe8bbb7386",
-        Name = "get",
-        Title = "Get Bicep Schema for a resource",
-        Description = "Provides the Bicep schema definition of any Azure resource type (latest service version). Use this to get the schema needed to write Bicep IaC (infrasturcture as code) for Azure resources such as AI models, storage accounts, databases, virtual machines, app services, key vaults, and more. Do not use this tool for resource deployment, deployment guidelines, or getting best practices.",
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = false)]
-    public sealed class BicepSchemaGetCommand(ILogger<BicepSchemaGetCommand> logger) : BaseBicepSchemaCommand<BicepSchemaOptions>
+    private readonly ILogger<BicepSchemaGetCommand> _logger = logger;
+
+    private static readonly Lazy<IServiceProvider> s_serviceProvider = new(() =>
     {
+        var serviceCollection = new ServiceCollection();
+        SchemaGenerator.ConfigureServices(serviceCollection);
+        return serviceCollection.BuildServiceProvider();
+    });
 
-        private readonly ILogger<BicepSchemaGetCommand> _logger = logger;
-
-        private static readonly Lazy<IServiceProvider> s_serviceProvider;
-
-        static BicepSchemaGetCommand()
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, BicepSchemaOptions options, CancellationToken cancellationToken)
+    {
+        try
         {
-            s_serviceProvider = new Lazy<IServiceProvider>(() =>
-            {
-                var serviceCollection = new ServiceCollection();
-                SchemaGenerator.ConfigureServices(serviceCollection);
-                return serviceCollection.BuildServiceProvider();
-            });
-        }
+            TypesDefinitionResult result = SchemaGenerator.GetResourceTypeDefinitions(s_serviceProvider.Value, options.ResourceType!);
+            List<ComplexType> response = SchemaGenerator.GetResponse(result);
 
-        public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+            if (response is not null)
+            {
+                // Only log the resource type if we are able to get the schema from it.
+                // There is a slight chance that the LLM hallucinates the resource type
+                // parameter with value containing data that we shouldn't log.
+                context.Activity?.AddTag("resourceType", options.ResourceType);
+                context.Response.Results = ResponseResult.Create(new(response),
+                    BicepSchemaJsonContext.Default.BicepSchemaGetCommandResult);
+            }
+            else
+            {
+                context.Response.Results = null;
+            }
+        }
+        catch (Exception ex)
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return Task.FromResult(context.Response);
-            }
-
-            BicepSchemaOptions options = BindOptions(parseResult);
-
-            try
-            {
-                TypesDefinitionResult result = SchemaGenerator.GetResourceTypeDefinitions(s_serviceProvider.Value, options.ResourceType!);
-                List<ComplexType> response = SchemaGenerator.GetResponse(result);
-
-                if (response is not null)
-                {
-                    // Only log the resource type if we are able to get the schema from it.
-                    // There is a slight chance that the LLM hallucinates the resource type
-                    // parameter with value containing data that we shouldn't log.
-                    context.Activity?.AddTag("resourceType", options.ResourceType);
-                    context.Response.Results = ResponseResult.Create(new(response),
-                        BicepSchemaJsonContext.Default.BicepSchemaGetCommandResult);
-                }
-                else
-                {
-                    context.Response.Results = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An exception occurred fetching Bicep schema.");
-                HandleException(context, ex);
-            }
-            return Task.FromResult(context.Response);
-
+            _logger.LogError(ex, "An exception occurred fetching Bicep schema.");
+            HandleException(context, ex);
         }
+        return Task.FromResult(context.Response);
 
-        internal record BicepSchemaGetCommandResult(List<ComplexType> BicepSchemaResult);
     }
+
+    public sealed record BicepSchemaGetCommandResult(List<ComplexType> BicepSchemaResult);
 }

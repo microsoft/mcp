@@ -1,7 +1,10 @@
-using Azure.Mcp.Tools.Monitor.Models;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 
 /// <summary>
 /// Generator for NestJS greenfield projects (no existing telemetry)
@@ -12,11 +15,10 @@ public class NestJsGreenfieldGenerator : IGenerator
     {
         // Single NestJS project, greenfield
         var nestjsProjects = analysis.Projects
-            .Where(p => p.AppType == AppType.NestJs)
-            .ToList();
+            .Count(p => p.AppType == AppType.NestJs);
 
         return analysis.Language == Language.NodeJs
-            && nestjsProjects.Count == 1
+            && nestjsProjects == 1
             && analysis.State == InstrumentationState.Greenfield;
     }
 
@@ -87,7 +89,7 @@ useAzureMonitor({
         return builder.Build();
     }
 
-    private string DetectMainFile(string projectDir)
+    private static string DetectMainFile(string projectDir)
     {
         // Check common NestJS entry points
         var possiblePaths = new[]

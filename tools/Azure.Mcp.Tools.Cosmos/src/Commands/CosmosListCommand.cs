@@ -1,14 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
-using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Cosmos.Options;
 using Azure.Mcp.Tools.Cosmos.Services;
-using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 
@@ -25,44 +22,25 @@ namespace Azure.Mcp.Tools.Cosmos.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmosService cosmosService) : SubscriptionCommand<CosmosListOptions>()
+public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmosService cosmosService, ISubscriptionResolver subscriptionResolver)
+    : BaseCosmosCommand<CosmosListOptions, CosmosListCommand.CosmosListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<CosmosListCommand> _logger = logger;
     private readonly ICosmosService _cosmosService = cosmosService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(CosmosListOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(CosmosOptionDefinitions.AccountOptional);
-        command.Options.Add(CosmosOptionDefinitions.DatabaseOptional);
-        command.Validators.Add(result =>
-        {
-            // Validate that --account is provided when --database is specified
-            if (!string.IsNullOrEmpty(result.GetValueOrDefault<string>(CosmosOptionDefinitions.DatabaseOptional.Name)) &&
-                string.IsNullOrEmpty(result.GetValueOrDefault<string>(CosmosOptionDefinitions.AccountOptional.Name)))
-            {
-                result.AddError("The --account parameter is required when --database is specified.");
-            }
-        });
-    }
+        base.ValidateOptions(options, validationResult);
 
-    protected override CosmosListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string?>(CosmosOptionDefinitions.AccountOptional.Name);
-        options.Database = parseResult.GetValueOrDefault<string?>(CosmosOptionDefinitions.DatabaseOptional.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        // Validate that --account is provided when --database is specified
+        if (!string.IsNullOrEmpty(options.Database) && string.IsNullOrEmpty(options.Account))
         {
-            return context.Response;
+            validationResult.Errors.Add("The --account parameter is required when --database is specified.");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, CosmosListOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             if (!string.IsNullOrEmpty(options.Database))
@@ -70,10 +48,11 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
                 // List containers in the specified database
                 var containers = await _cosmosService.ListContainers(
                     options.Account!,
-                    options.Database!,
+                    options.Database,
                     options.Subscription!,
                     options.AuthMethod ?? AuthMethod.Credential,
                     options.Tenant,
+                    options.ResourceGroup,
                     options.RetryPolicy,
                     cancellationToken);
 
@@ -85,10 +64,11 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
             {
                 // List databases in the specified account
                 var databases = await _cosmosService.ListDatabases(
-                    options.Account!,
+                    options.Account,
                     options.Subscription!,
                     options.AuthMethod ?? AuthMethod.Credential,
                     options.Tenant,
+                    options.ResourceGroup,
                     options.RetryPolicy,
                     cancellationToken);
 
@@ -98,9 +78,10 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
             }
             else
             {
-                // List all accounts in the subscription
+                // List accounts in the subscription, optionally scoped to a resource group
                 var accounts = await _cosmosService.GetCosmosAccounts(
                     options.Subscription!,
+                    options.ResourceGroup,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
@@ -112,24 +93,19 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Account: {Account}, ResourceGroup: {ResourceGroup}.", Name, options.Account, options.ResourceGroup);
+            if (string.IsNullOrEmpty(options.ResourceGroup))
+            {
+                _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, Account: {Account}, Database: {Database}.", Name, options.Subscription, options.Account, options.Database);
+            }
+            else
+            {
+                _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Account: {Account}, Database: {Database}.", Name, options.Subscription, options.ResourceGroup, options.Account, options.Database);
+            }
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        CosmosException cosmosEx => cosmosEx.Message,
-        _ => base.GetErrorMessage(ex)
-    };
-
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        CosmosException cosmosEx => cosmosEx.StatusCode,
-        _ => base.GetStatusCode(ex)
-    };
-
-    internal record CosmosListCommandResult(List<string>? Accounts, List<string>? Databases, IReadOnlyList<string>? Containers);
+    public sealed record CosmosListCommandResult(List<string>? Accounts, List<string>? Databases, IReadOnlyList<string>? Containers);
 }

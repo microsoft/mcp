@@ -1,0 +1,77 @@
+{
+  "rules": [
+    {
+      "ruleId": "Migrate_InTree_Disk_Drivers_To_CSI_Drivers",
+      "description": "From Kubernetes 1.26, Azure Disk and Azure File in-tree drivers are deprecated in favor of CSI drivers. Existing deployments remain operational but untested; users should switch to CSI drivers for new features and SKUs.",
+      "query": "where properties.storageProfile.diskCSIDriver.enabled != true or properties.storageProfile.fileCSIDriver.enabled != true or properties.storageProfile.blobCSIDriver.enabled != true",
+      "ARM_Query": {
+        "anyOf": [
+          {
+            "field": "properties.storageProfile.diskCSIDriver.enabled",
+            "notEquals": true
+          },
+          {
+            "field": "properties.storageProfile.fileCSIDriver.enabled",
+            "notEquals": true
+          },
+          {
+            "field": "properties.storageProfile.blobCSIDriver.enabled",
+            "notEquals": true
+          }
+        ]
+      },
+      "fix": "users should switch to CSI drivers for new features and SKUs",
+      "ARM_Fix": {
+        "type": "propertyUpdate",
+        "operations": [
+          {
+            "field": "properties.storageProfile.diskCSIDriver.enabled",
+            "value": true
+          },
+          {
+            "field": "properties.storageProfile.fileCSIDriver.enabled",
+            "value": true
+          },
+          {
+            "field": "properties.storageProfile.blobCSIDriver.enabled",
+            "value": true
+          }
+        ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_kubernetes_cluster",
+        "anyOf": [
+          {
+            "attribute": "storage_profile.disk_driver_enabled",
+            "notEquals": true
+          },
+          {
+            "attribute": "storage_profile.file_driver_enabled",
+            "notEquals": true
+          },
+          {
+            "attribute": "storage_profile.blob_driver_enabled",
+            "notEquals": true
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "storage_profile.disk_driver_enabled",
+            "value": true
+          },
+          {
+            "attribute": "storage_profile.file_driver_enabled",
+            "value": true
+          },
+          {
+            "attribute": "storage_profile.blob_driver_enabled",
+            "value": true
+          }
+        ]
+      }
+    }
+  ]
+}

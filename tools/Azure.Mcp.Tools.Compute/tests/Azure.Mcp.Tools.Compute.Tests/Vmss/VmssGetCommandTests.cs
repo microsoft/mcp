@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.Tests.Vmss;
 
-public class VmssGetCommandTests : CommandUnitTestsBase<VmssGetCommand, IComputeService>
+public class VmssGetCommandTests : SubscriptionCommandUnitTestsBase<VmssGetCommand, IComputeService>
 {
     private readonly string _knownSubscription = "sub123";
     private readonly string _knownResourceGroup = "test-rg";
@@ -172,7 +172,8 @@ public class VmssGetCommandTests : CommandUnitTestsBase<VmssGetCommand, ICompute
         var response = await ExecuteCommandAsync("--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssGetListResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssGetResult);
+        Assert.NotNull(result.VmssList);
         Assert.Equal(2, result.VmssList.Count);
         Assert.Equal("vmss1", result.VmssList[0].Name);
         Assert.Equal("vmss2", result.VmssList[1].Name);
@@ -212,7 +213,8 @@ public class VmssGetCommandTests : CommandUnitTestsBase<VmssGetCommand, ICompute
             "--resource-group", _knownResourceGroup);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssGetListResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssGetResult);
+        Assert.NotNull(result.VmssList);
         Assert.Single(result.VmssList);
         Assert.Equal("vmss1", result.VmssList[0].Name);
         Assert.Equal("eastus", result.VmssList[0].Location);
@@ -234,7 +236,8 @@ public class VmssGetCommandTests : CommandUnitTestsBase<VmssGetCommand, ICompute
         var response = await ExecuteCommandAsync("--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssGetListResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssGetResult);
+        Assert.NotNull(result.VmssList);
         Assert.Empty(result.VmssList);
     }
 
@@ -271,7 +274,7 @@ public class VmssGetCommandTests : CommandUnitTestsBase<VmssGetCommand, ICompute
             "--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssGetSingleResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssGetResult);
         Assert.NotNull(result.Vmss);
         Assert.Equal("test-vmss", result.Vmss.Name);
         Assert.Equal("eastus", result.Vmss.Location);
@@ -313,7 +316,7 @@ public class VmssGetCommandTests : CommandUnitTestsBase<VmssGetCommand, ICompute
             "--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssGetVmInstanceResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssGetResult);
         Assert.NotNull(result.VmInstance);
         Assert.Equal("test-vmss_0", result.VmInstance.Name);
         Assert.Equal("0", result.VmInstance.InstanceId);
@@ -353,7 +356,7 @@ public class VmssGetCommandTests : CommandUnitTestsBase<VmssGetCommand, ICompute
             "--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssGetSingleResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssGetResult);
         Assert.NotNull(result.Vmss);
         Assert.Equal("test-vmss", result.Vmss.Name);
     }

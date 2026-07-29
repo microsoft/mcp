@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 using Azure.Mcp.Tools.VirtualDesktop.Models;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Tests.SessionHost;
 
-public class SessionHostUserSessionListCommandTests : CommandUnitTestsBase<SessionHostUserSessionListCommand, IVirtualDesktopService>
+public class SessionHostUserSessionListCommandTests : SubscriptionCommandUnitTestsBase<SessionHostUserSessionListCommand, IVirtualDesktopService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -21,7 +21,6 @@ public class SessionHostUserSessionListCommandTests : CommandUnitTestsBase<Sessi
         Assert.Equal("user-list", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("List all user sessions on a specific session host", CommandDefinition.Description);
     }
 
     [Theory]

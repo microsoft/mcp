@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Quota.Commands;
 using Azure.Mcp.Tools.Quota.Commands.Usage;
 using Azure.Mcp.Tools.Quota.Services;
 using Azure.Mcp.Tools.Quota.Services.Util;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Quota.Tests.Commands.Usage;
 
-public sealed class CheckCommandTests : CommandUnitTestsBase<CheckCommand, IQuotaService>
+public sealed class CheckCommandTests : SubscriptionCommandUnitTestsBase<CheckCommand, IQuotaService>
 {
     [Fact]
     public async Task Should_check_azure_quota_success()

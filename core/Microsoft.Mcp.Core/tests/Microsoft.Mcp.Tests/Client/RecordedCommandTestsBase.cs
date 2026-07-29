@@ -176,10 +176,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         var methodInfo = TestMethodResolver.TryResolveCurrentMethodInfo();
 
         // skip tests marked [LiveTestOnly] when not in Live mode
-        if (TestMode != TestMode.Live && HasLiveTestOnlyAttribute(methodInfo))
-        {
-            Assert.Skip("Test is marked [LiveTestOnly] and cannot run in Playback or Record mode.");
-        }
+        CheckLiveTestOnly(methodInfo);
 
         if (fixture.Proxy == null)
         {
@@ -194,7 +191,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         await StartRecordOrPlayback();
 
         // apply custom matcher if test has attribute
-        await ApplyAttributeMatcherSettings(methodInfo);
+        await ApplyAttributeMatcherSettings(TestMethodResolver.TryResolveCurrentMethodInfo());
 
         SetRecordingOptions(RecordingOptions);
     }
@@ -229,11 +226,6 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         };
 
         await SetMatcher(matcher, RecordingId);
-    }
-
-    private static bool HasLiveTestOnlyAttribute(MethodInfo? methodInfo)
-    {
-        return methodInfo?.GetCustomAttribute<LiveTestOnlyAttribute>() != null;
     }
 
     private async Task SetMatcher(CustomDefaultMatcher matcher, string? recordingId = null)

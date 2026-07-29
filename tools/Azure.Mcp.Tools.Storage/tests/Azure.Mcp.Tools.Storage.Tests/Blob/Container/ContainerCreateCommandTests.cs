@@ -119,6 +119,30 @@ public class ContainerCreateCommandTests : SubscriptionCommandUnitTestsBase<Cont
     }
 
     [Fact]
+    public async Task ExecuteAsync_HandlesStorageAccountNotFound()
+    {
+        // Arrange
+        Service.CreateContainer(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Storage account not found"));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--account", "nonexistentaccount",
+            "--subscription", "sub123",
+            "--container", "container123");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("not found", response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange

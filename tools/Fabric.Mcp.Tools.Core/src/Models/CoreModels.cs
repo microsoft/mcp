@@ -54,6 +54,82 @@ public class CreateItemRequest
 }
 
 /// <summary>
+/// Request model for searching the OneLake catalog.
+/// Maps to the body of POST /v1/catalog/search.
+/// </summary>
+public class CatalogSearchRequest
+{
+    [JsonPropertyName("search")]
+    public string? Search { get; set; }
+
+    [JsonPropertyName("filter")]
+    public string? Filter { get; set; }
+
+    [JsonPropertyName("pageSize")]
+    public int? PageSize { get; set; }
+
+    [JsonPropertyName("continuationToken")]
+    public string? ContinuationToken { get; set; }
+}
+
+/// <summary>
+/// Response model for a OneLake catalog search.
+/// </summary>
+public class CatalogSearchResponse
+{
+    [JsonPropertyName("value")]
+    public List<CatalogEntry> Value { get; set; } = [];
+
+    [JsonPropertyName("continuationToken")]
+    public string? ContinuationToken { get; set; }
+}
+
+/// <summary>
+/// A discoverable metadata representation of a Fabric entity returned by catalog search.
+/// </summary>
+public class CatalogEntry
+{
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = string.Empty;
+
+    [JsonPropertyName("type")]
+    public string Type { get; set; } = string.Empty;
+
+    [JsonPropertyName("catalogEntryType")]
+    public string CatalogEntryType { get; set; } = string.Empty;
+
+    [JsonPropertyName("displayName")]
+    public string DisplayName { get; set; } = string.Empty;
+
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("hierarchy")]
+    public CatalogEntryHierarchy? Hierarchy { get; set; }
+}
+
+/// <summary>
+/// The immediate ancestors of a catalog entry in Fabric's data architecture.
+/// </summary>
+public class CatalogEntryHierarchy
+{
+    [JsonPropertyName("workspace")]
+    public CatalogWorkspace? Workspace { get; set; }
+}
+
+/// <summary>
+/// The workspace that a catalog entry belongs to.
+/// </summary>
+public class CatalogWorkspace
+{
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = string.Empty;
+
+    [JsonPropertyName("displayName")]
+    public string DisplayName { get; set; } = string.Empty;
+}
+
+/// <summary>
 /// Configuration and constants for Fabric API endpoints
 /// </summary>
 public static class FabricEndpoints

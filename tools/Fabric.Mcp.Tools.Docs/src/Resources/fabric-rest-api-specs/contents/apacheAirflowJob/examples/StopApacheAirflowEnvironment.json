@@ -1,0 +1,16 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "apacheAirflowJobId": "5b218778-e7a5-4d73-8187-f10824047715",
+        "beta": true
+    },
+    "responses": {
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/9f9f1a64-0f73-4c0f-b3f9-93c01872ae07",
+                "x-ms-operation-id": "9f9f1a64-0f73-4c0f-b3f9-93c01872ae07",
+                "Retry-After": 30
+            }
+        }
+    }
+}
