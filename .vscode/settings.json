@@ -1,7 +1,0 @@
-{
-    "chat.mcp.serverSampling": {
-        ".vscode/mcp.json: iris-local-mcp": {
-            "allowedDuringChat": true
-        }
-    }
-}
