@@ -132,10 +132,12 @@ Wait-ResilienceProvisioning -Path $serviceGroupPath
 #     These are kept separate from the pre-provisioned service group / resource group above so the
 #     create tests can freely create usage plans and enrollments
 #     without mutating the resources the get/recovery tests depend on.
-#     NOTE: this resource group is created outside the test harness's managed resource group and is
-#     therefore NOT auto-cleaned by teardown; it is named "<rg>-create" for easy manual cleanup.
-$location = (Get-AzResourceGroup -Name $ResourceGroupName).Location
-New-AzResourceGroup -Name $createResourceGroupName -Location $location -Force | Out-Null
+#     NOTE: this resource group is created outside the test harness's managed resource group, so it
+#     is NOT deleted by Remove-TestResources.ps1. It is named "<rg>-create" for easy manual cleanup,
+#     and carries the same Owners/DeleteAfter tags as the managed resource group so subscription-wide
+#     expiry-based clean-up (see New-TestResources.ps1's DeleteAfterHours) reclaims it automatically.
+$managedResourceGroup = Get-AzResourceGroup -Name $ResourceGroupName
+New-AzResourceGroup -Name $createResourceGroupName -Location $managedResourceGroup.Location -Tag $managedResourceGroup.Tags -Force | Out-Null
 
 $createServiceGroupPath = "/providers/Microsoft.Management/serviceGroups/$createServiceGroupName`?api-version=$serviceGroupApiVersion"
 Invoke-ResilienceRestPut -Path $createServiceGroupPath -Body @{

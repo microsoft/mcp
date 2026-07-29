@@ -46,8 +46,8 @@
       "description": "Create or update Azure Resilience Management resources, including usage plans and usage plan enrollments, for Azure service groups.",
       "toolMetadata": {
         "destructive": {
-          "value": false,
-          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
         },
         "idempotent": {
           "value": true,
