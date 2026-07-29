@@ -2160,6 +2160,44 @@
       ]
     },
     {
+      "name": "get_azure_iot_hub_devices",
+      "description": "Read Azure IoT Hub device registry information, including device identities, device twins, registry statistics, and IoT Hub device queries.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only retrieves device registry information from an Azure IoT Hub without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_device_show",
+        "iothub_device_stats",
+        "iothub_device_twin_get",
+        "iothub_query_run",
+        "iothub_query_compile",
+        "iothub_query_discover"
+      ]
+    },
+    {
       "name": "edit_azure_data_analytics_resources",
       "description": "Update and delete Azure Event Hubs resources including namespaces, event hubs, and consumer groups.",
       "toolMetadata": {

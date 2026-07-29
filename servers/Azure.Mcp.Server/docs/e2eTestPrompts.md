@@ -603,9 +603,20 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| iothub_device_show | Show device <device_id> in IoT Hub <hub_name> in resource group <resource_group_name> |
+| iothub_device_show | Get the device identity for <device_id> in IoT Hub <hub_name> |
+| iothub_device_stats | Show device statistics for IoT Hub <hub_name> in resource group <resource_group_name> |
+| iothub_device_stats | How many devices are registered in IoT Hub <hub_name>? |
+| iothub_device_twin_get | Get the device twin for <device_id> in IoT Hub <hub_name> |
+| iothub_device_twin_get | Show desired and reported properties for device <device_id> in IoT Hub <hub_name> |
 | iothub_hub_get | Get details for IoT Hub <hub_name> in resource group <resource_group_name> |
 | iothub_hub_get | Show IoT Hub <hub_name> in resource group <resource_group_name> for subscription <subscription_id> |
 | iothub_hub_get | Retrieve IoT Hub <hub_name> metadata from resource group <resource_group_name> |
+| iothub_query_compile | Compile an IoT Hub query for devices where reported batteryLevel is less than 20 |
+| iothub_query_compile | Build an IoT Hub query filtering devices by tag location equal to building5 |
+| iothub_query_discover | Discover the queryable device twin fields in IoT Hub <hub_name> |
+| iothub_query_run | Run the query "SELECT * FROM devices WHERE status = 'enabled'" against IoT Hub <hub_name> |
+| iothub_query_run | Query all devices in IoT Hub <hub_name> in resource group <resource_group_name> |
 
 ## Azure Key Vault
 
