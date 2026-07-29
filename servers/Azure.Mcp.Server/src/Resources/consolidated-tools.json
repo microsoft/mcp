@@ -2160,12 +2160,12 @@
       ]
     },
     {
-      "name": "get_azure_iot_hub_devices",
-      "description": "Read Azure IoT Hub device registry information, including device identities, device twins, registry statistics, and IoT Hub device queries.",
+      "name": "get_azure_iot_hub_device",
+      "description": "Get a single device identity from an Azure IoT Hub device registry. Returns device identity metadata, excluding authentication keys.",
       "toolMetadata": {
         "destructive": {
           "value": false,
-          "description": "This tool only retrieves device registry information from an Azure IoT Hub without deleting or modifying existing resources."
+          "description": "This tool only performs read operations on an Azure IoT Hub without deleting or modifying existing resources."
         },
         "idempotent": {
           "value": true,
@@ -2189,11 +2189,171 @@
         }
       },
       "mappedToolList": [
-        "iothub_device_show",
-        "iothub_device_stats",
-        "iothub_device_twin_get",
-        "iothub_query_run",
-        "iothub_query_compile",
+        "iothub_device_show"
+      ]
+    },
+    {
+      "name": "get_azure_iot_hub_device_statistics",
+      "description": "Get aggregate device statistics for an Azure IoT Hub identity registry: enabled, disabled, and total device counts.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only performs read operations on an Azure IoT Hub without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_device_stats"
+      ]
+    },
+    {
+      "name": "get_azure_iot_hub_device_twin",
+      "description": "Get a device twin from an Azure IoT Hub, including tags and desired/reported properties.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only performs read operations on an Azure IoT Hub without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_device_twin_get"
+      ]
+    },
+    {
+      "name": "run_azure_iot_hub_query",
+      "description": "Run a SQL-like query against an Azure IoT Hub device registry and return a single page of results.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only performs read operations on an Azure IoT Hub without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_query_run"
+      ]
+    },
+    {
+      "name": "compile_azure_iot_hub_query",
+      "description": "Compile typed predicates into a syntactically valid Azure IoT Hub query string. Performs no network calls.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only compiles a query string and does not delete or modify any resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_query_compile"
+      ]
+    },
+    {
+      "name": "discover_azure_iot_hub_query_fields",
+      "description": "Discover queryable Azure IoT Hub device twin field paths by sampling devices, grouped by scope (device, tags, desired, reported).",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only performs read operations on an Azure IoT Hub without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
         "iothub_query_discover"
       ]
     },
