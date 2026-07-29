@@ -23,7 +23,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans.Enrollments;
         service group, and returns the enrollment information including id, name, the associated service group
         id, provisioning state, and error details.
         """,
-    Destructive = false,
+    Destructive = true,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = false,

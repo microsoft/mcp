@@ -1,6 +1,7 @@
 param(
     [string] $TenantId,
     [string] $TestApplicationId,
+    [string] $TestApplicationOid,
     [string] $ResourceGroupName,
     [string] $BaseName,
     [hashtable] $DeploymentOutputs,
@@ -138,6 +139,22 @@ Wait-ResilienceProvisioning -Path $serviceGroupPath
 #     expiry-based clean-up (see New-TestResources.ps1's DeleteAfterHours) reclaims it automatically.
 $managedResourceGroup = Get-AzResourceGroup -Name $ResourceGroupName
 New-AzResourceGroup -Name $createResourceGroupName -Location $managedResourceGroup.Location -Tag $managedResourceGroup.Tags -Force | Out-Null
+
+$createResourceGroupRoleAssigned = Get-AzRoleAssignment `
+    -ObjectId $TestApplicationOid `
+    -RoleDefinitionName 'Owner' `
+    -ResourceGroupName $createResourceGroupName `
+    -ErrorAction SilentlyContinue
+
+if (!$createResourceGroupRoleAssigned) {
+    Retry {
+        New-AzRoleAssignment `
+            -ObjectId $TestApplicationOid `
+            -RoleDefinitionName 'Owner' `
+            -ResourceGroupName $createResourceGroupName `
+            -ErrorAction Stop
+    } | Out-Null
+}
 
 $createServiceGroupPath = "/providers/Microsoft.Management/serviceGroups/$createServiceGroupName`?api-version=$serviceGroupApiVersion"
 Invoke-ResilienceRestPut -Path $createServiceGroupPath -Body @{

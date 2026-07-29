@@ -23,7 +23,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans;
         the created usage plan information including id, name, resource type, location, tags, plan type, and
         provisioning state.
         """,
-    Destructive = false,
+    Destructive = true,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = false,
