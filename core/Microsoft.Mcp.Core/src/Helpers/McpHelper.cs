@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Mcp.Core.Commands;
@@ -92,7 +91,7 @@ public static class McpHelper
     /// </summary>
     /// <param name="tool">The MCP tool definition.</param>
     /// <returns>A telemetry-friendly string of the tool's annotations.</returns>
-    public static string CreateToolAnnotationTelemetry(Tool tool) => JsonSerializer.Serialize(new()
+    public static string CreateToolAnnotationTelemetry(Tool tool) => new JsonObject()
     {
         ["destructive"] = tool.Annotations?.DestructiveHint ?? false,
         ["idempotent"] = tool.Annotations?.IdempotentHint ?? false,
@@ -100,14 +99,14 @@ public static class McpHelper
         ["readonly"] = tool.Annotations?.ReadOnlyHint ?? false,
         ["secret"] = HasHint(tool, SecretHintMetaKey),
         ["localrequired"] = HasHint(tool, LocalRequiredHintMetaKey),
-    }, ModelsJsonContext.Default.DictionaryStringBoolean);
+    }.ToJsonString();
 
     /// <summary>
     /// Creates a telemetry-friendly string representation of the IBaseCommand-based tool.
     /// </summary>
     /// <param name="command">The IBaseCommand-based tool.</param>
     /// <returns>A telemetry-friendly string of the IBaseCommand-based tool.</returns>
-    public static string CreateToolAnnotationTelemetry(IBaseCommand command) => JsonSerializer.Serialize(new()
+    public static string CreateToolAnnotationTelemetry(IBaseCommand command) => new JsonObject()
     {
         ["destructive"] = command.Metadata.Destructive,
         ["idempotent"] = command.Metadata.Idempotent,
@@ -115,5 +114,5 @@ public static class McpHelper
         ["readonly"] = command.Metadata.ReadOnly,
         ["secret"] = command.Metadata.Secret,
         ["localrequired"] = command.Metadata.LocalRequired,
-    }, ModelsJsonContext.Default.DictionaryStringBoolean);
+    }.ToJsonString();
 }
