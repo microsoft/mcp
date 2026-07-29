@@ -36,8 +36,10 @@ public class CommandFactoryTests
         _serverConfiguration = new McpServerConfiguration
         {
             Name = "Test Server",
+            ShortName = "test",
             Version = "Test Version",
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
 

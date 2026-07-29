@@ -31,6 +31,12 @@ jobs:
 
   - template: /eng/common/pipelines/templates/steps/retain-run.yml
 
+  - template: /eng/common/pipelines/templates/steps/login-to-github.yml
+    parameters:
+      TokenOwners:
+        - Microsoft
+      ExportAsOutputVariable: true
+
   - pwsh: |
       $buildInfoPath = "$(Pipeline.Workspace)/build_info/build_info.json"
       $buildInfo = Get-Content -Raw -Path $buildInfoPath | ConvertFrom-Json
@@ -45,11 +51,19 @@ jobs:
       $version = $server.version
       $tag = $server.releaseTag
 
-      gh release create $tag --title "$serverName $version"
+      if ($serverName -eq 'Azure.Mcp.Server') {
+        $templatePath = "$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/release-notes-template.md"
+        $notes = (Get-Content -Raw -Path $templatePath).Replace('[Version]', $version)
+        $notesFile = [System.IO.Path]::GetTempFileName()
+        Set-Content -Path $notesFile -Value $notes -Encoding UTF8
+        gh release create $tag --title "$serverName $version" --notes-file $notesFile
+      } else {
+        gh release create $tag --title "$serverName $version"
+      }
       gh release upload $tag $(Pipeline.Workspace)/binaries_signed_zipped/*.zip
     displayName: Create GitHub Release and upload artifacts
     env:
-      GH_TOKEN: $(azuresdk-github-pat)
+      GH_TOKEN: $(GH_TOKEN)
 
 - template: /eng/pipelines/templates/jobs/publish-symbols.yml
 
@@ -90,8 +104,8 @@ jobs:
       DeploymentEnvironment: 'public'
       ServerName: ${{ parameters.ServerName }}
       DependsOn: TagRepository
-
-- template: /eng/pipelines/templates/jobs/update-mcp-repository.yml
+      
+- template: /eng/pipelines/templates/jobs/mcp-registry/release-server-json.yml
   parameters:
     ServerName: ${{ parameters.ServerName }}
     PackageMCPB: ${{ parameters.PackageMCPB }}

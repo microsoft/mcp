@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ResourceHealth.Options.ServiceHealthEvents;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Commands.ServiceHealthEvents;
@@ -24,69 +24,34 @@ namespace Azure.Mcp.Tools.ResourceHealth.Commands.ServiceHealthEvents;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsListCommand> logger, IResourceHealthService resourceHealthService)
-    : BaseResourceHealthCommand<ServiceHealthEventsListOptions>()
+public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsListCommand> logger, IResourceHealthService resourceHealthService, ISubscriptionResolver subscriptionResolver)
+    : BaseResourceHealthCommand<ServiceHealthEventsListOptions, ServiceHealthEventsListCommand.ServiceHealthEventsListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ServiceHealthEventsListCommand> _logger = logger;
     private readonly IResourceHealthService _resourceHealthService = resourceHealthService;
 
-    private static readonly HashSet<string> validEventTypes = new(StringComparer.OrdinalIgnoreCase) { "ServiceIssue", "PlannedMaintenance", "HealthAdvisory", "Security" };
-    private static readonly HashSet<string> validStatuses = new(StringComparer.OrdinalIgnoreCase) { "Active", "Resolved" };
+    private static readonly HashSet<string> s_validEventTypes = new(StringComparer.OrdinalIgnoreCase) { "ServiceIssue", "PlannedMaintenance", "HealthAdvisory", "Security" };
+    private static readonly HashSet<string> s_validStatuses = new(StringComparer.OrdinalIgnoreCase) { "Active", "Resolved" };
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(ServiceHealthEventsListOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(ResourceHealthOptionDefinitions.EventType);
-        command.Options.Add(ResourceHealthOptionDefinitions.Status);
-        command.Options.Add(ResourceHealthOptionDefinitions.TrackingId);
-        command.Options.Add(ResourceHealthOptionDefinitions.Filter);
-        command.Options.Add(ResourceHealthOptionDefinitions.QueryStartTime);
-        command.Options.Add(ResourceHealthOptionDefinitions.QueryEndTime);
+        base.ValidateOptions(options, validationResult);
 
-        // Add validators for enum values
-        command.Validators.Add(commandResult =>
+        // Validate event-type enum values
+        if (!string.IsNullOrEmpty(options.EventType) && !s_validEventTypes.Contains(options.EventType))
         {
-            // Validate event-type enum values
-            if (commandResult.TryGetValue(ResourceHealthOptionDefinitions.EventType, out var eventType) && !string.IsNullOrEmpty(eventType))
-            {
-                if (!validEventTypes.Contains(eventType))
-                {
-                    commandResult.AddError($"Invalid event-type '{eventType}'. Valid values are: {string.Join(", ", validEventTypes)}");
-                }
-            }
-
-            // Validate status enum values
-            if (commandResult.TryGetValue(ResourceHealthOptionDefinitions.Status, out var status) && !string.IsNullOrEmpty(status))
-            {
-                if (!validStatuses.Contains(status))
-                {
-                    commandResult.AddError($"Invalid status '{status}'. Valid values are: {string.Join(", ", validStatuses)}");
-                }
-            }
-        });
-    }
-
-    protected override ServiceHealthEventsListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.EventType = parseResult.GetValueOrDefault(ResourceHealthOptionDefinitions.EventType);
-        options.Status = parseResult.GetValueOrDefault(ResourceHealthOptionDefinitions.Status);
-        options.TrackingId = parseResult.GetValueOrDefault(ResourceHealthOptionDefinitions.TrackingId);
-        options.Filter = parseResult.GetValueOrDefault(ResourceHealthOptionDefinitions.Filter);
-        options.QueryStartTime = parseResult.GetValueOrDefault(ResourceHealthOptionDefinitions.QueryStartTime);
-        options.QueryEndTime = parseResult.GetValueOrDefault(ResourceHealthOptionDefinitions.QueryEndTime);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add($"Invalid event-type '{options.EventType}'. Valid values are: {string.Join(", ", s_validEventTypes)}");
         }
 
-        var options = BindOptions(parseResult);
+        // Validate status enum values
+        if (!string.IsNullOrEmpty(options.Status) && !s_validStatuses.Contains(options.Status))
+        {
+            validationResult.Errors.Add($"Invalid status '{options.Status}'. Valid values are: {string.Join(", ", s_validStatuses)}");
+        }
+    }
 
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ServiceHealthEventsListOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             var events = await _resourceHealthService.ListServiceHealthEventsAsync(
@@ -112,5 +77,5 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
         return context.Response;
     }
 
-    internal record ServiceHealthEventsListCommandResult(List<Models.ServiceHealthEvent> Events);
+    public sealed record ServiceHealthEventsListCommandResult(List<Models.ServiceHealthEvent> Events);
 }

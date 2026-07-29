@@ -7,16 +7,16 @@
     <EmbeddedResource Include="**\Resources\*.json" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <PackageReference Include="Azure.AI.OpenAI" />
     <PackageReference Include="Azure.ResourceManager" />
     <PackageReference Include="Azure.ResourceManager.CosmosDB" />
     <PackageReference Include="Microsoft.HybridRow"/>
     <PackageReference Include="Microsoft.Azure.Cosmos.Aot" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
-    <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 </Project>

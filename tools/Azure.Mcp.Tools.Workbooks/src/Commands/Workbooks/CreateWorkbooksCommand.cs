@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Workbooks.Models;
-using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
 using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
@@ -29,46 +27,21 @@ namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logger, IWorkbooksService workbooksService) : SubscriptionCommand<CreateWorkbookOptions>
+public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logger, IWorkbooksService workbooksService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<CreateWorkbookOptions, CreateWorkbooksCommand.CreateWorkbooksCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<CreateWorkbooksCommand> _logger = logger;
     private readonly IWorkbooksService _workbooksService = workbooksService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, CreateWorkbookOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(WorkbooksOptionDefinitions.DisplayNameRequired);
-        command.Options.Add(WorkbooksOptionDefinitions.SerializedContentRequired);
-        command.Options.Add(WorkbooksOptionDefinitions.SourceId);
-    }
-
-    protected override CreateWorkbookOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.DisplayName = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.DisplayNameRequired.Name);
-        options.SerializedContent = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.SerializedContentRequired.Name);
-        options.SourceId = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.SourceId.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var createdWorkbook = await _workbooksService.CreateWorkbookAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.DisplayName!,
-                options.SerializedContent!,
+                options.ResourceGroup,
+                options.DisplayName,
+                options.SerializedContent,
                 /**
                  * The source ID is optional, defaulting to "azure monitor" if not provided.
                  * "azure monitor" is the default for workbooks created in the Azure Monitor extension,

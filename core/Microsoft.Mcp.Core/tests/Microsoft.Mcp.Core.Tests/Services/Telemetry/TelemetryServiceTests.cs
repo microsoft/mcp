@@ -1,13 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
@@ -24,14 +27,16 @@ public class TelemetryServiceTests
     private readonly McpServerConfiguration _testConfiguration = new()
     {
         Name = "TestService",
+        ShortName = "test",
         Version = "1.0.0",
         IsTelemetryEnabled = true,
         DisplayName = "Test Display",
+        Description = "Test Description",
         RootCommandGroupName = "azmcp"
     };
     private readonly IOptions<McpServerConfiguration> _mockOptions;
     private readonly IMachineInformationProvider _mockInformationProvider;
-    private readonly IOptions<ServiceStartOptions> _mockServiceOptions;
+    private readonly IOptions<ServerStartOptions> _mockServiceOptions;
     private readonly IAzureCloudConfiguration _mockCloudConfiguration;
     private readonly ILogger<TelemetryService> _logger;
 
@@ -40,8 +45,8 @@ public class TelemetryServiceTests
         _mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
         _mockOptions.Value.Returns(_testConfiguration);
 
-        _mockServiceOptions = Substitute.For<IOptions<ServiceStartOptions>>();
-        _mockServiceOptions.Value.Returns(new ServiceStartOptions());
+        _mockServiceOptions = Substitute.For<IOptions<ServerStartOptions>>();
+        _mockServiceOptions.Value.Returns(new ServerStartOptions());
 
         _mockInformationProvider = Substitute.For<IMachineInformationProvider>();
         _mockInformationProvider.GetMacAddressHash().Returns(Task.FromResult(TestMacAddressHash));
@@ -81,7 +86,7 @@ public class TelemetryServiceTests
         };
 
         // Act
-        using var activity = service.StartActivity(activityId, clientInfo);
+        using var activity = service.StartActivity(activityId, clientInfo, null);
 
         // Assert
         Assert.Null(activity);
@@ -134,7 +139,7 @@ public class TelemetryServiceTests
         // Arrange
         _testConfiguration.IsTelemetryEnabled = false;
 
-        var serviceStartOptions = new ServiceStartOptions
+        var serviceStartOptions = new ServerStartOptions
         {
             Mode = "test-mode",
             Debug = true,
@@ -159,9 +164,11 @@ public class TelemetryServiceTests
         var configuration = new McpServerConfiguration
         {
             Name = "TestService",
+            ShortName = "test",
             Version = "1.0.0",
             IsTelemetryEnabled = true,
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
 
@@ -191,9 +198,11 @@ public class TelemetryServiceTests
         var configuration = new McpServerConfiguration
         {
             Name = "TestService",
+            ShortName = "test",
             Version = "1.0.0",
             IsTelemetryEnabled = true,
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
 
@@ -212,7 +221,7 @@ public class TelemetryServiceTests
             Version = "1.0.0",
             Title = "Test MCP server"
         };
-        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo));
+        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo, null));
     }
 
     [Fact]
@@ -224,9 +233,11 @@ public class TelemetryServiceTests
         var configuration = new McpServerConfiguration
         {
             Name = "TestService",
+            ShortName = "test",
             Version = "1.0.0",
             IsTelemetryEnabled = true,
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
 
@@ -245,14 +256,14 @@ public class TelemetryServiceTests
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => service.InitializeAsync());
 
-        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo));
+        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo, null));
     }
 
     [Fact]
     public async Task StartActivity_ReturnsActivityWhenEnabled()
     {
         // Arrange
-        var serviceStartOptions = new ServiceStartOptions
+        var serviceStartOptions = new ServerStartOptions
         {
             Mode = "test-mode",
             Debug = true,
@@ -263,9 +274,11 @@ public class TelemetryServiceTests
         var configuration = new McpServerConfiguration
         {
             Name = "TestService",
+            ShortName = "test",
             Version = "1.0.0",
             IsTelemetryEnabled = true,
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
         var operationName = "an-activity-id";
@@ -297,9 +310,11 @@ public class TelemetryServiceTests
         var configuration = new McpServerConfiguration
         {
             Name = "TestService",
+            ShortName = "test",
             Version = "1.0.0",
             IsTelemetryEnabled = true,
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
 
@@ -330,7 +345,7 @@ public class TelemetryServiceTests
     public async Task StartActivity_HasCloudBasedOnServiceStartOptions(string? cloud, AzureCloud expectedCloud)
     {
         // Arrange
-        var serviceStartOptions = new ServiceStartOptions
+        var serviceStartOptions = new ServerStartOptions
         {
             Mode = "test-mode",
             Debug = true,
@@ -342,9 +357,11 @@ public class TelemetryServiceTests
         var configuration = new McpServerConfiguration
         {
             Name = "TestService",
+            ShortName = "test",
             Version = "1.0.0",
             IsTelemetryEnabled = true,
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
         var operationName = "an-activity-id";
@@ -374,7 +391,7 @@ public class TelemetryServiceTests
     public async Task StartActivity_HasCloudBasedOnConfiguration(string configName, string? cloud, AzureCloud expectedCloud)
     {
         // Arrange
-        var serviceStartOptions = new ServiceStartOptions
+        var serviceStartOptions = new ServerStartOptions
         {
             Mode = "test-mode",
             Debug = true,
@@ -385,9 +402,11 @@ public class TelemetryServiceTests
         var configuration = new McpServerConfiguration
         {
             Name = "TestService",
+            ShortName = "test",
             Version = "1.0.0",
             IsTelemetryEnabled = true,
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
         var operationName = "an-activity-id";
@@ -438,7 +457,7 @@ public class TelemetryServiceTests
     public async Task StartActivity_NoCloudWhenAzureCloudConfigurationIsNull()
     {
         // Arrange
-        var serviceStartOptions = new ServiceStartOptions
+        var serviceStartOptions = new ServerStartOptions
         {
             Mode = "test-mode",
             Debug = true,
@@ -449,9 +468,11 @@ public class TelemetryServiceTests
         var configuration = new McpServerConfiguration
         {
             Name = "TestService",
+            ShortName = "test",
             Version = "1.0.0",
             IsTelemetryEnabled = true,
             DisplayName = "Test Display",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
         var operationName = "an-activity-id";
@@ -477,7 +498,7 @@ public class TelemetryServiceTests
     private static void AssertDefaultTags<T>(
         IEnumerable<KeyValuePair<string, T?>> tags,
         McpServerConfiguration? expectedOptions,
-        ServiceStartOptions? expectedServiceOptions,
+        ServerStartOptions? expectedServiceOptions,
         Action<Dictionary<string, T?>>? additionalAsserts = null)
     {
         var dictionary = tags.ToDictionary();
@@ -526,5 +547,100 @@ public class TelemetryServiceTests
 
         public Task<string?> GetOrCreateDeviceId() => Task.FromException<string?>(
             new ArgumentNullException("test-exception"));
+    }
+
+    // ── SetClientNameAndVersion tests ──────────────────────────────────────────
+
+    [Fact]
+    public void SetClientNameAndVersion_NullBoth_SetsNoTags()
+    {
+        var activity = new Activity("test").Start();
+        TelemetryService.SetClientNameAndVersion(activity, null, null);
+        Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientName);
+        Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientVersion);
+        activity.Stop();
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_SessionClientInfoOnly_SetsFromClientInfo()
+    {
+        var activity = new Activity("test").Start();
+        var clientInfo = new Implementation { Name = "VS-Code", Version = "1.2.3" };
+        TelemetryService.SetClientNameAndVersion(activity, clientInfo, null);
+        Assert.Equal("VS-Code", activity.TagObjects.Single(t => t.Key == TagName.ClientName).Value);
+        Assert.Equal("1.2.3", activity.TagObjects.Single(t => t.Key == TagName.ClientVersion).Value);
+        activity.Stop();
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_RequestMetaClientInfoOnly_SetsFromMeta()
+    {
+        var activity = new Activity("test").Start();
+        var meta = new JsonObject
+        {
+            [McpHelper.ClientInfoMetaKey] = new JsonObject
+            {
+                [McpHelper.ClientInfoNameKey] = "CopilotChat",
+                [McpHelper.ClientInfoVersionKey] = "4.0.0"
+            }
+        };
+        var requestParams = new ListToolsRequestParams { Meta = meta };
+        TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
+        Assert.Equal("CopilotChat", activity.TagObjects.Single(t => t.Key == TagName.ClientName).Value);
+        Assert.Equal("4.0.0", activity.TagObjects.Single(t => t.Key == TagName.ClientVersion).Value);
+        activity.Stop();
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_BothPresent_RequestMetaWins()
+    {
+        // In 2026-07-28 stateless mode the per-request _meta value should override
+        // the session-level clientInfo (which will be null in practice on stateless servers,
+        // but if both are present the request-scoped value takes precedence).
+        var activity = new Activity("test").Start();
+        var clientInfo = new Implementation { Name = "OldClient", Version = "0.1.0" };
+        var meta = new JsonObject
+        {
+            [McpHelper.ClientInfoMetaKey] = new JsonObject
+            {
+                [McpHelper.ClientInfoNameKey] = "NewClient",
+                [McpHelper.ClientInfoVersionKey] = "9.9.9"
+            }
+        };
+        var requestParams = new ListToolsRequestParams { Meta = meta };
+        TelemetryService.SetClientNameAndVersion(activity, clientInfo, requestParams);
+        Assert.Equal("NewClient", activity.TagObjects.Single(t => t.Key == TagName.ClientName).Value);
+        Assert.Equal("9.9.9", activity.TagObjects.Single(t => t.Key == TagName.ClientVersion).Value);
+        activity.Stop();
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_RequestMetaNonStringValues_AreIgnored()
+    {
+        var activity = new Activity("test").Start();
+        var meta = new JsonObject
+        {
+            [McpHelper.ClientInfoMetaKey] = new JsonObject
+            {
+                [McpHelper.ClientInfoNameKey] = JsonValue.Create(42),    // number, not string
+                [McpHelper.ClientInfoVersionKey] = JsonValue.Create(true)   // bool, not string
+            }
+        };
+        var requestParams = new ListToolsRequestParams { Meta = meta };
+        TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
+        Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientName);
+        Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientVersion);
+        activity.Stop();
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_RequestMetaMissingClientInfoKey_SetsNoTags()
+    {
+        var activity = new Activity("test").Start();
+        var requestParams = new ListToolsRequestParams { Meta = new JsonObject() };
+        TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
+        Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientName);
+        Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientVersion);
+        activity.Stop();
     }
 }

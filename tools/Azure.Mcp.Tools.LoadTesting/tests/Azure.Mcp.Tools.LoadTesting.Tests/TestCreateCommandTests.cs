@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.LoadTesting.Tests;
 
-public class TestCreateCommandTests : CommandUnitTestsBase<TestCreateCommand, ILoadTestingService>
+public class TestCreateCommandTests : SubscriptionCommandUnitTestsBase<TestCreateCommand, ILoadTestingService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -29,10 +29,18 @@ public class TestCreateCommandTests : CommandUnitTestsBase<TestCreateCommand, IL
     {
         var expected = new Test { TestId = "testId1", DisplayName = "TestDisplayName", Description = "TestDescription" };
         Service.CreateTestAsync(
-            Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"),
-            Arg.Is("TestDisplayName"), Arg.Is("TestDescription"),
-            Arg.Is((int?)20), Arg.Is((int?)50), Arg.Is((int?)1), Arg.Is("https://example.com/api/test"),
-            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>(),
+            Arg.Is("sub123"),
+            Arg.Is("testResourceName"),
+            Arg.Is("testId1"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("TestDisplayName"),
+            Arg.Is("TestDescription"),
+            Arg.Is((int?)20),
+            Arg.Is((int?)50),
+            Arg.Is((int?)1),
+            Arg.Is("https://example.com/api/test"),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -62,10 +70,18 @@ public class TestCreateCommandTests : CommandUnitTestsBase<TestCreateCommand, IL
     public async Task ExecuteAsync_HandlesBadRequestErrors()
     {
         Service.CreateTestAsync(
-            Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"),
-            Arg.Is("TestDisplayName"), Arg.Is("TestDescription"),
-            Arg.Is((int?)20), Arg.Is((int?)50), Arg.Is((int?)1), Arg.Is((string?)null),
-            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>(),
+            Arg.Is("sub123"),
+            Arg.Is("testResourceName"),
+            Arg.Is("testId1"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("TestDisplayName"),
+            Arg.Is("TestDescription"),
+            Arg.Is((int?)20),
+            Arg.Is((int?)50),
+            Arg.Is((int?)1),
+            Arg.Is((string?)null),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(new Test());
 
@@ -81,10 +97,18 @@ public class TestCreateCommandTests : CommandUnitTestsBase<TestCreateCommand, IL
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         Service.CreateTestAsync(
-            Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"),
-            Arg.Is("TestDisplayName"), Arg.Is("TestDescription"),
-            Arg.Is((int?)20), Arg.Is((int?)50), Arg.Is((int?)1), Arg.Is("https://example.com/api/test"),
-            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>(),
+            Arg.Is("sub123"),
+            Arg.Is("testResourceName"),
+            Arg.Is("testId1"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("TestDisplayName"),
+            Arg.Is("TestDescription"),
+            Arg.Is<int?>(20),
+            Arg.Is<int?>(50),
+            Arg.Is<int?>(1),
+            Arg.Is("https://example.com/api/test"),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

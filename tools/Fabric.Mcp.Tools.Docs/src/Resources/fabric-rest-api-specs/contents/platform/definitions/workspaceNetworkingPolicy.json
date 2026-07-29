@@ -45,7 +45,7 @@
       "type": "object",
       "properties": {
         "defaultAction": {
-          "description": "Default policy for workspace access from public networks.",
+          "description": "The default policy for workspace access from public networks. **If omitted from a PUT request body, this field defaults to `Allow`, which may unintentionally open network access. Always explicitly specify this field in every PUT request body.**",
           "$ref": "#/definitions/DefaultAction"
         }
       }
@@ -74,7 +74,7 @@
       "description": "Represents the complete set of outbound access protection cloud connection rules configured for a workspace as part of its networking communication policy. \nThis object defines the connection rules that govern which external endpoints and workspaces are permitted or denied for outbound communication",
       "properties": {
         "defaultAction": {
-          "description": "Defines the default behavior for all cloud connection types that are not explicitly listed in the rules array. \n If set to \"Allow\", all unspecified connection types are permitted by default. \nIf set to \"Deny\", all unspecified connection types are blocked by default unless explicitly allowed. \nThis setting acts as a global fallback policy and is critical for enforcing a secure default posture in environments where only known and trusted connections should be permitted.",
+          "description": "Defines the default behavior for all cloud connection types that are not explicitly listed in the rules array. \nIf set to \"Allow\", all unspecified connection types are permitted by default. \nIf set to \"Deny\", all unspecified connection types are blocked by default unless explicitly allowed. \nThis setting acts as a global fallback policy and is critical for enforcing a secure default posture in environments where only known and trusted connections should be permitted. \n**If omitted from a PUT request body, this field defaults to `Allow`, which may unintentionally permit all outbound connections. Always explicitly specify this field in every PUT request body.**",
           "$ref": "#/definitions/ConnectionAccessActionType"
         },
         "rules": {
@@ -171,7 +171,7 @@
       "description": "Represents the complete set of gateway outbound access protection rules configured for a workspace as part of its networking communication policy. \nThis object defines the gateway rules that govern outbound communication",
       "properties": {
         "defaultAction": {
-          "description": "Defines the default behavior for all gateways that are not explicitly listed in the allowed list array. \n If set to \"Allow\", all unspecified gateways are permitted by default. \nIf set to \"Deny\", all unspecified gateways are blocked.",
+          "description": "Defines the default behavior for all gateways that are not explicitly listed in the allowed list array. \nIf set to \"Allow\", all unspecified gateways are permitted by default. \nIf set to \"Deny\", all unspecified gateways are blocked. \n**If omitted from a PUT request body, this field defaults to `Allow`, which may unintentionally permit all outbound gateway connections. Always explicitly specify this field in every PUT request body.**",
           "$ref": "#/definitions/GatewayAccessActionType"
         },
         "allowedGateways": {
@@ -217,6 +217,67 @@
             "description": "Blocks outbound gateways. When used as a default action, all gateways are denied unless explicitly allowed."
           }
         ]
+      }
+    },
+    "InboundFirewallConfiguration": {
+      "type": "object",
+      "description": "This object defines the complete set of firewall rules to manage inbound access protection as part of a workspace’s networking communication policy. It ensures that only explicitly authorized IP addresses are permitted for inbound communication. \nWhen submitted via the PUT API, this object creates or fully replaces the existing IP firewall configuration for the workspace. These rules are enforced only when the workspace’s network communication policy has inbound.publicAccessRules.defaultAction set to Deny.",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "description": "A list of rules that define IP addresses permitted for inbound access. Each rule may include a name and a single IP address, an IP address range, or a CIDR IP address. A maximum of 256 rules can be specified per workspace.",
+          "items": {
+            "$ref": "#/definitions/FirewallRule"
+          }
+        }
+      }
+    },
+    "FirewallRule": {
+      "type": "object",
+      "description": "Defines a firewall rule, identified by its name and containing a single IP address, an IP address range, or a CIDR IP address as its value.",
+      "required": [
+        "displayName",
+        "value"
+      ],
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "description": "Specifies the name of the rule. Display names can be up to 128 characters in length and are required to be unique per workspace."
+        },
+        "value": {
+          "type": "string",
+          "description": "Specifies the value of the rule, specified as a single IP address, an IP address range, or a CIDR IP address."
+        }
+      }
+    },
+    "WorkspaceInboundAzureResourceRules": {
+      "type": "object",
+      "description": "Represents a collection of inbound Azure resource instance rules configured for a workspace. These rules define which Azure resource instances are allowed to access the workspace.",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "description": "An array of inbound Azure resource instance rules associated with the workspace.",
+          "items": {
+            "$ref": "#/definitions/WorkspaceInboundAzureResourceRule"
+          }
+        }
+      }
+    },
+    "WorkspaceInboundAzureResourceRule": {
+      "type": "object",
+      "description": "Represents a single inbound Azure resource instance rule that specifies an allowed Azure resource instance for the workspace.",
+      "required": [ "displayName", "resourceId" ],
+      "properties": {
+        "displayName": {
+          "description": "A user-friendly display name for the rule. This name is used for display purposes only and does not affect the rule's functionality.",
+          "type": "string",
+          "readOnly": false
+        },
+        "resourceId": {
+          "description": "The full Azure Resource Manager (ARM) resource ID of the resource within the rule. This is a unique identifier in the format: `/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}`. You can retrieve this from the Azure Portal (Resource properties), Azure CLI (az resource show), or ARM templates.",
+          "type": "string",
+          "readOnly": false
+        }
       }
     }
   }

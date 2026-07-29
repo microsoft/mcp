@@ -13,11 +13,13 @@ namespace Azure.Mcp.Core.Services.Azure.Subscription;
 public class SubscriptionService(
     ICacheService cacheService,
     ITenantService tenantService,
+    ISubscriptionResolver subscriptionResolver,
     ILogger<SubscriptionService> logger)
     : BaseAzureService(tenantService), ISubscriptionService
 {
     private const int MaxSubscriptions = 10_000;
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+    private readonly ISubscriptionResolver _subscriptionResolver = subscriptionResolver ?? throw new ArgumentNullException(nameof(subscriptionResolver));
     private readonly ILogger<SubscriptionService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private const string CacheGroup = "subscription";
     private const string CacheKey = "subscriptions";
@@ -76,7 +78,7 @@ public class SubscriptionService(
         var response = await armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscriptionId)).GetAsync(cancellationToken);
         if (response?.Value == null)
         {
-            throw new Exception($"Could not retrieve subscription {subscription}");
+            throw new KeyNotFoundException($"Could not retrieve subscription {subscription}");
         }
 
         // Cache the result using subscription ID
@@ -94,8 +96,8 @@ public class SubscriptionService(
     public async Task<string> GetSubscriptionIdByName(string subscriptionName, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         var subscriptions = await GetSubscriptions(tenant, retryPolicy, cancellationToken);
-        var subscription = subscriptions.FirstOrDefault(s => s.DisplayName.Equals(subscriptionName, StringComparison.OrdinalIgnoreCase)) ??
-            throw new ArgumentException($"Could not find subscription with name {subscriptionName}", nameof(subscriptionName));
+        var subscription = subscriptions.FirstOrDefault(s => s.DisplayName.Equals(subscriptionName, StringComparisons.SubscriptionDisplayName)) ??
+            throw new KeyNotFoundException($"Could not find subscription with name {subscriptionName}");
 
         return subscription.SubscriptionId;
     }
@@ -103,17 +105,14 @@ public class SubscriptionService(
     public async Task<string> GetSubscriptionNameById(string subscriptionId, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         var subscriptions = await GetSubscriptions(tenant, retryPolicy, cancellationToken);
-        var subscription = subscriptions.FirstOrDefault(s => s.SubscriptionId.Equals(subscriptionId, StringComparison.OrdinalIgnoreCase)) ??
-            throw new ArgumentException($"Could not find subscription with ID {subscriptionId}", nameof(subscriptionId));
+        var subscription = subscriptions.FirstOrDefault(s => s.SubscriptionId.Equals(subscriptionId, StringComparisons.SubscriptionId)) ??
+            throw new KeyNotFoundException($"Could not find subscription with ID {subscriptionId}");
 
         return subscription.DisplayName;
     }
 
     /// <inheritdoc/>
-    public string? GetDefaultSubscriptionId()
-    {
-        return CommandHelper.GetDefaultSubscription();
-    }
+    public string? GetDefaultSubscriptionId() => _subscriptionResolver.GetDefaultSubscriptionId();
 
     private async Task<string> GetSubscriptionId(string subscription, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {

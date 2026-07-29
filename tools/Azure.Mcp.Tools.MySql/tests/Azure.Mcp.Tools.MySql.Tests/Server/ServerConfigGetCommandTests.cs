@@ -3,17 +3,17 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Server;
 using Azure.Mcp.Tools.MySql.Services;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.MySql.Tests.Server;
 
-public class ServerConfigGetCommandTests : CommandUnitTestsBase<ServerConfigGetCommand, IMySqlService>
+public class ServerConfigGetCommandTests : SubscriptionCommandUnitTestsBase<ServerConfigGetCommand, IMySqlService>
 {
     [Fact]
     public async Task ExecuteAsync_ReturnsConfiguration_WhenSuccessful()
@@ -29,12 +29,11 @@ public class ServerConfigGetCommandTests : CommandUnitTestsBase<ServerConfigGetC
             GeoRedundantBackup = "Disabled"
         }, MySqlJsonContext.Default.ServerConfigGetResult);
 
-        Service.GetServerConfigAsync("sub123", "rg1", "user1", "test-server", Arg.Any<CancellationToken>()).Returns(expectedConfig);
+        Service.GetServerConfigAsync("sub123", "rg1", "test-server", Arg.Any<CancellationToken>()).Returns(expectedConfig);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1",
             "--server", "test-server");
 
         var result = ValidateAndDeserializeResponse(response, MySqlJsonContext.Default.ServerConfigGetCommandResult);
@@ -44,13 +43,12 @@ public class ServerConfigGetCommandTests : CommandUnitTestsBase<ServerConfigGetC
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenServiceThrows()
     {
-        Service.GetServerConfigAsync("sub123", "rg1", "user1", "test-server", Arg.Any<CancellationToken>())
+        Service.GetServerConfigAsync("sub123", "rg1", "test-server", Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1",
             "--server", "test-server");
 
         Assert.NotNull(response);

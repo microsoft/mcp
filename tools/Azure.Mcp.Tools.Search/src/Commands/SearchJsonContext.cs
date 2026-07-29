@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Search.Commands.Index;
 using Azure.Mcp.Tools.Search.Commands.Knowledge;
@@ -18,7 +19,4 @@ namespace Azure.Mcp.Tools.Search.Commands;
 [JsonSerializable(typeof(KnowledgeBaseGetCommand.KnowledgeBaseGetCommandResult))]
 [JsonSerializable(typeof(KnowledgeBaseRetrieveCommand.KnowledgeBaseRetrieveCommandResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal sealed partial class SearchJsonContext : JsonSerializerContext
-{
-    // This class is generated at runtime by the source generator.
-}
+internal sealed partial class SearchJsonContext : JsonSerializerContext;

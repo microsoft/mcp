@@ -19,6 +19,12 @@ public class McpServerConfiguration
     public required string Name { get; set; }
 
     /// <summary>
+    /// A short identifier for the MCP server (i.e. "azure", "fabric").
+    /// Used, for example, as the tool name when the server runs in single tool proxy mode.
+    /// </summary>
+    public required string ShortName { get; set; }
+
+    /// <summary>
     /// The display name of the MCP server.
     /// </summary>
     public required string DisplayName { get; set; }
@@ -27,6 +33,11 @@ public class McpServerConfiguration
     /// The version of the MCP server.
     /// </summary>
     public required string Version { get; set; }
+
+    /// <summary>
+    /// A description of the MCP server. Used, for example, as the tool description when the server runs in single tool proxy mode.
+    /// </summary>
+    public required string Description { get; set; }
 
     /// <summary>
     /// Indicates whether telemetry is enabled for the MCP server.  By default, it is set to true.

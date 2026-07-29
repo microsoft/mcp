@@ -12,6 +12,7 @@ public interface IContainerAppsService
     Task<ResourceQueryResults<ContainerAppInfo>> ListContainerApps(
         string subscription,
         string? resourceGroup = null,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

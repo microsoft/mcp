@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Compute.Models;
-using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vmss;
 using Azure.Mcp.Tools.Compute.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
@@ -30,76 +30,39 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger, IComputeService computeService)
-    : BaseComputeCommand<VmssUpdateOptions>(true)
+public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger, IComputeService computeService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<VmssUpdateOptions, VmssUpdateCommand.VmssUpdateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<VmssUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(VmssUpdateOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
+        base.ValidateOptions(options, validationResult);
 
-        // Required options
-        command.Options.Add(ComputeOptionDefinitions.VmssName.AsRequired());
-
-        // Update options (at least one required - validated in command)
-        command.Options.Add(ComputeOptionDefinitions.UpgradePolicy);
-        command.Options.Add(ComputeOptionDefinitions.Capacity);
-        command.Options.Add(ComputeOptionDefinitions.VmSize);
-        command.Options.Add(ComputeOptionDefinitions.Overprovision);
-        command.Options.Add(ComputeOptionDefinitions.EnableAutoOsUpgrade);
-        command.Options.Add(ComputeOptionDefinitions.ScaleInPolicy);
-        command.Options.Add(ComputeOptionDefinitions.Tags);
-
-        // Resource group is required for update
-        command.Validators.Add(commandResult =>
+        // Custom validation: At least one update property must be specified
+        if (string.IsNullOrEmpty(options.UpgradePolicy) &&
+            options.Capacity == null &&
+            string.IsNullOrEmpty(options.VmSize) &&
+            options.Overprovision == null &&
+            options.EnableAutoOsUpgrade == null &&
+            string.IsNullOrEmpty(options.ScaleInPolicy) &&
+            options.Tags == null)
         {
-            // Custom validation: At least one update property must be specified
-            if (!commandResult.HasOptionResult(ComputeOptionDefinitions.UpgradePolicy) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.Capacity) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.VmSize) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.Overprovision) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.EnableAutoOsUpgrade) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.ScaleInPolicy) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.Tags))
-            {
-                commandResult.AddError(
-                    "At least one update property must be specified: --upgrade-policy, --capacity, --vm-size, --overprovision, --enable-auto-os-upgrade, --scale-in-policy, or --tags.");
-            }
-        });
-    }
-
-    protected override VmssUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.VmssName = parseResult.GetValueOrDefault(ComputeOptionDefinitions.VmssName);
-        options.UpgradePolicy = parseResult.GetValueOrDefault(ComputeOptionDefinitions.UpgradePolicy);
-        options.Capacity = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Capacity);
-        options.VmSize = parseResult.GetValueOrDefault(ComputeOptionDefinitions.VmSize);
-        options.Overprovision = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Overprovision);
-        options.EnableAutoOsUpgrade = parseResult.GetValueOrDefault(ComputeOptionDefinitions.EnableAutoOsUpgrade);
-        options.ScaleInPolicy = parseResult.GetValueOrDefault(ComputeOptionDefinitions.ScaleInPolicy);
-        options.Tags = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Tags);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add(
+                "At least one update property must be specified: --upgrade-policy, --capacity, --vm-size, --overprovision, --enable-auto-os-upgrade, --scale-in-policy, or --tags.");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VmssUpdateOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
             var result = await _computeService.UpdateVmssAsync(
-                options.VmssName!,
-                options.ResourceGroup!,
+                options.VmssName,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.VmSize,
                 options.Capacity,
@@ -137,5 +100,5 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger, IComput
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmssUpdateCommandResult(VmssUpdateResult Vmss);
+    public sealed record VmssUpdateCommandResult(VmssUpdateResult Vmss);
 }

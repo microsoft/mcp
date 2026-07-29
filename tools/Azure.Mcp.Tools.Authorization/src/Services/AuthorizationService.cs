@@ -9,12 +9,11 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Services.Models;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Authorization.Services;
 
-public class AuthorizationService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AuthorizationService> logger)
+public class AuthorizationService(ISubscriptionService subscriptionService, ITenantService tenantService)
     : BaseAzureResourceService(subscriptionService, tenantService), IAuthorizationService
 {
     private const string ApproveReviewResult = "Approve";
@@ -25,8 +24,6 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
     // BaseAzureResourceService keeps its subscription service private; this service also needs it
     // to resolve the tenant for direct ARM REST calls.
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-    private readonly ILogger<AuthorizationService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
     public async Task<ResourceQueryResults<RoleAssignment>> ListRoleAssignmentsAsync(
         string subscription,
         string scope,

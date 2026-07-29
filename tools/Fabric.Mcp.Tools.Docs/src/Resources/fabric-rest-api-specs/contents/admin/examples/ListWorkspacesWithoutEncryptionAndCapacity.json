@@ -1,0 +1,32 @@
+{
+    "parameters": {
+        "capacityId": "61d6811f-7544-4e75-a1e6-1c59c0383312",
+        "encryptionStatus": "Active"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "workspaces": [
+                    {
+                        "id": "abf49964-6f70-4aea-a66c-4b78a22e3ddc",
+                        "name": "Contoso Workspace 1",
+                        "type": "Workspace",
+                        "state": "Active",
+                        "capacityId": "61d6811f-7544-4e75-a1e6-1c59c0383312",
+                        "domainId": "039bd896-b39c-4540-93e3-e9926de135f9"
+                    },
+                    {
+                        "id": "90119767-07b4-4657-82ee-53e90fece225",
+                        "name": "Contoso Workspace 3",
+                        "type": "Workspace",
+                        "state": "Active",
+                        "capacityId": "61d6811f-7544-4e75-a1e6-1c59c0383312",
+                        "domainId": "039bd896-b39c-4540-93e3-e9926de135f9"
+                    }
+                ],
+                "continuationUri": "https://api.fabric.microsoft.com/v1/admin/workspaces?continuationToken='LDEsMTAwMDAwLDA%3D'",
+                "continuationToken": "LDEsMTAwMDAwLDA%3D"
+            }
+        }
+    }
+}

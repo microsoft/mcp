@@ -127,8 +127,8 @@ public class CombinedWorkflowTests : IDisposable
         Assert.Equal(matchedDefinitions.Count, successCount);
 
         // Flag any orphaned definition files that no workload can reach.
-        // dbtjob and hlscohort have no corresponding workload API spec directories.
-        var knownOrphans = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "dbtjob-definition.md", "hlscohort-definition.md" };
+        // dbtjob, hlscohort, orgapp, and orgappaudience have no corresponding workload API spec directories.
+        var knownOrphans = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "dbtjob-definition.md", "hlscohort-definition.md", "orgapp-definition.md", "orgappaudience-definition.md" };
         var orphaned = allDefinitionResources
             .Except(matchedDefinitions)
             .Where(r => !knownOrphans.Contains(Path.GetFileName(r)!))

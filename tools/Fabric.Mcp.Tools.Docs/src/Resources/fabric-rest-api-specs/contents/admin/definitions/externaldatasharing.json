@@ -53,7 +53,7 @@
                 },
                 "recipient": {
                     "description": "The recipient who was invited to accept the external data share.",
-                    "$ref": "#/definitions/ExternalDataShareRecipient",
+                    "$ref": "#/definitions/BaseExternalDataShareRecipient",
                     "readOnly": true
                 },
                 "status": {
@@ -134,6 +134,85 @@
                     "type": "string",
                     "format": "uuid",
                     "description": "The recipient's tenant ID."
+                }
+            }
+        },
+        "BaseExternalDataShareRecipient": {
+            "description": "The recipient of an external data share. Use 'ExternalDataShareUserRecipient' to share with a user by email, or 'ExternalDataShareSPRecipient' to share with a service principal by object ID. If 'type' is not specified, it defaults to 'User'.",
+            "type": "object",
+            "required": ["type"],
+            "discriminator": "type",
+            "properties": {
+                "type": {
+                    "description": "The type of the external data share recipient. Additional recipient types may be added over time.",
+                    "$ref": "#/definitions/ExternalDataShareRecipientType"
+                }
+            }
+        },
+        "ExternalDataShareRecipientType": {
+            "description": "The type of the external data share recipient. Defaults to 'User' if not provided. Additional recipient types may be added over time.",
+            "type": "string",
+            "default": "User",
+            "enum": ["ServicePrincipal", "User"],
+            "x-ms-enum": {
+                "name": "ExternalDataShareRecipientType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "ServicePrincipal",
+                        "description": "The recipient is a service principal, identified by object ID and tenant ID."
+                    },
+                    {
+                        "value": "User",
+                        "description": "The recipient is a user, identified by user principal name (email address)."
+
+                    }
+                ]
+            }
+        },
+        "ExternalDataShareSPRecipient": {
+            "description": "An external data share recipient that is a service principal, identified by principal ID and tenant ID.",
+            "type": "object",
+            "required": ["principalId", "tenantId"],
+            "x-ms-discriminator-value": "ServicePrincipal",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/BaseExternalDataShareRecipient"
+                }
+            ],
+            "properties": {
+                "principalId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The principal ID of the service principal recipient. This is equivalent to the Entra ID object ID."
+                },
+                "tenantId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The tenant ID of the service principal recipient."
+                }
+            }
+        },
+        "ExternalDataShareUserRecipient": {
+            "description": "An external data share recipient that is a user, identified by user principal name (email address). This is the default recipient type.",
+            "type": "object",
+            "required": ["userPrincipalName"],
+            "x-ms-discriminator-value": "User",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/BaseExternalDataShareRecipient"
+                }
+            ],
+            "properties": {
+                "userPrincipalName": {
+                    "type": "string",
+                    "description": "The user principal name (email address) of the recipient.",
+                    "maxLength": 256
+                },
+                "tenantId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The tenant ID of the user recipient. Optional."
                 }
             }
         }

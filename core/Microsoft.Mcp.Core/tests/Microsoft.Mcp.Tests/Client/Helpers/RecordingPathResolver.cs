@@ -10,14 +10,9 @@ namespace Microsoft.Mcp.Tests.Client.Helpers;
 /// </summary>
 public sealed class RecordingPathResolver : IRecordingPathResolver
 {
-    private static readonly char[] _invalidChars = ['\\', '/', ':', '*', '?', '"', '<', '>', '|'];
+    private static readonly char[] s_invalidChars = ['\\', '/', ':', '*', '?', '"', '<', '>', '|'];
 
-    private readonly string _repoRoot;
-
-    public RecordingPathResolver()
-    {
-        _repoRoot = ResolveRepositoryRoot() ?? Directory.GetCurrentDirectory();
-    }
+    public string RepositoryRoot { get; } = ResolveRepositoryRoot() ?? Directory.GetCurrentDirectory();
 
     /// <summary>
     /// Attempt to locate the repository root by walking up until a .git directory/file or global.json is found.
@@ -38,8 +33,6 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
         throw new InvalidOperationException("Unable to locate repository root. Ensure tests are running in a cloned repository.");
     }
 
-    public string RepositoryRoot => _repoRoot;
-
     /// <summary>
     /// Sanitizes a test display/name into a file-system friendly component.
     /// </summary>
@@ -51,7 +44,7 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
         int i = 0;
         foreach (var c in name)
         {
-            buffer[i++] = _invalidChars.Contains(c) ? '_' : c;
+            buffer[i++] = s_invalidChars.Contains(c) ? '_' : c;
         }
         return new string(buffer);
     }
@@ -63,10 +56,10 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
     public string GetSessionDirectory(Type testType, string? variantSuffix = null)
     {
         // Locate the test project directory by ascending from the assembly location until a matching *.csproj exists.
-        var projectDir = GetProjectDirectory(testType);
+        var projectDir = GetSourcePath(testType.Assembly);
 
         // Compute relative path from repo root.
-        var relativeProjectPath = Path.GetRelativePath(_repoRoot, projectDir)
+        var relativeProjectPath = Path.GetRelativePath(RepositoryRoot, projectDir)
             .Replace('\\', '/'); // Normalize separators for consistency.
 
         // Append SessionRecords and suffix.
@@ -75,35 +68,6 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
 
         // TODO: Consider caching projectDir per assembly for performance if needed.
         return sessionDir;
-    }
-
-    private static string GetProjectDirectory(Type testType)
-    {
-        // Locate the test project directory by ascending from the assembly location until a matching *.csproj exists.
-        var assemblyDir = Path.GetDirectoryName(testType.Assembly.Location)!;
-        var projectDir = FindProjectDirectory(assemblyDir, testType);
-
-        return projectDir;
-    }
-
-    private static string FindProjectDirectory(string startDirectory, Type testType)
-    {
-        var current = new DirectoryInfo(startDirectory);
-        var expectedProjectName = testType.Assembly.GetName().Name; // Typically matches .csproj file name.
-
-        while (current != null)
-        {
-            // Look for any .csproj; prefer one matching assembly name.
-            var csprojFiles = current.GetFiles("*.csproj", SearchOption.TopDirectoryOnly);
-            if (csprojFiles.Length > 0)
-            {
-                var matching = csprojFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f.Name) == expectedProjectName);
-                return (matching ?? csprojFiles.First()).Directory!.FullName;
-            }
-            current = current.Parent;
-        }
-
-        throw new InvalidOperationException($"Unable to locate project directory for test type {testType.FullName} starting from {startDirectory}.");
     }
 
     /// <summary>
@@ -120,7 +84,7 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
     /// <summary>
     /// Generates a clear message for missing assets.json file to assist users in creating one when they hit the error.
     /// </summary>
-    private string BuildMissingAssetsErrorMessage(string testClass, string projectDir)
+    private static string BuildMissingAssetsErrorMessage(string testClass, string projectDir)
     {
         string projectDirName = new DirectoryInfo(projectDir).Name;
 
@@ -135,11 +99,16 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
     }
 
     /// <summary>
-    /// Attempts to find a nearest assets.json walking upwards.
+    /// Get the assets.json file for the test type using the assembly's SourcePath metadata.
+    /// <para>
+    /// This method uses the <see cref="AssemblyMetadataAttribute"/> with the key "SourcePath" to determine the
+    /// location of the test project and then looks for an "assets.json" file in that directory.
+    /// </para>
+    /// <param name="testType">The type of the test for which to find the assets.json file.</param>
     /// </summary>
     public string GetAssetsJson(Type testType)
     {
-        var projectDir = GetProjectDirectory(testType);
+        var projectDir = GetSourcePath(testType.Assembly);
 
         var current = new DirectoryInfo(projectDir);
 
@@ -150,5 +119,17 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
             return assetsFile;
         }
         throw new FileNotFoundException(BuildMissingAssetsErrorMessage(testType.FullName ?? "UnknownTestClass", projectDir));
+    }
+
+    private static string GetSourcePath(Assembly assembly)
+    {
+        var sourcePaths = assembly.GetCustomAttributes<AssemblyMetadataAttribute>().Where(a => a.Key == "SourcePath");
+        if (sourcePaths.Count() != 1)
+        {
+            throw new InvalidOperationException("No SourcePath metadata found. Ensure the test project is properly " +
+                "configured with '<IsTestProject>true</IsTestProject>' in the .csproj file, uses 'Directory.Build.targets', " +
+                "and has a single 'SourcePath' metadata.");
+        }
+        return sourcePaths.First().Value!;
     }
 }

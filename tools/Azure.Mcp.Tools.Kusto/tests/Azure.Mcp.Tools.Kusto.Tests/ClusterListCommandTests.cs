@@ -3,17 +3,17 @@
 
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.Tests;
 
-public sealed class ClusterListCommandTests : CommandUnitTestsBase<ClusterListCommand, IKustoService>
+public sealed class ClusterListCommandTests : SubscriptionCommandUnitTestsBase<ClusterListCommand, IKustoService>
 {
     [Fact]
     public async Task ExecuteAsync_ReturnsClusters_WhenClustersExist()

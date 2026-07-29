@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.Tests.Vm;
 
-public class VmDeleteCommandTests : CommandUnitTestsBase<VmDeleteCommand, IComputeService>
+public class VmDeleteCommandTests : SubscriptionCommandUnitTestsBase<VmDeleteCommand, IComputeService>
 {
     private readonly string _knownSubscription = "sub123";
     private readonly string _knownResourceGroup = "test-rg";
@@ -124,9 +124,9 @@ public class VmDeleteCommandTests : CommandUnitTestsBase<VmDeleteCommand, ICompu
     }
 
     [Fact]
-    public async Task ExecuteAsync_VmNotFound_ReturnsSuccess()
+    public async Task ExecuteAsync_VmNotFound_ReturnsNotFoundMessage()
     {
-        // Arrange - service returns false (VM was already gone / 404), but delete is idempotent
+        // Arrange - service returns false (VM was already gone / 404); delete is idempotent so HTTP 200
         Service.DeleteVmAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -143,9 +143,12 @@ public class VmDeleteCommandTests : CommandUnitTestsBase<VmDeleteCommand, ICompu
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription);
 
-        // Assert - idempotent: 404 treated as success
+        // Assert - HTTP 200 (idempotent) but message says "not found"
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmDeleteCommandResult);
+        Assert.False(result.Success);
+        Assert.Contains("not found", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(_knownVmName, result.Message);
     }
 
     [Fact]

@@ -1,0 +1,59 @@
+{
+  "rules": [
+    {
+      "ruleId": "Upgrade_TLS_To_1_2_For_Storage_Accounts",
+      "description": "Upgrade TLS to latest version. Support for TLS 1.0 and TLS 1.1 in Azure storage accounts is ending.",
+      "query": "where (isempty(properties['minimumTlsVersion']) or properties['minimumTlsVersion'] in ('TLS1_0', 'TLS1_1'))",
+      "ARM_Query": {
+        "anyOf": [
+          {
+            "field": "properties.minimumTlsVersion",
+            "exists": false
+          },
+          {
+            "field": "properties.minimumTlsVersion",
+            "in": [
+              "TLS1_0",
+              "TLS1_1"
+            ]
+          }
+        ]
+      },
+      "fix": "Upgrade TLS to latest version. Support for TLS 1.0 and TLS 1.1 in Azure storage accounts is ending.",
+      "ARM_Fix": {
+        "type": "propertyUpdate",
+        "operations": [
+          {
+            "field": "properties.minimumTlsVersion",
+            "value": "TLS1_2"
+          }
+        ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_storage_account",
+        "anyOf": [
+          {
+            "attribute": "min_tls_version",
+            "exists": false
+          },
+          {
+            "attribute": "min_tls_version",
+            "in": [
+              "TLS1_0",
+              "TLS1_1"
+            ]
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "min_tls_version",
+            "value": "TLS1_2"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ResourceHealth.Options.AvailabilityStatus;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Commands.AvailabilityStatus;
 
@@ -26,36 +25,14 @@ namespace Azure.Mcp.Tools.ResourceHealth.Commands.AvailabilityStatus;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCommand> logger, IResourceHealthService resourceHealthService)
-    : BaseResourceHealthCommand<AvailabilityStatusGetOptions>()
+public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCommand> logger, IResourceHealthService resourceHealthService, ISubscriptionResolver subscriptionResolver)
+    : BaseResourceHealthCommand<AvailabilityStatusGetOptions, AvailabilityStatusGetCommand.AvailabilityStatusGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<AvailabilityStatusGetCommand> _logger = logger;
     private readonly IResourceHealthService _resourceHealthService = resourceHealthService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AvailabilityStatusGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(ResourceHealthOptionDefinitions.ResourceId.AsOptional());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-    }
-
-    protected override AvailabilityStatusGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceId = parseResult.GetValueOrDefault<string>(ResourceHealthOptionDefinitions.ResourceId.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             List<Models.AvailabilityStatus> statuses;
@@ -119,5 +96,5 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
         _ => base.GetStatusCode(ex)
     };
 
-    internal record AvailabilityStatusGetCommandResult(List<Models.AvailabilityStatus> Statuses);
+    public sealed record AvailabilityStatusGetCommandResult(List<Models.AvailabilityStatus> Statuses);
 }

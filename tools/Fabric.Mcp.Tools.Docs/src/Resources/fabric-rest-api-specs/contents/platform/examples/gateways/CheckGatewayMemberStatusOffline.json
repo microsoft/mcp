@@ -1,0 +1,25 @@
+{
+    "parameters": {
+        "gatewayId": "8e41c4dd-a382-4937-9bf3-695ab881f7c2",
+        "gatewayMemberId": "f921ee6b-8feb-4595-8aa7-3ed34338e8b6"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "status": "Offline",
+                "gatewayVersion": "1.2.3",
+                "gatewayUpgradeState": "UpToDate",
+                "errorDetails": [
+                    {
+                        "errorCode": "DM_GWPipeline_Client_GatewayUnreachable",
+                        "message": "Gateway is unreachable",
+                        "relatedResource": {
+                            "resourceId": "f921ee6b-8feb-4595-8aa7-3ed34338e8b6",
+                            "resourceType": "Gateway"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

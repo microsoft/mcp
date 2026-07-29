@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Add better handling for MsalClientException and MsalServiceException"

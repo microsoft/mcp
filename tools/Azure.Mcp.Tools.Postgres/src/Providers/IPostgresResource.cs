@@ -1,9 +1,11 @@
-﻿using Npgsql;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Postgres.Providers
+using Npgsql;
+
+namespace Azure.Mcp.Tools.Postgres.Providers;
+
+public interface IPostgresResource : IAsyncDisposable
 {
-    public interface IPostgresResource : IAsyncDisposable
-    {
-        NpgsqlConnection Connection { get; }
-    }
+    NpgsqlConnection Connection { get; }
 }

@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Sql.Options.Database;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
@@ -14,33 +16,27 @@ namespace Azure.Mcp.Tools.Sql.Commands.Database;
     Id = "c4ef0375-0df9-445c-b8ae-2542e9612425",
     Name = "delete",
     Title = "Delete SQL Database",
-    Description = "Deletes a database from an Azure SQL Server.This idempotent operation removes the specified database from the server, returning Deleted = false if the database doesn't exist or Deleted = true if successfully removed.",
+    Description = "Deletes a database from an Azure SQL Server. This idempotent operation removes the specified database from the server, returning Deleted = false if the database doesn't exist or Deleted = true if successfully removed.",
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class DatabaseDeleteCommand(ISqlService sqlService, ILogger<DatabaseDeleteCommand> logger)
-    : BaseDatabaseCommand<DatabaseDeleteOptions>(logger)
+public sealed class DatabaseDeleteCommand(ISqlService sqlService, ILogger<DatabaseDeleteCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<DatabaseDeleteOptions, DatabaseDeleteCommand.DatabaseDeleteResult>(subscriptionResolver)
 {
     private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<DatabaseDeleteCommand> _logger = logger;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DatabaseDeleteOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var deleted = await _sqlService.DeleteDatabaseAsync(
-                options.Server!,
-                options.Database!,
-                options.ResourceGroup!,
+                options.Server,
+                options.Database,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.RetryPolicy,
                 cancellationToken);
@@ -68,6 +64,6 @@ public sealed class DatabaseDeleteCommand(ISqlService sqlService, ILogger<Databa
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DatabaseDeleteResult(bool Deleted, string DatabaseName);
+    public sealed record DatabaseDeleteResult(bool Deleted, string DatabaseName);
 }
 

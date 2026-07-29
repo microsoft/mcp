@@ -1,6 +1,9 @@
-using Azure.Mcp.Tools.Monitor.Models;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Detectors;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 
 /// <summary>
 /// Detects Python application type based on framework dependencies.
@@ -77,7 +80,7 @@ public class PythonAppTypeDetector : IAppTypeDetector
     /// Priority order: Django > FastAPI > Flask > GenAI > others
     /// (Django and FastAPI are more specific, Flask is more general)
     /// </summary>
-    private AppType DetectAppType(List<string> dependencies)
+    private static AppType DetectAppType(List<string> dependencies)
     {
         // Get known frameworks from registry
         var frameworks = PythonInstrumentationRegistry.GetByCategory("framework")
@@ -144,7 +147,7 @@ public class PythonAppTypeDetector : IAppTypeDetector
     /// <summary>
     /// Detect the entry point file for a Python application.
     /// </summary>
-    private string? DetectEntryPoint(string workspacePath, AppType appType)
+    private static string? DetectEntryPoint(string workspacePath, AppType appType)
     {
         // Django uses manage.py as the main entry point
         if (appType == AppType.Django)

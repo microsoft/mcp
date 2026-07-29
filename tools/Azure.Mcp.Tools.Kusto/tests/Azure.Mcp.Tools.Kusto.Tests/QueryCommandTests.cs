@@ -3,18 +3,17 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
-using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.Tests;
 
-public sealed class QueryCommandTests : CommandUnitTestsBase<QueryCommand, IKustoService>
+public sealed class QueryCommandTests : SubscriptionCommandUnitTestsBase<QueryCommand, IKustoService>
 {
     public static IEnumerable<object[]> QueryArgumentMatrix()
     {
@@ -34,14 +33,14 @@ public sealed class QueryCommandTests : CommandUnitTestsBase<QueryCommand, IKust
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedJson);
         }
         else
         {
             Service.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedJson);
         }
 
@@ -68,14 +67,14 @@ public sealed class QueryCommandTests : CommandUnitTestsBase<QueryCommand, IKust
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
         else
         {
             Service.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
 
@@ -96,14 +95,14 @@ public sealed class QueryCommandTests : CommandUnitTestsBase<QueryCommand, IKust
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
         }
         else
         {
             Service.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
         }
 
@@ -121,6 +120,6 @@ public sealed class QueryCommandTests : CommandUnitTestsBase<QueryCommand, IKust
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Either --cluster-uri must be provided", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Missing Required options:", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 }

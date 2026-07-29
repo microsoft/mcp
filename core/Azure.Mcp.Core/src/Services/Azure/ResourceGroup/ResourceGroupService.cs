@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Resource;
 using Microsoft.Mcp.Core.Models.ResourceGroup;
 using Microsoft.Mcp.Core.Options;
@@ -65,7 +66,7 @@ public class ResourceGroupService(
         var cachedResults = await _cacheService.GetAsync<List<ResourceGroupInfo>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
         if (cachedResults != null)
         {
-            return cachedResults.FirstOrDefault(rg => rg.Name.Equals(resourceGroupName, StringComparison.OrdinalIgnoreCase));
+            return cachedResults.FirstOrDefault(rg => rg.Name.Equals(resourceGroupName, StringComparisons.ResourceGroup));
         }
 
         var rg = await GetResourceGroupResource(subscription, resourceGroupName, tenant, retryPolicy, cancellationToken);
@@ -94,7 +95,7 @@ public class ResourceGroupService(
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroupName), resourceGroupName));
 
         var resourceGroupResource = await GetResourceGroupResource(subscription, resourceGroupName, tenant, retryPolicy, cancellationToken)
-            ?? throw new Exception($"Resource group '{resourceGroupName}' not found");
+            ?? throw new KeyNotFoundException($"Resource group '{resourceGroupName}' not found");
 
         await foreach (var r in resourceGroupResource.GetGenericResourcesAsync(cancellationToken: cancellationToken))
         {

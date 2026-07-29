@@ -176,7 +176,7 @@ Uses `Azure.ResourceManager.DataProtectionBackup` SDK. The `DppDatasourceRegistr
 - Schedule and retention defaults
 - Snapshot RG requirements
 - `DataSourceSetMode`, `BackupParametersMode`, `InstanceNamingMode`
-- Continuous backup flag (for Blob, ADLS, CosmosDB)
+- Continuous backup flag (for Blob, ADLS)
 - Auto-detect base resource type remapping
 
 ##### Adding a new workload is purely data-driven
@@ -301,7 +301,9 @@ The toolset exposes **15 commands** organized in **9 command groups**:
 | Elastic SAN | `ElasticSAN` | elasticsan, esan | `.../elasticSans/volumeGroups` | Operational | Incremental (daily) |
 | PostgreSQL Flexible Server | `PostgreSQLFlexible` | pgflex, postgresql | `Microsoft.DBforPostgreSQL/flexibleServers` | Vault | Full (daily) |
 | Azure Data Lake Storage | `AzureDataLakeStorage` | adls, datalake | `.../storageAccounts/blobServices` | Operational | Continuous |
-| Azure Cosmos DB | `CosmosDB` | cosmosdb, cosmos | `Microsoft.DocumentDB/databaseAccounts` | Operational | Continuous |
+| Azure Cosmos DB (preview) | `CosmosDB` | cosmosdb, cosmos | `Microsoft.DocumentDB/databaseAccounts` | Vault | Full (weekly, P1W) |
+
+> **Cosmos DB notes (preview):** Supports NoSQL and MongoDB (RU) APIs only. Source account must have native continuous (PITR) backup enabled and public network access. Backup vault must be in the same region as the Cosmos DB primary write region. Unsupported: NSP-bound accounts, hierarchical partition keys, PPAF, cross-region restore, item-level restore, restore to Serverless or throughput-limited target accounts.
 
 ### `policy create`  -  Feature Support Matrix
 

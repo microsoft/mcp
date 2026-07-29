@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Options;
 using Azure.Mcp.Tools.Authorization.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Authorization.Commands;
 
@@ -27,38 +26,19 @@ namespace Azure.Mcp.Tools.Authorization.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand> logger, IAuthorizationService authorizationService) : SubscriptionCommand<RoleAssignmentListOptions>
+public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand> logger, IAuthorizationService authorizationService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<RoleAssignmentListOptions, RoleAssignmentListCommand.RoleAssignmentListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<RoleAssignmentListCommand> _logger = logger;
     private readonly IAuthorizationService _authorizationService = authorizationService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RoleAssignmentListOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Authorization.Scope);
-    }
-
-    protected override RoleAssignmentListOptions BindOptions(ParseResult parseResult)
-    {
-        var args = base.BindOptions(parseResult);
-        args.Scope = parseResult.GetValueOrDefault<string>(OptionDefinitions.Authorization.Scope.Name);
-        return args;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var assignments = await _authorizationService.ListRoleAssignmentsAsync(
                 options.Subscription!,
-                options.Scope!,
+                options.Scope,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -74,5 +54,5 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
         return context.Response;
     }
 
-    internal record RoleAssignmentListCommandResult(List<RoleAssignment> Assignments, bool AreResultsTruncated);
+    public sealed record RoleAssignmentListCommandResult(List<RoleAssignment> Assignments, bool AreResultsTruncated);
 }

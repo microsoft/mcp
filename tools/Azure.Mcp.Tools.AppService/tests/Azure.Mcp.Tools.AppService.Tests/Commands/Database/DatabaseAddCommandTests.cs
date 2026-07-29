@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Database;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -14,7 +14,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.Tests.Commands.Database;
 
 [Trait("Command", "DatabaseAdd")]
-public class DatabaseAddCommandTests : CommandUnitTestsBase<DatabaseAddCommand, IAppServiceService>
+public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<DatabaseAddCommand, IAppServiceService>
 {
     [Theory]
     [InlineData("SqlServer", "test-server.database.windows.net", "test-db", null, null)]

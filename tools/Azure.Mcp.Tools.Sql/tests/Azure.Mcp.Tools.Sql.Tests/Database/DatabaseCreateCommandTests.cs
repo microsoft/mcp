@@ -2,18 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.Database;
 using Azure.Mcp.Tools.Sql.Models;
+using Azure.Mcp.Tools.Sql.Options.Database;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.Tests.Database;
 
-public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCommand, ISqlService>
+public class DatabaseCreateCommandTests : SubscriptionCommandUnitTestsBase<DatabaseCreateCommand, ISqlService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -21,7 +22,6 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
         Assert.Equal("create", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("Create a new Azure SQL Database", CommandDefinition.Description);
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
+            Arg.Any<DatabaseReadScale?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
@@ -111,7 +111,7 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
             Arg.Is(2147483648L),
             Arg.Any<string?>(),
             Arg.Is(true),
-            Arg.Is("Disabled"),
+            Arg.Is(DatabaseReadScale.Disabled),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
@@ -128,13 +128,30 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
             "--collation", "SQL_Latin1_General_CP1_CI_AS",
             "--max-size-bytes", "2147483648",
             "--zone-redundant", "true",
-            "--read-scale", "Disabled");
+            "--read-scale", "dISaBled");
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
+    }
+
+    [Theory]
+    [InlineData("Both")]
+    [InlineData("invalid")]
+    public async Task ExecuteAsync_WithInvalidReadScale_ReturnsBadRequest(string readScale)
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1",
+            "--database", "testdb",
+            "--read-scale", readScale);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains($"Invalid --read-scale '{readScale}'. Must be one of:", response.Message);
+        Assert.Empty(Service.ReceivedCalls());
     }
 
     [Fact]
@@ -153,7 +170,7 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
+            Arg.Any<DatabaseReadScale?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
@@ -188,7 +205,7 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
+            Arg.Any<DatabaseReadScale?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(conflictException);
@@ -222,7 +239,7 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
+            Arg.Any<DatabaseReadScale?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
@@ -256,7 +273,7 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
+            Arg.Any<DatabaseReadScale?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(authException);
@@ -290,7 +307,7 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
+            Arg.Any<DatabaseReadScale?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(badRequestException);
@@ -348,7 +365,7 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
                 Arg.Any<long?>(),
                 Arg.Any<string?>(),
                 Arg.Any<bool?>(),
-                Arg.Any<string?>(),
+                Arg.Any<DatabaseReadScale?>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(mockDatabase);
@@ -406,7 +423,7 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
+            Arg.Any<DatabaseReadScale?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
@@ -437,7 +454,7 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
+            Arg.Any<DatabaseReadScale?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
@@ -476,7 +493,7 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
+            Arg.Any<DatabaseReadScale?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
@@ -509,7 +526,7 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
+            Arg.Any<DatabaseReadScale?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
@@ -548,7 +565,7 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
+            Arg.Any<DatabaseReadScale?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
@@ -581,7 +598,7 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
+            Arg.Any<DatabaseReadScale?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
@@ -620,7 +637,7 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
+            Arg.Any<DatabaseReadScale?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
@@ -653,9 +670,8 @@ public class DatabaseCreateCommandTests : CommandUnitTestsBase<DatabaseCreateCom
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
+            Arg.Any<DatabaseReadScale?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 }
-

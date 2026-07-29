@@ -7,21 +7,13 @@ using Azure.Security.KeyVault.Administration;
 using Azure.Security.KeyVault.Certificates;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Secrets;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.KeyVault.Services;
 
-public sealed class KeyVaultService(
-    ITenantService tenantService,
-    IHttpClientFactory httpClientFactory,
-    ILogger<KeyVaultService> logger) : BaseAzureService(tenantService), IKeyVaultService
+public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureService(tenantService), IKeyVaultService
 {
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-    private readonly ILogger<KeyVaultService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
     public async Task<List<string>> ListKeys(
         string vaultName,
         bool includeManagedKeys,
@@ -36,7 +28,7 @@ public sealed class KeyVaultService(
         var client = CreateKeyClient(vaultName, credential, retryPolicy);
         var keys = new List<string>();
 
-        await foreach (var key in client.GetPropertiesOfKeysAsync(cancellationToken).Where(x => x.Managed == includeManagedKeys))
+        await foreach (var key in client.GetPropertiesOfKeysAsync(cancellationToken).Where(x => includeManagedKeys || !x.Managed))
         {
             keys.Add(key.Name);
         }
@@ -225,7 +217,7 @@ public sealed class KeyVaultService(
                 }
                 catch (FormatException ex)
                 {
-                    throw new Exception("The provided certificate-data is neither a file path, raw PEM, nor base64 encoded content.", ex);
+                    throw new ArgumentException("The provided certificate-data is neither a valid file path, raw PEM text, nor valid base64-encoded content.", ex);
                 }
             }
         }
@@ -243,7 +235,7 @@ public sealed class KeyVaultService(
     {
         ValidateVaultName(vaultName);
 
-        switch (_tenantService.CloudConfiguration.CloudType)
+        switch (TenantService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
                 return $"https://{vaultName}.vault.azure.net";
@@ -261,7 +253,7 @@ public sealed class KeyVaultService(
     {
         ValidateVaultName(vaultName);
 
-        switch (_tenantService.CloudConfiguration.CloudType)
+        switch (TenantService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
                 return $"https://{vaultName}.managedhsm.azure.net";
@@ -305,7 +297,7 @@ public sealed class KeyVaultService(
     private KeyClient CreateKeyClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
         var vaultUri = new Uri(BuildVaultUri(vaultName));
-        var httpClient = _httpClientFactory.CreateClient();
+        var httpClient = TenantService.GetClient();
         httpClient.BaseAddress = vaultUri;
         var options = new KeyClientOptions();
         options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
@@ -316,7 +308,7 @@ public sealed class KeyVaultService(
     private SecretClient CreateSecretClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
         var vaultUri = new Uri(BuildVaultUri(vaultName));
-        var httpClient = _httpClientFactory.CreateClient();
+        var httpClient = TenantService.GetClient();
         httpClient.BaseAddress = vaultUri;
         var options = new SecretClientOptions();
         options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
@@ -327,7 +319,7 @@ public sealed class KeyVaultService(
     private CertificateClient CreateCertificateClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
         var vaultUri = new Uri(BuildVaultUri(vaultName));
-        var httpClient = _httpClientFactory.CreateClient();
+        var httpClient = TenantService.GetClient();
         httpClient.BaseAddress = vaultUri;
         var options = new CertificateClientOptions();
         options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
@@ -346,8 +338,18 @@ public sealed class KeyVaultService(
         var credential = await GetCredential(tenantId, cancellationToken);
         var hsmUri = new Uri(GetHsmUri(vaultName));
 
-        var hsmClient = new KeyVaultSettingsClient(hsmUri, credential);
+        var hsmClient = CreateSettingsClient(hsmUri, credential, retryPolicy);
         var hsmResponse = await hsmClient.GetSettingsAsync(cancellationToken);
         return hsmResponse.Value;
+    }
+
+    private KeyVaultSettingsClient CreateSettingsClient(Uri hsmUri, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
+    {
+        var httpClient = TenantService.GetClient();
+        httpClient.BaseAddress = hsmUri;
+        var options = new KeyVaultAdministrationClientOptions();
+        options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
+        options.Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
+        return new(hsmUri, credential, options);
     }
 }

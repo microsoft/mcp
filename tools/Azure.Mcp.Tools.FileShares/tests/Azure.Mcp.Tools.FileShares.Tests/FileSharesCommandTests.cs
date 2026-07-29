@@ -6,6 +6,7 @@ using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
+using Xunit;
 
 namespace Azure.Mcp.Tools.FileShares.Tests;
 
@@ -345,6 +346,7 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
                 { "provisioned-throughput-mib-per-sec", provisionedThroughputMiBPerSec ?? 125 },
                 { "public-network-access", publicNetworkAccess ?? "Enabled" },
                 { "nfs-root-squash", nfsRootSquash ?? "NoRootSquash" },
+                { "nfs-encryption-in-transit", "Enabled" },
                 { "tags", "{\"environment\":\"test\",\"owner\":\"ankushb\"}" }
             };
 
@@ -479,11 +481,11 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "file-share-name", FileShare1Name },
-                    { "name", testSnapshotName }
+                    { "snapshot-name", testSnapshotName }
                 });
 
-            var deleteResult = result.AssertProperty("message");
-            Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
+            var deleteResult = result.AssertProperty("deleted");
+            Assert.Equal(JsonValueKind.True, deleteResult.ValueKind);
         }
     }
 

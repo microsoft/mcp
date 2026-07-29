@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
@@ -24,72 +22,41 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     OpenWorld = false,
     ReadOnly = false,
     Secret = false)]
-public sealed class FileDeleteCommand(
-    ILogger<FileDeleteCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<FileDeleteOptions>()
+public sealed class FileDeleteCommand(ILogger<FileDeleteCommand> logger, IOneLakeService oneLakeService)
+    : AuthenticatedCommand<FileDeleteOptions, FileDeleteCommand.FileDeleteCommandResult>
 {
     private readonly ILogger<FileDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(FileDeleteOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.FilePath);
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+        if (string.IsNullOrWhiteSpace(options.WorkspaceId) && string.IsNullOrWhiteSpace(options.Workspace))
         {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-
-            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
-            {
-                result.AddError("Item identifier is required. Provide --item or --item-id.");
-            }
-        });
-    }
-
-    protected override FileDeleteOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
-            ? workspaceId!
-            : workspaceName ?? string.Empty;
-
-        var itemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-        var itemName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-        options.ItemId = !string.IsNullOrWhiteSpace(itemId)
-            ? itemId!
-            : itemName ?? string.Empty;
-
-        options.FilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.FilePath.Name) ?? string.Empty;
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("Workspace identifier is required. Provide --workspace or --workspace-id.");
         }
 
-        var options = BindOptions(parseResult);
+        if (string.IsNullOrWhiteSpace(options.ItemId) && string.IsNullOrWhiteSpace(options.Item))
+        {
+            validationResult.Errors.Add("Item identifier is required. Provide --item or --item-id.");
+        }
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FileDeleteOptions options, CancellationToken cancellationToken)
+    {
         try
         {
+            var workspaceIdentifier = !string.IsNullOrWhiteSpace(options.WorkspaceId)
+                ? options.WorkspaceId
+                : options.Workspace!;
+
+            var itemIdentifier = !string.IsNullOrWhiteSpace(options.ItemId)
+                ? options.ItemId
+                : options.Item!;
+
             await _oneLakeService.DeleteFileAsync(
-                options.WorkspaceId,
-                options.ItemId,
+                workspaceIdentifier,
+                itemIdentifier,
                 options.FilePath,
                 cancellationToken);
 
@@ -106,20 +73,23 @@ public sealed class FileDeleteCommand(
         return context.Response;
     }
 
-    public sealed record FileDeleteCommandResult(
-        string FilePath,
-        string Message);
-
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
-    };
+    public sealed record FileDeleteCommandResult(string FilePath, string Message);
 }
 
-public sealed class FileDeleteOptions : GlobalOptions
+public sealed class FileDeleteOptions
 {
-    public string WorkspaceId { get; set; } = string.Empty;
-    public string ItemId { get; set; } = string.Empty;
-    public string FilePath { get; set; } = string.Empty;
+    [Option(Description = OneLakeOptionDescriptions.WorkspaceId)]
+    public string? WorkspaceId { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.Workspace)]
+    public string? Workspace { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.ItemId)]
+    public string? ItemId { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.Item)]
+    public string? Item { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.FilePath)]
+    public required string FilePath { get; set; }
 }

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.FileShares.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FileShares.Services;
@@ -48,6 +49,7 @@ public interface IFileSharesService
         int? provisionedThroughputMiBPerSec = null,
         string? publicNetworkAccess = null,
         string? nfsRootSquash = null,
+        string? nfsEncryptionInTransit = null,
         string[]? allowedSubnets = null,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
@@ -67,6 +69,7 @@ public interface IFileSharesService
         int? provisionedThroughputMiBPerSec = null,
         string? publicNetworkAccess = null,
         string? nfsRootSquash = null,
+        string? nfsEncryptionInTransit = null,
         string[]? allowedSubnets = null,
         Dictionary<string, string>? tags = null,
         string? tenant = null,

@@ -18,7 +18,6 @@ namespace Azure.Mcp.Tools.ServiceBus.Tests.Topic;
 public class SubscriptionDetailsCommandTests : CommandUnitTestsBase<SubscriptionDetailsCommand, IServiceBusService>
 {
     // Test constants
-    private const string SubscriptionId = "sub123";
     private const string TopicName = "testTopic";
     private const string SubscriptionName = "testSubscription";
     private const string NamespaceName = "test.servicebus.windows.net";
@@ -50,7 +49,6 @@ public class SubscriptionDetailsCommandTests : CommandUnitTestsBase<Subscription
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", SubscriptionId,
             "--namespace", NamespaceName,
             "--topic", TopicName,
             "--subscription-name", SubscriptionName);
@@ -80,7 +78,6 @@ public class SubscriptionDetailsCommandTests : CommandUnitTestsBase<Subscription
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", SubscriptionId,
             "--namespace", NamespaceName,
             "--topic", TopicName,
             "--subscription-name", SubscriptionName);
@@ -108,7 +105,6 @@ public class SubscriptionDetailsCommandTests : CommandUnitTestsBase<Subscription
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", SubscriptionId,
             "--namespace", NamespaceName,
             "--topic", TopicName,
             "--subscription-name", SubscriptionName);
@@ -120,11 +116,10 @@ public class SubscriptionDetailsCommandTests : CommandUnitTestsBase<Subscription
     }
 
     [Theory]
-    [InlineData("--subscription sub123 --namespace test.servicebus.windows.net --topic testTopic --subscription-name testSubscription", true)]
-    [InlineData("--namespace test.servicebus.windows.net --topic testTopic --subscription-name testSubscription", false)]  // Missing subscription
-    [InlineData("--subscription sub123 --topic testTopic --subscription-name testSubscription", false)]   // Missing namespace
-    [InlineData("--subscription sub123 --namespace test.servicebus.windows.net --subscription-name testSubscription", false)] // Missing topic
-    [InlineData("--subscription sub123 --namespace test.servicebus.windows.net --topic testTopic", false)] // Missing subscription-name
+    [InlineData("--namespace test.servicebus.windows.net --topic testTopic --subscription-name testSubscription", true)]
+    [InlineData("--topic testTopic --subscription-name testSubscription", false)]   // Missing namespace
+    [InlineData("--namespace test.servicebus.windows.net --subscription-name testSubscription", false)] // Missing topic
+    [InlineData("--namespace test.servicebus.windows.net --topic testTopic", false)] // Missing subscription-name
     [InlineData("", false)]  // Missing all required options
     public async Task ExecuteAsync_ValidatesRequiredParameters(string args, bool shouldSucceed)
     {

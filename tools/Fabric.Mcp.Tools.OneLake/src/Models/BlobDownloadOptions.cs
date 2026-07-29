@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.IO;
-
 namespace Fabric.Mcp.Tools.OneLake.Models;
 
 /// <summary>

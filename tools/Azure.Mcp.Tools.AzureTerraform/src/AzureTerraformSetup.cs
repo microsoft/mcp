@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureTerraform.Commands;
+using Azure.Mcp.Tools.AzureTerraform.Commands.Conftest;
 using Azure.Mcp.Tools.AzureTerraform.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -68,7 +69,7 @@ public sealed class AzureTerraformSetup : IAreaSetup
 
         var avmGroup = new CommandGroup(
             "avm",
-            "Azure Verified Modules (AVM) documentation tools - Lists modules, versions, and retrieves module documentation",
+            "Azure Verified Modules (AVM) documentation tools - Lists resource and pattern modules, versions, and retrieves module documentation",
             "AVM"
         );
 

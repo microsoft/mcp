@@ -2,17 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
-using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.SubnetSize;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Tests.FileSystem.SubnetSize;
 
-public class FileSystemSubnetSizeCommandTests : CommandUnitTestsBase<SubnetSizeAskCommand, IManagedLustreService>
+public class FileSystemSubnetSizeCommandTests : SubscriptionCommandUnitTestsBase<SubnetSizeAskCommand, IManagedLustreService>
 {
     private readonly string _knownSubscriptionId = "sub123";
 

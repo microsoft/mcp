@@ -44,12 +44,39 @@ public class AvmDocsServiceParsingTests
             avm-res-compute-vm,Virtual Machine,Available,https://github.com/Azure/terraform-azurerm-avm-res-compute-vm
             """;
 
-        var modules = AvmDocsService.ParseModuleCsv(csv);
+        var modules = AvmDocsService.ParseModuleCsv(csv, AvmDocsService.ModuleTypeResource);
 
         Assert.Equal(2, modules.Count);
         Assert.Equal("avm-res-storage-storageaccount", modules[0].ModuleName);
         Assert.Equal("Storage Account", modules[0].Description);
         Assert.Equal("Azure/avm-res-storage-storageaccount/azurerm", modules[0].Source);
+        Assert.Equal(AvmDocsService.ModuleTypeResource, modules[0].ModuleType);
+    }
+
+    [Fact]
+    public void ParseModuleCsv_ParsesPatternModulesWithType()
+    {
+        var csv = """
+            ModuleName,Description,ModuleStatus,RepoURL
+            avm-ptn-aiml-ai-foundry,AI Foundry pattern,Available,https://github.com/Azure/terraform-azurerm-avm-ptn-aiml-ai-foundry
+            """;
+
+        var modules = AvmDocsService.ParseModuleCsv(csv, AvmDocsService.ModuleTypePattern);
+
+        Assert.Single(modules);
+        Assert.Equal("avm-ptn-aiml-ai-foundry", modules[0].ModuleName);
+        Assert.Equal(AvmDocsService.ModuleTypePattern, modules[0].ModuleType);
+    }
+
+    [Fact]
+    public void ParseModuleCsv_StripsBomFromHeader()
+    {
+        var csv = "\uFEFFModuleName,Description,ModuleStatus,RepoURL\navm-ptn-test,Test,Available,https://github.com/Azure/terraform-azurerm-avm-ptn-test";
+
+        var modules = AvmDocsService.ParseModuleCsv(csv, AvmDocsService.ModuleTypePattern);
+
+        Assert.Single(modules);
+        Assert.Equal("avm-ptn-test", modules[0].ModuleName);
     }
 
     [Fact]
@@ -61,7 +88,7 @@ public class AvmDocsServiceParsingTests
             avm-res-future-thing,Future Thing,Proposed,https://github.com/Azure/terraform-azurerm-avm-res-future-thing
             """;
 
-        var modules = AvmDocsService.ParseModuleCsv(csv);
+        var modules = AvmDocsService.ParseModuleCsv(csv, AvmDocsService.ModuleTypeResource);
 
         Assert.Single(modules);
         Assert.Equal("avm-res-storage-storageaccount", modules[0].ModuleName);
@@ -72,7 +99,7 @@ public class AvmDocsServiceParsingTests
     {
         var csv = "ModuleName,Description,ModuleStatus,RepoURL\n\navm-res-test,Test,Available,https://github.com/Azure/terraform-azurerm-avm-res-test\n\n";
 
-        var modules = AvmDocsService.ParseModuleCsv(csv);
+        var modules = AvmDocsService.ParseModuleCsv(csv, AvmDocsService.ModuleTypeResource);
 
         Assert.Single(modules);
     }
@@ -85,7 +112,7 @@ public class AvmDocsServiceParsingTests
             avm-res-test,"A module for testing, with commas",Available,https://github.com/Azure/terraform-azurerm-avm-res-test
             """;
 
-        var modules = AvmDocsService.ParseModuleCsv(csv);
+        var modules = AvmDocsService.ParseModuleCsv(csv, AvmDocsService.ModuleTypeResource);
 
         Assert.Single(modules);
         Assert.Equal("A module for testing, with commas", modules[0].Description);
@@ -94,7 +121,7 @@ public class AvmDocsServiceParsingTests
     [Fact]
     public void ParseModuleCsv_EmptyContent_ReturnsEmpty()
     {
-        var modules = AvmDocsService.ParseModuleCsv("");
+        var modules = AvmDocsService.ParseModuleCsv("", AvmDocsService.ModuleTypeResource);
 
         Assert.Empty(modules);
     }
@@ -102,7 +129,7 @@ public class AvmDocsServiceParsingTests
     [Fact]
     public void ParseModuleCsv_HeaderOnly_ReturnsEmpty()
     {
-        var modules = AvmDocsService.ParseModuleCsv("ModuleName,Description,ModuleStatus,RepoURL");
+        var modules = AvmDocsService.ParseModuleCsv("ModuleName,Description,ModuleStatus,RepoURL", AvmDocsService.ModuleTypeResource);
 
         Assert.Empty(modules);
     }
@@ -139,7 +166,7 @@ public class AvmDocsServiceParsingTests
             avm-res-valid,Valid,Available,https://github.com/Azure/terraform-azurerm-avm-res-valid
             """;
 
-        var modules = AvmDocsService.ParseModuleCsv(csv);
+        var modules = AvmDocsService.ParseModuleCsv(csv, AvmDocsService.ModuleTypeResource);
 
         Assert.Single(modules);
         Assert.Equal("avm-res-valid", modules[0].ModuleName);

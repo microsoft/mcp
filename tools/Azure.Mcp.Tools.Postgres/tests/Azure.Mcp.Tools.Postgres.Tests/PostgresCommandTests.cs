@@ -208,8 +208,6 @@ public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture li
             "postgres_table_schema_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
                 { "server", ServerName },
                 { "database", TestDatabaseName },
                 { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },
@@ -246,8 +244,6 @@ public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture li
             "postgres_database_query",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
                 { "server", ServerName },
                 { "database", TestDatabaseName },
                 { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },
@@ -278,8 +274,6 @@ public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture li
             "postgres_database_query",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
                 { "server", ServerName },
                 { "database", TestDatabaseName },
                 { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },
@@ -305,8 +299,6 @@ public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture li
             "postgres_database_query",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
                 { "server", ServerName },
                 { "database", TestDatabaseName },
                 { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },
@@ -423,8 +415,6 @@ public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture li
         JsonElement error = await this.CallToolAsyncWithErrorExpected("postgres_database_query",
             new()
             {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
                     { "server", ServerName },
                     { "database", TestDatabaseName },
                     { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },
@@ -502,8 +492,6 @@ public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture li
             "postgres_table_schema_get",
             new()
             {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
                     { "server", ServerName },
                     { "database", TestDatabaseName },
                     { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },

@@ -35,5 +35,6 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="$(AssemblyName).Tests" />
+    <InternalsVisibleTo Include="Azure.Mcp.Core.Tests" />
   </ItemGroup>
 </Project>

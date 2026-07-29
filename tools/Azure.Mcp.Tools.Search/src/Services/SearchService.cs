@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
@@ -16,7 +17,7 @@ using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.KnowledgeBases;
 using Azure.Search.Documents.KnowledgeBases.Models;
 using Azure.Search.Documents.Models;
-using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
@@ -26,14 +27,12 @@ namespace Azure.Mcp.Tools.Search.Services;
 public sealed partial class SearchService(
     ISubscriptionService subscriptionService,
     ICacheService cacheService,
-    ITenantService tenantService,
-    ILogger<SearchService> logger)
+    ITenantService tenantService)
     : BaseAzureService(tenantService), ISearchService
 {
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-    private readonly ILogger<SearchService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private const string CacheGroup = "search";
     private const string SearchServicesCacheKey = "services";
     private static readonly TimeSpan s_cacheDurationServices = CacheDurations.ServiceData;
@@ -215,7 +214,7 @@ public sealed partial class SearchService(
             var result = await searchClient.GetKnowledgeBaseAsync(knowledgeBaseName, cancellationToken: cancellationToken);
             if (result?.Value != null)
             {
-                if (result.Value.Name.Equals(knowledgeBaseName, StringComparison.OrdinalIgnoreCase))
+                if (result.Value.Name.Equals(knowledgeBaseName, StringComparisons.ResourceName))
                 {
                     bases.Add(new(result.Value.Name, result.Value.Description, [.. result.Value.KnowledgeSources.Select(ks => ks.Name)]));
                 }

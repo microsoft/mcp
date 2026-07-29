@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -13,7 +13,7 @@ using SessionHostModel = Azure.Mcp.Tools.VirtualDesktop.Models.SessionHost;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Tests.SessionHost;
 
-public class SessionHostListCommandTests : CommandUnitTestsBase<SessionHostListCommand, IVirtualDesktopService>
+public class SessionHostListCommandTests : SubscriptionCommandUnitTestsBase<SessionHostListCommand, IVirtualDesktopService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()

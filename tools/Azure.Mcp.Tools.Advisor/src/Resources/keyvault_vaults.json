@@ -1,0 +1,53 @@
+{
+  "rules": [
+    {
+      "ruleId": "Enable_Soft_Delete_For_Key_Vaults",
+      "description": "Key Vault's soft-delete feature enables recovery of deleted vaults and objects like keys, secrets, and certificates. When enabled, marked resources are retained for 90 days, allowing for their recovery, essentially undoing deletion.",
+      "query": "where isnull(properties.enableSoftDelete) or properties.enableSoftDelete != 'true'",
+      "ARM_Query": {
+        "anyOf": [
+          {
+            "field": "properties.enableSoftDelete",
+            "exists": false
+          },
+          {
+            "field": "properties.enableSoftDelete",
+            "notEquals": true
+          }
+        ]
+      },
+      "fix": "Key Vault's soft-delete feature enables recovery of deleted vaults and objects like keys, secrets, and certificates. When enabled, marked resources are retained for 90 days, allowing for their recovery, essentially undoing deletion.",
+      "ARM_Fix": {
+        "type": "propertyUpdate",
+        "operations": [
+          {
+            "field": "properties.enableSoftDelete",
+            "value": true
+          }
+        ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_key_vault",
+        "anyOf": [
+          {
+            "attribute": "soft_delete_retention_days",
+            "exists": false
+          },
+          {
+            "attribute": "soft_delete_retention_days",
+            "less": 7
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "soft_delete_retention_days",
+            "value": 7
+          }
+        ]
+      }
+    }
+  ]
+}

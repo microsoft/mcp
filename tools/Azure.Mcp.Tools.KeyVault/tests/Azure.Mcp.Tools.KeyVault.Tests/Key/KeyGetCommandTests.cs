@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Key;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Keys;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.Tests.Key;
 
-public class KeyGetCommandTests : CommandUnitTestsBase<KeyGetCommand, IKeyVaultService>
+public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand, IKeyVaultService>
 {
     private const string _knownSubscriptionId = "knownSubscription";
     private const string _knownVaultName = "knownVaultName";
@@ -175,5 +175,33 @@ public class KeyGetCommandTests : CommandUnitTestsBase<KeyGetCommand, IKeyVaultS
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsKeysList_IncludesNullManagedKeys_WhenIncludeManagedIsFalse()
+    {
+        // KV-01: the filter is `includeManagedKeys || x.Managed != true`, which means keys where
+        // Managed is null (i.e., keys not backing a certificate) are included when includeManagedKeys=false.
+        // This test documents that null-managed keys are expected to appear in the default listing.
+        var expectedKeys = new List<string> { "regular-key", "null-managed-key" };
+
+        Service.ListKeys(
+            Arg.Is(_knownVaultName),
+            Arg.Is(false),
+            Arg.Is(_knownSubscriptionId),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedKeys);
+
+        var response = await ExecuteCommandAsync(
+            "--vault", _knownVaultName,
+            "--subscription", _knownSubscriptionId);
+
+        var result = ValidateAndDeserializeResponse(response, KeyVaultJsonContext.Default.KeyGetCommandResult);
+
+        Assert.NotNull(result.Keys);
+        Assert.Equal(expectedKeys.Count, result.Keys.Count);
+        Assert.Contains("null-managed-key", result.Keys);
     }
 }

@@ -1,7 +1,10 @@
-using Azure.Mcp.Tools.Monitor.Models;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 
 /// <summary>
 /// Generator for classic ASP.NET greenfield projects (.NET Framework).
@@ -10,12 +13,7 @@ namespace Azure.Mcp.Tools.Monitor.Generators;
 /// </summary>
 public class AspNetClassicGreenfieldGenerator : IGenerator
 {
-    private readonly GeneratorConfig _config;
-
-    public AspNetClassicGreenfieldGenerator()
-    {
-        _config = GeneratorConfigLoader.LoadConfig("aspnet-classic-greenfield");
-    }
+    private readonly GeneratorConfig _config = GeneratorConfigLoader.LoadConfig("aspnet-classic-greenfield");
 
     public bool CanHandle(Analysis analysis)
     {
@@ -39,10 +37,7 @@ public class AspNetClassicGreenfieldGenerator : IGenerator
 
         return new OnboardingSpecBuilder(analysis)
             .WithAgentPreExecuteInstruction(AgentPreExecuteInstruction)
-            .WithDecision(
-                Intents.Onboard,
-                _config.Decision.Solution,
-                _config.Decision.Rationale)
+            .WithDecision(Intents.Onboard, _config.Decision.Solution, _config.Decision.Rationale)
             .AddActionsFromConfig(_config, projectFile, entryPoint, projectDir)
             .Build();
     }

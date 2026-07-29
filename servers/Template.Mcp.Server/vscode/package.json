@@ -101,7 +101,7 @@
         "@typescript-eslint/eslint-plugin": "^8.47.0",
         "@typescript-eslint/parser": "^8.47.0",
         "@vscode/test-electron": "~2",
-        "@vscode/vsce": "~3",
+        "@vscode/vsce": "~3.9.2",
         "chai": "~4",
         "eslint": "~9",
         "glob": "^13.0.0",
@@ -116,7 +116,7 @@
         "webpack-cli": "^6.0.1"
     },
     "dependencies": {
-        "@microsoft/vscode-azext-utils": "~2",
+        "@microsoft/vscode-azext-utils": "~4.1.1",
         "@microsoft/vscode-azureresources-api": "~2",
         "dayjs": "~1",
         "dotenv": "~16",

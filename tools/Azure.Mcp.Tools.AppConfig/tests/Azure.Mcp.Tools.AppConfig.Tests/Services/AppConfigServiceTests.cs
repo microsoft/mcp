@@ -1,66 +1,47 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Reflection;
+using Azure.Core;
+using Azure.Data.AppConfiguration;
 using Azure.Mcp.Tools.AppConfig.Services;
+using Microsoft.Mcp.Core.Options;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.Tests.Services;
 
 public class AppConfigServiceTests
 {
-    /// <summary>
-    /// Regression guard: ensures ExecuteSingleResourceQueryAsync continues to expose the optional
-    /// additionalFilter parameter and that AppConfigService calls it using a named argument.
-    /// If the base signature changes or the service reverts to positional arguments, this test fails.
-    /// </summary>
     [Fact]
-    public void FindAppConfigStore_InvokesExecuteSingleResourceQueryAsyncWithNamedAdditionalFilter()
+    public void CreateConfigurationClientOptions_AppliesRetrySettings()
     {
-        var baseType = typeof(AppConfigService).BaseType;
-        Assert.NotNull(baseType);
+        var retryPolicy = new RetryPolicyOptions
+        {
+            DelaySeconds = 2,
+            MaxDelaySeconds = 10,
+            MaxRetries = 4,
+            Mode = RetryMode.Fixed,
+            NetworkTimeoutSeconds = 15
+        };
+        using var httpClient = new HttpClient();
+        var options = AppConfigService.CreateConfigurationClientOptions(
+            AppConfigurationAudience.AzurePublicCloud,
+            retryPolicy,
+            httpClient,
+            new Uri("https://example.azconfig.io"));
 
-        var executeMethod = baseType!.GetMethod(
-            "ExecuteSingleResourceQueryAsync",
-            BindingFlags.NonPublic | BindingFlags.Instance);
-        Assert.NotNull(executeMethod);
-
-        var parameters = executeMethod!.GetParameters();
-        Assert.True(parameters.Length >= 7, "ExecuteSingleResourceQueryAsync should expose the additionalFilter parameter");
-        Assert.Equal("additionalFilter", parameters[6].Name);
-
-        var methodSource = ReadFindAppConfigStoreSource();
-        Assert.Contains("ExecuteSingleResourceQueryAsync(", methodSource);
-        Assert.Contains("additionalFilter:", methodSource);
+        Assert.Equal(AppConfigurationAudience.AzurePublicCloud, options.Audience);
+        Assert.Equal(TimeSpan.FromSeconds(2), options.Retry.Delay);
+        Assert.Equal(TimeSpan.FromSeconds(10), options.Retry.MaxDelay);
+        Assert.Equal(4, options.Retry.MaxRetries);
+        Assert.Equal(RetryMode.Fixed, options.Retry.Mode);
+        Assert.Equal(TimeSpan.FromSeconds(15), options.Retry.NetworkTimeout);
     }
 
-    private static string ReadFindAppConfigStoreSource()
+    [Theory]
+    [InlineData(200, true)]
+    [InlineData(204, false)]
+    public void KeyValueExistedFromDeleteStatus_MapsKnownStatuses(int statusCode, bool expected)
     {
-        var sourceFile = Path.Combine(
-            AppContext.BaseDirectory,
-            "..", "..", "..", "..", "..",
-            "src", "Services", "AppConfigService.cs");
-
-        if (!File.Exists(sourceFile))
-        {
-            return string.Empty;
-        }
-
-        var source = File.ReadAllText(sourceFile);
-        var marker = "private async Task<AppConfigurationAccount> FindAppConfigStore";
-        var startIndex = source.IndexOf(marker, StringComparison.Ordinal);
-        if (startIndex < 0)
-        {
-            return source;
-        }
-
-        var snippet = source[startIndex..];
-        var nextMethodIndex = snippet.IndexOf("private", 1, StringComparison.Ordinal);
-        if (nextMethodIndex > 0)
-        {
-            snippet = snippet[..nextMethodIndex];
-        }
-
-        return snippet;
+        Assert.Equal(expected, AppConfigService.KeyValueExistedFromDeleteStatus(statusCode));
     }
 }

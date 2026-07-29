@@ -1,6 +1,47 @@
 {
   "consolidated_tools": [
     {
+      "name": "get_azure_resilience_management_details",
+      "description": "Get details about Azure Resilience Management resources, including resilience goals (templates, assignments, and their resources), usage plans and enrollments, and recovery plans (plans, resources, and jobs) for Azure service groups.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_goal_template_get",
+        "resilience_goal_assignment_get",
+        "resilience_goal_resource_get",
+        "resilience_usageplan_get",
+        "resilience_usageplan_enrollment_get",
+        "resilience_recovery_plan_get",
+        "resilience_recovery_plan_resource_get",
+        "resilience_recovery_job_get",
+        "resilience_recovery_job_resource_get"
+      ]
+    },
+    {
       "name": "get_azure_subscriptions_and_resource_groups",
       "description": "Get information about Azure subscriptions, resource groups, and resources within resource groups that the user has access to.",
       "toolMetadata": {
@@ -179,7 +220,12 @@
         "sql_db_get",
         "sql_server_get",
         "cosmos_list",
-        "cosmos_database_container_item_query"
+        "cosmos_database_container_item_query",
+        "cosmos_database_container_schema_infer",
+        "cosmos_database_container_item_list-recent",
+        "cosmos_database_container_item_get",
+        "cosmos_database_container_item_text-search",
+        "cosmos_database_container_item_vector-search"
       ]
     },
     {
@@ -354,7 +400,8 @@
         "datadog_monitoredresources_list",
         "monitor_workspace_list",
         "monitor_activitylog_list",
-        "monitor_healthmodels_entity_get",
+        "monitor_healthmodels_list",
+        "monitor_healthmodels_get",
         "monitor_metrics_definitions",
         "monitor_metrics_query",
         "monitor_resource_log_query",
@@ -705,7 +752,7 @@
     },
     {
       "name": "list_azure_advisor_recommendations",
-      "description": "Get Azure Advisor recommendations for cost optimization, security, reliability, operational excellence, and performance improvements across Azure resources.",
+      "description": "Get or summarize Azure Advisor recommendations for cost optimization, security, reliability, operational excellence, and performance improvements across Azure resources. Supports filtering by category, impact, resource type, resource, and free-text search, and aggregating recommendations into grouped summaries.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -733,8 +780,75 @@
         }
       },
       "mappedToolList": [
-        "advisor_recommendation_list"
+        "advisor_recommendation_list",
+        "advisor_recommendation_summary"
       ]
+    },
+    {
+      "name": "list_azure_advisor_recommendation_types",
+      "description": "List the catalog of Azure Advisor recommendation types — every recommendation Advisor can possibly generate, with its category, impact, target resource type, and sub-category. Results are sorted by impact (High → Medium → Low) so the most important recommendations surface first. Use this in two scenarios: (1) greenfield/empty environments where no actual recommendations have been generated yet — the catalog still shows what Advisor would recommend once resources exist; (2) brownfield environments where a new resource type is being onboarded into an existing subscription — pass --resource-type to see exactly which recommendations will apply to it. Optionally narrow results with --resource-type (e.g. 'microsoft.compute/virtualmachines'), --impact (High|Medium|Low), and/or --category (Cost|HighAvailability|Security|Performance|OperationalExcellence).",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "advisor_recommendation-type_list"
+      ]
+    },
+    {
+        "name": "apply_azure_advisor_recommendations",
+        "description": "Get rules that can help apply Advisor recommendation to create or modify IaaC files (like ARM, Bicep) for Azure resources.",
+        "toolMetadata": {
+            "destructive": {
+                "value": false,
+                "description": "This tool performs only additive updates without deleting or modifying existing resources."
+            },
+            "idempotent": {
+                "value": true,
+                "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+            },
+            "openWorld": {
+                "value": false,
+                "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+            },
+            "readOnly": {
+                "value": true,
+                "description": "This tool only performs read operations without modifying any state or data."
+            },
+            "secret": {
+                "value": false,
+                "description": "This tool does not handle sensitive or secret information."
+            },
+            "localRequired": {
+                "value": false,
+                "description": "This tool is available in both local and remote server modes."
+            }
+        },
+        "mappedToolList": [
+            "advisor_recommendation_apply"
+        ]
     },
     {
       "name": "get_azure_retail_pricing",
@@ -2010,6 +2124,39 @@
         "eventhubs_namespace_get",
         "eventhubs_eventhub_get",
         "eventhubs_eventhub_consumergroup_get"
+      ]
+    },
+    {
+      "name": "get_azure_iot_hub",
+      "description": "Get details about an Azure IoT Hub.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only retrieves information about an Azure IoT Hub without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_hub_get"
       ]
     },
     {
@@ -3695,8 +3842,7 @@
         "monitor_instrumentation_send-brownfield-analysis",
         "monitor_instrumentation_send-enhancement-select"
       ]
-    }
-    ,
+    },
     {
       "name": "get_azure_device_registry_details",
       "description": "Get details about Azure Device Registry namespaces in a subscription or resource group. Returns namespace information including name, location, provisioning state, and UUID.",
@@ -3917,6 +4063,382 @@
         "azureterraform_aztfexport_resourcegroup",
         "azureterraform_conftest_plan",
         "azureterraform_conftest_workspace"
+      ]
+    },
+    {
+      "name": "get_azure_sre_agent_resources",
+      "description": "Get and list Azure SRE Agent resources, sub-agents, custom tools, skills, connectors, hooks, threads, scheduled tasks, incidents, plans, docs, memories, common prompts, architecture plans, and workflow validation/generation results.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_agents_get",
+        "sreagent_agents_list",
+        "sreagent_agents_tools_get",
+        "sreagent_agents_tools_list",
+        "sreagent_architecture_plan",
+        "sreagent_commonprompts_get",
+        "sreagent_commonprompts_list",
+        "sreagent_connectors_get",
+        "sreagent_connectors_list",
+        "sreagent_docs_get",
+        "sreagent_docs_memories_list",
+        "sreagent_docs_memories_search",
+        "sreagent_hooks_get",
+        "sreagent_hooks_list",
+        "sreagent_hooks_thread_list",
+        "sreagent_incidents_active_list",
+        "sreagent_incidents_plans_list",
+        "sreagent_scheduledtasks_get",
+        "sreagent_scheduledtasks_list",
+        "sreagent_skills_list",
+        "sreagent_threads_get",
+        "sreagent_threads_list",
+        "sreagent_workflows_generate",
+        "sreagent_workflows_validate"
+      ]
+    },
+    {
+      "name": "test_azure_sre_agent_connector",
+      "description": "Test an Azure SRE Agent connector and list the tools it exposes. The tested connector may reach out to external systems.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with external systems whose behavior is not fully known to the server."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_connectors_test"
+      ]
+    },
+    {
+      "name": "manage_azure_sre_agent_resources",
+      "description": "Create, update, or delete Azure SRE Agent sub-agents, custom tools, skills, connectors (Kusto), hooks, thread hook activation, common prompts, and memory entries.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or otherwise irreversibly modify Azure SRE Agent resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify Azure SRE Agent state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_agents_create",
+        "sreagent_agents_delete",
+        "sreagent_agents_tools_create",
+        "sreagent_commonprompts_delete",
+        "sreagent_connectors_create_kusto",
+        "sreagent_connectors_delete",
+        "sreagent_docs_memories_delete",
+        "sreagent_hooks_delete",
+        "sreagent_hooks_thread_activate",
+        "sreagent_hooks_thread_deactivate",
+        "sreagent_skills_create",
+        "sreagent_skills_delete"
+      ]
+    },
+    {
+      "name": "create_azure_sre_agent_mcp_connector",
+      "description": "Create or update an MCP connector on an Azure SRE Agent resource. May store bearer tokens or other secret credentials and connects to external MCP endpoints.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or otherwise irreversibly modify Azure SRE Agent resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with external systems whose behavior is not fully known to the server."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify Azure SRE Agent state or data."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool may handle sensitive secret material such as bearer tokens or credentials."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_connectors_create_mcp"
+      ]
+    },
+    {
+      "name": "operate_azure_sre_agent_resources",
+      "description": "Perform non-destructive write operations on Azure SRE Agent resources: create or update common prompts, pause or resume scheduled tasks, and apply workflow YAML.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify Azure SRE Agent state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_commonprompts_create",
+        "sreagent_scheduledtasks_pause",
+        "sreagent_scheduledtasks_resume",
+        "sreagent_workflows_apply"
+      ]
+    },
+    {
+      "name": "setup_azure_sre_agent_incident_integrations",
+      "description": "Configure Azure SRE Agent incident response integrations with external systems (PagerDuty, ServiceNow). May store API keys or other secret credentials.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify Azure SRE Agent state or data."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool may handle sensitive secret material such as bearer tokens or credentials."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_incidents_setup_pagerduty",
+        "sreagent_incidents_setup_servicenow"
+      ]
+    },
+    {
+      "name": "ingest_azure_sre_agent_events_and_memories",
+      "description": "Append memory entries, trigger memory reindexing, and create incidents or response plans on an Azure SRE Agent resource. Each call is non-idempotent and may produce a new record.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Repeated invocations may produce different results or trigger new side effects each time."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify Azure SRE Agent state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_docs_memories_add",
+        "sreagent_docs_memories_reindex",
+        "sreagent_incidents_create",
+        "sreagent_incidents_plans_create"
+      ]
+    },
+    {
+      "name": "interact_with_azure_sre_agent_threads_and_tasks",
+      "description": "Create threads or scheduled tasks, send messages, and run investigations on an Azure SRE Agent resource. These operations invoke the agent which may call external tools and produce non-deterministic results.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Repeated invocations may produce different results or trigger new side effects each time."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with external systems whose behavior is not fully known to the server."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify Azure SRE Agent state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_scheduledtasks_create",
+        "sreagent_threads_create",
+        "sreagent_threads_investigate",
+        "sreagent_threads_investigate_yolo",
+        "sreagent_threads_send_message"
+      ]
+    },
+    {
+      "name": "delete_azure_sre_agent_threads_and_tasks",
+      "description": "Delete Azure SRE Agent threads or scheduled tasks. Each call is destructive and not idempotent.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or otherwise irreversibly modify Azure SRE Agent resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Repeated invocations may produce different results or trigger new side effects each time."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify Azure SRE Agent state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "sreagent_scheduledtasks_delete",
+        "sreagent_threads_delete"
+      ]
+    },
+    {
+      "name": "derive_azure_infrastructure_insights",
+      "description": "Derive insights about an existing Azure environment by analyzing patterns in Azure Resource Graph data. Supports tenant-wide or single-subscription scope and an optional free-form query describing user intent to tailor the insights for downstream infrastructure planning. Requires the MCP client to support sampling.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only reads Azure Resource Graph data and does not modify any resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool handles sensitive data such as secrets, credentials, keys, or other confidential information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "insights_get"
       ]
     }
   ]

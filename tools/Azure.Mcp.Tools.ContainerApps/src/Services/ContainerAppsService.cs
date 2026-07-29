@@ -16,6 +16,7 @@ public sealed class ContainerAppsService(ISubscriptionService subscriptionServic
     public async Task<ResourceQueryResults<ContainerAppInfo>> ListContainerApps(
         string subscription,
         string? resourceGroup = null,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
@@ -27,6 +28,7 @@ public sealed class ContainerAppsService(ISubscriptionService subscriptionServic
             subscription,
             retryPolicy,
             ConvertToContainerAppInfoModel,
+            tenant: tenant,
             cancellationToken: cancellationToken);
 
         return containerApps;

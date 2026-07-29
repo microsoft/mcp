@@ -13,7 +13,8 @@
                 "id": "cfafbeb1-8037-4d0c-896e-a46fb22287ff",
                 "displayName": "New workspace",
                 "description": "",
-                "type": "Workspace"
+                "type": "Workspace",
+                "capacityRegion": "West US"
             }
         }
     }

@@ -5,6 +5,7 @@ using System.Collections.Immutable;
 using System.IdentityModel.Tokens.Jwt;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Channels;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
@@ -16,6 +17,7 @@ using Azure.ResourceManager.ResourceGraph.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.AppLens.Services;
@@ -52,7 +54,7 @@ public class AppLensService(
 
         if (findResult is DidNotFindResourceResult notFound)
         {
-            throw new InvalidOperationException(notFound.Message);
+            return new DiagnosticResult([notFound.Message], [], string.Empty, string.Empty);
         }
 
         var foundResource = (FoundResourceResult)findResult;
@@ -107,7 +109,7 @@ public class AppLensService(
         if (!string.IsNullOrEmpty(resourceGroup))
         {
             var rgFiltered = filteredResults
-                .Where(r => r.ResourceGroup.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase))
+                .Where(r => r.ResourceGroup.Equals(resourceGroup, StringComparisons.ResourceGroup))
                 .ToImmutableArray();
 
             if (rgFiltered.Length == 0)
@@ -147,7 +149,7 @@ public class AppLensService(
 
         // Filter to supported resource types
         var supportedResults = filteredResults
-            .Where(r => IsResourceTypeSupported(r.ResourceType, r.ResourceKind))
+            .Where(r => IsResourceTypeSupported(r.ResourceType))
             .ToImmutableArray();
 
         if (supportedResults.Length == 0)
@@ -255,19 +257,11 @@ public class AppLensService(
     }
 
     /// <summary>
-    /// Checks whether a resource type (and optionally kind) is supported by AppLens diagnostics.
+    /// Checks whether a resource type is supported by AppLens diagnostics.
     /// </summary>
-    internal static bool IsResourceTypeSupported(string resourceType, string resourceKind)
+    internal static bool IsResourceTypeSupported(string resourceType)
     {
-        if (resourceType.Equals("microsoft.web/sites", StringComparison.OrdinalIgnoreCase))
-        {
-            return resourceKind.Equals("app", StringComparison.OrdinalIgnoreCase)
-                || resourceKind.Equals("linux", StringComparison.OrdinalIgnoreCase)
-                || resourceKind.Equals("functionapp", StringComparison.OrdinalIgnoreCase);
-        }
-
-        return resourceType.Equals("microsoft.containerservice/managedclusters", StringComparison.OrdinalIgnoreCase)
-            || resourceType.Equals("microsoft.apimanagement/service", StringComparison.OrdinalIgnoreCase);
+        return SupportedResourceTypes().Contains(resourceType, StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Kusto.Models;
 using Microsoft.Mcp.Core.Models;
@@ -27,7 +28,6 @@ public interface IKustoService
     Task<List<string>> ListDatabasesAsync(
         string clusterUri,
         string? tenant = null,
-        AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
@@ -35,7 +35,6 @@ public interface IKustoService
         string subscription,
         string clusterName,
         string? tenant = null,
-        AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
@@ -44,7 +43,6 @@ public interface IKustoService
         string databaseName,
         string query,
         string? tenant = null,
-        AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
@@ -54,7 +52,6 @@ public interface IKustoService
         string databaseName,
         string query,
         string? tenant = null,
-        AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
@@ -62,7 +59,6 @@ public interface IKustoService
         string clusterUri,
         string databaseName,
         string? tenant = null,
-        AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
@@ -71,7 +67,6 @@ public interface IKustoService
         string clusterName,
         string databaseName,
         string? tenant = null,
-        AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
@@ -80,7 +75,6 @@ public interface IKustoService
         string databaseName,
         string tableName,
         string? tenant = null,
-        AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
@@ -90,7 +84,6 @@ public interface IKustoService
         string databaseName,
         string tableName,
         string? tenant = null,
-        AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

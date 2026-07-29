@@ -1,0 +1,206 @@
+{
+  "rules": [
+    {
+      "ruleId": "Use_Capacity_Reservation_For_Critical_VMs",
+      "description": "Use Azure Capacity Reservation for virtual machine (VM) that runs critical workloads. Azure Capacity Reservations reserve compute capacity in a specific region or availability zone.",
+      "query": "where isnull(properties.capacityReservation)",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "properties.capacityReservation",
+            "exists": false
+          }
+        ]
+      },
+      "fix": "Use Azure Capacity Reservation for virtual machine (VM) that runs critical workloads",
+      "ARM_Fix": {
+        "type": "resourceAction",
+        "action": "createAndLink",
+        "targetService": "Microsoft.Compute/capacityReservationGroups",
+        "details": "Add a Microsoft.Compute/capacityReservationGroups resource and a nested Microsoft.Compute/capacityReservationGroups/capacityReservations child resource to the template, then set properties.capacityReservation.capacityReservationGroup.id on the VM to reference the group."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_linux_virtual_machine",
+        "note": "Also applies to azurerm_windows_virtual_machine",
+        "allOf": [
+          {
+            "attribute": "capacity_reservation_group_id",
+            "exists": false
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "createAndLink",
+        "targetResource": "azurerm_capacity_reservation_group",
+        "details": "Add an azurerm_capacity_reservation_group resource and an azurerm_capacity_reservation child resource to the Terraform configuration, then set capacity_reservation_group_id on the VM resource to reference the group's id."
+      }
+    },
+    {
+      "ruleId": "Migrate_production_workload_from_Aseries",
+      "description": "Migrate production workload from A-series or B-series virtual machine (VM) to D-series or better VM. A-series and B-series VMs are designed for entry-level workloads.",
+      "query": "where properties.hardwareProfile.vmSize contains 'Standard_B' or properties.hardwareProfile.vmSize contains 'Standard_A'",
+      "ARM_Query": {
+        "anyOf": [
+          {
+            "field": "properties.hardwareProfile.vmSize",
+            "startsWith": "Standard_B"
+          },
+          {
+            "field": "properties.hardwareProfile.vmSize",
+            "startsWith": "Standard_A"
+          }
+        ]
+      },
+      "fix": "Migrate production workload from A-series or B-series virtual machine (VM) to D-series or better VM. A-series and B-series VMs are designed for entry-level workloads.",
+      "ARM_Fix": {
+        "type": "resourceAction",
+        "action": "resize",
+        "details": "Deallocate the VM, then update properties.hardwareProfile.vmSize to a D-series or better SKU (e.g., Standard_D4s_v5). Verify image and extension compatibility before redeployment."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_linux_virtual_machine",
+        "note": "Also applies to azurerm_windows_virtual_machine",
+        "anyOf": [
+          {
+            "attribute": "size",
+            "startsWith": "Standard_B"
+          },
+          {
+            "attribute": "size",
+            "startsWith": "Standard_A"
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "resize",
+        "details": "Deallocate the VM, then update the size attribute to a D-series or better SKU (e.g., Standard_D4s_v5). Verify image and extension compatibility before redeployment."
+      }
+    },
+    {
+      "ruleId": "Migrate_Retiring_VM_Series_F_G_B_Ls",
+      "description": "Azure Virtual Machine (VM) series F, Fs, Fsv2, Lsv2, G, Gs, Av2, and B are retiring. The VM series are no longer available for use or purchase. Applications and workloads currently operating on VM types must be migrated to newer VM series.",
+      "query": "where tostring(properties.hardwareProfile.vmSize) startswith 'Standard_Lsv2' or tostring(properties.hardwareProfile.vmSize) startswith 'Standard_GS' or tostring(properties.hardwareProfile.vmSize) startswith 'Standard_G' or tostring(properties.hardwareProfile.vmSize) startswith 'Standard_Fsv2' or tostring(properties.hardwareProfile.vmSize) startswith 'Standard_Fs' or tostring(properties.hardwareProfile.vmSize) startswith 'Standard_F' or tostring(properties.hardwareProfile.vmSize) startswith 'Standard_B' or tostring(properties.hardwareProfile.vmSize) startswith 'Standard_Av2'",
+      "ARM_Query": {
+        "anyOf": [
+          {
+            "field": "properties.hardwareProfile.vmSize",
+            "startsWith": "Standard_Lsv2"
+          },
+          {
+            "field": "properties.hardwareProfile.vmSize",
+            "startsWith": "Standard_GS"
+          },
+          {
+            "field": "properties.hardwareProfile.vmSize",
+            "startsWith": "Standard_G"
+          },
+          {
+            "field": "properties.hardwareProfile.vmSize",
+            "startsWith": "Standard_Fsv2"
+          },
+          {
+            "field": "properties.hardwareProfile.vmSize",
+            "startsWith": "Standard_Fs"
+          },
+          {
+            "field": "properties.hardwareProfile.vmSize",
+            "startsWith": "Standard_F"
+          },
+          {
+            "field": "properties.hardwareProfile.vmSize",
+            "startsWith": "Standard_B"
+          },
+          {
+            "field": "properties.hardwareProfile.vmSize",
+            "startsWith": "Standard_Av2"
+          }
+        ]
+      },
+      "fix": "use or purchase",
+      "ARM_Fix": {
+        "type": "resourceAction",
+        "action": "resize",
+        "details": "Deallocate the VM and update properties.hardwareProfile.vmSize to an equivalent current-generation SKU. Recommended replacements by series: F/Fs/Fsv2 (compute-optimized) → Fasv6 or Famsv6; G/GS (memory-heavy) → Msv3 or Mv2; Lsv2 (storage-optimized) → Lsv3 or Lasv3; B (burstable) → Bsv2; Av2 (general-purpose) → Dsv5 or Dpsv5. Verify image and extension compatibility before redeployment."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_linux_virtual_machine",
+        "note": "Also applies to azurerm_windows_virtual_machine",
+        "anyOf": [
+          {
+            "attribute": "size",
+            "startsWith": "Standard_Lsv2"
+          },
+          {
+            "attribute": "size",
+            "startsWith": "Standard_GS"
+          },
+          {
+            "attribute": "size",
+            "startsWith": "Standard_G"
+          },
+          {
+            "attribute": "size",
+            "startsWith": "Standard_Fsv2"
+          },
+          {
+            "attribute": "size",
+            "startsWith": "Standard_Fs"
+          },
+          {
+            "attribute": "size",
+            "startsWith": "Standard_F"
+          },
+          {
+            "attribute": "size",
+            "startsWith": "Standard_B"
+          },
+          {
+            "attribute": "size",
+            "startsWith": "Standard_Av2"
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "resize",
+        "details": "Deallocate the VM and update the size attribute to an equivalent current-generation SKU. Recommended replacements by series: F/Fs/Fsv2 (compute-optimized) → Fasv6 or Famsv6; G/GS (memory-heavy) → Msv3 or Mv2; Lsv2 (storage-optimized) → Lsv3 or Lasv3; B (burstable) → Bsv2; Av2 (general-purpose) → Dsv5 or Dpsv5. Verify image and extension compatibility before redeployment."
+      }
+    },
+    {
+      "ruleId": "Migrate_NC24rs_v3_To_Newer_NC_Series",
+      "description": "Standard_NC24rs_v3 virtual machine size in NCv3-series virtual machines is retiring. Upgrade to the newer VM series in the same NC product line.",
+      "query": "where (tostring(properties.hardwareProfile.vmSize) in~ ('Standard_NC24s_v3') or tostring(sku.name) in~ ('Standard_NC24s_v3'))",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "properties.hardwareProfile.vmSize",
+            "equals": "Standard_NC24s_v3"
+          }
+        ]
+      },
+      "fix": "Upgrade to newer NC-series VM",
+      "ARM_Fix": {
+        "type": "resourceAction",
+        "action": "resize",
+        "details": "Deallocate the VM and update properties.hardwareProfile.vmSize to a current NC-series equivalent. For general GPU workloads use Standard_NC24ads_A100_v4 (NCads A100 v4 series). For MPI or RDMA-dependent workloads (original 'r' suffix SKUs), use Standard_ND96asr_v4 (NDv4) or Standard_ND96isr_H100_v5 (ND H100 v5) instead, as NC24ads_A100_v4 does not support RDMA. Verify GPU drivers and extension compatibility before redeployment."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_linux_virtual_machine",
+        "note": "Also applies to azurerm_windows_virtual_machine",
+        "allOf": [
+          {
+            "attribute": "size",
+            "equals": "Standard_NC24s_v3"
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "resize",
+        "details": "Deallocate the VM and update the size attribute to a current NC-series equivalent. For general GPU workloads use Standard_NC24ads_A100_v4. For MPI or RDMA-dependent workloads, use Standard_ND96asr_v4 or Standard_ND96isr_H100_v5. Verify GPU drivers and extension compatibility before redeployment."
+      }
+    }
+  ]
+}

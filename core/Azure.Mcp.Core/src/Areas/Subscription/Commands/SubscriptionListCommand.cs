@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Core.Areas.Subscription.Commands;
@@ -22,20 +23,14 @@ namespace Azure.Mcp.Core.Areas.Subscription.Commands;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger, ISubscriptionService subscriptionService) : GlobalCommand<SubscriptionListOptions>()
+public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger, ISubscriptionService subscriptionService)
+    : AuthenticatedCommand<SubscriptionListOptions, SubscriptionListCommand.SubscriptionListCommandResult>()
 {
     private readonly ILogger<SubscriptionListCommand> _logger = logger;
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SubscriptionListOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var subscriptions = await _subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
@@ -44,8 +39,8 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
             var subscriptionInfos = MapToSubscriptionInfos(subscriptions, defaultSubscriptionId);
 
             context.Response.Results = ResponseResult.Create(
-                    new SubscriptionListCommandResult(subscriptionInfos),
-                    SubscriptionJsonContext.Default.SubscriptionListCommandResult);
+                new(subscriptionInfos),
+                SubscriptionJsonContext.Default.SubscriptionListCommandResult);
         }
         catch (Exception ex)
         {
@@ -65,7 +60,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
             s.DisplayName,
             s.State?.ToString(),
             s.TenantId?.ToString(),
-            hasDefault && s.SubscriptionId.Equals(defaultSubscriptionId, StringComparison.OrdinalIgnoreCase)
+            hasDefault && s.SubscriptionId.Equals(defaultSubscriptionId, StringComparisons.SubscriptionId)
         )).ToList();
 
         // Sort so the default subscription appears first
@@ -77,5 +72,5 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         return infos;
     }
 
-    internal record SubscriptionListCommandResult(List<SubscriptionInfo> Subscriptions);
+    public sealed record SubscriptionListCommandResult(List<SubscriptionInfo> Subscriptions);
 }

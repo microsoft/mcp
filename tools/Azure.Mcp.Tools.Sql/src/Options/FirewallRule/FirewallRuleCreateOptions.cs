@@ -1,18 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Sql.Options.FirewallRule;
 
-public class FirewallRuleCreateOptions : BaseSqlOptions
+public sealed class FirewallRuleCreateOptions : BaseSqlOptions
 {
-    [JsonPropertyName(SqlOptionDefinitions.FirewallRuleName)]
-    public string? FirewallRuleName { get; set; }
+    [Option(Description = SqlOptionDescriptions.FirewallRuleName)]
+    public required string FirewallRuleName { get; set; }
 
-    [JsonPropertyName(SqlOptionDefinitions.StartIpAddress)]
-    public string? StartIpAddress { get; set; }
+    [Option(Description = "The start IP address of the firewall rule range.")]
+    public required string StartIpAddress { get; set; }
 
-    [JsonPropertyName(SqlOptionDefinitions.EndIpAddress)]
-    public string? EndIpAddress { get; set; }
+    [Option(Description = "The end IP address of the firewall rule range.")]
+    public required string EndIpAddress { get; set; }
+
+    [Option(Description = SqlOptionDescriptions.Server)]
+    public required string Server { get; set; }
 }

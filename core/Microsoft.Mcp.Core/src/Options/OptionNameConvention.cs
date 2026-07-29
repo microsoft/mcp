@@ -3,7 +3,7 @@
 
 using System.Text;
 
-namespace Microsoft.Mcp.Core.Commands;
+namespace Microsoft.Mcp.Core.Options;
 
 /// <summary>
 /// Derives CLI option names from C# property names using kebab-case convention.
@@ -63,6 +63,5 @@ public static class OptionNameConvention
     /// <summary>
     /// Returns the full CLI option flag (e.g., "--vault-name") for a property name.
     /// </summary>
-    public static string ToOptionFlag(string propertyName) =>
-        $"--{ToKebabCase(propertyName)}";
+    public static string ToOptionFlag(string propertyName) => $"--{ToKebabCase(propertyName)}";
 }

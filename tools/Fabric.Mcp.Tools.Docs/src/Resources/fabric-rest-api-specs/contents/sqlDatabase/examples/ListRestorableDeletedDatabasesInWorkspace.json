@@ -1,0 +1,31 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "displayName": "SQLDatabase1",
+                        "properties": {
+                            "restorableDeletedDatabaseName": "SQLDatabase1,134140258788170000",
+                            "earliestRestorePoint": "2024-12-01T00:00:00.000Z",
+                            "latestRestorePoint": "2024-12-02T00:00:00.000Z",
+                            "deletionTimestamp": "2024-12-01T00:00:00.000Z"
+                        }
+                    },
+                    {
+                        "displayName": "SQLDatabase2",
+                        "properties": {
+                            "restorableDeletedDatabaseName": "SQLDatabase2,134140258788470000",
+                            "earliestRestorePoint": "2024-12-01T00:00:00.000Z",
+                            "latestRestorePoint": "2024-12-02T00:00:00.000Z",
+                            "deletionTimestamp": "2024-12-01T00:00:00.000Z"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

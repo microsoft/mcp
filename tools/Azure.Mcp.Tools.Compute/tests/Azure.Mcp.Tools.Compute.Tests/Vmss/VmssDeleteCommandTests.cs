@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.Tests.Vmss;
 
-public class VmssDeleteCommandTests : CommandUnitTestsBase<VmssDeleteCommand, IComputeService>
+public class VmssDeleteCommandTests : SubscriptionCommandUnitTestsBase<VmssDeleteCommand, IComputeService>
 {
     private readonly string _knownSubscription = "sub123";
     private readonly string _knownResourceGroup = "test-rg";
@@ -125,7 +125,7 @@ public class VmssDeleteCommandTests : CommandUnitTestsBase<VmssDeleteCommand, IC
     }
 
     [Fact]
-    public async Task ExecuteAsync_VmssNotFound_ReturnsSuccess()
+    public async Task ExecuteAsync_VmssNotFound_ReturnsNotFoundMessage()
     {
         // Arrange - service returns false (VMSS was already gone / 404), but delete is idempotent
         Service.DeleteVmssAsync(
@@ -144,9 +144,12 @@ public class VmssDeleteCommandTests : CommandUnitTestsBase<VmssDeleteCommand, IC
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription);
 
-        // Assert - idempotent: 404 treated as success
+        // Assert - HTTP 200 (idempotent) but message says "not found"
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssDeleteCommandResult);
+        Assert.False(result.Success);
+        Assert.Contains("not found", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(_knownVmssName, result.Message);
     }
 
     [Fact]

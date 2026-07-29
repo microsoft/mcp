@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.Collections.Concurrent;
+using System.CommandLine;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Reflection;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 
 namespace Microsoft.Mcp.Core.Options;
 
@@ -16,87 +16,81 @@ namespace Microsoft.Mcp.Core.Options;
 /// </summary>
 public static class OptionBinder
 {
-    private static readonly MethodInfo GetValueOrDefaultMethod =
-        typeof(ParseResultExtensions)
-            .GetMethods(BindingFlags.Public | BindingFlags.Static)
-            .Single(m => m.Name == nameof(ParseResultExtensions.GetValueOrDefault)
-                && m.IsGenericMethodDefinition
-                && m.GetParameters().Length == 2
-                && m.GetParameters()[1].ParameterType == typeof(string));
+    private const DynamicallyAccessedMemberTypes OptionBindingMembers =
+        DynamicallyAccessedMemberTypes.PublicProperties |
+        DynamicallyAccessedMemberTypes.PublicParameterlessConstructor;
+
+    private static readonly ConcurrentDictionary<Type, OptionTypeHandler[]> s_optionTypeHandlers = new();
 
     /// <summary>
     /// Registers System.CommandLine options on a command based on the public properties of <typeparamref name="TOptions"/>.
     /// </summary>
-    [UnconditionalSuppressMessage("Trimming", "IL2055:MakeGenericType",
-        Justification = "Option<T> is used with property types rooted by the application.")]
-    [UnconditionalSuppressMessage("AOT", "IL3050:RequiresDynamicCode",
-        Justification = "Option<T> generic instantiation uses types rooted by the application.")]
-    public static void RegisterOptions<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TOptions>(Command command)
+    /// <param name="command">The command to register options on.</param>
+    public static void RegisterOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(Command command)
         where TOptions : class
     {
-        var descriptors = OptionDescriptor.FromType<TOptions>();
-        foreach (var descriptor in descriptors)
+        var handlers = s_optionTypeHandlers.GetOrAdd(typeof(TOptions), _ => GetOptionTypeHandlers<TOptions>());
+        foreach (var handler in handlers)
         {
-            var option = CreateOption(descriptor);
-            command.Options.Add(option);
+            command.Options.Add(handler.Option);
         }
+    }
+
+    private static OptionTypeHandler[] GetOptionTypeHandlers<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>() where TOptions : class
+    {
+        var descriptors = OptionDescriptor.FromType<TOptions>();
+        return [.. descriptors.Select(d => new OptionTypeHandler(d))];
     }
 
     /// <summary>
     /// Creates a new <typeparamref name="TOptions"/> instance and populates its properties
     /// from the parsed command-line values.
     /// </summary>
-    [UnconditionalSuppressMessage("Trimming", "IL2060:MakeGenericMethod",
-        Justification = "GetValueOrDefault<T> is called with property types rooted by the application.")]
-    [UnconditionalSuppressMessage("AOT", "IL3050:RequiresDynamicCode",
-        Justification = "Generic method instantiation uses types rooted by the application.")]
-    public static TOptions BindOptions<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TOptions>(ParseResult parseResult)
+    /// <param name="parseResult">The parsed command-line values.</param>
+    public static TOptions BindOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(ParseResult parseResult)
         where TOptions : class
     {
         var instance = (TOptions)CreateInstance(typeof(TOptions));
-        var descriptors = OptionDescriptor.FromType<TOptions>();
         List<string> missingOptions = [];
-        List<string> errors = [];
+        List<string> errors = [.. parseResult.Errors.Select(e => e.Message)];
         Dictionary<PropertyInfo, object>? parentInstances = null;
+        var handlers = s_optionTypeHandlers.GetOrAdd(typeof(TOptions), _ => GetOptionTypeHandlers<TOptions>());
 
-        foreach (var descriptor in descriptors)
+        foreach (var handler in handlers)
         {
-            var optionName = $"--{descriptor.Name}";
-            var method = GetValueOrDefaultMethod.MakeGenericMethod(descriptor.Type);
-
             object? value;
             try
             {
-                value = method.Invoke(null, [parseResult, optionName]);
+                value = handler.Binder.Invoke(parseResult);
             }
-            catch (TargetInvocationException ex) when (ex.InnerException is InvalidOperationException or FormatException or OverflowException)
+            catch (Exception ex) when (ex is InvalidOperationException or FormatException or OverflowException or ArgumentException)
             {
-                errors.Add($"Invalid value for '{optionName}': {ex.InnerException.Message}");
+                errors.Add($"Invalid value for '{handler.Option.Name}': {ex.Message}");
                 continue;
             }
 
             if (value is null)
             {
-                if (descriptor.Required)
+                if (handler.Option.Required)
                 {
-                    missingOptions.Add(optionName);
+                    missingOptions.Add(handler.Option.Name);
                 }
                 continue;
             }
 
-            if (descriptor.ParentProperty is not null)
+            if (handler.Descriptor.ParentProperty is not null)
             {
                 parentInstances ??= [];
-                if (!parentInstances.TryGetValue(descriptor.ParentProperty, out var parent))
+                if (!parentInstances.TryGetValue(handler.Descriptor.ParentProperty, out var parent))
                 {
-                    parent = CreateInstance(descriptor.ParentProperty.PropertyType);
-                    parentInstances[descriptor.ParentProperty] = parent;
+                    parent = CreateInstance(handler.Descriptor.ParentProperty.PropertyType);
+                    parentInstances[handler.Descriptor.ParentProperty] = parent;
                 }
-                descriptor.TargetProperty.SetValue(parent, value);
+                handler.Descriptor.TargetProperty.SetValue(parent, value);
             }
             else
             {
-                descriptor.TargetProperty.SetValue(instance, value);
+                handler.Descriptor.TargetProperty.SetValue(instance, value);
             }
         }
 
@@ -128,29 +122,6 @@ public static class OptionBinder
         }
 
         return instance;
-    }
-
-    [UnconditionalSuppressMessage("Trimming", "IL2055:MakeGenericType",
-        Justification = "Option<T> is used with property types rooted by the application.")]
-    [UnconditionalSuppressMessage("AOT", "IL3050:RequiresDynamicCode",
-        Justification = "Option<T> generic instantiation uses types rooted by the application.")]
-    private static Option CreateOption(OptionDescriptor descriptor)
-    {
-        var optionType = typeof(Option<>).MakeGenericType(descriptor.Type);
-        var option = (Option)Activator.CreateInstance(optionType, $"--{descriptor.Name}")!;
-        option.Description = descriptor.Description;
-        option.Required = descriptor.Required;
-        option.Hidden = descriptor.Hidden;
-
-        // For array/collection types, allow multiple values after a single option token
-        // e.g., --modules RedisBloom RedisJSON instead of --modules RedisBloom --modules RedisJSON
-        if (descriptor.Type.IsArray || (descriptor.Type != typeof(string) && descriptor.Type.IsAssignableTo(typeof(System.Collections.IEnumerable))))
-        {
-            option.Arity = ArgumentArity.OneOrMore;
-            option.AllowMultipleArgumentsPerToken = true;
-        }
-
-        return option;
     }
 
     [UnconditionalSuppressMessage("Trimming", "IL2067:UnrecognizedReflectionPattern",

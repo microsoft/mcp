@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Policy.Models;
-using Azure.Mcp.Tools.Policy.Options;
 using Azure.Mcp.Tools.Policy.Options.Assignment;
 using Azure.Mcp.Tools.Policy.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Policy.Commands.Assignment;
 
@@ -31,34 +29,14 @@ namespace Azure.Mcp.Tools.Policy.Commands.Assignment;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListCommand> logger, IPolicyService policyService)
-    : SubscriptionCommand<PolicyAssignmentListOptions>
+public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListCommand> logger, IPolicyService policyService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<PolicyAssignmentListOptions, PolicyAssignmentListCommand.PolicyAssignmentListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<PolicyAssignmentListCommand> _logger = logger;
     private readonly IPolicyService _policyService = policyService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, PolicyAssignmentListOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(PolicyOptionDefinitions.Scope.AsOptional());
-    }
-
-    protected override PolicyAssignmentListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Scope = parseResult.GetValueOrDefault<string>(PolicyOptionDefinitions.Scope.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var assignments = await _policyService.ListPolicyAssignmentsAsync(
@@ -92,12 +70,5 @@ public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListComm
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
-        _ => base.GetStatusCode(ex)
-    };
-
-    public record PolicyAssignmentListCommandResult(List<PolicyAssignment> Assignments);
+    public sealed record PolicyAssignmentListCommandResult(List<PolicyAssignment> Assignments);
 }

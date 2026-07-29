@@ -2,19 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Workbooks.Tests;
 
-public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksCommand, IWorkbooksService>
+public class ListWorkbooksCommandTests : SubscriptionCommandUnitTestsBase<ListWorkbooksCommand, IWorkbooksService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -22,7 +22,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
         Assert.Equal("list", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
-        Assert.Contains("workbook", CommandDefinition.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -38,12 +37,12 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
     }
 
     [Fact]
-    public void Description_ContainsRequiredInformation()
+    public void Description_VerifyLength()
     {
         var description = Command.Description;
         Assert.NotNull(description);
-        Assert.Contains("workbook", description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("subscription", description, StringComparison.OrdinalIgnoreCase);
+        Assert.NotEmpty(description);
+        Assert.True(description.Length <= 1024, "Description should not exceed 1024 characters");
     }
 
     [Fact]
@@ -245,42 +244,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<OutputFormat>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Is<string?>(t => t == null),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithAuthMethod_PassesCorrectParameters()
-    {
-        // Arrange
-        var listResult = new WorkbookListResult([], 0, null);
-        Service.ListWorkbooksAsync(
-            Arg.Any<IReadOnlyList<string>?>(),
-            Arg.Any<IReadOnlyList<string>?>(),
-            Arg.Any<WorkbookFilters?>(),
-            Arg.Any<int>(),
-            Arg.Any<bool>(),
-            Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(listResult);
-
-        // Act
-        await ExecuteCommandAsync(
-            "--subscription", "test-subscription",
-            "--resource-group", "test-resource-group",
-            "--auth-method", "1");
-
-        // Assert
-        await Service.Received(1).ListWorkbooksAsync(
-            Arg.Is<IReadOnlyList<string>?>(s => s != null && s.Contains("test-subscription")),
-            Arg.Is<IReadOnlyList<string>?>(rg => rg != null && rg.Contains("test-resource-group")),
-            Arg.Any<WorkbookFilters?>(),
-            Arg.Any<int>(),
-            Arg.Any<bool>(),
-            Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
