@@ -73,6 +73,15 @@ public static partial class IoTHubQueryCompiler
         return builder.ToString();
     }
 
+    /// <summary>
+    /// Determines whether a field path can be used in a compiled query. The field discoverer uses this so it
+    /// never surfaces a field path that <see cref="Compile"/> would reject.
+    /// </summary>
+    /// <param name="field">The dotted field path to validate (e.g. <c>temperature</c> or <c>nested.value</c>).</param>
+    /// <returns><see langword="true"/> if the field path is valid; otherwise <see langword="false"/>.</returns>
+    public static bool IsValidFieldPath(string? field) =>
+        !string.IsNullOrWhiteSpace(field) && FieldPathRegex().IsMatch(field.Trim());
+
     private static string CompilePredicate(QueryPredicate predicate, int index, QueryDiscoveredFields? discoveredFields)
     {
         ArgumentNullException.ThrowIfNull(predicate);
@@ -83,7 +92,7 @@ public static partial class IoTHubQueryCompiler
         }
 
         var field = predicate.Field.Trim();
-        if (!FieldPathRegex().IsMatch(field))
+        if (!IsValidFieldPath(field))
         {
             throw new ArgumentException(
                 $"Filter at index {index} has an invalid field path '{field}'. Only letters, digits, underscores, '$' and '.' are allowed.");

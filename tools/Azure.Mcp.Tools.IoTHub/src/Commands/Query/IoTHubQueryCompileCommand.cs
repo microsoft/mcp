@@ -96,7 +96,10 @@ public sealed class IoTHubQueryCompileCommand(
                 return Task.FromResult(context.Response);
             }
 
-            var result = new IoTHubQueryCompileResult(query, options.Top);
+            // Cap the returned page-size hint to the maximum that 'iothub query run' will honor so callers
+            // are not misled into expecting a larger page than a single run can return.
+            var maxCount = options.Top is { } top ? Math.Min(top, IoTHubQueryLimits.MaxPageSize) : (int?)null;
+            var result = new IoTHubQueryCompileResult(query, maxCount);
             context.Response.Results = ResponseResult.Create(
                 result,
                 IoTHubJsonContext.Default.IoTHubQueryCompileResult);

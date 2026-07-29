@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.Mcp.Tools.IoTHub.Options.Query;
+using Azure.Mcp.Tools.IoTHub.Query;
 using Azure.Mcp.Tools.IoTHub.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -36,9 +37,9 @@ public sealed class IoTHubQueryRunCommand(
     ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<IoTHubQueryRunOptions, IoTHubQueryRunResult>(subscriptionResolver)
 {
-    private const int DefaultMaxCount = 100;
+    private const int DefaultMaxCount = IoTHubQueryLimits.MaxPageSize;
     private const int MinMaxCount = 1;
-    private const int MaxMaxCount = DefaultMaxCount;
+    private const int MaxMaxCount = IoTHubQueryLimits.MaxPageSize;
 
     private readonly ILogger<IoTHubQueryRunCommand> _logger = logger;
     private readonly IIoTHubDeviceService _service = service;

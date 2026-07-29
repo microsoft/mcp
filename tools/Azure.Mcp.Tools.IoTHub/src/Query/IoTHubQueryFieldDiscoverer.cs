@@ -107,7 +107,9 @@ public static class IoTHubQueryFieldDiscoverer
 
         public void Add(string field, string type, JsonElement example)
         {
-            if (string.IsNullOrWhiteSpace(field))
+            // Only surface field paths the query compiler will accept, so 'discover' never suggests a
+            // path that 'compile' would reject.
+            if (!IoTHubQueryCompiler.IsValidFieldPath(field))
             {
                 return;
             }

@@ -132,7 +132,7 @@ public class IoTHubDeviceService(
             var token = GetSasToken(hostname, key.KeyName, key.PrimaryKey);
             httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SharedAccessSignature", token);
 
-            var response = await httpClient.GetAsync(requestUri, ct);
+            using var response = await httpClient.GetAsync(requestUri, ct);
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync(ct);
@@ -168,7 +168,7 @@ public class IoTHubDeviceService(
             var token = GetSasToken(hostname, key.KeyName, key.PrimaryKey);
             httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SharedAccessSignature", token);
 
-            var response = await httpClient.GetAsync(requestUri, ct);
+            using var response = await httpClient.GetAsync(requestUri, ct);
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync(ct);
@@ -291,7 +291,7 @@ public class IoTHubDeviceService(
             var token = GetSasToken(hostname, key.KeyName, key.PrimaryKey);
             httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SharedAccessSignature", token);
 
-            var response = await httpClient.GetAsync(requestUri, ct);
+            using var response = await httpClient.GetAsync(requestUri, ct);
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync(ct);
