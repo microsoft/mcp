@@ -29,7 +29,7 @@ public sealed class DatabaseUpdateOptions : BaseSqlOptions
     public bool? ZoneRedundant { get; set; }
 
     [Option(Description = SqlOptionDescriptions.ReadScale)]
-    public string? ReadScale { get; set; }
+    public DatabaseReadScale? ReadScale { get; set; }
 
     [Option(Description = SqlOptionDescriptions.Database)]
     public required string Database { get; set; }
