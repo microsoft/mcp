@@ -21,9 +21,9 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
     private const string NotStartedStatus = "NotStarted";
     private const string PendingStatus = "Pending";
     private const string RoleAssignmentApprovalsApiVersion = "2021-01-01-preview";
-    // BaseAzureResourceService keeps its subscription service private; this service also needs it
-    // to resolve the tenant for direct ARM REST calls.
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+    // BaseAzureResourceService receives ISubscriptionService but doesn't expose it to derived classes.
+    // This field provides direct access for ARM REST calls that require tenant resolution.
+    private readonly ISubscriptionService _subscriptionService = subscriptionService;
     public async Task<ResourceQueryResults<RoleAssignment>> ListRoleAssignmentsAsync(
         string subscription,
         string scope,
@@ -162,16 +162,16 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
         request.Headers.Authorization = new("Bearer", token.Token);
 
         using var response = await httpClient.SendAsync(request, cancellationToken);
-        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
             throw new HttpRequestException(
-                $"Azure RBAC PIM approval request failed with status {(int)response.StatusCode} ({response.StatusCode}): {responseContent}",
+                $"Azure RBAC PIM approval request failed with status {(int)response.StatusCode}.",
                 null,
                 response.StatusCode);
         }
 
-        return JsonDocument.Parse(responseContent);
+        await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        return await JsonDocument.ParseAsync(responseStream, cancellationToken: cancellationToken);
     }
 
     private Uri CreateArmUri(string pathAndQuery)
