@@ -1128,6 +1128,12 @@ Example prompts that generate Azure CLI commands:
 
 * "Show me IoT Hub 'my-iot-hub' in resource group 'my-resource-group' of my subscription 'my-subscription'"
 * "Get details for IoT Hub 'my-iot-hub' in resource group 'my-resource-group' of my subscription 'my-subscription'"
+* "Show device 'my-device' in IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
+* "Show device statistics for IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
+* "Get the device twin for 'my-device' in IoT Hub 'my-iot-hub'"
+* "Query all devices in IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
+* "Compile an IoT Hub query for devices where reported batteryLevel is less than 20"
+* "Discover the queryable device twin fields in IoT Hub 'my-iot-hub'"
 
 ### 🔑 Azure Key Vault
 
