@@ -1,0 +1,3 @@
+changes:
+  - section: "New Features"
+    description: "Added `azmcp advisor metadata get` to retrieve the global Azure Advisor recommendation-type metadata catalog entry (by recommendation type id) from Azure Resource Graph."

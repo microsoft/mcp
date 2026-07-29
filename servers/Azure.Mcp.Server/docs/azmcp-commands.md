@@ -362,6 +362,13 @@ azmcp advisor recommendation apply --resource <resource>
 azmcp advisor recommendation-type list [--resource-type <resource-type>] \
                                        [--impact <High|Medium|Low>] \
                                        [--category <category>]
+
+# Get the Azure Advisor metadata catalog entry and details for a specific recommendation type by its
+# recommendation type id. Explains what an Advisor recommendation type means, including its display name,
+# category, sub-category, impact, supported resource type, description, potential benefits, and remediation actions.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor metadata get --recommendation-type-id <recommendation-type-id> \
+                           [--language <language>]
 ```
 
 ### Azure AI Search Operations

@@ -6,6 +6,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| advisor_metadata_get | Get the Advisor metadata for recommendation type id <recommendation-type-id> |
+| advisor_metadata_get | What does Advisor recommendation type <recommendation-type-id> mean? |
+| advisor_metadata_get | Show me the catalog details for Advisor recommendation type <recommendation-type-id> |
+| advisor_metadata_get | Get the German (de) metadata for Advisor recommendation type <recommendation-type-id> |
+| advisor_metadata_get | What is the impact and category of Advisor recommendation type <recommendation-type-id>? |
+| advisor_metadata_get | Show the remediation actions for Advisor recommendation type <recommendation-type-id> |
+| advisor_metadata_get | When does Advisor recommendation type <recommendation-type-id> retire? |
 | advisor_recommendation_list | List all recommendations in my subscription |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription <subscription> |
 | advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> |

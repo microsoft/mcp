@@ -194,6 +194,103 @@ public class AdvisorService(
             .ThenBy(r => r.DisplayName, StringComparer.OrdinalIgnoreCase)];
     }
 
+    public async Task<RecommendationMetadata?> GetRecommendationMetadataAsync(
+        string recommendationTypeId,
+        string language,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(recommendationTypeId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(language);
+
+        // The Advisor recommendation-metadata catalog (type 'microsoft.advisor/metadata') is a global,
+        // tenant-wide catalog — it is not subscription-scoped and is identical across all tenants. Run the
+        // ARG query at tenant scope so no subscription is required; ARG evaluates it across all subscriptions
+        // the identity can access.
+        var allTenants = await TenantService.GetTenants(cancellationToken);
+        if (allTenants.Count == 0)
+        {
+            throw new InvalidOperationException("No accessible Azure tenants were found for the signed-in identity.");
+        }
+
+        var tenantResource = allTenants[0];
+
+        var query =
+            "advisorresources " +
+            "| where type =~ 'microsoft.advisor/metadata' " +
+            $"and tostring(properties.recommendationTypeId) =~ '{EscapeKqlString(recommendationTypeId)}' " +
+            $"and tostring(properties.language) =~ '{EscapeKqlString(language)}' " +
+            "| limit 1";
+
+        var queryContent = new ResourceQueryContent(query);
+
+        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
+        if (result == null || result.Count == 0)
+        {
+            return null;
+        }
+
+        using var jsonDocument = JsonDocument.Parse(result.Data);
+        var dataArray = jsonDocument.RootElement;
+        if (dataArray.ValueKind != JsonValueKind.Array || dataArray.GetArrayLength() == 0)
+        {
+            return null;
+        }
+
+        return ConvertToRecommendationMetadataModel(dataArray[0]);
+    }
+
+    internal static RecommendationMetadata ConvertToRecommendationMetadataModel(JsonElement item)
+    {
+        var data = Models.RecommendationMetadataData.FromJson(item)
+            ?? throw new InvalidOperationException("Failed to parse Advisor recommendation metadata data");
+
+        var properties = data.Properties;
+
+        RecommendationServiceRetirement? serviceRetirement = null;
+        var retirement = properties?.SourceProperties?.ServiceRetirement;
+        if (retirement is not null)
+        {
+            serviceRetirement = new RecommendationServiceRetirement(
+                RetirementDate: retirement.RetirementDate,
+                RetirementFeatureName: retirement.RetirementFeatureName,
+                TrackingIds: retirement.ServiceHealth?.TrackingIds,
+                AshUrls: retirement.ServiceHealth?.AshUrls);
+        }
+
+        IReadOnlyList<RecommendationMetadataAction>? actions = null;
+        if (properties?.Actions is { Count: > 0 } actionList)
+        {
+            actions = actionList
+                .Select(a => new RecommendationMetadataAction(
+                    ActionType: a.ActionType,
+                    Caption: a.Caption,
+                    DocumentLink: a.DocumentLink,
+                    BladeName: a.BladeName))
+                .ToList();
+        }
+
+        return new RecommendationMetadata(
+            RecommendationTypeId: properties?.RecommendationTypeId ?? string.Empty,
+            DisplayName: properties?.DisplayName,
+            Label: properties?.Label,
+            Category: properties?.RecommendationCategory,
+            SubCategory: properties?.RecommendationSubCategory,
+            Impact: properties?.RecommendationImpact,
+            PriorityScore: properties?.PriorityScore,
+            PotentialBenefits: properties?.PotentialBenefits,
+            DetailedDescription: properties?.DetailedDescription,
+            LearnMoreLink: properties?.LearnMoreLink,
+            SupportedResourceType: properties?.SupportedResourceType,
+            Scope: properties?.RecommendationScope,
+            DataSourceQuery: properties?.RecommendationDataSourceQuery,
+            ResourceSingularName: properties?.ResourceMetadata?.Singular,
+            ResourcePluralName: properties?.ResourceMetadata?.Plural,
+            Actions: actions,
+            Language: properties?.Language,
+            LastRefreshed: properties?.LastRefreshed,
+            ServiceRetirement: serviceRetirement);
+    }
+
     public async Task<RecommendationSummary> SummarizeRecommendationsAsync(
         string subscription,
         string? resourceGroup,
