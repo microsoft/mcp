@@ -39,6 +39,8 @@ public class TagName
     public const string Cloud = "Cloud";
     public const string TraceParent = "w3c.traceparent";
     public const string TraceState = "w3c.tracestate";
+    public const string ResolutionMethod = "resolution.method";
+    public const string ResolutionConfidence = "resolution.confidence";
 }
 
 public class ActivityName

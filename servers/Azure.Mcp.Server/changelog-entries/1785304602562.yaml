@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added deterministic intent-to-namespace resolver for single-proxy mode. When the MCP 2026-07-28 protocol is in use (sampling APIs unavailable), the server now uses token-overlap scoring with synonym expansion to route a user intent directly to the most relevant namespace tool, reducing round-trips from 3 to 2 while keeping wrong-namespace picks fully self-correcting via learn-mode."
