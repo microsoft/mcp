@@ -17,8 +17,8 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
     Name = "show",
     Title = "Show IoT Hub Device",
     Description = """
-        Show the device identity for a device in an IoT Hub device registry. Returns the device identity metadata without authentication keys.
-        Always present the complete raw JSON result to the user, including all fields (statusReason, connectionStateUpdatedTime, statusUpdatedTime, capabilities, etc.). Do not summarize, reformat, or omit any fields.
+        Show the device identity for a device in an IoT Hub device registry.
+        Returns device identity metadata while intentionally excluding authentication keys.
         Device names/IDs are case-sensitive and must match exactly.
         """,
     Destructive = false,
