@@ -317,7 +317,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                 Name = "Go",
                 Runtime = "native",
                 ProgrammingModel = "Native Go worker SDK",
-                Prerequisites = ["Go 1.24+", "Azure Functions Core Tools 4.12+"],
+                Prerequisites = ["Go 1.24+", "Azure Functions Core Tools v4.12+"],
                 DevelopmentTools = ["VS Code with Go + Azure Functions extensions", "Azure Functions Core Tools"],
                 InitCommand = "go mod init <module-name>",
                 RunCommand = "func start",
