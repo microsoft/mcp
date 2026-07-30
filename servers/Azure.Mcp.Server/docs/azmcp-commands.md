@@ -368,7 +368,8 @@ azmcp advisor recommendation-type list [--resource-type <resource-type>] \
 # category, sub-category, impact, supported resource type, description, potential benefits, and remediation actions.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor metadata get --recommendation-type-id <recommendation-type-id> \
-                           [--language <language>]
+                           [--language <language>] \
+                           [--tenant <tenant>]
 ```
 
 ### Azure AI Search Operations
