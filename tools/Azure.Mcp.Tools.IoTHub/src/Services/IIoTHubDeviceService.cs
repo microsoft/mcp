@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.IoTHub.Services;
 public interface IIoTHubDeviceService
 {
     Task<DeviceListResult> ListDevices(
-        string name,
+        string hubName,
         string resourceGroup,
         string subscription,
         int? maxCount = null,

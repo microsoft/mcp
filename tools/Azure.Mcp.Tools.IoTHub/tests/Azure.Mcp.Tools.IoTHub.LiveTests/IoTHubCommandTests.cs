@@ -25,14 +25,14 @@ public class IoTHubCommandTests(
 
         await CallToolAsync("iothub_device_list", new()
         {
-            { "name", hubName },
+            { "hub-name", hubName },
             { "resourceGroup", Settings.ResourceGroupName },
             { "subscription", Settings.SubscriptionId }
         });
 
         await CallToolAsync("iothub_device_list", new()
         {
-            { "name", hubName },
+            { "hub-name", hubName },
             { "resourceGroup", Settings.ResourceGroupName },
             { "subscription", Settings.SubscriptionId },
             { "maxCount", 2 }

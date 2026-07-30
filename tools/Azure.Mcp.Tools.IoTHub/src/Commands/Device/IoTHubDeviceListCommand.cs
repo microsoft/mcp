@@ -67,7 +67,7 @@ public sealed class IoTHubDeviceListCommand(
             };
 
             var result = await _service.ListDevices(
-                options.Name,
+                options.HubName,
                 options.ResourceGroup,
                 options.Subscription!,
                 maxCount,
@@ -84,7 +84,7 @@ public sealed class IoTHubDeviceListCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing devices in IoT Hub '{HubName}'.", options.Name);
+            _logger.LogError(ex, "Error listing devices in IoT Hub '{HubName}'.", options.HubName);
             HandleException(context, ex);
         }
 

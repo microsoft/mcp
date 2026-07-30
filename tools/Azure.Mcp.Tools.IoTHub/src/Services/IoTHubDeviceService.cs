@@ -40,26 +40,26 @@ public class IoTHubDeviceService(
     private sealed record HubConnection(string Hostname, List<IoTHubKey> Keys);
 
     private async Task<HubConnection> GetHubConnectionAsync(
-        string name,
+        string hubName,
         string resourceGroup,
         string subscription,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
-        var cacheKey = $"{subscription}/{resourceGroup}/{name}";
+        var cacheKey = $"{subscription}/{resourceGroup}/{hubName}";
         var cached = await _cacheService.GetAsync<HubConnection>(ConnectionCacheGroup, cacheKey, s_connectionCacheDuration, cancellationToken);
         if (cached is not null)
         {
-            _logger.LogDebug("Using cached IoT Hub connection details for hub {HubName} in resource group {ResourceGroup}.", name, resourceGroup);
+            _logger.LogDebug("Using cached IoT Hub connection details for hub {HubName} in resource group {ResourceGroup}.", hubName, resourceGroup);
             return cached;
         }
 
-        _logger.LogInformation("Resolving IoT Hub connection details for hub {HubName} in resource group {ResourceGroup}.", name, resourceGroup);
-        var hub = await _ioTHubService.GetIoTHub(name, resourceGroup, subscription, tenant: null, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+        _logger.LogInformation("Resolving IoT Hub connection details for hub {HubName} in resource group {ResourceGroup}.", hubName, resourceGroup);
+        var hub = await _ioTHubService.GetIoTHub(hubName, resourceGroup, subscription, tenant: null, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
         var hostname = hub.HostName ?? throw new InvalidOperationException("IoT Hub hostname is null");
-        var keys = await _ioTHubService.GetIoTHubKeys(name, resourceGroup, subscription, tenant: null, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+        var keys = await _ioTHubService.GetIoTHubKeys(hubName, resourceGroup, subscription, tenant: null, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
-        _logger.LogInformation("Resolved IoT Hub connection details for hub {HubName}. Hostname={Hostname}, KeyCount={KeyCount}.", name, hostname, keys.Count);
+        _logger.LogInformation("Resolved IoT Hub connection details for hub {HubName}. Hostname={Hostname}, KeyCount={KeyCount}.", hubName, hostname, keys.Count);
         var connection = new HubConnection(hostname, keys);
         await _cacheService.SetAsync(ConnectionCacheGroup, cacheKey, connection, s_connectionCacheDuration, cancellationToken);
         return connection;
@@ -91,7 +91,7 @@ public class IoTHubDeviceService(
     }
 
     public async Task<DeviceListResult> ListDevices(
-        string name,
+        string hubName,
         string resourceGroup,
         string subscription,
         int? maxCount = null,
@@ -99,13 +99,13 @@ public class IoTHubDeviceService(
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
-            (nameof(name), name),
+            (nameof(hubName), hubName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
         return await ExecuteWithTimeoutAsync(async ct =>
         {
-            var connection = await GetHubConnectionAsync(name, resourceGroup, subscription, retryPolicy, ct);
+            var connection = await GetHubConnectionAsync(hubName, resourceGroup, subscription, retryPolicy, ct);
             var hostname = connection.Hostname;
             var key = SelectKey(connection, "RegistryRead");
 

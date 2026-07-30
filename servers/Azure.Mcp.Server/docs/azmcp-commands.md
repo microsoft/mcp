@@ -2953,7 +2953,7 @@ azmcp grafana list --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp iothub device list --subscription <subscription> \
                          --resource-group <resource-group> \
-                         --name <iothub-name> \
+                         --hub-name <iot-hub-name> \
                          [--max-count <max-count>]
 ```
 

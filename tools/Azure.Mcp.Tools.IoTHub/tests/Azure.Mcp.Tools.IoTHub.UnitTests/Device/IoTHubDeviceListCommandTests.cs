@@ -48,7 +48,7 @@ public class IoTHubDeviceListCommandTests : SubscriptionCommandUnitTestsBase<IoT
         var response = await ExecuteCommandAsync(
             "--subscription", "sub-id",
             "--resource-group", "test-rg",
-            "--name", "test-hub");
+            "--hub-name", "test-hub");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -69,7 +69,7 @@ public class IoTHubDeviceListCommandTests : SubscriptionCommandUnitTestsBase<IoT
         var response = await ExecuteCommandAsync(
             "--subscription", "sub-id",
             "--resource-group", "test-rg",
-            "--name", "test-hub",
+            "--hub-name", "test-hub",
             "--max-count", "500");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -97,7 +97,7 @@ public class IoTHubDeviceListCommandTests : SubscriptionCommandUnitTestsBase<IoT
         var response = await ExecuteCommandAsync(
             "--subscription", "sub-id",
             "--resource-group", "test-rg",
-            "--name", "test-hub");
+            "--hub-name", "test-hub");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -111,7 +111,7 @@ public class IoTHubDeviceListCommandTests : SubscriptionCommandUnitTestsBase<IoT
         var response = await ExecuteCommandAsync(
             "--subscription", "sub-id",
             "--resource-group", "test-rg",
-            "--name", "test-hub",
+            "--hub-name", "test-hub",
             "--max-count", "0");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -136,7 +136,7 @@ public class IoTHubDeviceListCommandTests : SubscriptionCommandUnitTestsBase<IoT
         var response = await ExecuteCommandAsync(
             "--subscription", "sub-id",
             "--resource-group", "test-rg",
-            "--name", "test-hub");
+            "--hub-name", "test-hub");
 
         var result = ValidateAndDeserializeResponse(response, IoTHubJsonContext.Default.DeviceListResult);
         Assert.NotNull(result);
@@ -159,7 +159,7 @@ public class IoTHubDeviceListCommandTests : SubscriptionCommandUnitTestsBase<IoT
         var response = await ExecuteCommandAsync(
             "--subscription", "sub-id",
             "--resource-group", "test-rg",
-            "--name", "test-hub");
+            "--hub-name", "test-hub");
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
