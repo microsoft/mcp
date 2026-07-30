@@ -24,7 +24,7 @@ namespace Microsoft.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 /// </summary>
 public class ToolLoaderTelemetryTests : IDisposable
 {
-    private Activity _activity;
+    private readonly Activity _activity;
 
     public ToolLoaderTelemetryTests()
     {
@@ -43,12 +43,11 @@ public class ToolLoaderTelemetryTests : IDisposable
     {
         var toolName = "tool";
         var mcpServer = Substitute.For<McpServer>();
-        var serviceProvider = Substitute.For<IServiceProvider>();
         var commandFactory = Substitute.For<ICommandFactory>();
         var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions(Tool: ["nevercalled"]));
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
-        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(serviceProvider, commandFactory, options, logger));
+        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger));
         var request = CreateToolCallRequest(mcpServer, toolName);
 
         await mcpRuntime.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -65,7 +64,6 @@ public class ToolLoaderTelemetryTests : IDisposable
     {
         var toolName = "tool";
         var mcpServer = Substitute.For<McpServer>();
-        var serviceProvider = Substitute.For<IServiceProvider>();
         var commandFactory = Substitute.For<ICommandFactory>();
         commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand>
         {
@@ -74,7 +72,7 @@ public class ToolLoaderTelemetryTests : IDisposable
         var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
-        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(serviceProvider, commandFactory, options, logger));
+        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader( commandFactory, options, logger));
         var request = CreateToolCallRequest(mcpServer, toolName);
 
         await mcpRuntime.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -94,7 +92,6 @@ public class ToolLoaderTelemetryTests : IDisposable
         var mcpServer = Substitute.For<McpServer>();
         var clientCapabilities = new ClientCapabilities();
         mcpServer.ClientCapabilities.Returns(clientCapabilities);
-        var serviceProvider = Substitute.For<IServiceProvider>();
         var commandFactory = Substitute.For<ICommandFactory>();
         var toolCommand = Substitute.For<IBaseCommand>();
         toolCommand.Id.Returns(toolId);
@@ -106,7 +103,7 @@ public class ToolLoaderTelemetryTests : IDisposable
         var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
-        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(serviceProvider, commandFactory, options, logger));
+        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger));
         var request = CreateToolCallRequest(mcpServer, toolName);
 
         await mcpRuntime.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -125,7 +122,6 @@ public class ToolLoaderTelemetryTests : IDisposable
         var toolArea = "area";
         var toolId = Guid.NewGuid().ToString();
         var mcpServer = Substitute.For<McpServer>();
-        var serviceProvider = Substitute.For<IServiceProvider>();
         var commandFactory = Substitute.For<ICommandFactory>();
         commandFactory.GetServiceArea(Arg.Is(toolName)).Returns(toolArea);
         var toolCommand = Substitute.For<IBaseCommand>();
@@ -141,7 +137,7 @@ public class ToolLoaderTelemetryTests : IDisposable
         var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
-        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(serviceProvider, commandFactory, options, logger));
+        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger));
         var request = CreateToolCallRequest(mcpServer, toolName);
 
         await Assert.ThrowsAsync<Exception>(() => mcpRuntime.CallToolHandler(request, TestContext.Current.CancellationToken).AsTask());
@@ -160,7 +156,6 @@ public class ToolLoaderTelemetryTests : IDisposable
         var toolArea = "area";
         var toolId = Guid.NewGuid().ToString();
         var mcpServer = Substitute.For<McpServer>();
-        var serviceProvider = Substitute.For<IServiceProvider>();
         var commandFactory = Substitute.For<ICommandFactory>();
         commandFactory.GetServiceArea(Arg.Is(toolName)).Returns(toolArea);
 
@@ -177,7 +172,7 @@ public class ToolLoaderTelemetryTests : IDisposable
         var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
-        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(serviceProvider, commandFactory, options, logger));
+        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger));
         var request = CreateToolCallRequest(mcpServer, toolName);
 
         await mcpRuntime.CallToolHandler(request, TestContext.Current.CancellationToken);

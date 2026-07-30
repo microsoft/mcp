@@ -9,7 +9,7 @@ using ModelContextProtocol.Server;
 namespace Microsoft.Mcp.Core.Models.Command;
 
 /// <summary>
-/// Provides context for command execution including service access and response management
+/// Provides context for command execution including response management
 /// </summary>
 public class CommandContext
 {
