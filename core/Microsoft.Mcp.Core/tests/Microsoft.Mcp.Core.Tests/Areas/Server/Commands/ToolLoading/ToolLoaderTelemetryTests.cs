@@ -72,7 +72,7 @@ public class ToolLoaderTelemetryTests : IDisposable
         var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
-        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader( commandFactory, options, logger));
+        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger));
         var request = CreateToolCallRequest(mcpServer, toolName);
 
         await mcpRuntime.CallToolHandler(request, TestContext.Current.CancellationToken);
