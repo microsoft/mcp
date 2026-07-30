@@ -15,7 +15,11 @@ namespace Azure.Mcp.Tools.Advisor.Tests.Services;
 // optional-block branches live — directly against representative payloads.
 public class AdvisorMetadataConversionTests
 {
-    private static JsonElement Parse(string json) => JsonDocument.Parse(json).RootElement;
+    private static JsonElement Parse(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+        return document.RootElement.Clone();
+    }
 
     [Fact]
     public void Convert_FullPayload_MapsAllFieldsIncludingActionsAndRetirement()

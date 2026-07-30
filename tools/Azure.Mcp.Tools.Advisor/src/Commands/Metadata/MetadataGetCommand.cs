@@ -51,6 +51,7 @@ public sealed class MetadataGetCommand(ILogger<MetadataGetCommand> logger, IAdvi
             var metadata = await _advisorService.GetRecommendationMetadataAsync(
                 options.RecommendationTypeId,
                 language,
+                options.Tenant,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

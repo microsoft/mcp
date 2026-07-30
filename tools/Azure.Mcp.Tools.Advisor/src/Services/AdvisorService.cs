@@ -197,22 +197,17 @@ public class AdvisorService(
     public async Task<RecommendationMetadata?> GetRecommendationMetadataAsync(
         string recommendationTypeId,
         string language,
+        string? tenant,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(recommendationTypeId);
         ArgumentException.ThrowIfNullOrWhiteSpace(language);
 
         // The Advisor recommendation-metadata catalog (type 'microsoft.advisor/metadata') is a global,
-        // tenant-wide catalog — it is not subscription-scoped and is identical across all tenants. Run the
-        // ARG query at tenant scope so no subscription is required; ARG evaluates it across all subscriptions
-        // the identity can access.
-        var allTenants = await TenantService.GetTenants(cancellationToken);
-        if (allTenants.Count == 0)
-        {
-            throw new InvalidOperationException("No accessible Azure tenants were found for the signed-in identity.");
-        }
-
-        var tenantResource = allTenants[0];
+        // tenant-wide catalog — it is not subscription-scoped. Run the ARG query at tenant scope using the
+        // tenant supplied by the caller (the agent orchestrator); no subscription is required.
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var tenantResource = armClient.GetTenants().First();
 
         var query =
             "advisorresources " +

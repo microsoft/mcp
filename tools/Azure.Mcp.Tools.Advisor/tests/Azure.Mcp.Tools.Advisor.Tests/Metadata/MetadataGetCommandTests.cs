@@ -41,6 +41,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
         Service.GetRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns((RecommendationMetadata?)null);
 
@@ -92,6 +93,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
         Service.GetRecommendationMetadataAsync(
             RecommendationTypeId,
             "en",
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -120,6 +122,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
         await Service.Received(1).GetRecommendationMetadataAsync(
             RecommendationTypeId,
             "en",
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -129,6 +132,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
         Service.GetRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns((RecommendationMetadata?)null);
 
@@ -137,6 +141,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
         await Service.Received(1).GetRecommendationMetadataAsync(
             RecommendationTypeId,
             "en",
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -146,6 +151,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
         Service.GetRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns((RecommendationMetadata?)null);
 
@@ -154,6 +160,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
         await Service.Received(1).GetRecommendationMetadataAsync(
             RecommendationTypeId,
             "fr",
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -171,6 +178,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
         Service.GetRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns((RecommendationMetadata?)null);
 
@@ -179,6 +187,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
         await Service.Received(1).GetRecommendationMetadataAsync(
             RecommendationTypeId,
             expected,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -197,6 +206,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
         await Service.DidNotReceive().GetRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -206,6 +216,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
         Service.GetRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns((RecommendationMetadata?)null);
 
@@ -226,6 +237,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
         await Service.DidNotReceive().GetRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -235,6 +247,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
         Service.GetRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -251,6 +264,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
         Service.GetRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Not found"));
 
@@ -266,6 +280,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
         Service.GetRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Forbidden"));
 
@@ -281,6 +296,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
         Service.GetRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Unauthorized, "Authentication failed"));
 
@@ -318,6 +334,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
         Service.GetRecommendationMetadataAsync(
             RecommendationTypeId,
             "en",
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
