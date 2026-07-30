@@ -154,7 +154,6 @@ public static partial class ServiceCollectionExtensions
                 );
 
                 toolLoaders.Add(new CommandFactoryToolLoader(
-                    sp,
                     sp.GetRequiredService<ICommandFactory>(),
                     Options.Create(utilityToolLoaderOptions),
                     loggerFactory.CreateLogger<CommandFactoryToolLoader>()
@@ -191,7 +190,6 @@ public static partial class ServiceCollectionExtensions
                     new NamespaceToolLoader(
                         consolidatedCommandFactory,
                         sp.GetRequiredService<IOptions<ServerStartOptions>>(),
-                        sp,
                         loggerFactory.CreateLogger<NamespaceToolLoader>(),
                         false
                     ),
