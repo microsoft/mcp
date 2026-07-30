@@ -1,0 +1,4 @@
+pr: 3184
+changes:
+  - section: "Bugs Fixed"
+    description: "The npm wrapper no longer writes `@azure/mcp-<platform>-<arch>` into the calling project's `package.json` and lockfile when it auto-installs a missing platform package. The install now targets a private directory inside the wrapper package instead of the inherited working directory, and its output no longer goes to stdout, which carries the MCP protocol stream in `server start`."
