@@ -372,11 +372,24 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
             throw new KeyNotFoundException($"Event Hubs namespace '{namespaceName}' not found in resource group '{resourceGroup}'.");
         }
 
+        // Fetch the existing event hub (if any) so an update preserves the fields the caller
+        // didn't ask to change. This is a create-or-update PUT, so any property left unset on
+        // the new EventHubData below is submitted as absent rather than "unchanged" - for
+        // PartitionCount in particular, Azure rejects a PUT to an existing event hub that
+        // omits it with "PartitionCount can only be changed on a Dedicated Event Hub cluster or
+        // Premium namespace", even when no partition-count change was requested.
+        var existingEventHub = await namespaceResource.Value.GetEventHubs().GetIfExistsAsync(eventHubName, cancellationToken);
+        var existingData = existingEventHub?.Value?.Data;
+
         var eventHubData = new EventHubData();
 
         if (partitionCount.HasValue)
         {
             eventHubData.PartitionCount = partitionCount.Value;
+        }
+        else if (existingData?.PartitionCount.HasValue == true)
+        {
+            eventHubData.PartitionCount = existingData.PartitionCount;
         }
 
         if (messageRetentionInHours.HasValue)
@@ -386,6 +399,10 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
                 RetentionTimeInHours = messageRetentionInHours.Value,
                 CleanupPolicy = CleanupPolicyRetentionDescription.Delete
             };
+        }
+        else if (existingData?.RetentionDescription is not null)
+        {
+            eventHubData.RetentionDescription = existingData.RetentionDescription;
         }
 
         if (status is not null)
@@ -405,6 +422,10 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
                     $"Invalid status '{status}'. Valid values: Active, Disabled, Restoring, SendDisabled, ReceiveDisabled, Creating, Deleting, Renaming, Unknown.",
                     nameof(status))
             };
+        }
+        else if (existingData?.Status is not null)
+        {
+            eventHubData.Status = existingData.Status;
         }
 
         var operation = await namespaceResource.Value.GetEventHubs()
