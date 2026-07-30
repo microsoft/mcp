@@ -292,7 +292,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
    | **Environment Variables** | *(leave blank - uses Azure CLI auth)* |
    | **Tools** | `*` |
 
-   > **Alternative Command (using .NET):** `dotnet dnx -p Azure.Mcp server start`
+   > **Alternative Command (using .NET):** `dotnet dnx Azure.Mcp server start`
 
 3. Press **Ctrl+S** (or **Cmd+S** on macOS) to save the server configuration.
 
