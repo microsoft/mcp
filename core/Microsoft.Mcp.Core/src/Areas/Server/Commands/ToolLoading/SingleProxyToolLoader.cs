@@ -31,6 +31,7 @@ public sealed class SingleProxyToolLoader(
     private readonly JsonElement _toolSchema = BuildToolSchema(serverConfiguration!.Value.ShortName);
 
     private string? _cachedRootToolsJson;
+    private IReadOnlyList<Tool>? _cachedRootTools;
     private readonly ConcurrentDictionary<string, string> _cachedToolListsJson = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, IList<McpClientTool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
 
@@ -200,6 +201,7 @@ public sealed class SingleProxyToolLoader(
         }
         var toolsJson = JsonSerializer.Serialize(tools, ServerJsonContext.Default.IEnumerableTool);
         _cachedRootToolsJson = toolsJson;
+        _cachedRootTools = tools;
 
         return toolsJson;
     }
@@ -273,6 +275,20 @@ public sealed class SingleProxyToolLoader(
             var toolName = await GetToolNameFromIntentAsync(request, intent, toolsJson, cancellationToken);
             if (toolName != null)
             {
+                response = await ToolLearnModeAsync(request, intent, toolName, cancellationToken);
+            }
+        }
+        else if (!string.IsNullOrWhiteSpace(intent) && _cachedRootTools != null)
+        {
+            // Sampling unavailable (e.g. 2026-07-28 stateless clients): use deterministic
+            // namespace resolver for stage-1 only. Result feeds into ToolLearnModeAsync —
+            // never directly into CommandModeAsync — so wrong picks are self-correcting.
+            var toolName = DeterministicToolResolution.ResolveNamespace(intent, _cachedRootTools);
+            if (toolName != null)
+            {
+                Activity.Current
+                    ?.SetTag(TagName.ResolutionMethod, "deterministic")
+                    .SetTag(TagName.ToolArea, toolName);
                 response = await ToolLearnModeAsync(request, intent, toolName, cancellationToken);
             }
         }
@@ -578,6 +594,7 @@ public sealed class SingleProxyToolLoader(
         _cachedAllToolLists.Clear();
         _cachedToolListsJson.Clear();
         _cachedRootToolsJson = null;
+        _cachedRootTools = null;
 
         await ValueTask.CompletedTask;
     }

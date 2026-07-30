@@ -646,4 +646,77 @@ public class SingleProxyToolLoaderTests
     }
 
     #endregion
+
+    #region Deterministic Resolver Tests
+
+    /// <summary>
+    /// Creates a <see cref="SingleProxyToolLoader"/> backed by a mock discovery strategy that
+    /// exposes the supplied named servers. Each server uses a loopback client returning an empty
+    /// tool list — sufficient to reach <c>ToolLearnModeAsync</c> and inspect its response text.
+    /// </summary>
+    private static SingleProxyToolLoader CreateToolLoaderWithNamespaces(params (string id, string description)[] servers)
+    {
+        var builder = new MockMcpDiscoveryStrategyBuilder();
+        foreach (var (id, description) in servers)
+            builder.AddServer(id, id, description);
+
+        var discoveryStrategy = builder.Build();
+        var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
+        var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        return new SingleProxyToolLoader(discoveryStrategy, logger, options, CreateServerConfigurationOptions());
+    }
+
+    [Fact]
+    public async Task CallToolHandler_IntentMatchesNamespace_RoutesDeterministicallyToNamespaceLearnMode()
+    {
+        // Arrange — no sampling capability on the mock server (ClientCapabilities is null by default)
+        var toolLoader = CreateToolLoaderWithNamespaces(
+            ("storage",    "Azure Storage blobs containers accounts"),
+            ("compute",    "Azure Compute virtual machines disks"),
+            ("keyvault",   "Azure Key Vault secrets keys certificates"));
+
+        var arguments = new Dictionary<string, JsonElement>
+        {
+            ["intent"] = JsonDocument.Parse("\"list my storage accounts\"").RootElement
+        };
+        var request = CreateCallToolRequest("azure", arguments);
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert — deterministic resolver should route to "storage"; response contains the
+        // namespace-specific learn text, NOT the root "available list of tools" text.
+        Assert.NotNull(result);
+        Assert.Null(result.IsError);
+        var text = result.Content.OfType<TextContentBlock>().First().Text;
+        Assert.Contains("'storage'", text, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Here are the available list of tools", text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_IntentBelowConfidenceThreshold_ReturnsRootLearnMode()
+    {
+        // Arrange — intent has no recognisable signal for any namespace
+        var toolLoader = CreateToolLoaderWithNamespaces(
+            ("storage",    "Azure Storage blobs containers accounts"),
+            ("compute",    "Azure Compute virtual machines disks"),
+            ("keyvault",   "Azure Key Vault secrets keys certificates"));
+
+        var arguments = new Dictionary<string, JsonElement>
+        {
+            ["intent"] = JsonDocument.Parse("\"xyzzy foobar quux123\"").RootElement
+        };
+        var request = CreateCallToolRequest("azure", arguments);
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert — resolver confidence is below threshold; falls back to root learn-mode.
+        Assert.NotNull(result);
+        Assert.Null(result.IsError);
+        var text = result.Content.OfType<TextContentBlock>().First().Text;
+        Assert.Contains("Here are the available list of tools", text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    #endregion
 }
