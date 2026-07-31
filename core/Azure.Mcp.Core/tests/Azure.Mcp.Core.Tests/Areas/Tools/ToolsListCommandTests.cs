@@ -25,22 +25,16 @@ public class ToolsListCommandTests
 
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ToolsListCommand> _logger;
-    private readonly CommandContext _context;
     private readonly ToolsListCommand _command;
     private readonly Command _commandDefinition;
 
     public ToolsListCommandTests()
     {
-        var collection = new ServiceCollection();
-        collection.AddLogging();
+        _serviceProvider = Substitute.For<IServiceProvider>();
+        _serviceProvider.GetService(typeof(ICommandFactory)).Returns(CommandFactoryHelpers.CreateCommandFactory());
 
-        var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
-        collection.AddSingleton(commandFactory);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _context = new(_serviceProvider);
         _logger = Substitute.For<ILogger<ToolsListCommand>>();
-        _command = new(_logger);
+        _command = new(_serviceProvider, _logger);
         _commandDefinition = _command.GetCommand();
     }
 
@@ -177,15 +171,18 @@ public class ToolsListCommandTests
     /// and returns appropriate error response.
     /// </summary>
     [Fact]
-    public async Task ExecuteAsync_WithNullServiceProvider_HandlesGracefully()
+    public async Task ExecuteAsync_WithNullCommandFactory_HandlesGracefully()
     {
-        // Arrange & Act
-        var response = await ExecuteAsync(new CommandContext(null!));
+        // Arrange
+        _serviceProvider.GetService(typeof(ICommandFactory)).Returns(null);
+
+        // Act
+        var response = await ExecuteAsync();
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("cannot be null", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(HttpStatusCode.UnprocessableContent, response.Status);
+        Assert.Contains("No service for type", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -196,12 +193,11 @@ public class ToolsListCommandTests
     public async Task ExecuteAsync_WithCorruptedCommandFactory_HandlesGracefully()
     {
         // Arrange
-        var faultyServiceProvider = Substitute.For<IServiceProvider>();
-        faultyServiceProvider.GetService(typeof(ICommandFactory))
+        _serviceProvider.GetService(typeof(ICommandFactory))
             .Returns(x => throw new InvalidOperationException("Corrupted command factory"));
 
         // Act
-        var response = await ExecuteAsync(new CommandContext(faultyServiceProvider));
+        var response = await ExecuteAsync();
 
         // Assert
         Assert.NotNull(response);
@@ -357,17 +353,11 @@ public class ToolsListCommandTests
             RootCommandGroupName = "azmcp"
         });
 
-        // Create a NEW service collection just for the empty command factory
-        var finalCollection = new ServiceCollection();
-        finalCollection.AddLogging();
-
         var emptyCommandFactory = new CommandFactory(tempServiceProvider, emptyAreaSetups, telemetryService, configurationOptions, logger);
-        finalCollection.AddSingleton<ICommandFactory>(emptyCommandFactory);
-
-        var emptyServiceProvider = finalCollection.BuildServiceProvider();
+        _serviceProvider.GetService(typeof(ICommandFactory)).Returns(emptyCommandFactory);
 
         // Act
-        var response = await ExecuteAsync(new CommandContext(emptyServiceProvider));
+        var response = await ExecuteAsync();
 
         // Assert
         var result = DeserializeCommandsResults(response);
@@ -719,11 +709,6 @@ public class ToolsListCommandTests
         Assert.Contains(result.Commands, cmd => cmd.Name.Equals("keyvault", StringComparison.OrdinalIgnoreCase));
     }
 
-    private async Task<CommandResponse> ExecuteAsync(params string[] args) => await ExecuteAsync(_context, args);
-
-    private async Task<CommandResponse> ExecuteAsync(CommandContext context, params string[] args)
-    {
-        var parseResult = _commandDefinition.Parse(args);
-        return await _command.ExecuteAsync(context, _command.BindOptions(parseResult), TestContext.Current.CancellationToken);
-    }
+    private async Task<CommandResponse> ExecuteAsync(params string[] args) =>
+        await _command.ExecuteAsync(new(), _command.BindOptions(_commandDefinition.Parse(args)), TestContext.Current.CancellationToken);
 }

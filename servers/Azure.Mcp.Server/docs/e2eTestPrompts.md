@@ -161,6 +161,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> |
 | azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription |
 | azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> |
+| azurebackup_governance_find-unprotected | Find unprotected SQL databases and file shares discovered by backup vaults in my subscription |
+| azurebackup_governance_find-unprotected | Show all resources and sub-resources that need backup protection in resource group <resource_group> |
 | azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> |
 | azurebackup_governance_immutability | Set immutability to Enabled on vault <vault_name> in resource group <resource_group> |
 | azurebackup_governance_soft-delete | Configure soft delete on vault <vault_name> in resource group <resource_group> |

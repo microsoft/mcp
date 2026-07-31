@@ -80,8 +80,10 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     /// Resource types that Azure Backup can protect.
     /// RSV: IaasVM, SQL-in-IaasVM (workload on VM), SAP HANA (workload on VM), SAP ASE (workload on VM), Azure FileShare.
     /// DPP: Disk, Blob, AKS, ElasticSAN, ADLS, PostgreSQL Flexible, CosmosDB.
-    /// Note: SQL/SAP HANA/SAP ASE are in-guest workloads on VMs, so VMs covers them.
+    /// Note: SQL/SAP HANA/SAP ASE are in-guest workloads on VMs discovered via RSV
+    /// protectable-items enrichment (Step 4), not via ARM resource enumeration.
     /// Blob and ADLS share the storageAccounts ARM type.
+    /// ElasticSAN backup DatasourceId is at the volume-group level.
     /// </summary>
     private static readonly string[] s_protectableResourceTypes =
     [
@@ -90,7 +92,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         "Microsoft.DBforPostgreSQL/flexibleServers",
         "Microsoft.ContainerService/managedClusters",
         "Microsoft.Compute/disks",
-        "Microsoft.ElasticSan/elasticSans",
+        "Microsoft.ElasticSan/elasticSans/volumeGroups",
         "Microsoft.DocumentDB/databaseAccounts"
     ];
     public async Task<VaultCreateResult> CreateVaultAsync(
@@ -690,7 +692,88 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
                     resource.Data.ResourceType.ToString(),
                     resource.Id?.ResourceGroupName,
                     resource.Data.Location.ToString(),
-                    resource.Data.Tags?.ToDictionary(t => t.Key, t => t.Value)));
+                    resource.Data.Tags?.ToDictionary(t => t.Key, t => t.Value),
+                    DiscoverySource: "arm"));
+            }
+        }
+
+        // Step 4: Enrich with RSV protectable items (sub-resources like SQL DBs, file shares)
+        // Skip vault enrichment when the caller specified a resource-type filter because
+        // vault-discovered item types (e.g. "AzureFileShare") don't match ARM resource
+        // types (e.g. "Microsoft.Storage/storageAccounts").
+        if (!string.IsNullOrEmpty(resourceTypeFilter))
+        {
+            return unprotected;
+        }
+
+        // Limit concurrent vault queries to avoid ARM throttling (429) in subscriptions with many vaults
+        const int maxConcurrency = 5;
+        var throttle = new SemaphoreSlim(maxConcurrency);
+
+        var enrichmentTasks = rsvVaults
+            .Where(v => v.Name is not null && v.ResourceGroup is not null)
+            .Where(v => string.IsNullOrEmpty(resourceGroup) ||
+                string.Equals(v.ResourceGroup, resourceGroup, StringComparisons.ResourceGroup))
+            .Select(async v =>
+            {
+                await throttle.WaitAsync(cancellationToken);
+                try
+                {
+                    return (Vault: v, Items: await rsvOps.ListDiscoveredProtectableItemsAsync(
+                        v.Name!, v.ResourceGroup!, subscription, tenant, retryPolicy, cancellationToken));
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Failed to list protectable items for RSV vault '{VaultName}' in resource group '{ResourceGroup}'. Skipping vault enrichment.", v.Name, v.ResourceGroup);
+                    return (Vault: v, Items: new List<ProtectableItemInfo>());
+                }
+                finally
+                {
+                    throttle.Release();
+                }
+            });
+
+        var enrichmentResults = await Task.WhenAll(enrichmentTasks);
+        var seenVaultItemIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var (vault, items) in enrichmentResults)
+        {
+            foreach (var item in items)
+            {
+                // Skip items that are already protected or in protecting state
+                if (string.Equals(item.ProtectionState, "Protected", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(item.ProtectionState, "Protecting", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                // Skip if this item's ID is already in the protected set
+                if (!string.IsNullOrEmpty(item.Id) && protectedIds.Contains(item.Id))
+                {
+                    continue;
+                }
+
+                // Skip duplicate vault-discovered items (same item registered in multiple vaults)
+                if (!string.IsNullOrEmpty(item.Id) && !seenVaultItemIds.Add(item.Id))
+                {
+                    continue;
+                }
+
+                unprotected.Add(new UnprotectedResourceInfo(
+                    item.Id,
+                    item.FriendlyName ?? item.Name,
+                    item.ProtectableItemType,
+                    vault.ResourceGroup,
+                    null,
+                    null,
+                    ParentResourceId: item.ServerName ?? item.ParentName,
+                    DiscoverySource: "vault",
+                    VaultName: vault.Name,
+                    ProtectionState: item.ProtectionState));
             }
         }
 

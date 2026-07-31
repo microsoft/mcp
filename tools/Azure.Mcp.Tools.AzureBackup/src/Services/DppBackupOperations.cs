@@ -435,8 +435,9 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             // policies and matching by name to work around this SDK limitation.
             var policies = await ListPoliciesAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
             return policies.FirstOrDefault(p => p.Name == policyName)
-                ?? throw new InvalidOperationException(
-                    $"Policy '{policyName}' not found or cannot be parsed by the Azure SDK due to an unsupported retention/duration field.");
+                ?? throw new KeyNotFoundException(
+                    $"Policy '{policyName}' not found in vault '{vaultName}'. " +
+                    $"If the policy exists, it may contain a retention/duration format not yet supported by the Azure SDK.");
         }
     }
 
