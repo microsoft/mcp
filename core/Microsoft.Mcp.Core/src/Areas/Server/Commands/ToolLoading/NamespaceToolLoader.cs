@@ -52,8 +52,9 @@ public sealed class NamespaceToolLoader(
 
     internal readonly Dictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
     private ListToolsResult? _cachedListToolsResult;
+    private bool StructuredOutputEnabled => _options.Value.StructuredOutputMode != null;
 
-    private const string ToolCallProxySchema = """
+    private const string ToolCallProxyInputSchema = """
         {
           "type": "object",
           "properties": {
@@ -72,7 +73,7 @@ public sealed class NamespaceToolLoader(
 
     private static readonly HashSet<string> MetaKeys = new(StringComparer.OrdinalIgnoreCase) { "intent", "command", "learn", "parameters" };
 
-    private static readonly JsonElement ToolSchema = JsonSerializer.Deserialize("""
+    private static readonly JsonElement ToolInputSchema = JsonSerializer.Deserialize("""
         {
             "type": "object",
             "properties": {
@@ -138,7 +139,8 @@ public sealed class NamespaceToolLoader(
                     To invoke a command, set "command" and wrap its args in "parameters".
                     Set "learn=true" to discover available sub commands.
                     """,
-                InputSchema = ToolSchema,
+                InputSchema = ToolInputSchema,
+                OutputSchema = StructuredOutputEnabled ? AggregateStructuredOutput.NamespaceOutputSchema : null,
                 Annotations = new ToolAnnotations()
                 {
                     Title = group.Title ?? namespaceName,
@@ -155,6 +157,29 @@ public sealed class NamespaceToolLoader(
         // Cache the result
         _cachedListToolsResult = allToolsResponse;
         return ValueTask.FromResult(allToolsResponse);
+    }
+
+    private CallToolResult CreateNamespaceCallResult(
+        string contentText,
+        Func<JsonElement> structuredContentFactory,
+        bool isError)
+    {
+        var useStructuredContent = !isError && StructuredOutputEnabled;
+        return new CallToolResult
+        {
+            Content =
+            [
+                new TextContentBlock
+                {
+                    Text = useStructuredContent
+                        && StructuredOutputMode.Compact == _options.Value.StructuredOutputMode
+                        ? StructuredOutputHelper.CompactContentMessage
+                        : contentText
+                }
+            ],
+            StructuredContent = useStructuredContent ? structuredContentFactory() : null,
+            IsError = isError
+        };
     }
 
     private static bool AllToolsInGroupMatch(Predicate<ToolMetadata> predicate, CommandGroup group)
@@ -186,8 +211,10 @@ public sealed class NamespaceToolLoader(
             throw new ArgumentNullException(nameof(request.Params.Name), "Tool name cannot be null or empty.");
         }
 
-        string tool = request.Params.Name;
-        var args = request.Params?.Arguments;
+        var requestParams = request.Params;
+        string tool = requestParams.Name;
+        var args = requestParams.Arguments;
+
         string? intent = null;
         string? command = null;
         bool learn = false;
@@ -255,7 +282,13 @@ public sealed class NamespaceToolLoader(
                 activity?.SetTag(TagName.ToolName, command);
 
                 var toolParams = GetParametersFromArgs(args);
-                return await InvokeChildToolAsync(request, intent ?? "", tool, command, toolParams, cancellationToken);
+                return await InvokeChildToolAsync(
+                    request,
+                    intent ?? "",
+                    tool,
+                    command,
+                    toolParams,
+                    cancellationToken);
             }
         }
         catch (KeyNotFoundException ex)
@@ -278,20 +311,15 @@ public sealed class NamespaceToolLoader(
             };
         }
 
-        return new CallToolResult
-        {
-            Content =
-                [
-                    new TextContentBlock {
-                    Text = """
-                        The "command" parameters are required when not learning
-                        Run again with the "learn" argument to get a list of available tools and their parameters.
-                        To learn about a specific tool, use the "tool" argument with the name of the tool.
-                    """
-                }
-                ],
-            IsError = false
-        };
+        const string helpMessage = """
+            The "command" parameters are required when not learning
+            Run again with the "learn" argument to get a list of available tools and their parameters.
+            To learn about a specific tool, use the "tool" argument with the name of the tool.
+            """;
+        return CreateNamespaceCallResult(
+            helpMessage,
+            () => AggregateStructuredOutput.CreateMessage(helpMessage),
+            isError: false);
     }
 
     private async Task<CallToolResult> InvokeChildToolAsync(
@@ -485,11 +513,11 @@ public sealed class NamespaceToolLoader(
                 return McpHelper.InjectToolIdMetadata(finalResponse, cmd.Id);
             }
 
-            return McpHelper.InjectToolIdMetadata(new CallToolResult
-            {
-                Content = [new TextContentBlock { Text = jsonResponse }],
-                IsError = isError
-            }, cmd.Id);
+            var result = CreateNamespaceCallResult(
+                jsonResponse,
+                () => AggregateStructuredOutput.CreateToolResult(command, jsonResponse),
+                isError);
+            return McpHelper.InjectToolIdMetadata(result, cmd.Id);
         }
         catch (Exception ex)
         {
@@ -507,32 +535,33 @@ public sealed class NamespaceToolLoader(
                             Run again with the "learn=true" to get a list of available commands and their parameters.
                             """
                     }
-                ]
+                ],
+                IsError = true
             };
         }
     }
 
-    private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string namespaceName, CancellationToken cancellationToken)
+    private async Task<CallToolResult> InvokeToolLearn(
+        RequestContext<CallToolRequestParams> request,
+        string? intent,
+        string namespaceName,
+        CancellationToken cancellationToken)
     {
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
-        var toolsJson = GetChildToolListJson(request, namespaceName);
+        var tools = GetChildToolList(request, namespaceName);
+        var toolsJson = JsonSerializer.Serialize(tools, ServerJsonContext.Default.IEnumerableTool);
 
-        var learnResponse = new CallToolResult
-        {
-            Content =
-            [
-                new TextContentBlock {
-                    Text = $"""
-                        Here are the available command and their parameters for '{namespaceName}' tool.
-                        If you do not find a suitable command, run again with the "learn=true" to get a list of available commands and their parameters.
-                        Next, identify the command you want to execute and run again with the "command" and "parameters" arguments.
+        var contentText = $"""
+            Here are the available command and their parameters for '{namespaceName}' tool.
+            If you do not find a suitable command, run again with the "learn=true" to get a list of available commands and their parameters.
+            Next, identify the command you want to execute and run again with the "command" and "parameters" arguments.
 
-                        {toolsJson}
-                        """
-                }
-            ],
-            IsError = false
-        };
+            {toolsJson}
+            """;
+        var learnResponse = CreateNamespaceCallResult(
+            contentText,
+            () => AggregateStructuredOutput.CreateToolList(tools),
+            isError: false);
         var response = learnResponse;
         if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
         {
@@ -540,7 +569,13 @@ public sealed class NamespaceToolLoader(
             (string? commandName, IDictionary<string, JsonElement> parameters) = await GetCommandAndParametersFromIntentAsync(request, intent, namespaceName, availableTools, cancellationToken);
             if (commandName != null)
             {
-                response = await InvokeChildToolAsync(request, intent, namespaceName, commandName, parameters, cancellationToken);
+                response = await InvokeChildToolAsync(
+                    request,
+                    intent,
+                    namespaceName,
+                    commandName,
+                    parameters,
+                    cancellationToken);
             }
         }
         return response;
@@ -586,12 +621,6 @@ public sealed class NamespaceToolLoader(
         _cachedToolLists[namespaceName] = list;
 
         return list;
-    }
-
-    private string GetChildToolListJson(RequestContext<CallToolRequestParams> request, string namespaceName)
-    {
-        var listTools = GetChildToolList(request, namespaceName);
-        return JsonSerializer.Serialize(listTools, ServerJsonContext.Default.IEnumerableTool);
     }
 
     private string GetChildToolJson(RequestContext<CallToolRequestParams> request, string namespaceName, string commandName)
@@ -732,7 +761,7 @@ public sealed class NamespaceToolLoader(
                             - If no command matches, return JSON schema with "Unknown" tool name.
 
                             Result Schema:
-                            {ToolCallProxySchema}
+                            {ToolCallProxyInputSchema}
 
                             Intent:
                             {intent ?? "No specific intent provided"}

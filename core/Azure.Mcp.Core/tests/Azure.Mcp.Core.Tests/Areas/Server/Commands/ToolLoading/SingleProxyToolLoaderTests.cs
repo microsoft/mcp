@@ -120,7 +120,39 @@ public class SingleProxyToolLoaderTests
         Assert.NotEmpty(azureTool.Description!);
         // Verify the tool has proper structure
         Assert.True(azureTool.InputSchema.ValueKind != JsonValueKind.Undefined);
+        Assert.False(azureTool.OutputSchema.HasValue);
         Assert.NotNull(azureTool.Annotations);
+    }
+
+    [Theory]
+    [InlineData(StructuredOutputMode.Duplicated)]
+    [InlineData(StructuredOutputMode.Compact)]
+    public async Task ListToolsHandler_StructuredOutputModeEmitsSingleAggregateSchema(
+        StructuredOutputMode mode)
+    {
+        var (toolLoader, mockDiscoveryStrategy) = CreateToolLoader(
+            useRealDiscovery: false,
+            new ToolLoaderOptions(StructuredOutputMode: mode));
+        mockDiscoveryStrategy.DiscoverServersAsync(TestContext.Current.CancellationToken)
+            .Returns(Task.FromResult(Enumerable.Empty<IMcpServerProvider>()));
+
+        var result = await toolLoader.ListToolsHandler(
+            CreateListToolsRequest(),
+            TestContext.Current.CancellationToken);
+
+        var tool = Assert.Single(result.Tools);
+        Assert.True(tool.OutputSchema.HasValue);
+        var variants = tool.OutputSchema.Value.GetProperty("oneOf");
+        Assert.Equal(3, variants.GetArrayLength());
+        var required = variants[1].GetProperty("required")
+            .EnumerateArray()
+            .Select(element => element.GetString());
+        Assert.Contains("tool", required);
+        Assert.Contains("command", required);
+        Assert.Contains("result", required);
+        Assert.Equal(
+            "object",
+            variants[1].GetProperty("properties").GetProperty("result").GetProperty("type").GetString());
     }
 
     [Fact]
@@ -170,6 +202,32 @@ public class SingleProxyToolLoaderTests
         var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(textContent);
         Assert.NotEmpty(textContent.Text);
+    }
+
+    [Theory]
+    [InlineData(StructuredOutputMode.Duplicated, false)]
+    [InlineData(StructuredOutputMode.Compact, true)]
+    public async Task CallToolHandler_LearnReturnsAggregateToolList(
+        StructuredOutputMode mode,
+        bool expectsCompactContent)
+    {
+        var toolLoader = CreateToolLoaderWithMockClient(
+            new ToolLoaderOptions(StructuredOutputMode: mode),
+            new MockMcpClientBuilder());
+        var request = CreateCallToolRequest("azure", new Dictionary<string, JsonElement>
+        {
+            ["learn"] = JsonDocument.Parse("true").RootElement,
+            ["intent"] = JsonDocument.Parse("\"List available tools\"").RootElement
+        });
+
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError ?? false);
+        Assert.True(result.StructuredContent.HasValue);
+        Assert.Equal("tool-list", result.StructuredContent.Value.GetProperty("kind").GetString());
+        Assert.Equal("storage", result.StructuredContent.Value.GetProperty("tools")[0].GetProperty("name").GetString());
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        Assert.Equal(expectsCompactContent, text == StructuredOutputHelper.CompactContentMessage);
     }
 
     [Fact]
@@ -264,6 +322,90 @@ public class SingleProxyToolLoaderTests
 
         var textContent = result.Content.OfType<TextContentBlock>().First();
         Assert.Contains("tool\" and \"command\" parameters are required", textContent.Text);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_CompactGuidanceReturnsAggregateMessage()
+    {
+        var (toolLoader, _) = CreateToolLoader(
+            useRealDiscovery: false,
+            new ToolLoaderOptions(StructuredOutputMode: StructuredOutputMode.Compact));
+
+        var result = await toolLoader.CallToolHandler(
+            CreateCallToolRequest(),
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError ?? false);
+        Assert.Equal(
+            StructuredOutputHelper.CompactContentMessage,
+            Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+        Assert.True(result.StructuredContent.HasValue);
+        Assert.Equal("message", result.StructuredContent.Value.GetProperty("kind").GetString());
+        Assert.Contains(
+            "required",
+            result.StructuredContent.Value.GetProperty("message").GetString(),
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData(StructuredOutputMode.Duplicated, false)]
+    [InlineData(StructuredOutputMode.Compact, true)]
+    public async Task CallToolHandler_ChildResultUsesSingleAggregateEnvelope(
+        StructuredOutputMode mode,
+        bool expectsCompactContent)
+    {
+        using var document = JsonDocument.Parse("""{"value":42}""");
+        var downstreamResult = new CallToolResult
+        {
+            Content = [new TextContentBlock { Text = "Listed accounts" }],
+            StructuredContent = document.RootElement.Clone(),
+            IsError = false
+        };
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("account_list", "List storage accounts", () => downstreamResult);
+        var toolLoader = CreateToolLoaderWithMockClient(
+            new ToolLoaderOptions(StructuredOutputMode: mode),
+            clientBuilder);
+
+        var result = await toolLoader.CallToolHandler(
+            CreateCallToolRequestWithToolAndCommand("storage", "account_list"),
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError ?? false);
+        Assert.True(result.StructuredContent.HasValue);
+        var structuredContent = result.StructuredContent.Value;
+        Assert.Equal("tool-result", structuredContent.GetProperty("kind").GetString());
+        Assert.Equal("storage", structuredContent.GetProperty("tool").GetString());
+        Assert.Equal("account_list", structuredContent.GetProperty("command").GetString());
+        var proxiedResult = structuredContent.GetProperty("result");
+        Assert.Equal(
+            "Listed accounts",
+            proxiedResult.GetProperty("content")[0].GetProperty("text").GetString());
+        Assert.Equal(
+            42,
+            proxiedResult.GetProperty("structuredContent").GetProperty("value").GetInt32());
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        Assert.Equal(expectsCompactContent, text == StructuredOutputHelper.CompactContentMessage);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_CompactChildErrorOmitsStructuredContent()
+    {
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddErrorTool("account_list", "List storage accounts", "Invalid request.");
+        var toolLoader = CreateToolLoaderWithMockClient(
+            new ToolLoaderOptions(StructuredOutputMode: StructuredOutputMode.Compact),
+            clientBuilder);
+
+        var result = await toolLoader.CallToolHandler(
+            CreateCallToolRequestWithToolAndCommand("storage", "account_list"),
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.False(result.StructuredContent.HasValue);
+        Assert.Equal(
+            "Invalid request.",
+            Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
     }
 
     [Fact]
@@ -643,6 +785,7 @@ public class SingleProxyToolLoaderTests
         Assert.False(result.IsError ?? false);
         var textContent = result.Content.OfType<TextContentBlock>().First();
         Assert.Equal("Created account", textContent.Text);
+        Assert.False(result.StructuredContent.HasValue);
     }
 
     #endregion

@@ -55,7 +55,8 @@ public static partial class ServiceCollectionExtensions
             ReadOnly = serviceStartOptions.ReadOnly ?? false,
             DangerouslyDisableElicitation = serviceStartOptions.DangerouslyDisableElicitation,
             Tool = serviceStartOptions.Tool,
-            IsHttpMode = serviceStartOptions.IsHttpMode
+            IsHttpMode = serviceStartOptions.IsHttpMode,
+            StructuredOutputMode = serviceStartOptions.StructuredOutputMode
         };
 
         if (serviceStartOptions.Mode == ModeTypes.NamespaceProxy)
@@ -150,7 +151,8 @@ public static partial class ServiceCollectionExtensions
                     ReadOnly: defaultToolLoaderOptions.ReadOnly,
                     DangerouslyDisableElicitation: defaultToolLoaderOptions.DangerouslyDisableElicitation,
                     Tool: defaultToolLoaderOptions.Tool,
-                    IsHttpMode: defaultToolLoaderOptions.IsHttpMode
+                    IsHttpMode: defaultToolLoaderOptions.IsHttpMode,
+                    StructuredOutputMode: defaultToolLoaderOptions.StructuredOutputMode
                 );
 
                 toolLoaders.Add(new CommandFactoryToolLoader(

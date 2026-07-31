@@ -128,6 +128,26 @@ public class ServiceStartCommandTests
     }
 
     [Theory]
+    [InlineData("duplicated", StructuredOutputMode.Duplicated)]
+    [InlineData("compact", StructuredOutputMode.Compact)]
+    public void StructuredOutputModeOption_ParsesCaseInsensitiveValues(
+        string value,
+        StructuredOutputMode expected)
+    {
+        var options = BindOptions(new[] { "--structured-output-mode", value });
+
+        Assert.Equal(expected, options.StructuredOutputMode);
+    }
+
+    [Fact]
+    public void StructuredOutputModeOption_DefaultsToDisabled()
+    {
+        var options = BindOptions(new string[] { });
+
+        Assert.Null(options.StructuredOutputMode);
+    }
+
+    [Theory]
     [InlineData("azmcp_storage_account_get")]
     [InlineData("azmcp_keyvault_secret_get")]
     [InlineData("azmcp_storage_account_get", "azmcp_keyvault_secret_get")]
@@ -209,6 +229,7 @@ public class ServiceStartCommandTests
             "--namespace", "storage",
             "--namespace", "keyvault",
             "--mode", "all",
+            "--structured-output-mode", "compact",
             "--read-only",
             "--debug",
             "--dangerously-disable-elicitation",
@@ -218,6 +239,7 @@ public class ServiceStartCommandTests
         Assert.Equal(TransportTypes.StdIo, options.Transport);
         Assert.Equal(new[] { "storage", "keyvault" }, options.Namespace);
         Assert.Equal("all", options.Mode);
+        Assert.Equal(StructuredOutputMode.Compact, options.StructuredOutputMode);
         Assert.True(options.ReadOnly);
         Assert.True(options.Debug);
         Assert.False(options.DangerouslyDisableHttpIncomingAuth);
