@@ -8,7 +8,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Tests;
-using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
@@ -20,7 +19,6 @@ namespace Azure.Mcp.Core.Tests.Services.Azure.Authentication;
 /// Tests verify that authentication challenges return correct WWW-Authenticate headers
 /// with OAuth 2.0 protected resource metadata.
 /// </summary>
-[Trait("TestType", "Live")]
 public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsyncLifetime
 {
     protected ITestOutputHelper _output = output;
@@ -31,6 +29,7 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
 
     public async ValueTask InitializeAsync()
     {
+        Assert.SkipWhen(!TestExtensions.IsLiveTestMode(), "Skipping test in non-live mode");
         Assert.SkipWhen(TestExtensions.IsRunningInNonInteractiveEnvironment(), TestExtensions.RunningInNonInteractiveEnvironment);
 
         LiveTestSettings? settings = null;
@@ -112,7 +111,6 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
         }
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task UnauthenticatedRequest_Returns401WithResourceMetadata()
     {
@@ -148,7 +146,6 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
         _output.WriteLine("✓ Unauthenticated request returned correct WWW-Authenticate header");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task InvalidTokenRequest_Returns401WithErrorDetails()
     {
@@ -183,7 +180,6 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
         _output.WriteLine($"✓ Invalid token request returned error details in WWW-Authenticate header");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task ExpiredTokenRequest_Returns401WithErrorDetails()
     {
@@ -221,7 +217,6 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
         _output.WriteLine($"✓ Expired token request returned error details in WWW-Authenticate header");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task OAuthProtectedResourceMetadataEndpoint_ReturnsValidMetadata()
     {
@@ -246,7 +241,6 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
         _output.WriteLine("✓ OAuth protected resource metadata endpoint returned valid metadata");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task MultipleUnauthenticatedRequests_ConsistentWwwAuthenticateHeader()
     {
@@ -279,7 +273,6 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
         _output.WriteLine("✓ WWW-Authenticate header is consistent across multiple requests");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task WwwAuthenticateHeader_ContainsCorrectRealm()
     {
@@ -301,7 +294,6 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
         _output.WriteLine($"✓ WWW-Authenticate header contains correct realm: {expectedRealm}");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task WwwAuthenticateHeader_ResourceMetadataPointsToCorrectEndpoint()
     {
@@ -323,7 +315,6 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
         _output.WriteLine($"✓ resource_metadata points to correct endpoint: {expectedMetadataUrl}");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task Client_CanDiscoverAndUseMetadataForAuthentication()
     {
@@ -352,7 +343,6 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
         _output.WriteLine($"  Scope: {scope}");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task MetadataDocument_ContainsAllRequiredFields()
     {
@@ -371,7 +361,6 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
         Assert.All(metadata.AuthorizationServers, server => Assert.Matches(@"https://login\.microsoftonline\.com/.+/v2\.0", server));
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task WwwAuthenticateMetadataUrl_MatchesActualEndpoint()
     {
@@ -391,7 +380,6 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
         Assert.Equal(_serverUrl, metadata?.Resource);
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task MetadataAuthorizationServer_ContainsCorrectTenantId()
     {
@@ -405,7 +393,6 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
         Assert.Contains($"https://login.microsoftonline.com/{tenantId}/v2.0", json);
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task MetadataScopes_ContainsCorrectClientId()
     {
