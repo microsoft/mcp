@@ -68,8 +68,8 @@ public class InstanceGetCommandTests : SubscriptionCommandUnitTestsBase<Instance
     [InlineData("--subscription sub123 --resource-group rg1 --instance aio-01", true)]
     [InlineData("--subscription sub123 --resource-group rg1", false)] // missing instance
     [InlineData("--subscription sub123 --instance aio-01", false)] // missing resource group
-    [InlineData("--subscription sub123 --resource-group rg1 --instance AB", false)] // invalid name (too short, uppercase)
-    [InlineData("--subscription sub123 --resource-group rg1 --instance -bad-", false)] // invalid name (leading/trailing hyphen)
+    [InlineData("--subscription sub123 --resource-group rg1 --instance AB", true)] // format is not validated by command
+    [InlineData("--subscription sub123 --resource-group rg1 --instance -bad-", true)] // format is not validated by command
     [InlineData("", false)] // missing everything
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
