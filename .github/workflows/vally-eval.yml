@@ -88,7 +88,7 @@ jobs:
       - name: Run vally
         run: |
           $isDebug = '${{ github.event.inputs.logLevel }}' -eq 'true'
-          $numberOfRuns = ${{ github.event.inputs.numberOfRuns }}
+          $numberOfRuns = [int]'${{ inputs.numberOfRuns || 1 }}'
           $buildInfo = '${{ github.workspace }}/.work/build_info.json'
 
           $baseVallyDirectory = '${{ github.workspace }}/.work/vally'

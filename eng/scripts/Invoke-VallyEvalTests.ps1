@@ -27,6 +27,9 @@
 .PARAMETER OutputPath
     Optional path for Vally output. Defaults to `<repo-root>/.work/vally/vally-results`.
 
+.PARAMETER NumberOfRuns
+    The number of times to run each eval spec. Defaults to 1.
+
 .PARAMETER IsDebug
     When specified, adds `--verbose` to the `vally eval` invocation for
     additional diagnostic output.
