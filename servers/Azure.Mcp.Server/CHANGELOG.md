@@ -6,7 +6,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- Removed IServiceProvider from CommandContext and downstream locations where no longer used. [[#3185](https://github.com/microsoft/mcp/pull/3185)]
+- Removed `IServiceProvider` from `CommandContext` and downstream locations where no longer used. [[#3185](https://github.com/microsoft/mcp/pull/3185)]
 
 ## 3.0.0-beta.30 (2026-07-28)
 
