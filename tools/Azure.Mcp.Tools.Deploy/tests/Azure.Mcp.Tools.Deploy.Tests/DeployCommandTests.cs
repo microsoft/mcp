@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Xunit;
@@ -127,35 +125,12 @@ public class DeployCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
 
     private async Task<string?> CallToolMessageAsync(string command, Dictionary<string, object?> parameters)
     {
-        // Output will be streamed, so if we're not in debug mode, hold the debug output for logging in the failure case
-        Action<string> writeOutput = Settings.DebugOutput
-            ? s => Output.WriteLine(s)
-            : s => FailureOutput.AppendLine(s);
+        var result = await CallToolAsync(
+            "deploy",
+            command,
+            parameters,
+            resultProcessor: elem => elem.TryGetProperty("message", out var messageProp) ? messageProp : null);
 
-        writeOutput($"request: {JsonSerializer.Serialize(new { command, parameters })}");
-
-        var result = await Client.CallToolAsync(command, parameters);
-
-        var content = McpTestUtilities.GetFirstText(result.Content);
-        if (string.IsNullOrWhiteSpace(content))
-        {
-            Output.WriteLine($"response: {JsonSerializer.Serialize(result)}");
-            throw new Exception("No JSON content found in the response.");
-        }
-
-        var root = JsonSerializer.Deserialize<JsonElement>(content!);
-        if (root.ValueKind != JsonValueKind.Object)
-        {
-            Output.WriteLine($"response: {JsonSerializer.Serialize(result)}");
-            throw new Exception("Invalid JSON response.");
-        }
-
-        // Remove the `args` property and log the content
-        var trimmed = root.Deserialize<JsonObject>()!;
-        trimmed.Remove("args");
-        writeOutput($"response content: {trimmed.ToJsonString(new JsonSerializerOptions { WriteIndented = true })}");
-
-        return root.TryGetProperty("message", out var property) ? property.GetString() : null;
+        return result?.GetString() ?? null;
     }
-
 }

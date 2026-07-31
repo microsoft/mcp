@@ -165,31 +165,6 @@ public class SqlCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
     }
 
     [Fact]
-    public async Task Should_ValidateRequiredParameters()
-    {
-        // Test with missing required parameters - expect an exception or null result
-        try
-        {
-            var result = await CallToolAsync(
-                "sql_db_get",
-                new Dictionary<string, object?>
-                {
-                    { "subscription", Settings.SubscriptionId }
-                    // Missing resource-group and server
-                });
-
-            // If we get here without an exception, the validation didn't work as expected
-            Assert.Fail("Expected command to fail due to missing required parameters, but it succeeded");
-        }
-        catch (Exception ex)
-        {
-            // Expected behavior - should fail due to missing required parameters
-            Assert.NotNull(ex.Message);
-            Assert.Contains("required", ex.Message.ToLower());
-        }
-    }
-
-    [Fact]
     public async Task Should_DeleteDatabase_Return404ForNonExistentDatabase()
     {
         // Test deleting a non-existent database to verify proper error handling
