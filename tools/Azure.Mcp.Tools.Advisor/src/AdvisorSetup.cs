@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Advisor.Commands.Metadata;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,7 +21,7 @@ public class AdvisorSetup : IAreaSetup
         services.AddSingleton<RecommendationListCommand>();
         services.AddSingleton<RecommendationSummaryCommand>();
         services.AddSingleton<RecommendationApplyCommand>();
-        services.AddSingleton<RecommendationTypeListCommand>();
+        services.AddSingleton<RecommendationMetadataListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -32,14 +33,16 @@ public class AdvisorSetup : IAreaSetup
         var recommendation = new CommandGroup("recommendation", "Advisor recommendations - Commands for listing, summarizing, and applying Advisor recommendations in your Azure subscription.");
         advisor.AddSubGroup(recommendation);
 
-        var recommendationType = new CommandGroup("recommendation-type", "Advisor recommendation type metadata - Commands for listing the catalog of Advisor recommendation types, categories, and impact levels available in the tenant. Useful for new or empty environments without generated recommendations.");
-        advisor.AddSubGroup(recommendationType);
+        var metadata = new CommandGroup(
+            "metadata",
+            "Discover the global Azure Advisor recommendation metadata catalog (formerly recommendation types) from Azure Resource Graph, including localized guidance, impact, categories, supported resource types, actions, and service-retirement details. Use it in greenfield environments with no generated recommendations, or filter by resource type during brownfield onboarding to identify applicable recommendation types. List results are ordered High, Medium, then Low impact.");
+        advisor.AddSubGroup(metadata);
 
         // Register Advisor commands
         recommendation.AddCommand<RecommendationListCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationSummaryCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationApplyCommand>(serviceProvider);
-        recommendationType.AddCommand<RecommendationTypeListCommand>(serviceProvider);
+        metadata.AddCommand<RecommendationMetadataListCommand>(serviceProvider);
 
         return advisor;
     }

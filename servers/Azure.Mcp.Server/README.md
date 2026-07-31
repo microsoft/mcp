@@ -934,7 +934,7 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 
 * "List my Advisor recommendations"
 * "Apply Advisor recommendations to IaaC files"
-* "List all Advisor recommendation types from catalog"
+* "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 
 ### 🔎 Azure AI Search
 

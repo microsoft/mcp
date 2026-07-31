@@ -355,13 +355,16 @@ azmcp advisor recommendation summary --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation apply --resource <resource>
 
-# List the catalog of Advisor recommendation types — every recommendation Advisor can generate, with its category,
-# impact, target resource type, and sub-category. Results sorted by impact (High → Medium → Low). Use for greenfield
-# (empty environments) or brownfield (onboarding a new resource type into an existing subscription) scenarios.
+# List the global Azure Advisor recommendation metadata catalog (formerly recommendation types) from Azure Resource
+# Graph. Use it in greenfield environments with no generated recommendations, or filter by supported resource type
+# during brownfield onboarding. Returns localized type IDs, categories, impact, priority, descriptions, actions,
+# scope, source query, and service-retirement details. Results are ordered High, Medium, Low.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation-type list [--resource-type <resource-type>] \
-                                       [--impact <High|Medium|Low>] \
-                                       [--category <category>]
+azmcp advisor metadata list [--language <language>] \
+                            [--resource-type <resource-type>] \
+                            [--impact <High|Medium|Low>] \
+                            [--category <category>] \
+                            [--tenant <tenant>]
 ```
 
 ### Azure AI Search Operations
