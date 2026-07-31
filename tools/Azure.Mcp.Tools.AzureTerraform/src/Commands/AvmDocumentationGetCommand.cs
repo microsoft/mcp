@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Options;
 using Azure.Mcp.Tools.AzureTerraform.Services;
@@ -17,6 +16,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     Title = "Get AVM Module Documentation",
     Description = """
         Retrieves the documentation (README.md) for a specific version of an Azure Verified Module (AVM).
+        Works for both resource modules (avm-res-*) and pattern modules (avm-ptn-*).
         Returns the full module documentation including usage examples, input variables,
         output values, and resource descriptions. Use --module-name and --module-version
         to specify the module and version (e.g., --module-name avm-res-storage-storageaccount --module-version 0.4.0).
@@ -29,56 +29,26 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     LocalRequired = false)]
 public sealed class AvmDocumentationGetCommand(
     ILogger<AvmDocumentationGetCommand> logger,
-    IAvmDocsService avmDocsService) : BaseCommand<AvmDocumentationOptions>
+    IAvmDocsService avmDocsService) : BaseCommand<AvmDocumentationOptions, AvmDocumentationResult>
 {
     private readonly ILogger<AvmDocumentationGetCommand> _logger = logger;
     private readonly IAvmDocsService _avmDocsService = avmDocsService;
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureTerraformOptionDefinitions.AvmModuleName.AsRequired());
-        command.Options.Add(AzureTerraformOptionDefinitions.AvmModuleVersion.AsRequired());
-    }
-
-    protected override AvmDocumentationOptions BindOptions(ParseResult parseResult)
-    {
-        return new AvmDocumentationOptions
-        {
-            ModuleName = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.AvmModuleName.Name),
-            ModuleVersion = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.AvmModuleVersion.Name)
-        };
-    }
-
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        AvmDocumentationOptions options,
         CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var documentation = await _avmDocsService.GetDocumentationAsync(
-                options.ModuleName!,
-                options.ModuleVersion!,
+                options.ModuleName,
+                options.ModuleVersion,
                 cancellationToken).ConfigureAwait(false);
 
-            var result = new Models.AvmDocumentationResult
-            {
-                ModuleName = options.ModuleName!,
-                ModuleVersion = options.ModuleVersion!,
-                Documentation = documentation
-            };
-
-            context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AvmDocumentationResult);
-            context.Response.Message = string.Empty;
+            context.Response.Results = ResponseResult.Create(
+                new(options.ModuleName, options.ModuleVersion, documentation),
+                AzureTerraformJsonContext.Default.AvmDocumentationResult);
 
             context.Activity
                 ?.AddTag(AzureTerraformTelemetryTags.ToolArea, "avm")

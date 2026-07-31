@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.FirewallRule;
 using Azure.Mcp.Tools.Sql.Services;
@@ -16,8 +18,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
     Name = "list",
     Title = "List SQL Server Firewall Rules",
     Description = """
-        Gets a list of firewall rules for a SQL server. This command retrieves all
-        firewall rules configured for the specified SQL server, including their IP address ranges
+        Gets/retrieves a list of all firewall rules configured for a SQL server, including their IP address ranges
         and rule names. Returns an array of firewall rule objects with their properties.
         """,
     Destructive = false,
@@ -26,25 +27,19 @@ namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class FirewallRuleListCommand(ISqlService sqlService, ILogger<FirewallRuleListCommand> logger)
-    : BaseSqlCommand<FirewallRuleListOptions>(logger)
+public sealed class FirewallRuleListCommand(ISqlService sqlService, ILogger<FirewallRuleListCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<FirewallRuleListOptions, FirewallRuleListCommand.FirewallRuleListResult>(subscriptionResolver)
 {
     private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<FirewallRuleListCommand> _logger = logger;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FirewallRuleListOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var firewallRules = await _sqlService.ListFirewallRulesAsync(
-                options.Server!,
-                options.ResourceGroup!,
+                options.Server,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.RetryPolicy,
                 cancellationToken);
@@ -72,5 +67,5 @@ public sealed class FirewallRuleListCommand(ISqlService sqlService, ILogger<Fire
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record FirewallRuleListResult(List<SqlServerFirewallRule> FirewallRules);
+    public sealed record FirewallRuleListResult(List<SqlServerFirewallRule> FirewallRules);
 }

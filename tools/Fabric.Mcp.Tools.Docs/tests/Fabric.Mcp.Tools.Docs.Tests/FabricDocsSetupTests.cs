@@ -4,6 +4,8 @@
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.Docs.Tests;
 

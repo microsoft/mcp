@@ -2,28 +2,27 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Server;
 using Azure.Mcp.Tools.MySql.Services;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.MySql.Tests.Server;
 
-public class ServerParamGetCommandTests : CommandUnitTestsBase<ServerParamGetCommand, IMySqlService>
+public class ServerParamGetCommandTests : SubscriptionCommandUnitTestsBase<ServerParamGetCommand, IMySqlService>
 {
     [Fact]
     public async Task ExecuteAsync_ReturnsParameter_WhenSuccessful()
     {
         var expectedValue = "ON";
-        Service.GetServerParameterAsync("sub123", "rg1", "user1", "test-server", "max_connections", Arg.Any<CancellationToken>()).Returns(expectedValue);
+        Service.GetServerParameterAsync("sub123", "rg1", "test-server", "max_connections", Arg.Any<CancellationToken>()).Returns(expectedValue);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1",
             "--server", "test-server",
             "--param", "max_connections");
 
@@ -35,13 +34,12 @@ public class ServerParamGetCommandTests : CommandUnitTestsBase<ServerParamGetCom
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenServiceThrows()
     {
-        Service.GetServerParameterAsync("sub123", "rg1", "user1", "test-server", "invalid_param", Arg.Any<CancellationToken>())
+        Service.GetServerParameterAsync("sub123", "rg1", "test-server", "invalid_param", Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Parameter 'invalid_param' not found."));
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1",
             "--server", "test-server",
             "--param", "invalid_param");
 

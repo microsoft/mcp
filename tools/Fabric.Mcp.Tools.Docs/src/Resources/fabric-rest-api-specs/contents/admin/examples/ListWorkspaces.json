@@ -10,7 +10,17 @@
                         "type": "Workspace",
                         "state": "Active",
                         "capacityId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e84",
-                        "domainId": "039bd896-b39c-4540-93e3-e9926de135f9"
+                        "domainId": "039bd896-b39c-4540-93e3-e9926de135f9",
+                        "tags": [
+                            {
+                                "id": "b3f2c8e9-4d8e-4a7c-9a32-f8c1b2e4d6af",
+                                "displayName": "Finance"
+                            },
+                            {
+                                "id": "6f1a8d3b-92c4-4f67-8c2d-1e5a9b7f4a23",
+                                "displayName": "Production"
+                            }
+                        ]
                     }
                 ],
                 "continuationUri": "https://api.fabric.microsoft.com/v1/admin/workspaces?continuationToken='LDEsMTAwMDAwLDA%3D'",

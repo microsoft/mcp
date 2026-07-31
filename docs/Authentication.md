@@ -65,8 +65,8 @@ Regardless of which credential is used, the authenticated identity must have the
 
 When the Azure MCP Server is hosted remotely (for example, on Azure Container Apps) using HTTP transport, authentication operates in two layers:
 
-1. **Inbound authentication** — the client authenticates to the Azure MCP Server
-2. **Outbound authentication** — the Azure MCP Server authenticates to downstream Azure services
+1. **Inbound authentication** — the client authenticates to the Azure MCP Server (protocol-hardened in MCP 2026-07-28)
+2. **Outbound authentication** — the Azure MCP Server authenticates to downstream Azure services and external MCP servers (see [External MCP Server OAuth Compliance](#external-mcp-server-oauth-compliance-mcp-2026-07-28) for registry server requirements under MCP 2026-07-28)
 
 ```mermaid
 sequenceDiagram
@@ -81,6 +81,9 @@ sequenceDiagram
     AzureMCPServer->>Entra: 4. Obtain outbound token
     AzureMCPServer->>Azure: 5. Call Azure service with outbound token
 ```
+
+> [!NOTE]
+> **MCP 2026-07-28 changes:** Inbound authentication validates JWT issuer, audience, and scope via Microsoft.Identity.Web. For registry-backed external MCP servers, HTTPS and non-empty scope entries are enforced by the server; issuer/audience validation of the outbound Azure Identity token is performed by the downstream resource. See [External MCP Server OAuth Compliance](#external-mcp-server-oauth-compliance-mcp-2026-07-28) for details.
 
 > [!TIP]
 > Want to get started quickly? The [`azd` templates](#deploy-with-azd-templates) below automate the entire setup illustrated above.
@@ -146,3 +149,74 @@ Each `azd` template provisions:
 - Entra ID app registration(s) with the correct scopes and roles
 - Managed identity with appropriate RBAC assignments
 - Azure Container App configured to run the Azure MCP Server with all required environment variables and server flags
+
+---
+
+## External MCP Server OAuth Compliance (MCP 2026-07-28)
+
+When the Azure MCP Server acts as an MCP client to external, OAuth-protected MCP servers (configured via registry), it must comply with MCP 2026-07-28 authorization hardening rules.
+
+### OAuth Configuration Requirements
+
+External MCP servers configured in the registry with `OAuthScopes` must meet these requirements:
+
+| Requirement | Details |
+|---|---|
+| **HTTPS endpoint** | All OAuth-protected registry servers must use HTTPS (`https://` scheme) — enforced by the server |
+| **Non-empty scopes** | All scopes in `OAuthScopes` must be non-empty strings — enforced by the server |
+| **Issuer validation** | A deployment requirement: the server's issuer identity should be resolvable and validated by its OAuth provider. Azure Identity bearer tokens carry issuer/audience claims that the downstream resource validates; the Azure MCP registry client does not perform additional client-side issuer binding |
+| **Application type** | A deployment requirement: registry servers should be registered as the correct OAuth application type (confidential vs public client) with their OAuth provider |
+| **Scope registration** | A deployment requirement: all scopes in `OAuthScopes` should be registered with the OAuth provider |
+| **Protected resource metadata** | Recommended: Publish `.well-known/oauth-protected-resource` metadata per OAuth Protected Resources spec |
+
+### Known Limitation: MCP Protocol Resource Parameter
+
+**Issue:** MCP 2026-07-28 protocol specifies that token endpoint requests include a `resource` parameter (per [RFC 8707](https://www.rfc-editor.org/rfc/rfc8707), Resource Indicators for OAuth 2.0), but some OAuth providers (e.g., Entra ID) do not support this parameter.
+
+**Impact:** Access tokens are currently obtained **without** the resource parameter. This may result in overly-broad token scope.
+
+**Workaround:** Configure your OAuth provider to accept token requests from Azure MCP Server even without the `resource` parameter. This is a known limitation documented in [modelcontextprotocol/csharp-sdk issue #939](https://github.com/modelcontextprotocol/csharp-sdk/issues/939).
+
+**Recommended mitigation strategies:**
+1. Use narrow OAuth scopes that limit token usage to specific resources
+2. Implement rate limiting or request signing to protect token endpoints
+3. Monitor token usage patterns for unexpected requests
+4. Follow OAuth provider guidance for handling requests without the resource parameter
+
+### Issuer Binding and Validation
+
+When registering an external MCP server with OAuth scopes, ensure that:
+- The server's URL matches its registered issuer identity
+- The issuer is resolvable and publishes OpenID Connect metadata
+- Your OAuth provider can validate the issuer claim in received tokens
+
+Example registry entry for an OAuth-protected MCP server:
+
+```json
+{
+  "servers": {
+    "external-secure-server": {
+      "url": "https://my-mcp-server.example.com",
+      "title": "External MCP Server",
+      "OAuthScopes": ["mcp:invoke"]
+    }
+  }
+}
+```
+
+In this example:
+- URL and issuer match (`my-mcp-server.example.com`)
+- OAuth scopes are explicit and minimal
+- The server is registered in your OAuth provider as a resource/API
+
+### Testing OAuth-Protected External Servers
+
+To verify compliance:
+
+1. **Verify issuer resolution:** Ensure the server's `.well-known/openid-configuration` is reachable
+2. **Test token acquisition:** Confirm tokens can be obtained with your configured scopes
+3. **Test token usage:** Verify that MCP requests succeed with acquired tokens
+4. **Test scope validation:** Confirm that requests with insufficient scopes are rejected
+5. **Test issuer mismatch:** Verify rejection when token issuer doesn't match server identity
+
+---

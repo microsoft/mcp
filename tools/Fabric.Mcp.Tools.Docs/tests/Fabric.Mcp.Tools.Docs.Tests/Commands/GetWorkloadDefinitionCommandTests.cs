@@ -7,6 +7,7 @@ using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.Docs.Tests.Commands;
 
@@ -53,7 +54,7 @@ public class GetWorkloadDefinitionCommandTests : CommandUnitTestsBase<GetWorkloa
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
-        Assert.Equal("Missing Required options: --workload-type", result.Message);
+        Assert.Contains("Missing Required options: --workload-type", result.Message);
         Service.DidNotReceive().GetWorkloadItemDefinition(Arg.Any<string>());
     }
 

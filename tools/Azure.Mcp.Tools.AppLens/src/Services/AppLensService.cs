@@ -5,6 +5,7 @@ using System.Collections.Immutable;
 using System.IdentityModel.Tokens.Jwt;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Channels;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
@@ -16,6 +17,7 @@ using Azure.ResourceManager.ResourceGraph.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.AppLens.Services;
@@ -107,7 +109,7 @@ public class AppLensService(
         if (!string.IsNullOrEmpty(resourceGroup))
         {
             var rgFiltered = filteredResults
-                .Where(r => r.ResourceGroup.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase))
+                .Where(r => r.ResourceGroup.Equals(resourceGroup, StringComparisons.ResourceGroup))
                 .ToImmutableArray();
 
             if (rgFiltered.Length == 0)

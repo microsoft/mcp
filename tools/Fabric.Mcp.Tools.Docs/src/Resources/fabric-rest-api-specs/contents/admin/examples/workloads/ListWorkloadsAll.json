@@ -1,0 +1,40 @@
+{
+  "parameters": {},
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "id": "Fabric.TestWorkload",
+            "name": "Test Workload",
+            "publisher": "Contoso",
+            "isAssignable": true,
+            "isAssignedToTenant": true,
+            "assignedCapacitiesCount": 2,
+            "assignedWorkspacesCount": 0
+          },
+          {
+            "id": "Fabric.TestWorkloadV2",
+            "name": "Awesome Workload",
+            "publisher": "Contoso",
+            "isAssignable": true,
+            "isAssignedToTenant": false,
+            "assignedCapacitiesCount": 0,
+            "assignedWorkspacesCount": 0
+          },
+          {
+            "id": "Fabric.SampleWorkload",
+            "name": "Sample Workload",
+            "publisher": "SampleOrganization",
+            "isAssignable": true,
+            "isAssignedToTenant": false,
+            "assignedCapacitiesCount": 0,
+            "assignedWorkspacesCount": 0
+          }
+        ],
+        "continuationUri": "https://api.fabric.microsoft.com/v1/admin/workloads?continuationToken=MSwxMDAwMCww",
+        "continuationToken": "MSwxMDAwMCww"
+      }
+    }
+  }
+}

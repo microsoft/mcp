@@ -20,7 +20,13 @@
                 "oneLakeEndpoints": {
                     "blobEndpoint": "https://eastus-onelake.blob.fabric.microsoft.com",
                     "dfsEndpoint": "https://eastus-onelake.dfs.fabric.microsoft.com"
-                }
+                },
+                "tags": [
+                    {
+                        "id": "b3f2c8e9-4d8e-4a7c-9a32-f8c1b2e4d6af",
+                        "displayName": "Finance"
+                    }
+                ]
             }
         }
     }

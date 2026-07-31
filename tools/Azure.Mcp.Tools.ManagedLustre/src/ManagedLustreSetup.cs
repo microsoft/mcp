@@ -5,6 +5,8 @@ using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.Sku;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.SubnetSize;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;

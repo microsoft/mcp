@@ -13,6 +13,9 @@ using Azure.ResourceManager.Compute.Models;
 using Azure.ResourceManager.Network;
 using Azure.ResourceManager.Network.Models;
 using Azure.ResourceManager.Resources;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
@@ -21,10 +24,12 @@ namespace Azure.Mcp.Tools.Compute.Services;
 public class ComputeService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ILogger<ComputeService> logger)
+    ILogger<ComputeService> logger,
+    IOptions<ServerStartOptions> serviceStartOptions)
     : BaseAzureResourceService(subscriptionService, tenantService), IComputeService
 {
     private readonly ILogger<ComputeService> _logger = logger;
+    private readonly IOptions<ServerStartOptions> _serviceStartOptions = serviceStartOptions;
 
     // Default VM size (D-series v5, approximately 2 vCPU and 8 GB RAM)
     private const string DefaultVmSize = "Standard_D2s_v5";
@@ -183,10 +188,7 @@ public class ComputeService(
             // Only add SSH key if explicitly provided
             if (!string.IsNullOrEmpty(sshPublicKey))
             {
-                // Check if it's a file path
-                var resolvedSshKey = File.Exists(sshPublicKey)
-                    ? File.ReadAllText(sshPublicKey).Trim()
-                    : sshPublicKey;
+                var resolvedSshKey = ResolveSshPublicKey(sshPublicKey);
 
                 vmData.OSProfile.LinuxConfiguration.SshPublicKeys.Add(new()
                 {
@@ -846,9 +848,7 @@ public class ComputeService(
 
             if (!string.IsNullOrEmpty(sshPublicKey))
             {
-                var resolvedSshKey = File.Exists(sshPublicKey)
-                    ? File.ReadAllText(sshPublicKey).Trim()
-                    : sshPublicKey;
+                var resolvedSshKey = ResolveSshPublicKey(sshPublicKey);
 
                 vmssData.VirtualMachineProfile.OSProfile.LinuxConfiguration.SshPublicKeys.Add(new()
                 {
@@ -969,14 +969,22 @@ public class ComputeService(
 
         if (tags != null)
         {
-            // Parse tags in key=value,key2=value2 format
-            var tagPairs = tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            foreach (var pair in tagPairs)
+            if (string.IsNullOrEmpty(tags))
             {
-                var keyValue = pair.Split('=', 2);
-                if (keyValue.Length == 2)
+                // Empty string explicitly clears all existing tags
+                patch.Tags.Clear();
+            }
+            else
+            {
+                // Parse tags in key=value,key2=value2 format
+                var tagPairs = tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var pair in tagPairs)
                 {
-                    patch.Tags[keyValue[0].Trim()] = keyValue[1].Trim();
+                    var keyValue = pair.Split('=', 2);
+                    if (keyValue.Length == 2)
+                    {
+                        patch.Tags[keyValue[0].Trim()] = keyValue[1].Trim();
+                    }
                 }
             }
             needsUpdate = true;
@@ -1047,9 +1055,11 @@ public class ComputeService(
 
         if (bootDiagnostics != null)
         {
-            var enabled = bootDiagnostics.Equals("true", StringComparison.OrdinalIgnoreCase) ||
-                          bootDiagnostics.Equals("enable", StringComparison.OrdinalIgnoreCase);
-            patch.BootDiagnostics = new() { Enabled = enabled };
+            patch.BootDiagnostics = new()
+            {
+                Enabled = bootDiagnostics.Equals("true", StringComparison.OrdinalIgnoreCase) ||
+                    bootDiagnostics.Equals("enable", StringComparison.OrdinalIgnoreCase)
+            };
             needsUpdate = true;
         }
 
@@ -1061,14 +1071,22 @@ public class ComputeService(
 
         if (tags != null)
         {
-            // Parse tags in key=value,key2=value2 format
-            var tagPairs = tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            foreach (var pair in tagPairs)
+            if (string.IsNullOrEmpty(tags))
             {
-                var keyValue = pair.Split('=', 2);
-                if (keyValue.Length == 2)
+                // Empty string explicitly clears all existing tags
+                patch.Tags.Clear();
+            }
+            else
+            {
+                // Parse tags in key=value,key2=value2 format
+                var tagPairs = tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var pair in tagPairs)
                 {
-                    patch.Tags[keyValue[0].Trim()] = keyValue[1].Trim();
+                    var keyValue = pair.Split('=', 2);
+                    if (keyValue.Length == 2)
+                    {
+                        patch.Tags[keyValue[0].Trim()] = keyValue[1].Trim();
+                    }
                 }
             }
             needsUpdate = true;
@@ -1537,7 +1555,7 @@ public class ComputeService(
         string? hyperVGeneration = null,
         int? maxShares = null,
         string? networkAccessPolicy = null,
-        string? enableBursting = null,
+        bool? enableBursting = null,
         string? tags = null,
         string? diskEncryptionSet = null,
         string? encryptionType = null,
@@ -1566,13 +1584,13 @@ public class ComputeService(
 
         var diskData = new ManagedDiskData(new(resolvedLocation))
         {
-            CreationData = creationData
+            CreationData = creationData,
+            DiskSizeGB = sizeGb,
+            MaxShares = maxShares,
+            BurstingEnabled = enableBursting,
+            DiskIopsReadWrite = diskIopsReadWrite,
+            DiskMBpsReadWrite = diskMbpsReadWrite
         };
-
-        if (sizeGb.HasValue)
-        {
-            diskData.DiskSizeGB = sizeGb.Value;
-        }
 
         if (!string.IsNullOrEmpty(sku))
         {
@@ -1605,19 +1623,9 @@ public class ComputeService(
             diskData.HyperVGeneration = new(hyperVGeneration);
         }
 
-        if (maxShares.HasValue)
-        {
-            diskData.MaxShares = maxShares.Value;
-        }
-
         if (!string.IsNullOrEmpty(networkAccessPolicy))
         {
             diskData.NetworkAccessPolicy = new(networkAccessPolicy);
-        }
-
-        if (!string.IsNullOrEmpty(enableBursting))
-        {
-            diskData.BurstingEnabled = enableBursting.Equals("true", StringComparison.OrdinalIgnoreCase);
         }
 
         if (tags is not null)
@@ -1660,16 +1668,6 @@ public class ComputeService(
             diskData.Tier = tier;
         }
 
-        if (diskIopsReadWrite.HasValue)
-        {
-            diskData.DiskIopsReadWrite = diskIopsReadWrite.Value;
-        }
-
-        if (diskMbpsReadWrite.HasValue)
-        {
-            diskData.DiskMBpsReadWrite = diskMbpsReadWrite.Value;
-        }
-
         if (!string.IsNullOrEmpty(securityType))
         {
             diskData.SecurityProfile = new()
@@ -1697,7 +1695,7 @@ public class ComputeService(
         long? diskMbpsReadWrite = null,
         int? maxShares = null,
         string? networkAccessPolicy = null,
-        string? enableBursting = null,
+        bool? enableBursting = null,
         string? tags = null,
         string? diskEncryptionSet = null,
         string? encryptionType = null,
@@ -1713,41 +1711,23 @@ public class ComputeService(
         var rgResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
         var diskResource = await rgResource.Value.GetManagedDisks().GetAsync(diskName, cancellationToken);
 
-        var diskPatch = new ManagedDiskPatch();
-
-        if (sizeGb.HasValue)
+        var diskPatch = new ManagedDiskPatch
         {
-            diskPatch.DiskSizeGB = sizeGb.Value;
-        }
+            DiskSizeGB = sizeGb,
+            DiskIopsReadWrite = diskIopsReadWrite,
+            DiskMBpsReadWrite = diskMbpsReadWrite,
+            MaxShares = maxShares,
+            BurstingEnabled = enableBursting
+        };
 
         if (!string.IsNullOrEmpty(sku))
         {
             diskPatch.Sku = new() { Name = new(sku) };
         }
 
-        if (diskIopsReadWrite.HasValue)
-        {
-            diskPatch.DiskIopsReadWrite = diskIopsReadWrite.Value;
-        }
-
-        if (diskMbpsReadWrite.HasValue)
-        {
-            diskPatch.DiskMBpsReadWrite = diskMbpsReadWrite.Value;
-        }
-
-        if (maxShares.HasValue)
-        {
-            diskPatch.MaxShares = maxShares.Value;
-        }
-
         if (!string.IsNullOrEmpty(networkAccessPolicy))
         {
             diskPatch.NetworkAccessPolicy = new(networkAccessPolicy);
-        }
-
-        if (!string.IsNullOrEmpty(enableBursting))
-        {
-            diskPatch.BurstingEnabled = enableBursting.Equals("true", StringComparison.OrdinalIgnoreCase);
         }
 
         if (tags is not null)
@@ -1887,5 +1867,58 @@ public class ComputeService(
             // Return false to indicate the disk was not found (idempotent delete)
             return false;
         }
+    }
+
+    internal static readonly string[] s_validSshKeyPrefixes =
+    [
+        "ssh-rsa ",
+        "ssh-ed25519 ",
+        "ssh-dss ",
+        "ecdsa-sha2-nistp256 ",
+        "ecdsa-sha2-nistp384 ",
+        "ecdsa-sha2-nistp521 ",
+        "sk-ssh-ed25519@openssh.com ",
+        "sk-ecdsa-sha2-nistp256@openssh.com ",
+    ];
+
+    private string ResolveSshPublicKey(string sshPublicKey)
+    {
+        if (!_serviceStartOptions.Value.IsHttpMode)
+        {
+            // In stdio mode, allow resolving file paths for convenience
+            if (File.Exists(sshPublicKey))
+            {
+                return File.ReadAllText(sshPublicKey).Trim();
+            }
+        }
+        else
+        {
+            // In HTTP mode, file path resolution is not allowed for security
+            if (!IsValidSshPublicKeyContent(sshPublicKey))
+            {
+                var message = LooksLikeFilePath(sshPublicKey)
+                    ? "The provided SSH public key appears to be a file path. " +
+                      "In remote HTTP mode, file paths cannot be resolved on the server. " +
+                      "Please provide the SSH public key content directly (e.g., 'ssh-rsa AAAA...', 'ssh-ed25519 AAAA...')."
+                    : "The provided SSH public key does not appear to be valid key content. " +
+                      "Please provide the SSH public key content directly (e.g., 'ssh-rsa AAAA...', 'ssh-ed25519 AAAA...').";
+
+                throw new ArgumentException(message);
+            }
+        }
+
+        return sshPublicKey.Trim();
+    }
+
+    internal static bool LooksLikeFilePath(string value)
+    {
+        var trimmed = value.Trim();
+        return trimmed.Contains('/') || trimmed.Contains('\\') || trimmed.EndsWith(".pub", StringComparison.OrdinalIgnoreCase);
+    }
+
+    internal static bool IsValidSshPublicKeyContent(string value)
+    {
+        var trimmed = value.Trim();
+        return Array.Exists(s_validSshKeyPrefixes, prefix => trimmed.StartsWith(prefix, StringComparison.Ordinal));
     }
 }

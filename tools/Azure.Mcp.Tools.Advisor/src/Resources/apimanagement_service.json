@@ -1,0 +1,172 @@
+{
+  "rules": [
+    {
+      "ruleId": "Enable_Multi_Region_Deployment_For_APIM",
+      "description": "Azure API Management supports multi-region deployment, which enables API publishers to add regional API gateways to an existing API Management instance. Multi-region deployment helps reduce request latency perceived by geographically distributed API consumers and improves service availability.",
+      "query": "where sku.name == \"Premium\" | where isnull(properties['additionalLocations'])",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "sku.name",
+            "equals": "Premium"
+          },
+          {
+            "field": "properties.additionalLocations",
+            "exists": false
+          }
+        ]
+      },
+      "fix": "Azure API Management supports multi-region deployment, which enables API publishers to add regional API gateways to an existing API Management instance. Multi-region deployment helps reduce request latency perceived by geographically distributed API consumers and improves service availability.",
+      "ARM_Fix": {
+        "type": "resourceAction",
+        "action": "configure",
+        "targetService": "Microsoft.ApiManagement/service",
+        "details": "Add one or more region objects to properties.additionalLocations in the APIM resource definition to enable multi-region gateway deployment."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_api_management",
+        "allOf": [
+          {
+            "attribute": "sku_name",
+            "startsWith": "Premium"
+          },
+          {
+            "attribute": "additional_location",
+            "exists": false
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "configure",
+        "targetResource": "azurerm_api_management",
+        "details": "Add one or more additional_location blocks to the azurerm_api_management resource definition to enable multi-region gateway deployment."
+      }
+    },
+    {
+      "ruleId": "Migrate_APIM_From_stv1_To_stv2",
+      "description": "stv1 instances were deprecated on August 31, 2024. If not migrated to stv2 by then, auto-migration will occur. In some cases, due to technical limitations, services may be shut down in March 2025.",
+      "query": "extend plat_version = properties.platformVersion | extend skuName = sku.name | where tolower(plat_version) == tolower('stv1')",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "properties.platformVersion",
+            "equals": "stv1"
+          }
+        ]
+      },
+      "fix": "stv1 instances were deprecated on August 31, 2024. If not migrated to stv2 by then, auto-migration will occur. In some cases, due to technical limitations, services may be shut down in March 2025.",
+      "ARM_Fix": {
+        "type": "resourceAction",
+        "action": "migrate",
+        "targetService": "Microsoft.ApiManagement/service",
+        "details": "Follow the Azure-guided stv1-to-stv2 migration process. The platform version cannot be changed via a direct property update; use the Azure Portal migration wizard or the dedicated migration REST API."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_api_management",
+        "note": "Platform version (stv1 vs stv2) is not exposed as a Terraform attribute. Use the Azure Portal or ARM API to verify the platform version before applying this remediation.",
+        "allOf": [
+          {
+            "attribute": "id",
+            "exists": true
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "migrate",
+        "targetResource": "azurerm_api_management",
+        "details": "Platform version cannot be changed via Terraform attributes. Follow the Azure-guided stv1-to-stv2 migration process using the Azure Portal migration wizard or dedicated migration REST API. After migration completes, the Terraform state will reflect the updated resource without code changes."
+      }
+    },
+    {
+      "ruleId": "Upgrade_TLS_To_1_2_For_APIM",
+      "description": "Support for TLS 1.0 and 1.1 on API Management is retiring. Update the TLS policy to the latest version.",
+      "query": "where (properties.customProperties.['Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10'] =~ 'true' or properties.customProperties.['Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11'] =~ 'true' or properties['customProperties']['Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.TLS10'] =~ 'true' or properties['customProperties']['Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11'] =~ 'true')",
+      "ARM_Query": {
+        "anyOf": [
+          {
+            "field": "properties.customProperties['Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10']",
+            "equals": "true"
+          },
+          {
+            "field": "properties.customProperties['Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11']",
+            "equals": "true"
+          },
+          {
+            "field": "properties.customProperties['Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10']",
+            "equals": "true"
+          },
+          {
+            "field": "properties.customProperties['Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11']",
+            "equals": "true"
+          }
+        ]
+      },
+      "fix": "Support for TLS 1.0 and 1.1 on API Management is retiring. Update the TLS policy to the latest version.",
+      "ARM_Fix": {
+        "type": "propertyUpdate",
+        "operations": [
+          {
+            "field": "properties.customProperties['Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10']",
+            "value": "false"
+          },
+          {
+            "field": "properties.customProperties['Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11']",
+            "value": "false"
+          },
+          {
+            "field": "properties.customProperties['Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10']",
+            "value": "false"
+          },
+          {
+            "field": "properties.customProperties['Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11']",
+            "value": "false"
+          }
+        ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_api_management",
+        "anyOf": [
+          {
+            "attribute": "security.enable_backend_tls10",
+            "equals": true
+          },
+          {
+            "attribute": "security.enable_backend_tls11",
+            "equals": true
+          },
+          {
+            "attribute": "security.enable_frontend_tls10",
+            "equals": true
+          },
+          {
+            "attribute": "security.enable_frontend_tls11",
+            "equals": true
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "security.enable_backend_tls10",
+            "value": false
+          },
+          {
+            "attribute": "security.enable_backend_tls11",
+            "value": false
+          },
+          {
+            "attribute": "security.enable_frontend_tls10",
+            "value": false
+          },
+          {
+            "attribute": "security.enable_frontend_tls11",
+            "value": false
+          }
+        ]
+      }
+    }
+  ]
+}

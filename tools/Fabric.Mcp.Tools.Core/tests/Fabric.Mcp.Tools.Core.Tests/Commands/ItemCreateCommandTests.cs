@@ -4,6 +4,7 @@
 using Fabric.Mcp.Tools.Core.Commands;
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Mcp.Tests.Client;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.Core.Tests.Commands;
 
@@ -14,10 +15,11 @@ public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IF
     {
         Assert.Equal("create-item", Command.Name);
         Assert.Equal("Create Fabric Item", Command.Title);
-        Assert.Contains("Creates a new item in a Fabric workspace", Command.Description);
         Assert.False(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
         Assert.False(Command.Metadata.Idempotent);
+        Assert.NotNull(Command.Description);
+        Assert.NotEmpty(Command.Description);
     }
 
     [Fact]

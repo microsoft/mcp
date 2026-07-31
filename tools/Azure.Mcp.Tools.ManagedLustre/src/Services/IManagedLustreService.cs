@@ -104,7 +104,7 @@ public interface IManagedLustreService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<Models.AutoexportJob> GetAutoexportJobAsync(
+    Task<AutoexportJob> GetAutoexportJobAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
@@ -153,7 +153,7 @@ public interface IManagedLustreService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<Models.AutoimportJob> GetAutoimportJobAsync(
+    Task<AutoimportJob> GetAutoimportJobAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
@@ -162,7 +162,7 @@ public interface IManagedLustreService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<List<Models.AutoimportJob>> ListAutoimportJobsAsync(
+    Task<List<AutoimportJob>> ListAutoimportJobsAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
@@ -192,7 +192,7 @@ public interface IManagedLustreService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<Models.ImportJob> CancelImportJobAsync(
+    Task<ImportJob> CancelImportJobAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
@@ -201,7 +201,7 @@ public interface IManagedLustreService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<Models.ImportJob> GetImportJobAsync(
+    Task<ImportJob> GetImportJobAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
@@ -210,7 +210,7 @@ public interface IManagedLustreService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<List<Models.ImportJob>> ListImportJobsAsync(
+    Task<List<ImportJob>> ListImportJobsAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,

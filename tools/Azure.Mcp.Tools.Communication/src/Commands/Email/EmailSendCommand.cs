@@ -2,11 +2,10 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Communication.Models;
-using Azure.Mcp.Tools.Communication.Options;
+using Azure.Mcp.Tools.Communication.Options.Email;
 using Azure.Mcp.Tools.Communication.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Communication.Commands.Email;
@@ -25,77 +24,52 @@ namespace Azure.Mcp.Tools.Communication.Commands.Email;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger, ICommunicationService communicationService) : BaseCommunicationCommand<EmailSendOptions>
+public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger, ICommunicationService communicationService)
+    : AuthenticatedCommand<EmailSendOptions, EmailSendCommand.EmailSendCommandResult>
 {
     private readonly ILogger<EmailSendCommand> _logger = logger;
     private readonly ICommunicationService _communicationService = communicationService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(EmailSendOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(CommunicationOptionDefinitions.Sender);
-        command.Options.Add(CommunicationOptionDefinitions.SenderName);
-        command.Options.Add(CommunicationOptionDefinitions.ToEmail);
-        command.Options.Add(CommunicationOptionDefinitions.Cc);
-        command.Options.Add(CommunicationOptionDefinitions.Bcc);
-        command.Options.Add(CommunicationOptionDefinitions.Subject);
-        command.Options.Add(CommunicationOptionDefinitions.EmailMessage);
-        command.Options.Add(CommunicationOptionDefinitions.IsHtml);
-        command.Options.Add(CommunicationOptionDefinitions.ReplyTo);
-        command.Validators.Add(commandResult =>
+        base.ValidateOptions(options, validationResult);
+
+        if (options.To == null || options.To.Length == 0)
         {
-            var to = commandResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.ToEmail.Name);
-            if (to == null || to.Length == 0)
-                commandResult.AddError("At least one 'to' email address must be provided.");
-            else if (to.Any(string.IsNullOrWhiteSpace))
-                commandResult.AddError("to email addresses cannot be empty.");
-
-            var cc = commandResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.Cc.Name);
-            if (cc != null && cc.Any(string.IsNullOrWhiteSpace))
-                commandResult.AddError("CC email addresses should not be empty if provided by user.");
-
-            var bcc = commandResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.Bcc.Name);
-            if (bcc != null && bcc.Any(string.IsNullOrWhiteSpace))
-                commandResult.AddError("BCC email addresses should not be empty if provided by user.");
-
-            var replyTo = commandResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.ReplyTo.Name);
-            if (replyTo != null && replyTo.Any(string.IsNullOrWhiteSpace))
-                commandResult.AddError("Reply-To email addresses should not be empty if provided by user.");
-        });
-    }
-
-    protected override EmailSendOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.From = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.Sender.Name);
-        options.SenderName = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.SenderName.Name);
-        options.To = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.ToEmail.Name);
-        options.Cc = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.Cc.Name);
-        options.Bcc = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.Bcc.Name);
-        options.Subject = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.Subject.Name);
-        options.Message = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.EmailMessage.Name);
-        options.IsHtml = parseResult.GetValueOrDefault<bool>(CommunicationOptionDefinitions.IsHtml.Name);
-        options.ReplyTo = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.ReplyTo.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("At least one 'to' email address must be provided.");
         }
-        var options = BindOptions(parseResult);
+        else if (options.To.Any(string.IsNullOrWhiteSpace))
+        {
+            validationResult.Errors.Add("to email addresses cannot be empty.");
+        }
 
+        if (options.Cc != null && options.Cc.Any(string.IsNullOrWhiteSpace))
+        {
+            validationResult.Errors.Add("CC email addresses should not be empty if provided by user.");
+        }
+
+        if (options.Bcc != null && options.Bcc.Any(string.IsNullOrWhiteSpace))
+        {
+            validationResult.Errors.Add("BCC email addresses should not be empty if provided by user.");
+        }
+
+        if (options.ReplyTo != null && options.ReplyTo.Any(string.IsNullOrWhiteSpace))
+        {
+            validationResult.Errors.Add("Reply-To email addresses should not be empty if provided by user.");
+        }
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, EmailSendOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             var result = await _communicationService.SendEmailAsync(
-                options.Endpoint!,
-                options.From!,
+                options.Endpoint,
+                options.From,
                 options.SenderName,
-                options.To!,
-                options.Subject!,
-                options.Message!,
+                options.To,
+                options.Subject,
+                options.Message,
                 options.IsHtml,
                 options.Cc,
                 options.Bcc,
@@ -118,5 +92,5 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger, ICommunic
     /// <summary>
     /// Result returned by the Email Send Command.
     /// </summary>
-    public record EmailSendCommandResult(EmailSendResult Result);
+    public sealed record EmailSendCommandResult(EmailSendResult Result);
 }

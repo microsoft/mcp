@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
-using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
@@ -18,10 +17,9 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
     Name = "embeddings-create",
     Title = "Create OpenAI Embeddings",
     Description = """
-        Create embeddings using Azure OpenAI in Microsoft Foundry. Generate vector embeddings from text using Azure OpenAI
-        deployments in your Microsoft Foundry resource for semantic search, similarity comparisons, clustering, or machine
-        learning. Use this when you need to create foundry embeddings, generate vectors from text, or convert text to
-        numerical representations using Azure OpenAI. Requires resource-name, deployment-name, and input-text.
+        Create/generate vector embeddings from text using Azure OpenAI deployments in your Microsoft Foundry resource
+        for semantic search, similarity comparisons, clustering, or machine learning. Use this when you need to create
+        foundry embeddings, generate vectors from text, or convert text to numerical representations using Azure OpenAI.
         """,
     Destructive = false,
     Idempotent = false,
@@ -29,53 +27,21 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class OpenAiEmbeddingsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiEmbeddingsCreateOptions>
+public sealed class OpenAiEmbeddingsCreateCommand(IFoundryExtensionsService foundryExtensionsService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<OpenAiEmbeddingsCreateOptions, OpenAiEmbeddingsCreateCommand.OpenAiEmbeddingsCreateCommandResult>(subscriptionResolver)
 {
     private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(FoundryExtensionsOptionDefinitions.ResourceNameOption);
-        command.Options.Add(FoundryExtensionsOptionDefinitions.DeploymentNameOption);
-        command.Options.Add(FoundryExtensionsOptionDefinitions.InputTextOption);
-        command.Options.Add(FoundryExtensionsOptionDefinitions.UserOption);
-        command.Options.Add(FoundryExtensionsOptionDefinitions.EncodingFormatOption);
-        command.Options.Add(FoundryExtensionsOptionDefinitions.DimensionsOption);
-    }
-
-    protected override OpenAiEmbeddingsCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.ResourceName = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.ResourceNameOption.Name);
-        options.DeploymentName = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.DeploymentNameOption.Name);
-        options.InputText = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.InputTextOption.Name);
-        options.User = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.UserOption.Name);
-        options.EncodingFormat = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.EncodingFormatOption.Name);
-        options.Dimensions = parseResult.GetValueOrDefault<int?>(FoundryExtensionsOptionDefinitions.DimensionsOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, OpenAiEmbeddingsCreateOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
-            var options = BindOptions(parseResult);
-
-            var foundryService = _foundryExtensionsService;
-            var result = await foundryService.CreateEmbeddingsAsync(
-                options.ResourceName!,
-                options.DeploymentName!,
-                options.InputText!,
+            var result = await _foundryExtensionsService.CreateEmbeddingsAsync(
+                options.ResourceName,
+                options.Deployment,
+                options.InputText,
                 options.Subscription!,
-                options.ResourceGroup!,
+                options.ResourceGroup,
                 options.User,
                 options.EncodingFormat!,
                 options.Dimensions,
@@ -85,7 +51,7 @@ public sealed class OpenAiEmbeddingsCreateCommand(IFoundryExtensionsService foun
                 cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new(result, options.ResourceName!, options.DeploymentName!, options.InputText!),
+                new(result, options.ResourceName, options.Deployment, options.InputText),
                 FoundryExtensionsJsonContext.Default.OpenAiEmbeddingsCreateCommandResult);
         }
         catch (Exception ex)
@@ -96,7 +62,7 @@ public sealed class OpenAiEmbeddingsCreateCommand(IFoundryExtensionsService foun
         return context.Response;
     }
 
-    internal record OpenAiEmbeddingsCreateCommandResult(
+    public sealed record OpenAiEmbeddingsCreateCommandResult(
         EmbeddingResult EmbeddingResult,
         string ResourceName,
         string DeploymentName,

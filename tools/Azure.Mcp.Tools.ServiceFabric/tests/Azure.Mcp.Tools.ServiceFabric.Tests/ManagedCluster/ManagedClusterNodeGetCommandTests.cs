@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ServiceFabric.Commands;
 using Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
 using Azure.Mcp.Tools.ServiceFabric.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Tests.ManagedCluster;
 
-public class ManagedClusterNodeGetCommandTests : CommandUnitTestsBase<ManagedClusterNodeGetCommand, IServiceFabricService>
+public class ManagedClusterNodeGetCommandTests : SubscriptionCommandUnitTestsBase<ManagedClusterNodeGetCommand, IServiceFabricService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()

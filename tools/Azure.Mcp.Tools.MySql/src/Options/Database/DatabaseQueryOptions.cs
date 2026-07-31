@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.MySql.Options.Database;
 
-public class DatabaseQueryOptions : MySqlDatabaseOptions
+public sealed class DatabaseQueryOptions : MySqlDatabaseOptions
 {
-    [JsonPropertyName(MySqlOptionDefinitions.QueryText)]
-    public string? Query { get; set; }
+    [Option(Description = "Query to be executed against a MySQL database.")]
+    public required string Query { get; set; }
 }

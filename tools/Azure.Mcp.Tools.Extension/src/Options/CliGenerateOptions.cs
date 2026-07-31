@@ -1,16 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Extension.Options;
 
-public class CliGenerateOptions : GlobalOptions
+public sealed class CliGenerateOptions
 {
-    [JsonPropertyName(ExtensionOptionDefinitions.CliGenerate.IntentName)]
-    public string? Intent { get; set; }
+    [Option(Description = "The user intent of the task to be solved by using the CLI tool. This user intent will be used to generate the appropriate CLI command to accomplish the desirable goal.")]
+    public required string Intent { get; set; }
 
-    [JsonPropertyName(ExtensionOptionDefinitions.CliGenerate.CliTypeName)]
-    public string? CliType { get; set; }
+    [Option(Description = "The type of CLI tool to use. Supported values are 'az' for Azure CLI.")]
+    public required string CliType { get; set; }
 }

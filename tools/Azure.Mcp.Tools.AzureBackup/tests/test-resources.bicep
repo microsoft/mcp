@@ -8,8 +8,15 @@ param baseName string = take(resourceGroup().name, 20)
 @description('The location of the resource. By default, this is the same as the resource group.')
 param location string = resourceGroup().location
 
+@description('The location for the Cosmos DB account and the DPP backup vault. Azure Backup for Cosmos DB (DPP, preview) requires both to be in the same region (and in a preview-enabled region such as eastus2euap or centraluseuap). Defaults to the resource group location; override (along with the RG location) when targeting a preview region.')
+param cosmosLocation string = location
+
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
+
+@description('Admin password for the SQL VM used in testing.')
+@secure()
+param sqlVmAdminPwd string = 'P${newGuid()}!'
 
 // Recovery Services Vault (RSV) - GeoRedundant for CRR support
 resource rsvVault 'Microsoft.RecoveryServices/vaults@2024-04-01' = {
@@ -37,6 +44,9 @@ resource rsvBackupConfig 'Microsoft.RecoveryServices/vaults/backupconfig@2024-04
 }
 
 // Backup Vault (Data Protection / DPP) - GeoRedundant for CRR support
+// Note: Cosmos DB (preview) DPP backup requires the vault to be in the same region as the Cosmos DB primary write region.
+// `cosmosLocation` defaults to `location`, so by default the DPP vault and the Cosmos DB account are co-located.
+// When overriding `cosmosLocation`, set `location` to the same preview-enabled region.
 resource dppVault 'Microsoft.DataProtection/backupVaults@2024-04-01' = {
   name: '${baseName}-dpp'
   location: location
@@ -193,3 +203,184 @@ resource appStorageBackupContributorRoleAssignment 'Microsoft.Authorization/role
 output storageAccountId string = testStorageAccount.id
 output storageAccountName string = testStorageAccount.name
 output fileShareName string = testFileShare.name
+
+// ─── Resources for CosmosDB Backup E2E Tests ───
+
+// Cosmos DB account (NoSQL API) for DPP backup testing
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
+  name: take('${replace(baseName, '-', '')}cosmos', 44)
+  location: cosmosLocation
+  kind: 'GlobalDocumentDB'
+  properties: {
+    databaseAccountOfferType: 'Standard'
+    locations: [
+      {
+        locationName: cosmosLocation
+        failoverPriority: 0
+      }
+    ]
+    consistencyPolicy: {
+      defaultConsistencyLevel: 'Session'
+    }
+    // Continuous backup mode (required for Azure Backup DPP long-term protection)
+    backupPolicy: {
+      type: 'Continuous'
+      continuousModeProperties: {
+        tier: 'Continuous7Days'
+      }
+    }
+  }
+  tags: {
+    Owner: 'azurebackup-mcp-tests'
+    ServiceName: 'AzureBackup'
+    Environment: 'Test'
+  }
+}
+
+// Cosmos DB Operator role for DPP vault MSI on the Cosmos DB account
+// Required for the backup vault to manage backup operations
+resource cosmosDbOperatorRoleDef 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  name: '230815da-be43-4aae-9cb4-875f7bd000aa' // Cosmos DB Operator
+}
+
+resource dppCosmosDbOperatorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(cosmosDbOperatorRoleDef.id, dppVault.id, cosmosDbAccount.id)
+  scope: cosmosDbAccount
+  properties: {
+    principalId: dppVault.identity.principalId
+    roleDefinitionId: cosmosDbOperatorRoleDef.id
+    principalType: 'ServicePrincipal'
+    description: 'Cosmos DB Operator for DPP vault MSI'
+  }
+}
+
+// Reader role for DPP vault MSI on the Cosmos DB account resource group
+// Some DPP datasources require Reader on the RG
+resource readerRoleDef 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  name: 'acdd72a7-3385-48ef-bd42-f606fba81ae7' // Reader
+}
+
+resource dppReaderOnRgForCosmosDb 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(readerRoleDef.id, dppVault.id, resourceGroup().id, 'cosmosdb')
+  properties: {
+    principalId: dppVault.identity.principalId
+    roleDefinitionId: readerRoleDef.id
+    principalType: 'ServicePrincipal'
+    description: 'Reader for DPP vault MSI on RG (CosmosDB backup)'
+  }
+}
+
+// Backup Contributor for the test app on the Cosmos DB account
+resource appCosmosDbBackupContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(backupContributorRoleDefinition.id, testApplicationOid, cosmosDbAccount.id)
+  scope: cosmosDbAccount
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: backupContributorRoleDefinition.id
+    description: 'Backup Contributor for ${testApplicationOid} on CosmosDB'
+  }
+}
+
+output cosmosDbAccountId string = cosmosDbAccount.id
+output cosmosDbAccountName string = cosmosDbAccount.name
+output cosmosDbAccountLocation string = cosmosLocation
+
+// ─── SQL VM for ARM-Level Discovery Testing ───
+// Lowest-cost config: Standard_B2als_v2 + SQL 2022 Developer (free license) + no public IP.
+// The find-unprotected command discovers this VM via ARM Resource Graph as an unprotected resource.
+// No RSV container registration is needed — ARM-level discovery finds VMs directly.
+
+resource testVnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
+  name: '${baseName}-vnet'
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.0.0.0/24'
+      ]
+    }
+    subnets: [
+      {
+        name: 'default'
+        properties: {
+          addressPrefix: '10.0.0.0/24'
+        }
+      }
+    ]
+  }
+  tags: {
+    Owner: 'azurebackup-mcp-tests'
+    ServiceName: 'AzureBackup'
+    Environment: 'Test'
+  }
+}
+
+resource sqlVmNic 'Microsoft.Network/networkInterfaces@2024-01-01' = {
+  name: '${baseName}-sqlvm-nic'
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          subnet: {
+            id: testVnet.properties.subnets[0].id
+          }
+          privateIPAllocationMethod: 'Dynamic'
+        }
+      }
+    ]
+  }
+  tags: {
+    Owner: 'azurebackup-mcp-tests'
+    ServiceName: 'AzureBackup'
+    Environment: 'Test'
+  }
+}
+
+resource sqlVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
+  name: '${baseName}-sqlvm'
+  location: location
+  properties: {
+    hardwareProfile: {
+      vmSize: 'Standard_B2als_v2'
+    }
+    storageProfile: {
+      imageReference: {
+        publisher: 'MicrosoftSQLServer'
+        offer: 'sql2022-ws2022'
+        sku: 'sqldev-gen2'
+        version: 'latest'
+      }
+      osDisk: {
+        createOption: 'FromImage'
+        managedDisk: {
+          storageAccountType: 'Standard_LRS'
+        }
+      }
+    }
+    osProfile: {
+      computerName: take('${replace(baseName, '-', '')}sq', 15)
+      adminUsername: 'mcptestadmin'
+      adminPassword: sqlVmAdminPwd
+    }
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: sqlVmNic.id
+        }
+      ]
+    }
+  }
+  tags: {
+    Owner: 'azurebackup-mcp-tests'
+    ServiceName: 'AzureBackup'
+    Environment: 'Test'
+  }
+}
+
+output sqlVmId string = sqlVm.id
+output sqlVmName string = sqlVm.name
+output resourceGroupLocation string = location

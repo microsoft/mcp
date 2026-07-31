@@ -827,6 +827,184 @@
           }
         }
       }
+    },
+    "/workspaces/{workspaceId}/notebooks/{notebookId}/jobs/execute/instances?beta=false": {
+      "post": {
+        "summary": "Run on-demand notebook job instance.",
+        "description": "> [!NOTE]\n> This API is a release version of a beta version due to be deprecated on April 1, 2028.\n**When calling this API - callers must set the query parameter `beta` to the value `false`**.\n\n## Required Delegated Scopes\n\nNotebook.Execute.All or Item.Execute.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "BackgroundJobs"
+        ],
+        "operationId": "BackgroundJobs_RunOnDemandNotebook",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "notebookId",
+            "description": "The notebook item ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2028-04-01",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **April 1, 2028**."
+            }
+          },
+          {
+            "in": "body",
+            "name": "runNotebookRequest",
+            "description": "Run notebook request payload with parameters to use.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/RunNotebookRequest"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Request accepted, job execution is in progress.\n\n---\n**Headers:**\n\n**Location** `string` - The URL to the job instance resource.\n\n**Retry-After** `integer` - The number of seconds the client should wait before polling the job status for the first time. Clients must use this value to determine when to check the job status and should wait at least this many seconds before the first status poll."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* MissingMinimalPermissions - The caller does not have sufficient permissions to run job instance. \n\n* InvalidJobType - The requested job type is invalid. \n\n* TooManyRequestsForJobs - The caller is making to many run on-demand job requests. \n\n* ItemNotFound - Requested item id not found. \n\n* ComputeTypeMismatch - The compute type provided in the request does not align with the compute type configured in the notebook content.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Run notebook with no request body.": {
+            "$ref": "./examples/RunNotebookWithNoRequestBody.json"
+          },
+          "Run notebook with parameters.": {
+            "$ref": "./examples/RunNotebookWithParameters.json"
+          },
+          "Run Spark notebook with request body.": {
+            "$ref": "./examples/RunSparkNotebookWithRequestBody.json"
+          },
+          "Run Jupyter notebook with request body.": {
+            "$ref": "./examples/RunJupyterNotebookWithRequestBody.json"
+          },
+          "Run Data Warehouse notebook with request body.": {
+            "$ref": "./examples/RunDataWarehouseNotebookWithRequestBody.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/notebooks/{notebookId}/jobs/execute/instances/{jobInstanceId}?beta=true": {
+      "get": {
+        "summary": "Get one notebook's job instance.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\n## Required Delegated Scopes\n\nNotebook.Read.All or Notebook.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n ## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "BackgroundJobs"
+        ],
+        "operationId": "BackgroundJobs_Get_Notebook_Job_Instance_(beta)",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "notebookId",
+            "description": "The notebook ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "jobInstanceId",
+            "description": "The job instance ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "required": true,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.\n\n---\n**Headers:**\n\n**Retry-After** `integer` - The number of seconds to wait before checking the status of the job instance.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/NotebookJobInstance"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InsufficientPrivileges - The caller does not have sufficient permissions to access the item.\n\n* ItemNotFound - Requested item id not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get Spark notebook job instance example": {
+            "$ref": "./examples/GetSparkNotebookJobInstance.json"
+          },
+          "Get jupyter notebook job instance example": {
+            "$ref": "./examples/GetJupyterNotebookJobInstance.json"
+          },
+          "Get data warehouse notebook job instance example": {
+            "$ref": "./examples/GetDataWarehouseNotebookJobInstance.json"
+          }
+        }
+      }
     }
   },
   "responses": {},

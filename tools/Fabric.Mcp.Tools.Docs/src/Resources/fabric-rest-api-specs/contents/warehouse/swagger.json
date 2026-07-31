@@ -381,6 +381,143 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/warehouses/sqlPoolsConfiguration?beta=true": {
+      "get": {
+        "summary": "Gets the SQL Pools configuration in the specified workspace (beta).",
+        "description": "> [!NOTE]\n> SQL Pools configuration is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. **When calling this API, callers must specify `true` as the value for the query parameter `beta`\n\n## Permissions\n\nThe caller must have admin workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SQLPools"
+        ],
+        "operationId": "SQLPools_Get_Sql_Pools_Configuration_(beta)",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "in": "query",
+            "name": "beta",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "type": "boolean",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/SQLPoolsConfigurationResponse"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get SQL Pools (Beta) example": {
+            "$ref": "./examples/GetSqlPools.json"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates the SQL Pools configuration in the specified workspace (beta).",
+        "description": "> [!NOTE]\n> SQL Pools configuration is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. **When calling this API, callers must specify `true` as the value for the query parameter `beta`.\n\n## Permissions\n\nThe caller must have admin workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SQLPools"
+        ],
+        "operationId": "SQLPools_Update_Sql_Pools_Configuration_(beta)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "in": "body",
+            "name": "updateSQLPoolsConfigurationRequest",
+            "description": "A SQL pools configuration update request.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateSQLPoolsConfigurationRequest"
+            }
+          },
+          {
+            "in": "query",
+            "name": "beta",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "type": "boolean",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Enable SQL Pools and setup pools' configuration (beta) example": {
+            "$ref": "./examples/CreateSqlPools.json"
+          },
+          "Update SQL Pools (beta) example": {
+            "$ref": "./examples/UpdateSqlPools.json"
+          },
+          "Disable SQL Pools and delete all existing pools (beta) example": {
+            "$ref": "./examples/DeleteSqlPools.json"
+          }
+        }
+      }
+    },
     "/workspaces/{workspaceId}/warehouses/{warehouseId}/connectionString": {
       "get": {
         "summary": "Returns the SQL connection string of the specified warehouse.",

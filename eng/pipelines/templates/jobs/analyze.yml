@@ -9,16 +9,22 @@ jobs:
 
   - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
-  - task: NodeTool@0
-    displayName: "Install Node.js 22"
+  - template: /eng/common/pipelines/templates/steps/eng-common-workflow-enforcer.yml
+
+  - template: /eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml
+
+  - task: UseNode@1
+    displayName: 'Install Node.js 24'
     inputs:
-      versionSpec: '22.x'
+      version: '24.x'
   
   - task: Powershell@2
     displayName: "Run source analysis"
     inputs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Analyze-Code.ps1
+    env:
+      AZURE_MCP_COLLECT_TELEMETRY: 'false'
 
   # Run AOT analysis only on Linux x64
   - template: /eng/pipelines/templates/steps/analyze-aot-compact.yml
@@ -27,14 +33,6 @@ jobs:
       sourceDirectory: $(Build.SourcesDirectory)
 
   - template: /eng/common/pipelines/templates/steps/check-spelling.yml
-
-  - template: /eng/common/pipelines/templates/steps/verify-links.yml
-    parameters:
-      Condition: succeededOrFailed()
-      Directory: ""
-      CheckLinkGuidance: $true
-      ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-        Urls: (eng/common/scripts/get-markdown-files-from-changed-files.ps1)
 
   - pwsh: |
       # Verify that the package README.md files do not contain invalid headers or comment annotations

@@ -6,7 +6,6 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Tools.Postgres.Auth;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -61,8 +60,6 @@ public class PostgresServiceParameterizedQueryTests
         // but we can verify the method signature and that it doesn't throw for valid inputs
 
         // Arrange
-        string subscriptionId = "test-sub";
-        string resourceGroup = "test-rg";
         string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
         string? password = null;
@@ -71,7 +68,7 @@ public class PostgresServiceParameterizedQueryTests
 
         // Act & Assert - Method should accept these parameters without throwing
         // The actual parameterization is tested through integration tests
-        var task = _postgresService.GetTableSchemaAsync(subscriptionId, resourceGroup, authType, user, password, server, database, tableName, TestContext.Current.CancellationToken);
+        var task = _postgresService.GetTableSchemaAsync(authType, user, password, server, database, tableName, TestContext.Current.CancellationToken);
 
         // The method will fail at the connection stage, but that's expected in unit tests
         // What we're testing is that the method signature accepts these parameters correctly
@@ -89,8 +86,6 @@ public class PostgresServiceParameterizedQueryTests
         // With parameterized queries, these should be treated as literal table names
 
         // Arrange
-        string subscriptionId = "test-sub";
-        string resourceGroup = "test-rg";
         string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
         string? password = null;
@@ -100,7 +95,7 @@ public class PostgresServiceParameterizedQueryTests
         // Act & Assert
         // The method should not throw due to SQL injection attempts
         // With proper parameterization, malicious input is treated as a literal table name
-        var task = _postgresService.GetTableSchemaAsync(subscriptionId, resourceGroup, authType, user, password, server, database, maliciousTableName, TestContext.Current.CancellationToken);
+        var task = _postgresService.GetTableSchemaAsync(authType, user, password, server, database, maliciousTableName, TestContext.Current.CancellationToken);
 
         // The method will fail at the connection stage, but importantly,
         // it won't fail due to SQL parsing errors caused by injection attempts
@@ -112,8 +107,6 @@ public class PostgresServiceParameterizedQueryTests
     {
         // Arrange
         string tableName = "table_with_special_chars_123!@#$%^&*()";
-        string subscriptionId = "test-sub";
-        string resourceGroup = "test-rg";
         string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
         string? password = null;
@@ -122,7 +115,7 @@ public class PostgresServiceParameterizedQueryTests
 
         // Act & Assert
         // Should handle special characters safely through parameterization
-        var task = _postgresService.GetTableSchemaAsync(subscriptionId, resourceGroup, authType, user, password, server, database, tableName, TestContext.Current.CancellationToken);
+        var task = _postgresService.GetTableSchemaAsync(authType, user, password, server, database, tableName, TestContext.Current.CancellationToken);
         Assert.NotNull(task);
     }
 
@@ -132,8 +125,6 @@ public class PostgresServiceParameterizedQueryTests
     public void GetTableSchemaAsync_WithEmptyTableName_ShouldHandleGracefully(string tableName)
     {
         // Arrange
-        string subscriptionId = "test-sub";
-        string resourceGroup = "test-rg";
         string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
         string? password = null;
@@ -142,7 +133,7 @@ public class PostgresServiceParameterizedQueryTests
 
         // Act & Assert
         // Should handle empty/whitespace table names without security issues
-        var task = _postgresService.GetTableSchemaAsync(subscriptionId, resourceGroup, authType, user, password, server, database, tableName, TestContext.Current.CancellationToken);
+        var task = _postgresService.GetTableSchemaAsync(authType, user, password, server, database, tableName, TestContext.Current.CancellationToken);
         Assert.NotNull(task);
     }
 
@@ -150,8 +141,6 @@ public class PostgresServiceParameterizedQueryTests
     public void GetTableSchemaAsync_WithNullTableName_ShouldHandleGracefully()
     {
         // Arrange
-        string subscriptionId = "test-sub";
-        string resourceGroup = "test-rg";
         string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
         string? password = null;
@@ -160,7 +149,7 @@ public class PostgresServiceParameterizedQueryTests
 
         // Act & Assert
         // Should handle null table name without security issues
-        var task = _postgresService.GetTableSchemaAsync(subscriptionId, resourceGroup, authType, user, password, server, database, null!, TestContext.Current.CancellationToken);
+        var task = _postgresService.GetTableSchemaAsync(authType, user, password, server, database, null!, TestContext.Current.CancellationToken);
         Assert.NotNull(task);
     }
 
@@ -169,8 +158,6 @@ public class PostgresServiceParameterizedQueryTests
     {
         // This test verifies that query validation is called before execution
         // Arrange
-        string subscriptionId = "test-sub";
-        string resourceGroup = "test-rg";
         string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
         string? password = null;
@@ -180,7 +167,7 @@ public class PostgresServiceParameterizedQueryTests
 
         // Act & Assert
         // The method should fail validation before attempting to connect to database
-        var task = _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, password, server, database, maliciousQuery, TestContext.Current.CancellationToken);
+        var task = _postgresService.ExecuteQueryAsync(authType, user, password, server, database, maliciousQuery, TestContext.Current.CancellationToken);
 
         // We expect this to eventually throw due to validation, not due to database connection
         // The validation should catch dangerous queries before any database interaction
@@ -194,8 +181,6 @@ public class PostgresServiceParameterizedQueryTests
     public void ExecuteQueryAsync_WithValidQueries_ShouldPassValidation(string validQuery)
     {
         // Arrange
-        string subscriptionId = "test-sub";
-        string resourceGroup = "test-rg";
         string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
         string? password = null;
@@ -204,7 +189,7 @@ public class PostgresServiceParameterizedQueryTests
 
         // Act & Assert
         // Valid queries should pass validation and proceed to connection attempt
-        var task = _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, password, server, database, validQuery, TestContext.Current.CancellationToken);
+        var task = _postgresService.ExecuteQueryAsync(authType, user, password, server, database, validQuery, TestContext.Current.CancellationToken);
         Assert.NotNull(task);
     }
 
@@ -215,8 +200,6 @@ public class PostgresServiceParameterizedQueryTests
         // and Azure OpenAI embeddings are properly handled
 
         // Arrange
-        string subscriptionId = "test-sub";
-        string resourceGroup = "test-rg";
         string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
         string? password = null;
@@ -234,7 +217,7 @@ public class PostgresServiceParameterizedQueryTests
 
         // Act & Assert
         // The method should accept complex queries with vector operations and Azure OpenAI functions
-        var task = _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, password, server, database, vectorQuery, TestContext.Current.CancellationToken);
+        var task = _postgresService.ExecuteQueryAsync(authType, user, password, server, database, vectorQuery, TestContext.Current.CancellationToken);
 
         // Verify the task is created successfully (will fail at connection stage in unit test)
         Assert.NotNull(task);
@@ -250,8 +233,6 @@ public class PostgresServiceParameterizedQueryTests
         // PostgreSQL pgvector supports multiple operators: <=> (cosine), <-> (L2), <#> (inner product)
 
         // Arrange
-        string subscriptionId = "test-sub";
-        string resourceGroup = "test-rg";
         string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
         string? password = null;
@@ -260,7 +241,8 @@ public class PostgresServiceParameterizedQueryTests
 
         // Act & Assert
         // Should accept queries with various vector similarity operators
-        var task = _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, password, server, database, vectorQuery, TestContext.Current.CancellationToken);
+        var task = _postgresService.ExecuteQueryAsync(authType, user, password, server, database, vectorQuery, TestContext.Current.CancellationToken);
         Assert.NotNull(task);
     }
 }
+

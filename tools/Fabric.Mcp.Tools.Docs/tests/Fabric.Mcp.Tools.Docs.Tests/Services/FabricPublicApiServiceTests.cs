@@ -5,6 +5,7 @@ using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.Docs.Tests.Services;
 
@@ -261,6 +262,7 @@ public class FabricPublicApiServiceTests
     [InlineData("graphQLApi")]
     [InlineData("semanticModel")]
     [InlineData("sparkjobdefinition")]
+    [InlineData("mirroredCatalog")]
     [InlineData("mirroredAzureDatabricksCatalog")]
     public void GetFabricWorkloadItemDefinition_WithCamelCaseWorkload_ReturnsDefinition(string workloadType)
     {

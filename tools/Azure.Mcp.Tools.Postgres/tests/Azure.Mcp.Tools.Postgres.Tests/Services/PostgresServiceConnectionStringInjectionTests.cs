@@ -6,7 +6,6 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Tools.Postgres.Auth;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -68,7 +67,7 @@ public class PostgresServiceConnectionStringInjectionTests
     {
         // Act
         await _postgresService.ExecuteQueryAsync(
-            "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
+            AuthTypes.MicrosoftEntra, "test-user", null,
             "legitimate-server", maliciousDatabase, "SELECT 1",
             TestContext.Current.CancellationToken);
 
@@ -85,8 +84,8 @@ public class PostgresServiceConnectionStringInjectionTests
     {
         // Act
         await _postgresService.ListTablesAsync(
-            "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
-            "legitimate-server", maliciousDatabase,
+            AuthTypes.MicrosoftEntra, "test-user", null,
+            "legitimate-server", maliciousDatabase, "public",
             TestContext.Current.CancellationToken);
 
         // Assert
@@ -102,7 +101,7 @@ public class PostgresServiceConnectionStringInjectionTests
     {
         // Act
         await _postgresService.GetTableSchemaAsync(
-            "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
+            AuthTypes.MicrosoftEntra, "test-user", null,
             "legitimate-server", maliciousDatabase, "some_table",
             TestContext.Current.CancellationToken);
 
@@ -121,7 +120,7 @@ public class PostgresServiceConnectionStringInjectionTests
 
         // Act
         await _postgresService.ExecuteQueryAsync(
-            "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
+            AuthTypes.MicrosoftEntra, "test-user", null,
             legitimateServer, maliciousDatabase, "SELECT 1",
             TestContext.Current.CancellationToken);
 
@@ -135,14 +134,14 @@ public class PostgresServiceConnectionStringInjectionTests
     }
 
     [Fact]
-    public async Task ExecuteQueryAsync_WithSslDowngradeInDatabase_DoesNotDisableSsl()
+    public async Task ExecuteQueryAsync_WithSslDowngradeInDatabase_EnforcesSslRequire()
     {
         // Arrange — attacker tries to inject SSL Mode=Disable via the database parameter
         const string maliciousDatabase = "postgres;SSL Mode=Disable";
 
         // Act
         await _postgresService.ExecuteQueryAsync(
-            "test-sub", "test-rg", AuthTypes.MicrosoftEntra, "test-user", null,
+            AuthTypes.MicrosoftEntra, "test-user", null,
             "safe-server", maliciousDatabase, "SELECT 1",
             TestContext.Current.CancellationToken);
 
@@ -150,7 +149,25 @@ public class PostgresServiceConnectionStringInjectionTests
         Assert.NotNull(_capturedConnectionString);
         var parsed = new NpgsqlConnectionStringBuilder(_capturedConnectionString!);
 
-        // SSL Mode should not be Disable — the builder escapes the value in the Database field
-        Assert.NotEqual(SslMode.Disable, parsed.SslMode);
+        // SSL Mode must be Require — the builder escapes the injected value in the Database field
+        // and BuildConnectionString explicitly sets SslMode.Require to prevent silent downgrade.
+        Assert.Equal(SslMode.Require, parsed.SslMode);
+    }
+
+    [Fact]
+    public async Task ExecuteQueryAsync_NormalInputs_EnforcesSslRequire()
+    {
+        // Act — exercise the normal (non-injection) code path
+        await _postgresService.ExecuteQueryAsync(
+            AuthTypes.MicrosoftEntra, "test-user", null,
+            "safe-server", "mydb", "SELECT 1",
+            TestContext.Current.CancellationToken);
+
+        // Assert — BuildConnectionString must enforce SslMode.Require so connections
+        // cannot silently downgrade to unencrypted (the Npgsql default is Prefer).
+        Assert.NotNull(_capturedConnectionString);
+        var parsed = new NpgsqlConnectionStringBuilder(_capturedConnectionString!);
+        Assert.Equal(SslMode.Require, parsed.SslMode);
     }
 }
+

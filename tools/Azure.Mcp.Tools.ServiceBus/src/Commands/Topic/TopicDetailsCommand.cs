@@ -2,15 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.ServiceBus.Models;
-using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Mcp.Tools.ServiceBus.Options.Topic;
 using Azure.Mcp.Tools.ServiceBus.Services;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
@@ -30,40 +27,19 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<BaseTopicOptions>
+public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger, IServiceBusService serviceBusService)
+    : AuthenticatedCommand<BaseTopicOptions, TopicDetailsCommand.TopicDetailsCommandResult>
 {
     private readonly ILogger<TopicDetailsCommand> _logger = logger;
     private readonly IServiceBusService _serviceBusService = serviceBusService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseTopicOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(ServiceBusOptionDefinitions.Namespace);
-        command.Options.Add(ServiceBusOptionDefinitions.Topic);
-    }
-
-    protected override BaseTopicOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.TopicName = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Topic.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Namespace.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var details = await _serviceBusService.GetTopicDetails(
-                options.Namespace!,
-                options.TopicName!,
+                options.Namespace,
+                options.Topic,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -82,7 +58,7 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger, ISe
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         ServiceBusException exception when exception.Reason == ServiceBusFailureReason.MessagingEntityNotFound =>
-            $"Subscription not found. Please check the topic and subscription name and try again.",
+            $"Topic not found. Please check the topic name and try again.",
         _ => base.GetErrorMessage(ex)
     };
 
@@ -92,5 +68,5 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger, ISe
         _ => base.GetStatusCode(ex)
     };
 
-    internal record TopicDetailsCommandResult(TopicDetails TopicDetails);
+    public sealed record TopicDetailsCommandResult(TopicDetails TopicDetails);
 }

@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Log;
@@ -22,9 +23,6 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Log;
 
         When to use: User asks for logs from a specific resource by name or ID.
         When NOT to use: User asks for general workspace-wide logs without mentioning a specific resource.
-
-        Required arguments: resource ID or resource name, table name, KQL query
-        Optional: hours, limit
         """,
     Destructive = false,
     Idempotent = true,
@@ -32,48 +30,21 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Log;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> logger, IMonitorService monitorService) : SubscriptionCommand<ResourceLogQueryOptions>()
+public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> logger, IMonitorService monitorService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ResourceLogQueryOptions, List<JsonNode>>(subscriptionResolver)
 {
     private readonly ILogger<ResourceLogQueryCommand> _logger = logger;
     private readonly IMonitorService _monitorService = monitorService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ResourceLogQueryOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(ResourceLogQueryOptionDefinitions.ResourceId);
-        command.Options.Add(MonitorOptionDefinitions.TableName);
-        command.Options.Add(MonitorOptionDefinitions.Query);
-        command.Options.Add(MonitorOptionDefinitions.Hours);
-        command.Options.Add(MonitorOptionDefinitions.Limit);
-    }
-
-    protected override ResourceLogQueryOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceId = parseResult.GetValueOrDefault<string>(ResourceLogQueryOptionDefinitions.ResourceId.Name);
-        options.TableName = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.TableName.Name);
-        options.Query = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Query.Name);
-        options.Hours = parseResult.GetValueOrDefault<int>(MonitorOptionDefinitions.Hours.Name);
-        options.Limit = parseResult.GetValueOrDefault<int>(MonitorOptionDefinitions.Limit.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var results = await _monitorService.QueryResourceLogs(
                 options.Subscription!,
-                options.ResourceId!,
-                options.Query!,
-                options.TableName!,
+                options.ResourceId,
+                options.Query,
+                options.Table,
                 options.Hours,
                 options.Limit,
                 options.Tenant,

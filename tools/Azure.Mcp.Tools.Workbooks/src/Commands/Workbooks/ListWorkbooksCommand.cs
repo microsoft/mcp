@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Workbooks.Models;
-using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
 using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
@@ -38,75 +36,34 @@ namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger, IWorkbooksService workbooksService) : SubscriptionCommand<ListWorkbooksOptions>
+public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger, IWorkbooksService workbooksService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ListWorkbooksOptions, ListWorkbooksCommand.ListWorkbooksCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ListWorkbooksCommand> _logger = logger;
     private readonly IWorkbooksService _workbooksService = workbooksService;
 
-    protected override void RegisterOptions(Command command)
+    public override void PostBindOptions(ListWorkbooksOptions options)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(WorkbooksOptionDefinitions.Kind);
-        command.Options.Add(WorkbooksOptionDefinitions.Category);
-        command.Options.Add(WorkbooksOptionDefinitions.SourceIdFilter);
-        command.Options.Add(WorkbooksOptionDefinitions.NameContains);
-        command.Options.Add(WorkbooksOptionDefinitions.ModifiedAfter);
-        command.Options.Add(WorkbooksOptionDefinitions.OutputFormat);
-        command.Options.Add(WorkbooksOptionDefinitions.MaxResults);
-        command.Options.Add(WorkbooksOptionDefinitions.IncludeTotalCount);
+        base.PostBindOptions(options);
+        if (!string.IsNullOrEmpty(options.ModifiedAfter) && DateTimeOffset.TryParse(options.ModifiedAfter, out var modifiedAfter))
+        {
+            options.ParsedModifiedAfter = modifiedAfter;
+        }
     }
 
-    protected override ListWorkbooksOptions BindOptions(ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ListWorkbooksOptions options, CancellationToken cancellationToken)
     {
-        var options = base.BindOptions(parseResult);
-
-        var resourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.ResourceGroups = string.IsNullOrEmpty(resourceGroup) ? null : [resourceGroup];
-
-        options.Kind = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.Kind.Name);
-        options.Category = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.Category.Name);
-        options.SourceId = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.SourceIdFilter.Name);
-        options.NameContains = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.NameContains.Name);
-
-        var modifiedAfterStr = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.ModifiedAfter.Name);
-        if (!string.IsNullOrEmpty(modifiedAfterStr) && DateTimeOffset.TryParse(modifiedAfterStr, out var modifiedAfter))
-        {
-            options.ModifiedAfter = modifiedAfter;
-        }
-
-        var outputFormatStr = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.OutputFormat.Name);
-        options.OutputFormat = ParseOutputFormat(outputFormatStr);
-
-        var maxResults = parseResult.GetValueOrDefault<int>(WorkbooksOptionDefinitions.MaxResults.Name);
-        options.MaxResults = maxResults > 0 ? Math.Min(maxResults, 1000) : 50;
-
-        var includeTotalCount = parseResult.GetValueOrDefault<bool?>(WorkbooksOptionDefinitions.IncludeTotalCount.Name);
-        options.IncludeTotalCount = includeTotalCount ?? true;
-
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var filters = options.ToFilters();
 
             var result = await _workbooksService.ListWorkbooksAsync(
                 string.IsNullOrEmpty(options.Subscription) ? null : [options.Subscription],
-                options.ResourceGroups,
+                string.IsNullOrEmpty(options.ResourceGroup) ? null : [options.ResourceGroup],
                 filters,
-                options.MaxResults,
-                options.IncludeTotalCount,
-                options.OutputFormat,
+                options.MaxResults == null || options.MaxResults.Value < 1 ? 50 : Math.Min(options.MaxResults.Value, 1000),
+                options.IncludeTotalCount ?? true,
+                ParseOutputFormat(options.OutputFormat),
                 options.RetryPolicy,
                 options.Tenant,
                 cancellationToken);
@@ -134,5 +91,5 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger, I
         };
     }
 
-    internal record ListWorkbooksCommandResult(List<WorkbookInfo> Workbooks, int? TotalCount, int Returned);
+    public sealed record ListWorkbooksCommandResult(List<WorkbookInfo> Workbooks, int? TotalCount, int Returned);
 }

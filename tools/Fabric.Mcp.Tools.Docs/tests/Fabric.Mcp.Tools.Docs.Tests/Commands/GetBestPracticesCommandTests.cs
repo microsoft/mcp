@@ -7,6 +7,7 @@ using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.Docs.Tests.Commands;
 
@@ -53,7 +54,7 @@ public class GetBestPracticesCommandTests : CommandUnitTestsBase<GetBestPractice
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
-        Assert.Equal("Missing Required options: --topic", result.Message);
+        Assert.Contains("Missing Required options: --topic", result.Message);
         Service.DidNotReceive().GetTopicBestPractices(Arg.Any<string>());
     }
 

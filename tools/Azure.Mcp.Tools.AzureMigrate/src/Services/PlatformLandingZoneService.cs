@@ -25,7 +25,7 @@ public sealed class PlatformLandingZoneService(
     : BaseAzureResourceService(subscriptionService, tenantService), IPlatformLandingZoneService
 {
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private static readonly ConcurrentDictionary<string, PlatformLandingZoneParameters> ParameterCache = new();
+    private static readonly ConcurrentDictionary<string, PlatformLandingZoneParameters> s_parameterCache = new();
 
     /// <inheritdoc/>
     public Task<PlatformLandingZoneParameters> UpdateParametersAsync(
@@ -59,7 +59,7 @@ public sealed class PlatformLandingZoneService(
             CachedAt = DateTime.UtcNow
         };
 
-        ParameterCache[key] = parameters;
+        s_parameterCache[key] = parameters;
         return Task.FromResult(parameters);
     }
 
@@ -97,7 +97,7 @@ public sealed class PlatformLandingZoneService(
     public async Task<string?> GenerateAsync(PlatformLandingZoneContext context, CancellationToken cancellationToken = default)
     {
         var key = GetCacheKey(context);
-        if (!ParameterCache.TryGetValue(key, out var parameters))
+        if (!s_parameterCache.TryGetValue(key, out var parameters))
             throw new InvalidOperationException("No parameters cached. Use 'update' action first.");
 
         var url = BuildUrl(context, "GeneratePlatformLandingZone");
@@ -147,7 +147,7 @@ public sealed class PlatformLandingZoneService(
     public string GetParameterStatus(PlatformLandingZoneContext context)
     {
         var key = GetCacheKey(context);
-        if (!ParameterCache.TryGetValue(key, out var p))
+        if (!s_parameterCache.TryGetValue(key, out var p))
             return "No parameters cached. Use 'update' action to set parameters.";
 
         return $"""

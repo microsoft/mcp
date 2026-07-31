@@ -163,7 +163,7 @@
             ],
             "properties": {
                 "format": {
-                    "description": "The format of the item definition.",
+                    "description": "The format of the KQL database definition.",
                     "type": "string",
                     "readOnly": false
                 },

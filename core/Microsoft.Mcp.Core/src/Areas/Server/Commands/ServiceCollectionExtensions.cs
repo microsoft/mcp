@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,7 @@ using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
@@ -26,15 +28,18 @@ using Options = Microsoft.Extensions.Options.Options;
 /// <summary>
 /// Extension methods for configuring Azure MCP server services.
 /// </summary>
-public static class ServiceCollectionExtensions
+public static partial class ServiceCollectionExtensions
 {
+    [GeneratedRegex("^[A-Za-z0-9_-]+$")]
+    private static partial Regex ShortNamePattern();
+
     /// <summary>
     /// Adds the Azure MCP server services to the specified <see cref="IServiceCollection"/>.
     /// </summary>
     /// <param name="services">The service collection to add services to.</param>
     /// <param name="serviceStartOptions">The options for configuring the server.</param>
     /// <returns>The service collection with MCP server services added.</returns>
-    public static IServiceCollection AddAzureMcpServer(this IServiceCollection services, ServiceStartOptions serviceStartOptions)
+    public static IServiceCollection AddAzureMcpServer(this IServiceCollection services, ServerStartOptions serviceStartOptions)
     {
         // Register HTTP client services
         services.AddHttpClientServices();
@@ -149,7 +154,6 @@ public static class ServiceCollectionExtensions
                 );
 
                 toolLoaders.Add(new CommandFactoryToolLoader(
-                    sp,
                     sp.GetRequiredService<ICommandFactory>(),
                     Options.Create(utilityToolLoaderOptions),
                     loggerFactory.CreateLogger<CommandFactoryToolLoader>()
@@ -185,8 +189,7 @@ public static class ServiceCollectionExtensions
                     // NamespaceToolLoader enables direct in-process execution for consolidated tools
                     new NamespaceToolLoader(
                         consolidatedCommandFactory,
-                        sp.GetRequiredService<IOptions<ServiceStartOptions>>(),
-                        sp,
+                        sp.GetRequiredService<IOptions<ServerStartOptions>>(),
                         loggerFactory.CreateLogger<NamespaceToolLoader>(),
                         false
                     ),
@@ -217,6 +220,9 @@ public static class ServiceCollectionExtensions
             {
                 var configuration = serverConfiguration.Value;
 
+                // Keep server identity/instructions as startup-owned metadata.
+                // Runtime capability discovery remains request-driven through MCP handlers
+                // (for example server/discover and tools/list) on the stateless protocol path.
                 mcpServerOptions.ServerInfo = new Implementation
                 {
                     Name = configuration.DisplayName,
@@ -251,27 +257,42 @@ public static class ServiceCollectionExtensions
     /// Using <see cref="IConfiguration"/> configures <see cref="McpServerConfiguration"/>.
     /// </summary>
     /// <param name="services">Service Collection to add configuration logic to.</param>
-    public static void InitializeConfigurationAndOptions(this IServiceCollection services)
+    /// <param name="assembly">The assembly to use for configuration.</param>
+    public static void InitializeConfigurationAndOptions(this IServiceCollection services, Assembly assembly)
     {
-        var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
-        var configuration = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", optional: false)
-            .AddJsonFile($"appsettings.{environment}.json", optional: true)
-            .AddEnvironmentVariables()
-            .SetBasePath(AppContext.BaseDirectory)
-            .Build();
-        services.AddSingleton<IConfiguration>(configuration);
+        services.AddSingleton(GetConfiguration());
 
         services.AddOptions<McpServerConfiguration>()
-            .Configure<IConfiguration, IOptions<ServiceStartOptions>>((options, rootConfiguration, serviceStartOptions) =>
+            .Configure<IConfiguration, IOptions<ServerStartOptions>>((options, rootConfiguration, serviceStartOptions) =>
             {
+                // Use a scoped IConfiguration for loading server settings.
+                var scopedConfiguration = GetConfiguration(assembly);
+
                 // Manually bind configuration values to avoid reflection-based binding for AOT compatibility
-                options.RootCommandGroupName = rootConfiguration[nameof(McpServerConfiguration.RootCommandGroupName)]
+                var mcpConfiguration = scopedConfiguration.GetRequiredSection("MicrosoftMcp");
+                options.RootCommandGroupName = mcpConfiguration[nameof(McpServerConfiguration.RootCommandGroupName)]
                     ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.RootCommandGroupName)}' is required.");
-                options.Name = rootConfiguration[nameof(McpServerConfiguration.Name)]
+                options.Name = mcpConfiguration[nameof(McpServerConfiguration.Name)]
                     ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.Name)}' is required.");
-                options.DisplayName = rootConfiguration[nameof(McpServerConfiguration.DisplayName)]
+                options.DisplayName = mcpConfiguration[nameof(McpServerConfiguration.DisplayName)]
                     ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.DisplayName)}' is required.");
+
+                options.ShortName = mcpConfiguration[nameof(McpServerConfiguration.ShortName)]
+                    ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.ShortName)}' is required.");
+                options.ShortName = options.ShortName.Trim();
+                if (!ShortNamePattern().IsMatch(options.ShortName))
+                {
+                    throw new InvalidOperationException(
+                        $"Configuration value '{nameof(McpServerConfiguration.ShortName)}' must contain only letters, digits, '_', or '-'.");
+                }
+
+                options.Description = mcpConfiguration[nameof(McpServerConfiguration.Description)]
+                    ?? throw new InvalidOperationException($"Configuration value '{nameof(McpServerConfiguration.Description)}' is required.");
+                if (string.IsNullOrWhiteSpace(options.Description))
+                {
+                    throw new InvalidOperationException(
+                        $"Configuration value '{nameof(McpServerConfiguration.Description)}' must not be empty or whitespace.");
+                }
 
                 // Assembly.GetEntryAssembly is used to retrieve the version of the server application as that is
                 // the assembly that will run the tool calls.
@@ -283,7 +304,7 @@ public static class ServiceCollectionExtensions
                 // Disable telemetry when support logging is enabled to prevent sensitive data from being sent
                 // to telemetry endpoints. Support logging captures debug-level information that may contain
                 // sensitive data, so we disable all telemetry as a safety measure.
-                if (!string.IsNullOrWhiteSpace(serviceStartOptions.Value.SupportLoggingFolder))
+                if (!string.IsNullOrWhiteSpace(serviceStartOptions.Value.DangerouslyWriteSupportLogsToDir))
                 {
                     options.IsTelemetryEnabled = false;
                     return;
@@ -293,5 +314,36 @@ public static class ServiceCollectionExtensions
                 // over any other settings.
                 options.IsTelemetryEnabled = rootConfiguration.GetValue("AZURE_MCP_COLLECT_TELEMETRY", true);
             });
+    }
+
+    /// <summary>
+    /// Creates an IConfiguration instance based on the use case.
+    /// <para>
+    /// When the assembly is null, the configuration is loaded from the file system. This is for runtime settings.
+    /// When the assembly is not null, the configuration is loaded from embedded resources. This is for server information settings.
+    /// </para>
+    /// </summary>
+    /// <param name="assembly">An assembly to load embedded server information settings from.</param>
+    /// <returns>An IConfiguration instance.</returns>
+    private static IConfiguration GetConfiguration(Assembly? assembly = null)
+    {
+        var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
+        var configurationBuilder = new ConfigurationBuilder().SetBasePath(AppContext.BaseDirectory);
+
+        if (assembly == null)
+        {
+            // assembly was null, loading runtime settings. Everything is optional and loaded from the file system.
+            configurationBuilder.AddJsonFile("appsettings.json", optional: true)
+                .AddJsonFile($"appsettings.{environment}.json", optional: true)
+                .AddEnvironmentVariables();
+        }
+        else
+        {
+            // assembly was not null, loading server information settings. These are embedded in the assembly.
+            configurationBuilder.AddEmbeddedAppSettings(assembly, "appsettings.json", required: true)
+                .AddEmbeddedAppSettings(assembly, $"appsettings.{environment}.json", required: false);
+        }
+
+        return configurationBuilder.Build();
     }
 }

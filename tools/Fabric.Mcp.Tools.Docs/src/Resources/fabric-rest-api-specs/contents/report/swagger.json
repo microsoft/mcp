@@ -406,6 +406,13 @@
             "type": "string",
             "format": "uuid",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "description": "The format of the report public definition.",
+            "type": "string",
+            "required": false
           }
         ],
         "responses": {

@@ -1,4 +1,0 @@
-pr: 2702
-changes:
-  - section: "Bugs Fixed"
-    description: "Update Container App Commands to accept tenant parameter"

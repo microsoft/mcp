@@ -1,0 +1,59 @@
+{
+    "parameters": {
+        "workspaceId": "1ede770b-e7b7-4b30-8acf-1c985425f4a7",
+        "notebookId": "28ecef4f-a073-485e-be94-fd75c68bfd49",
+        "jobInstanceId": "f2d65699-dd22-4889-980c-15226deb0e1b",
+        "beta": true
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "f2d65699-dd22-4889-980c-15226deb0e1b",    
+                "itemId": "28ecef4f-a073-485e-be94-fd75c68bfd49",
+                "jobType": "Execute",
+                "invokeType": "Manual",
+                "status": "Completed",
+                "rootActivityId": "8c2ee553-53a4-7edb-1042-0d8189a9e0ca",
+                "startTimeUtc": "2023-04-22T06:35:00.7812154",
+                "endTimeUtc": "2023-04-22T06:35:00.8033333",
+                "failureReason": null,
+                "properties": {
+                    "exitValue": null,
+                    "compute": "Spark",
+                    "computeDetails": {
+                        "highConcurrencyModeStatus": {
+                            "sessionSource": "Created",
+                            "sessionTag": "tag1"
+                        },
+                        "livyId": "60cfa752-457a-435e-bde2-b25f928ea647",
+                        "monitoringInfo": { 
+                            "activityDetails": {
+                                "sparkApplicationId": "application_1742884741239_0001",
+                                "livyName": "ref1_60cfa752-457a-435e-bde2-b25f928ea647",
+                                "creatorItem": {
+                                    "workspaceId": "1ede770b-e7b7-4b30-8acf-1c985425f4a7",
+                                    "itemId": "28ecef4f-a073-485e-be94-fd75c68bfd49",
+                                    "referenceType": "ById"
+                                },
+                                "itemName": "ref1",
+                                "jobType": "SparkSession",
+                                "capacityId": "907376aa-279b-4c47-bc09-5000c9fca1b1",
+                                "isHighConcurrency": false,
+                                "runtimeVersion": "1.3",
+                                "operationName": "Notebook Scheduled Run",
+                                "cancellationReason": "System stopped the Spark session upon completion of the notebook run",
+                                "submittedDateTime": "2025-03-25T06:43:12.3457658+00:00",
+                                "endDateTime": "2025-03-25T06:44:03.7621105+00:00",
+                                "startDateTime": "2025-03-25T06:39:22.3115694+00:00"
+                            },
+                            "sparkUiUrl": "https://sparkui.fabric.microsoft.com/sparkui/ed747705-47be-4ea4-8af5-963e5d81396b/workspaceTypes/datacloud/workspaces/1ede770b-e7b7-4b30-8acf-1c985425f4a7/activities/2ec5a60a-ad7f-416b-859f-ae35097488cd/applications/application_1743143839903_0001/jobs",
+                            "sparkJobDetailsUrl": "https://app.fabric.microsoft.com/workloads/de-ds/sparkmonitor/28ecef4f-a073-485e-be94-fd75c68bfd49/60cfa752-457a-435e-bde2-b25f928ea647?experience=power-bi",
+                            "driverLogUrl": "https://sparkui.fabric.microsoft.com/sparkui/ed747705-47be-4ea4-8af5-963e5d81396b/api/v1/wt/datacloud/workspaces/1ede770b-e7b7-4b30-8acf-1c985425f4a7/activities/2ec5a60a-ad7f-416b-859f-ae35097488cd/applications/application_1743143839903_0001/driverlog/stderr",
+                            "executionSnapshotUrl": "https://app.fabric.microsoft.com/groups/1ede770b-e7b7-4b30-8acf-1c985425f4a7/synapsenotebooks/28ecef4f-a073-485e-be94-fd75c68bfd49/snapshots/f2d65699-dd22-4889-980c-15226deb0e1b?experience=power-bi"
+                        }
+                    }
+	            }
+            }
+        }
+    }
+}

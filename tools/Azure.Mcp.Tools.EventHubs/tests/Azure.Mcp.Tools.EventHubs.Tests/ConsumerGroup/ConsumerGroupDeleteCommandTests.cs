@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.Tests.ConsumerGroup;
 
-public class ConsumerGroupDeleteCommandTests : CommandUnitTestsBase<ConsumerGroupDeleteCommand, IEventHubsService>
+public class ConsumerGroupDeleteCommandTests : SubscriptionCommandUnitTestsBase<ConsumerGroupDeleteCommand, IEventHubsService>
 {
     [Theory]
     [InlineData("", false)]
@@ -85,7 +85,7 @@ public class ConsumerGroupDeleteCommandTests : CommandUnitTestsBase<ConsumerGrou
             "test-eventhub",
             "test-namespace",
             "test-rg",
-            "test-subscription",
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());

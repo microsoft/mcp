@@ -21,10 +21,4 @@
     <ProjectReference Include="..\..\src\Fabric.Mcp.Tools.Docs.csproj" />
     <ProjectReference Include="$(RepoRoot)core\Microsoft.Mcp.Core\tests\Microsoft.Mcp.Tests\Microsoft.Mcp.Tests.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Using Include="Xunit" />
-    <Using Include="Microsoft.Mcp.Core.Commands" />
-  </ItemGroup>
-
 </Project>

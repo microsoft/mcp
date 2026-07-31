@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.WellArchitectedFramework.Options.ServiceGuide;
 using Azure.Mcp.Tools.WellArchitectedFramework.Services.ServiceGuide;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.WellArchitectedFramework.Commands.ServiceGuide;
@@ -17,7 +16,7 @@ namespace Azure.Mcp.Tools.WellArchitectedFramework.Commands.ServiceGuide;
     Title = "Get Well-Architected Framework Service Guide",
     Description = """
         Get Azure Well-Architected Framework guidance for a specific Azure service, or list all supported services when no service is specified. When a service is provided, returns architectural best practices, design patterns, and recommendations based on the five pillars: reliability, security, cost optimization, operational excellence, and performance efficiency.
-        Optional: --service: A single Azure service name. Service name format: case-insensitive; hyphens, underscores, spaces, and name variations allowed; use double quotes (not single quotes) for names with spaces. e.g., cosmos-db, Cosmos_DB, "Cosmos DB", cosmosdb, cosmos-database, cosmosdatabase
+        Service name format: case-insensitive; hyphens, underscores, spaces, and name variations allowed; use double quotes (not single quotes) for names with spaces. e.g., cosmos-db, Cosmos_DB, "Cosmos DB", cosmosdb, cosmos-database, cosmosdatabase
         """,
     Destructive = false,
     Idempotent = true,
@@ -26,36 +25,16 @@ namespace Azure.Mcp.Tools.WellArchitectedFramework.Commands.ServiceGuide;
     Secret = false,
     LocalRequired = false)]
 public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logger, IServiceGuideService serviceGuideService)
-    : BaseCommand<ServiceGuideGetOptions>
+    : BaseCommand<ServiceGuideGetOptions, List<string>>
 {
     private readonly ILogger<ServiceGuideGetCommand> _logger = logger;
     private readonly IServiceGuideService _serviceGuideService = serviceGuideService;
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(WellArchitectedFrameworkOptionDefinitions.Service);
-    }
-
-    protected override ServiceGuideGetOptions BindOptions(ParseResult parseResult)
-    {
-        return new ServiceGuideGetOptions
-        {
-            Service = parseResult.GetValueOrDefault<string>(WellArchitectedFrameworkOptionDefinitions.Service.Name)
-        };
-    }
-
     public override Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        ServiceGuideGetOptions options,
         CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return Task.FromResult(context.Response);
-        }
-
-        var options = BindOptions(parseResult);
         context.Activity?.AddTag("WellArchitectedFramework_Service", options.Service);
 
         try
@@ -114,19 +93,19 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
             """;
     }
 
-    private string GetGuidanceAvailable(string serviceName, string serviceGuideUrl)
+    private static string GetGuidanceAvailable(string serviceName, string serviceGuideUrl)
     {
         return $"For detailed Azure Well-Architected Framework guidance on '{serviceName}' service, " +
             $"please refer to the markdown file at this URL: {serviceGuideUrl}";
     }
 
-    private string GetGuidanceNotAvailable(string serviceName, string supportedServicesBulletList)
+    private static string GetGuidanceNotAvailable(string serviceName, string supportedServicesBulletList)
     {
         return $"""
             Azure Well-Architected Framework guidance for '{serviceName}' service is not available.
 
             Please try a different variation of the service name using the following format for the --service option:
-            {WellArchitectedFrameworkOptionDefinitions.ServiceNameDescription}
+            {WellArchitectedFrameworkOptionDescriptions.Service}
 
             Supported services:
             {supportedServicesBulletList}

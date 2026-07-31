@@ -16,7 +16,7 @@ public class LedgerEntryAppendCommandTests : CommandUnitTestsBase<LedgerEntryApp
     public async Task Execute_Success_ReturnsResult()
     {
         Service.AppendEntryAsync("ledger1", "data", cancellationToken: Arg.Any<CancellationToken>())
-            .Returns(new AppendEntryResult { TransactionId = "tx1", State = "Committed" });
+            .Returns(new AppendEntryResult(TransactionId: "tx1", State: "Committed"));
 
         var response = await ExecuteCommandAsync("--ledger", "ledger1", "--content", "data");
 

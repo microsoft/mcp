@@ -3,6 +3,7 @@
 
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.Core.Tests;
 
@@ -46,7 +47,8 @@ public class FabricCoreSetupTests
 
         // Assert
         Assert.True(rootGroup.Commands.ContainsKey("create-item"), "Should have create-item command");
-        Assert.Single(rootGroup.Commands);
+        Assert.True(rootGroup.Commands.ContainsKey("search-catalog"), "Should have search-catalog command");
+        Assert.Equal(2, rootGroup.Commands.Count);
     }
 
     [Fact]

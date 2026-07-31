@@ -53,6 +53,9 @@
                     "singleSignOnType": "None",
                     "connectionEncryption": "NotEncrypted",
                     "skipTestConnection": false
+                },
+                "connectionRecency": {
+                    "createdDateTime": "2023-05-23T16:22:20Z"
                 }
             }
         }

@@ -7,3 +7,15 @@ https://dev.azure.com/azure-sdk/internal/_build?definitionId=7571
 
 # Link check times out, but link is valid
 https://aka.ms/security.md/msrc/bounty
+
+# Links from release template are going to fail validation check because they are incomplete, confirmed they work
+https://learn.microsoft.com/en-us/azure/developer/github-copilot-azure/get-started?pivots=visual-studio-2026
+https://www.nuget.org/packages/Azure.Mcp/%5BVersion%5D
+https://www.npmjs.com/package/@azure/mcp/v/%5BVersion%5D
+https://mcr.microsoft.com/en-us/artifact/mar/azure-sdk/azure-mcp
+https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-%5BVersion%5D/Azure.Mcp.Server-linux-x64.mcpb
+https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-%5BVersion%5D/Azure.Mcp.Server-linux-arm64.mcpb
+https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-%5BVersion%5D/Azure.Mcp.Server-osx-x64.mcpb
+https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-%5BVersion%5D/Azure.Mcp.Server-osx-arm64.mcpb
+https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-%5BVersion%5D/Azure.Mcp.Server-win-x64.mcpb
+https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-%5BVersion%5D/Azure.Mcp.Server-win-arm64.mcpb

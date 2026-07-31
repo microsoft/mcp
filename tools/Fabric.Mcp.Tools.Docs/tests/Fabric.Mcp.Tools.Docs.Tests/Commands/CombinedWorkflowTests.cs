@@ -9,7 +9,9 @@ using Fabric.Mcp.Tools.Docs.Commands.BestPractices;
 using Fabric.Mcp.Tools.Docs.Commands.PublicApis;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.Docs.Tests.Commands;
 
@@ -127,8 +129,8 @@ public class CombinedWorkflowTests : IDisposable
         Assert.Equal(matchedDefinitions.Count, successCount);
 
         // Flag any orphaned definition files that no workload can reach.
-        // dbtjob and hlscohort have no corresponding workload API spec directories.
-        var knownOrphans = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "dbtjob-definition.md", "hlscohort-definition.md" };
+        // dbtjob, hlscohort, orgapp, and orgappaudience have no corresponding workload API spec directories.
+        var knownOrphans = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "dbtjob-definition.md", "hlscohort-definition.md", "orgapp-definition.md", "orgappaudience-definition.md" };
         var orphaned = allDefinitionResources
             .Except(matchedDefinitions)
             .Where(r => !knownOrphans.Contains(Path.GetFileName(r)!))
@@ -268,8 +270,8 @@ public class CombinedWorkflowTests : IDisposable
         Assert.Equal(workloads1.OrderBy(w => w), workloads2.OrderBy(w => w));
     }
 
-    private Task<CommandResponse> ExecuteCommandAsync(IBaseCommand command, params string[] args)
-        => command.ExecuteAsync(new(_serviceProvider), command.GetCommand().Parse(args), TestContext.Current.CancellationToken);
+    private static Task<CommandResponse> ExecuteCommandAsync(IBaseCommand command, params string[] args)
+        => command.ExecuteAsync(new(), command.GetCommand().Parse(args), TestContext.Current.CancellationToken);
 
     private static IEnumerable<string> ValidateAndDeserializeWorkloadsResponse(CommandResponse response)
     {

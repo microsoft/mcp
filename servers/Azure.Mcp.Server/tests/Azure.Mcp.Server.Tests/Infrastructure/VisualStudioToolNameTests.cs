@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -41,13 +42,14 @@ public sealed class VisualStudioToolNameTests
         var serviceCollection = new ServiceCollection()
             .AddLogging()
             .AddSingleton<ITelemetryService, NoopTelemetryService>()
-            .AddSingleton(Substitute.For<Core.Services.Azure.Subscription.ISubscriptionService>())
+            .AddSingleton(Substitute.For<ISubscriptionService>())
             .AddSingleton(Substitute.For<Core.Services.Azure.Tenant.ITenantService>())
             .AddSingleton(Substitute.For<IHttpClientFactory>())
             .AddSingleton(Substitute.For<IDateTimeProvider>())
             .AddSingleton(Substitute.For<IExternalProcessService>())
             .AddSingleton(Substitute.For<IAzureTokenCredentialProvider>())
-            .AddSingleton(Substitute.For<IAzureCloudConfiguration>());
+            .AddSingleton(Substitute.For<IAzureCloudConfiguration>())
+            .AddSingleton(Substitute.For<ISubscriptionResolver>());
 
         foreach (var area in areaSetups)
         {
@@ -59,8 +61,10 @@ public sealed class VisualStudioToolNameTests
         var configurationOptions = Options.Create(new McpServerConfiguration
         {
             Name = "Test Server",
+            ShortName = "test",
             Version = "1.0",
             DisplayName = "Test",
+            Description = "Test Description",
             RootCommandGroupName = "azmcp"
         });
 

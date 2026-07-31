@@ -9,7 +9,7 @@ namespace Microsoft.Mcp.Core.Commands;
 public class TagName
 {
     public const string McpServerVersion = "Version";
-    public const string McpServerName = "McpServerName";
+    public const string McpServerName = "McpServerNameV2";
     public const string ClientName = "ClientName";
     public const string ClientVersion = "ClientVersion";
     public const string DevDeviceId = "DevDeviceId";
@@ -37,6 +37,8 @@ public class TagName
     public const string Host = "Host";
     public const string ProcessorArchitecture = "ProcessorArchitecture";
     public const string Cloud = "Cloud";
+    public const string TraceParent = "w3c.traceparent";
+    public const string TraceState = "w3c.tracestate";
 }
 
 public class ActivityName

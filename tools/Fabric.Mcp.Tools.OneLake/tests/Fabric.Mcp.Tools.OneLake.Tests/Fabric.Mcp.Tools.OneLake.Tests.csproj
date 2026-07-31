@@ -15,17 +15,10 @@
     <PackageReference Include="coverlet.MTP" />
     <PackageReference Include="NSubstitute" />
     <PackageReference Include="NSubstitute.Analyzers.CSharp" />
-    <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Fabric.Mcp.Tools.OneLake.csproj" />
     <ProjectReference Include="$(RepoRoot)core\Microsoft.Mcp.Core\tests\Microsoft.Mcp.Tests\Microsoft.Mcp.Tests.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Using Include="Xunit" />
-    <Using Include="Microsoft.Mcp.Core.Commands" />
-  </ItemGroup>
-
 </Project>

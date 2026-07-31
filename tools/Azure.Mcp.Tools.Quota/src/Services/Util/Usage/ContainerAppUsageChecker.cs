@@ -22,8 +22,8 @@ public class ContainerAppUsageChecker(TokenCredential credential, string subscri
             {
                 result.Add(new UsageInfo(
                     Name: item.Name?.Value ?? string.Empty,
-                    Limit: (int)(item.Limit),
-                    Used: (int)(item.CurrentValue),
+                    Limit: (int)item.Limit,
+                    Used: (int)item.CurrentValue,
                     Unit: item.Unit.ToString()
                 ));
             }

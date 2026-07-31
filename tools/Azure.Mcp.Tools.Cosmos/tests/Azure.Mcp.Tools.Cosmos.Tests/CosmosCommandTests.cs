@@ -228,6 +228,328 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         }
     }
 
+    [Fact]
+    public async Task Should_infer_container_schema()
+    {
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+        var result = await CallToolAsync(
+            "cosmos_database_container_schema_infer",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "account", resourceBaseName },
+                { "database", "ToDoList" },
+                { "container", "Items" }
+            });
+
+        // Document schema:
+        // {
+        //   "completed": "boolean",
+        //   "priority": "number",
+        //   "id": "string",
+        //   "title": "string",
+        //   "_rid": "string",
+        //   "_self": "string",
+        //   "_etag": "string",
+        //   "_attachments": "string",
+        //   "_ts": "string"
+        // }
+
+        var sampleSize = result.AssertProperty("sampleSize");
+        Assert.Equal(JsonValueKind.Number, sampleSize.ValueKind);
+        Assert.True(sampleSize.GetInt32() > 0);
+
+        var properties = result.AssertProperty("properties");
+        Assert.Equal(JsonValueKind.Array, properties.ValueKind);
+        // Items seeded by seed-cosmos.ps1 always contain id/title/completed/priority.
+        var names = properties.EnumerateArray()
+            .Select(p => p.GetProperty("name").GetString())
+            .ToHashSet();
+        Assert.Contains("id", names);
+        Assert.Contains("title", names);
+        Assert.Contains("completed", names);
+        Assert.Contains("priority", names);
+    }
+
+    [Fact]
+    public async Task Should_list_recent_items()
+    {
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+        var result = await CallToolAsync(
+            "cosmos_database_container_item_list-recent",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "account", resourceBaseName },
+                { "database", "ToDoList" },
+                { "container", "Items" }
+            });
+
+        var items = result.AssertProperty("items");
+        Assert.Equal(JsonValueKind.Array, items.ValueKind);
+        Assert.NotEmpty(items.EnumerateArray());
+    }
+
+    [Fact]
+    public async Task Should_get_item_by_id()
+    {
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+
+        // First, fetch any existing item to obtain a valid id to look up.
+        var listResult = await CallToolAsync(
+            "cosmos_database_container_item_list-recent",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "account", resourceBaseName },
+                { "database", "ToDoList" },
+                { "container", "Items" }
+            });
+
+        var items = listResult.AssertProperty("items");
+        Assert.Equal(JsonValueKind.Array, items.ValueKind);
+        var firstItem = items.EnumerateArray().FirstOrDefault();
+        Assert.Equal(JsonValueKind.Object, firstItem.ValueKind);
+
+        var id = RegisterOrRetrieveVariable("itemId", firstItem.GetProperty("id").GetString()!);
+        Assert.False(string.IsNullOrEmpty(id));
+
+        var getResult = await CallToolAsync(
+            "cosmos_database_container_item_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "account", resourceBaseName },
+                { "database", "ToDoList" },
+                { "container", "Items" },
+                { "id", id }
+            });
+
+        var item = getResult.AssertProperty("item");
+        Assert.Equal(JsonValueKind.Object, item.ValueKind);
+        Assert.Equal(id, item.GetProperty("id").GetString());
+    }
+
+    [Fact]
+    public async Task Should_get_item_by_id_with_partition_key()
+    {
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+
+        // Items container uses /id as partition key in test resources.
+        var listResult = await CallToolAsync(
+            "cosmos_database_container_item_list-recent",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "account", resourceBaseName },
+                { "database", "ToDoList" },
+                { "container", "Items" }
+            });
+
+        var items = listResult.AssertProperty("items");
+        Assert.Equal(JsonValueKind.Array, items.ValueKind);
+        var firstItem = items.EnumerateArray().FirstOrDefault();
+        Assert.Equal(JsonValueKind.Object, firstItem.ValueKind);
+
+        var id = RegisterOrRetrieveVariable("itemIdWithPk", firstItem.GetProperty("id").GetString()!);
+        Assert.False(string.IsNullOrEmpty(id));
+
+        var getResult = await CallToolAsync(
+            "cosmos_database_container_item_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "account", resourceBaseName },
+                { "database", "ToDoList" },
+                { "container", "Items" },
+                { "id", id },
+                { "partition-key", id }
+            });
+
+        var item = getResult.AssertProperty("item");
+        Assert.Equal(JsonValueKind.Object, item.ValueKind);
+        Assert.Equal(id, item.GetProperty("id").GetString());
+    }
+
+    [Fact]
+    public async Task Should_text_search_documents()
+    {
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+        var result = await CallToolAsync(
+            "cosmos_database_container_item_text-search",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "account", resourceBaseName },
+                { "database", "ToDoList" },
+                { "container", "TextItems" },
+                { "search-property", "description" },
+                { "search-phrase", "cosmos" }
+            });
+
+        // Document schema:
+        // {
+        //   "id": "string",
+        //   "description": "string",
+        //   "_rid": "string",
+        //   "_self": "string",
+        //   "_attachments": "string",
+        //   "_ts": "string"
+        // }
+
+        var items = result.AssertProperty("items");
+        Assert.Equal(JsonValueKind.Array, items.ValueKind);
+        // TextItems seeded by seed-cosmos.ps1 contains text-1 and text-3 with "cosmos".
+        // "hello" is a stop word in Cosmos's extended English list and is not indexed.
+        var hitIds = items.EnumerateArray()
+            .Select(i => i.GetProperty("id").GetString())
+            .ToHashSet();
+        Assert.Contains("text-1", hitIds);
+        Assert.Contains("text-3", hitIds);
+        // Results should not include other properties
+        foreach (var item in items.EnumerateArray())
+        {
+            Assert.True(item.TryGetProperty("id", out _), "id should be present");
+            Assert.True(item.TryGetProperty("description", out _), "description should be present");
+        }
+    }
+
+    [Fact]
+    public async Task Should_text_search_documents_with_select_properties()
+    {
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+        var result = await CallToolAsync(
+            "cosmos_database_container_item_text-search",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "account", resourceBaseName },
+                { "database", "ToDoList" },
+                { "container", "TextItems" },
+                { "search-property", "description" },
+                { "search-phrase", "cosmos" },
+                { "properties-to-select", "id" }
+            });
+
+        // Document schema:
+        // {
+        //   "id": "string",
+        //   "description": "string",
+        //   "_rid": "string",
+        //   "_self": "string",
+        //   "_attachments": "string",
+        //   "_ts": "string"
+        // }
+
+        var items = result.AssertProperty("items");
+        Assert.Equal(JsonValueKind.Array, items.ValueKind);
+        // TextItems seeded by seed-cosmos.ps1 contains text-1 and text-3 with "cosmos".
+        // "hello" is a stop word in Cosmos's extended English list and is not indexed.
+        var hitIds = items.EnumerateArray()
+            .Select(i => i.GetProperty("id").GetString())
+            .ToHashSet();
+        Assert.Contains("text-1", hitIds);
+        Assert.Contains("text-3", hitIds);
+        // Results should not include other properties
+        foreach (var item in items.EnumerateArray())
+        {
+            Assert.True(item.TryGetProperty("id", out _), "id should be present");
+            Assert.False(item.TryGetProperty("description", out _), "description should not be selected");
+        }
+    }
+
+    [Fact]
+    public async Task Should_vector_search_documents()
+    {
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+        var openAiEndpoint = RegisterOrRetrieveDeploymentOutputVariable("openAiEndpoint", "OPENAIENDPOINT");
+        var embeddingDeployment = RegisterOrRetrieveDeploymentOutputVariable("embeddingDeployment", "EMBEDDINGDEPLOYMENTNAME");
+
+        // Omitting --properties-to-select triggers the wrapper-projection path: the service
+        // requests `c AS doc, VectorDistance(...) AS _score` and strips the vector before returning.
+        var result = await CallToolAsync(
+            "cosmos_database_container_item_vector-search",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "account", resourceBaseName },
+                { "database", "ToDoList" },
+                { "container", "VectorItems" },
+                { "vector-property", "vector" },
+                { "search-text", "hello world" },
+                { "openai-endpoint", openAiEndpoint },
+                { "embedding-deployment", embeddingDeployment }
+            });
+
+        // Document schema:
+        // {
+        //   "id": "string",
+        //   "text": "string",
+        //   "vector": "array",
+        //   "_rid": "string",
+        //   "_self": "string",
+        //   "_attachments": "string",
+        //   "_ts": "string",
+        // }
+
+        var items = result.AssertProperty("items");
+        Assert.Equal(JsonValueKind.Array, items.ValueKind);
+        Assert.NotEmpty(items.EnumerateArray());
+        var first = items.EnumerateArray().First();
+        Assert.Equal("vec-greeting", first.GetProperty("id").GetString());
+        // The score is calculated by Cosmos during the vector search
+        Assert.True(first.TryGetProperty("_score", out _), "_score should be present");
+        Assert.True(first.TryGetProperty("text", out _), "text property should be selected");
+        Assert.False(first.TryGetProperty("vector", out _), "vector property should be stripped");
+    }
+
+    [Fact]
+    public async Task Should_vector_search_documents_with_select_properties()
+    {
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+        var openAiEndpoint = RegisterOrRetrieveDeploymentOutputVariable("openAiEndpoint", "OPENAIENDPOINT");
+        var embeddingDeployment = RegisterOrRetrieveDeploymentOutputVariable("embeddingDeployment", "EMBEDDINGDEPLOYMENTNAME");
+
+        // VectorItems uses 1536-dim vectors to match `text-embedding-3-small`.
+        var result = await CallToolAsync(
+            "cosmos_database_container_item_vector-search",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "account", resourceBaseName },
+                { "database", "ToDoList" },
+                { "container", "VectorItems" },
+                { "vector-property", "vector" },
+                { "properties-to-select", "id" },
+                { "search-text", "hello world" },
+                { "openai-endpoint", openAiEndpoint },
+                { "embedding-deployment", embeddingDeployment }
+            });
+
+        // Document schema:
+        // {
+        //   "id": "string",
+        //   "text": "string",
+        //   "vector": "array",
+        //   "_rid": "string",
+        //   "_self": "string",
+        //   "_attachments": "string",
+        //   "_ts": "string",
+        // }
+
+        var items = result.AssertProperty("items");
+        Assert.Equal(JsonValueKind.Array, items.ValueKind);
+        Assert.NotEmpty(items.EnumerateArray());
+        // vec-greeting is the seeded doc with text "Hello world, a friendly greeting...";
+        // it should rank first by cosine similarity against the "hello world" query embedding.
+        var first = items.EnumerateArray().First();
+        Assert.Equal("vec-greeting", first.GetProperty("id").GetString());
+        // The score is calculated by Cosmos during the vector search
+        Assert.True(first.TryGetProperty("_score", out _), "_score should be present");
+        Assert.False(first.TryGetProperty("text", out _), "text property should not be selected");
+        Assert.False(first.TryGetProperty("vector", out _), "vector property should be stripped");
+    }
+
     private static string GetStringOrNameElementString(JsonElement element, string propertyName)
     {
         if (element.ValueKind == JsonValueKind.String)

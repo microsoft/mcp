@@ -155,7 +155,7 @@
       "required": ["parts"],
       "properties": {
         "format": {
-          "description": "The format of the item definition.",
+          "description": "The format of the warehouse definition.",
           "type": "string",
           "readOnly": false
         },
@@ -202,6 +202,107 @@
           "description": "The warehouse description. Maximum length is 256 characters.",
           "type": "string",
           "readOnly": false
+        }
+      }
+    },
+    "UpdateSQLPoolsConfigurationRequest": {
+      "type": "object",
+      "description": "SQL pools configuration request payload.",
+      "properties": {
+        "customSQLPoolsEnabled": {
+          "description": "Indicates whether the SQL pools configuration is enabled. When set to false, the configuration is disabled but preserved. Re-enabling it restores the previously saved configuration.",
+          "type": "boolean"
+        },
+        "customSQLPools": {
+          "description": "A list of SQL pool elements. In update requests, you must explicitly specify the name of the pools to retain. Any SQL pool not included in the update request will be deleted.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CustomSQLPool"
+          }
+        }
+      }
+    },
+    "CustomSQLPool": {
+      "type": "object",
+      "description": "Custom SQL pool element.",
+      "properties": {
+        "name": {
+          "description": "Friendly name for the SQL pool.",
+          "type": "string"
+        },
+        "isDefault": {
+          "description": "Indicates that this is a default SQL pool. Only one pool can be marked as default. True - Sql Pool is the default, False - Sql Pool is not the default.",
+          "type": "boolean"
+        },
+        "maxResourcePercentage": {
+          "description": "Maximum percentage of workspace resources that this SQL pool is allowed to consume. Value is an integer in the range 1-100. The sum of maxResourcePercentage values across all SQL pools must not exceed 100",
+          "format": "int32",
+          "type": "integer"
+        },
+        "optimizeForReads": {
+          "description": "Optimizes the SQL pool for read-heavy workloads. True - the SQL pool will leverage enhanced caching to improve read performance. False - the SQL pool will not use enhanced caching. Default is true.",
+          "type": "boolean"
+        },
+        "classifier": {
+          "$ref": "#/definitions/CustomSqlPoolClassifier",
+          "description": "This is an object that holds the classifier that is applied to the SQL pool."
+        }
+      }
+    },
+    "CustomSqlPoolClassifier": {
+      "type": "object",
+      "description": "A classifier element.",
+      "required": [
+        "type",
+        "value"
+      ],
+      "properties": {
+        "type": {
+          "description": "Classifier element type.",
+          "$ref": "#/definitions/CustomSqlPoolClassifierType"
+        },
+        "value": {
+          "description": "List of strings.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "CustomSqlPoolClassifierType": {
+      "description": "Classifier element type. Additional classifier element types may be added over time.",
+      "type": "string",
+      "enum": ["Application Name", "Application Name Regex"],
+      "x-ms-enum": {
+        "name": "CustomSqlPoolClassifierType",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Application Name",
+            "description": "Refers to specific application names applied to the SQL pool."
+          },
+          {
+            "value": "Application Name Regex",
+            "description": "Refers to a regular expression pattern used to match the application names applied to the SQL pool."
+          }
+        ]
+      }
+    },
+    "SQLPoolsConfigurationResponse": {
+      "type": "object",
+      "description": "SQL pools configuration response.",
+      "properties": {
+        "customSQLPoolsEnabled": {
+          "description": "Indicates whether the SQL pools configuration is enabled. When set to false, the configuration is disabled but preserved. Re-enabling it restores the previously saved configuration.",
+          "type": "boolean"
+        },
+        "customSQLPools": {
+          "description": "A list of SQL pool elements.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CustomSQLPool"
+          }
         }
       }
     },

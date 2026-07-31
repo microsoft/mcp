@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Options;
+
 namespace Azure.Mcp.Tools.AzureTerraform.Options;
 
 public sealed class AvmVersionOptions
 {
-    public string? ModuleName { get; set; }
+    [Option(Description = AzureTerraformOptionDescriptions.ModuleName)]
+    public required string ModuleName { get; set; }
 }

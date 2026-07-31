@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.Server;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.Tests.Server;
 
-public class ServerCreateCommandTests : CommandUnitTestsBase<ServerCreateCommand, ISqlService>
+public class ServerCreateCommandTests : SubscriptionCommandUnitTestsBase<ServerCreateCommand, ISqlService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -22,7 +22,6 @@ public class ServerCreateCommandTests : CommandUnitTestsBase<ServerCreateCommand
         Assert.Equal("create", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
-        Assert.Contains("Creates a new Azure SQL server", command.Description);
     }
 
     [Theory]

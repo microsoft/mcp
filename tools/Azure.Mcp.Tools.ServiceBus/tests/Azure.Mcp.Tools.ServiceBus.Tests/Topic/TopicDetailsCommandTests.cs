@@ -18,7 +18,6 @@ namespace Azure.Mcp.Tools.ServiceBus.Tests.Topic;
 public class TopicDetailsCommandTests : CommandUnitTestsBase<TopicDetailsCommand, IServiceBusService>
 {
     // Test constants
-    private const string SubscriptionId = "sub123";
     private const string TopicName = "testTopic";
     private const string NamespaceName = "test.servicebus.windows.net";
 
@@ -49,7 +48,6 @@ public class TopicDetailsCommandTests : CommandUnitTestsBase<TopicDetailsCommand
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", SubscriptionId,
             "--namespace", NamespaceName,
             "--topic", TopicName);
 
@@ -77,13 +75,13 @@ public class TopicDetailsCommandTests : CommandUnitTestsBase<TopicDetailsCommand
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", SubscriptionId,
             "--namespace", NamespaceName,
             "--topic", TopicName);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("Topic not found", response.Message);
     }
 
     [Fact]
@@ -102,7 +100,6 @@ public class TopicDetailsCommandTests : CommandUnitTestsBase<TopicDetailsCommand
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", SubscriptionId,
             "--namespace", NamespaceName,
             "--topic", TopicName);
 
@@ -113,10 +110,9 @@ public class TopicDetailsCommandTests : CommandUnitTestsBase<TopicDetailsCommand
     }
 
     [Theory]
-    [InlineData("--subscription sub123 --namespace test.servicebus.windows.net --topic testTopic", true)]
-    [InlineData("--namespace test.servicebus.windows.net --topic testTopic", false)]  // Missing subscription
-    [InlineData("--subscription sub123 --topic testTopic", false)]   // Missing namespace
-    [InlineData("--subscription sub123 --namespace test.servicebus.windows.net", false)] // Missing topic
+    [InlineData("--namespace test.servicebus.windows.net --topic testTopic", true)]
+    [InlineData("--topic testTopic", false)]   // Missing namespace
+    [InlineData("--namespace test.servicebus.windows.net", false)] // Missing topic
     [InlineData("", false)]  // Missing all required options
     public async Task ExecuteAsync_ValidatesRequiredParameters(string args, bool shouldSucceed)
     {

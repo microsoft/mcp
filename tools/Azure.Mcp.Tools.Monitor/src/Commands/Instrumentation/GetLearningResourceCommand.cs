@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tools.Monitor.Options;
-using Azure.Mcp.Tools.Monitor.Tools;
+using Azure.Mcp.Tools.Monitor.Options.Instrumentation;
+using Azure.Mcp.Tools.Monitor.Tools.Instrumentation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.Monitor.Commands;
+namespace Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
 
 [CommandMetadata(
     Id = "2c9f3785-4b97-4dd6-8489-af515638f0d5",
@@ -23,33 +22,12 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
     Secret = false,
     LocalRequired = true)]
 public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceCommand> logger)
-    : BaseCommand<GetLearningResourceOptions>
+    : BaseCommand<GetLearningResourceOptions, GetLearningResourceCommand.GetLearningResourceCommandResult>
 {
     private readonly ILogger<GetLearningResourceCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, GetLearningResourceOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(MonitorInstrumentationOptionDefinitions.Path);
-    }
-
-    protected override GetLearningResourceOptions BindOptions(ParseResult parseResult)
-    {
-        return new GetLearningResourceOptions
-        {
-            Path = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.Path.Name)
-        };
-    }
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return Task.FromResult(context.Response);
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             if (string.IsNullOrWhiteSpace(options.Path))
@@ -58,9 +36,8 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
                 var resources = GetLearningResourceTool.ListLearningResources();
 
                 context.Response.Status = HttpStatusCode.OK;
-                context.Response.Results = ResponseResult.Create(
-                    new GetLearningResourceCommandResult(Resources: resources ?? [], Content: null),
-                    MonitorInstrumentationJsonContext.Default.GetLearningResourceCommandResult);
+                context.Response.Results = ResponseResult.Create(new(Resources: resources ?? [], Content: null),
+                    MonitorJsonContext.Default.GetLearningResourceCommandResult);
             }
             else
             {
@@ -68,9 +45,8 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
                 var content = GetLearningResourceTool.GetLearningResource(options.Path);
 
                 context.Response.Status = HttpStatusCode.OK;
-                context.Response.Results = ResponseResult.Create(
-                    new GetLearningResourceCommandResult(Resources: null, Content: content),
-                    MonitorInstrumentationJsonContext.Default.GetLearningResourceCommandResult);
+                context.Response.Results = ResponseResult.Create(new(Resources: null, Content: content),
+                    MonitorJsonContext.Default.GetLearningResourceCommandResult);
             }
 
             context.Response.Message = string.Empty;
@@ -84,6 +60,5 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
         return Task.FromResult(context.Response);
     }
 
-    internal record GetLearningResourceCommandResult(List<string>? Resources, string? Content);
-
+    public sealed record GetLearningResourceCommandResult(List<string>? Resources, string? Content);
 }

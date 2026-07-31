@@ -9,12 +9,22 @@ using Microsoft.Identity.Client;
 
 namespace Microsoft.Mcp.Core.Commands;
 
+/// <summary>
+/// A base class for commands that require authentication.
+/// </summary>
+/// <typeparam name="TOptions">The type of the options for the command.</typeparam>
+/// <typeparam name="TResult">The type of the result for the command.</typeparam>
 public abstract class AuthenticatedCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult> : BaseCommand<TOptions, TResult>
     where TOptions : class
 {
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        // CredentialUnavailableException derives from AuthenticationFailedException, so it must be
+        // matched first to surface a clear, actionable message for the common "not signed in" case.
+        CredentialUnavailableException credEx =>
+            "Azure credentials not found or unavailable. Please run 'az login' to authenticate, then try again. " +
+            $"For the complete list of supported credentials, see: https://aka.ms/azmcp/auth. Details: {credEx.Message}",
         AuthenticationFailedException authEx =>
             $"Authentication failed. Please run 'az login' to sign in to Azure. Details: {authEx.Message}",
         RequestFailedException rfEx => HandleRequestFailedException(rfEx),

@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.ManagedLustre.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 
@@ -30,47 +29,21 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class AutoexportJobDeleteCommand(IManagedLustreService service, ILogger<AutoexportJobDeleteCommand> logger)
-    : BaseManagedLustreCommand<AutoexportJobDeleteOptions>(logger)
+public sealed class AutoexportJobDeleteCommand(IManagedLustreService service, ILogger<AutoexportJobDeleteCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<AutoexportJobDeleteOptions, AutoexportJobDeleteCommand.AutoexportJobDeleteResult>(subscriptionResolver)
 {
-
     private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<AutoexportJobDeleteCommand> _logger = logger;
+    private readonly ILogger<AutoexportJobDeleteCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AutoexportJobDeleteOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(ManagedLustreOptionDefinitions.FileSystemNameOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.JobNameOption);
-    }
-
-    protected override AutoexportJobDeleteOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileSystemName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.FileSystemNameOption.Name);
-        options.JobName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.JobNameOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             await _service.DeleteAutoexportJobAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.FileSystemName!,
-                options.JobName!,
+                options.ResourceGroup,
+                options.FilesystemName,
+                options.JobName,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
@@ -80,12 +53,12 @@ public sealed class AutoexportJobDeleteCommand(IManagedLustreService service, IL
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting autoexport job {JobName} for AMLFS filesystem {FileSystem}.",
-                options.JobName, options.FileSystemName);
+                options.JobName, options.FilesystemName);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record AutoexportJobDeleteResult(string JobName, string Status);
+    public sealed record AutoexportJobDeleteResult(string JobName, string Status);
 }

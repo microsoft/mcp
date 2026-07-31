@@ -2,11 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ResourceHealth.Commands.AvailabilityStatus;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -14,7 +13,7 @@ using AvailabilityStatusModel = Azure.Mcp.Tools.ResourceHealth.Models.Availabili
 
 namespace Azure.Mcp.Tools.ResourceHealth.Tests.AvailabilityStatus;
 
-public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<AvailabilityStatusGetCommand, IResourceHealthService>
+public class AvailabilityStatusGetCommandTests : SubscriptionCommandUnitTestsBase<AvailabilityStatusGetCommand, IResourceHealthService>
 {
     #region Get (Single Resource) Tests
 
@@ -220,27 +219,14 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
 
     #region Validation Tests
 
-    [Theory]
-    [InlineData("--subscription")]
-    public async Task ExecuteAsync_ReturnsError_WhenRequiredParameterIsMissing(string missingParameter)
+    [Fact]
+    public async Task ExecuteAsync_ReturnsError_WhenRequiredParameterIsMissing()
     {
-        // The subscription option falls back to the Azure CLI profile or AZURE_SUBSCRIPTION_ID env var.
-        // Skip if a CLI profile default is present so the test only runs when
-        // the missing-subscription path is actually exercised.
-        TestEnvironment.SkipIfDefaultSubscriptionConfigured();
-
-        var argsList = new List<string>();
-        if (missingParameter != "--subscription")
-        {
-            argsList.Add("--subscription");
-            argsList.Add("12345678-1234-1234-1234-123456789012");
-        }
-
-        var response = await ExecuteCommandAsync(argsList.ToArray());
+        var response = await ExecuteCommandAsync([]);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
+        Assert.Contains($"Missing Required options: --subscription", response.Message);
     }
 
     #endregion

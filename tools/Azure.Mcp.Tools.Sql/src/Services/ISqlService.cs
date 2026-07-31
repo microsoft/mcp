@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Sql.Models;
+using Azure.Mcp.Tools.Sql.Options.Database;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Sql.Services;
@@ -58,7 +58,7 @@ public interface ISqlService
         long? maxSizeBytes = null,
         string? elasticPoolName = null,
         bool? zoneRedundant = null,
-        string? readScale = null,
+        DatabaseReadScale? readScale = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
@@ -92,7 +92,7 @@ public interface ISqlService
         long? maxSizeBytes = null,
         string? elasticPoolName = null,
         bool? zoneRedundant = null,
-        string? readScale = null,
+        DatabaseReadScale? readScale = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
@@ -125,7 +125,7 @@ public interface ISqlService
     /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A list of SQL databases</returns>
-    Task<ResourceQueryResults<SqlDatabase>> ListDatabasesAsync(
+    Task<List<SqlDatabase>> ListDatabasesAsync(
         string serverName,
         string resourceGroup,
         string subscription,
@@ -157,7 +157,7 @@ public interface ISqlService
     /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A list of SQL elastic pools</returns>
-    Task<ResourceQueryResults<SqlElasticPool>> GetElasticPoolsAsync(
+    Task<List<SqlElasticPool>> GetElasticPoolsAsync(
         string serverName,
         string resourceGroup,
         string subscription,

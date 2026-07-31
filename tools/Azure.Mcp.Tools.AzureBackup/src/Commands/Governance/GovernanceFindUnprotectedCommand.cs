@@ -1,16 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Governance;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 
@@ -20,7 +19,28 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
     Title = "Find Unprotected Resources",
     Description = """
         Scans the subscription to find Azure resources that are not currently protected by any
-        backup policy. Optionally filter by resource type, resource group, or tags.
+        backup policy using two-level discovery: (1) ARM resource enumeration finds top-level
+        unprotected resources, and (2) RSV vault protectable-items enrichment discovers
+        unprotected sub-resources that vaults have discovered but not yet protected.
+        Results include a 'discoverySource' field ('arm' or 'vault') indicating how each item
+        was found, and vault-discovered items include 'protectionState' to distinguish
+        never-protected items from items where protection was stopped.
+        Optionally filter by resource type, resource group, or tags.
+        Note: tag filtering applies only to ARM-discovered resources; vault-discovered
+        sub-resources do not carry ARM tags and are not filtered by the tag parameter.
+
+        Workload coverage and discovery level:
+        - IaaS VM: ARM (VM level)
+        - SQL in IaaS VM: Vault discovery (database level)
+        - SAP HANA in IaaS VM: Vault discovery (database level)
+        - Azure File Shares: Vault discovery (file share level)
+        - Blob Storage: ARM (storage account level)
+        - ADLS Gen2: ARM (storage account level)
+        - AKS: ARM (cluster level)
+        - Managed Disks: ARM (disk level)
+        - PostgreSQL Flexible: ARM (server level)
+        - Cosmos DB: ARM (account level)
+        - Elastic SAN: ARM (volume group level)
         """,
     Destructive = false,
     Idempotent = true,
@@ -28,37 +48,15 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnprotectedCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<GovernanceFindUnprotectedOptions>()
+public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnprotectedCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<GovernanceFindUnprotectedOptions, GovernanceFindUnprotectedCommand.GovernanceFindUnprotectedCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<GovernanceFindUnprotectedCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, GovernanceFindUnprotectedOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.ResourceTypeFilter);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(AzureBackupOptionDefinitions.TagFilter);
-    }
-
-    protected override GovernanceFindUnprotectedOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceTypeFilter = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ResourceTypeFilter.Name);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.TagFilter = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.TagFilter.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
+        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, "scan");
 
         try
@@ -85,5 +83,14 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
         return context.Response;
     }
 
-    internal record GovernanceFindUnprotectedCommandResult(List<UnprotectedResourceInfo> Resources);
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        ArgumentException argEx => argEx.Message,
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            "Authorization failed scanning for unprotected resources. Ensure you have 'Reader' role at subscription scope.",
+        RequestFailedException reqEx => reqEx.Message,
+        _ => base.GetErrorMessage(ex)
+    };
+
+    public sealed record GovernanceFindUnprotectedCommandResult(List<UnprotectedResourceInfo> Resources);
 }
