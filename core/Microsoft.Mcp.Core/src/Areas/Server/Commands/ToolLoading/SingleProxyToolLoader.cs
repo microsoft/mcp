@@ -201,7 +201,8 @@ public sealed class SingleProxyToolLoader(
             });
         }
 
-        _cachedTools = (tools, JsonSerializer.Serialize(tools, ServerJsonContext.Default.IEnumerableTool));
+        var json = JsonSerializer.Serialize(tools.Select(t => new ToolCommandInfo(t, false)), ServerJsonContext.Default.IEnumerableToolCommandInfo);
+        _cachedTools = (tools, json);
         return tools;
     }
 
