@@ -29,13 +29,11 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 public sealed class NamespaceToolLoader(
     ICommandFactory commandFactory,
     IOptions<ServerStartOptions> options,
-    IServiceProvider serviceProvider,
     ILogger<NamespaceToolLoader> logger,
     bool applyFilter = true) : BaseToolLoader(logger)
 {
     private readonly ICommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
     private readonly IOptions<ServerStartOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
-    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
     private readonly Lazy<IReadOnlyList<string>> _availableNamespaces = new(() =>
     {
@@ -416,7 +414,7 @@ public sealed class NamespaceToolLoader(
             }
 
             var currentActivity = Activity.Current;
-            var commandContext = new CommandContext(_serviceProvider, currentActivity)
+            var commandContext = new CommandContext(currentActivity)
             {
                 McpServer = request.Server,
                 ProgressToken = request.Params?.ProgressToken

@@ -44,3 +44,14 @@
   }
   ```
 - Copilot should utilize the [recorded test documentation](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md) in `docs/recorded-tests.md` for more details on how to convert and validate recorded tests.
+
+## Code Review Guidelines
+
+When reviewing PRs that add or modify MCP tools, cross-reference the [pre-merge checklist](PULL_REQUEST_TEMPLATE.md) and check the following repository-specific completeness requirements:
+
+- **`consolidated-tools.json`**: If a tool is renamed or removed, `servers/Azure.Mcp.Server/src/Resources/consolidated-tools.json` must be updated. Flag a tool rename when this file is not in the diff.
+- **`e2eTestPrompts.md`**: If a tool is added or modified, `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` must include prompts for it. Flag a diff that removes all prompts for a tool that remains registered, or that adds a tool without corresponding prompts.
+- **`azmcp-commands.md`**: If a tool is added, modified, or removed, `servers/Azure.Mcp.Server/docs/azmcp-commands.md` must be updated. Flag command registration changes when this file is not in the diff.
+- **ToolDescriptionEvaluator**: If tool descriptions are added or changed, the PR description must confirm a ToolDescriptionEvaluator score of at least `0.4`. Flag new tool descriptions when the PR body does not mention the score.
+- **TreatWarningsAsErrors**: This repository sets `TreatWarningsAsErrors=true`. An `async` method with no `await` produces CS1998 and fails the build. Report these findings as build breaks, not style suggestions.
+- **Changelog entries**: Entries under `servers/Azure.Mcp.Server/changelog-entries/` must conform to the YAML schema in `docs/changelog-entries.md`. Require a non-empty `changes` array whose entries contain a valid `section` and a `description`; `pr` and `subsection` are optional. Check schema conformance, and do not apply generic prose style suggestions to changelog entry files.
