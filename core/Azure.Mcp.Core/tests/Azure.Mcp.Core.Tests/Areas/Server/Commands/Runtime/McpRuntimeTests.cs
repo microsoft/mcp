@@ -1,5 +1,3 @@
-#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
-#pragma warning disable MCP9005 // Deprecated Sampling/Logging APIs - backward compat during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -191,6 +189,10 @@ public class McpRuntimeTests
 
         // Assert
         Assert.Equal(expectedResult, result);
+        Assert.NotNull(result.CacheScope);
+        Assert.Equal(CacheScope.Public, result.CacheScope);
+        Assert.NotNull(result.TimeToLive);
+        Assert.Equal(TimeSpan.FromHours(1), result.TimeToLive);
         await mockToolLoader.Received(1).ListToolsHandler(request, Arg.Any<CancellationToken>());
 
         mockTelemetry.Received(1).StartActivity(ActivityName.ListToolsHandler, Arg.Any<Implementation?>(), Arg.Any<RequestParams?>());
