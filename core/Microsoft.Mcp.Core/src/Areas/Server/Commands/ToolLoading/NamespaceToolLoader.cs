@@ -51,29 +51,29 @@ public sealed class NamespaceToolLoader(
         return [.. allSubGroups.Select(group => group.Name)];
     });
 
-    internal readonly Dictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
     private ListToolsResult? _cachedListToolsResult;
 
     private const string ToolCallProxySchema = """
         {
           "type": "object",
           "properties": {
-            "tool": {
+            "command": {
               "type": "string",
-              "description": "The name of the tool to call."
+              "description": "The name of the command to call."
             },
             "parameters": {
               "type": "object",
-              "description": "A key/value pair of parameters names and values to pass to the tool call command."
+              "description": "A key/value pair of parameters names and values to pass to the command."
             }
           },
           "additionalProperties": false
         }
         """;
 
-    private static readonly HashSet<string> MetaKeys = new(StringComparer.OrdinalIgnoreCase) { "intent", "command", "learn", "parameters" };
+    private static readonly HashSet<string> s_metaKeys = new(StringComparer.OrdinalIgnoreCase) { "intent", "command", "learn", "parameters" };
 
-    private static readonly JsonElement ToolSchema = JsonSerializer.Deserialize("""
+    private static readonly JsonElement s_toolSchema = JsonSerializer.Deserialize("""
         {
             "type": "object",
             "properties": {
@@ -139,7 +139,7 @@ public sealed class NamespaceToolLoader(
                     To invoke a command, set "command" and wrap its args in "parameters".
                     Set "learn=true" to discover available sub commands.
                     """,
-                InputSchema = ToolSchema,
+                InputSchema = s_toolSchema,
                 Annotations = new ToolAnnotations()
                 {
                     Title = group.Title ?? namespaceName,
@@ -272,7 +272,7 @@ public sealed class NamespaceToolLoader(
                             The tool '{tool}.{command}' was not found or does not support the specified command.
                             Please ensure the tool name and command are correct.
                             If you want to learn about available tools, run again with the "learn=true" argument.
-                        """
+                            """
                     }
                 ],
                 IsError = true
@@ -288,7 +288,7 @@ public sealed class NamespaceToolLoader(
                         The "command" parameter is required when not learning.
                         Run again with the "learn" argument to get a list of available tools and their parameters.
                         To learn about a specific tool, use the "command" argument with the name of the tool.
-                    """
+                        """
                 }
             ],
             IsError = false
@@ -370,7 +370,7 @@ public sealed class NamespaceToolLoader(
             // Enforce read-only mode at execution time
             if ((_options.Value.ReadOnly ?? false) && !cmd.Metadata.ReadOnly)
             {
-                return McpHelper.InjectToolIdMetadata(new CallToolResult
+                return new CallToolResult
                 {
                     Content =
                     [
@@ -380,13 +380,14 @@ public sealed class NamespaceToolLoader(
                         }
                     ],
                     IsError = true,
-                }, cmd.Id);
+                    Meta = new([new(McpHelper.ToolIdMetaKey, cmd.Id)])
+                };
             }
 
             // Enforce HTTP mode restrictions at execution time
             if (_options.Value.IsHttpMode && cmd.Metadata.LocalRequired)
             {
-                return McpHelper.InjectToolIdMetadata(new CallToolResult
+                return new CallToolResult
                 {
                     Content =
                     [
@@ -396,7 +397,8 @@ public sealed class NamespaceToolLoader(
                         }
                     ],
                     IsError = true,
-                }, cmd.Id);
+                    Meta = new([new(McpHelper.ToolIdMetaKey, cmd.Id)])
+                };
             }
 
             // Check if this tool requires elicitation for sensitive or destructive operations
@@ -461,38 +463,39 @@ public sealed class NamespaceToolLoader(
                     ? $"The '{command}' command is missing required parameters."
                     : commandResponse.Message;
 
-                var finalResponse = new CallToolResult
+                return new CallToolResult
                 {
                     Content =
                     [
-                        new TextContentBlock {
-                                Text = $"""
-                                    {errorMessage}
+                        new TextContentBlock
+                        {
+                            Text = $"""
+                                {errorMessage}
 
-                                    - Review the following command spec and identify the required arguments from the input schema.
-                                    - Omit any arguments that are not required or do not apply to your use case.
-                                    - Wrap all command arguments into the root "parameters" argument.
-                                    - If required data is missing infer the data from your context or prompt the user as needed.
-                                    - Run the tool again with the "command" and root "parameters" object.
+                                - Review the following command spec and identify the required arguments from the input schema.
+                                - Omit any arguments that are not required or do not apply to your use case.
+                                - Wrap all command arguments into the root "parameters" argument.
+                                - If required data is missing infer the data from your context or prompt the user as needed.
+                                - Run the tool again with the "command" and root "parameters" object.
 
-                                    Command Spec:
-                                    {childToolSpecJson}
-                                    """
-                            }
+                                Command Spec:
+                                {childToolSpecJson}
+                                """
+                        },
+                        // Add original response content
+                        new TextContentBlock { Text = jsonResponse }
                     ],
-                    IsError = true
+                    IsError = true,
+                    Meta = new([new(McpHelper.ToolIdMetaKey, cmd.Id)])
                 };
-
-                // Add original response content
-                finalResponse.Content.Add(new TextContentBlock { Text = jsonResponse });
-                return McpHelper.InjectToolIdMetadata(finalResponse, cmd.Id);
             }
 
-            return McpHelper.InjectToolIdMetadata(new CallToolResult
+            return new CallToolResult
             {
                 Content = [new TextContentBlock { Text = jsonResponse }],
-                IsError = isError
-            }, cmd.Id);
+                IsError = isError,
+                Meta = new([new(McpHelper.ToolIdMetaKey, cmd.Id)])
+            };
         }
         catch (Exception ex)
         {
@@ -501,7 +504,8 @@ public sealed class NamespaceToolLoader(
             {
                 Content =
                 [
-                    new TextContentBlock {
+                    new TextContentBlock
+                    {
                         Text = $"""
                             There was an error finding or calling tool and command.
                             Failed to call namespace: {namespaceName}, command: {command}
@@ -525,9 +529,10 @@ public sealed class NamespaceToolLoader(
         {
             Content =
             [
-                new TextContentBlock {
+                new TextContentBlock
+                {
                     Text = $"""
-                        Here are the available commands and their parameters for '{namespaceName}' tool.
+                        Here are the available commands and their input schema for '{namespaceName}' tool.
                         If you do not find a suitable "command", run again with the "learn=true" to get a list of available commands and their parameters.
                         Next, identify the command you want to execute and run again with the "command" and "parameters" arguments, respecting "required" parameters if present.
 
@@ -660,7 +665,7 @@ public sealed class NamespaceToolLoader(
 
         // Fallback: treat all non-meta args as parameters (Codex compatibility)
         var flatParams = args
-            .Where(kvp => !MetaKeys.Contains(kvp.Key))
+            .Where(kvp => !s_metaKeys.Contains(kvp.Key))
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
         return flatParams;
@@ -699,8 +704,6 @@ public sealed class NamespaceToolLoader(
 #pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
         await NotifyProgressAsync(request, $"Learning about {namespaceName} capabilities...", cancellationToken);
 
-        JsonElement toolParams = GetParametersJsonElement(request);
-        var toolParamsJson = toolParams.GetRawText();
         var availableToolsJson = JsonSerializer.Serialize(availableTools.Select(t => new ToolCommandInfo(t)), ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
         var samplingRequest = new CreateMessageRequestParams
@@ -710,7 +713,8 @@ public sealed class NamespaceToolLoader(
                 new SamplingMessage
                 {
                     Role = Role.Assistant,
-                    Content = [new TextContentBlock{
+                    Content = [new TextContentBlock
+                    {
                         Text = $"""
                             Your task:
                             - Select the single command that best matches the user's intent.
@@ -718,7 +722,7 @@ public sealed class NamespaceToolLoader(
                             - Map the user's intent and known parameters to the command's input schema, ensuring parameter names and types match the schema exactly (no extra or missing parameters).
                             - Only include parameters that are defined in the selected command's input schema.
                             - Do not guess or invent parameters.
-                            - If no command matches, return JSON schema with "Unknown" tool name.
+                            - If no command matches, return JSON schema with "Unknown" command name.
 
                             Result Schema:
                             {ToolCallProxySchema}
@@ -727,7 +731,7 @@ public sealed class NamespaceToolLoader(
                             {intent ?? "No specific intent provided"}
 
                             Known Parameters:
-                            {toolParamsJson}
+                            {GetParametersJsonElement(request).GetRawText()}
 
                             Available Commands:
                             {availableToolsJson}
@@ -740,17 +744,17 @@ public sealed class NamespaceToolLoader(
         {
             var samplingResponse = await request.Server.SampleAsync(samplingRequest, cancellationToken);
             var samplingContent = samplingResponse.Content is { Count: > 0 } ? samplingResponse.Content[0] as TextContentBlock : null;
-            var toolCallJson = samplingContent?.Text?.Trim();
+            var commandCallJson = samplingContent?.Text?.Trim();
             string? commandName = null;
             var parameters = new Dictionary<string, JsonElement>();
 
-            if (!string.IsNullOrEmpty(toolCallJson))
+            if (!string.IsNullOrEmpty(commandCallJson))
             {
-                using var jsonDoc = JsonDocument.Parse(toolCallJson);
+                using var jsonDoc = JsonDocument.Parse(commandCallJson);
                 var root = jsonDoc.RootElement;
-                if (root.TryGetProperty("tool", out var toolProp) && toolProp.ValueKind == JsonValueKind.String)
+                if (root.TryGetProperty("command", out var commandProp) && commandProp.ValueKind == JsonValueKind.String)
                 {
-                    commandName = toolProp.GetString();
+                    commandName = commandProp.GetString();
                 }
                 if (root.TryGetProperty("parameters", out var parametersElem) && parametersElem.ValueKind == JsonValueKind.Object)
                 {

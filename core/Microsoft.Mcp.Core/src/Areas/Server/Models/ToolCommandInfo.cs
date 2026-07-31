@@ -25,14 +25,9 @@ public sealed class ToolCommandInfo
     public string? Description { get; init; }
 
     /// <summary>
-    /// Properties of the tool's input schema.
+    /// Input schema of the tool.
     /// </summary>
-    public JsonElement? Properties { get; init; }
-
-    /// <summary>
-    /// Required properties of the tool's input schema.
-    /// </summary>
-    public JsonElement? Required { get; init; }
+    public JsonElement? InputSchema { get; init; }
 
     public ToolCommandInfo(Tool tool, bool includeSchema = true)
     {
@@ -40,14 +35,7 @@ public sealed class ToolCommandInfo
         if (includeSchema)
         {
             Command = tool.Name;
-            if (tool.InputSchema.TryGetProperty("properties", out var properties))
-            {
-                Properties = properties;
-            }
-            if (tool.InputSchema.TryGetProperty("required", out var required))
-            {
-                Required = required;
-            }
+            InputSchema = tool.InputSchema;
         }
         else
         {

@@ -22,17 +22,17 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = serverDiscoveryStrategy ?? throw new ArgumentNullException(nameof(serverDiscoveryStrategy));
     private readonly ConcurrentDictionary<string, List<Tool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
 
-    private const string ToolCallProxySchema = """
+    private const string CommandCallProxySchema = """
         {
           "type": "object",
           "properties": {
-            "tool": {
+            "command": {
               "type": "string",
-              "description": "The name of the tool to call."
+              "description": "The name of the command to call."
             },
             "parameters": {
               "type": "object",
-              "description": "A key/value pair of parameters names and values to pass to the tool call command."
+              "description": "A key/value pair of parameters names and values to pass to the command."
             }
           },
           "additionalProperties": false
@@ -177,7 +177,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                             The tool '{tool}.{command}' was not found or does not support the specified command.
                             Please ensure the tool name and command are correct.
                             If you want to learn about available tools, run again with the "learn=true" argument.
-                        """
+                            """
                     }
                 ],
                 IsError = true
@@ -193,7 +193,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                         The "command" parameters are required when not learning
                         Run again with the "learn" argument to get a list of available tools and their parameters.
                         To learn about a specific tool, use the "tool" argument with the name of the tool.
-                    """
+                        """
                 }
             ]
         };
@@ -391,8 +391,8 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             [
                 new TextContentBlock {
                     Text = $"""
-                        Here are the available commands and their parameters for '{tool}' tool.
-                        If you do not find a suitable command, run again with the "learn=true" to get a list of available commands and their parameters.
+                        Here are the available commands and their input schema for '{tool}' tool.
+                        If you do not find a suitable command, run again with the "learn=true" to get a list of available commands and their input schema.
                         Next, identify the command you want to execute and run again with the "command" and "parameters" arguments, respecting "required" parameters if present.
 
                         {toolsJson}
@@ -485,6 +485,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                 Message = message,
             }, cancellationToken: cancellationToken);
     }
+
     private async Task<(string? commandName, Dictionary<string, object?> parameters)> GetCommandAndParametersFromIntentAsync(
         RequestContext<CallToolRequestParams> request,
         string intent,
@@ -514,10 +515,10 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                             - Map the user's intent and known parameters to the command's input schema, ensuring parameter names and types match the schema exactly (no extra or missing parameters).
                             - Only include parameters that are defined in the selected command's input schema.
                             - Do not guess or invent parameters.
-                            - If no command matches, return JSON schema with "Unknown" tool name.
+                            - If no command matches, return JSON schema with "Unknown" command name.
 
                             Result Schema:
-                            {ToolCallProxySchema}
+                            {CommandCallProxySchema}
 
                             Intent:
                             {intent ?? "No specific intent provided"}
@@ -536,16 +537,16 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         {
             var samplingResponse = await request.Server.SampleAsync(samplingRequest, cancellationToken);
             var samplingContent = samplingResponse.Content is { Count: > 0 } ? samplingResponse.Content[0] as TextContentBlock : null;
-            var toolCallJson = samplingContent?.Text?.Trim();
+            var commandCallJson = samplingContent?.Text?.Trim();
             string? commandName = null;
             Dictionary<string, object?> parameters = [];
-            if (!string.IsNullOrEmpty(toolCallJson))
+            if (!string.IsNullOrEmpty(commandCallJson))
             {
-                using var jsonDoc = JsonDocument.Parse(toolCallJson);
+                using var jsonDoc = JsonDocument.Parse(commandCallJson);
                 var root = jsonDoc.RootElement;
-                if (root.TryGetProperty("tool", out var toolProp) && toolProp.ValueKind == JsonValueKind.String)
+                if (root.TryGetProperty("command", out var commandProp) && commandProp.ValueKind == JsonValueKind.String)
                 {
-                    commandName = toolProp.GetString();
+                    commandName = commandProp.GetString();
                 }
                 if (root.TryGetProperty("parameters", out var parametersElem) && parametersElem.ValueKind == JsonValueKind.Object)
                 {
