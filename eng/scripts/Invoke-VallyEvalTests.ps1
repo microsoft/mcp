@@ -93,6 +93,16 @@ if (!(Test-Path $BuildInfoPath)) {
     exit 1
 }
 
+$environment = "";
+if ($IsWindows) {
+    $environment = "windows"
+} elseif ($IsLinux) {
+    $environment = "linux"
+} else {
+    Write-Error "Unsupported platform. This script only supports Windows, Linux, and macOS."
+    exit 1
+}
+
 $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
 
 $results = [System.Collections.ArrayList]::new()
@@ -114,7 +124,7 @@ $results | ForEach-Object { $commandArg += "--eval-spec '$($_)' " }
 Write-Host "Getting eval paths from VallyEvaluator"
 $(Get-ChildItem "$EvalsDirectory/**/eval.yaml") | ForEach-Object { $commandArg += "--eval-spec '$($_.FullName)' " }
 
-$expression = "vally eval --work-dir '$WorkDirectory' --output-dir '$OutputPath' --runs $NumberOfRuns"
+$expression = "vally eval --work-dir '$WorkDirectory' --output-dir '$OutputPath' --runs $NumberOfRuns --param ENVIRONMENT=$environment"
 
 if ($IsDebug) {
     $expression += " --verbose"
