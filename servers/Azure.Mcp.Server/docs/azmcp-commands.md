@@ -2684,12 +2684,12 @@ azmcp foundryextensions openai models-list \
     --resource-group <resource-group> \
     --resource-name <resource-name>
 
-# Get details of Microsoft Foundry (AI) resources in a subscription or resource group
+# List or get Microsoft Foundry resource details (endpoint, SKU, location). --resource-group is required when --resource-name is specified.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundryextensions resource get \
     --subscription <subscription> \
     [--resource-group <resource-group>] \
-    [--resource-name <resource-name>]
+    [--resource-name <resource-name>]   # --resource-group required when --resource-name is provided
 ```
 
 ### Azure Function App Operations
