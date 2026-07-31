@@ -54,7 +54,7 @@ public class IoTHubCommandTests(
 
         var payload = result!.Value;
 
-        var iotHub = payload.AssertProperty("iotHub");
+        var iotHub = payload.AssertProperty("ioTHub");
         Assert.Equal(JsonValueKind.Object, iotHub.ValueKind);
 
         var areResultsTruncated =

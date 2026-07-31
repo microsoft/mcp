@@ -19,11 +19,11 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
     Title = "List IoT Hub Devices",
     Description = """
         List devices in an IoT Hub device registry. Returns device identity metadata without authentication keys.
-        Use --max-count to limit results (default 100, maximum 100). Values greater than 100 are capped at 100; if more devices exist, truncated=true is set.
+        Use --max-count to limit results (default 100, maximum 100). Values greater than 100 are rejected with an error; if more devices exist, truncated=true is set.
         Hub names/IDs are case-sensitive and must match exactly.
         """,
     Destructive = false,
-    Idempotent = true,
+    Idempotent = false,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
@@ -50,6 +50,12 @@ public sealed class IoTHubDeviceListCommand(
             validationResult.Errors.Add(
                 $"The entered max-count '{options.MaxCount}' is less than 1 device. Please specify a value of at least 1.");
         }
+
+        if (options.MaxCount is > MaxMaxCount)
+        {
+            validationResult.Errors.Add(
+                $"The entered max-count '{options.MaxCount}' is greater than the maximum of {MaxMaxCount} devices. Please specify a value of at most {MaxMaxCount}.");
+        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(
@@ -59,17 +65,13 @@ public sealed class IoTHubDeviceListCommand(
     {
         try
         {
-            var maxCount = options.MaxCount switch
-            {
-                null => DefaultMaxCount,
-                > MaxMaxCount => MaxMaxCount,
-                _ => options.MaxCount.Value
-            };
+            var maxCount = options.MaxCount ?? DefaultMaxCount;
 
             var result = await _service.ListDevices(
                 options.HubName,
                 options.ResourceGroup,
                 options.Subscription!,
+                options.Tenant,
                 maxCount,
                 options.RetryPolicy,
                 cancellationToken);
@@ -79,7 +81,7 @@ public sealed class IoTHubDeviceListCommand(
             if (result.Truncated)
             {
                 context.Response.Message =
-                    $"Showing the first {maxCount} devices. The hub contains more devices, but the results were truncated because the maximum is {maxCount}.";
+                    $"Showing the first {maxCount} devices. The hub may contain more devices; the results were truncated at the maximum of {maxCount}.";
             }
         }
         catch (Exception ex)

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.IoTHub.Models;
@@ -78,9 +77,7 @@ public sealed class IoTHubGetCommand(
         return context.Response;
     }
 
-    public record IoTHubGetCommandResult(
-        [property: JsonPropertyName("iotHub")] IoTHubDescription IoTHub,
-        bool AreResultsTruncated);
+    public record IoTHubGetCommandResult(IoTHubDescription IoTHub, bool AreResultsTruncated);
 
     private static bool IsValidIoTHubName(string value)
     {

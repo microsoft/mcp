@@ -1,73 +1,36 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Security.Cryptography;
-using System.Text;
+using System.Net;
 using System.Text.Json;
+using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Models;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.IoTHub.Services;
 
 public class IoTHubDeviceService(
-    IIoTHubService ioTHubService,
+    IIoTHubHostnameResolver hostnameResolver,
     IHttpClientFactory httpClientFactory,
-    ITenantService tenantService,
-    ICacheService cacheService,
-    ILogger<IoTHubDeviceService> logger)
+    ITenantService tenantService)
     : BaseAzureService(tenantService), IIoTHubDeviceService
 {
-    private readonly IIoTHubService _ioTHubService = ioTHubService ?? throw new ArgumentNullException(nameof(ioTHubService));
+    private readonly IIoTHubHostnameResolver _hostnameResolver = hostnameResolver ?? throw new ArgumentNullException(nameof(hostnameResolver));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-    private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-    private readonly ILogger<IoTHubDeviceService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    // Resolving the hub hostname and shared access keys requires two ARM control-plane round-trips
-    // (a hub GET and a listKeys POST). Cache the result briefly so repeated data-plane calls
-    // against the same hub don't pay that cost every time.
-    private const string ConnectionCacheGroup = "iothub-device-connection";
-    private static readonly TimeSpan s_connectionCacheDuration = TimeSpan.FromMinutes(15);
 
     // Upper bound for a single IoT Hub operation (control-plane + data-plane). If exceeded the
     // caller gets a clear timeout error instead of appearing to hang indefinitely.
     private static readonly TimeSpan s_operationTimeout = TimeSpan.FromSeconds(100);
 
-    private sealed record HubConnection(string Hostname, List<IoTHubKey> Keys);
+    // API version for the IoT Hub device registry data-plane REST API.
+    private const string RegistryApiVersion = "2021-04-12";
 
-    private async Task<HubConnection> GetHubConnectionAsync(
-        string hubName,
-        string resourceGroup,
-        string subscription,
-        RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken)
-    {
-        var cacheKey = $"{subscription}/{resourceGroup}/{hubName}";
-        var cached = await _cacheService.GetAsync<HubConnection>(ConnectionCacheGroup, cacheKey, s_connectionCacheDuration, cancellationToken);
-        if (cached is not null)
-        {
-            _logger.LogDebug("Using cached IoT Hub connection details for hub {HubName} in resource group {ResourceGroup}.", hubName, resourceGroup);
-            return cached;
-        }
-
-        _logger.LogInformation("Resolving IoT Hub connection details for hub {HubName} in resource group {ResourceGroup}.", hubName, resourceGroup);
-        var hub = await _ioTHubService.GetIoTHub(hubName, resourceGroup, subscription, tenant: null, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
-        var hostname = hub.HostName ?? throw new InvalidOperationException("IoT Hub hostname is null");
-        var keys = await _ioTHubService.GetIoTHubKeys(hubName, resourceGroup, subscription, tenant: null, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
-
-        _logger.LogInformation("Resolved IoT Hub connection details for hub {HubName}. Hostname={Hostname}, KeyCount={KeyCount}.", hubName, hostname, keys.Count);
-        var connection = new HubConnection(hostname, keys);
-        await _cacheService.SetAsync(ConnectionCacheGroup, cacheKey, connection, s_connectionCacheDuration, cancellationToken);
-        return connection;
-    }
-
-    private static IoTHubKey SelectKey(HubConnection connection, string requiredRight)
-        => connection.Keys.FirstOrDefault(k => k.Rights?.Contains(requiredRight) == true)
-            ?? throw new InvalidOperationException($"No key with {requiredRight} rights found");
+    // Microsoft Entra ID scope for the IoT Hub service (data-plane) REST API.
+    private const string IoTHubTokenScope = "https://iothubs.azure.net/.default";
 
     private async Task<T> ExecuteWithTimeoutAsync<T>(
         Func<CancellationToken, Task<T>> operation,
@@ -94,6 +57,7 @@ public class IoTHubDeviceService(
         string hubName,
         string resourceGroup,
         string subscription,
+        string? tenant = null,
         int? maxCount = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -105,27 +69,47 @@ public class IoTHubDeviceService(
 
         return await ExecuteWithTimeoutAsync(async ct =>
         {
-            var connection = await GetHubConnectionAsync(hubName, resourceGroup, subscription, retryPolicy, ct);
-            var hostname = connection.Hostname;
-            var key = SelectKey(connection, "RegistryRead");
+            var hostname = await _hostnameResolver.GetHostnameAsync(hubName, resourceGroup, subscription, tenant, retryPolicy, ct);
 
+            // The registry API has no continuation token, so fetch one more than the requested max
+            // (top = maxCount + 1). If the hub returns the extra device we know more devices exist
+            // beyond the page; otherwise a full page simply means the hub holds exactly maxCount
+            // devices. This avoids a false "truncated" flag when the count equals the max.
+            var maxCountParam = maxCount.HasValue ? $"&top={maxCount.Value + 1}" : string.Empty;
+            var requestUri = $"https://{hostname}/devices?api-version={RegistryApiVersion}{maxCountParam}";
+
+            // Send the request through an Azure.Core pipeline so the caller's RetryPolicyOptions
+            // governs transient-failure retries (408/429/5xx and network errors).
             using var httpClient = _httpClientFactory.CreateClient();
-            var apiVersion = "2021-04-12";
-            // The registry API has no continuation/paging support, so over-fetch by one device to
-            // detect whether more devices exist beyond the requested page size.
-            var fetchCount = maxCount.HasValue ? maxCount.Value + 1 : (int?)null;
-            var maxCountParam = fetchCount.HasValue ? $"&top={fetchCount.Value}" : string.Empty;
-            var requestUri = $"https://{hostname}/devices?api-version={apiVersion}{maxCountParam}";
+            var clientOptions = ConfigureRetryPolicy(AddDefaultPolicies(new IoTHubClientOptions()), retryPolicy);
+            clientOptions.Transport = new HttpClientTransport(httpClient);
+            var pipeline = HttpPipelineBuilder.Build(clientOptions);
 
-            var token = GetSasToken(hostname, key.KeyName, key.PrimaryKey);
-            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SharedAccessSignature", token);
+            var credential = await GetCredential(tenant, ct);
+            var accessToken = await credential.GetTokenAsync(new TokenRequestContext([IoTHubTokenScope]), ct);
 
-            var response = await httpClient.GetAsync(requestUri, ct);
-            response.EnsureSuccessStatusCode();
+            using var request = pipeline.CreateRequest();
+            request.Method = RequestMethod.Get;
+            request.Uri.Reset(new Uri(requestUri));
+            request.Headers.Add("Authorization", $"Bearer {accessToken.Token}");
 
-            var content = await response.Content.ReadAsStringAsync(ct);
+            using var response = await pipeline.SendRequestAsync(request, ct);
+            var content = response.Content.ToString();
+            if (response.IsError)
+            {
+                var statusCode = (HttpStatusCode)response.Status;
+                var explanation = ExplainStatusCode(statusCode);
+                var detail = string.IsNullOrWhiteSpace(content) ? "No additional error details were returned." : content;
+                throw new HttpRequestException(
+                    $"The IoT Hub device registry request failed with status {response.Status} ({statusCode}). {explanation} {detail}",
+                    inner: null,
+                    statusCode: statusCode);
+            }
+
             var devices = JsonSerializer.Deserialize(content, IoTHubJsonContext.Default.ListDeviceIdentity) ?? [];
 
+            // We requested maxCount + 1: if the hub returned more than maxCount there are additional
+            // devices, so drop the extra device and flag the result as truncated.
             var truncated = false;
             if (maxCount.HasValue && devices.Count > maxCount.Value)
             {
@@ -137,18 +121,22 @@ public class IoTHubDeviceService(
         }, "list devices", cancellationToken);
     }
 
-    private static string GetSasToken(string hostname, string policyName, string sharedAccessKey)
+    // explanation for a failed IoT Hub device registry response
+    private static string ExplainStatusCode(HttpStatusCode statusCode) => statusCode switch
     {
-        // Generate SAS token for IoT Hub authentication
-        var expiry = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds();
-        var resourceUri = Uri.EscapeDataString(hostname);
-        var toSign = $"{resourceUri}\n{expiry}";
-
-        var keyBytes = Convert.FromBase64String(sharedAccessKey);
-        using var hmac = new HMACSHA256(keyBytes);
-        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(toSign));
-        var signature = Uri.EscapeDataString(Convert.ToBase64String(hash));
-
-        return $"sr={resourceUri}&sig={signature}&se={expiry}&skn={policyName}";
-    }
+        HttpStatusCode.Unauthorized =>
+            "Authentication failed: the Microsoft Entra ID token was rejected. Verify you are signed in to the tenant that owns the hub and that the token has not expired.",
+        HttpStatusCode.Forbidden =>
+            "Authorization failed: the signed-in identity lacks data-plane access. Assign the 'IoT Hub Data Reader' role (or another role that grants device registry read) on the hub.",
+        HttpStatusCode.NotFound =>
+            "Not found: the IoT Hub or endpoint could not be located. Verify the hub name and that it exists in the specified subscription and resource group.",
+        HttpStatusCode.TooManyRequests =>
+            "Throttled: the IoT Hub identity registry rate limit was exceeded. Wait and retry, and consider a smaller --max-count.",
+        HttpStatusCode.RequestTimeout =>
+            "The request timed out; the hub may be busy. Retry the operation.",
+        HttpStatusCode.InternalServerError or HttpStatusCode.BadGateway or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout =>
+            "The IoT Hub service is temporarily unavailable. This is usually transient; retry the operation.",
+        _ =>
+            "The request could not be completed.",
+    };
 }

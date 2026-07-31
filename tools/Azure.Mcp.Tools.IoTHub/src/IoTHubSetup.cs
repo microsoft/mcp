@@ -19,6 +19,7 @@ public class IoTHubSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IIoTHubService, IoTHubService>();
+        services.AddSingleton<IIoTHubHostnameResolver, IoTHubHostnameResolver>();
         services.AddSingleton<IIoTHubDeviceService, IoTHubDeviceService>();
 
         services.AddSingleton<IoTHubGetCommand>();

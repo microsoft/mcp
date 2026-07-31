@@ -14,11 +14,11 @@ public class IoTHubDeviceListOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }
 
-    [Option(Description = "The maximum number of items to return per page. Defaults to 100 when not specified. Values greater than 100 are capped at 100.")]
+    [Option(Description = "The maximum number of items to return per page. Defaults to 100 when not specified. Values greater than 100 are rejected with an error.")]
     public int? MaxCount { get; set; }
 
     [Option(Description = OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
+    public required string? Subscription { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
