@@ -372,14 +372,17 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
             throw new KeyNotFoundException($"Event Hubs namespace '{namespaceName}' not found in resource group '{resourceGroup}'.");
         }
 
-        // Fetch the existing event hub (if any) so an update preserves the fields the caller
-        // didn't ask to change. This is a create-or-update PUT, so any property left unset on
-        // the new EventHubData below is submitted as absent rather than "unchanged" - for
-        // PartitionCount in particular, Azure rejects a PUT to an existing event hub that
-        // omits it with "PartitionCount can only be changed on a Dedicated Event Hub cluster or
-        // Premium namespace", even when no partition-count change was requested.
-        var existingEventHub = await namespaceResource.Value.GetEventHubs().GetIfExistsAsync(eventHubName, cancellationToken);
-        var existingData = existingEventHub?.Value?.Data;
+        // Fetch the existing event hub only when at least one optional property is absent so
+        // that a create-or-update PUT preserves fields the caller didn't explicitly set.
+        // PartitionCount in particular: Azure rejects a PUT to an existing event hub that
+        // omits it with "PartitionCount can only be changed on a Dedicated Event Hub cluster or Premium namespace",
+        // even when no partition-count change was requested.
+        EventHubData? existingData = null;
+        if (!partitionCount.HasValue || !messageRetentionInHours.HasValue || status is null)
+        {
+            var existingEventHub = await namespaceResource.Value.GetEventHubs().GetIfExistsAsync(eventHubName, cancellationToken);
+            existingData = existingEventHub?.Value?.Data;
+        }
 
         var eventHubData = new EventHubData();
 
