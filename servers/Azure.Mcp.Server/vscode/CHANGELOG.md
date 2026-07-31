@@ -5,7 +5,7 @@
 
 ### Changed
 
-- Removed IServiceProvider from CommandContext and downstream locations where no longer used. [[#3185](https://github.com/microsoft/mcp/pull/3185)]
+- Removed `IServiceProvider` from `CommandContext` and downstream locations where no longer used. [[#3185](https://github.com/microsoft/mcp/pull/3185)]
 
 ## 3.0.30 (2026-07-28) (pre-release)
 
