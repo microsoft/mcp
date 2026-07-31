@@ -16,6 +16,7 @@ public class PromptDatastore
         promptsByNamespace = prompts
             .GroupBy(x => x.Namespace, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+    }
 
     public List<string> GetNamespaces()
     {
