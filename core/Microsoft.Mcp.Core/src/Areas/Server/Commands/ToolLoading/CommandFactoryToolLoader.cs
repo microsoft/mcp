@@ -23,12 +23,10 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// Exposes AzureMcp commands as MCP tools that can be invoked through the MCP protocol.
 /// </summary>
 public sealed class CommandFactoryToolLoader(
-    IServiceProvider serviceProvider,
     ICommandFactory commandFactory,
     IOptions<ToolLoaderOptions> options,
     ILogger<CommandFactoryToolLoader> logger) : BaseToolLoader(logger)
 {
-    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     private readonly ICommandFactory _commandFactory = commandFactory;
     private readonly IOptions<ToolLoaderOptions> _options = options;
     private bool StructuredOutputEnabled => _options.Value.StructuredOutputMode != null;
@@ -161,9 +159,7 @@ public sealed class CommandFactoryToolLoader(
             }, command.Id);
         }
 
-        var commandArguments = request.Params.Arguments;
-
-        var commandContext = new CommandContext(_serviceProvider, activity)
+        var commandContext = new CommandContext(activity)
         {
             McpServer = request.Server,
             ProgressToken = request.Params.ProgressToken
@@ -192,11 +188,11 @@ public sealed class CommandFactoryToolLoader(
 
         if (effectiveOptions.Count == 1 && IsRawMcpToolInputOption(effectiveOptions[0]))
         {
-            commandOptions = realCommand.ParseFromRawMcpToolInput(commandArguments);
+            commandOptions = realCommand.ParseFromRawMcpToolInput(request.Params.Arguments);
         }
         else
         {
-            commandOptions = realCommand.ParseFromDictionary(commandArguments);
+            commandOptions = realCommand.ParseFromDictionary(request.Params.Arguments);
         }
 
         _logger.LogTrace("Invoking '{Tool}'.", realCommand.Name);

@@ -268,8 +268,8 @@ public class CombinedWorkflowTests : IDisposable
         Assert.Equal(workloads1.OrderBy(w => w), workloads2.OrderBy(w => w));
     }
 
-    private Task<CommandResponse> ExecuteCommandAsync(IBaseCommand command, params string[] args)
-        => command.ExecuteAsync(new(_serviceProvider), command.GetCommand().Parse(args), TestContext.Current.CancellationToken);
+    private static Task<CommandResponse> ExecuteCommandAsync(IBaseCommand command, params string[] args)
+        => command.ExecuteAsync(new(), command.GetCommand().Parse(args), TestContext.Current.CancellationToken);
 
     private static IEnumerable<string> ValidateAndDeserializeWorkloadsResponse(CommandResponse response)
     {
