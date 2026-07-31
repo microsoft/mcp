@@ -217,7 +217,7 @@ public class SingleProxyToolLoaderTests
         Assert.NotNull(textContent);
         Assert.NotEmpty(textContent.Text);
         // The actual behavior shows available tools list
-        Assert.Contains("Here are the available list of tools", textContent.Text);
+        Assert.Contains("Here are the available tools", textContent.Text);
     }
 
     [Fact]
