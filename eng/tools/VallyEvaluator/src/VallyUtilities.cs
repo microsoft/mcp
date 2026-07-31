@@ -13,6 +13,8 @@ internal class VallyUtilities
     private static readonly System.Text.RegularExpressions.Regex AngleBracketPlaceholderRegex =
         new("<[^<>\\s]+>", System.Text.RegularExpressions.RegexOptions.Compiled);
 
+    private const string EnvironmentPlaceholder = "${ENVIRONMENT}";
+
     internal static readonly ISerializer Serializer =
         new StaticSerializerBuilder(new VallyYamlStaticContext())
             .EnsureRoundtrip()
@@ -217,7 +219,7 @@ internal class VallyUtilities
 
     public static async Task WritePromptsAsync(List<TestPrompt> prompts,
         string outputFile,
-        string environment = "linux",
+        string environment = EnvironmentPlaceholder,
         bool force = false)
     {
         var stimuli = new List<Stimulus>();
