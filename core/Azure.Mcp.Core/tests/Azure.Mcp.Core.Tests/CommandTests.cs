@@ -18,6 +18,7 @@ public class CommandTests(ITestOutputHelper output, TestProxyFixture testProxyFi
     {
         var result = await CallToolAsync(
             "group_list",
+            "group_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -33,7 +34,8 @@ public class CommandTests(ITestOutputHelper output, TestProxyFixture testProxyFi
     {
         var result = await CallToolAsync(
             "subscription_list",
-            new Dictionary<string, object?>());
+            "subscription_list",
+            []);
 
         var subscriptionsArray = result.AssertProperty("subscriptions");
         Assert.Equal(JsonValueKind.Array, subscriptionsArray.ValueKind);

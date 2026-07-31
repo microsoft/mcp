@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Helpers;
@@ -124,14 +125,19 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         return envVarDictionary;
     }
 
+    /// <summary>
+    /// Initializes the MCP client and starts the MCP server with the appropriate arguments and environment variables.
+    /// </summary>
+    /// <param name="proxy">An optional Test Proxy fixture.</param>
+    /// <returns></returns>
     protected virtual async ValueTask InitializeAsyncInternal(TestProxyFixture? proxy = null)
     {
         // Use custom arguments if provided, otherwise use standard mode (debug can be enabled via environment variable)
         var debugEnvVar = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_DEBUG");
         var enableDebug = string.Equals(debugEnvVar, "true", StringComparison.OrdinalIgnoreCase) || Settings.DebugOutput;
         List<string> defaultArgs = enableDebug
-            ? ["server", "start", "--mode", "all", "--debug", "--dangerously-disable-elicitation", "--disable-caching"]
-            : ["server", "start", "--mode", "all", "--dangerously-disable-elicitation", "--disable-caching"];
+            ? ["server", "start", "--mode", "namespace", "--debug", "--dangerously-disable-elicitation", "--disable-caching"]
+            : ["server", "start", "--mode", "namespace", "--dangerously-disable-elicitation", "--disable-caching"];
         var arguments = CustomArguments?.ToList() ?? defaultArgs;
 
         LiveServerFixture.EnvironmentVariables = GetEnvironmentVariables(proxy);
@@ -152,31 +158,46 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
     /// <param name="parameters">The MCP server command parameters.</param>
     /// <returns>The "results" JSON property from <see cref="CommandResponse"/>, if it exists.</returns>
     protected async Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters)
-        => await CallToolAsync(command, parameters, Client);
+        => await CallToolAsync(command.Split('_')[0], command, parameters, Client);
 
     /// <summary>
     /// Calls <see cref="McpClient.CallToolAsync(string, IReadOnlyDictionary{string, object?}?, IProgress{ModelContextProtocol.ProgressNotificationValue}?, ModelContextProtocol.RequestOptions?, CancellationToken)"/>
     /// executing the command against the MCP server and returns the "results" property from <see cref="CommandResponse"/>, if it exists.
     /// Logs the request and response for debugging purposes.
     /// </summary>
+    /// <param name="tool">The MCP tool to execute.</param>
+    /// <param name="command">The MCP server command to execute.</param>
+    /// <param name="parameters">The MCP server command parameters.</param>
+    /// <returns>The "results" JSON property from <see cref="CommandResponse"/>, if it exists.</returns>
+    protected async Task<JsonElement?> CallToolAsync(string tool, string command, Dictionary<string, object?> parameters)
+        => await CallToolAsync(tool, command, parameters, Client);
+
+    /// <summary>
+    /// Calls <see cref="McpClient.CallToolAsync(string, IReadOnlyDictionary{string, object?}?, IProgress{ModelContextProtocol.ProgressNotificationValue}?, ModelContextProtocol.RequestOptions?, CancellationToken)"/>
+    /// executing the command against the MCP server and returns the "results" property from <see cref="CommandResponse"/>, if it exists.
+    /// Logs the request and response for debugging purposes.
+    /// </summary>
+    /// <param name="tool">The MCP tool to execute.</param>
     /// <param name="command">The MCP server command to execute.</param>
     /// <param name="parameters">The MCP server command parameters.</param>
     /// <param name="mcpClient">The MCP client to use for the call.</param>
     /// <returns>The "results" JSON property from <see cref="CommandResponse"/>, if it exists.</returns>
-    protected async Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters, McpClient mcpClient)
-        => await CallToolAsync(command, parameters, mcpClient, elem => elem.TryGetProperty("results", out var property) ? property : null);
+    protected async Task<JsonElement?> CallToolAsync(string tool, string command, Dictionary<string, object?> parameters, McpClient mcpClient)
+        => await CallToolAsync(tool, command, parameters, mcpClient, elem => elem.TryGetProperty("results", out var property) ? property : null);
 
     /// <summary>
     /// Calls <see cref="McpClient.CallToolAsync(string, IReadOnlyDictionary{string, object?}?, IProgress{ModelContextProtocol.ProgressNotificationValue}?, ModelContextProtocol.RequestOptions?, CancellationToken)"/>
     /// executing the command against the MCP server and extracts the JSON property from <see cref="CommandResponse"/>, if it exists.
     /// Logs the request and response for debugging purposes.
     /// </summary>
+    /// <param name="tool">The MCP tool to execute.</param>
     /// <param name="command">The MCP server command to execute.</param>
     /// <param name="parameters">The MCP server command parameters.</param>
     /// <param name="mcpClient">The MCP client to use for the call. If null the default Client will be used.</param>
     /// <param name="resultProcessor">A function to extract the desired result from the JSON response. If null the "results" property will be retrieved, if it exists.</param>
     /// <returns>The extracted JSON property from <see cref="CommandResponse"/>, if it exists.</returns>
     protected async Task<JsonElement?> CallToolAsync(
+        string tool,
         string command,
         Dictionary<string, object?> parameters,
         McpClient? mcpClient = null,
@@ -193,12 +214,19 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
             ? Output.WriteLine
             : s => FailureOutput.AppendLine(s);
 
-        writeOutput($"request: {JsonSerializer.Serialize(new { command, parameters })}");
+        IReadOnlyDictionary<string, object?>? arguments = new Dictionary<string, object?>()
+        {
+            { "intent", $"Test tool call for {tool} {command}" },
+            { "command", command },
+            { "parameters", parameters }
+        };
+
+        writeOutput($"request: {JsonSerializer.Serialize(new { tool, arguments })}");
 
         CallToolResult result;
         try
         {
-            result = await mcpClient.CallToolAsync(command, parameters);
+            result = await mcpClient.CallToolAsync(tool, arguments);
         }
         catch (ModelContextProtocol.McpException ex)
         {

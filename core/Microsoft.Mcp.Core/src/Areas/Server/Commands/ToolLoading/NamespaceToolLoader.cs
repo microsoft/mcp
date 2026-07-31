@@ -76,23 +76,23 @@ public sealed class NamespaceToolLoader(
         {
             "type": "object",
             "properties": {
-            "intent": {
-                "type": "string",
-                "description": "The intent of the azure operation to perform."
-            },
-            "command": {
-                "type": "string",
-                "description": "The command to execute against the specified tool."
-            },
-            "parameters": {
-                "type": "object",
-                "description": "The parameters to pass to the tool command."
-            },
-            "learn": {
-                "type": "boolean",
-                "description": "To learn about the tool and its supported child tools and parameters.",
-                "default": false
-            }
+                "intent": {
+                    "type": "string",
+                    "description": "The intent of the azure operation to perform."
+                },
+                "command": {
+                    "type": "string",
+                    "description": "The command to execute against the specified tool."
+                },
+                "parameters": {
+                    "type": "object",
+                    "description": "The parameters to pass to the tool command."
+                },
+                "learn": {
+                    "type": "boolean",
+                    "description": "To learn about the tool and its supported child tools and parameters.",
+                    "default": false
+                }
             },
             "required": ["intent"],
             "additionalProperties": false

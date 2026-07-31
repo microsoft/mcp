@@ -1243,6 +1243,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         var policyName = $"test-dpp-tags-{Random.Shared.NextInt64()}";
 
         var status = await CallToolAsync(
+            "azurebackup",
             "azurebackup_policy_create",
             new()
             {

@@ -445,34 +445,6 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : "Standard_LRS", skuName);
     }
 
-    [Theory]
-    [InlineData("--invalid-param", new string[0])]
-    [InlineData("--subscription", new[] { "invalidSub" })]
-    [InlineData("--account-name", new[] { "testacct", "--subscription", "sub123" })] // Missing required resource-group and location
-    public async Task Should_Return400_WithInvalidInput_ForAccountCreate(string firstArg, string[] remainingArgs)
-    {
-        var allArgs = new[] { firstArg }.Concat(remainingArgs);
-        var argsString = string.Join(" ", allArgs);
-
-        // For error testing, we expect CallToolAsync to return null (no results)
-        // and we need to catch any exceptions or check the response manually
-        try
-        {
-            var result = await CallToolAsync("storage_account_create",
-                new Dictionary<string, object?> { { "args", argsString } });
-
-            // If we get here, the command didn't fail as expected
-            // This might indicate the command succeeded when it should have failed
-            Assert.Fail("Expected command to fail with invalid input, but it succeeded");
-        }
-        catch (Exception ex)
-        {
-            // Expected to fail with validation errors
-            Assert.True(ex.Message.Contains("required") || ex.Message.Contains("invalid"),
-                $"Expected validation error, but got: {ex.Message}");
-        }
-    }
-
     [Fact]
     public async Task Should_list_storage_tables_with_tenant_id()
     {

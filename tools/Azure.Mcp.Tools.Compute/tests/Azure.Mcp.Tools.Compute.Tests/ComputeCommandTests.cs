@@ -695,6 +695,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         var invalidVmName = RegisterOrRetrieveVariable("invalidPowerStateVm", "nonexistent-vm-" + Guid.NewGuid().ToString("N")[..8]);
 
         var result = await CallToolAsync(
+            "compute",
             "compute_vm_power-state",
             new()
             {
@@ -953,6 +954,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Act - creating a disk without size-gb or source should fail
         JsonElement? result = await CallToolAsync(
+            "compute",
             "compute_disk_create",
             new()
             {
@@ -1148,6 +1150,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         // Act - upload-type without upload-size-bytes should fail
         JsonElement? result = await CallToolAsync(
+            "compute",
             "compute_disk_create",
             new()
             {
