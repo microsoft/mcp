@@ -4,7 +4,6 @@ on:
   pull_request:
     paths:
       - 'tools/Azure.Mcp.*/**'
-      - '.vally.yaml'
   workflow_dispatch:
     inputs:
       logLevel:
