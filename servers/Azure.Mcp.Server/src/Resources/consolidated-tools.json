@@ -819,7 +819,7 @@
     },
     {
       "name": "get_azure_advisor_recommendation_metadata",
-      "description": "Get the Azure Advisor metadata catalog entry and details for a specific recommendation type by its recommendation type id. Explains what an Advisor recommendation type means, including its display name, category, sub-category, impact, supported resource type, description, potential benefits, and remediation actions.",
+      "description": "Get Azure Advisor metadata for a specific recommendation type id. Explains what an Advisor recommendation type means, including its display name, category, sub-category, impact, supported resource type, description, potential benefits, and remediation actions.",
       "toolMetadata": {
         "destructive": {
           "value": false,

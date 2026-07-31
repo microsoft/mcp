@@ -197,7 +197,6 @@ public class AdvisorService(
     public async Task<RecommendationMetadata?> GetRecommendationMetadataAsync(
         string recommendationTypeId,
         string language,
-        string? tenant,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(recommendationTypeId);
@@ -205,8 +204,8 @@ public class AdvisorService(
 
         // The Advisor recommendation-metadata catalog (type 'microsoft.advisor/metadata') is a global,
         // tenant-wide catalog — it is not subscription-scoped. Run the ARG query at tenant scope using the
-        // tenant supplied by the caller (the agent orchestrator); no subscription is required.
-        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        // default credential's tenant; no subscription is required.
+        var armClient = await CreateArmClientAsync(cancellationToken: cancellationToken);
         var tenantResource = armClient.GetTenants().First();
 
         var query =

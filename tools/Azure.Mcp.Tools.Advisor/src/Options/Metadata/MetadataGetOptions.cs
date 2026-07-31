@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Options.Metadata;
@@ -17,7 +16,4 @@ public sealed class MetadataGetOptions
         "Region-qualified tags such as 'en-US' are accepted and mapped to the base language ('en').",
         DefaultValue = "en")]
     public string Language { get; set; } = "en";
-
-    [Option(Description = OptionDescriptions.Tenant)]
-    public string? Tenant { get; set; }
 }

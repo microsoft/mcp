@@ -37,6 +37,5 @@ public interface IAdvisorService
     Task<RecommendationMetadata?> GetRecommendationMetadataAsync(
         string recommendationTypeId,
         string language,
-        string? tenant,
         CancellationToken cancellationToken = default);
 }

@@ -15,9 +15,9 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Metadata;
     Id = "3c9f1e6a-8b2d-4e77-9c14-5a6d0f2b7e83",
     Name = "get",
     Title = "Get Advisor Recommendation Metadata",
-    Description = "Get the Azure Advisor metadata catalog entry and details for a specific recommendation type by its " +
-        "recommendation type id. Explains what an Advisor recommendation type means, including its display name, " +
-        "category, sub-category, impact, supported resource type, description, potential benefits, and remediation actions.",
+    Description = "Get Azure Advisor metadata for a specific recommendation type id. " +
+        "Explains what an Advisor recommendation type means, including its display name, category, sub-category, " +
+        "impact, supported resource type, description, potential benefits, and remediation actions.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -51,7 +51,6 @@ public sealed class MetadataGetCommand(ILogger<MetadataGetCommand> logger, IAdvi
             var metadata = await _advisorService.GetRecommendationMetadataAsync(
                 options.RecommendationTypeId,
                 language,
-                options.Tenant,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
