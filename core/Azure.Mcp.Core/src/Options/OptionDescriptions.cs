@@ -10,19 +10,16 @@ namespace Azure.Mcp.Core.Options;
 public static class OptionDescriptions
 {
     public const string Subscription =
-        "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. " +
-        "If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.";
+        "The Azure subscription GUID identifier or display name. " +
+        "If not specified, the logged in Azure CLI profile subscription or AZURE_SUBSCRIPTION_ID environment variable will be used.";
 
-    public const string Tenant =
-        "The Microsoft Entra ID tenant ID or name. " +
-        "This can be either the GUID identifier or the display name of your Entra ID tenant.";
+    public const string Tenant = "The Microsoft Entra ID tenant GUID identifier or display name.";
 
     public const string AuthMethod =
         "Authentication method to use. " +
         "Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.";
 
-    public const string ResourceGroup =
-        "The name of the Azure resource group. This is a logical container for Azure resources.";
+    public const string ResourceGroup = "The Azure resource group name.";
 
     public const string Scope =
         "Scope at which the role assignment or definition applies to, " +
