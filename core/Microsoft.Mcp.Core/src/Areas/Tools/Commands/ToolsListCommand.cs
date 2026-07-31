@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Tools.Options;
 using Microsoft.Mcp.Core.Commands;
@@ -28,7 +29,7 @@ namespace Microsoft.Mcp.Core.Areas.Tools.Commands;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
+public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<ToolsListCommand> logger)
     : BaseCommand<ToolsListOptions, ToolsListCommand.ToolsListResult>
 {
     private static readonly HashSet<string> s_ignored = new(StringComparer.OrdinalIgnoreCase) { "server", "tools" };
@@ -38,7 +39,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger)
     {
         try
         {
-            var factory = context.GetService<ICommandFactory>();
+            var factory = serviceProvider.GetRequiredService<ICommandFactory>();
 
             // If the --namespace-mode flag is set, return distinct top‑level namespaces (e.g. child groups beneath root 'azmcp').
             if (options.NamespaceMode)

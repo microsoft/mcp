@@ -355,7 +355,7 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
     {
         var server = Substitute.For<McpServer>();
         server.ClientCapabilities.Returns(new ClientCapabilities { Sampling = new SamplingCapability() });
-        var context = new CommandContext(ServiceProvider) { McpServer = server };
+        var context = new CommandContext() { McpServer = server };
         return ((IBaseCommand)Command).ExecuteAsync(context, CommandDefinition.Parse(args), TestContext.Current.CancellationToken);
     }
 
