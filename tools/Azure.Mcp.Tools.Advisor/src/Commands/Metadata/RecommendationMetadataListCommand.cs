@@ -109,8 +109,9 @@ public sealed class RecommendationMetadataListCommand(
                 StringComparison.OrdinalIgnoreCase))
         {
             validationResult.Errors.Add(
-                $"{RecommendationMetadataFilters.ServiceRetirementSubCategory} metadata and service-retirement filters " +
-                $"are only valid with --category {RecommendationMetadataFilters.HighAvailabilityCategory}.");
+                $"Category '{normalizedCategory}' is not valid for the " +
+                $"{RecommendationMetadataFilters.ServiceRetirementSubCategory} subcategory or service-retirement filters. " +
+                $"Use --category {RecommendationMetadataFilters.HighAvailabilityCategory}.");
         }
 
         if (!TryParseRetirementDateFilter(options.RetirementDate, out _, out _, out var retirementDateError))

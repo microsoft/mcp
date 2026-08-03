@@ -220,8 +220,9 @@ public class AdvisorService(
                 StringComparison.OrdinalIgnoreCase))
         {
             throw new ArgumentException(
-                $"{RecommendationMetadataFilters.ServiceRetirementSubCategory} metadata and service-retirement filters " +
-                $"are only valid for the {RecommendationMetadataFilters.HighAvailabilityCategory} category.",
+                $"Category '{category}' is not valid for the " +
+                $"{RecommendationMetadataFilters.ServiceRetirementSubCategory} subcategory or service-retirement filters. " +
+                $"Use {RecommendationMetadataFilters.HighAvailabilityCategory}.",
                 nameof(category));
         }
 
