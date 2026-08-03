@@ -133,11 +133,9 @@ public class AdvisorService(
             query += $" | where tostring(properties.recommendationImpact) =~ '{EscapeKqlString(filters.Impact.Trim())}'";
         }
 
-        if (!string.IsNullOrWhiteSpace(filters?.Category))
-        {
-            query += $" | where tostring(properties.recommendationCategory) =~ '{EscapeKqlString(filters.Category.Trim())}'";
-        }
-
+        var category = string.IsNullOrWhiteSpace(filters?.Category)
+            ? null
+            : filters.Category.Trim();
         var subCategory = string.IsNullOrWhiteSpace(filters?.SubCategory)
             ? null
             : filters.SubCategory.Trim();
@@ -156,31 +154,22 @@ public class AdvisorService(
                 nameof(filters));
         }
 
-        if (subCategory is not null)
-        {
-            query += $" | where tostring(properties.recommendationSubCategory) =~ '{EscapeKqlString(subCategory)}'";
-        }
-
         var hasTrackingIdFilter = trackingId is not null;
         var hasRetirementDateFilter = retirementDate is not null && retirementDateOperator is not null;
         var hasServiceRetirementFilter = hasTrackingIdFilter || hasRetirementDateFilter;
+        (category, subCategory) = ResolveServiceRetirementScope(
+            category,
+            subCategory,
+            hasServiceRetirementFilter);
 
-        if (hasServiceRetirementFilter &&
-            subCategory is not null &&
-            !subCategory.Equals(
-                RecommendationMetadataFilters.ServiceRetirementSubCategory,
-                StringComparison.OrdinalIgnoreCase))
+        if (category is not null)
         {
-            throw new ArgumentException(
-                "TrackingId and retirement-date filters are only valid for the " +
-                $"{RecommendationMetadataFilters.ServiceRetirementSubCategory} subcategory.",
-                nameof(filters));
+            query += $" | where tostring(properties.recommendationCategory) =~ '{EscapeKqlString(category)}'";
         }
 
-        if (hasServiceRetirementFilter && subCategory is null)
+        if (subCategory is not null)
         {
-            query += " | where tostring(properties.recommendationSubCategory) =~ " +
-                $"'{RecommendationMetadataFilters.ServiceRetirementSubCategory}'";
+            query += $" | where tostring(properties.recommendationSubCategory) =~ '{EscapeKqlString(subCategory)}'";
         }
 
         if (trackingId is not null)
@@ -201,6 +190,44 @@ public class AdvisorService(
         }
 
         return query + " | project properties";
+    }
+
+    private static (string? Category, string? SubCategory) ResolveServiceRetirementScope(
+        string? category,
+        string? subCategory,
+        bool hasServiceRetirementFilter)
+    {
+        var isServiceUpgradeAndRetirement = subCategory?.Equals(
+            RecommendationMetadataFilters.ServiceRetirementSubCategory,
+            StringComparison.OrdinalIgnoreCase) == true;
+
+        if (hasServiceRetirementFilter && subCategory is not null && !isServiceUpgradeAndRetirement)
+        {
+            throw new ArgumentException(
+                "TrackingId and retirement-date filters are only valid for the " +
+                $"{RecommendationMetadataFilters.ServiceRetirementSubCategory} subcategory.",
+                nameof(subCategory));
+        }
+
+        if (!hasServiceRetirementFilter && !isServiceUpgradeAndRetirement)
+        {
+            return (category, subCategory);
+        }
+
+        if (category is not null &&
+            !category.Equals(
+                RecommendationMetadataFilters.HighAvailabilityCategory,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                $"{RecommendationMetadataFilters.ServiceRetirementSubCategory} metadata and service-retirement filters " +
+                $"are only valid for the {RecommendationMetadataFilters.HighAvailabilityCategory} category.",
+                nameof(category));
+        }
+
+        return (
+            category ?? RecommendationMetadataFilters.HighAvailabilityCategory,
+            subCategory ?? RecommendationMetadataFilters.ServiceRetirementSubCategory);
     }
 
     private static string GetKqlComparisonOperator(string comparisonOperator) =>

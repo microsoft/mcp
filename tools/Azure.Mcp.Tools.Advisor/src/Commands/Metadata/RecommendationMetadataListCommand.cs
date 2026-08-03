@@ -87,15 +87,30 @@ public sealed class RecommendationMetadataListCommand(
         var hasServiceRetirementFilter =
             !string.IsNullOrWhiteSpace(options.TrackingId) ||
             !string.IsNullOrWhiteSpace(options.RetirementDate);
+        var normalizedSubCategory = options.SubCategory?.Trim();
+        var isServiceUpgradeAndRetirement = normalizedSubCategory?.Equals(
+            RecommendationMetadataFilters.ServiceRetirementSubCategory,
+            StringComparison.OrdinalIgnoreCase) == true;
         if (hasServiceRetirementFilter &&
-            !string.IsNullOrWhiteSpace(options.SubCategory) &&
-            !options.SubCategory.Trim().Equals(
+            !string.IsNullOrWhiteSpace(normalizedSubCategory) &&
+            !normalizedSubCategory.Equals(
                 RecommendationMetadataFilters.ServiceRetirementSubCategory,
                 StringComparison.OrdinalIgnoreCase))
         {
             validationResult.Errors.Add(
                 "Service-retirement filters are only valid with --sub-category " +
                 $"{RecommendationMetadataFilters.ServiceRetirementSubCategory}.");
+        }
+
+        if ((hasServiceRetirementFilter || isServiceUpgradeAndRetirement) &&
+            !string.IsNullOrEmpty(normalizedCategory) &&
+            !normalizedCategory.Equals(
+                RecommendationMetadataFilters.HighAvailabilityCategory,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            validationResult.Errors.Add(
+                $"{RecommendationMetadataFilters.ServiceRetirementSubCategory} metadata and service-retirement filters " +
+                $"are only valid with --category {RecommendationMetadataFilters.HighAvailabilityCategory}.");
         }
 
         if (!TryParseRetirementDateFilter(options.RetirementDate, out _, out _, out var retirementDateError))

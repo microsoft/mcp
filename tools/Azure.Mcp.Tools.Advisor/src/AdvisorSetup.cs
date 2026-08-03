@@ -35,7 +35,7 @@ public class AdvisorSetup : IAreaSetup
 
         var metadata = new CommandGroup(
             "metadata",
-            "Discover the global Azure Advisor recommendation metadata catalog (formerly recommendation types) from Azure Resource Graph, including localized guidance, impact, categories, subcategories, supported resource types, actions, and service-retirement details. Use it in greenfield environments with no generated recommendations, filter by resource type during brownfield onboarding, or find service retirements by tracking ID and retirement date. List results are ordered High, Medium, then Low impact.");
+            "Discover the global Azure Advisor recommendation metadata catalog (formerly recommendation types) from Azure Resource Graph, including localized guidance, impact, categories, subcategories, supported resource types, actions, and service-retirement details. Use it in greenfield environments with no generated recommendations, filter by resource type during brownfield onboarding, or find service retirements by tracking ID and retirement date. Service-retirement metadata belongs to the HighAvailability category and ServiceUpgradeAndRetirement subcategory; conflicting filters are rejected. List results are ordered High, Medium, then Low impact.");
         advisor.AddSubGroup(metadata);
 
         // Register Advisor commands

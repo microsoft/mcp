@@ -59,7 +59,7 @@ public class AdvisorMetadataServiceTests
     }
 
     [Fact]
-    public void BuildMetadataListQuery_RetirementFiltersImplicitlyApplySubCategoryFirst()
+    public void BuildMetadataListQuery_RetirementFiltersImplicitlyApplyCategoryAndSubCategoryFirst()
     {
         var query = AdvisorService.BuildMetadataListQuery(
             "en",
@@ -68,13 +68,18 @@ public class AdvisorMetadataServiceTests
                 RetirementDateOperator: "ge",
                 RetirementDate: new DateOnly(2026, 3, 31)));
 
+        var categoryIndex = query.IndexOf(
+            "tostring(properties.recommendationCategory) =~ 'HighAvailability'",
+            StringComparison.Ordinal);
         var subCategoryIndex = query.IndexOf(
             "tostring(properties.recommendationSubCategory) =~ 'ServiceUpgradeAndRetirement'",
             StringComparison.Ordinal);
         var trackingIndex = query.IndexOf("trackingIds", StringComparison.Ordinal);
         var retirementDateIndex = query.IndexOf("todatetime", StringComparison.Ordinal);
 
+        Assert.True(categoryIndex >= 0);
         Assert.True(subCategoryIndex >= 0);
+        Assert.True(categoryIndex < subCategoryIndex);
         Assert.True(subCategoryIndex < trackingIndex);
         Assert.True(subCategoryIndex < retirementDateIndex);
     }
@@ -107,6 +112,32 @@ public class AdvisorMetadataServiceTests
         Assert.Contains("ServiceUpgradeAndRetirement", exception.Message);
     }
 
+    [Fact]
+    public void BuildMetadataListQuery_ConflictingRetirementFilterCategoryThrows()
+    {
+        var exception = Assert.Throws<ArgumentException>(() =>
+            AdvisorService.BuildMetadataListQuery(
+                "en",
+                new RecommendationMetadataFilters(
+                    Category: "Cost",
+                    TrackingId: "QNY1-HB8")));
+
+        Assert.Contains("HighAvailability", exception.Message);
+    }
+
+    [Fact]
+    public void BuildMetadataListQuery_ConflictingRetirementSubCategoryCategoryThrows()
+    {
+        var exception = Assert.Throws<ArgumentException>(() =>
+            AdvisorService.BuildMetadataListQuery(
+                "en",
+                new RecommendationMetadataFilters(
+                    Category: "Cost",
+                    SubCategory: "ServiceUpgradeAndRetirement")));
+
+        Assert.Contains("HighAvailability", exception.Message);
+    }
+
     [Theory]
     [InlineData("ge", null)]
     [InlineData(null, "2026-03-31")]
@@ -133,13 +164,15 @@ public class AdvisorMetadataServiceTests
             "en",
             new RecommendationMetadataFilters(
                 ResourceType: @"microsoft.test/type\child",
-                Category: "Cost' or true",
-                TrackingId: "QNY1-'HB8"));
+                Category: "Cost' or true"));
+        var trackingQuery = AdvisorService.BuildMetadataListQuery(
+            "en",
+            new RecommendationMetadataFilters(TrackingId: "QNY1-'HB8"));
 
         Assert.Contains(@"microsoft.test/type\\child", query);
         Assert.Contains("Cost'' or true", query);
         Assert.DoesNotContain("Cost' or true'", query);
-        Assert.Contains("\"QNY1-''HB8\"", query);
+        Assert.Contains("\"QNY1-''HB8\"", trackingQuery);
     }
 
     [Fact]

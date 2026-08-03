@@ -56,6 +56,10 @@ public class RecommendationMetadataListCommandTests
     [InlineData("--retirement-date 2026-03-31", false)]
     [InlineData("--sub-category ZoneResiliency --tracking-id QNY1-HB8", false)]
     [InlineData("--sub-category RegionalResiliency --retirement-date ge:2026-03-31", false)]
+    [InlineData("--category Cost --tracking-id QNY1-HB8", false)]
+    [InlineData("--category Cost --retirement-date ge:2026-03-31", false)]
+    [InlineData("--category Cost --sub-category ServiceUpgradeAndRetirement", false)]
+    [InlineData("--category HighAvailability --retirement-date ge:2026-03-31", true)]
     [InlineData("--impact Critical", false)]
     [InlineData("--language Klingon", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
