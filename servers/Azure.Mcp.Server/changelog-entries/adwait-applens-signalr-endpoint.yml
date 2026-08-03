@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Updated AppLens conversational diagnostics to use the new SignalR endpoint."
