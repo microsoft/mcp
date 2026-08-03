@@ -806,6 +806,8 @@
   "microsoft-foundry\\resource\\private-network\\references\\template-index.md",
   "microsoft-foundry\\resource\\private-network\\references\\vpn-dns-setup.bicep",
   "microsoft-foundry\\resource\\private-network\\references\\vpn-dns-setup.md",
+  "microsoft-foundry\\scripts\\check-and-setup-dependencies.ps1",
+  "microsoft-foundry\\scripts\\check-and-setup-dependencies.sh",
   "python-appservice-deploy\\references\\create-app.md",
   "python-appservice-deploy\\references\\deploy-azcli.md",
   "python-appservice-deploy\\references\\deploy-azd.md",
