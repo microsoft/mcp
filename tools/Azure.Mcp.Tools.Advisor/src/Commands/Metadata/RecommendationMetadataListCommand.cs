@@ -16,12 +16,13 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Metadata;
     Id = "16c9c57e-8f14-43bd-91da-d1548b6af72e",
     Name = "list",
     Title = "List Advisor Recommendation Metadata",
-    Description = "List the global Azure Advisor recommendation metadata catalog (formerly recommendation types) from Azure Resource Graph. " +
-                  "Use this catalog even when an environment has no generated recommendations: discover available types for greenfield environments, " +
-                  "or filter by supported resource type during brownfield onboarding to identify applicable recommendation types. Returns localized type IDs, " +
-                  "names, categories, subcategories, impact, priority, descriptions, benefits, actions, scope, source query, and service-retirement details. " +
-                  "Supports optional language, resource type, impact, category, subcategory, Service Health tracking ID, retirement date, and tenant filters. " +
-                  "Results are ordered by impact from High to Medium to Low, then by display name.",
+    Description = "List Azure Advisor recommendation metadata (formerly recommendation types). " +
+                  "Use this tool before deploying resources such as virtual machines to discover what recommendations Advisor could produce, even when there are no active recommendations. " +
+                  "Show Advisor service retirements on, before, or after a specified retirement date, or find service-retirement metadata by Service Health tracking ID. " +
+                  "The global Azure Resource Graph catalog supports greenfield discovery and resource-type filtering for brownfield onboarding. " +
+                  "Optional filters include language, resource type, impact, category, subcategory, tracking ID, retirement date, and tenant. " +
+                  "Returns localized type IDs, names, categories, subcategories, impact, priority, descriptions, benefits, actions, scope, source query, and service-retirement details, " +
+                  "ordered by impact from High to Medium to Low and then by display name.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
