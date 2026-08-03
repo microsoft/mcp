@@ -532,8 +532,8 @@ public class AppLensService(
         return _tenantService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://diagnosticschatnext.azure.com/chatHub",
-            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://diagnosticschatnext.azure.cn/chatHub",
-            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://diagnosticschatnext.azure.us/chatHub",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://diagnosticschat.azure.cn/chatHub",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://diagnosticschat.azure.us/chatHub",
             _ => "https://diagnosticschatnext.azure.com/chatHub",
         };
     }
