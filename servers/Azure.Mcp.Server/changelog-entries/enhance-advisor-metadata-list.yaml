@@ -1,3 +1,3 @@
 changes:
   - section: Breaking Changes
-    description: Renamed advisor_recommendation-type_list to advisor_metadata_list and moved recommendation-type discovery to the global Azure Resource Graph metadata catalog with richer localized, action, and service-retirement details.
+    description: Renamed advisor_recommendation-type_list to advisor_metadata_list and moved recommendation-type discovery to the global Azure Resource Graph metadata catalog with richer localized details and filters for subcategory, Service Health tracking ID, and service-retirement date.

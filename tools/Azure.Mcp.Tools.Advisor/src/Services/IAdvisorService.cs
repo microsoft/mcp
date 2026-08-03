@@ -29,9 +29,7 @@ public interface IAdvisorService
 
     Task<ResourceQueryResults<RecommendationMetadata>> ListRecommendationMetadataAsync(
         string language,
-        string? resourceType,
-        string? impact,
-        string? category,
+        RecommendationMetadataFilters? filters,
         string? tenant,
         CancellationToken cancellationToken = default);
 }

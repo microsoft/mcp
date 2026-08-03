@@ -20,8 +20,17 @@ public sealed class RecommendationMetadataListOptions
     [Option(Description = "Optional recommendation impact filter. Allowed values are High, Medium, or Low. Matched case-insensitively; unfiltered results are ordered High, Medium, then Low.")]
     public string? Impact { get; set; }
 
-    [Option(Description = "Optional exact Advisor category filter. Current categories include Cost, HighAvailability, Security, Performance, and OperationalExcellence; future Advisor categories are also accepted. Matched case-insensitively.")]
+    [Option(Description = "Optional exact Advisor category filter. Allowed values are Cost, HighAvailability, Security, Performance, and OperationalExcellence. Matched case-insensitively.")]
     public string? Category { get; set; }
+
+    [Option(Description = "Optional exact recommendation subcategory filter, such as ServiceUpgradeAndRetirement, ZoneResiliency, or RegionalResiliency. Matched case-insensitively.")]
+    public string? SubCategory { get; set; }
+
+    [Option(Description = "Optional exact Service Health tracking ID filter, such as QNY1-HB8. Matched case-insensitively. Applies only to ServiceUpgradeAndRetirement metadata; --sub-category may be omitted but cannot specify a different subcategory.")]
+    public string? TrackingId { get; set; }
+
+    [Option(Description = "Optional service-retirement date filter in '<operator>:<yyyy-MM-dd>' format, for example 'ge:2026-03-31'. Supported operators are eq, lt, le, gt, and ge. Applies only to ServiceUpgradeAndRetirement metadata; --sub-category may be omitted but cannot specify a different subcategory.")]
+    public string? RetirementDate { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Globalization;
 using System.Net;
+using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Options.Metadata;
 using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Extensions.Logging;
@@ -18,7 +20,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Metadata;
                   "Use this catalog even when an environment has no generated recommendations: discover available types for greenfield environments, " +
                   "or filter by supported resource type during brownfield onboarding to identify applicable recommendation types. Returns localized type IDs, " +
                   "names, categories, subcategories, impact, priority, descriptions, benefits, actions, scope, source query, and service-retirement details. " +
-                  "Supports optional language, resource type, impact, category, and tenant filters. " +
+                  "Supports optional language, resource type, impact, category, subcategory, Service Health tracking ID, retirement date, and tenant filters. " +
                   "Results are ordered by impact from High to Medium to Low, then by display name.",
     Destructive = false,
     Idempotent = true,
@@ -34,7 +36,15 @@ public sealed class RecommendationMetadataListCommand(
         RecommendationMetadataListCommand.RecommendationMetadataListResult>()
 {
     private static readonly string[] AllowedImpacts = ["High", "Medium", "Low"];
-
+    private static readonly string[] AllowedCategories =
+    [
+        "Cost",
+        "HighAvailability",
+        "Security",
+        "Performance",
+        "OperationalExcellence",
+    ];
+    private static readonly string[] AllowedRetirementDateOperators = ["eq", "lt", "le", "gt", "ge"];
     private static readonly HashSet<string> SupportedLanguages = new(StringComparer.OrdinalIgnoreCase)
     {
         "en", "cs", "de", "es", "fr", "hu", "id", "it", "ja", "ko",
@@ -64,6 +74,33 @@ public sealed class RecommendationMetadataListCommand(
             validationResult.Errors.Add(
                 $"Invalid --impact value '{options.Impact}'. Allowed values: {string.Join(", ", AllowedImpacts)}.");
         }
+
+        var normalizedCategory = options.Category?.Trim();
+        if (!string.IsNullOrEmpty(normalizedCategory) &&
+            !AllowedCategories.Contains(normalizedCategory, StringComparer.OrdinalIgnoreCase))
+        {
+            validationResult.Errors.Add(
+                $"Invalid --category value '{options.Category}'. Allowed values: {string.Join(", ", AllowedCategories)}.");
+        }
+
+        var hasServiceRetirementFilter =
+            !string.IsNullOrWhiteSpace(options.TrackingId) ||
+            !string.IsNullOrWhiteSpace(options.RetirementDate);
+        if (hasServiceRetirementFilter &&
+            !string.IsNullOrWhiteSpace(options.SubCategory) &&
+            !options.SubCategory.Trim().Equals(
+                RecommendationMetadataFilters.ServiceRetirementSubCategory,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            validationResult.Errors.Add(
+                "Service-retirement filters are only valid with --sub-category " +
+                $"{RecommendationMetadataFilters.ServiceRetirementSubCategory}.");
+        }
+
+        if (!TryParseRetirementDateFilter(options.RetirementDate, out _, out _, out var retirementDateError))
+        {
+            validationResult.Errors.Add(retirementDateError!);
+        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(
@@ -75,12 +112,24 @@ public sealed class RecommendationMetadataListCommand(
         {
             _ = TryNormalizeLanguage(options.Language, out var language);
             var impact = NormalizeImpact(options.Impact);
+            _ = TryParseRetirementDateFilter(
+                options.RetirementDate,
+                out var retirementDateOperator,
+                out var retirementDate,
+                out _);
+
+            var filters = new RecommendationMetadataFilters(
+                ResourceType: NormalizeOptionalFilter(options.ResourceType),
+                Impact: impact,
+                Category: NormalizeAllowedValue(options.Category, AllowedCategories),
+                SubCategory: NormalizeOptionalFilter(options.SubCategory),
+                TrackingId: NormalizeOptionalFilter(options.TrackingId),
+                RetirementDateOperator: retirementDateOperator,
+                RetirementDate: retirementDate);
 
             var metadata = await _advisorService.ListRecommendationMetadataAsync(
                 language,
-                NormalizeOptionalFilter(options.ResourceType),
-                impact,
-                NormalizeOptionalFilter(options.Category),
+                filters,
                 options.Tenant,
                 cancellationToken);
 
@@ -91,8 +140,8 @@ public sealed class RecommendationMetadataListCommand(
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing Advisor recommendation metadata. Language: {Language}, ResourceType: {ResourceType}, Impact: {Impact}, Category: {Category}.",
-                options.Language, options.ResourceType, options.Impact, options.Category);
+                "Error listing Advisor recommendation metadata. Language: {Language}, ResourceType: {ResourceType}, Impact: {Impact}, Category: {Category}, SubCategory: {SubCategory}.",
+                options.Language, options.ResourceType, options.Impact, options.Category, options.SubCategory);
             HandleException(context, ex);
         }
 
@@ -136,18 +185,60 @@ public sealed class RecommendationMetadataListCommand(
     }
 
     private static string? NormalizeImpact(string? impact)
+        => NormalizeAllowedValue(impact, AllowedImpacts);
+
+    private static string? NormalizeAllowedValue(string? value, IReadOnlyList<string> allowedValues)
     {
-        if (string.IsNullOrWhiteSpace(impact))
+        if (string.IsNullOrWhiteSpace(value))
         {
             return null;
         }
 
-        return AllowedImpacts.FirstOrDefault(
-            candidate => candidate.Equals(impact.Trim(), StringComparison.OrdinalIgnoreCase));
+        return allowedValues.FirstOrDefault(
+            candidate => candidate.Equals(value.Trim(), StringComparison.OrdinalIgnoreCase));
     }
 
     private static string? NormalizeOptionalFilter(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static bool TryParseRetirementDateFilter(
+        string? expression,
+        out string? comparisonOperator,
+        out DateOnly? retirementDate,
+        out string? error)
+    {
+        comparisonOperator = null;
+        retirementDate = null;
+        error = null;
+
+        if (string.IsNullOrWhiteSpace(expression))
+        {
+            return true;
+        }
+
+        var parts = expression.Split(':', 2, StringSplitOptions.TrimEntries);
+        if (parts.Length != 2 ||
+            !AllowedRetirementDateOperators.Contains(parts[0], StringComparer.OrdinalIgnoreCase))
+        {
+            error = "Invalid --retirement-date value. Use '<operator>:<yyyy-MM-dd>' with operator eq, lt, le, gt, or ge.";
+            return false;
+        }
+
+        if (!DateOnly.TryParseExact(
+            parts[1],
+            "yyyy-MM-dd",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out var parsedDate))
+        {
+            error = "Invalid --retirement-date date. Use ISO date format yyyy-MM-dd, for example ge:2026-03-31.";
+            return false;
+        }
+
+        comparisonOperator = parts[0].ToLowerInvariant();
+        retirementDate = parsedDate;
+        return true;
+    }
 
     public sealed record RecommendationMetadataListResult(
         List<Models.RecommendationMetadata> Metadata,

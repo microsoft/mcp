@@ -786,7 +786,7 @@
     },
     {
       "name": "list_azure_advisor_recommendation_metadata",
-      "description": "List the global Azure Advisor recommendation metadata catalog (formerly recommendation types) from Azure Resource Graph. Use it even when no recommendation instances exist: discover available types for greenfield environments or filter by supported resource type during brownfield onboarding. Returns localized IDs, names, categories, subcategories, impact, priority, descriptions, benefits, actions, scope, source query, and service-retirement details. Supports optional language, resource type, impact, category, and tenant filters, ordered High, Medium, then Low impact.",
+      "description": "List the global Azure Advisor recommendation metadata catalog (formerly recommendation types) from Azure Resource Graph. Use it even when no recommendation instances exist: discover available types for greenfield environments, filter by supported resource type during brownfield onboarding, or find service-retirement metadata by Service Health tracking ID and retirement date. Returns localized IDs, names, categories, subcategories, impact, priority, descriptions, benefits, actions, scope, source query, and service-retirement details. Supports language, resource type, impact, category, subcategory, tracking ID, retirement date, and tenant filters, ordered High, Medium, then Low impact.",
       "toolMetadata": {
         "destructive": {
           "value": false,

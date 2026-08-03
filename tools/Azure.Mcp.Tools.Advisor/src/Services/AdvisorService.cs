@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
@@ -18,6 +20,17 @@ public class AdvisorService(
     ITenantService tenantService)
     : BaseAzureResourceService(subscriptionService, tenantService), IAdvisorService
 {
+    private const string RetirementDateProperty =
+        "properties.sourceProperties.serviceRetirement.retirementDate";
+    private const string TrackingIdsProperty =
+        "properties.sourceProperties.serviceRetirement.serviceHealth.trackingIds";
+
+    private static readonly AdvisorJsonContext KqlJsonContext = new(
+        new JsonSerializerOptions
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        });
+
     private static readonly Dictionary<string, int> ImpactRank = new(StringComparer.OrdinalIgnoreCase)
     {
         ["High"] = 0,
@@ -66,9 +79,7 @@ public class AdvisorService(
 
     public async Task<ResourceQueryResults<RecommendationMetadata>> ListRecommendationMetadataAsync(
         string language,
-        string? resourceType,
-        string? impact,
-        string? category,
+        RecommendationMetadataFilters? filters,
         string? tenant,
         CancellationToken cancellationToken = default)
     {
@@ -76,7 +87,7 @@ public class AdvisorService(
 
         var tenantResource = await GetTenantResourceAsync(tenant, cancellationToken);
         var queryContent = new ResourceQueryContent(
-            BuildMetadataListQuery(language, resourceType, impact, category));
+            BuildMetadataListQuery(language, filters));
 
         ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
         if (result == null || result.Count == 0)
@@ -105,32 +116,106 @@ public class AdvisorService(
 
     internal static string BuildMetadataListQuery(
         string language,
-        string? resourceType,
-        string? impact,
-        string? category)
+        RecommendationMetadataFilters? filters)
     {
         var query =
             "advisorresources " +
             "| where type =~ 'microsoft.advisor/metadata' " +
             $"| where tostring(properties.language) =~ '{EscapeKqlString(language.Trim())}'";
 
-        if (!string.IsNullOrWhiteSpace(resourceType))
+        if (!string.IsNullOrWhiteSpace(filters?.ResourceType))
         {
-            query += $" | where tostring(properties.supportedResourceType) =~ '{EscapeKqlString(resourceType.Trim())}'";
+            query += $" | where tostring(properties.supportedResourceType) =~ '{EscapeKqlString(filters.ResourceType.Trim())}'";
         }
 
-        if (!string.IsNullOrWhiteSpace(impact))
+        if (!string.IsNullOrWhiteSpace(filters?.Impact))
         {
-            query += $" | where tostring(properties.recommendationImpact) =~ '{EscapeKqlString(impact.Trim())}'";
+            query += $" | where tostring(properties.recommendationImpact) =~ '{EscapeKqlString(filters.Impact.Trim())}'";
         }
 
-        if (!string.IsNullOrWhiteSpace(category))
+        if (!string.IsNullOrWhiteSpace(filters?.Category))
         {
-            query += $" | where tostring(properties.recommendationCategory) =~ '{EscapeKqlString(category.Trim())}'";
+            query += $" | where tostring(properties.recommendationCategory) =~ '{EscapeKqlString(filters.Category.Trim())}'";
+        }
+
+        var subCategory = string.IsNullOrWhiteSpace(filters?.SubCategory)
+            ? null
+            : filters.SubCategory.Trim();
+        var trackingId = string.IsNullOrWhiteSpace(filters?.TrackingId)
+            ? null
+            : filters.TrackingId.Trim();
+        var retirementDate = filters?.RetirementDate;
+        var retirementDateOperator = string.IsNullOrWhiteSpace(filters?.RetirementDateOperator)
+            ? null
+            : filters.RetirementDateOperator.Trim();
+
+        if ((retirementDate is null) != (retirementDateOperator is null))
+        {
+            throw new ArgumentException(
+                "RetirementDate and RetirementDateOperator must be provided together.",
+                nameof(filters));
+        }
+
+        if (subCategory is not null)
+        {
+            query += $" | where tostring(properties.recommendationSubCategory) =~ '{EscapeKqlString(subCategory)}'";
+        }
+
+        var hasTrackingIdFilter = trackingId is not null;
+        var hasRetirementDateFilter = retirementDate is not null && retirementDateOperator is not null;
+        var hasServiceRetirementFilter = hasTrackingIdFilter || hasRetirementDateFilter;
+
+        if (hasServiceRetirementFilter &&
+            subCategory is not null &&
+            !subCategory.Equals(
+                RecommendationMetadataFilters.ServiceRetirementSubCategory,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                "TrackingId and retirement-date filters are only valid for the " +
+                $"{RecommendationMetadataFilters.ServiceRetirementSubCategory} subcategory.",
+                nameof(filters));
+        }
+
+        if (hasServiceRetirementFilter && subCategory is null)
+        {
+            query += " | where tostring(properties.recommendationSubCategory) =~ " +
+                $"'{RecommendationMetadataFilters.ServiceRetirementSubCategory}'";
+        }
+
+        if (trackingId is not null)
+        {
+            var serializedTrackingId = JsonSerializer.Serialize(
+                trackingId,
+                KqlJsonContext.String);
+            query += $" | where tostring({TrackingIdsProperty}) contains " +
+                $"'{EscapeKqlString(serializedTrackingId)}'";
+        }
+
+        if (retirementDate is { } date && retirementDateOperator is not null)
+        {
+            query += $" | where isnotempty(tostring({RetirementDateProperty}))";
+            query += $" | where startofday(todatetime({RetirementDateProperty})) " +
+                $"{GetKqlComparisonOperator(retirementDateOperator)} " +
+                $"datetime({date:yyyy-MM-dd})";
         }
 
         return query + " | project properties";
     }
+
+    private static string GetKqlComparisonOperator(string comparisonOperator) =>
+        comparisonOperator.ToLowerInvariant() switch
+        {
+            "eq" => "==",
+            "lt" => "<",
+            "le" => "<=",
+            "gt" => ">",
+            "ge" => ">=",
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(comparisonOperator),
+                comparisonOperator,
+                "Unsupported retirement-date comparison operator.")
+        };
 
     internal static RecommendationMetadata ConvertToRecommendationMetadataModel(JsonElement item)
     {

@@ -11,6 +11,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | advisor_metadata_list | List high-impact Advisor metadata for microsoft.sql/servers/databases |
 | advisor_metadata_list | Show the German metadata catalog for Advisor recommendations |
 | advisor_metadata_list | Which Advisor recommendation types include service-retirement details? |
+| advisor_metadata_list | List Advisor metadata in the ServiceUpgradeAndRetirement subcategory |
+| advisor_metadata_list | Find the Advisor service-retirement metadata with tracking ID QNY1-HB8 |
+| advisor_metadata_list | Show Advisor service retirements on or after March 31, 2026 |
 | advisor_recommendation_apply | Apply Advisor recommendations to this ARM template |
 | advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account |
 | advisor_recommendation_list | List all recommendations in my subscription |

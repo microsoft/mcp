@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Services;
 using Xunit;
 
@@ -12,11 +13,14 @@ public class AdvisorMetadataServiceTests
     [Fact]
     public void BuildMetadataListQuery_UsesMetadataResourceTypeAndLanguage()
     {
-        var query = AdvisorService.BuildMetadataListQuery("en", null, null, null);
+        var query = AdvisorService.BuildMetadataListQuery("en", null);
 
         Assert.Contains("advisorresources", query);
         Assert.Contains("type =~ 'microsoft.advisor/metadata'", query);
         Assert.Contains("tostring(properties.language) =~ 'en'", query);
+        Assert.DoesNotContain("properties.recommendationSubCategory", query);
+        Assert.DoesNotContain("array_index_of", query);
+        Assert.DoesNotContain("todatetime", query);
         Assert.EndsWith("| project properties", query);
     }
 
@@ -25,13 +29,101 @@ public class AdvisorMetadataServiceTests
     {
         var query = AdvisorService.BuildMetadataListQuery(
             "de",
-            "microsoft.compute/virtualmachines",
-            "High",
-            "Cost");
+            new RecommendationMetadataFilters(
+                ResourceType: "microsoft.compute/virtualmachines",
+                Impact: "High",
+                Category: "HighAvailability",
+                SubCategory: "ServiceUpgradeAndRetirement",
+                TrackingId: "QNY1-HB8",
+                RetirementDateOperator: "ge",
+                RetirementDate: new DateOnly(2026, 3, 31)));
 
         Assert.Contains("tostring(properties.supportedResourceType) =~ 'microsoft.compute/virtualmachines'", query);
         Assert.Contains("tostring(properties.recommendationImpact) =~ 'High'", query);
-        Assert.Contains("tostring(properties.recommendationCategory) =~ 'Cost'", query);
+        Assert.Contains("tostring(properties.recommendationCategory) =~ 'HighAvailability'", query);
+        Assert.Contains("tostring(properties.recommendationSubCategory) =~ 'ServiceUpgradeAndRetirement'", query);
+        Assert.Contains(
+            "tostring(properties.sourceProperties.serviceRetirement.serviceHealth.trackingIds) contains '\"QNY1-HB8\"'",
+            query);
+        Assert.Contains("isnotempty(tostring(properties.sourceProperties.serviceRetirement.retirementDate))", query);
+        Assert.Contains("startofday(todatetime(properties.sourceProperties.serviceRetirement.retirementDate)) >= datetime(2026-03-31)", query);
+
+        var subCategoryIndex = query.IndexOf("recommendationSubCategory", StringComparison.Ordinal);
+        var trackingSearchIndex = query.IndexOf("trackingIds", StringComparison.Ordinal);
+        var retirementPresenceIndex = query.IndexOf("isnotempty", StringComparison.Ordinal);
+        var retirementComparisonIndex = query.IndexOf("startofday", StringComparison.Ordinal);
+
+        Assert.True(subCategoryIndex < trackingSearchIndex);
+        Assert.True(subCategoryIndex < retirementPresenceIndex);
+        Assert.True(retirementPresenceIndex < retirementComparisonIndex);
+    }
+
+    [Fact]
+    public void BuildMetadataListQuery_RetirementFiltersImplicitlyApplySubCategoryFirst()
+    {
+        var query = AdvisorService.BuildMetadataListQuery(
+            "en",
+            new RecommendationMetadataFilters(
+                TrackingId: "QNY1-HB8",
+                RetirementDateOperator: "ge",
+                RetirementDate: new DateOnly(2026, 3, 31)));
+
+        var subCategoryIndex = query.IndexOf(
+            "tostring(properties.recommendationSubCategory) =~ 'ServiceUpgradeAndRetirement'",
+            StringComparison.Ordinal);
+        var trackingIndex = query.IndexOf("trackingIds", StringComparison.Ordinal);
+        var retirementDateIndex = query.IndexOf("todatetime", StringComparison.Ordinal);
+
+        Assert.True(subCategoryIndex >= 0);
+        Assert.True(subCategoryIndex < trackingIndex);
+        Assert.True(subCategoryIndex < retirementDateIndex);
+    }
+
+    [Fact]
+    public void BuildMetadataListQuery_ExplicitRetirementSubCategoryIsNotDuplicated()
+    {
+        var query = AdvisorService.BuildMetadataListQuery(
+            "en",
+            new RecommendationMetadataFilters(
+                SubCategory: "serviceupgradeandretirement",
+                TrackingId: "QNY1-HB8"));
+
+        Assert.Contains("properties.recommendationSubCategory", query);
+        Assert.Equal(
+            query.IndexOf("properties.recommendationSubCategory", StringComparison.Ordinal),
+            query.LastIndexOf("properties.recommendationSubCategory", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void BuildMetadataListQuery_ConflictingRetirementSubCategoryThrows()
+    {
+        var exception = Assert.Throws<ArgumentException>(() =>
+            AdvisorService.BuildMetadataListQuery(
+                "en",
+                new RecommendationMetadataFilters(
+                    SubCategory: "ZoneResiliency",
+                    TrackingId: "QNY1-HB8")));
+
+        Assert.Contains("ServiceUpgradeAndRetirement", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("ge", null)]
+    [InlineData(null, "2026-03-31")]
+    public void BuildMetadataListQuery_IncompleteRetirementDateFilterThrows(
+        string? comparisonOperator,
+        string? date)
+    {
+        DateOnly? retirementDate = date is null ? null : DateOnly.Parse(date);
+
+        var exception = Assert.Throws<ArgumentException>(() =>
+            AdvisorService.BuildMetadataListQuery(
+                "en",
+                new RecommendationMetadataFilters(
+                    RetirementDateOperator: comparisonOperator,
+                    RetirementDate: retirementDate)));
+
+        Assert.Contains("must be provided together", exception.Message);
     }
 
     [Fact]
@@ -39,13 +131,48 @@ public class AdvisorMetadataServiceTests
     {
         var query = AdvisorService.BuildMetadataListQuery(
             "en",
-            @"microsoft.test/type\child",
-            null,
-            "Cost' or true");
+            new RecommendationMetadataFilters(
+                ResourceType: @"microsoft.test/type\child",
+                Category: "Cost' or true",
+                TrackingId: "QNY1-'HB8"));
 
         Assert.Contains(@"microsoft.test/type\\child", query);
         Assert.Contains("Cost'' or true", query);
         Assert.DoesNotContain("Cost' or true'", query);
+        Assert.Contains("\"QNY1-''HB8\"", query);
+    }
+
+    [Fact]
+    public void BuildMetadataListQuery_TrackingIdUsesCaseInsensitiveExactElementMatch()
+    {
+        var query = AdvisorService.BuildMetadataListQuery(
+            "en",
+            new RecommendationMetadataFilters(TrackingId: "qny1-hb8"));
+
+        Assert.Contains(
+            "tostring(properties.sourceProperties.serviceRetirement.serviceHealth.trackingIds) contains '\"qny1-hb8\"'",
+            query);
+    }
+
+    [Theory]
+    [InlineData("eq", "==")]
+    [InlineData("lt", "<")]
+    [InlineData("le", "<=")]
+    [InlineData("gt", ">")]
+    [InlineData("ge", ">=")]
+    public void BuildMetadataListQuery_MapsRetirementDateOperator(
+        string comparisonOperator,
+        string expectedKqlOperator)
+    {
+        var query = AdvisorService.BuildMetadataListQuery(
+            "en",
+            new RecommendationMetadataFilters(
+                RetirementDateOperator: comparisonOperator,
+                RetirementDate: new DateOnly(2025, 8, 15)));
+
+        Assert.Contains(
+            $"startofday(todatetime(properties.sourceProperties.serviceRetirement.retirementDate)) {expectedKqlOperator} datetime(2025-08-15)",
+            query);
     }
 
     [Fact]
