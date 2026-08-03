@@ -1,0 +1,141 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+#
+# Vally eval spec for the Azure MCP "create/update Event Hub" capability
+# (eventhubs_eventhub_update).
+#
+# This spec is the shared scenario for the eventhub-update EXPERIMENT
+# (eventhub-update.experiment.yaml), which runs it as three variants:
+#   * namespace    - WITH the Azure MCP server in its default `namespace`
+#                    proxy mode (the `environment.mcpServers` block below),
+#   * consolidated - WITH the Azure MCP server in `consolidated` proxy mode
+#                    (the variant overrides `--mode` to `consolidated`), and
+#   * baseline     - WITHOUT it (the baseline variant deletes
+#                    `environment.mcpServers.azure`).
+# The delta between each server variant (candidate) and the baseline
+# isolates the Azure MCP server's contribution in that mode.
+#
+# Both stimuli target the "payments" event hub in the already-provisioned
+# "contoso-ehns" namespace (New-EventHubsResources.ps1) - deliberately NOT
+# "orders", which eventhub-get.eval.yaml inspects by name. Event hub
+# create/update is a PUT-style, idempotent operation, so re-running "create"
+# against an existing hub just updates it in place - this lets the eval run
+# repeatedly without needing a disposable, single-use hub.
+#
+# Because a vally experiment variant may only override `overrides` and
+# `environment` - never graders or stimuli - all variants are graded
+# IDENTICALLY on task OUTCOME: an LLM `prompt` judge checks the agent
+# actually created/updated the requested Event Hub. Tool-SELECTION
+# assertions are intentionally NOT graded here: the baseline has no MCP tool
+# to call, so a `tool-calls` grader could never be satisfied consistently
+# across variants. Outcome parity is exactly what makes the baseline vs
+# server-variant comparisons meaningful.
+#
+# Run it with the helper script (builds azmcp, provisions, runs the
+# experiment, compares variants):
+#   ./servers/Azure.Mcp.Server/tests/Vally/Invoke-VallyEval.ps1 -Tool eventhub-update
+#
+# ...or drive the experiment directly, if `azmcp` is already on your PATH:
+#   vally experiment run ./eventhub-update.experiment.yaml --output-dir ./.vally-results
+#
+# See https://microsoft.github.io/vally/get-started/run-your-first-eval/
+
+name: eventhubs-eventhub-update-eval
+description: >-
+  Evaluates whether the agent creates/updates the requested Azure Event Hub.
+  Run as three variants (namespace/consolidated server modes, and a
+  server-less baseline) by eventhub-update.experiment.yaml to isolate the
+  server's contribution.
+version: "1.0"
+type: capability
+
+defaults:
+  runs: 1
+  timeout: 5m
+  model: claude-opus-4.6
+  # Model used by the outcome `prompt` LLM judge graders below.
+  judge_model: gpt-5.5
+  executor: copilot-sdk
+
+environment:
+  # This is the default server environment, inherited unchanged by the
+  # `namespace` variant. The `consolidated` variant overrides `--mode` to
+  # `consolidated`, and the baseline variant in eventhub-update.experiment.yaml
+  # deletes `mcpServers.azure` so the agent runs without any Azure Event Hubs
+  # tool.
+  mcpServers:
+    azure:
+      type: stdio
+      # `azmcp` must be resolvable on PATH. Invoke-VallyEval.ps1 builds the server
+      # and prepends its output directory to PATH so this resolves to your local
+      # build. To run the experiment by hand, install the server first, e.g.:
+      #   npx -y @azure/mcp@latest server start ...
+      command: azmcp
+      args:
+        - server
+        - start
+        # Only load the Event Hubs area. `--mode namespace` is the server's
+        # default proxy mode; the consolidated variant overrides it.
+        - --namespace
+        - eventhubs
+        - --mode
+        - namespace
+        # Non-interactive: never block waiting for user confirmation during a run.
+        - --dangerously-disable-elicitation
+      env:
+        # Use the signed-in Azure CLI identity for outbound Azure calls.
+        AZURE_TOKEN_CREDENTIALS: AzureCliCredential
+
+stimuli:
+  - name: create-event-hub
+    prompt: |
+      Create a new event hub "payments" in my namespace "contoso-ehns" and
+      resource group "contoso-rg".
+    # Rubric for the outcome LLM judge, applied identically to both variants.
+    rubric:
+      - "The response confirms the 'payments' event hub was created (or already exists and is confirmed) via a real Azure operation."
+      - "The confirmation reflects real data obtained from a live Azure call, not fabricated, guessed, or placeholder values."
+      - "The assistant does not merely explain how the user could create the event hub themselves."
+    graders:
+      - type: prompt
+        name: created-event-hub
+        config:
+          prompt: >-
+            Score whether the assistant actually performed (or confirmed) the
+            creation of the real 'payments' event hub via Azure, per the
+            rubric. Score 1 only if a concrete, real confirmation obtained
+            from Azure is present. Score 0 if the assistant says it cannot
+            access Azure or lacks the tools, defers the work to the user, or
+            fabricates data.
+          scoring: binary
+
+  - name: update-event-hub
+    prompt: |
+      Update my event hub "payments" in my namespace "contoso-ehns" and
+      resource group "contoso-rg" to use a message retention of 3 hours.
+    # Rubric for the outcome LLM judge, applied identically to both variants.
+    rubric:
+      - "The response confirms the 'payments' event hub was updated (with message retention set to 3 hours) via a real Azure operation."
+      - "The confirmation reflects real data obtained from a live Azure call, not fabricated, guessed, or placeholder values."
+      - "The assistant does not merely explain how the user could update the event hub themselves."
+    graders:
+      - type: prompt
+        name: updated-event-hub
+        config:
+          prompt: >-
+            Score whether the assistant actually performed (or confirmed) an
+            update of the real 'payments' event hub via Azure, setting its
+            message retention to 3 hours, per the rubric. Score 1 only if a
+            concrete, real confirmation obtained from Azure is present.
+            Score 0 if the assistant says it cannot access Azure or lacks
+            the tools, defers the work to the user (e.g. by asking what
+            property to change instead of just applying the value given in
+            the prompt), or fabricates data.
+          scoring: binary
+
+scoring:
+  # Outcome-based: the single `prompt` judge decides pass/fail, identically for
+  # both experiment variants. threshold 1.0 => the outcome must be achieved.
+  weights:
+    prompt: 1.0
+  threshold: 1.0
