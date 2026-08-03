@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tools.Sql.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Sql.Options.Server;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
@@ -27,33 +27,14 @@ namespace Azure.Mcp.Tools.Sql.Commands.Server;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class ServerDeleteCommand(ISqlService sqlService, ILogger<ServerDeleteCommand> logger)
-    : BaseSqlCommand<ServerDeleteOptions>(logger)
+public sealed class ServerDeleteCommand(ISqlService sqlService, ILogger<ServerDeleteCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ServerDeleteOptions, ServerDeleteCommand.ServerDeleteResult>(subscriptionResolver)
 {
     private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<ServerDeleteCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ServerDeleteOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(SqlOptionDefinitions.ForceOption);
-    }
-
-    protected override ServerDeleteOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Force = parseResult.GetValueOrDefault<bool>(SqlOptionDefinitions.ForceOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             // Show warning about destructive operation unless force is specified
@@ -68,8 +49,8 @@ public sealed class ServerDeleteCommand(ISqlService sqlService, ILogger<ServerDe
             }
 
             var deleted = await _sqlService.DeleteServerAsync(
-                options.Server!,
-                options.ResourceGroup!,
+                options.Server,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.RetryPolicy,
                 cancellationToken);
@@ -108,12 +89,5 @@ public sealed class ServerDeleteCommand(ISqlService sqlService, ILogger<ServerDe
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
-    };
-
-    internal record ServerDeleteResult(string Message, bool Success);
+    public sealed record ServerDeleteResult(string Message, bool Success);
 }

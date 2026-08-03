@@ -1,11 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
@@ -497,7 +493,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         return new TableGetResult(normalizedWorkspaceId, normalizedItemIdentifier, trimmedNamespace, trimmedTableName, tableDefinition, rawResponse);
     }
 
-    private List<OneLakeFileInfo> ParseBlobListResponse(string xmlContent)
+    private static List<OneLakeFileInfo> ParseBlobListResponse(string xmlContent)
     {
         var files = new List<OneLakeFileInfo>();
         try
@@ -2023,7 +2019,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.OneLakeShortcut, cancellationToken) ?? new OneLakeShortcut();
     }
 
-    public async Task<BulkCreateShortcutResponse> CreateOrUpdateShortcutsAsync(string workspaceId, string itemId, string shortcutsJson, string? shortcutConflictPolicy = null, CancellationToken cancellationToken = default)
+    public async Task<BulkCreateShortcutResponse> CreateOrUpdateShortcutsAsync(string workspaceId, string itemId, string shortcutsJson, ShortcutConflictPolicy? shortcutConflictPolicy = null, CancellationToken cancellationToken = default)
     {
         BulkCreateShortcutsRequest request;
         try
@@ -2037,8 +2033,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         }
 
         var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts/bulkCreate";
-        if (!string.IsNullOrWhiteSpace(shortcutConflictPolicy))
-            url += $"?shortcutConflictPolicy={Uri.EscapeDataString(shortcutConflictPolicy)}";
+        if (shortcutConflictPolicy != null)
+            url += $"?shortcutConflictPolicy={Uri.EscapeDataString(shortcutConflictPolicy.ToString()!)}";
 
         var body = JsonSerializer.Serialize(request, OneLakeJsonContext.Default.BulkCreateShortcutsRequest);
         var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, body, cancellationToken: cancellationToken);
@@ -2050,11 +2046,11 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             ?? new BulkCreateShortcutResponse();
     }
 
-    public async Task<OneLakeShortcut> CreateShortcutAsync(string workspaceId, string itemId, OneLakeShortcut shortcut, string? shortcutConflictPolicy = null, CancellationToken cancellationToken = default)
+    public async Task<OneLakeShortcut> CreateShortcutAsync(string workspaceId, string itemId, OneLakeShortcut shortcut, ShortcutConflictPolicy? shortcutConflictPolicy = null, CancellationToken cancellationToken = default)
     {
         var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts";
-        if (!string.IsNullOrWhiteSpace(shortcutConflictPolicy))
-            url += $"?shortcutConflictPolicy={Uri.EscapeDataString(shortcutConflictPolicy)}";
+        if (shortcutConflictPolicy != null)
+            url += $"?shortcutConflictPolicy={Uri.EscapeDataString(shortcutConflictPolicy.ToString()!)}";
 
         var body = JsonSerializer.Serialize(shortcut, OneLakeJsonContext.Default.OneLakeShortcut);
         var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, body, cancellationToken: cancellationToken);

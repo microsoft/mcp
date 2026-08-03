@@ -79,7 +79,6 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_goal_template_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "service-group", serviceGroup },
                 { "name", goalTemplate }
             });
@@ -98,7 +97,6 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_goal_assignment_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "service-group", serviceGroup },
                 { "name", goalAssignment }
             });
@@ -117,7 +115,6 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_goal_resource_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "service-group", serviceGroup },
                 { "goal-assignment", goalAssignment }
             });
@@ -135,7 +132,6 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_recovery_plan_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "service-group", serviceGroup },
                 { "name", recoveryPlan }
             });
@@ -154,7 +150,6 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_recovery_plan_resource_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "service-group", serviceGroup },
                 { "recovery-plan", recoveryPlan }
             });
@@ -173,7 +168,6 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_recovery_job_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "service-group", serviceGroup },
                 { "recovery-plan", recoveryPlan },
                 { "name", recoveryJob }
@@ -194,7 +188,6 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_recovery_job_resource_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "service-group", serviceGroup },
                 { "recovery-plan", recoveryPlan },
                 { "recovery-job", recoveryJob }

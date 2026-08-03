@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using Azure.Mcp.Tools.Pricing.Models;
 using Azure.Mcp.Tools.Pricing.Options;
 using Azure.Mcp.Tools.Pricing.Services;
@@ -22,7 +21,7 @@ namespace Azure.Mcp.Tools.Pricing.Commands;
         Get Azure retail pricing information. Do NOT call this tool if the user provides only a broad service name (e.g., "Virtual Machines", "Storage", "SQL Database") without a specific SKU—ask for the exact SKU or tier first. 
         For comparisons across regions or SKUs, require explicit ARM SKU names. Do not assume defaults. Call this tool only after the user specifies a SKU (--sku) or confirms they want all pricing for a service. Requires at least one filter: --sku, --service, --region, --service-family, or --filter. 
         SavingsPlan is not a valid --price-type; use --include-savings-plan instead. Valid --price-type: Consumption, Reservation, DevTestConsumption. When --include-savings-plan is true, Consumption results include a nested savingsPlan array (1-year/3-year pricing, mainly Linux VMs). 
-        For Bicep/ARM cost estimation, extract resource type and SKU, query per resource, and sum monthly costs (hourly × 730).
+        For Bicep/ARM cost estimation, extract resource type and SKU, query per resource, and sum monthly costs (hourly x 730).
         """,
     Destructive = false,
     Idempotent = true,
@@ -30,79 +29,42 @@ namespace Azure.Mcp.Tools.Pricing.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger, IPricingService pricingService) : BasePricingCommand<PricingGetOptions>
+public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger, IPricingService pricingService)
+    : AuthenticatedCommand<PricingGetOptions, PricingGetCommand.PricingGetCommandResult>
 {
     private readonly ILogger<PricingGetCommand> _logger = logger;
     private readonly IPricingService _pricingService = pricingService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(PricingGetOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(PricingOptionDefinitions.Sku);
-        command.Options.Add(PricingOptionDefinitions.Service);
-        command.Options.Add(PricingOptionDefinitions.Region);
-        command.Options.Add(PricingOptionDefinitions.ServiceFamily);
-        command.Options.Add(PricingOptionDefinitions.PriceType);
-        command.Options.Add(PricingOptionDefinitions.IncludeSavingsPlan);
-        command.Options.Add(PricingOptionDefinitions.Filter);
+        base.ValidateOptions(options, validationResult);
 
-        // Add validation: at least one filter must be provided
-        command.Validators.Add(result =>
+        if (string.IsNullOrEmpty(options.Sku) &&
+            string.IsNullOrEmpty(options.Service) &&
+            string.IsNullOrEmpty(options.Region) &&
+            string.IsNullOrEmpty(options.ServiceFamily) &&
+            string.IsNullOrEmpty(options.PriceType) &&
+            string.IsNullOrEmpty(options.Filter))
         {
-            var sku = result.GetValue(PricingOptionDefinitions.Sku);
-            var service = result.GetValue(PricingOptionDefinitions.Service);
-            var region = result.GetValue(PricingOptionDefinitions.Region);
-            var serviceFamily = result.GetValue(PricingOptionDefinitions.ServiceFamily);
-            var priceType = result.GetValue(PricingOptionDefinitions.PriceType);
-            var filter = result.GetValue(PricingOptionDefinitions.Filter);
+            validationResult.Errors.Add("At least one filter is required. " +
+                "Specify --sku, --service, --region, --service-family, --price-type, or --filter.");
+        }
 
-            if (string.IsNullOrEmpty(sku) &&
-                string.IsNullOrEmpty(service) &&
-                string.IsNullOrEmpty(region) &&
-                string.IsNullOrEmpty(serviceFamily) &&
-                string.IsNullOrEmpty(priceType) &&
-                string.IsNullOrEmpty(filter))
-            {
-                result.AddError("At least one filter is required. " +
-                    "Specify --sku, --service, --region, --service-family, --price-type, or --filter.");
-            }
-
-            // Require --sku when --service is provided (broad service queries return too many results)
-            if (!string.IsNullOrEmpty(service) && string.IsNullOrEmpty(sku))
-            {
-                result.AddError(
-                    $"When querying by service '{service}', you must also specify --sku to narrow results. " +
-                    "Ask the user which specific SKU they want pricing for. " +
-                    "Examples: --sku Standard_D4s_v5 (for VMs), --sku Standard_LRS (for Storage), --sku GP_Gen5_2 (for SQL).");
-            }
-        });
-    }
-
-    protected override PricingGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Sku = parseResult.GetValue(PricingOptionDefinitions.Sku);
-        options.Service = parseResult.GetValue(PricingOptionDefinitions.Service);
-        options.Region = parseResult.GetValue(PricingOptionDefinitions.Region);
-        options.ServiceFamily = parseResult.GetValue(PricingOptionDefinitions.ServiceFamily);
-        options.PriceType = parseResult.GetValue(PricingOptionDefinitions.PriceType);
-        options.IncludeSavingsPlan = parseResult.GetValue(PricingOptionDefinitions.IncludeSavingsPlan);
-        options.Filter = parseResult.GetValue(PricingOptionDefinitions.Filter);
-        return options;
+        // Require --sku when --service is provided (broad service queries return too many results)
+        if (!string.IsNullOrEmpty(options.Service) && string.IsNullOrEmpty(options.Sku))
+        {
+            validationResult.Errors.Add(
+                $"When querying by service '{options.Service}', you must also specify --sku to narrow results. " +
+                "Ask the user which specific SKU they want pricing for. " +
+                "Examples: --sku Standard_D4s_v5 (for VMs), --sku Standard_LRS (for Storage), --sku GP_Gen5_2 (for SQL).");
+        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        PricingGetOptions options,
         CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             _logger.LogDebug(
@@ -139,5 +101,5 @@ public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger, IPricin
         return context.Response;
     }
 
-    public record PricingGetCommandResult(List<PriceItem> Prices);
+    public sealed record PricingGetCommandResult(List<PriceItem> Prices);
 }

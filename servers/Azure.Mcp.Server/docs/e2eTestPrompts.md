@@ -161,6 +161,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> |
 | azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription |
 | azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> |
+| azurebackup_governance_find-unprotected | Find unprotected SQL databases and file shares discovered by backup vaults in my subscription |
+| azurebackup_governance_find-unprotected | Show all resources and sub-resources that need backup protection in resource group <resource_group> |
 | azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> |
 | azurebackup_governance_immutability | Set immutability to Enabled on vault <vault_name> in resource group <resource_group> |
 | azurebackup_governance_soft-delete | Configure soft delete on vault <vault_name> in resource group <resource_group> |
@@ -584,6 +586,27 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | functions_template_get | Show me a Cosmos DB trigger with an output binding in Java |
 | functions_template_get | Generate a MCP Tool trigger in TypeScript for Node.js 22 |
 
+## Azure Insights
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| insights_get | Generate insights from my current subscription |
+| insights_get | Summarize what's deployed across my Azure environment and highlight notable patterns |
+| insights_get | Analyze my tenant and give me insights about the overall infrastructure |
+| insights_get | What can you tell me about my existing Azure environment? |
+| insights_get | Analyze subscription <subscription_id> for architectural patterns |
+| insights_get | Analyze my Azure infrastructure and surface patterns to help me plan my next project |
+| insights_get | Generate insights about my Azure environment to help me plan a new data analytics platform |
+| insights_get | What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS? |
+
+## Azure IoT Hub
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| iothub_hub_get | Get details for IoT Hub <hub_name> in resource group <resource_group_name> |
+| iothub_hub_get | Show IoT Hub <hub_name> in resource group <resource_group_name> for subscription <subscription_id> |
+| iothub_hub_get | Retrieve IoT Hub <hub_name> metadata from resource group <resource_group_name> |
+
 ## Azure Key Vault
 
 | Tool Name | Test Prompt |
@@ -822,7 +845,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | monitor_activitylog_list | List the activity logs of the last month for <resource_name> |
-| monitor_healthmodels_entity_get | Show me the health status of entity <entity_id> using the health model <health_model_name> |
+| monitor_healthmodels_get | Show me the health model <health_model_name> in resource group <resource_group> |
+| monitor_healthmodels_list | List the Azure Monitor health models in my subscription |
+| monitor_healthmodels_list | What health models are in resource group <resource_group>? |
 | monitor_instrumentation_get-learning-resource | Get the onboarding learning resource at path <resource_path> |
 | monitor_instrumentation_get-learning-resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource_path> |
 | monitor_instrumentation_get-learning-resource | Get the content of the Azure Monitor learning resource file at path <resource_path> |
@@ -857,9 +882,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | monitor_table_type_list | Show me the available table types in the Log Analytics workspace <workspace_name> |
 | monitor_webtests_createorupdate | Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
 | monitor_webtests_createorupdate | Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
-| monitor_webtests_get | Get Web Test details for <webtest_resource_name> in my subscription in <resource_group> |
-| monitor_webtests_get | List all Web Test resources in my subscription |
-| monitor_webtests_get | List all Web Test resources in my subscription in <resource_group> |
 | monitor_workspace_list | List all Log Analytics workspaces in my subscription |
 | monitor_workspace_list | Show me my Log Analytics workspaces |
 | monitor_workspace_list | Show me the Log Analytics workspaces in my subscription |
@@ -1263,7 +1285,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| cloudarchitect_design | Please help me design an architecture for a large-scale file upload, storage, and retrieval service |
 | cloudarchitect_design | Help me design an Azure cloud service that will serve as an ATM for users |
 | cloudarchitect_design | I want to design a cloud app for ordering groceries |
 | cloudarchitect_design | How can I design a cloud service in Azure that will store and present videos for users? |

@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text;
+using System.Net.Http.Json;
 using Azure.Core;
 using Azure.Mcp.Tools.Extension.Models;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -24,22 +24,13 @@ internal class CliGenerateService(IHttpClientFactory httpClientFactory, IAzureTo
         // AzCli copilot API endpoint
         var url = GetCliCopilotEndpoint();
 
-        var requestBody = new AzureCliGenerateRequest()
-        {
-            Question = intent,
-            History = [],
-            EnableParameterInjection = true
-        };
-        var content = new StringContent(
-                JsonSerializer.Serialize(requestBody, ExtensionJsonContext.Default.AzureCliGenerateRequest),
-                Encoding.UTF8,
-                "application/json");
+        var requestBody = new AzureCliGenerateRequest(intent, [], true);
 
         using HttpRequestMessage requestMessage = new()
         {
             Method = HttpMethod.Post,
             RequestUri = new Uri(url),
-            Content = content
+            Content = JsonContent.Create(requestBody, ExtensionJsonContext.Default.AzureCliGenerateRequest, new("application/json"))
         };
         requestMessage.Headers.Authorization = new("Bearer", accessToken.Token);
         requestMessage.Headers.Add("clientType", "azuremcp");
@@ -47,18 +38,15 @@ internal class CliGenerateService(IHttpClientFactory httpClientFactory, IAzureTo
         return responseMessage;
     }
 
-    private string GetCliCopilotEndpoint()
+    private string GetCliCopilotEndpoint() => cloudConfiguration.CloudType switch
     {
-        return cloudConfiguration.CloudType switch
-        {
-            AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
-                "https://azclis-copilot-apim-prod-eus.azure-api.net/azcli/copilot",
-            AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
-                "https://azclis-copilot-apim-prod-eus.azure-api.cn/azcli/copilot",
-            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
-                "https://azclis-copilot-apim-prod-eus.azure-api.us/azcli/copilot",
-            _ =>
-                "https://azclis-copilot-apim-prod-eus.azure-api.net/azcli/copilot"
-        };
-    }
+        AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
+            "https://azclis-copilot-apim-prod-eus.azure-api.net/azcli/copilot",
+        AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
+            "https://azclis-copilot-apim-prod-eus.azure-api.cn/azcli/copilot",
+        AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
+            "https://azclis-copilot-apim-prod-eus.azure-api.us/azcli/copilot",
+        _ =>
+            "https://azclis-copilot-apim-prod-eus.azure-api.net/azcli/copilot"
+    };
 }

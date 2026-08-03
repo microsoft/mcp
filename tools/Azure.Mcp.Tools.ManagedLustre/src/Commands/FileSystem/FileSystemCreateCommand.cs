@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.ManagedLustre.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
@@ -26,102 +25,58 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class FileSystemCreateCommand(IManagedLustreService service, ILogger<FileSystemCreateCommand> logger)
-    : BaseManagedLustreCommand<FileSystemCreateOptions>(logger)
+public sealed class FileSystemCreateCommand(IManagedLustreService service, ILogger<FileSystemCreateCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<FileSystemCreateOptions, FileSystemCreateCommand.FileSystemCreateResult>(subscriptionResolver)
 {
-
     private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<FileSystemCreateCommand> _logger = logger;
+    private readonly ILogger<FileSystemCreateCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(FileSystemCreateOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
+        base.ValidateOptions(options, validationResult);
 
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(ManagedLustreOptionDefinitions.NameOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.LocationOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.SkuOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.SizeOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.SubnetIdOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.ZoneOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.MaintenanceDayOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.MaintenanceTimeOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.HsmContainerOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.HsmLogContainerOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.ImportPrefixOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.RootSquashModeOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.NoSquashNidListsOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.SquashUidOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.SquashGidOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.CustomEncryptionOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.KeyUrlOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.SourceVaultOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.UserAssignedIdentityIdOption);
-        command.Validators.Add(ValidateRootSquashOptions);
-        command.Validators.Add(ValidateMaintanenceOptionsCreate);
-        command.Validators.Add(ValidateEncryptionOptions);
-        command.Validators.Add(ValidateHSMOptions);
+        ManagedLustreCommonValidators.ValidateRootSquashOptions(validationResult, options.RootSquashMode, options.NoSquashNidList, options.SquashUid, options.SquashGid);
+
+        if (options.CustomEncryption == true &&
+            (string.IsNullOrWhiteSpace(options.KeyUrl) || string.IsNullOrWhiteSpace(options.SourceVault) || string.IsNullOrWhiteSpace(options.UserAssignedIdentityId)))
+        {
+            validationResult.Errors.Add("Missing Required options: key-url, source-vault, user-assigned-identity when custom-encryption is set");
+        }
+
+        var hsmEnabled = !string.IsNullOrWhiteSpace(options.HsmContainer) || !string.IsNullOrWhiteSpace(options.HsmLogContainer);
+
+        // Always require both values if one is specified.
+        if (hsmEnabled && (string.IsNullOrWhiteSpace(options.HsmContainer) || string.IsNullOrWhiteSpace(options.HsmLogContainer)))
+        {
+            validationResult.Errors.Add("When enabling Azure Blob Integration both data container and log container must be specified.");
+        }
     }
 
-    protected override FileSystemCreateOptions BindOptions(ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FileSystemCreateOptions options, CancellationToken cancellationToken)
     {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.NameOption.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.LocationOption.Name);
-        options.Sku = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.SkuOption.Name);
-        options.SizeTiB = parseResult.GetValueOrDefault<int>(ManagedLustreOptionDefinitions.SizeOption.Name);
-        options.SubnetId = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.SubnetIdOption.Name);
-        options.Zone = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.ZoneOption.Name);
-        options.HsmContainer = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.HsmContainerOption.Name);
-        options.HsmLogContainer = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.HsmLogContainerOption.Name);
-        options.ImportPrefix = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.ImportPrefixOption.Name);
-        options.MaintenanceDay = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.MaintenanceDayOption.Name);
-        options.MaintenanceTime = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.MaintenanceTimeOption.Name);
-        options.RootSquashMode = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.RootSquashModeOption.Name);
-        options.NoSquashNidLists = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.NoSquashNidListsOption.Name);
-        options.SquashUid = parseResult.GetValueOrDefault<long?>(ManagedLustreOptionDefinitions.SquashUidOption.Name);
-        options.SquashGid = parseResult.GetValueOrDefault<long?>(ManagedLustreOptionDefinitions.SquashGidOption.Name);
-        options.EnableCustomEncryption = parseResult.GetValueOrDefault<bool>(ManagedLustreOptionDefinitions.CustomEncryptionOption.Name);
-        options.KeyUrl = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.KeyUrlOption.Name);
-        options.SourceVaultId = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.SourceVaultOption.Name);
-        options.UserAssignedIdentityId = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.UserAssignedIdentityIdOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
-            var options = BindOptions(parseResult);
-
             var fs = await _service.CreateFileSystemAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.Name!,
-                options.Location!,
-                options.Sku!,
-                options.SizeTiB!.Value,
-                options.SubnetId!,
-                options.Zone!,
-                options.MaintenanceDay!,
-                options.MaintenanceTime!,
+                options.ResourceGroup,
+                options.Name,
+                options.Location,
+                options.Sku,
+                options.Size,
+                options.SubnetId,
+                options.Zone,
+                options.MaintenanceDay,
+                options.MaintenanceTime,
                 options.HsmContainer,
                 options.HsmLogContainer,
                 options.ImportPrefix,
                 options.RootSquashMode,
-                options.NoSquashNidLists,
+                options.NoSquashNidList,
                 options.SquashUid,
                 options.SquashGid,
-                options.EnableCustomEncryption ?? false,
+                options.CustomEncryption ?? false,
                 options.KeyUrl,
-                options.SourceVaultId,
+                options.SourceVault,
                 options.UserAssignedIdentityId,
                 options.Tenant,
                 options.RetryPolicy,
@@ -138,5 +93,5 @@ public sealed class FileSystemCreateCommand(IManagedLustreService service, ILogg
         return context.Response;
     }
 
-    internal record FileSystemCreateResult(Models.LustreFileSystem FileSystem);
+    public sealed record FileSystemCreateResult(Models.LustreFileSystem FileSystem);
 }

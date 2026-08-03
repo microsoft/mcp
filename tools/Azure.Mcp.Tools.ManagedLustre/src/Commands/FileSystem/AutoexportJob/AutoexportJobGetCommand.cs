@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.ManagedLustre.Options;
+using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 
@@ -31,80 +31,54 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class AutoexportJobGetCommand(IManagedLustreService service, ILogger<AutoexportJobGetCommand> logger)
-    : BaseManagedLustreCommand<AutoexportJobGetOptions>(logger)
+public sealed class AutoexportJobGetCommand(IManagedLustreService service, ILogger<AutoexportJobGetCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<AutoexportJobGetOptions, AutoexportJobGetCommand.AutoexportJobGetResult>(subscriptionResolver)
 {
-
     private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<AutoexportJobGetCommand> _logger = logger;
+    private readonly ILogger<AutoexportJobGetCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AutoexportJobGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(ManagedLustreOptionDefinitions.FileSystemNameOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.JobNameOption.AsOptional());
-    }
-
-    protected override AutoexportJobGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileSystemName ??= parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.FileSystemNameOption.Name);
-        options.JobName ??= parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.JobNameOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-
             if (!string.IsNullOrWhiteSpace(options.JobName))
             {
                 // Get specific job
                 var result = await _service.GetAutoexportJobAsync(
                     options.Subscription!,
-                    options.ResourceGroup!,
-                    options.FileSystemName!,
-                    options.JobName!,
+                    options.ResourceGroup,
+                    options.FilesystemName,
+                    options.JobName,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(result), ManagedLustreJsonContext.Default.AutoexportJobGetResult);
+                context.Response.Results = ResponseResult.Create(new(result, null), ManagedLustreJsonContext.Default.AutoexportJobGetResult);
             }
             else
             {
                 // List all jobs
                 var results = await _service.ListAutoexportJobsAsync(
                     options.Subscription!,
-                    options.ResourceGroup!,
-                    options.FileSystemName!,
+                    options.ResourceGroup,
+                    options.FilesystemName,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(results ?? []), ManagedLustreJsonContext.Default.AutoexportJobListResult);
+                context.Response.Results = ResponseResult.Create(new(null, results ?? []), ManagedLustreJsonContext.Default.AutoexportJobGetResult);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting autoexport job {JobName} for AMLFS filesystem {FileSystemName}.", options.JobName, options.FileSystemName);
+            _logger.LogError(ex, "Error getting autoexport job {JobName} for AMLFS filesystem {FileSystemName}.", options.JobName, options.FilesystemName);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    public record AutoexportJobGetResult(Models.AutoexportJob Job);
-    public record AutoexportJobListResult(List<Models.AutoexportJob> Jobs);
+    public sealed record AutoexportJobGetResult(
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Models.AutoexportJob? Job,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] List<Models.AutoexportJob>? Jobs);
 }

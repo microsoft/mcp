@@ -16,11 +16,10 @@ namespace Azure.Mcp.Tools.Advisor.Models;
 /// Property names and null-handling are governed by JsonSourceGenerationOptions on
 /// AdvisorJsonContext (camelCase naming + WhenWritingNull default).
 /// </summary>
-public record RecommendationType(
+public sealed record RecommendationType(
     string Id,
     string DisplayName,
     string? Category,
     string? Impact,
     string? ResourceType,
-    string? SubCategory
-);
+    string? SubCategory);

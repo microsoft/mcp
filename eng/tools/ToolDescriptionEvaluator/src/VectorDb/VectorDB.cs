@@ -1,19 +1,42 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics.Tensors;
+using System.Runtime.CompilerServices;
+using Microsoft.Extensions.VectorData;
 
 namespace ToolSelection.VectorDb;
 
-public record Entry(string Id, object? Metadata, float[] Vector);
+/// <summary>
+/// A record stored in the vector database. The properties are annotated with
+/// <c>Microsoft.Extensions.VectorData</c> attributes so the model can be reused with any
+/// <see cref="VectorStore"/> provider (for example Azure AI Search, Cosmos DB, Redis, ...).
+/// </summary>
+public record Entry
+{
+    public Entry(string id, object? metadata, ReadOnlyMemory<float> vector)
+    {
+        Id = id;
+        Metadata = metadata;
+        Vector = vector;
+    }
 
-public record QueryResult(float Score, Entry Entry);
+    [VectorStoreKey]
+    public string Id { get; init; }
 
-public record QueryOptions(int TopK = 10, float MinimumScore = 0.0f, Func<Entry, bool>? Predicate = null);
+    [VectorStoreData]
+    public object? Metadata { get; init; }
+
+    // Default output dimensions of the Azure OpenAI text-embedding-3-large model used by EmbeddingService.
+    // The in-memory implementation does not enforce this value; it is metadata for real providers.
+    [VectorStoreVector(3072, DistanceFunction = DistanceFunction.CosineSimilarity)]
+    public ReadOnlyMemory<float> Vector { get; init; }
+}
 
 public interface IDistanceMetric
 {
-    float Distance(float[] a, float[] b);
+    float Distance(ReadOnlySpan<float> a, ReadOnlySpan<float> b);
     bool BiggerIsCloser { get; }
 }
 
@@ -21,12 +44,12 @@ public class CosineSimilarity : IDistanceMetric
 {
     public bool BiggerIsCloser => true;  // Cosine similarity: 1 = most similar, -1 = least similar
 
-    public float Distance(float[] a, float[] b)
+    public float Distance(ReadOnlySpan<float> a, ReadOnlySpan<float> b)
     {
         if (a.Length != b.Length)
             throw new ArgumentException("Vector lengths must match");
 
-        return TensorPrimitives.CosineSimilarity(a.AsSpan(), b.AsSpan());
+        return TensorPrimitives.CosineSimilarity(a, b);
     }
 }
 
@@ -34,214 +57,142 @@ public class DotProduct : IDistanceMetric
 {
     public bool BiggerIsCloser => true;
 
-    public float Distance(float[] a, float[] b)
+    public float Distance(ReadOnlySpan<float> a, ReadOnlySpan<float> b)
     {
         if (a.Length != b.Length)
             throw new ArgumentException("Vector lengths must match");
 
-        return TensorPrimitives.Dot(a.AsSpan(), b.AsSpan());
+        return TensorPrimitives.Dot(a, b);
     }
 }
 
-public class VectorDB(IDistanceMetric distanceMetric, IEnumerable<Entry>? entries = null) : IDisposable
+/// <summary>
+/// An in-memory <see cref="VectorStore"/> implementation of <c>Microsoft.Extensions.VectorData</c>.
+/// It exposes named <see cref="VectorStoreCollection{TKey, TRecord}"/> instances so the current
+/// custom implementation can be swapped for any of the available providers with little to no code changes.
+/// </summary>
+public sealed class VectorDB : VectorStore
 {
-    private readonly ReaderWriterLockSlim _lock = new();
-    private readonly List<Entry> _entries = entries?.OrderBy(e => e.Id, StringComparer.Ordinal).ToList() ?? new();
-    private readonly IDistanceMetric _distanceMetric = distanceMetric;
-    private bool _disposed = false;
+    public const string DefaultCollectionName = "tools";
 
-    ~VectorDB()
+    private readonly IDistanceMetric _distanceMetric;
+    private readonly Dictionary<string, InMemoryVectorStoreCollection> _collections = new(StringComparer.Ordinal);
+    private readonly object _sync = new();
+    private readonly VectorStoreMetadata _metadata = new() { VectorStoreSystemName = "InMemory" };
+    private bool _disposed;
+
+    public VectorDB(IDistanceMetric distanceMetric, IEnumerable<Entry>? entries = null)
     {
-        Dispose(false);
+        _distanceMetric = distanceMetric;
+
+        if (entries != null)
+        {
+            _collections[DefaultCollectionName] = new InMemoryVectorStoreCollection(DefaultCollectionName, distanceMetric, entries);
+        }
     }
 
-    public void Dispose()
+    /// <summary>Gets the default, strongly-typed collection used by the evaluator.</summary>
+    public InMemoryVectorStoreCollection DefaultCollection => GetOrCreateCollection(DefaultCollectionName);
+
+    private InMemoryVectorStoreCollection GetOrCreateCollection(string name)
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+        lock (_sync)
+        {
+            if (!_collections.TryGetValue(name, out var collection))
+            {
+                collection = new InMemoryVectorStoreCollection(name, _distanceMetric);
+                _collections[name] = collection;
+            }
+
+            return collection;
+        }
     }
 
-    protected virtual void Dispose(bool disposing)
+    [RequiresUnreferencedCode("Uses generic type checks that may be trimmed.")]
+    [RequiresDynamicCode("Uses generic type checks that may require dynamic code.")]
+    public override VectorStoreCollection<TKey, TRecord> GetCollection<TKey, TRecord>(string name, VectorStoreCollectionDefinition? definition = null)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+
+        if (typeof(TKey) != typeof(string) || typeof(TRecord) != typeof(Entry))
+        {
+            throw new NotSupportedException($"This store only supports collections of <{nameof(String)}, {nameof(Entry)}>.");
+        }
+
+        return (VectorStoreCollection<TKey, TRecord>)(object)GetOrCreateCollection(name);
+    }
+
+    public override VectorStoreCollection<object, Dictionary<string, object?>> GetDynamicCollection(string name, VectorStoreCollectionDefinition definition)
+        => throw new NotSupportedException("Dynamic collections are not supported by the in-memory vector store.");
+
+    public override async IAsyncEnumerable<string> ListCollectionNamesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        List<string> names;
+
+        lock (_sync)
+        {
+            names = _collections.Keys.ToList();
+        }
+
+        foreach (var name in names)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            yield return name;
+        }
+    }
+
+    public override Task<bool> CollectionExistsAsync(string name, CancellationToken cancellationToken = default)
+    {
+        lock (_sync)
+        {
+            return Task.FromResult(_collections.ContainsKey(name));
+        }
+    }
+
+    public override Task EnsureCollectionDeletedAsync(string name, CancellationToken cancellationToken = default)
+    {
+        lock (_sync)
+        {
+            if (_collections.Remove(name, out var collection))
+            {
+                collection.Dispose();
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public override object? GetService(Type serviceType, object? serviceKey = null)
+    {
+        ArgumentNullException.ThrowIfNull(serviceType);
+
+        return
+            serviceKey is not null ? null :
+            serviceType == typeof(VectorStoreMetadata) ? _metadata :
+            serviceType.IsInstanceOfType(this) ? this :
+            null;
+    }
+
+    protected override void Dispose(bool disposing)
     {
         if (!_disposed)
         {
             if (disposing)
             {
-                _lock?.Dispose();
+                lock (_sync)
+                {
+                    foreach (var collection in _collections.Values)
+                    {
+                        collection.Dispose();
+                    }
+
+                    _collections.Clear();
+                }
             }
+
             _disposed = true;
         }
-    }
 
-    public int Count
-    {
-        get
-        {
-            _lock.EnterReadLock();
-            try
-            {
-                return _entries.Count;
-            }
-            finally
-            {
-                _lock.ExitReadLock();
-            }
-        }
-    }
-
-    private int BinarySearch(string id)
-    {
-        return _entries.BinarySearch(new Entry(id, null, []),
-            Comparer<Entry>.Create((a, b) => string.Compare(a.Id, b.Id, StringComparison.Ordinal)));
-    }
-
-    public void Upsert(Entry entry)
-    {
-        _lock.EnterWriteLock();
-        try
-        {
-            int index = BinarySearch(entry.Id);
-            if (index >= 0)
-            {
-                _entries[index] = entry;
-            }
-            else
-            {
-                _entries.Insert(~index, entry);
-            }
-        }
-        finally
-        {
-            _lock.ExitWriteLock();
-        }
-    }
-
-    public Entry? Get(string id)
-    {
-        _lock.EnterReadLock();
-        try
-        {
-            int index = BinarySearch(id);
-            return index >= 0 ? _entries[index] : null;
-        }
-        finally
-        {
-            _lock.ExitReadLock();
-        }
-    }
-
-    public bool Delete(string id)
-    {
-        _lock.EnterWriteLock();
-        try
-        {
-            int index = BinarySearch(id);
-            if (index >= 0)
-            {
-                _entries.RemoveAt(index);
-                return true;
-            }
-            return false;
-        }
-        finally
-        {
-            _lock.ExitWriteLock();
-        }
-    }
-
-    public List<QueryResult> Query(float[] vector, QueryOptions options)
-    {
-        _lock.EnterReadLock();
-        try
-        {
-            return QuerySlice(_entries, vector, options);
-        }
-        finally
-        {
-            _lock.ExitReadLock();
-        }
-    }
-
-    private List<QueryResult> QuerySlice(IEnumerable<Entry> entries, float[] vector, QueryOptions options)
-    {
-        const int threshold = 100;
-        var entryList = entries.ToList();
-
-        if (entryList.Count > threshold)
-        {
-            int half = entryList.Count / 2;
-            var leftTask = Task.Run(() => QuerySlice(entryList.Take(half), vector, options));
-            var rightResult = QuerySlice(entryList.Skip(half), vector, options);
-            var leftResult = leftTask.Result;
-
-            // Merge results
-            var mergedResults = new List<QueryResult>(leftResult.Count + rightResult.Count);
-            int leftIndex = 0, rightIndex = 0;
-
-            while (leftIndex < leftResult.Count && rightIndex < rightResult.Count)
-            {
-                bool takeLeft = _distanceMetric.BiggerIsCloser
-                    ? leftResult[leftIndex].Score >= rightResult[rightIndex].Score
-                    : leftResult[leftIndex].Score <= rightResult[rightIndex].Score;
-
-                if (takeLeft)
-                {
-                    mergedResults.Add(leftResult[leftIndex++]);
-                }
-                else
-                {
-                    mergedResults.Add(rightResult[rightIndex++]);
-                }
-            }
-
-            // Add remaining results
-            while (leftIndex < leftResult.Count)
-                mergedResults.Add(leftResult[leftIndex++]);
-            while (rightIndex < rightResult.Count)
-                mergedResults.Add(rightResult[rightIndex++]);
-
-            return mergedResults;
-        }
-
-        var results = new List<QueryResult>();
-
-        foreach (var entry in entryList)
-        {
-            if (options.Predicate != null && !options.Predicate(entry))
-                continue;
-
-            float score = _distanceMetric.Distance(vector, entry.Vector);
-            if (score < options.MinimumScore)
-                continue;
-
-            var queryResult = new QueryResult(score, entry);
-
-            // Find insertion point
-            int insertIndex = results.BinarySearch(queryResult,
-                Comparer<QueryResult>.Create((a, b) =>
-                {
-                    int result = a.Score.CompareTo(b.Score);
-                    return _distanceMetric.BiggerIsCloser ? -result : result;
-                }));
-
-            if (insertIndex < 0)
-                insertIndex = ~insertIndex;
-
-            if (insertIndex == options.TopK)
-            {
-                // Score is worse than all current results, skip
-                continue;
-            }
-
-            if (results.Count == options.TopK)
-            {
-                // Remove the worst result
-                results.RemoveAt(results.Count - 1);
-            }
-
-            results.Insert(insertIndex, queryResult);
-        }
-
-        return results;
+        base.Dispose(disposing);
     }
 }

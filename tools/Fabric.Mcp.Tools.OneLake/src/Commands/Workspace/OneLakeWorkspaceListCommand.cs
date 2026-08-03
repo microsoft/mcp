@@ -7,7 +7,6 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Workspace;
 
@@ -22,9 +21,8 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Workspace;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class OneLakeWorkspaceListCommand(
-    ILogger<OneLakeWorkspaceListCommand> logger,
-    IOneLakeService oneLakeService) : AuthenticatedCommand<WorkspaceListOptions, OneLakeWorkspaceListCommand.OneLakeWorkspaceListCommandResult>
+public sealed class OneLakeWorkspaceListCommand(ILogger<OneLakeWorkspaceListCommand> logger, IOneLakeService oneLakeService)
+    : AuthenticatedCommand<WorkspaceListOptions, OneLakeWorkspaceListCommand.OneLakeWorkspaceListCommandResult>
 {
     private readonly ILogger<OneLakeWorkspaceListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -41,8 +39,7 @@ public sealed class OneLakeWorkspaceListCommand(
 
                 _logger.LogInformation("Retrieved OneLake workspaces XML response with length: {Length}", xmlResponse.Length);
 
-                var result = new OneLakeWorkspaceListCommandResult { XmlResponse = xmlResponse };
-                context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeWorkspaceListCommandResult);
+                context.Response.Results = ResponseResult.Create(new(null, xmlResponse), OneLakeJsonContext.Default.OneLakeWorkspaceListCommandResult);
             }
             else
             {
@@ -53,8 +50,7 @@ public sealed class OneLakeWorkspaceListCommand(
                 var workspaceList = workspaces.ToList();
                 _logger.LogInformation("Retrieved {Count} OneLake workspaces", workspaceList.Count);
 
-                var result = new OneLakeWorkspaceListCommandResult { Workspaces = workspaceList };
-                context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeWorkspaceListCommandResult);
+                context.Response.Results = ResponseResult.Create(new(workspaceList, null), OneLakeJsonContext.Default.OneLakeWorkspaceListCommandResult);
             }
         }
         catch (Exception ex)
@@ -66,18 +62,5 @@ public sealed class OneLakeWorkspaceListCommand(
         return context.Response;
     }
 
-    public class OneLakeWorkspaceListCommandResult
-    {
-        public List<Models.Workspace>? Workspaces { get; set; }
-        public string? XmlResponse { get; set; }
-
-        public OneLakeWorkspaceListCommandResult(List<Models.Workspace> workspaces)
-        {
-            Workspaces = workspaces ?? throw new ArgumentNullException(nameof(workspaces));
-        }
-
-        public OneLakeWorkspaceListCommandResult()
-        {
-        }
-    }
+    public sealed record OneLakeWorkspaceListCommandResult(List<Models.Workspace>? Workspaces, string? XmlResponse);
 }

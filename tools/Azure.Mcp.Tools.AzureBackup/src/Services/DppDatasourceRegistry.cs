@@ -151,7 +151,7 @@ public static class DppDatasourceRegistry
     /// Useful for user-facing validation messages.
     /// </summary>
     public static IReadOnlyList<string> KnownTypeNames { get; } = AllProfiles
-        .SelectMany(p => new[] { p.FriendlyName }.Concat(p.Aliases))
+        .SelectMany(p => new[] { p.FriendlyName }.Concat(p.Aliases).Concat(new[] { p.ArmResourceType }))
         .ToArray();
 
     /// <summary>

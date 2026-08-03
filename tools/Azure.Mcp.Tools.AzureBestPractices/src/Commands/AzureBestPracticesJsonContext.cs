@@ -7,7 +7,4 @@ namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
 
 [JsonSerializable(typeof(List<string>))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal partial class AzureBestPracticesJsonContext : JsonSerializerContext
-{
-
-}
+internal partial class AzureBestPracticesJsonContext : JsonSerializerContext;

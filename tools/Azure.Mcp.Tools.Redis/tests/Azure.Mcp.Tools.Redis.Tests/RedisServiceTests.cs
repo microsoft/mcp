@@ -4,9 +4,7 @@
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Tools.Redis.Models.CacheForRedis;
 using Azure.Mcp.Tools.Redis.Services;
-using Azure.ResourceManager.Redis;
 using Azure.ResourceManager.Redis.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;

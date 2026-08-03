@@ -5,17 +5,16 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Subscription.Commands;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tests.Commands;
 using Azure.ResourceManager.Resources;
-using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Subscription;
 
-public class SubscriptionListCommandTests : CommandUnitTestsBase<SubscriptionListCommand, ISubscriptionService>
+public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<SubscriptionListCommand, ISubscriptionService>
 {
     [Fact]
     public async Task ExecuteAsync_NoParameters_ReturnsSubscriptions()
@@ -108,26 +107,6 @@ public class SubscriptionListCommandTests : CommandUnitTestsBase<SubscriptionLis
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithAuthMethod_PassesAuthMethodToCommand()
-    {
-        // Arrange
-        Service.GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .Returns([SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Sub1")]);
-        Service.GetDefaultSubscriptionId().Returns((string?)null);
-
-        // Act
-        var result = await ExecuteCommandAsync("--auth-method", AuthMethod.Credential.ToString().ToLowerInvariant());
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        await Service.Received(1).GetSubscriptions(
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
     public async Task ExecuteAsync_WithDefaultSubscription_MarksDefaultSubscription()
     {
         // Arrange
@@ -142,10 +121,8 @@ public class SubscriptionListCommandTests : CommandUnitTestsBase<SubscriptionLis
             .Returns(expectedSubscriptions);
         Service.GetDefaultSubscriptionId().Returns("sub2");
 
-        var args = CommandDefinition.Parse("");
-
         // Act
-        var result = await Command.ExecuteAsync(Context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync("");
 
         // Assert
         Assert.NotNull(result);

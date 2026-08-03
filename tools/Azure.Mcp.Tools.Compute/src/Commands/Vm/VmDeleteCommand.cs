@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tools.Compute.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Compute.Options.Vm;
 using Azure.Mcp.Tools.Compute.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
@@ -32,45 +32,21 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     ReadOnly = false,
     Secret = true,
     LocalRequired = false)]
-public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger, IComputeService computeService)
-    : BaseComputeCommand<VmDeleteOptions>(true)
+public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger, IComputeService computeService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<VmDeleteOptions, VmDeleteCommand.VmDeleteCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<VmDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VmDeleteOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-
-        // Required options
-        command.Options.Add(ComputeOptionDefinitions.VmName.AsRequired());
-        command.Options.Add(ComputeOptionDefinitions.ForceDeletion);
-    }
-
-    protected override VmDeleteOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.VmName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name);
-        options.ForceDeletion = parseResult.GetValueOrDefault(ComputeOptionDefinitions.ForceDeletion);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
             var deleted = await _computeService.DeleteVmAsync(
-                options.VmName!,
-                options.ResourceGroup!,
+                options.VmName,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.ForceDeletion ? true : null,
                 options.Tenant,
@@ -81,9 +57,7 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger, IComputeSer
                 ? $"Virtual machine '{options.VmName}' was successfully deleted from resource group '{options.ResourceGroup}'."
                 : $"Virtual machine '{options.VmName}' was not found in resource group '{options.ResourceGroup}'. Nothing was deleted.";
 
-            context.Response.Results = ResponseResult.Create(
-                new VmDeleteCommandResult(message, deleted),
-                ComputeJsonContext.Default.VmDeleteCommandResult);
+            context.Response.Results = ResponseResult.Create(new(message, deleted), ComputeJsonContext.Default.VmDeleteCommandResult);
         }
         catch (Exception ex)
         {
@@ -106,5 +80,5 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger, IComputeSer
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmDeleteCommandResult(string Message, bool Success);
+    public sealed record VmDeleteCommandResult(string Message, bool Success);
 }

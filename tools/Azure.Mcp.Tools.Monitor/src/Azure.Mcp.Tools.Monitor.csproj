@@ -27,6 +27,7 @@
     <PackageReference Include="Azure.Monitor.Query.Logs" />
     <PackageReference Include="Azure.ResourceManager" />
     <PackageReference Include="Azure.ResourceManager.ApplicationInsights" />
+    <PackageReference Include="Azure.ResourceManager.CloudHealth" />
     <PackageReference Include="Azure.ResourceManager.OperationalInsights" />
     <PackageReference Include="Azure.ResourceManager.Monitor" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />

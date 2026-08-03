@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Tests.Areas.Server.Helpers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -115,7 +116,7 @@ public class BaseDiscoveryStrategyTests
     public async Task GetOrCreateClientAsync_WithNewServer_CreatesAndCachesClient()
     {
         // Arrange
-        var mockClient = Substitute.For<McpClient>();
+        var mockClient = LoopbackMcpClient.Create(_ => null);
         var provider = CreateMockServerProvider("TestServer");
         provider.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(mockClient);
         var strategy = CreateMockStrategy(provider);
@@ -132,7 +133,7 @@ public class BaseDiscoveryStrategyTests
     public async Task GetOrCreateClientAsync_WithCachedServer_ReturnsCachedClient()
     {
         // Arrange
-        var mockClient = Substitute.For<McpClient>();
+        var mockClient = LoopbackMcpClient.Create(_ => null);
         var provider = CreateMockServerProvider("TestServer");
         provider.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(mockClient);
         var strategy = CreateMockStrategy(provider);
@@ -154,7 +155,7 @@ public class BaseDiscoveryStrategyTests
     public async Task GetOrCreateClientAsync_WithCustomOptions_PassesOptionsCorrectly()
     {
         // Arrange
-        var mockClient = Substitute.For<McpClient>();
+        var mockClient = LoopbackMcpClient.Create(_ => null);
         var provider = CreateMockServerProvider("TestServer");
         provider.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(mockClient);
         var strategy = CreateMockStrategy(provider);
@@ -172,7 +173,7 @@ public class BaseDiscoveryStrategyTests
     public async Task GetOrCreateClientAsync_WithDefaultOptions_UsesDefaultOptions()
     {
         // Arrange
-        var mockClient = Substitute.For<McpClient>();
+        var mockClient = LoopbackMcpClient.Create(_ => null);
         var provider = CreateMockServerProvider("TestServer");
         provider.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(mockClient);
         var strategy = CreateMockStrategy(provider);
@@ -203,8 +204,8 @@ public class BaseDiscoveryStrategyTests
     public async Task GetOrCreateClientAsync_WithMultipleServers_CachesEachSeparately()
     {
         // Arrange
-        var mockClient1 = Substitute.For<McpClient>();
-        var mockClient2 = Substitute.For<McpClient>();
+        var mockClient1 = LoopbackMcpClient.Create(_ => null);
+        var mockClient2 = LoopbackMcpClient.Create(_ => null);
         var provider1 = CreateMockServerProvider("Server1");
         var provider2 = CreateMockServerProvider("Server2");
 
@@ -288,7 +289,7 @@ public class BaseDiscoveryStrategyTests
     public async Task GetOrCreateClientAsync_CacheUsesSameKeyForDifferentCasing_ReusesCachedClient()
     {
         // Arrange
-        var mockClient1 = Substitute.For<McpClient>();
+        var mockClient1 = LoopbackMcpClient.Create(_ => null);
         var provider = CreateMockServerProvider("TestServer");
 
         // Setup provider to return a client for the first call
@@ -319,8 +320,8 @@ public class BaseDiscoveryStrategyTests
     public async Task DisposeAsync_ShouldDisposeAllCachedClients()
     {
         // Arrange
-        var mockClient1 = Substitute.For<McpClient>();
-        var mockClient2 = Substitute.For<McpClient>();
+        var mockClient1 = LoopbackMcpClient.Create(_ => null, out var tracker1);
+        var mockClient2 = LoopbackMcpClient.Create(_ => null, out var tracker2);
         var provider1 = CreateMockServerProvider("Server1");
         var provider2 = CreateMockServerProvider("Server2");
 
@@ -337,8 +338,8 @@ public class BaseDiscoveryStrategyTests
         await strategy.DisposeAsync();
 
         // Assert - All cached clients should be disposed
-        await mockClient1.Received(1).DisposeAsync();
-        await mockClient2.Received(1).DisposeAsync();
+        Assert.True(tracker1.WasDisposed);
+        Assert.True(tracker2.WasDisposed);
     }
 
     [Fact]
@@ -356,17 +357,13 @@ public class BaseDiscoveryStrategyTests
     public async Task DisposeAsync_ShouldHandleClientDisposalExceptions()
     {
         // Arrange
-        var mockClient1 = Substitute.For<McpClient>();
-        var mockClient2 = Substitute.For<McpClient>();
+        var mockClient1 = LoopbackMcpClient.CreateThrowingOnDispose(_ => null, out var tracker1);
+        var mockClient2 = LoopbackMcpClient.Create(_ => null, out var tracker2);
         var provider1 = CreateMockServerProvider("Server1");
         var provider2 = CreateMockServerProvider("Server2");
 
         provider1.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(mockClient1);
         provider2.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(mockClient2);
-
-        // Setup first client to throw on disposal
-        mockClient1.DisposeAsync().Returns(ValueTask.FromException(new InvalidOperationException("Client 1 disposal failed")));
-        mockClient2.DisposeAsync().Returns(ValueTask.CompletedTask);
 
         var strategy = CreateMockStrategy(provider1, provider2);
 
@@ -378,15 +375,15 @@ public class BaseDiscoveryStrategyTests
         await strategy.DisposeAsync();
 
         // Assert - Both clients should have been attempted to dispose
-        await mockClient1.Received(1).DisposeAsync();
-        await mockClient2.Received(1).DisposeAsync();
+        Assert.True(tracker1.WasDisposed);
+        Assert.True(tracker2.WasDisposed);
     }
 
     [Fact]
     public async Task DisposeAsync_ShouldBeIdempotent()
     {
         // Arrange
-        var mockClient = Substitute.For<McpClient>();
+        var mockClient = LoopbackMcpClient.Create(_ => null, out var tracker);
         var provider = CreateMockServerProvider("Server1");
         provider.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(mockClient);
 
@@ -401,14 +398,14 @@ public class BaseDiscoveryStrategyTests
         await strategy.DisposeAsync();
 
         // Assert - client should only be disposed once (idempotent)
-        await mockClient.Received(1).DisposeAsync();
+        Assert.Equal(1, tracker.DisposeCount);
     }
 
     [Fact]
     public async Task DisposeAsync_ShouldClearClientCache()
     {
         // Arrange
-        var mockClient = Substitute.For<McpClient>();
+        var mockClient = LoopbackMcpClient.Create(_ => null, out var tracker);
         var provider = CreateMockServerProvider("Server1");
         provider.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(mockClient);
 
@@ -423,6 +420,6 @@ public class BaseDiscoveryStrategyTests
 
         // Assert - After disposal, cache should be cleared
         // This is verified by the fact that disposal was called and the cache is no longer accessible
-        await mockClient.Received(1).DisposeAsync();
+        Assert.True(tracker.WasDisposed);
     }
 }

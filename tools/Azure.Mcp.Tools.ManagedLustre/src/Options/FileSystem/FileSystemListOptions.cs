@@ -1,9 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
+
 namespace Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 
-public sealed class FileSystemListOptions : BaseManagedLustreOptions
+public sealed class FileSystemListOptions : ISubscriptionOption
 {
-    // Uses subscription (required) and optional resource group from base classes
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public string? ResourceGroup { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [OptionContainer(Prefix = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

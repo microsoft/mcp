@@ -1,6 +1,5 @@
 # 🌟 Microsoft MCP Servers
 
-
 ## 📘 What is MCP?
 
 **Model Context Protocol (MCP)** is an open protocol that standardizes how applications provide context to large language models (LLMs). It allows AI applications to connect with various data sources and tools in a consistent manner, enhancing their capabilities and flexibility. MCP follows a client-server architecture:
@@ -44,7 +43,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **DESCRIPTION**: All Azure MCP tools in a single server.  The Azure MCP Server implements the MCP specification to create a seamless connection between AI agents and Azure services.  Azure MCP Server can be used alone or with the GitHub Copilot for Azure extension in VS Code.
 - **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
 - **TYPE**: `Local`
-- **INSTALL**: [![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022) [![Install Azure MCP in IntelliJ](https://img.shields.io/badge/IntelliJ%20IDEA-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053) [![Install Azure MCP in Eclipse](https://img.shields.io/badge/Eclipse-b6ae1d?style=flat-square&logo=eclipse&logoColor=white)](https://marketplace.eclipse.org/content/azure-toolkit-eclipse)
+- **INSTALL**: [![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022) [![Install Azure MCP in IntelliJ](https://img.shields.io/badge/IntelliJ%20IDEA-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053) [![Install Azure MCP in Eclipse](https://img.shields.io/badge/Eclipse-b6ae1d?style=flat-square&logo=eclipse&logoColor=white)](https://marketplace.eclipse.org/content/azure-toolkit-eclipse) [![Install Azure MCP in Claude Code](https://img.shields.io/badge/Claude_Code-Install-orange?style=flat-square)](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server#claude-code)
 
 ### ✨ Microsoft Foundry
 - **DOCUMENTATION**: [Get started with Foundry MCP Server](https://learn.microsoft.com/azure/ai-foundry/mcp/get-started?view=foundry&tabs=user)
@@ -74,6 +73,13 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
 - **TYPE**: `Local`
 - **INSTALL**: [![Install AKS MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-kubernetes-tools.vscode-aks-tools) [![Install AKS MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-kubernetes-tools.vscode-aks-tools) [![Install AKS MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://github.com/Azure/aks-mcp)
+
+### 💻 Binlog MCP Server
+- **REPOSITORY**: [dotnet/skills](https://github.com/dotnet/skills)
+- **DESCRIPTION**: A Model Context Protocol (MCP) server for analyzing MSBuild binary logs (`.binlog` files). Exposes structured access to build errors, warnings, targets, tasks, and properties so AI agents can triage CI failures and answer build-diagnostic questions.
+- **CATEGORY**: `DEVELOPER TOOLS`
+- **TYPE**: `Local`
+- **INSTALL**: .NET global tool from [NuGet.org](https://www.nuget.org/packages/Microsoft.AITools.BinlogMcp) — `dotnet tool install --global Microsoft.AITools.BinlogMcp`
 
 ### <img height="18" width="18" src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" alt="GitHub Logo" /> GitHub
 - **REPOSITORY**: [github/github-mcp-server](https://github.com/github/github-mcp-server)

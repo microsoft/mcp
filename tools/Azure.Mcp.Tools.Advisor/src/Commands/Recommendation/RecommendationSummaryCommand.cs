@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tools.Advisor.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 
@@ -34,64 +33,31 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCommand> logger, IAdvisorService advisorService)
-    : BaseAdvisorCommand<RecommendationSummaryOptions>(logger)
+public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCommand> logger, IAdvisorService advisorService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<RecommendationSummaryOptions, RecommendationSummaryCommand.RecommendationSummaryResult>(subscriptionResolver)
 {
     private readonly IAdvisorService _advisorService = advisorService;
+    private readonly ILogger<RecommendationSummaryCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(RecommendationSummaryOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AdvisorOptionDefinitions.GroupBy.AsOptional());
-        command.Options.Add(AdvisorOptionDefinitions.Top.AsOptional());
-        command.Options.Add(AdvisorOptionDefinitions.Category.AsOptional());
-        command.Options.Add(AdvisorOptionDefinitions.Impact.AsOptional());
-        command.Options.Add(AdvisorOptionDefinitions.ResourceType.AsOptional());
-        command.Options.Add(AdvisorOptionDefinitions.Resource.AsOptional());
-        command.Options.Add(AdvisorOptionDefinitions.Search.AsOptional());
+        base.ValidateOptions(options, validationResult);
 
-        command.Validators.Add(commandResult =>
+        if (options.GroupBy != null)
         {
-            if (!commandResult.TryGetValue(AdvisorOptionDefinitions.GroupBy, out string? value))
-            {
-                // --group-by is optional; when omitted we default to 'category' in ExecuteAsync.
-                return;
-            }
-
-            var normalized = value?.Trim();
+            // --group-by is optional; when omitted we default to 'category' in ExecuteAsync.
+            var normalized = options.GroupBy.Trim();
             if (string.IsNullOrEmpty(normalized) ||
                 !AdvisorService.AllowedGroupBy.Contains(normalized, StringComparer.OrdinalIgnoreCase))
             {
-                commandResult.AddError(
-                    $"Invalid --group-by value '{value}'. Allowed values: {string.Join(", ", AdvisorService.AllowedGroupBy)}.");
+                validationResult.Errors.Add(
+                    $"Invalid --group-by value '{options.GroupBy}'. Allowed values: {string.Join(", ", AdvisorService.AllowedGroupBy)}.");
             }
-        });
-    }
-
-    protected override RecommendationSummaryOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.GroupBy = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.GroupBy);
-        options.Top = parseResult.CommandResult.HasOptionResult(AdvisorOptionDefinitions.Top)
-            ? parseResult.GetValueOrDefault(AdvisorOptionDefinitions.Top)
-            : (int?)null;
-        options.Category = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.Category);
-        options.Impact = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.Impact);
-        options.ResourceType = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.ResourceType);
-        options.Resource = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.Resource);
-        options.Search = parseResult.GetValueOrDefault(AdvisorOptionDefinitions.Search);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecommendationSummaryOptions options, CancellationToken cancellationToken)
+    {
         // Validator in RegisterOptions guarantees that when --group-by is supplied it is one of
         // AllowedGroupBy (case-insensitive). When omitted, default to 'category' — the most useful
         // high-level "key themes" view. Normalize to lowercase so the service receives the canonical bucket name.
@@ -114,6 +80,7 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
                 options.RetryPolicy,
                 groupBy,
                 filters,
+                options.Tenant,
                 cancellationToken);
 
             // --top is a presentation cap: slice the bucket list but keep TotalRecommendations
@@ -133,7 +100,7 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
             }
 
             context.Response.Results = ResponseResult.Create(
-                new RecommendationSummaryResult(summary),
+                new(summary),
                 AdvisorJsonContext.Default.RecommendationSummaryResult);
         }
         catch (Exception ex)
@@ -167,5 +134,5 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record RecommendationSummaryResult(Models.RecommendationSummary Summary);
+    public sealed record RecommendationSummaryResult(Models.RecommendationSummary Summary);
 }

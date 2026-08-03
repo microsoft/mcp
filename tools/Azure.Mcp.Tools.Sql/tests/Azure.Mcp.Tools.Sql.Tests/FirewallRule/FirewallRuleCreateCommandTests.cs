@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.Tests.FirewallRule;
 
-public class FirewallRuleCreateCommandTests : CommandUnitTestsBase<FirewallRuleCreateCommand, ISqlService>
+public class FirewallRuleCreateCommandTests : SubscriptionCommandUnitTestsBase<FirewallRuleCreateCommand, ISqlService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()

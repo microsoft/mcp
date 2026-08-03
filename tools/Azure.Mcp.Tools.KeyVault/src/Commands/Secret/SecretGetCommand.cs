@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Tools.KeyVault.Options;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.KeyVault.Models;
 using Azure.Mcp.Tools.KeyVault.Options.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Secret;
 
@@ -24,42 +23,21 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Secret;
     ReadOnly = true,
     Secret = true,
     LocalRequired = false)]
-public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<SecretGetOptions>
+public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVaultService keyVaultService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<SecretGetOptions, SecretGetCommand.SecretGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<SecretGetCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SecretGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(KeyVaultOptionDefinitions.VaultName);
-        command.Options.Add(KeyVaultOptionDefinitions.SecretName.AsOptional());
-    }
-
-    protected override SecretGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.VaultName.Name);
-        options.SecretName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.SecretName.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            if (string.IsNullOrEmpty(options.SecretName))
+            if (string.IsNullOrEmpty(options.Secret))
             {
                 // List all secrets
                 var secrets = await _keyVaultService.ListSecrets(
-                    options.VaultName!,
+                    options.Vault,
                     options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
@@ -71,34 +49,25 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVault
             {
                 // Get specific secret
                 var secret = await _keyVaultService.GetSecret(
-                    options.VaultName!,
-                    options.SecretName,
+                    options.Vault,
+                    options.Secret,
                     options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
 
-                var secretDetails = new SecretDetails(
-                    secret.Name,
-                    secret.Value,
-                    secret.Properties.Enabled,
-                    secret.Properties.NotBefore,
-                    secret.Properties.ExpiresOn,
-                    secret.Properties.CreatedOn,
-                    secret.Properties.UpdatedOn);
-
-                context.Response.Results = ResponseResult.Create(new(Secrets: null, Secret: secretDetails), KeyVaultJsonContext.Default.SecretGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(null, SecretDetails.FromSecret(secret)), KeyVaultJsonContext.Default.SecretGetCommandResult);
             }
         }
         catch (Exception ex)
         {
-            if (string.IsNullOrEmpty(options.SecretName))
+            if (string.IsNullOrEmpty(options.Secret))
             {
-                _logger.LogError(ex, "Error listing secrets from vault {VaultName}", options.VaultName);
+                _logger.LogError(ex, "Error listing secrets from vault {VaultName}", options.Vault);
             }
             else
             {
-                _logger.LogError(ex, "Error getting secret {SecretName} from vault {VaultName}", options.SecretName, options.VaultName);
+                _logger.LogError(ex, "Error getting secret {Secret} from vault {VaultName}", options.Secret, options.Vault);
             }
             HandleException(context, ex);
         }
@@ -106,6 +75,5 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVault
         return context.Response;
     }
 
-    internal record SecretDetails(string Name, string Value, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn);
-    internal record SecretGetCommandResult(List<string>? Secrets, SecretDetails? Secret);
+    public sealed record SecretGetCommandResult(List<string>? Secrets, SecretDetails? Secret);
 }

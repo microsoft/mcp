@@ -15,6 +15,7 @@ public interface IAdvisorService
         RetryPolicyOptions? retryPolicy,
         RecommendationFilters? filters = null,
         int top = 50,
+        string? tenant = null,
         CancellationToken cancellationToken = default);
 
     Task<RecommendationSummary> SummarizeRecommendationsAsync(
@@ -23,6 +24,7 @@ public interface IAdvisorService
         RetryPolicyOptions? retryPolicy,
         string groupBy,
         RecommendationFilters? filters = null,
+        string? tenant = null,
         CancellationToken cancellationToken = default);
 
     Task<List<RecommendationType>> ListRecommendationTypesAsync(

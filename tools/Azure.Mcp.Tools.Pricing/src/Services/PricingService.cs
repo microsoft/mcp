@@ -45,9 +45,7 @@ public class PricingService(IAzureCloudConfiguration cloudConfiguration) : IPric
 
         var clientOptions = new AzureRetailPricesClientOptions(serviceVersion);
 
-        var client = new AzureRetailPricesClient(
-            GetPricingEndpoint(),
-            clientOptions);
+        var client = new AzureRetailPricesClient(GetPricingEndpoint(), clientOptions);
 
         var retailPrices = client.GetRetailPricesClient();
 
@@ -123,16 +121,13 @@ public class PricingService(IAzureCloudConfiguration cloudConfiguration) : IPric
         return value.Replace("'", "''");
     }
 
-    private Uri GetPricingEndpoint()
+    private Uri GetPricingEndpoint() => cloudConfiguration.CloudType switch
     {
-        return cloudConfiguration.CloudType switch
-        {
-            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => new Uri("https://prices.azure.com"),
-            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => new Uri("https://prices.azure.cn"),
-            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => new Uri("https://prices.azure.us"),
-            _ => new Uri("https://prices.azure.com")
-        };
-    }
+        AzureCloudConfiguration.AzureCloud.AzurePublicCloud => new("https://prices.azure.com"),
+        AzureCloudConfiguration.AzureCloud.AzureChinaCloud => new("https://prices.azure.cn"),
+        AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => new("https://prices.azure.us"),
+        _ => new("https://prices.azure.com")
+    };
 
     private static PriceItem MapToPriceItem(RetailPriceItem item)
     {
