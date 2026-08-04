@@ -145,4 +145,37 @@ public class MySqlServiceQueryValidationTests
 
         Assert.Contains("dangerous keyword", exception.Message);
     }
+
+    [Theory]
+    [InlineData("SELECT N'test' FROM users")]  // National string with benign content
+    [InlineData("SELECT N'it\\'s a test' FROM t")]  // National string with escaped quote
+    [InlineData("SELECT N'line\\nbreak' FROM t")]  // National string with escape sequence (benign)
+    public void ValidateQuerySafety_WithNationalStringsInBenignContext_ShouldNotThrow(string query)
+    {
+        // Act & Assert - National strings that don't contain dangerous keywords should pass
+        MySqlService.ValidateQuerySafety(query);
+    }
+
+    [Theory]
+    [InlineData("SELECT X'48656C6C6F' FROM users")]  // X'...' hex format = 'Hello' (benign)
+    [InlineData("SELECT 0x61626364 FROM t")]  // 0xXXXX hex format = 'abcd' (benign)
+    public void ValidateQuerySafety_WithHexLiteralsInBenignContext_ShouldNotThrow(string query)
+    {
+        // Act & Assert - Hex literals for benign data should not throw
+        MySqlService.ValidateQuerySafety(query);
+    }
+
+    [Theory]
+    [InlineData("SELECT LOAD_FILE('/etc/passwd') FROM t")]  // Direct dangerous function call
+    [InlineData("SELECT CHAR(112, 103, 95, 115, 108, 101, 101, 112) FROM t")]  // CHAR() encoding dangerous function (blocked as obfuscation)
+    public void ValidateQuerySafety_WithDangerousFunctionCalls_ShouldThrowInvalidOperationException(string query)
+    {
+        // Act & Assert - Dangerous functions should be blocked regardless of escaping
+        var exception = Assert.Throws<InvalidOperationException>(() => MySqlService.ValidateQuerySafety(query));
+
+        Assert.True(
+            exception.Message.Contains("dangerous") ||
+            exception.Message.Contains("not allowed"),
+            $"Expected error for dangerous function, but got: {exception.Message}");
+    }
 }
