@@ -3,10 +3,16 @@
 
 namespace McpToolEvaluator.Core.Models;
 
-public sealed class TestPrompt(string section, string tool, string prompt, string @namespace = "")
+public sealed class TestPrompt(
+    string section,
+    string tool,
+    string prompt,
+    string @namespace = "",
+    PromptInteraction interaction = PromptInteraction.None)
 {
     public string Section { get; set; } = section;
     public string Tool { get; set; } = tool;
     public string Prompt { get; set; } = prompt;
     public string Namespace { get; set; } = @namespace;
+    public PromptInteraction Interaction { get; set; } = interaction;
 }

@@ -12,7 +12,9 @@ public class PromptDatastore
 
     public PromptDatastore(string promptFilePath)
     {
-        prompts = PromptParser.ParseFile(promptFilePath);
+        prompts = PromptParser.ParseFile(promptFilePath)
+            .Where(prompt => prompt.Interaction == PromptInteraction.None)
+            .ToList();
         promptsByNamespace = prompts
             .GroupBy(x => x.Namespace, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
