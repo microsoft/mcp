@@ -56,9 +56,9 @@ public class RecommendationMetadataListCommandTests
     [InlineData("--retirement-date 2026-03-31", false)]
     [InlineData("--sub-category ZoneResiliency --tracking-id QNY1-HB8", false)]
     [InlineData("--sub-category RegionalResiliency --retirement-date ge:2026-03-31", false)]
-    [InlineData("--category Cost --tracking-id QNY1-HB8", false)]
-    [InlineData("--category Cost --retirement-date ge:2026-03-31", false)]
-    [InlineData("--category Cost --sub-category ServiceUpgradeAndRetirement", false)]
+    [InlineData("--category OperationalExcellence --tracking-id QNY1-HB8", true)]
+    [InlineData("--category OperationalExcellence --retirement-date ge:2026-03-31", true)]
+    [InlineData("--category OperationalExcellence --sub-category ServiceUpgradeAndRetirement", true)]
     [InlineData("--category HighAvailability --retirement-date ge:2026-03-31", true)]
     [InlineData("--impact Critical", false)]
     [InlineData("--language Klingon", false)]
@@ -204,6 +204,23 @@ public class RecommendationMetadataListCommandTests
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Allowed values", response.Message);
+        await Service.DidNotReceive().ListRecommendationMetadataAsync(
+            Arg.Any<string>(),
+            Arg.Any<RecommendationMetadataFilters?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("2026-03-31")]
+    [InlineData("ne:2026-03-31")]
+    public async Task ExecuteAsync_InvalidRetirementDateExplainsFormatWithExample(string value)
+    {
+        var response = await ExecuteCommandAsync("--retirement-date", value);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("<operator>:<yyyy-MM-dd>", response.Message);
+        Assert.Contains("--retirement-date ge:2026-03-01", response.Message);
         await Service.DidNotReceive().ListRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<RecommendationMetadataFilters?>(),

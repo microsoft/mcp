@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Metadata;
     Id = "16c9c57e-8f14-43bd-91da-d1548b6af72e",
     Name = "list",
     Title = "List Advisor Recommendation Metadata",
-    Description = "List Azure Advisor recommendation metadata (formerly recommendation types). " +
+    Description = "List Azure Advisor recommendation metadata, also known as recommendation types. " +
                   "Use this tool before deploying resources such as virtual machines to discover what recommendations Advisor could produce, even when there are no active recommendations. " +
                   "Show Advisor service retirements on, before, or after a specified retirement date, or find service-retirement metadata by Service Health tracking ID. " +
                   "The global Azure Resource Graph catalog supports greenfield discovery and resource-type filtering for brownfield onboarding. " +
@@ -88,9 +88,6 @@ public sealed class RecommendationMetadataListCommand(
             !string.IsNullOrWhiteSpace(options.TrackingId) ||
             !string.IsNullOrWhiteSpace(options.RetirementDate);
         var normalizedSubCategory = options.SubCategory?.Trim();
-        var isServiceUpgradeAndRetirement = normalizedSubCategory?.Equals(
-            RecommendationMetadataFilters.ServiceRetirementSubCategory,
-            StringComparison.OrdinalIgnoreCase) == true;
         if (hasServiceRetirementFilter &&
             !string.IsNullOrWhiteSpace(normalizedSubCategory) &&
             !normalizedSubCategory.Equals(
@@ -100,18 +97,6 @@ public sealed class RecommendationMetadataListCommand(
             validationResult.Errors.Add(
                 "Service-retirement filters are only valid with --sub-category " +
                 $"{RecommendationMetadataFilters.ServiceRetirementSubCategory}.");
-        }
-
-        if ((hasServiceRetirementFilter || isServiceUpgradeAndRetirement) &&
-            !string.IsNullOrEmpty(normalizedCategory) &&
-            !normalizedCategory.Equals(
-                RecommendationMetadataFilters.HighAvailabilityCategory,
-                StringComparison.OrdinalIgnoreCase))
-        {
-            validationResult.Errors.Add(
-                $"Category '{normalizedCategory}' is not valid for the " +
-                $"{RecommendationMetadataFilters.ServiceRetirementSubCategory} subcategory or service-retirement filters. " +
-                $"Use --category {RecommendationMetadataFilters.HighAvailabilityCategory}.");
         }
 
         if (!TryParseRetirementDateFilter(options.RetirementDate, out _, out _, out var retirementDateError))
@@ -237,7 +222,7 @@ public sealed class RecommendationMetadataListCommand(
         if (parts.Length != 2 ||
             !AllowedRetirementDateOperators.Contains(parts[0], StringComparer.OrdinalIgnoreCase))
         {
-            error = "Invalid --retirement-date value. Use '<operator>:<yyyy-MM-dd>' with operator eq, lt, le, gt, or ge.";
+            error = "Invalid --retirement-date value. Use '<operator>:<yyyy-MM-dd>' with operator eq, lt, le, gt, or ge; for example, --retirement-date ge:2026-03-01.";
             return false;
         }
 

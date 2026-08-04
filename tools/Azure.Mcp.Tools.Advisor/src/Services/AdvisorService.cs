@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Encodings.Web;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -24,12 +23,6 @@ public class AdvisorService(
         "properties.sourceProperties.serviceRetirement.retirementDate";
     private const string TrackingIdsProperty =
         "properties.sourceProperties.serviceRetirement.serviceHealth.trackingIds";
-
-    private static readonly AdvisorJsonContext KqlJsonContext = new(
-        new JsonSerializerOptions
-        {
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-        });
 
     private static readonly Dictionary<string, int> ImpactRank = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -157,8 +150,7 @@ public class AdvisorService(
         var hasTrackingIdFilter = trackingId is not null;
         var hasRetirementDateFilter = retirementDate is not null && retirementDateOperator is not null;
         var hasServiceRetirementFilter = hasTrackingIdFilter || hasRetirementDateFilter;
-        (category, subCategory) = ResolveServiceRetirementScope(
-            category,
+        subCategory = ResolveServiceRetirementSubCategory(
             subCategory,
             hasServiceRetirementFilter);
 
@@ -174,11 +166,8 @@ public class AdvisorService(
 
         if (trackingId is not null)
         {
-            var serializedTrackingId = JsonSerializer.Serialize(
-                trackingId,
-                KqlJsonContext.String);
-            query += $" | where tostring({TrackingIdsProperty}) contains " +
-                $"'{EscapeKqlString(serializedTrackingId)}'";
+            query += $" | mv-expand trackingId = {TrackingIdsProperty}";
+            query += $" | where tostring(trackingId) =~ '{EscapeKqlString(trackingId)}'";
         }
 
         if (retirementDate is { } date && retirementDateOperator is not null)
@@ -192,8 +181,7 @@ public class AdvisorService(
         return query + " | project properties";
     }
 
-    private static (string? Category, string? SubCategory) ResolveServiceRetirementScope(
-        string? category,
+    private static string? ResolveServiceRetirementSubCategory(
         string? subCategory,
         bool hasServiceRetirementFilter)
     {
@@ -211,24 +199,10 @@ public class AdvisorService(
 
         if (!hasServiceRetirementFilter && !isServiceUpgradeAndRetirement)
         {
-            return (category, subCategory);
+            return subCategory;
         }
 
-        if (category is not null &&
-            !category.Equals(
-                RecommendationMetadataFilters.HighAvailabilityCategory,
-                StringComparison.OrdinalIgnoreCase))
-        {
-            throw new ArgumentException(
-                $"Category '{category}' is not valid for the " +
-                $"{RecommendationMetadataFilters.ServiceRetirementSubCategory} subcategory or service-retirement filters. " +
-                $"Use {RecommendationMetadataFilters.HighAvailabilityCategory}.",
-                nameof(category));
-        }
-
-        return (
-            category ?? RecommendationMetadataFilters.HighAvailabilityCategory,
-            subCategory ?? RecommendationMetadataFilters.ServiceRetirementSubCategory);
+        return subCategory ?? RecommendationMetadataFilters.ServiceRetirementSubCategory;
     }
 
     private static string GetKqlComparisonOperator(string comparisonOperator) =>

@@ -358,9 +358,8 @@ azmcp advisor recommendation apply --resource <resource>
 # List the global Azure Advisor recommendation metadata catalog (also called recommendation types) from Azure Resource
 # Graph. Use it in greenfield environments with no generated recommendations, or filter by supported resource type
 # during brownfield onboarding. Supports service-retirement filtering by Service Health tracking ID and retirement
-# date expression. Service-retirement metadata belongs to the HighAvailability category and
-# ServiceUpgradeAndRetirement subcategory; conflicting category or subcategory filters are rejected. Results are
-# ordered High, Medium, Low.
+# date expression. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting
+# subcategory filters are rejected. Results are ordered High, Medium, Low.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor metadata list [--language <language>] \
                             [--resource-type <resource-type>] \

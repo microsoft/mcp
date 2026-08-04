@@ -12,6 +12,5 @@ public sealed record RecommendationMetadataFilters(
     string? RetirementDateOperator = null,
     DateOnly? RetirementDate = null)
 {
-    internal const string HighAvailabilityCategory = "HighAvailability";
     internal const string ServiceRetirementSubCategory = "ServiceUpgradeAndRetirement";
 }
