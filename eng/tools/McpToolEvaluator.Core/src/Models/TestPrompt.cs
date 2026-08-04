@@ -8,11 +8,11 @@ public sealed class TestPrompt(
     string tool,
     string prompt,
     string @namespace = "",
-    string interaction = "none")
+    PromptInteraction interaction = PromptInteraction.None)
 {
     public string Section { get; set; } = section;
     public string Tool { get; set; } = tool;
     public string Prompt { get; set; } = prompt;
     public string Namespace { get; set; } = @namespace;
-    public string Interaction { get; set; } = interaction;
+    public PromptInteraction Interaction { get; set; } = interaction;
 }
