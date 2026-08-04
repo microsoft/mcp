@@ -24,6 +24,9 @@ public class SqlQueryValidatorTests
     [InlineData("SELECT preset FROM config")]
     [InlineData("SELECT * FROM intersections")]
     [InlineData("SELECT * FROM exceptions")]
+    [InlineData("SELECT 'drop table' AS msg FROM users")]  // dangerous keyword inside string literal is safe
+    [InlineData("SELECT * FROM users WHERE note = 'pg_sleep is bad'")]  // dangerous function name inside string literal is safe
+    [InlineData("SELECT U&'pg_slee\\0070'(10)")]  // U&'...' is a string literal per Postgres spec, not an identifier — cannot invoke functions
     public void EnsureReadOnlySelect_WithSafeQueries_ShouldNotThrow(string query)
     {
         SqlQueryValidator.EnsureReadOnlySelect(query);
@@ -119,7 +122,6 @@ public class SqlQueryValidatorTests
     [InlineData("SELECT U&\"pg_sl\\0065ep\"(10)")]  // \0065 = 'e', resolves to pg_sleep(10) → DoS
     [InlineData("SELECT U&\"pg_read_fil\\0065\"('/etc/passwd')")]  // \0065 = 'e', resolves to pg_read_file → file read
     [InlineData("SELECT U&\"dblink_exe\\0063\"('host=evil.com', 'DELETE ...')")]  // \0063 = 'c', resolves to dblink_exec → lateral movement
-    [InlineData("SELECT U&'pg_slee\\0070'(10)")]  // Unicode escape in single-quoted string
     [InlineData("SELECT U&\"pg_termin\\0061te_backend\"(12345)")]  // \0061 = 'a', resolves to pg_terminate_backend
     [InlineData("SELECT U&\"generate_seri\\0065s\"(1, 1000000)")]  // \0065 = 'e', resolves to generate_series
     [InlineData("SELECT * FROM U&\"pg_sh\\0061dow\"")]  // \0061 = 'a', resolves to pg_shadow
@@ -136,5 +138,4 @@ public class SqlQueryValidatorTests
     {
         SqlQueryValidator.EnsureReadOnlySelect(query);
     }
-
-    }
+}

@@ -147,10 +147,12 @@ internal static class SqlQueryValidator
         // Standard literals use only doubled quotes ('') as escape; backslash is literal
         // (standard_conforming_strings = on, the default since PostgreSQL 9.1).
         // E-prefixed strings (E'...') additionally support backslash escapes (e.g., \').
-        // Unicode strings (U&'...' or U&"...") have been decoded for validation above.
+        // Unicode string literals (U&'...') have been decoded for validation above.
+        // U&"..." are identifiers, NOT string literals, and must remain visible for tokenization
+        // so that obfuscated dangerous functions (e.g., U&"pg_slee\0070") are still caught.
         // The E-string pattern must appear first so the alternation matches it before
         // the standard pattern consumes the opening quote.
-        var withoutStrings = Regex.Replace(decodedForValidation, "[uU]&['\"]([^'\"\\\\]|\\\\.)*['\"]|[eE]'([^'\\\\]|\\\\.|'')*'|'([^']|'')*'", "'str'", RegexOptions.Compiled, RegexHelper.DefaultRegexTimeout);
+        var withoutStrings = Regex.Replace(decodedForValidation, "[uU]&'([^'\\\\]|\\\\.)*'|[eE]'([^'\\\\]|\\\\.|'')*'|'([^']|'')*'", "'str'", RegexOptions.Compiled, RegexHelper.DefaultRegexTimeout);
 
         // Reject inline / block comments which can hide stacked statements or alter logic.
         if (withoutStrings.Contains("--", StringComparison.Ordinal) || withoutStrings.Contains("/*", StringComparison.Ordinal))
@@ -173,10 +175,10 @@ internal static class SqlQueryValidator
         }
 
         // Tokenize: capture word tokens (letters / underscore). Numerics & punctuation ignored.
-        // Extract tokens from the decoded content to catch function names that may be inside U&"..." literals.
-        // After decoding, dangerous functions like pg_sleep become visible even if they were obfuscated
-        // with Unicode escapes like U&"pg_slee\0070".
-        var matches = Regex.Matches(decodedForValidation, "[A-Za-z_]+", RegexOptions.Compiled, RegexHelper.DefaultRegexTimeout);
+        // Use withoutStrings so that dangerous keywords mentioned inside string literals
+        // (e.g., SELECT 'drop table' AS msg) don't cause false positives, while still catching
+        // obfuscated U&"..." identifiers which were decoded and then stripped above.
+        var matches = Regex.Matches(withoutStrings, "[A-Za-z_]+", RegexOptions.Compiled, RegexHelper.DefaultRegexTimeout);
         if (matches.Count == 0)
         {
             throw new CommandValidationException("Query must contain a SELECT statement.");
@@ -242,6 +244,7 @@ internal static class SqlQueryValidator
                 }
                 return match.Value;
             },
-            RegexOptions.Compiled);
+            RegexOptions.Compiled,
+            RegexHelper.DefaultRegexTimeout);
     }
 }
