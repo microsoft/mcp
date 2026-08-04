@@ -12,8 +12,10 @@ namespace Fabric.Mcp.Tools.Docs.Commands;
 [JsonSerializable(typeof(FabricWorkloadPublicApi))]
 [JsonSerializable(typeof(ListWorkloadsCommand.ItemListCommandResult))]
 [JsonSerializable(typeof(GetExamplesCommand.ExampleFileResult))]
-[JsonSerializable(typeof(string))]
-[JsonSerializable(typeof(IEnumerable<string>))]
+[JsonSerializable(typeof(GetBestPracticesCommand.GetBestPracticesCommandResult))]
+[JsonSerializable(typeof(GetWorkloadDefinitionCommand.GetWorkloadDefinitionCommandResult))]
+[JsonSerializable(typeof(GetPlatformApisCommand.GetPlatformApisCommandResult))]
+[JsonSerializable(typeof(GetWorkloadApisCommand.GetWorkloadApisCommandResult))]
 public partial class FabricJsonContext : JsonSerializerContext
 {
 }

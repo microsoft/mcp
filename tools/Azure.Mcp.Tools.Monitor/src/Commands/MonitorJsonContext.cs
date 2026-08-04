@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Commands.HealthModels;
 using Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
+using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Commands.Table;
 using Azure.Mcp.Tools.Monitor.Commands.TableType;
@@ -26,18 +26,23 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(HealthModelDetail))]
 [JsonSerializable(typeof(HealthModelGetCommand.HealthModelGetCommandResult))]
 [JsonSerializable(typeof(HealthModelIdentity))]
+[JsonSerializable(typeof(HealthModelListCommand.HealthModelListCommandResult))]
 [JsonSerializable(typeof(HealthModelSummary))]
-[JsonSerializable(typeof(List<HealthModelSummary>))]
-[JsonSerializable(typeof(List<JsonNode>))]
 [JsonSerializable(typeof(MetricsDefinitionsCommand.MetricsDefinitionsCommandResult))]
 [JsonSerializable(typeof(MetricsDefinitionsCommand.MetricsDefinitionsCommandResult))]
 [JsonSerializable(typeof(MetricsQueryCommand.MetricsQueryCommandResult))]
 [JsonSerializable(typeof(MetricsQueryCommand.MetricsQueryCommandResult))]
+[JsonSerializable(typeof(OrchestratorNextCommand.OrchestratorNextCommandResult))]
+[JsonSerializable(typeof(OrchestratorStartCommand.OrchestratorStartCommandResult))]
+[JsonSerializable(typeof(ResourceLogQueryCommand.ResourceLogQueryCommandResult))]
+[JsonSerializable(typeof(SendBrownfieldAnalysisCommand.SendBrownfieldAnalysisCommandResult))]
+[JsonSerializable(typeof(SendEnhancementSelectCommand.SendEnhancementSelectCommandResult))]
 [JsonSerializable(typeof(TableListCommand.TableListCommandResult))]
 [JsonSerializable(typeof(TableTypeListCommand.TableTypeListCommandResult))]
 [JsonSerializable(typeof(WebTestsCreateOrUpdateCommand.WebTestsCreateOrUpdateCommandResult))]
 [JsonSerializable(typeof(WebTestsGetCommand.WebTestsGetCommandResult))]
 [JsonSerializable(typeof(WorkspaceListCommand.WorkspaceListCommandResult))]
+[JsonSerializable(typeof(WorkspaceLogQueryCommand.WorkspaceLogQueryCommandResult))]
 [JsonSerializable(typeof(Dictionary<string, object>))]
 [JsonSerializable(typeof(Dictionary<string, object?>))]
 [JsonSerializable(typeof(object))]
@@ -45,7 +50,6 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(List<object>))]
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(JsonElement?))]
-[JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(int))]
 [JsonSerializable(typeof(int?))]

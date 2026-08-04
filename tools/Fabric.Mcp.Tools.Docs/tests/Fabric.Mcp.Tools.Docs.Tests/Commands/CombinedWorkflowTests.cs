@@ -240,12 +240,11 @@ public class CombinedWorkflowTests : IDisposable
             Assert.Equal(HttpStatusCode.OK, apiResult.Status);
             Assert.NotNull(apiResult.Results);
 
-            // Serialize the result to JSON and verify it contains an apiSpecification field
+            // Deserialize the command wrapper and verify its API specification contains valid JSON.
             var json = JsonSerializer.Serialize(apiResult.Results);
-            using var doc = JsonDocument.Parse(json);
-            Assert.True(doc.RootElement.TryGetProperty("apiSpecification", out var apiSpecElement),
-                $"API result for workload '{workload}' should contain 'apiSpecification'");
-            var apiSpecJson = apiSpecElement.GetString();
+            var result = JsonSerializer.Deserialize(json, FabricJsonContext.Default.GetWorkloadApisCommandResult);
+            Assert.NotNull(result);
+            var apiSpecJson = result.PublicApi.apiSpecification;
             Assert.False(string.IsNullOrEmpty(apiSpecJson),
                 $"API specification for workload '{workload}' should not be empty");
 

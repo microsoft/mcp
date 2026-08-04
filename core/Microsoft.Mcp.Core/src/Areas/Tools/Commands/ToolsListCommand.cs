@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -30,7 +29,7 @@ namespace Microsoft.Mcp.Core.Areas.Tools.Commands;
     LocalRequired = false,
     Secret = false)]
 public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<ToolsListCommand> logger)
-    : BaseCommand<ToolsListOptions, ToolsListCommand.ToolsListResult>
+    : BaseCommand<ToolsListOptions, ToolsListCommand.ToolsListCommandResult>
 {
     private static readonly HashSet<string> s_ignored = new(StringComparer.OrdinalIgnoreCase) { "server", "tools" };
     private static readonly HashSet<string> s_surfaced = new(StringComparer.OrdinalIgnoreCase) { "extension" };
@@ -82,11 +81,15 @@ public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<T
                 if (options.NameOnly)
                 {
                     var namespaceNames = namespaceCommands.Select(nc => nc.Command).ToList();
-                    context.Response.Results = ResponseResult.Create(new(null, namespaceNames), ModelsJsonContext.Default.ToolsListResult);
+                    context.Response.Results = ResponseResult.Create(
+                        new(null, namespaceNames),
+                        ModelsJsonContext.Default.ToolsListCommandResult);
                     return context.Response;
                 }
 
-                context.Response.Results = ResponseResult.Create(new(namespaceCommands, null), ModelsJsonContext.Default.ToolsListResult);
+                context.Response.Results = ResponseResult.Create(
+                    new(namespaceCommands, null),
+                    ModelsJsonContext.Default.ToolsListCommandResult);
                 return context.Response;
             }
 
@@ -103,7 +106,9 @@ public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<T
 
                 var toolNames = allToolNames.OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToList();
 
-                context.Response.Results = ResponseResult.Create(new(null, toolNames), ModelsJsonContext.Default.ToolsListResult);
+                context.Response.Results = ResponseResult.Create(
+                    new(null, toolNames),
+                    ModelsJsonContext.Default.ToolsListCommandResult);
                 return context.Response;
             }
 
@@ -118,7 +123,9 @@ public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<T
 
             var tools = allTools.ToList();
 
-            context.Response.Results = ResponseResult.Create(new(tools, null), ModelsJsonContext.Default.ToolsListResult);
+            context.Response.Results = ResponseResult.Create(
+                new(tools, null),
+                ModelsJsonContext.Default.ToolsListCommandResult);
             return context.Response;
         }
         catch (Exception ex)
@@ -167,55 +174,9 @@ public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<T
         };
     }
 
-    [JsonConverter(typeof(ToolsListResultConverter))]
-    public sealed record ToolsListResult(
+    public sealed record ToolsListCommandResult(
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] List<CommandInfo>? Commands,
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] List<string>? Names);
-
-    public sealed class ToolsListResultConverter : JsonConverter<ToolsListResult>
-    {
-        public override ToolsListResult? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            if (reader.TokenType == JsonTokenType.StartObject)
-            {
-                List<string>? names = null;
-                while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
-                {
-                    if (reader.TokenType == JsonTokenType.PropertyName && reader.GetString() == "names")
-                    {
-                        reader.Read(); // Move to the value of "names"
-                        names = JsonSerializer.Deserialize(ref reader, ModelsJsonContext.Default.ListString);
-                    }
-                }
-                return new(null, names);
-            }
-            else if (reader.TokenType == JsonTokenType.StartArray)
-            {
-                var commands = JsonSerializer.Deserialize(ref reader, ModelsJsonContext.Default.ListCommandInfo);
-                return new(commands, null);
-            }
-
-            throw new JsonException("Invalid JSON format for ToolsListResult.");
-        }
-
-        public override void Write(Utf8JsonWriter writer, ToolsListResult? value, JsonSerializerOptions options)
-        {
-            if (value is not null)
-            {
-                if (value.Commands is not null)
-                {
-                    JsonSerializer.Serialize(writer, value.Commands, ModelsJsonContext.Default.ListCommandInfo);
-                }
-                else if (value.Names is not null)
-                {
-                    writer.WriteStartObject();
-                    writer.WritePropertyName("names");
-                    JsonSerializer.Serialize(writer, value.Names, ModelsJsonContext.Default.ListString);
-                    writer.WriteEndObject();
-                }
-            }
-        }
-    }
 
     private static void SearchCommandInCommandGroup(string commandPrefix, CommandGroup searchedGroup, List<CommandInfo> foundCommands)
     {

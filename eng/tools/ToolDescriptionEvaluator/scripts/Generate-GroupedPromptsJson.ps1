@@ -224,11 +224,13 @@ function Invoke-NamespaceGeneration {
 
     if (-not (Test-Path $NamespaceToolsPath)) { throw "Namespace tools file not found: $NamespaceToolsPath" }
     $namespaceJson = Get-Content -Raw -Path $NamespaceToolsPath | ConvertFrom-Json
-    if (-not $namespaceJson.results) { throw "Input namespace tools JSON missing 'results' array" }
+    $commandsProperty = $namespaceJson.results.PSObject.Properties['commands']
+    $namespaceCommands = if ($null -ne $commandsProperty) { $commandsProperty.Value } else { $namespaceJson.results }
+    if (-not $namespaceCommands) { throw "Input namespace tools JSON is missing commands" }
 
     $warnings = @()
     $outputMap = [ordered]@{}
-    foreach ($ns in $namespaceJson.results) {
+    foreach ($ns in $namespaceCommands) {
     if (-not $ns.name) { continue }
 
         $commandStrings = @(Get-NamespaceCommandStrings -Node $ns -AllPromptKeys $AllPromptKeys)

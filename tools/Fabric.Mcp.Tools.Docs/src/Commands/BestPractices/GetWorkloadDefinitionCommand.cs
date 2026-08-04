@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Fabric.Mcp.Tools.Docs.Options.PublicApis;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.Logging;
@@ -22,7 +23,7 @@ namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
     LocalRequired = false,
     Secret = false)]
 public sealed class GetWorkloadDefinitionCommand(IFabricPublicApiService service, ILogger<GetWorkloadDefinitionCommand> logger)
-    : AuthenticatedCommand<WorkloadCommandOptions, string>
+    : AuthenticatedCommand<WorkloadCommandOptions, GetWorkloadDefinitionCommand.GetWorkloadDefinitionCommandResult>
 {
     private readonly ILogger<GetWorkloadDefinitionCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricPublicApiService _service = service ?? throw new ArgumentNullException(nameof(service));
@@ -33,7 +34,9 @@ public sealed class GetWorkloadDefinitionCommand(IFabricPublicApiService service
         {
             var workloadItemDefinition = _service.GetWorkloadItemDefinition(options.WorkloadType);
 
-            context.Response.Results = ResponseResult.Create(workloadItemDefinition, FabricJsonContext.Default.String);
+            context.Response.Results = ResponseResult.Create(
+                new(workloadItemDefinition),
+                FabricJsonContext.Default.GetWorkloadDefinitionCommandResult);
         }
         catch (ArgumentException argEx)
         {
@@ -49,4 +52,7 @@ public sealed class GetWorkloadDefinitionCommand(IFabricPublicApiService service
 
         return Task.FromResult(context.Response);
     }
+
+    public sealed record GetWorkloadDefinitionCommandResult(
+        [property: JsonPropertyName("definition")] string Definition);
 }

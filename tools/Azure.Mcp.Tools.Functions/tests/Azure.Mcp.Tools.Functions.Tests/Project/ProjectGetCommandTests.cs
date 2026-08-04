@@ -61,11 +61,7 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
         var response = await ExecuteCommandAsync("--language", "python");
 
         // Assert
-        var results = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ListProjectTemplateResult);
-
-        Assert.Single(results);
-
-        var result = results[0];
+        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ProjectTemplateResult);
         Assert.Equal("python", result.Language);
         Assert.NotEmpty(result.InitInstructions);
         Assert.Equal(4, result.ProjectStructure.Count);
@@ -88,10 +84,8 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
         var response = await ExecuteCommandAsync("--language", "typescript");
 
         // Assert
-        var results = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ListProjectTemplateResult);
-
-        Assert.Single(results);
-        Assert.Equal("typescript", results[0].Language);
+        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ProjectTemplateResult);
+        Assert.Equal("typescript", result.Language);
     }
 
     [Fact]
@@ -139,11 +133,7 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
         var response = await ExecuteCommandAsync("--language", "python");
 
         // Assert
-        var results = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ListProjectTemplateResult);
-
-        Assert.Single(results);
-
-        var result = results[0];
+        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ProjectTemplateResult);
         Assert.Equal("python", result.Language);
         Assert.Contains("virtual environment", result.InitInstructions);
         Assert.True(result.ProjectStructure.Count > 0);
@@ -172,11 +162,9 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
         var response = await ExecuteCommandAsync("--language", language.ToString());
 
         // Assert
-        var results = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ListProjectTemplateResult);
-
-        Assert.Single(results);
-        Assert.Equal(language.ToString(), results[0].Language);
-        Assert.True(results[0].ProjectStructure.Count > 0);
+        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ProjectTemplateResult);
+        Assert.Equal(language.ToString(), result.Language);
+        Assert.True(result.ProjectStructure.Count > 0);
     }
 
     [Fact]

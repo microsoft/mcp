@@ -24,7 +24,8 @@ namespace Azure.Mcp.Tools.AzureTerraformBestPractices.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class AzureTerraformBestPracticesGetCommand() : BaseCommand<EmptyOptions, List<string>>
+public sealed class AzureTerraformBestPracticesGetCommand()
+    : BaseCommand<EmptyOptions, AzureTerraformBestPracticesGetCommand.AzureTerraformBestPracticesGetCommandResult>
 {
     private static readonly string s_bestPracticesText = LoadBestPracticesText();
 
@@ -41,8 +42,12 @@ public sealed class AzureTerraformBestPracticesGetCommand() : BaseCommand<EmptyO
     {
         var bestPractices = GetBestPracticesText();
         context.Response.Status = HttpStatusCode.OK;
-        context.Response.Results = ResponseResult.Create([bestPractices], AzureTerraformBestPracticesJsonContext.Default.ListString);
+        context.Response.Results = ResponseResult.Create(
+            new([bestPractices]),
+            AzureTerraformBestPracticesJsonContext.Default.AzureTerraformBestPracticesGetCommandResult);
         context.Response.Message = string.Empty;
         return Task.FromResult(context.Response);
     }
+
+    public sealed record AzureTerraformBestPracticesGetCommandResult(List<string> BestPractices);
 }

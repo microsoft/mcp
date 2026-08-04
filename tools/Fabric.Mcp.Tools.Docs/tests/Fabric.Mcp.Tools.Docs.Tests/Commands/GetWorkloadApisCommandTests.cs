@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Fabric.Mcp.Tools.Docs.Commands;
 using Fabric.Mcp.Tools.Docs.Commands.PublicApis;
 using Fabric.Mcp.Tools.Docs.Models;
 using Fabric.Mcp.Tools.Docs.Services;
@@ -41,8 +42,11 @@ public class GetWorkloadApisCommandTests : CommandUnitTestsBase<GetWorkloadApisC
         var result = await ExecuteCommandAsync("--workload-type", "notebook");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Results);
+        var response = ValidateAndDeserializeResponse(
+            result,
+            FabricJsonContext.Default.GetWorkloadApisCommandResult);
+        Assert.Equal(expectedApi.apiSpecification, response.PublicApi.apiSpecification);
+        Assert.Equal(expectedApi.apiModelDefinitions, response.PublicApi.apiModelDefinitions);
         await Service.Received(1).GetWorkloadPublicApis("notebook", Arg.Any<CancellationToken>());
     }
 

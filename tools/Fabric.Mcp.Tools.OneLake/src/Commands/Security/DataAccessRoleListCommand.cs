@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
@@ -32,7 +33,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
     ReadOnly = true,
     Secret = false)]
 public sealed class DataAccessRoleListCommand(ILogger<DataAccessRoleListCommand> logger, IOneLakeService oneLakeService)
-    : AuthenticatedCommand<DataAccessRoleListOptions, DataAccessRoleListResponse>()
+    : AuthenticatedCommand<DataAccessRoleListOptions, DataAccessRoleListCommand.DataAccessRoleListCommandResult>()
 {
     private readonly ILogger<DataAccessRoleListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -59,7 +60,12 @@ public sealed class DataAccessRoleListCommand(ILogger<DataAccessRoleListCommand>
         try
         {
             var result = await _oneLakeService.ListDataAccessRolesAsync(workspaceId!, options.ItemId, options.ContinuationToken, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.DataAccessRoleListResponse);
+            context.Response.Results = ResponseResult.Create(
+                new DataAccessRoleListCommandResult(
+                    result.Value ?? [],
+                    result.ContinuationToken,
+                    result.ContinuationUri),
+                OneLakeJsonContext.Default.DataAccessRoleListCommandResult);
         }
         catch (Exception ex)
         {
@@ -69,4 +75,9 @@ public sealed class DataAccessRoleListCommand(ILogger<DataAccessRoleListCommand>
 
         return context.Response;
     }
+
+    public sealed record DataAccessRoleListCommandResult(
+        List<DataAccessRole> Roles,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ContinuationToken,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ContinuationUri);
 }

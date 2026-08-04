@@ -1,0 +1,14 @@
+changes:
+  - section: "Breaking Changes"
+    description: |
+      Normalized result payloads for the following tools:
+      - `tools list` now returns either `{ commands }` or `{ names }`, omitting the inactive field.
+      - `advisor recommendation apply` now returns the resulting rules in a `{ rules }` object.
+      - `azurebestpractices get`, `azurebestpractices ai_app`, and `azureterraformbestpractices get` now return the resulting best practices in a `{ bestPractices }` object.
+      - `functions language list` and `functions project get` now return the resulting singleton values as direct objects.
+      - `monitor healthmodels list` now returns the resulting health models in a `{ healthModels }` object.
+      - `monitor resource log query` and `monitor workspace log query` now return the resulting rows in a `{ results }` object.
+      - `monitor instrumentation orchestrator-start`, `orchestrator-next`, `send-brownfield-analysis`, and `send-enhancement-select` now return the resulting scalar value in a `{ result }` object.
+      - `search index query` now returns the resulting rows in a `{ results }` object.
+      - `sql server get` now returns the resulting servers in a `{ servers }` object.
+      - `wellarchitectedframework serviceguide get` now returns the resulting guidance in a `{ guidance }` object.

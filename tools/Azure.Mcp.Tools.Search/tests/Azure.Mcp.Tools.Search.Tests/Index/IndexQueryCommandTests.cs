@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Commands.Index;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Mcp.Core.Options;
@@ -55,7 +56,10 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
+        var result = ValidateAndDeserializeResponse(response, SearchJsonContext.Default.IndexQueryCommandResult);
+        Assert.Single(result.Results);
+
+        var json = JsonSerializer.Serialize(result, SearchJsonContext.Default.IndexQueryCommandResult);
         Assert.Contains("totalCount", json);
         Assert.Contains("results", json);
     }

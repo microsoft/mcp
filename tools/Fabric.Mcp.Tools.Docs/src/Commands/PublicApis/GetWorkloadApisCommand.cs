@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Fabric.Mcp.Tools.Docs.Models;
 using Fabric.Mcp.Tools.Docs.Options.PublicApis;
 using Fabric.Mcp.Tools.Docs.Services;
@@ -23,7 +24,7 @@ namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
     LocalRequired = false,
     Secret = false)]
 public sealed class GetWorkloadApisCommand(IFabricPublicApiService service, ILogger<GetWorkloadApisCommand> logger)
-    : AuthenticatedCommand<WorkloadCommandOptions, FabricWorkloadPublicApi>
+    : AuthenticatedCommand<WorkloadCommandOptions, GetWorkloadApisCommand.GetWorkloadApisCommandResult>
 {
     private readonly ILogger<GetWorkloadApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricPublicApiService _service = service ?? throw new ArgumentNullException(nameof(service));
@@ -41,7 +42,9 @@ public sealed class GetWorkloadApisCommand(IFabricPublicApiService service, ILog
 
             var apis = await _service.GetWorkloadPublicApis(options.WorkloadType, cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricWorkloadPublicApi);
+            context.Response.Results = ResponseResult.Create(
+                new(apis),
+                FabricJsonContext.Default.GetWorkloadApisCommandResult);
         }
         catch (HttpRequestException httpEx)
         {
@@ -65,4 +68,7 @@ public sealed class GetWorkloadApisCommand(IFabricPublicApiService service, ILog
 
         return context.Response;
     }
+
+    public sealed record GetWorkloadApisCommandResult(
+        [property: JsonPropertyName("publicApi")] FabricWorkloadPublicApi PublicApi);
 }

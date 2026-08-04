@@ -29,7 +29,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
     Secret = false,
     LocalRequired = true)]
 public sealed class SendBrownfieldAnalysisCommand(ILogger<SendBrownfieldAnalysisCommand> logger, SendBrownfieldAnalysisTool sendBrownfieldAnalysisTool)
-    : BaseCommand<SendBrownfieldAnalysisOptions, string>
+    : BaseCommand<SendBrownfieldAnalysisOptions, SendBrownfieldAnalysisCommand.SendBrownfieldAnalysisCommandResult>
 {
     private readonly ILogger<SendBrownfieldAnalysisCommand> _logger = logger;
     private readonly SendBrownfieldAnalysisTool _sendBrownfieldAnalysisTool = sendBrownfieldAnalysisTool;
@@ -57,7 +57,9 @@ public sealed class SendBrownfieldAnalysisCommand(ILogger<SendBrownfieldAnalysis
                 findings.Logging);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, MonitorJsonContext.Default.String);
+            context.Response.Results = ResponseResult.Create(
+                new(result),
+                MonitorJsonContext.Default.SendBrownfieldAnalysisCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (JsonException ex)
@@ -74,4 +76,6 @@ public sealed class SendBrownfieldAnalysisCommand(ILogger<SendBrownfieldAnalysis
 
         return Task.FromResult(context.Response);
     }
+
+    public sealed record SendBrownfieldAnalysisCommandResult(string Result);
 }

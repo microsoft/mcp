@@ -33,7 +33,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
     ReadOnly = false,
     Secret = false)]
 public sealed class DataAccessRoleCreateOrUpdateCommand(ILogger<DataAccessRoleCreateOrUpdateCommand> logger, IOneLakeService oneLakeService)
-    : AuthenticatedCommand<DataAccessRoleCreateOrUpdateOptions, DataAccessRole>()
+    : AuthenticatedCommand<DataAccessRoleCreateOrUpdateOptions, DataAccessRoleCreateOrUpdateCommand.DataAccessRoleCreateOrUpdateCommandResult>()
 {
     private readonly ILogger<DataAccessRoleCreateOrUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -116,7 +116,9 @@ public sealed class DataAccessRoleCreateOrUpdateCommand(ILogger<DataAccessRoleCr
                 result = await _oneLakeService.CreateOrUpdateDataAccessRoleAsync(workspaceId!, options.ItemId, options.RoleDefinition!, cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.DataAccessRole);
+            context.Response.Results = ResponseResult.Create(
+                new DataAccessRoleCreateOrUpdateCommandResult(result),
+                OneLakeJsonContext.Default.DataAccessRoleCreateOrUpdateCommandResult);
         }
         catch (Exception ex)
         {
@@ -192,4 +194,6 @@ public sealed class DataAccessRoleCreateOrUpdateCommand(ILogger<DataAccessRoleCr
 
         return JsonSerializer.Serialize(role, OneLakeJsonContext.Default.DataAccessRole);
     }
+
+    public sealed record DataAccessRoleCreateOrUpdateCommandResult(DataAccessRole Role);
 }

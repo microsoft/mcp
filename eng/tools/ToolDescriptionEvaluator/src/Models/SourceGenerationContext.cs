@@ -7,6 +7,7 @@ namespace ToolSelection.Models;
 
 [JsonSourceGenerationOptions(WriteIndented = true, PropertyNameCaseInsensitive = true)]
 [JsonSerializable(typeof(ListToolsResult))]
+[JsonSerializable(typeof(ListToolsPayload))]
 [JsonSerializable(typeof(List<Tool>))]
 [JsonSerializable(typeof(Tool))]
 [JsonSerializable(typeof(Dictionary<string, List<string>>), TypeInfoPropertyName = "DictionaryStringListString")]

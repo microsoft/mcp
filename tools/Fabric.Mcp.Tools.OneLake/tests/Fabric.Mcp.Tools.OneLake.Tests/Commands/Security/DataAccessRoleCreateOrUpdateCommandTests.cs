@@ -100,8 +100,8 @@ public class DataAccessRoleCreateOrUpdateCommandTests : CommandUnitTestsBase<Dat
             "--item-id", "item1",
             "--role-definition", ValidRoleJson);
 
-        var result = ValidateAndDeserializeResponse(response, OneLakeJsonContext.Default.DataAccessRole);
-        Assert.Equal("TestRole", result.Name);
+        var result = ValidateAndDeserializeResponse(response, OneLakeJsonContext.Default.DataAccessRoleCreateOrUpdateCommandResult);
+        Assert.Equal("TestRole", result.Role.Name);
         await Service.Received(1).CreateOrUpdateDataAccessRoleAsync("32c6efb2-ca3a-4598-83b0-8abe799830cd", "item1", Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
@@ -120,4 +120,3 @@ public class DataAccessRoleCreateOrUpdateCommandTests : CommandUnitTestsBase<Dat
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
     }
 }
-

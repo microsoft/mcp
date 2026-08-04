@@ -25,7 +25,7 @@ namespace Azure.Mcp.Tools.Search.Commands.Index;
     Secret = false,
     LocalRequired = false)]
 public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearchService searchService)
-    : AuthenticatedCommand<IndexQueryOptions, List<JsonElement>>
+    : AuthenticatedCommand<IndexQueryOptions, IndexQueryCommand.IndexQueryCommandResult>
 {
     private readonly ILogger<IndexQueryCommand> _logger = logger;
     private readonly ISearchService _searchService = searchService;
@@ -41,7 +41,9 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearch
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(results, SearchJsonContext.Default.ListJsonElement);
+            context.Response.Results = ResponseResult.Create(
+                new(results),
+                SearchJsonContext.Default.IndexQueryCommandResult);
         }
         catch (Exception ex)
         {
@@ -51,4 +53,6 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearch
 
         return context.Response;
     }
+
+    public sealed record IndexQueryCommandResult(List<JsonElement> Results);
 }
