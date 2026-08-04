@@ -69,7 +69,7 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarket
     }
 
     // Implementation-specific error handling
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         HttpRequestException httpEx when httpEx.StatusCode == HttpStatusCode.NotFound =>
             "Marketplace product not found. Verify the product ID exists and you have access to it.",

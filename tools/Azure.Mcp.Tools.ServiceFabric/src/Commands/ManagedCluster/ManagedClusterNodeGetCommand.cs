@@ -70,7 +70,7 @@ public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCo
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         HttpRequestException httpEx when httpEx.StatusCode == HttpStatusCode.NotFound =>
             "Managed cluster, resource group, or node not found. Verify the names and that you have access.",

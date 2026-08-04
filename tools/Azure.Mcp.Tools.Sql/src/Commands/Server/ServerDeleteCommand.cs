@@ -76,7 +76,7 @@ public sealed class ServerDeleteCommand(ISqlService sqlService, ILogger<ServerDe
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             $"The given SQL server not found. It may have already been deleted.",

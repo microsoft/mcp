@@ -26,10 +26,6 @@ public sealed class AuthenticatedCommandTests
         public override Task<CommandResponse> ExecuteAsync(
             CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
             => Task.FromResult(context.Response);
-
-        public string InvokeGetErrorMessage(Exception ex) => GetErrorMessage(ex);
-
-        public HttpStatusCode InvokeGetStatusCode(Exception ex) => GetStatusCode(ex);
     }
 
     [Fact]
@@ -38,7 +34,7 @@ public sealed class AuthenticatedCommandTests
         var command = new AuthTestCommand();
         var ex = new CredentialUnavailableException("DefaultAzureCredential failed to retrieve a token.");
 
-        var message = command.InvokeGetErrorMessage(ex);
+        var message = command.GetErrorMessage(ex);
 
         Assert.Contains("az login", message);
         Assert.Contains("Azure credentials not found or unavailable", message);
@@ -50,7 +46,7 @@ public sealed class AuthenticatedCommandTests
         var command = new AuthTestCommand();
         var ex = new CredentialUnavailableException("DefaultAzureCredential failed to retrieve a token.");
 
-        Assert.Equal(HttpStatusCode.Unauthorized, command.InvokeGetStatusCode(ex));
+        Assert.Equal(HttpStatusCode.Unauthorized, command.GetStatusCode(ex));
     }
 
     [Fact]
@@ -59,7 +55,7 @@ public sealed class AuthenticatedCommandTests
         var command = new AuthTestCommand();
         var ex = new AuthenticationFailedException("token acquisition failed");
 
-        var message = command.InvokeGetErrorMessage(ex);
+        var message = command.GetErrorMessage(ex);
 
         Assert.Contains("Authentication failed", message);
         Assert.Contains("az login", message);

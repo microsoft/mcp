@@ -84,7 +84,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Advisor recommendation not found. Verify the subscription, resource group, and that you have access.",

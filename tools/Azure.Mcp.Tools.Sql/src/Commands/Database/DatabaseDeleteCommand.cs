@@ -54,7 +54,7 @@ public sealed class DatabaseDeleteCommand(ISqlService sqlService, ILogger<Databa
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "SQL server or database not found. Verify the server name, database name, resource group, and that you have access.",

@@ -423,7 +423,7 @@ public class ServiceStartCommandTests
         var exception = new ArgumentException("Invalid transport 'sse'. Valid transports are: stdio.");
 
         // Act
-        var message = GetErrorMessage(exception);
+        var message = _command.GetErrorMessage(exception);
 
         // Assert
         Assert.Contains("Invalid transport option specified", message);
@@ -437,7 +437,7 @@ public class ServiceStartCommandTests
         var exception = new ArgumentException("Invalid mode 'invalid'. Valid modes are: single, namespace, all.");
 
         // Act
-        var message = GetErrorMessage(exception);
+        var message = _command.GetErrorMessage(exception);
 
         // Assert
         Assert.Contains("Invalid mode option specified", message);
@@ -451,7 +451,7 @@ public class ServiceStartCommandTests
         var exception = new InvalidOperationException("Using --dangerously-disable-http-incoming-auth requires...");
 
         // Act
-        var message = GetErrorMessage(exception);
+        var message = _command.GetErrorMessage(exception);
 
         // Assert
         Assert.Contains("Configuration error to disable incoming HTTP authentication", message);
@@ -465,7 +465,7 @@ public class ServiceStartCommandTests
         var exception = new ArgumentException("--namespace and --tool options cannot be used together");
 
         // Act
-        var message = GetErrorMessage(exception);
+        var message = _command.GetErrorMessage(exception);
 
         // Assert
         Assert.Contains("Configuration error", message);
@@ -482,7 +482,7 @@ public class ServiceStartCommandTests
         var exception = (Exception)Activator.CreateInstance(exceptionType, "Test exception message")!;
 
         // Act
-        var statusCode = GetStatusCode(exception);
+        var statusCode = _command.GetStatusCode(exception);
 
         // Assert
         Assert.Equal(expectedStatusCode, statusCode);
@@ -744,22 +744,6 @@ public class ServiceStartCommandTests
     {
         // Need to use IBaseCommand here for ExecuteAsync as it handles binding and validating the args.
         return await ((IBaseCommand)_command).ExecuteAsync(new(), _command.GetCommand().Parse(args), TestContext.Current.CancellationToken);
-    }
-
-    private string GetErrorMessage(Exception exception)
-    {
-        // Use reflection to access the protected GetErrorMessage method
-        var method = typeof(ServerStartCommand).GetMethod("GetErrorMessage",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        return (string)method!.Invoke(_command, [exception])!;
-    }
-
-    private HttpStatusCode GetStatusCode(Exception exception)
-    {
-        // Use reflection to access the protected GetStatusCode method
-        var method = typeof(ServerStartCommand).GetMethod("GetStatusCode",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        return (HttpStatusCode)method!.Invoke(_command, [exception])!;
     }
 
     private static object GetAndAssertTagKeyValue(Activity activity, string tagName)

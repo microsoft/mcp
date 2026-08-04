@@ -99,7 +99,7 @@ public sealed class DiskGetCommand(ILogger<DiskGetCommand> logger, IComputeServi
         return $"^{pattern}$";
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == 404 =>
             "Disk not found. Verify the disk name and resource group are correct and you have access.",

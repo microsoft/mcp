@@ -65,7 +65,7 @@ public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCr
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "A SQL server with this name already exists. Choose a different server name.",

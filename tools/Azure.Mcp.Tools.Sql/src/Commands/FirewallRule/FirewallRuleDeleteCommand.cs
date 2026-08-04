@@ -57,7 +57,7 @@ public sealed class FirewallRuleDeleteCommand(ISqlService sqlService, ILogger<Fi
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "SQL server or firewall rule not found. Verify the server name, rule name, resource group, and that you have access.",

@@ -134,7 +134,7 @@ public sealed class DiskUpdateCommand(ILogger<DiskUpdateCommand> logger, IComput
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == 404 =>
             "Disk not found. Verify the disk name and resource group are correct.",

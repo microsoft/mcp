@@ -144,7 +144,7 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISp
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         FileNotFoundException fileEx => $"Audio file not found: {fileEx.Message}",
         ArgumentException argEx => $"Invalid parameter: {argEx.Message}",
@@ -152,7 +152,7 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISp
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    public override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ArgumentException => HttpStatusCode.BadRequest,
         FileNotFoundException => HttpStatusCode.NotFound,

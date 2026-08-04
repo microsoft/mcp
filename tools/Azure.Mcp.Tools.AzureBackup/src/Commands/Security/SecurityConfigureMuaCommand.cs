@@ -93,7 +93,7 @@ public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaComm
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         ArgumentException argEx => argEx.Message,
         UnauthorizedAccessException => "Authorization failed. Verify your RBAC permissions on the vault, or specify --vault-type to skip auto-detection.",
@@ -109,7 +109,7 @@ public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaComm
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    public override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         UnauthorizedAccessException => HttpStatusCode.Forbidden,
         ArgumentException or FormatException => HttpStatusCode.BadRequest,

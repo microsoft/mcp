@@ -78,7 +78,7 @@ public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseG
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "SQL database or server not found. Verify the server name, database name, resource group, and that you have access.",

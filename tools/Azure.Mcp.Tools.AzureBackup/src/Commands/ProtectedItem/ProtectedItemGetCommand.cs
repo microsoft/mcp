@@ -90,7 +90,7 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         KeyNotFoundException => "Protected item not found. Verify the item name and vault.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>

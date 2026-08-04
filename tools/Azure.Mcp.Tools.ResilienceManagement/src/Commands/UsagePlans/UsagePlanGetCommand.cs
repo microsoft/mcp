@@ -91,7 +91,7 @@ public sealed class UsagePlanGetCommand(ILogger<UsagePlanGetCommand> logger, IRe
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         ArgumentException argEx => argEx.Message,
         KeyNotFoundException => "Usage plan not found. Verify the usage plan name, resource group, subscription, and that you have access.",

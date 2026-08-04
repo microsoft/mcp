@@ -72,7 +72,7 @@ public sealed class GoalAssignmentGetCommand(ILogger<GoalAssignmentGetCommand> l
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         KeyNotFoundException => "Goal assignment not found. Verify the goal assignment name, service group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>

@@ -803,7 +803,7 @@ public sealed class {Resource}{Operation}Command(
     }
 
     // Implementation-specific error handling, only implement if this differs from base class behavior
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Resource not found. Verify the resource exists and you have access.",
@@ -814,7 +814,7 @@ public sealed class {Resource}{Operation}Command(
     };
 
     // Implementation-specific status code retrieval, only implement if this differs from base class behavior
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    public override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
         _ => base.GetStatusCode(ex)
@@ -1409,12 +1409,12 @@ Commands in Azure MCP follow a standardized error handling approach using the ba
 ### 1. Status Code Mapping
 The base implementation returns InternalServerError for all exceptions by default:
 ```csharp
-protected virtual HttpStatusCode GetStatusCode(Exception ex) => HttpStatusCode.InternalServerError;
+public virtual HttpStatusCode GetStatusCode(Exception ex) => HttpStatusCode.InternalServerError;
 ```
 
 Commands should override this to provide appropriate status codes:
 ```csharp
-protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+public override HttpStatusCode GetStatusCode(Exception ex) => ex switch
 {
     Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,  // Use Azure-reported status
     Azure.Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,   // Unauthorized
@@ -1426,12 +1426,12 @@ protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
 ### 2. Error Message Formatting
 The base implementation returns the exception message:
 ```csharp
-protected virtual string GetErrorMessage(Exception ex) => ex.Message;
+public virtual string GetErrorMessage(Exception ex) => ex.Message;
 ```
 
 Commands should override this to provide user-actionable messages:
 ```csharp
-protected override string GetErrorMessage(Exception ex) => ex switch
+public override string GetErrorMessage(Exception ex) => ex switch
 {
     Azure.Identity.AuthenticationFailedException authEx =>
         $"Authentication failed. Please run 'az login' to sign in. Details: {authEx.Message}",
@@ -1447,7 +1447,7 @@ protected override string GetErrorMessage(Exception ex) => ex switch
 ### 3. Response Format
 The base `HandleException` method in BaseCommand handles the response formatting:
 ```csharp
-protected virtual void HandleException(CommandContext context, Exception ex)
+public void HandleException(CommandContext context, Exception ex)
 {
     context.Activity?.SetStatus(ActivityStatusCode.Error);
 
@@ -1468,7 +1468,7 @@ Commands should call `HandleException(context, ex)` in their catch blocks.
 ### 4. Service-Specific Errors
 Commands should override error handlers to add service-specific mappings:
 ```csharp
-protected override string GetErrorMessage(Exception ex) => ex switch
+public override string GetErrorMessage(Exception ex) => ex switch
 {
     // Add service-specific cases
     ResourceNotFoundException =>
@@ -2041,7 +2041,7 @@ public sealed class MyCommand(ILogger<MyCommand> logger, IMyService service, ISu
 - **Solution**: Override base error handling methods for better user experience
 - **Pattern**:
 ```csharp
-protected override string GetErrorMessage(Exception ex) => ex switch
+public override string GetErrorMessage(Exception ex) => ex switch
 {
     Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
         "Resource not found. Verify the resource exists and you have access.",
@@ -2663,7 +2663,7 @@ public async Task<List<Resource>> GetResourcesAsync(
 Add appropriate error messages for remote HTTP scenarios:
 
 ```csharp
-protected override string GetErrorMessage(Exception ex) => ex switch
+public override string GetErrorMessage(Exception ex) => ex switch
 {
     RequestFailedException reqEx when reqEx.Status == 401 =>
         "Authentication failed. In remote mode, ensure your token has the required " +

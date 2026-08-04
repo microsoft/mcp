@@ -53,7 +53,7 @@ public sealed class ClusterGetCommand(
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         KeyNotFoundException => $"Kusto cluster not found. Verify the cluster name, resource group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
@@ -64,7 +64,7 @@ public sealed class ClusterGetCommand(
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    public override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         KeyNotFoundException => HttpStatusCode.NotFound,
         RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,

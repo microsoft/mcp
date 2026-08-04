@@ -80,7 +80,7 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException rfEx when rfEx.Status == (int)HttpStatusCode.NotFound =>
             "Hostpool not found. Verify the hostpool name and that you have access to it.",

@@ -83,10 +83,10 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) =>
+    public override string GetErrorMessage(Exception ex) =>
         OneLakeCommandValidators.GetErrorMessage(ex, base.GetErrorMessage);
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) =>
+    public override HttpStatusCode GetStatusCode(Exception ex) =>
         OneLakeCommandValidators.GetStatusCode(ex, base.GetStatusCode);
 
     public sealed record DirectoryCreateCommandResult(string WorkspaceId, string ItemId, string DirectoryPath, bool Success, string Message);

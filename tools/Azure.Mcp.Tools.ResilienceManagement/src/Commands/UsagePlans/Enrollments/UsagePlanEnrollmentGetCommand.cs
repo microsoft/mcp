@@ -78,7 +78,7 @@ public sealed class UsagePlanEnrollmentGetCommand(ILogger<UsagePlanEnrollmentGet
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         KeyNotFoundException => "Usage plan enrollment not found. Verify the enrollment name, usage plan, resource group, subscription, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>

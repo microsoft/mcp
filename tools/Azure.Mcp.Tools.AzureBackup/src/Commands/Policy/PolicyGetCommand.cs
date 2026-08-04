@@ -86,7 +86,7 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBac
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Policy not found. Verify the policy name and vault.",

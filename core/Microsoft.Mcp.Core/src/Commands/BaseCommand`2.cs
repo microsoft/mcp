@@ -110,7 +110,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         return response;
     }
 
-    protected virtual void HandleException(CommandContext context, Exception ex)
+    public void HandleException(CommandContext context, Exception ex)
     {
         context.Activity?.SetStatus(ActivityStatusCode.Error)
             ?.SetTag(TagName.ExceptionType, ex.GetType().ToString())
@@ -176,9 +176,9 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         response.Results = ResponseResult.Create(result, CoreJsonContext.Default.ExceptionResult);
     }
 
-    protected virtual string GetErrorMessage(Exception ex) => ex.Message;
+    public virtual string GetErrorMessage(Exception ex) => ex.Message;
 
-    protected virtual HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    public virtual HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ArgumentException => HttpStatusCode.BadRequest,  // Bad Request for invalid arguments
         InvalidOperationException => HttpStatusCode.UnprocessableEntity,  // Unprocessable Entity for configuration errors
@@ -236,4 +236,4 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     }
 }
 
-public record ExceptionResult(string Message, string? StackTrace, string Type);
+public sealed record ExceptionResult(string Message, string? StackTrace, string Type);

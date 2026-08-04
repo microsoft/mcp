@@ -64,7 +64,7 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMark
     }
 
     // Implementation-specific error handling
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         HttpRequestException { StatusCode: HttpStatusCode.NotFound } =>
             "No marketplace products found for the specified subscription. Verify the subscription exists and you have access to it.",

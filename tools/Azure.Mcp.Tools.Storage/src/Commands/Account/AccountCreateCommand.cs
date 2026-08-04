@@ -62,7 +62,7 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, I
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         KeyNotFoundException => $"Storage account not found. Verify the account name, subscription, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>

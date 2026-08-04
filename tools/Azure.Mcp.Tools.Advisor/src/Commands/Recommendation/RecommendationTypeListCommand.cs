@@ -80,7 +80,7 @@ public sealed class RecommendationTypeListCommand(ILogger<RecommendationTypeList
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         HttpRequestException httpEx when httpEx.StatusCode == HttpStatusCode.Forbidden =>
             $"Authorization failed accessing the Advisor metadata endpoint. Verify the signed-in identity has Reader access to the tenant. Details: {httpEx.Message}",

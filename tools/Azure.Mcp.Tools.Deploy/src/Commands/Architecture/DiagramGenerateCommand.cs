@@ -103,7 +103,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
         return Task.FromResult(context.Response);
     }
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    public override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         JsonException => HttpStatusCode.BadRequest,
         _ => base.GetStatusCode(ex)

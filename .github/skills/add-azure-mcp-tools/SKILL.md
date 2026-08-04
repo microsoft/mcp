@@ -1662,7 +1662,7 @@ protected override void RegisterOptions(Command command)
 Base implementation returns `InternalServerError` for all exceptions. Override for service-specific codes:
 
 ```csharp
-protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+public override HttpStatusCode GetStatusCode(Exception ex) => ex switch
 {
     Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
     Azure.Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
@@ -1676,7 +1676,7 @@ protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
 Base returns `ex.Message`. Override for user-actionable messages:
 
 ```csharp
-protected override string GetErrorMessage(Exception ex) => ex switch
+public override string GetErrorMessage(Exception ex) => ex switch
 {
     Azure.Identity.AuthenticationFailedException authEx =>
         $"Authentication failed. Please run 'az login' to sign in. Details: {authEx.Message}",
@@ -1693,7 +1693,7 @@ protected override string GetErrorMessage(Exception ex) => ex switch
 
 The base `HandleException` in `BaseCommand`:
 ```csharp
-protected virtual void HandleException(CommandContext context, Exception ex)
+public void HandleException(CommandContext context, Exception ex)
 {
     context.Activity?.SetStatus(ActivityStatusCode.Error);
     var result = new ExceptionResult(Message: ex.Message, StackTrace: ex.StackTrace, Type: ex.GetType().Name);
@@ -2022,7 +2022,7 @@ public async Task<List<Resource>> GetResourcesAsync(
 ### Error Handling for Remote Scenarios
 
 ```csharp
-protected override string GetErrorMessage(Exception ex) => ex switch
+public override string GetErrorMessage(Exception ex) => ex switch
 {
     RequestFailedException reqEx when reqEx.Status == 401 =>
         "Authentication failed. In remote mode, ensure your token has the required " +

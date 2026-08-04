@@ -28,8 +28,6 @@ public sealed class CommandValidationExceptionTests
         public override Task<CommandResponse> ExecuteAsync(
             CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
             => Task.FromResult(context.Response);
-
-        public void InvokeHandleException(CommandContext context, Exception ex) => HandleException(context, ex);
     }
 
     // ---------- Exception default tests ----------
@@ -71,7 +69,7 @@ public sealed class CommandValidationExceptionTests
         var command = new ValidationTestCommand();
         var context = new CommandContext();
 
-        command.InvokeHandleException(context, new CommandValidationException("Validation failed."));
+        command.HandleException(context, new CommandValidationException("Validation failed."));
 
         Assert.Equal(HttpStatusCode.BadRequest, context.Response.Status);
         Assert.Equal("Validation failed.", context.Response.Message);
@@ -84,7 +82,7 @@ public sealed class CommandValidationExceptionTests
         var command = new ValidationTestCommand();
         var context = new CommandContext();
 
-        command.InvokeHandleException(
+        command.HandleException(
             context,
             new CommandValidationException("Conflict occurred.", HttpStatusCode.Conflict));
 
@@ -99,7 +97,7 @@ public sealed class CommandValidationExceptionTests
         var command = new ValidationTestCommand();
         var context = new CommandContext();
 
-        command.InvokeHandleException(
+        command.HandleException(
             context,
             new CommandValidationException(
                 "ignored",

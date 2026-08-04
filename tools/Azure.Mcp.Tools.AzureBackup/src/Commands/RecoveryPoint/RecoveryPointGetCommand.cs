@@ -91,7 +91,7 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Recovery point not found. Verify the recovery point ID and protected item.",

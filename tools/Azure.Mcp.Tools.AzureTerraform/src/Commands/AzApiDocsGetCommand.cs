@@ -39,7 +39,7 @@ public sealed class AzApiDocsGetCommand(
     private readonly IAzApiDocsService _docsService = docsService;
     private readonly IAzApiExamplesService _examplesService = examplesService;
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    public override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         InvalidDataException => HttpStatusCode.BadRequest,
         _ => base.GetStatusCode(ex)

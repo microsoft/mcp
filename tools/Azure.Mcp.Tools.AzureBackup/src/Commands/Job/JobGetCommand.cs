@@ -86,7 +86,7 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Job not found. Verify the job ID and vault.",

@@ -66,10 +66,10 @@ public sealed class OneLakeItemDataListCommand(ILogger<OneLakeItemDataListComman
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) =>
+    public override string GetErrorMessage(Exception ex) =>
         OneLakeCommandValidators.GetErrorMessage(ex, base.GetErrorMessage);
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) =>
+    public override HttpStatusCode GetStatusCode(Exception ex) =>
         OneLakeCommandValidators.GetStatusCode(ex, base.GetStatusCode);
 
     public sealed record OneLakeItemDataListCommandResult(string? JsonResponse);

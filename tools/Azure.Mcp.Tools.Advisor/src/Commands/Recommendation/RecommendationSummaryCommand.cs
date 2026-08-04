@@ -124,7 +124,7 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Advisor recommendations not found. Verify the subscription, resource group, and that you have access.",

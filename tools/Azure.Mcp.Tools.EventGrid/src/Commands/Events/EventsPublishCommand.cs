@@ -76,7 +76,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Event Grid topic not found. Please verify the topic name and resource group exist.",
@@ -89,7 +89,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    public override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         System.Text.Json.JsonException => HttpStatusCode.BadRequest,
         _ => base.GetStatusCode(ex)

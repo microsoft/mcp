@@ -70,7 +70,7 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger, IComputeSer
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed. Verify you have appropriate permissions to delete the VM. Details: {reqEx.Message}",

@@ -108,7 +108,7 @@ public sealed class DiskCreateCommand(ILogger<DiskCreateCommand> logger, IComput
         return context.Response;
     }
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    public override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
         Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
@@ -117,7 +117,7 @@ public sealed class DiskCreateCommand(ILogger<DiskCreateCommand> logger, IComput
         _ => base.GetStatusCode(ex)
     };
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == 409 =>
             "A disk with this name already exists in the resource group.",

@@ -106,7 +106,7 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Virtual machine not found. Verify the VM name, resource group, and that you have access.",

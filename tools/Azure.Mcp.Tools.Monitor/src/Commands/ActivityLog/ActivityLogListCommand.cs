@@ -69,7 +69,7 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
     }
 
     // Implementation-specific error handling
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == 404 =>
             "Resource not found. Verify the resource name and that you have access to it.",
@@ -84,7 +84,7 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    public override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
         HttpRequestException httpEx when httpEx.Message.Contains("404") => (HttpStatusCode)404,

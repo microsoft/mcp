@@ -62,7 +62,7 @@ public sealed class DiskDeleteCommand(ILogger<DiskDeleteCommand> logger, IComput
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == 409 =>
             "The disk is currently attached to a virtual machine. Detach the disk before deleting.",

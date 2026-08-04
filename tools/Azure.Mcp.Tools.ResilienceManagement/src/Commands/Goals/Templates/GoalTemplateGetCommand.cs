@@ -73,7 +73,7 @@ public sealed class GoalTemplateGetCommand(ILogger<GoalTemplateGetCommand> logge
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         KeyNotFoundException => "Goal template not found. Verify the goal template name, service group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
