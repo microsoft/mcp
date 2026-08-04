@@ -107,6 +107,28 @@ public sealed class PromptParserTests : IDisposable
     }
 
     [Fact]
+    public void ParseFile_InteractionColumn_ParsesInteraction()
+    {
+        File.WriteAllText(_tempFile, """
+            ## advisor
+
+            | Tool Name | Prompt | Interaction |
+            |-----------|--------|-------------|
+            | advisor_recommendation_list | list recommendations | none |
+            | advisor_recommendation_apply | apply recommendations to this template | context-required |
+            | advisor_recommendation_apply | apply recommendations | clarification-required |
+            """);
+
+        var result = PromptParser.ParseFile(_tempFile);
+
+        Assert.Equal(3, result.Count);
+        Assert.Equal("none", result[0].Interaction);
+        Assert.Equal("context-required", result[1].Interaction);
+        Assert.Equal("clarification-required", result[2].Interaction);
+        Assert.Equal("apply recommendations to this template", result[1].Prompt);
+    }
+
+    [Fact]
     public void ParseFile_RowBeforeAnySection_UsesEmptySection()
     {
         File.WriteAllText(_tempFile, "| my_tool | do something |\n");

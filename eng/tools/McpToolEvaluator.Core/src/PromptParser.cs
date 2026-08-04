@@ -17,6 +17,11 @@ public static partial class PromptParser
     [GeneratedRegex(@"^\|\s*([a-z0-9_-]+)\s*\|\s*(.+)\s*\|$", RegexOptions.IgnoreCase)]
     private static partial Regex TableRowRegex();
 
+    [GeneratedRegex(
+        @"^\|\s*([a-z0-9_-]+)\s*\|\s*(.+?)\s*\|\s*(none|clarification-required|context-required)\s*\|$",
+        RegexOptions.IgnoreCase)]
+    private static partial Regex InteractionTableRowRegex();
+
     internal static string GetNamespace(string tool)
     {
         if (tool.StartsWith("get_azure_bestpractices_", StringComparison.OrdinalIgnoreCase))
@@ -49,11 +54,17 @@ public static partial class PromptParser
             }
 
             // Parse table rows
-            var rowMatch = TableRowRegex().Match(line);
+            var interactionRowMatch = InteractionTableRowRegex().Match(line);
+            var rowMatch = interactionRowMatch.Success
+                ? interactionRowMatch
+                : TableRowRegex().Match(line);
             if (rowMatch.Success)
             {
                 var tool = rowMatch.Groups[1].Value.Trim();
                 var prompt = rowMatch.Groups[2].Value.Trim();
+                var interaction = interactionRowMatch.Success
+                    ? interactionRowMatch.Groups[3].Value.Trim()
+                    : "none";
 
                 // Skip header rows
                 if (tool.Equals("Tool Name", StringComparison.OrdinalIgnoreCase) ||
@@ -62,7 +73,7 @@ public static partial class PromptParser
                     continue;
                 }
 
-                prompts.Add(new TestPrompt(currentSection, tool, prompt, GetNamespace(tool)));
+                prompts.Add(new TestPrompt(currentSection, tool, prompt, GetNamespace(tool), interaction));
             }
         }
 
