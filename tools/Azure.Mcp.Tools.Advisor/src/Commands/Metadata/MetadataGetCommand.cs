@@ -37,6 +37,18 @@ public sealed class MetadataGetCommand(ILogger<MetadataGetCommand> logger, IAdvi
         "nl", "pl", "pt-br", "pt-pt", "ru", "sv", "tr", "zh-hans", "zh-hant",
     };
 
+    public override void ValidateOptions(MetadataGetOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+
+        if (string.IsNullOrEmpty(options.RecommendationTypeId) ||
+            options.RecommendationTypeId.Length != 36 ||
+            !Guid.TryParseExact(options.RecommendationTypeId, "D", out _))
+        {
+            validationResult.Errors.Add("--recommendation-type-id must be a 36-character GUID in the form xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.");
+        }
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, MetadataGetOptions options, CancellationToken cancellationToken)
     {
         try

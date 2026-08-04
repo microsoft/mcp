@@ -202,11 +202,8 @@ public class AdvisorService(
         ArgumentException.ThrowIfNullOrWhiteSpace(recommendationTypeId);
         ArgumentException.ThrowIfNullOrWhiteSpace(language);
 
-        // The Advisor recommendation-metadata catalog (type 'microsoft.advisor/metadata') is a global,
-        // tenant-wide catalog — it is not subscription-scoped. Run the ARG query at tenant scope using the
-        // default credential's tenant; no subscription is required.
-        var armClient = await CreateArmClientAsync(cancellationToken: cancellationToken);
-        var tenantResource = armClient.GetTenants().First();
+        var tenantResource = (await TenantService.GetTenants(cancellationToken)).FirstOrDefault()
+            ?? throw new InvalidOperationException("No accessible tenants found.");
 
         var query =
             "advisorresources " +

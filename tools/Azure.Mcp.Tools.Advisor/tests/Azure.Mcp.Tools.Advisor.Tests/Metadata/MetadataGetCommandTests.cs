@@ -229,6 +229,23 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
             Arg.Any<CancellationToken>());
     }
 
+    [Theory]
+    [InlineData("not-a-guid")]
+    [InlineData("b131ddbe-5439-4c87-95bc-6999b0648252x")]
+    [InlineData("b131ddbe-5439-4c87-95bc-6999b064825z")]
+    public async Task ExecuteAsync_InvalidRecommendationTypeId_ReturnsBadRequest(string recommendationTypeId)
+    {
+        var response = await ExecuteCommandAsync("--recommendation-type-id", recommendationTypeId);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("36-character GUID", response.Message);
+
+        await Service.DidNotReceive().GetRecommendationMetadataAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>());
+    }
+
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
