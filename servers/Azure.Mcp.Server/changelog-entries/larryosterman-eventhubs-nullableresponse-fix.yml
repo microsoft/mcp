@@ -1,0 +1,3 @@
+changes:
+  - section: "Bug Fixes"
+    description: "Fixed a bug in EventHubs where creating a new event hub or consumer group could throw an `InvalidOperationException` instead of succeeding, because the `NullableResponse<T>.Value` accessor was dereferenced without checking `HasValue` first."
