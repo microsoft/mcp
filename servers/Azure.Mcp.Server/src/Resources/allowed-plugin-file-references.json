@@ -605,6 +605,8 @@
   "azure-validate\\references\\role-verification.md",
   "azure-validate\\references\\scripts\\scan-aspire-functions-secrets.ps1",
   "azure-validate\\references\\scripts\\scan-aspire-functions-secrets.sh",
+  "azure-validate\\references\\scripts\\workflow.ps1",
+  "azure-validate\\references\\scripts\\workflow.sh",
   "entra-agent-id\\references\\known-limitations.md",
   "entra-agent-id\\references\\oauth2-token-flow.md",
   "entra-agent-id\\references\\obo-blueprint-setup.md",
