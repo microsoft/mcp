@@ -8,9 +8,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Extension.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Time;
 
@@ -27,36 +25,24 @@ namespace Azure.Mcp.Tools.Extension.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class AzqrCommand(ILogger<AzqrCommand> logger, ISubscriptionService subscriptionService, IDateTimeProvider dateTimeProvider, IExternalProcessService processService, int processTimeoutSeconds = 300) : SubscriptionCommand<AzqrOptions>()
+public sealed class AzqrCommand(
+    ILogger<AzqrCommand> logger,
+    ISubscriptionService subscriptionService,
+    IDateTimeProvider dateTimeProvider,
+    IExternalProcessService processService,
+    ISubscriptionResolver subscriptionResolver,
+    int processTimeoutSeconds = 300)
+    : SubscriptionCommand<AzqrOptions, AzqrReportResult>(subscriptionResolver)
 {
     private readonly ILogger<AzqrCommand> _logger = logger;
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly IDateTimeProvider _dateTimeProvider = dateTimeProvider;
     private readonly IExternalProcessService _processService = processService;
     private readonly int _processTimeoutSeconds = processTimeoutSeconds;
-    private static string? _cachedAzqrPath;
+    private static string? s_cachedAzqrPath;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AzqrOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-    }
-
-    protected override AzqrOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
         var response = context.Response;
 
         try
@@ -117,9 +103,9 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, ISubscriptionServic
     private static string? FindAzqrCliPath()
     {
         // Return cached path if available and still exists
-        if (!string.IsNullOrEmpty(_cachedAzqrPath) && File.Exists(_cachedAzqrPath))
+        if (!string.IsNullOrEmpty(s_cachedAzqrPath) && File.Exists(s_cachedAzqrPath))
         {
-            return _cachedAzqrPath;
+            return s_cachedAzqrPath;
         }
         var exeName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "azqr.exe" : "azqr";
         var pathEnv = Environment.GetEnvironmentVariable("PATH");
@@ -130,7 +116,7 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, ISubscriptionServic
             var fullPath = Path.Combine(dir.Trim(), exeName);
             if (File.Exists(fullPath))
             {
-                _cachedAzqrPath = fullPath;
+                s_cachedAzqrPath = fullPath;
                 return fullPath;
             }
         }

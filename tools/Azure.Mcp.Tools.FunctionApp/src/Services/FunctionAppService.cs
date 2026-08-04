@@ -78,8 +78,8 @@ public sealed class FunctionAppService(
                 (nameof(resourceGroup), resourceGroup));
 
             var cacheKey = string.IsNullOrEmpty(tenant)
-                ? CacheKeyBuilder.Build(subscription, resourceGroup!, functionAppName)
-                : CacheKeyBuilder.Build(subscription, tenant, resourceGroup!, functionAppName);
+                ? CacheKeyBuilder.Build(subscription, resourceGroup, functionAppName)
+                : CacheKeyBuilder.Build(subscription, tenant, resourceGroup, functionAppName);
 
             var cachedResults = await _cacheService.GetAsync<List<FunctionAppInfo>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedResults != null)

@@ -1,14 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Commands;
+using Azure.Mcp.Tools.FileShares.Commands.Informational;
+using Azure.Mcp.Tools.FileShares.Services;
+using Xunit;
 
 namespace Azure.Mcp.Tools.FileShares.Tests.Informational;
 
 /// <summary>
 /// Unit tests for FileShareGetProvisioningRecommendationCommand.
 /// </summary>
-public class FileShareGetProvisioningRecommendationCommandTests : CommandUnitTestsBase<FileShareGetProvisioningRecommendationCommand, IFileSharesService>
+public class FileShareGetProvisioningRecommendationCommandTests : SubscriptionCommandUnitTestsBase<FileShareGetProvisioningRecommendationCommand, IFileSharesService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()

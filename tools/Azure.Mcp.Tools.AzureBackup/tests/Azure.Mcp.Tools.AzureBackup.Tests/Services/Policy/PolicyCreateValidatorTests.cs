@@ -59,6 +59,27 @@ public class PolicyCreateValidatorTests
         Assert.Contains(result.Issues, i => i.Message.StartsWith("Provide at least one schedule"));
     }
 
+    // ----- Unknown workload-type rejection (command-boundary validation) -----
+
+    [Theory]
+    [InlineData("garbage")]
+    [InlineData("s3bucket")]
+    [InlineData("'); DROP TABLE--")]
+    public void Validate_UnknownWorkloadType_RejectsWithActionableMessage(string workload)
+    {
+        var options = BaseOptions(workload);
+        options.DailyRetentionDays = "30";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Single(result.Issues);
+        Assert.Contains("Unknown workload type", result.Issues[0].Message);
+        Assert.Contains(workload, result.Issues[0].Message);
+        Assert.Contains("VM", result.Issues[0].Message);
+        Assert.Contains("AzureDisk", result.Issues[0].Message);
+    }
+
     [Theory]
     [InlineData("VM")]
     [InlineData("SQL")]

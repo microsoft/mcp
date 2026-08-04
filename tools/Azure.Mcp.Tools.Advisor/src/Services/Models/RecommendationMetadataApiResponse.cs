@@ -10,34 +10,29 @@ namespace Azure.Mcp.Tools.Advisor.Services.Models;
 // REST API spec exactly. Property names follow JsonSourceGenerationOptions on
 // AdvisorJsonContext (camelCase naming policy), which matches the ARM payload.
 
-internal record RecommendationMetadataApiResponse(
-    List<RecommendationMetadataEntity>? Value
-);
+internal sealed record RecommendationMetadataApiResponse(List<RecommendationMetadataEntity>? Value);
 
-internal record RecommendationMetadataEntity(
+internal sealed record RecommendationMetadataEntity(
     string? Id,
     string? Name,
     string? Type,
-    RecommendationMetadataProperties? Properties
-);
+    RecommendationMetadataProperties? Properties);
 
-internal record RecommendationMetadataProperties(
+internal sealed record RecommendationMetadataProperties(
     string? DisplayName,
     List<string>? DependsOn,
     List<string>? ApplicableScenarios,
-    List<RecommendationMetadataSupportedValue>? SupportedValues
-);
+    List<RecommendationMetadataSupportedValue>? SupportedValues);
 
 // The `recommendationType` metadata entity's supportedValues entries carry richer
 // per-type linkage fields beyond just id/displayName. These mirror the additional
 // properties in the ARM payload (verified against the live response). Other entities
 // (recommendationCategory, recommendationImpact, supportedResourceType) only populate
 // Id/DisplayName; the additional fields remain null for those.
-internal record RecommendationMetadataSupportedValue(
+internal sealed record RecommendationMetadataSupportedValue(
     string? Id,
     string? DisplayName,
     string? RecommendationCategory,
     string? RecommendationImpact,
     string? SupportedResourceType,
-    string? RecommendationSubCategory
-);
+    string? RecommendationSubCategory);

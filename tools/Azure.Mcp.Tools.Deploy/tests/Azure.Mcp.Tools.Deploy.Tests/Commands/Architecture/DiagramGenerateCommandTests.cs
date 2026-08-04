@@ -31,7 +31,7 @@ public class DiagramGenerateCommandTests : CommandUnitTestsBase<DiagramGenerateC
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("invalid JSON literal", response.Message);
+        Assert.Contains("raw-mcp-tool-input must be valid JSON", response.Message);
     }
 
     [Fact]

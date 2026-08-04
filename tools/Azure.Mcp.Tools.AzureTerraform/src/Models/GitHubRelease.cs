@@ -5,14 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Models;
 
-internal sealed class GitHubRelease
-{
-    [JsonPropertyName("tag_name")]
-    public string TagName { get; set; } = string.Empty;
-
-    [JsonPropertyName("created_at")]
-    public string CreatedAt { get; set; } = string.Empty;
-
-    [JsonPropertyName("tarball_url")]
-    public string TarballUrl { get; set; } = string.Empty;
-}
+internal sealed record GitHubRelease(
+    [property: JsonPropertyName("tag_name")] string TagName,
+    [property: JsonPropertyName("created_at")] string CreatedAt,
+    [property: JsonPropertyName("tarball_url")] string TarballUrl);

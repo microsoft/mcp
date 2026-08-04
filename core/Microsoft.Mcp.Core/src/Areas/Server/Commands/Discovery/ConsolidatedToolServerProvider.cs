@@ -76,7 +76,7 @@ public sealed class ConsolidatedToolServerProvider(CommandGroup commandGroup) : 
 
         if (ReadOnly)
         {
-            arguments.Add($"--{ServiceOptionDefinitions.ReadOnlyName}");
+            arguments.Add($"--read-only");
         }
 
         return [.. arguments];

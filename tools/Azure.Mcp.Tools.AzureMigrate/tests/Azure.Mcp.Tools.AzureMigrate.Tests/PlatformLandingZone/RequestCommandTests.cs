@@ -2,21 +2,22 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AzureMigrate.Commands;
 using Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Models;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Tests.Client;
+using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Tests.PlatformLandingZone;
 
-public class RequestCommandTests : CommandUnitTestsBase<RequestCommand, IPlatformLandingZoneService>
+public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestCommand, IPlatformLandingZoneService>
 {
     public RequestCommandTests()
     {
@@ -96,7 +97,7 @@ public class RequestCommandTests : CommandUnitTestsBase<RequestCommand, IPlatfor
                 .Returns("Status message");
 
             Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-                .Returns(new List<string>());
+                .Returns([]);
         }
 
         // Act
@@ -203,14 +204,8 @@ public class RequestCommandTests : CommandUnitTestsBase<RequestCommand, IPlatfor
             "--migrate-project-name", projectName);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.RequestCommandResult);
-
-        Assert.NotNull(result);
         Assert.Contains("downloaded successfully", result.Message, StringComparison.OrdinalIgnoreCase);
     }
 

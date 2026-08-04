@@ -101,7 +101,7 @@ internal class CustomChainedCredential : TokenCredential
     internal static IAzureCloudConfiguration? CloudConfiguration { get; set; }
 
     /// <summary>
-    /// Active transport type ("stdio" or "http"). Set by <see cref="Microsoft.Mcp.Core.Areas.Server.Commands.ServiceStartCommand"/>
+    /// Active transport type ("stdio" or "http"). Set by <see cref="Microsoft.Mcp.Core.Areas.Server.Commands.ServerStartCommand"/>
     /// before the credential chain is first used. Empty when not running as a server (e.g. direct CLI invocation).
     /// </summary>
     internal static string ActiveTransport { get; set; } = string.Empty;

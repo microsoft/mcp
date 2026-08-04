@@ -2,15 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FunctionApp.Models;
-using Azure.Mcp.Tools.FunctionApp.Options;
 using Azure.Mcp.Tools.FunctionApp.Options.FunctionApp;
 using Azure.Mcp.Tools.FunctionApp.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
 
@@ -29,47 +28,29 @@ namespace Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger, IFunctionAppService functionAppService)
-    : BaseFunctionAppCommand<FunctionAppGetOptions>()
+public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger, IFunctionAppService functionAppService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<FunctionAppGetOptions, FunctionAppGetCommand.FunctionAppGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<FunctionAppGetCommand> _logger = logger;
     private readonly IFunctionAppService _functionAppService = functionAppService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(FunctionAppGetOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(FunctionAppOptionDefinitions.FunctionApp);
+        base.ValidateOptions(options, validationResult);
 
-        command.Validators.Add(result =>
+        if (!string.IsNullOrWhiteSpace(options.FunctionApp) && string.IsNullOrWhiteSpace(options.ResourceGroup))
         {
-            if (result.HasOptionResult(FunctionAppOptionDefinitions.FunctionApp.Name) && !result.HasOptionResult(OptionDefinitions.Common.ResourceGroup.Name))
-            {
-                result.AddError($"--{FunctionAppOptionDefinitions.FunctionApp.Name} option requires --{OptionDefinitions.Common.ResourceGroup.Name} option to be specified.");
-            }
-        });
+            validationResult.Errors.Add($"--function-app option requires --resource-group option to be specified.");
+        }
     }
 
-    protected override FunctionAppGetOptions BindOptions(ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FunctionAppGetOptions options, CancellationToken cancellationToken)
     {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FunctionAppName = parseResult.GetValueOrDefault<string>(FunctionAppOptionDefinitions.FunctionApp.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            return context.Response;
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var functionApps = await _functionAppService.GetFunctionApp(
                 options.Subscription!,
-                options.FunctionAppName,
+                options.FunctionApp,
                 options.ResourceGroup,
                 options.Tenant,
                 options.RetryPolicy,
@@ -79,7 +60,7 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger,
         }
         catch (Exception ex)
         {
-            if (options.FunctionAppName is null)
+            if (options.FunctionApp is null)
             {
                 _logger.LogError(ex, "Error listing function apps. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}.",
                     options.Subscription, options.ResourceGroup);
@@ -88,7 +69,7 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger,
             {
                 _logger.LogError(ex,
                     "Error getting function app. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FunctionApp: {FunctionApp}.",
-                    options.Subscription, options.ResourceGroup, options.FunctionAppName);
+                    options.Subscription, options.ResourceGroup, options.FunctionApp);
             }
             HandleException(context, ex);
         }
@@ -106,5 +87,5 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger,
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record FunctionAppGetCommandResult(List<FunctionAppInfo> FunctionApps);
+    public sealed record FunctionAppGetCommandResult(List<FunctionAppInfo> FunctionApps);
 }

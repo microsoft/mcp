@@ -2,67 +2,49 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Speech.Options;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Speech.Commands;
 
-public abstract class BaseSpeechCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>
-    : SubscriptionCommand<T>
-    where T : BaseSpeechOptions, new()
+public abstract class BaseSpeechCommand<[DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>
+    : AuthenticatedCommand<TOptions, TResult> where TOptions : BaseSpeechOptions
 {
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(TOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        var endpointOption = SpeechOptionDefinitions.Endpoint.AsRequired();
-        command.Options.Add(endpointOption);
-        command.Validators.Add(commandResult =>
+        base.ValidateOptions(options, validationResult);
+
+        // Validate endpoint option
+        if (!Uri.TryCreate(options.Endpoint, UriKind.Absolute, out var uri))
         {
-            // Validate endpoint option
-            var endpointValue = commandResult.GetValueOrDefault(endpointOption);
+            validationResult.Errors.Add($"Invalid endpoint URL: {options.Endpoint}");
+            return;
+        }
 
-            if (!Uri.TryCreate(endpointValue, UriKind.Absolute, out var uri))
-            {
-                commandResult.AddError($"Invalid endpoint URL: {endpointValue}");
-                return;
-            }
+        if (uri.Scheme != Uri.UriSchemeHttps)
+        {
+            validationResult.Errors.Add($"Endpoint must use HTTPS: {options.Endpoint}");
+            return;
+        }
 
-            if (uri.Scheme != Uri.UriSchemeHttps)
-            {
-                commandResult.AddError($"Endpoint must use HTTPS: {endpointValue}");
-                return;
-            }
-
-            // Accept sovereign cloud endpoint suffixes
-            string[] validSuffixes =
-            [
-                ".cognitiveservices.azure.com",
+        // Accept sovereign cloud endpoint suffixes
+        string[] validSuffixes =
+        [
+            ".cognitiveservices.azure.com",
                 ".cognitiveservices.azure.cn",
                 ".cognitiveservices.azure.us"
-            ];
-            var matchedSuffix = Array.Find(validSuffixes, suffix => uri.Host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
-            if (matchedSuffix == null)
-            {
-                commandResult.AddError($"Endpoint must be a valid Azure AI Services endpoint. Host must end with '.cognitiveservices.azure.com' (or sovereign cloud equivalent): {uri.Host}");
-                return;
-            }
+        ];
+        var matchedSuffix = Array.Find(validSuffixes, suffix => uri.Host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
+        if (matchedSuffix == null)
+        {
+            validationResult.Errors.Add($"Endpoint must be a valid Azure AI Services endpoint. Host must end with '.cognitiveservices.azure.com' (or sovereign cloud equivalent): {uri.Host}");
+            return;
+        }
 
-            var subdomain = uri.Host[..^matchedSuffix.Length];
-            if (string.IsNullOrWhiteSpace(subdomain))
-            {
-                commandResult.AddError($"Endpoint must include a valid service name before '{matchedSuffix}'");
-            }
-        });
-    }
-
-    protected override T BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Endpoint = parseResult.GetValueOrDefault<string>(SpeechOptionDefinitions.Endpoint.Name);
-        return options;
+        var subdomain = uri.Host[..^matchedSuffix.Length];
+        if (string.IsNullOrWhiteSpace(subdomain))
+        {
+            validationResult.Errors.Add($"Endpoint must include a valid service name before '{matchedSuffix}'");
+        }
     }
 }

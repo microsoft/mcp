@@ -1,14 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
+using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
 
-public sealed class SubnetSizeAskOptions : BaseManagedLustreOptions
+namespace Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.SubnetSize;
+
+public sealed class SubnetSizeAskOptions : ISubscriptionOption
 {
-    [JsonPropertyName(ManagedLustreOptionDefinitions.sku)]
-    public string? Sku { get; set; }
+    [Option(Description = ManagedLustreOptionDescriptions.Sku)]
+    public required string Sku { get; set; }
 
-    [JsonPropertyName(ManagedLustreOptionDefinitions.size)]
-    public int Size { get; set; }
+    [Option(Description = ManagedLustreOptionDescriptions.Size)]
+    public required int Size { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [OptionContainer(Prefix = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

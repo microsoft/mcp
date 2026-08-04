@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.Diagnostics;
 using System.Net;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -11,20 +13,19 @@ using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 /// <summary>
 /// A tool loader that creates MCP tools from the registered command factory.
-/// Exposes AzureMcp commands as MCP tools that can be invoked through the MCP protocol.
+/// Exposes MCP commands as MCP tools that can be invoked through the MCP protocol.
 /// </summary>
 public sealed class CommandFactoryToolLoader(
-    IServiceProvider serviceProvider,
     ICommandFactory commandFactory,
     IOptions<ToolLoaderOptions> options,
     ILogger<CommandFactoryToolLoader> logger) : BaseToolLoader(logger)
 {
-    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     private readonly ICommandFactory _commandFactory = commandFactory;
     private readonly IOptions<ToolLoaderOptions> _options = options;
     private IReadOnlyDictionary<string, IBaseCommand> _toolCommands =
@@ -156,7 +157,7 @@ public sealed class CommandFactoryToolLoader(
             }, command.Id);
         }
 
-        var commandContext = new CommandContext(_serviceProvider, activity)
+        var commandContext = new CommandContext(activity)
         {
             McpServer = request.Server,
             ProgressToken = request.Params.ProgressToken

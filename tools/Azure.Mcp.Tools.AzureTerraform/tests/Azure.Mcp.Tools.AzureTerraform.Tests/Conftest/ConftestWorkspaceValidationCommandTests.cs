@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Mcp.Tools.AzureTerraform.Commands;
+using Azure.Mcp.Tools.AzureTerraform.Commands.Conftest;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Services;
 using Microsoft.Mcp.Tests.Client;

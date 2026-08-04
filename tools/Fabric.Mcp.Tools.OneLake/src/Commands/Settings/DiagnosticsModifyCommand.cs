@@ -6,8 +6,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Settings;
 
@@ -28,86 +27,66 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Settings;
     OpenWorld = false,
     ReadOnly = false,
     Secret = false)]
-public sealed class DiagnosticsModifyCommand(
-    ILogger<DiagnosticsModifyCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<DiagnosticsModifyOptions>()
+public sealed class DiagnosticsModifyCommand(ILogger<DiagnosticsModifyCommand> logger, IOneLakeService oneLakeService)
+    : AuthenticatedCommand<DiagnosticsModifyOptions, DiagnosticsModifyCommand.DiagnosticsModifyCommandResult>()
 {
     private readonly ILogger<DiagnosticsModifyCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(DiagnosticsModifyOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.DiagnosticsStatus.AsRequired());
-        command.Options.Add(FabricOptionDefinitions.DestinationLakehouseWorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.DestinationLakehouseItemId.AsOptional());
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+
+        if (string.IsNullOrWhiteSpace(options.WorkspaceId) && string.IsNullOrWhiteSpace(options.Workspace))
         {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-
-            var effectiveValue = !string.IsNullOrWhiteSpace(workspaceId) ? workspaceId : workspace;
-            if (!string.IsNullOrWhiteSpace(effectiveValue) && !Guid.TryParse(effectiveValue, out _))
-            {
-                result.AddError("Workspace must be a valid GUID. Name-based resolution is not supported for this command.");
-            }
-
-            var status = result.GetValueOrDefault<string>(FabricOptionDefinitions.DiagnosticsStatus.Name);
-            if (!string.Equals(status, "Enabled", StringComparison.OrdinalIgnoreCase) &&
-                !string.Equals(status, "Disabled", StringComparison.OrdinalIgnoreCase))
-            {
-                result.AddError("--status must be 'Enabled' or 'Disabled'.");
-            }
-
-            var destWorkspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.DestinationLakehouseWorkspaceId.Name);
-            var destItemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.DestinationLakehouseItemId.Name);
-
-            if (string.Equals(status, "Enabled", StringComparison.OrdinalIgnoreCase))
-            {
-                if (string.IsNullOrWhiteSpace(destWorkspaceId))
-                    result.AddError("--destination-lakehouse-workspace-id is required when --status is Enabled.");
-                else if (!Guid.TryParse(destWorkspaceId, out _))
-                    result.AddError("--destination-lakehouse-workspace-id must be a valid GUID.");
-
-                if (string.IsNullOrWhiteSpace(destItemId))
-                    result.AddError("--destination-lakehouse-item-id is required when --status is Enabled.");
-                else if (!Guid.TryParse(destItemId, out _))
-                    result.AddError("--destination-lakehouse-item-id must be a valid GUID.");
-            }
-            else if (string.Equals(status, "Disabled", StringComparison.OrdinalIgnoreCase))
-            {
-                if (!string.IsNullOrWhiteSpace(destWorkspaceId) || !string.IsNullOrWhiteSpace(destItemId))
-                    result.AddError("Destination options must be omitted when --status is Disabled.");
-            }
-        });
-    }
-
-    protected override DiagnosticsModifyOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        var workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId) ? workspaceId! : workspace ?? string.Empty;
-        options.Status = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DiagnosticsStatus.Name);
-        options.DestinationLakehouseWorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DestinationLakehouseWorkspaceId.Name);
-        options.DestinationLakehouseItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DestinationLakehouseItemId.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("Workspace identifier is required. Provide --workspace or --workspace-id.");
         }
 
-        var options = BindOptions(parseResult);
+        var effectiveValue = !string.IsNullOrWhiteSpace(options.WorkspaceId) ? options.WorkspaceId : options.Workspace;
+        if (!string.IsNullOrWhiteSpace(effectiveValue) && !Guid.TryParse(effectiveValue, out _))
+        {
+            validationResult.Errors.Add("Workspace must be a valid GUID. Name-based resolution is not supported for this command.");
+        }
+
+        if (!string.Equals(options.Status, "Enabled", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(options.Status, "Disabled", StringComparison.OrdinalIgnoreCase))
+        {
+            validationResult.Errors.Add("--status must be 'Enabled' or 'Disabled'.");
+        }
+
+        if (string.Equals(options.Status, "Enabled", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.IsNullOrWhiteSpace(options.DestinationLakehouseWorkspaceId))
+            {
+                validationResult.Errors.Add("--destination-lakehouse-workspace-id is required when --status is Enabled.");
+            }
+            else if (!Guid.TryParse(options.DestinationLakehouseWorkspaceId, out _))
+            {
+                validationResult.Errors.Add("--destination-lakehouse-workspace-id must be a valid GUID.");
+            }
+
+            if (string.IsNullOrWhiteSpace(options.DestinationLakehouseItemId))
+            {
+                validationResult.Errors.Add("--destination-lakehouse-item-id is required when --status is Enabled.");
+            }
+            else if (!Guid.TryParse(options.DestinationLakehouseItemId, out _))
+            {
+                validationResult.Errors.Add("--destination-lakehouse-item-id must be a valid GUID.");
+            }
+        }
+        else if (string.Equals(options.Status, "Disabled", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!string.IsNullOrWhiteSpace(options.DestinationLakehouseWorkspaceId) ||
+                !string.IsNullOrWhiteSpace(options.DestinationLakehouseItemId))
+            {
+                validationResult.Errors.Add("Destination options must be omitted when --status is Disabled.");
+            }
+        }
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DiagnosticsModifyOptions options, CancellationToken cancellationToken)
+    {
+        var workspaceId = string.IsNullOrWhiteSpace(options.WorkspaceId) ? options.Workspace : options.WorkspaceId;
         try
         {
             var settings = new OneLakeDiagnosticSettings { Status = options.Status };
@@ -123,12 +102,12 @@ public sealed class DiagnosticsModifyCommand(
                 };
             }
 
-            await _oneLakeService.ModifyDiagnosticsAsync(options.WorkspaceId!, settings, cancellationToken);
+            await _oneLakeService.ModifyDiagnosticsAsync(workspaceId!, settings, cancellationToken);
             context.Response.Results = ResponseResult.Create(new("Diagnostics settings modified successfully."), OneLakeJsonContext.Default.DiagnosticsModifyCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error modifying OneLake diagnostics. Workspace: {Workspace}.", options.WorkspaceId);
+            _logger.LogError(ex, "Error modifying OneLake diagnostics. Workspace: {Workspace}.", workspaceId);
             HandleException(context, ex);
         }
 
@@ -137,4 +116,3 @@ public sealed class DiagnosticsModifyCommand(
 
     public sealed record DiagnosticsModifyCommandResult(string Message);
 }
-

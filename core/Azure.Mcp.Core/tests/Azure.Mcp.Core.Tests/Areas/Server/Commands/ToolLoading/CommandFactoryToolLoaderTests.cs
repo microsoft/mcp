@@ -1,3 +1,4 @@
+#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -27,7 +28,7 @@ public class CommandFactoryToolLoaderTests
         var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
         var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ToolLoaderOptions());
 
-        var toolLoader = new CommandFactoryToolLoader(serviceProvider, commandFactory, toolLoaderOptions, logger);
+        var toolLoader = new CommandFactoryToolLoader(commandFactory, toolLoaderOptions, logger);
         return (toolLoader, commandFactory);
     }
 
@@ -347,10 +348,7 @@ public class CommandFactoryToolLoaderTests
         var (toolLoader, _) = CreateToolLoader();
 
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
-        {
-            Params = null
-        };
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, null!);
 
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
@@ -626,7 +624,7 @@ public class CommandFactoryToolLoaderTests
         var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
         commandMap["fake-enum-get"] = fakeCommand;
 
-        var toolLoader = new CommandFactoryToolLoader(serviceProvider, commandFactory, toolLoaderOptions, logger);
+        var toolLoader = new CommandFactoryToolLoader(commandFactory, toolLoaderOptions, logger);
         var request = CreateRequest();
 
         // Act
@@ -726,7 +724,7 @@ public class CommandFactoryToolLoaderTests
         var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
         commandMap["fake-secret-get"] = fakeCommand;
 
-        var toolLoader = new CommandFactoryToolLoader(serviceProvider, commandFactory, toolLoaderOptions, logger);
+        var toolLoader = new CommandFactoryToolLoader(commandFactory, toolLoaderOptions, logger);
         var request = CreateRequest();
 
         // Act

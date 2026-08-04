@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Quota.Models;
-using Azure.Mcp.Tools.Quota.Options;
 using Azure.Mcp.Tools.Quota.Options.Usage;
 using Azure.Mcp.Tools.Quota.Services;
 using Azure.Mcp.Tools.Quota.Services.Util;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Usage;
@@ -25,35 +24,23 @@ namespace Azure.Mcp.Tools.Quota.Commands.Usage;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class CheckCommand(ILogger<CheckCommand> logger, IQuotaService quotaService) : SubscriptionCommand<CheckOptions>()
+public sealed class CheckCommand(ILogger<CheckCommand> logger, IQuotaService quotaService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<CheckOptions, CheckCommand.UsageCheckCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<CheckCommand> _logger = logger;
     private readonly IQuotaService _quotaService = quotaService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(CheckOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(QuotaOptionDefinitions.QuotaCheck.Region);
-        command.Options.Add(QuotaOptionDefinitions.QuotaCheck.ResourceTypes);
-    }
-
-    protected override CheckOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Region = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.QuotaCheck.Region.Name) ?? string.Empty;
-        options.ResourceTypes = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.QuotaCheck.ResourceTypes.Name) ?? string.Empty;
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        base.ValidateOptions(options, validationResult);
+        if (string.IsNullOrWhiteSpace(options.ResourceTypes) || !options.ResourceTypes.Split(',').Any(rt => !string.IsNullOrWhiteSpace(rt)))
         {
-            return context.Response;
+            validationResult.Errors.Add("Resource types cannot be empty.");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, CheckOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             context.Activity?
@@ -79,10 +66,9 @@ public sealed class CheckCommand(ILogger<CheckCommand> logger, IQuotaService quo
             _logger.LogError(ex, "Error checking Azure resource usage");
             HandleException(context, ex);
         }
-        return context.Response;
 
+        return context.Response;
     }
 
-    public record UsageCheckCommandResult(Dictionary<string, List<UsageInfo>> UsageInfo);
-
+    public sealed record UsageCheckCommandResult(Dictionary<string, List<UsageInfo>> UsageInfo);
 }

@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tools.EventHubs.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.EventHubs.Options.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
@@ -34,42 +33,19 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<NamespaceDeleteOptions>
+public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logger, IEventHubsService service, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<NamespaceDeleteOptions, NamespaceDeleteCommand.NamespaceDeleteCommandResult>(subscriptionResolver)
 {
-
     private readonly IEventHubsService _service = service;
     private readonly ILogger<NamespaceDeleteCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, NamespaceDeleteOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
-    }
-
-    protected override NamespaceDeleteOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var success = await _service.DeleteNamespaceAsync(
-                options.Namespace!,
-                options.ResourceGroup!,
+                options.Namespace,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
@@ -93,5 +69,5 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
         return context.Response;
     }
 
-    internal record NamespaceDeleteCommandResult(bool Success, string Message);
+    public sealed record NamespaceDeleteCommandResult(bool Success, string Message);
 }

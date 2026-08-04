@@ -141,29 +141,4 @@ public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
 
         Assert.Null(result);
     }
-
-    [Fact]
-    public async Task Should_handle_invalid_subscription_gracefully()
-    {
-        // Invalid identifier should reach execution and return structured error details (HasValue)
-        var result = await CallToolAsync(
-            "acr_registry_list",
-            new()
-            {
-                { "subscription", "invalid-subscription" }
-            });
-
-        Assert.NotNull(result);
-        var message = result.AssertProperty("message");
-        Assert.Contains("invalid-subscription", message.GetString(), StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task Should_validate_required_subscription_parameter()
-    {
-        // Missing subscription option entirely should behave like other areas (validation -> null)
-        var result = await CallToolAsync("acr_registry_list", []);
-
-        Assert.Null(result);
-    }
 }

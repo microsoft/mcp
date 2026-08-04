@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Xunit;
@@ -10,7 +9,7 @@ namespace Microsoft.Mcp.Core.Tests.Commands;
 
 /// <summary>
 /// Tests for <see cref="CommandMetadataAttribute"/>, <see cref="CommandMetadataAttribute.ToToolMetadata"/>,
-/// and the metadata validation logic in <see cref="BaseCommand{TOptions}"/>.
+/// and the metadata validation logic in <see cref="BaseCommand{TOptions, TResult}"/>.
 /// </summary>
 public sealed class BaseCommandMetadataTests
 {
@@ -27,21 +26,17 @@ public sealed class BaseCommandMetadataTests
         ReadOnly = true,
         Secret = true,
         LocalRequired = true)]
-    private sealed class AttributeBasedCommand : BaseCommand<EmptyOptions>
+    private sealed class AttributeBasedCommand : BaseCommand<EmptyOptions, string>
     {
-        protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
-
         public override Task<CommandResponse> ExecuteAsync(
-            CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+            CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
             => Task.FromResult(context.Response);
     }
 
-    private sealed class NoMetadataCommand : BaseCommand<EmptyOptions>
+    private sealed class NoMetadataCommand : BaseCommand<EmptyOptions, string>
     {
-        protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
-
         public override Task<CommandResponse> ExecuteAsync(
-            CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+            CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
             => Task.FromResult(context.Response);
     }
 

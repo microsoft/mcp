@@ -28,5 +28,10 @@ public abstract class SubscriptionCommand<
     {
         // Always post-process subscription via resolver (env var / CLI profile fallback)
         options.Subscription = _subscriptionResolver.ResolveSubscription(options.Subscription);
+        if (!string.IsNullOrEmpty(options.Subscription))
+        {
+            // Trim any surrounding quotes that may have been included in the input
+            options.Subscription = options.Subscription.Trim('"', '\'');
+        }
     }
 }

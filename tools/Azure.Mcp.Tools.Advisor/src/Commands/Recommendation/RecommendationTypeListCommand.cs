@@ -2,12 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Net.Http;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
@@ -32,62 +30,32 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class RecommendationTypeListCommand(
-    ILogger<RecommendationTypeListCommand> logger,
-    IAdvisorService advisorService)
-    : GlobalCommand<RecommendationTypeListOptions>
+public sealed class RecommendationTypeListCommand(ILogger<RecommendationTypeListCommand> logger, IAdvisorService advisorService)
+    : AuthenticatedCommand<RecommendationTypeListOptions, RecommendationTypeListCommand.RecommendationTypeListResult>()
 {
-    private static readonly string[] AllowedImpacts = ["High", "Medium", "Low"];
+    private static readonly string[] s_allowedImpacts = ["High", "Medium", "Low"];
 
     private readonly ILogger<RecommendationTypeListCommand> _logger = logger;
     private readonly IAdvisorService _advisorService = advisorService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(RecommendationTypeListOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(RecommendationTypeListOptionDefinitions.ResourceType);
-        command.Options.Add(RecommendationTypeListOptionDefinitions.Impact);
-        command.Options.Add(RecommendationTypeListOptionDefinitions.Category);
+        base.ValidateOptions(options, validationResult);
 
-        command.Validators.Add(commandResult =>
+        if (options.Impact != null)
         {
-            if (!commandResult.TryGetValue(RecommendationTypeListOptionDefinitions.Impact, out string? value))
+            var normalized = options.Impact.Trim();
+            if (!string.IsNullOrEmpty(normalized) &&
+                !s_allowedImpacts.Contains(normalized, StringComparer.OrdinalIgnoreCase))
             {
-                return;
+                validationResult.Errors.Add(
+                    $"Invalid --impact value '{options.Impact}'. Allowed values: {string.Join(", ", s_allowedImpacts)}.");
             }
-
-            var normalized = value?.Trim();
-            if (string.IsNullOrEmpty(normalized))
-            {
-                return;
-            }
-
-            if (!AllowedImpacts.Contains(normalized, StringComparer.OrdinalIgnoreCase))
-            {
-                commandResult.AddError(
-                    $"Invalid --impact value '{value}'. Allowed values: {string.Join(", ", AllowedImpacts)}.");
-            }
-        });
-    }
-
-    protected override RecommendationTypeListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceType = parseResult.GetValueOrDefault<string>(RecommendationTypeListOptionDefinitions.ResourceType.Name);
-        options.Impact = parseResult.GetValueOrDefault<string>(RecommendationTypeListOptionDefinitions.Impact.Name);
-        options.Category = parseResult.GetValueOrDefault<string>(RecommendationTypeListOptionDefinitions.Category.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecommendationTypeListOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             var recommendationTypes = await _advisorService.ListRecommendationTypesAsync(
@@ -98,7 +66,7 @@ public sealed class RecommendationTypeListCommand(
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new RecommendationTypeListResult(recommendationTypes ?? []),
+                new(recommendationTypes ?? []),
                 AdvisorJsonContext.Default.RecommendationTypeListResult);
         }
         catch (Exception ex)
@@ -122,11 +90,5 @@ public sealed class RecommendationTypeListCommand(
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        HttpRequestException httpEx when httpEx.StatusCode.HasValue => httpEx.StatusCode.Value,
-        _ => base.GetStatusCode(ex)
-    };
-
-    internal record RecommendationTypeListResult(List<Models.RecommendationType> RecommendationTypes);
+    public sealed record RecommendationTypeListResult(List<Models.RecommendationType> RecommendationTypes);
 }

@@ -378,8 +378,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "admin-username", "azureuser" },
                 { "admin-password", "WinTestP@ss789!" },
                 { "image", "Win2022Datacenter" },
-                { "instance-count", 2 },
-                { "os-disk-size-gb", 40 }
+                { "instance-count", "2" },
+                { "os-disk-size-gb", "40" }
             });
 
         var vmss = result.AssertProperty("Vmss");
@@ -414,7 +414,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "admin-username", "azureuser" },
                 { "admin-password", "LinuxTestP@ss321!" },
                 { "image", "Ubuntu2404" },
-                { "instance-count", 1 },
+                { "instance-count", "1" },
                 { "upgrade-policy", "Manual" },
                 { "os-disk-type", "StandardSSD_LRS" }
             });
