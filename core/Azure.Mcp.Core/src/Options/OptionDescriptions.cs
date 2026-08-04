@@ -11,7 +11,7 @@ public static class OptionDescriptions
 {
     public const string Subscription =
         "The Azure subscription GUID identifier or display name. " +
-        "If not specified, the logged in Azure CLI profile subscription or AZURE_SUBSCRIPTION_ID environment variable will be used.";
+        "If not specified, the Azure CLI profile default subscription or AZURE_SUBSCRIPTION_ID environment variable will be used.";
 
     public const string Tenant = "The Microsoft Entra ID tenant GUID identifier or display name.";
 
