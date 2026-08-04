@@ -3180,7 +3180,7 @@ azmcp monitor metrics query --subscription <subscription> \
 azmcp monitor webtests createorupdate --subscription <subscription> \
                                       --resource-group <resource-group> \
                                       --webtest-resource <webtest-resource-name> \
-                                      [--appinsights-component <component-name>] \
+                                      [--appinsights-component <component-resource-id>] \
                                       [--location <location>] \
                                       [--webtest-locations <locations>] \
                                       [--request-url <url>] \
