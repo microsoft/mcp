@@ -129,7 +129,7 @@ stimuli:
             Azure are present. Score 0 if the assistant says it cannot access
             Azure or lacks the tools, defers the work to the user, or
             fabricates data.
-            scoring: binary
+          scoring: binary
 
 scoring:
   # Outcome-based: the single `prompt` judge decides pass/fail, identically for
