@@ -558,7 +558,7 @@ azmcp appconfig kv set --subscription <subscription> \
 
 ```bash
 # Diagnose resource using Azure App Lens
-# Only --resource and --question are required; all other parameters help disambiguate when multiple resources share the same name
+# Only --resource and --question are required; --subscription, --resource-group, and --resource-type are optional and used to narrow down results when multiple resources share the same name; --tenant is optional
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp applens resource diagnose --resource <resource> \
                                 --question <question> \
