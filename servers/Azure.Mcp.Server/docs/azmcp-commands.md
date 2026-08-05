@@ -367,8 +367,7 @@ azmcp advisor metadata list [--language <language>] \
                             [--category <Cost|HighAvailability|Security|Performance|OperationalExcellence>] \
                             [--sub-category <sub-category>] \
                             [--tracking-id <tracking-id>] \
-                            [--retirement-date <eq|lt|le|gt|ge>:<yyyy-MM-dd>] \
-                            [--tenant <tenant>]
+                            [--retirement-date <eq|lt|le|gt|ge>:<yyyy-MM-dd>]
 ```
 
 ### Azure AI Search Operations

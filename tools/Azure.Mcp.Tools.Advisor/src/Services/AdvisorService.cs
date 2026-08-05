@@ -73,12 +73,11 @@ public class AdvisorService(
     public async Task<ResourceQueryResults<RecommendationMetadata>> ListRecommendationMetadataAsync(
         string language,
         RecommendationMetadataFilters? filters,
-        string? tenant,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(language);
 
-        var tenantResource = await GetTenantResourceAsync(tenant, cancellationToken);
+        var tenantResource = await GetTenantResourceAsync(cancellationToken);
         var queryContent = new ResourceQueryContent(
             BuildMetadataListQuery(language, filters));
 
@@ -280,9 +279,7 @@ public class AdvisorService(
             DocumentLink: action.DocumentLink,
             BladeName: action.BladeName);
 
-    private async Task<TenantResource> GetTenantResourceAsync(
-        string? tenant,
-        CancellationToken cancellationToken)
+    private async Task<TenantResource> GetTenantResourceAsync(CancellationToken cancellationToken)
     {
         var tenants = await TenantService.GetTenants(cancellationToken);
         if (tenants.Count == 0)
@@ -290,15 +287,7 @@ public class AdvisorService(
             throw new InvalidOperationException("No accessible Azure tenants were found.");
         }
 
-        if (string.IsNullOrWhiteSpace(tenant))
-        {
-            return tenants[0];
-        }
-
-        var tenantId = await ResolveTenantIdAsync(tenant, cancellationToken);
-        return tenants.FirstOrDefault(candidate =>
-            candidate.Data.TenantId?.ToString().Equals(tenantId, StringComparison.OrdinalIgnoreCase) == true)
-            ?? throw new InvalidOperationException($"No accessible tenant found for tenant '{tenant}'.");
+        return tenants[0];
     }
 
     public async Task<RecommendationSummary> SummarizeRecommendationsAsync(

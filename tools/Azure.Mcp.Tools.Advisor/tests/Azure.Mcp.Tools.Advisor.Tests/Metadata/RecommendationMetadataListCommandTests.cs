@@ -60,6 +60,7 @@ public class RecommendationMetadataListCommandTests
     [InlineData("--category OperationalExcellence --retirement-date ge:2026-03-31", true)]
     [InlineData("--category OperationalExcellence --sub-category ServiceUpgradeAndRetirement", true)]
     [InlineData("--category HighAvailability --retirement-date ge:2026-03-31", true)]
+    [InlineData("--tenant tenant-id", false)]
     [InlineData("--impact Critical", false)]
     [InlineData("--language Klingon", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
@@ -67,7 +68,6 @@ public class RecommendationMetadataListCommandTests
         Service.ListRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<RecommendationMetadataFilters?>(),
-            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<RecommendationMetadata>([], false));
 
@@ -83,7 +83,6 @@ public class RecommendationMetadataListCommandTests
         Service.ListRecommendationMetadataAsync(
             "en",
             Arg.Any<RecommendationMetadataFilters?>(),
-            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<RecommendationMetadata>([expected], true));
 
@@ -107,7 +106,6 @@ public class RecommendationMetadataListCommandTests
         Service.ListRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<RecommendationMetadataFilters?>(),
-            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<RecommendationMetadata>([], false));
 
@@ -118,8 +116,7 @@ public class RecommendationMetadataListCommandTests
             "--category", "highavailability",
             "--sub-category", "ServiceUpgradeAndRetirement",
             "--tracking-id", "QNY1-HB8",
-            "--retirement-date", "ge:2026-03-31",
-            "--tenant", "tenant-id");
+            "--retirement-date", "ge:2026-03-31");
 
         await Service.Received(1).ListRecommendationMetadataAsync(
             "en",
@@ -131,7 +128,6 @@ public class RecommendationMetadataListCommandTests
                 filters.TrackingId == "QNY1-HB8" &&
                 filters.RetirementDateOperator == "ge" &&
                 filters.RetirementDate == new DateOnly(2026, 3, 31)),
-            "tenant-id",
             Arg.Any<CancellationToken>());
     }
 
@@ -145,7 +141,6 @@ public class RecommendationMetadataListCommandTests
         Service.ListRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<RecommendationMetadataFilters?>(),
-            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<RecommendationMetadata>([], false));
 
@@ -154,7 +149,6 @@ public class RecommendationMetadataListCommandTests
         await Service.Received(1).ListRecommendationMetadataAsync(
             expected,
             Arg.Any<RecommendationMetadataFilters?>(),
-            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -164,7 +158,6 @@ public class RecommendationMetadataListCommandTests
         Service.ListRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<RecommendationMetadataFilters?>(),
-            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<RecommendationMetadata>([], false));
 
@@ -174,7 +167,6 @@ public class RecommendationMetadataListCommandTests
             "en",
             Arg.Is<RecommendationMetadataFilters>(filters =>
                 filters.Impact == "Medium"),
-            null,
             Arg.Any<CancellationToken>());
     }
 
@@ -184,7 +176,6 @@ public class RecommendationMetadataListCommandTests
         Service.ListRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<RecommendationMetadataFilters?>(),
-            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<RecommendationMetadata>([], false));
 
@@ -207,7 +198,6 @@ public class RecommendationMetadataListCommandTests
         await Service.DidNotReceive().ListRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<RecommendationMetadataFilters?>(),
-            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -224,7 +214,6 @@ public class RecommendationMetadataListCommandTests
         await Service.DidNotReceive().ListRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<RecommendationMetadataFilters?>(),
-            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -234,7 +223,6 @@ public class RecommendationMetadataListCommandTests
         Service.ListRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<RecommendationMetadataFilters?>(),
-            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -251,7 +239,6 @@ public class RecommendationMetadataListCommandTests
         Service.ListRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<RecommendationMetadataFilters?>(),
-            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(
                 (int)HttpStatusCode.Forbidden,
