@@ -267,7 +267,7 @@ Optional properties are omitted, not written as `null`. Timestamps use ISO 8601
 UTC strings.
 
 The normative TypeScript definitions are in
-[`reporter/src/report.ts`](./reporter/src/report.ts). The following JSONC
+[`reporter/src/report.ts`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/tests/Vally/reporter/src/report.ts). The following JSONC
 describes the version 2 per-experiment artifact, `azure-mcp-report.json`:
 
 ```jsonc
