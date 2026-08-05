@@ -318,7 +318,7 @@ No script changes are needed - the runner discovers new evals by convention.
 ### Recommended: use the `create-vally-tool-experiments` skill
 
 The fastest, most consistent way to add a new tool experiment is the
-[`create-vally-tool-experiments`](../../../../.github/skills/create-vally-tool-experiments/SKILL.md)
+[`create-vally-tool-experiments`](https://github.com/microsoft/mcp/blob/main/.github/skills/create-vally-tool-experiments/SKILL.md)
 skill (GitHub Copilot). Ask Copilot to create an experiment for the target
 tool (e.g. *"create vally tool experiments for the remaining eventhubs
 tools"*) and it will, per tool:
