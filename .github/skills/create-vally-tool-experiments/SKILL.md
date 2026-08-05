@@ -177,6 +177,6 @@ Gate — do not consider the experiment done until:
       checks" section) — existing areas need no README changes since the
       runner discovers evals by convention.
 
-Report the comparison table (`VALUABLE` / `REGRESSION` / `BOTH PASS` /
-`INCONCLUSIVE` per stimulus) that `Invoke-VallyEval.ps1` prints as the result
-of this skill.
+Report the pairwise comparison table (`VALUABLE` / `REGRESSION` /
+`CANDIDATE AND BASELINE PASS` / `INCONCLUSIVE` per stimulus) and the best
+variant that `Invoke-VallyEval.ps1` prints as the result of this skill.
