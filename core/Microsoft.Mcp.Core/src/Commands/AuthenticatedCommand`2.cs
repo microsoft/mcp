@@ -18,7 +18,7 @@ public abstract class AuthenticatedCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult> : BaseCommand<TOptions, TResult>
     where TOptions : class
 {
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         // CredentialUnavailableException derives from AuthenticationFailedException, so it must be
         // matched first to surface a clear, actionable message for the common "not signed in" case.
@@ -37,7 +37,7 @@ public abstract class AuthenticatedCommand<
         _ => ex.Message  // Just return the actual exception message
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    public override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ArgumentException => HttpStatusCode.BadRequest,
         KeyNotFoundException => HttpStatusCode.NotFound,

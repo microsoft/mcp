@@ -288,7 +288,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
     /// </summary>
     /// <param name="ex">The exception to format an error message for.</param>
     /// <returns>A user-friendly error message.</returns>
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         ArgumentException argEx when argEx.Message.Contains("Invalid transport") =>
             "Invalid transport option specified. Use --transport stdio for the supported transport mechanism.",

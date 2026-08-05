@@ -88,7 +88,7 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger, IComput
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "VMSS not found. Verify the VMSS name, resource group, and that you have access.",

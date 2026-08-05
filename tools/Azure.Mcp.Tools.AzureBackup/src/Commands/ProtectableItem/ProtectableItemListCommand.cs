@@ -82,12 +82,5 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        ArgumentException argEx => argEx.Message,
-        RequestFailedException reqEx => reqEx.Message,
-        _ => base.GetErrorMessage(ex)
-    };
-
     public sealed record ProtectableItemListCommandResult(List<ProtectableItemInfo> Items);
 }

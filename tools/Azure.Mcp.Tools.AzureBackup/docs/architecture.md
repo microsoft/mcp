@@ -442,7 +442,7 @@ Key shared options:
 Commands implement `GetErrorMessage` and `GetStatusCode` overrides:
 
 ```csharp
-protected override string GetErrorMessage(Exception ex) => ex switch
+public override string GetErrorMessage(Exception ex) => ex switch
 {
     RequestFailedException { Status: 404 } => "Resource not found...",
     RequestFailedException { Status: 403 } => "Authorization failed...",

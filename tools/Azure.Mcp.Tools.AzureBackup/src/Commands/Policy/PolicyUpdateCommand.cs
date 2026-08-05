@@ -62,7 +62,7 @@ public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAz
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         ArgumentException argEx => argEx.Message,
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
@@ -71,13 +71,6 @@ public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAz
             $"Authorization failed updating the policy. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     public sealed record PolicyUpdateCommandResult(OperationResult Result);

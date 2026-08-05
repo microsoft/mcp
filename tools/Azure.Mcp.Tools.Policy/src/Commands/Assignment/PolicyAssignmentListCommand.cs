@@ -61,7 +61,7 @@ public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListComm
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed. Ensure you have the 'Reader' role or higher on the subscription or scope. Details: {reqEx.Message}",

@@ -417,7 +417,7 @@ public sealed class AccountGetCommand(
 ### Standard Error Response Format
 ```csharp
 // Override error handling for service-specific context
-protected override string GetErrorMessage(Exception ex) => ex switch
+public override string GetErrorMessage(Exception ex) => ex switch
 {
     Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
         "Resource not found. Verify the resource exists and you have access.",
@@ -428,11 +428,11 @@ protected override string GetErrorMessage(Exception ex) => ex switch
     _ => base.GetErrorMessage(ex)
 };
 
-protected override int GetStatusCode(Exception ex) => ex switch
+public override HttpStatusCode GetStatusCode(Exception ex) => ex switch
 {
-    Azure.RequestFailedException reqEx => reqEx.Status,
-    Azure.Identity.AuthenticationFailedException => 401,
-    ValidationException => 400,
+    Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
+    Azure.Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
+    ValidationException => HttpStatusCode.BadRequest,
     _ => base.GetStatusCode(ex)
 };
 ```

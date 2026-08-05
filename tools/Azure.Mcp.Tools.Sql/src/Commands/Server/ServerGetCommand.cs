@@ -73,7 +73,7 @@ public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCo
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "SQL server not found. Verify the server name, resource group, and that you have access.",

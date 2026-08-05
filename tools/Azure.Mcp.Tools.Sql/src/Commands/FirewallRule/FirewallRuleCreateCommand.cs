@@ -111,7 +111,7 @@ public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<Fi
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "SQL server not found. Verify the server name, resource group, and that you have access.",

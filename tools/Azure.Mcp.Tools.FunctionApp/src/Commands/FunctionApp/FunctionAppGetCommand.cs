@@ -77,7 +77,7 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger,
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Function App not found. Verify the app name, resource group, and subscription, and ensure you have access.",

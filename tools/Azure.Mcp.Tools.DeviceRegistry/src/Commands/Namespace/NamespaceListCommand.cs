@@ -64,7 +64,7 @@ public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger, I
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Resource not found. Verify the subscription and resource group exist and you have access.",

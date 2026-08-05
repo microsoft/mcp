@@ -15,13 +15,13 @@ public abstract class BaseCosmosCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<TOptions, TResult>(subscriptionResolver) where TOptions : class, ISubscriptionOption
 {
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         CosmosException cosmosEx => cosmosEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    public override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         CosmosException cosmosEx => cosmosEx.StatusCode,
         _ => base.GetStatusCode(ex)

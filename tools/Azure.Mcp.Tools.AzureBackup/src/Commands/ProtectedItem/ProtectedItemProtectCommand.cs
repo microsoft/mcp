@@ -127,7 +127,7 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         ArgumentException argEx => argEx.Message,
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>

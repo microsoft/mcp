@@ -67,7 +67,7 @@ public sealed class DatabaseCreateCommand(ISqlService sqlService, ILogger<Databa
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "Database already exists with the specified name. Choose a different database name or use the update command.",

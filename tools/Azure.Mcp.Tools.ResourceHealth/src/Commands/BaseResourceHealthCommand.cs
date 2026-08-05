@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.ResourceHealth.Commands;
 public abstract class BaseResourceHealthCommand<[DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions, TResult>(ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<TOptions, TResult>(subscriptionResolver) where TOptions : class, ISubscriptionOption
 {
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         ResourceHealthRequestFailedException { StatusCode: HttpStatusCode.Conflict } requestFailedEx =>
             $"Azure Resource Health returned Conflict. The subscription may need the Microsoft.ResourceHealth provider registered, or the provider may still be registering. Details: {requestFailedEx.ErrorMessage ?? requestFailedEx.Message}",
@@ -23,7 +23,7 @@ public abstract class BaseResourceHealthCommand<[DynamicallyAccessedMembers(Trim
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    public override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ResourceHealthRequestFailedException requestFailedEx => requestFailedEx.StatusCode,
         _ => base.GetStatusCode(ex)

@@ -70,7 +70,7 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger, IComput
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed. Verify you have appropriate permissions to delete the VMSS. Details: {reqEx.Message}",

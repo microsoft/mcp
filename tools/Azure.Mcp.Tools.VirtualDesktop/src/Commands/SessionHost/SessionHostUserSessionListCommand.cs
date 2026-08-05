@@ -84,7 +84,7 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException rfEx when rfEx.Status == (int)HttpStatusCode.NotFound =>
             "Session host or hostpool not found. Verify the names and that you have access to them.",

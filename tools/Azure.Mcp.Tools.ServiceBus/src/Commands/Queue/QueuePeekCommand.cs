@@ -57,14 +57,14 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger, IServiceB
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         ServiceBusException exception when exception.Reason == ServiceBusFailureReason.MessagingEntityNotFound =>
             $"Queue not found. Please check the queue name and try again.",
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    public override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ServiceBusException sbEx when sbEx.Reason == ServiceBusFailureReason.MessagingEntityNotFound => HttpStatusCode.NotFound,
         _ => base.GetStatusCode(ex)

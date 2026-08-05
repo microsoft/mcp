@@ -124,7 +124,7 @@ public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> l
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         ArgumentException argEx => $"Invalid parameter: {argEx.Message}",
         UnauthorizedAccessException => "Access denied. Check Azure AI Services credentials and permissions.",
@@ -133,7 +133,7 @@ public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> l
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    public override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ArgumentException => HttpStatusCode.BadRequest,
         UnauthorizedAccessException => HttpStatusCode.Unauthorized,

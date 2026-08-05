@@ -103,7 +103,7 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Virtual machine scale set or instance not found. Verify the VMSS name, instance ID, resource group, and that you have access.",

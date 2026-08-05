@@ -68,7 +68,7 @@ public sealed class ProtectedItemUndeleteCommand(ILogger<ProtectedItemUndeleteCo
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         ArgumentException argEx => argEx.Message,
         KeyNotFoundException => "Soft-deleted protected item not found. Verify the datasource ID and vault.",

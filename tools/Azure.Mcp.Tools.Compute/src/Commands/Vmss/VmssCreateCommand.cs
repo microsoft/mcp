@@ -116,7 +116,7 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger, IComput
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    public override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Resource not found. Verify the resource group exists and you have access.",
