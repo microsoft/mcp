@@ -48,8 +48,7 @@ public class IoTHubDeviceService(
         catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
         {
             throw new TimeoutException(
-                $"The IoT Hub '{operationName}' operation timed out after {operationTimeout.TotalSeconds:N0} seconds. " +
-                "The hub may be unavailable or the request too large. Try again, narrow your query, or reduce --max-count.");
+                $"The IoT Hub '{operationName}' operation timed out after {operationTimeout.TotalSeconds:N0} seconds.");
         }
     }
 
