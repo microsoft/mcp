@@ -290,6 +290,41 @@ public class AdvisorService(
         return tenants[0];
     }
 
+    public async Task<RecommendationMetadata?> GetRecommendationMetadataAsync(
+        string recommendationTypeId,
+        string language,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(recommendationTypeId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(language);
+
+        var tenantResource = await GetTenantResourceAsync(cancellationToken);
+
+        var query =
+            "advisorresources " +
+            "| where type =~ 'microsoft.advisor/metadata' " +
+            $"and tostring(properties.recommendationTypeId) =~ '{EscapeKqlString(recommendationTypeId)}' " +
+            $"and tostring(properties.language) =~ '{EscapeKqlString(language)}' " +
+            "| limit 1";
+
+        var queryContent = new ResourceQueryContent(query);
+
+        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
+        if (result == null || result.Count == 0)
+        {
+            return null;
+        }
+
+        using var jsonDocument = JsonDocument.Parse(result.Data);
+        var dataArray = jsonDocument.RootElement;
+        if (dataArray.ValueKind != JsonValueKind.Array || dataArray.GetArrayLength() == 0)
+        {
+            return null;
+        }
+
+        return ConvertToRecommendationMetadataModel(dataArray[0]);
+    }
+
     public async Task<RecommendationSummary> SummarizeRecommendationsAsync(
         string subscription,
         string? resourceGroup,
