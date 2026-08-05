@@ -33,4 +33,9 @@ public interface IAdvisorService
         string? impact,
         string? category,
         CancellationToken cancellationToken = default);
+
+    Task<RecommendationMetadata?> GetRecommendationMetadataAsync(
+        string recommendationTypeId,
+        string language,
+        CancellationToken cancellationToken = default);
 }

@@ -935,6 +935,7 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "List my Advisor recommendations"
 * "Apply Advisor recommendations to IaaC files"
 * "List all Advisor recommendation types from catalog"
+* "Get Advisor metadata for a recommendation type id"
 
 ### 🔎 Azure AI Search
 
