@@ -202,6 +202,7 @@ public class AdvisorService(
         ArgumentException.ThrowIfNullOrWhiteSpace(recommendationTypeId);
         ArgumentException.ThrowIfNullOrWhiteSpace(language);
 
+        // The Advisor metadata catalog is tenant-invariant, so any accessible tenant can be used for the query.
         var tenantResource = (await TenantService.GetTenants(cancellationToken)).FirstOrDefault()
             ?? throw new InvalidOperationException("No accessible tenants found.");
 
