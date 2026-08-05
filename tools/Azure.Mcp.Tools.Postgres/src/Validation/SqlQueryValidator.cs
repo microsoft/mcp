@@ -154,6 +154,12 @@ internal static class SqlQueryValidator
         // the standard pattern consumes the opening quote.
         var withoutStrings = Regex.Replace(decodedForValidation, "[uU]&'([^'\\\\]|\\\\.)*'|[eE]'([^'\\\\]|\\\\.|'')*'|'([^']|'')*'", "'str'", RegexOptions.Compiled, RegexHelper.DefaultRegexTimeout);
 
+        // The UESCAPE directive allows an alternate unicode escape character. Block this so that
+        // `SELECT U&"pg_slee!0070" UESCAPE '!' (10);` is blocked.
+        if (decodedForValidation.Contains('uescape', StringComparison.OrdinalIgnoreCase) {
+            throw new CommandValidationException("UESCAPE sequences are not allowed.")
+        }
+
         // Reject inline / block comments which can hide stacked statements or alter logic.
         if (withoutStrings.Contains("--", StringComparison.Ordinal) || withoutStrings.Contains("/*", StringComparison.Ordinal))
         {
