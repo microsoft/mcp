@@ -122,7 +122,7 @@ internal class CustomChainedCredential : TokenCredential
     private const string ClientIdEnvVarName = "AZURE_MCP_CLIENT_ID";
     private const string TokenCredentialsEnvVarName = "AZURE_TOKEN_CREDENTIALS";
 
-    private static bool ShouldUseOnlyBrokerCredential() => 
+    private static bool ShouldUseOnlyBrokerCredential() =>
         EnvironmentHelpers.GetEnvironmentVariableAsBool(OnlyUseBrokerCredentialEnvVarName);
 
     private static TokenCredential CreateCredential(
