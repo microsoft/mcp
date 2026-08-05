@@ -88,7 +88,6 @@ public sealed class RegistryToolLoader(
     /// <returns>The result of the tool call operation.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         if (request.Params == null)
         {
             var content = new TextContentBlock
@@ -102,6 +101,9 @@ public sealed class RegistryToolLoader(
                 IsError = true,
             };
         }
+
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request));
 
         // Initialize the tool client map if not already done
         await InitializeAsync(cancellationToken);
@@ -138,6 +140,10 @@ public sealed class RegistryToolLoader(
             };
         }
 
+        var toolId = McpHelper.GetToolIdFromMeta(kvp.Tool.Meta);
+        Activity.Current?.SetTag(TagName.ToolId, toolId)
+            .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(kvp.Tool));
+
         // Enforce read-only mode at execution time
         if (_options.Value.ReadOnly && kvp.Tool.Annotations?.ReadOnlyHint != true)
         {
@@ -150,7 +156,7 @@ public sealed class RegistryToolLoader(
             {
                 Content = [content],
                 IsError = true,
-            }, kvp.Tool.Meta);
+            }, toolId);
         }
 
         // Enforce HTTP mode restrictions at execution time
@@ -165,12 +171,13 @@ public sealed class RegistryToolLoader(
             {
                 Content = [content],
                 IsError = true,
-            }, kvp.Tool.Meta);
+            }, toolId);
         }
 
         // For MCP servers loaded from registry.json, the ToolArea is also its "server name".
         Activity.Current?.SetTag(TagName.ToolArea, kvp.ServerName)
             .SetTag(TagName.ToolName, request.Params.Name)
+            .SetTag(TagName.ToolSource, "external." + kvp.Client.ServerInfo.Name)
             .SetTag(TagName.IsServerCommandInvoked, true);
 
         var parameters = TransformArgumentsToDictionary(request.Params.Arguments);

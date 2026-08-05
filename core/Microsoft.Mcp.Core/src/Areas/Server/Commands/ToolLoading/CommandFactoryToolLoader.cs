@@ -74,7 +74,6 @@ public sealed class CommandFactoryToolLoader(
     /// <returns>The result of the tool call operation.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         if (request.Params == null)
         {
             var content = new TextContentBlock
@@ -88,6 +87,9 @@ public sealed class CommandFactoryToolLoader(
                 IsError = true,
             };
         }
+
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request));
 
         var toolName = request.Params.Name;
 
@@ -125,7 +127,9 @@ public sealed class CommandFactoryToolLoader(
                 IsError = true,
             };
         }
-        activity?.SetTag(TagName.ToolId, command.Id);
+        activity?.SetTag(TagName.ToolId, command.Id)
+            .SetTag(TagName.ToolSource, "internal")
+            .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(command));
 
         // Enforce read-only mode at execution time
         if (_options.Value.ReadOnly && !command.Metadata.ReadOnly)
