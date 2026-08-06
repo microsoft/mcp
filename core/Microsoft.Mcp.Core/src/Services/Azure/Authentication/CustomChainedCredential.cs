@@ -224,7 +224,7 @@ internal class CustomChainedCredential : TokenCredential
         return new ChainedTokenCredential([.. creds]);
     }
 
-    private static string s_tokenCacheName = "azure-mcp-msal.cache";
+    private const string TokenCacheName = "azure-mcp-msal.cache";
 
     private static TokenCredential CreateBrowserCredential(string? tenantId, AuthenticationRecord? authRecord)
     {
@@ -239,7 +239,7 @@ internal class CustomChainedCredential : TokenCredential
             AuthenticationRecord = authRecord,
             TokenCachePersistenceOptions = new TokenCachePersistenceOptions()
             {
-                Name = s_tokenCacheName,
+                Name = TokenCacheName,
             }
         };
 
@@ -499,7 +499,7 @@ internal class CustomChainedCredential : TokenCredential
         var deviceCodeOptions = new DeviceCodeCredentialOptions
         {
             TenantId = string.IsNullOrEmpty(tenantId) ? null : tenantId,
-            TokenCachePersistenceOptions = new TokenCachePersistenceOptions { Name = s_tokenCacheName }
+            TokenCachePersistenceOptions = new TokenCachePersistenceOptions { Name = TokenCacheName }
         };
 
         if (!string.IsNullOrEmpty(clientId))

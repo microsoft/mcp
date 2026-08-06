@@ -91,6 +91,12 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         Assert.Contains(toolNames, name => name.Contains("subscription", StringComparison.OrdinalIgnoreCase) && name.Contains("list", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(toolNames, name => name.Contains("group", StringComparison.OrdinalIgnoreCase) && name.Contains("list", StringComparison.OrdinalIgnoreCase));
 
+        var uniqueNames = toolNames.Distinct().ToList();
+
+        Assert.Equal(toolNames.Count, uniqueNames.Count);
+
+        Output.WriteLine($"Verified {toolNames.Count} unique tool names in default (namespace) mode");
+
         // Log for debugging
         Output.WriteLine($"Default mode (namespace) loaded {toolNames.Count} tools");
         foreach (var name in toolNames)
@@ -328,8 +334,9 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
             var isStorageOrKeyVault = toolName.Contains("documentation", StringComparison.OrdinalIgnoreCase) ||
                 toolName.Contains("storage", StringComparison.OrdinalIgnoreCase) ||
                 toolName.Contains("keyvault", StringComparison.OrdinalIgnoreCase);
-            var isUtilityTool = toolName.Contains("group", StringComparison.OrdinalIgnoreCase) ||
-                toolName.Contains("subscription", StringComparison.OrdinalIgnoreCase);
+            var isUtilityTool = toolName.Contains("group_list", StringComparison.OrdinalIgnoreCase) ||
+                toolName.Contains("group_resource_list", StringComparison.OrdinalIgnoreCase) ||
+                toolName.Contains("subscription_list", StringComparison.OrdinalIgnoreCase);
             Assert.True(isStorageOrKeyVault || isUtilityTool, $"Tool '{toolName}' should be related to documentation, keyvault, storage namespaces, or be a utility tool");
         });
 
@@ -530,29 +537,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         Assert.Contains(toolNames, name => name.Contains("subscription", StringComparison.OrdinalIgnoreCase));
 
         Output.WriteLine($"Invalid namespaces loaded {listResult.Count()} tools");
-    }
-
-    #endregion
-
-    #region Comparison Tests
-
-    [LiveTestOnly]
-    [Fact]
-    public async Task VerifyUniqueToolNames_InDefaultMode()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        var toolNames = listResult.Select(t => t.Name).ToList();
-        var uniqueNames = toolNames.Distinct().ToList();
-
-        Assert.Equal(toolNames.Count, uniqueNames.Count);
-
-        Output.WriteLine($"Verified {toolNames.Count} unique tool names in default (namespace) mode");
     }
 
     #endregion
