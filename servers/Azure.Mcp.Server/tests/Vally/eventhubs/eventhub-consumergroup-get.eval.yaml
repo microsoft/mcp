@@ -88,12 +88,12 @@ environment:
 stimuli:
   - name: list-consumer-groups-in-event-hub
     prompt: |
-      List all consumer groups in my event hub "orders" in namespace
-      "contoso-ehns" and resource group "contoso-rg".
+      List all consumer groups in my event hub "${EVENTHUB_ORDERS=orders}" in namespace
+      "${EVENTHUBS_NAMESPACE=contoso-ehns}" and resource group "${RESOURCE_GROUP=contoso-rg}".
     # Rubric for the outcome LLM judge, applied identically to both variants.
     rubric:
-      - "The response contains the actual list of consumer groups for the 'orders' event hub, retrieved from Azure."
-      - "The list includes the provisioned consumer group 'billing'."
+      - "The response contains the actual list of consumer groups for the '${EVENTHUB_ORDERS=orders}' event hub, retrieved from Azure."
+      - "The list includes the provisioned consumer group '${CONSUMER_GROUP_BILLING=billing}'."
       - "The consumer groups are real data obtained from a live lookup, not fabricated, guessed, or placeholder values."
       - "The assistant does not merely explain how the user could list the consumer groups themselves."
     graders:
@@ -102,20 +102,20 @@ stimuli:
         config:
           prompt: >-
             Score whether the assistant actually retrieved and returned the
-            real consumer groups for the 'orders' event hub, per the rubric.
+            real consumer groups for the '${EVENTHUB_ORDERS=orders}' event hub, per the rubric.
             Score 1 only if concrete consumer groups obtained from Azure are
-            present (including 'billing'). Score 0 if the assistant says it
+            present (including '${CONSUMER_GROUP_BILLING=billing}'). Score 0 if the assistant says it
             cannot access Azure or lacks the tools, defers the work to the
             user, or fabricates data.
           scoring: binary
 
   - name: get-single-consumer-group
     prompt: |
-      Get the details of my consumer group "billing" in my event hub "orders",
-      namespace "contoso-ehns", and resource group "contoso-rg".
+      Get the details of my consumer group "${CONSUMER_GROUP_BILLING=billing}" in my event hub "${EVENTHUB_ORDERS=orders}",
+      namespace "${EVENTHUBS_NAMESPACE=contoso-ehns}", and resource group "${RESOURCE_GROUP=contoso-rg}".
     # Rubric for the outcome LLM judge, applied identically to both variants.
     rubric:
-      - "The response contains the actual configuration/details of the 'billing' consumer group, retrieved from Azure."
+      - "The response contains the actual configuration/details of the '${CONSUMER_GROUP_BILLING=billing}' consumer group, retrieved from Azure."
       - "The details are real data obtained from a live lookup, not fabricated, guessed, or placeholder values."
       - "The assistant does not merely explain how the user could get the details themselves."
     graders:
@@ -124,7 +124,7 @@ stimuli:
         config:
           prompt: >-
             Score whether the assistant actually retrieved and returned the
-            real details of the 'billing' consumer group, per the rubric.
+            real details of the '${CONSUMER_GROUP_BILLING=billing}' consumer group, per the rubric.
             Score 1 only if concrete consumer group details obtained from
             Azure are present. Score 0 if the assistant says it cannot access
             Azure or lacks the tools, defers the work to the user, or

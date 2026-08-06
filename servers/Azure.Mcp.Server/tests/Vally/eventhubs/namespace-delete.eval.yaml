@@ -92,14 +92,14 @@ environment:
 stimuli:
   - name: delete-namespace
     prompt: |
-      Delete my namespace "contoso-ehns-delete" in my resource group "contoso-rg".
+      Delete my namespace "${EVENTHUBS_NAMESPACE_DELETE=contoso-ehns-delete}" in my resource group "${RESOURCE_GROUP=contoso-rg}".
     # Rubric for the outcome LLM judge, applied identically to both variants.
     # Because the same disposable namespace is shared across every variant of
     # this experiment run, an earlier candidate variant may already have
     # deleted it by the time a later one runs - so "it's already gone" is an
     # equally valid, real outcome as "I just deleted it".
     rubric:
-      - "The response confirms the 'contoso-ehns-delete' Event Hubs namespace was actually deleted via a real Azure operation, OR the assistant made a real Azure call, found it already deleted/absent, and reported that accurately."
+      - "The response confirms the '${EVENTHUBS_NAMESPACE_DELETE=contoso-ehns-delete}' Event Hubs namespace was actually deleted via a real Azure operation, OR the assistant made a real Azure call, found it already deleted/absent, and reported that accurately."
       - "The confirmation reflects a real check/deletion carried out against Azure, not fabricated, guessed, or placeholder confirmation."
       - "The assistant does not merely explain how the user could delete the namespace themselves."
     graders:
@@ -108,7 +108,7 @@ stimuli:
         config:
           prompt: >-
             Score whether the assistant actually performed the deletion of the
-            real 'contoso-ehns-delete' Event Hubs namespace via Azure, OR made
+            real '${EVENTHUBS_NAMESPACE_DELETE=contoso-ehns-delete}' Event Hubs namespace via Azure, OR made
             a real Azure lookup that confirmed it no longer exists (a valid
             outcome if a prior variant already deleted it), per the rubric.
             Score 1 only if a concrete, real confirmation obtained from Azure

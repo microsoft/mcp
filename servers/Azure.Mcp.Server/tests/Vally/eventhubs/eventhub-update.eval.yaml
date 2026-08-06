@@ -89,11 +89,11 @@ environment:
 stimuli:
   - name: create-event-hub
     prompt: |
-      Create a new event hub "payments" in my namespace "contoso-ehns" and
-      resource group "contoso-rg".
+      Create a new event hub "${EVENTHUB_PAYMENTS=payments}" in my namespace "${EVENTHUBS_NAMESPACE=contoso-ehns}" and
+      resource group "${RESOURCE_GROUP=contoso-rg}".
     # Rubric for the outcome LLM judge, applied identically to both variants.
     rubric:
-      - "The response confirms the 'payments' event hub was created (or already exists and is confirmed) via a real Azure operation."
+      - "The response confirms the '${EVENTHUB_PAYMENTS=payments}' event hub was created (or already exists and is confirmed) via a real Azure operation."
       - "The confirmation reflects real data obtained from a live Azure call, not fabricated, guessed, or placeholder values."
       - "The assistant does not merely explain how the user could create the event hub themselves."
     graders:
@@ -102,7 +102,7 @@ stimuli:
         config:
           prompt: >-
             Score whether the assistant actually performed (or confirmed) the
-            creation of the real 'payments' event hub via Azure, per the
+            creation of the real '${EVENTHUB_PAYMENTS=payments}' event hub via Azure, per the
             rubric. Score 1 only if a concrete, real confirmation obtained
             from Azure is present. Score 0 if the assistant says it cannot
             access Azure or lacks the tools, defers the work to the user, or
@@ -111,11 +111,11 @@ stimuli:
 
   - name: update-event-hub
     prompt: |
-      Update my event hub "payments" in my namespace "contoso-ehns" and
-      resource group "contoso-rg" to use a message retention of 3 hours.
+      Update my event hub "${EVENTHUB_PAYMENTS=payments}" in my namespace "${EVENTHUBS_NAMESPACE=contoso-ehns}" and
+      resource group "${RESOURCE_GROUP=contoso-rg}" to use a message retention of 3 hours.
     # Rubric for the outcome LLM judge, applied identically to both variants.
     rubric:
-      - "The response confirms the 'payments' event hub was updated (with message retention set to 3 hours) via a real Azure operation."
+      - "The response confirms the '${EVENTHUB_PAYMENTS=payments}' event hub was updated (with message retention set to 3 hours) via a real Azure operation."
       - "The confirmation reflects real data obtained from a live Azure call, not fabricated, guessed, or placeholder values."
       - "The assistant does not merely explain how the user could update the event hub themselves."
     graders:
@@ -124,7 +124,7 @@ stimuli:
         config:
           prompt: >-
             Score whether the assistant actually performed (or confirmed) an
-            update of the real 'payments' event hub via Azure, setting its
+            update of the real '${EVENTHUB_PAYMENTS=payments}' event hub via Azure, setting its
             message retention to 3 hours, per the rubric. Score 1 only if a
             concrete, real confirmation obtained from Azure is present.
             Score 0 if the assistant says it cannot access Azure or lacks

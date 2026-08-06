@@ -96,15 +96,15 @@ environment:
 stimuli:
   - name: delete-consumer-group
     prompt: |
-      Delete my consumer group "contoso-temp-cg" in my event hub "orders",
-      namespace "contoso-ehns", and resource group "contoso-rg".
+      Delete my consumer group "${CONSUMER_GROUP_TEMP=contoso-temp-cg}" in my event hub "${EVENTHUB_ORDERS=orders}",
+      namespace "${EVENTHUBS_NAMESPACE=contoso-ehns}", and resource group "${RESOURCE_GROUP=contoso-rg}".
     # Rubric for the outcome LLM judge, applied identically to both variants.
     # Because the disposable consumer group is shared across every variant
     # of this experiment run, an earlier candidate may already have deleted
     # it, so "it's already gone" is an equally valid, real outcome as "I
     # just deleted it".
     rubric:
-      - "The response confirms the 'contoso-temp-cg' consumer group was actually deleted via a real Azure operation, OR the assistant made a real Azure call, found it already deleted/absent, and reported that accurately."
+      - "The response confirms the '${CONSUMER_GROUP_TEMP=contoso-temp-cg}' consumer group was actually deleted via a real Azure operation, OR the assistant made a real Azure call, found it already deleted/absent, and reported that accurately."
       - "The confirmation reflects a real check/deletion carried out against Azure, not fabricated, guessed, or placeholder confirmation."
       - "The assistant does not merely explain how the user could delete the consumer group themselves."
     graders:
@@ -113,7 +113,7 @@ stimuli:
         config:
           prompt: >-
             Score whether the assistant actually performed the deletion of the
-            real 'contoso-temp-cg' consumer group via Azure, OR made a real
+            real '${CONSUMER_GROUP_TEMP=contoso-temp-cg}' consumer group via Azure, OR made a real
             Azure lookup that confirmed it no longer exists (a valid outcome
             if a prior variant already deleted it), per the rubric. Score 1
             only if a concrete, real confirmation obtained from Azure is

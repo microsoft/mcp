@@ -88,11 +88,11 @@ environment:
 stimuli:
   - name: create-namespace
     prompt: |
-      Create a new namespace "contoso-ehns" in my resource group "contoso-rg"
+      Create a new namespace "${EVENTHUBS_NAMESPACE=contoso-ehns}" in my resource group "${RESOURCE_GROUP=contoso-rg}"
       in the "eastus" region using the "Standard" SKU.
     # Rubric for the outcome LLM judge, applied identically to both variants.
     rubric:
-      - "The response confirms the 'contoso-ehns' Event Hubs namespace was created (or already exists and is confirmed) via a real Azure operation."
+      - "The response confirms the '${EVENTHUBS_NAMESPACE=contoso-ehns}' Event Hubs namespace was created (or already exists and is confirmed) via a real Azure operation."
       - "The confirmation reflects real data obtained from a live Azure call, not fabricated, guessed, or placeholder values."
       - "The assistant does not merely explain how the user could create the namespace themselves."
     graders:
@@ -101,7 +101,7 @@ stimuli:
         config:
           prompt: >-
             Score whether the assistant actually performed (or confirmed) the
-            creation of the real 'contoso-ehns' Event Hubs namespace via Azure,
+            creation of the real '${EVENTHUBS_NAMESPACE=contoso-ehns}' Event Hubs namespace via Azure,
             per the rubric. Score 1 only if a concrete, real confirmation
             obtained from Azure is present. Score 0 if the assistant says it
             cannot access Azure or lacks the tools, defers the work to the
@@ -110,11 +110,11 @@ stimuli:
 
   - name: update-namespace
     prompt: |
-      Update my namespace "contoso-ehns" in my resource group "contoso-rg" to
+      Update my namespace "${EVENTHUBS_NAMESPACE=contoso-ehns}" in my resource group "${RESOURCE_GROUP=contoso-rg}" to
       use the "Standard" SKU with a capacity of 2.
     # Rubric for the outcome LLM judge, applied identically to both variants.
     rubric:
-      - "The response confirms the 'contoso-ehns' Event Hubs namespace was updated via a real Azure operation."
+      - "The response confirms the '${EVENTHUBS_NAMESPACE=contoso-ehns}' Event Hubs namespace was updated via a real Azure operation."
       - "The confirmation reflects real data obtained from a live Azure call, not fabricated, guessed, or placeholder values."
       - "The assistant does not merely explain how the user could update the namespace themselves."
     graders:
@@ -123,7 +123,7 @@ stimuli:
         config:
           prompt: >-
             Score whether the assistant actually performed (or confirmed) an
-            update of the real 'contoso-ehns' Event Hubs namespace via Azure,
+            update of the real '${EVENTHUBS_NAMESPACE=contoso-ehns}' Event Hubs namespace via Azure,
             per the rubric. Score 1 only if a concrete, real confirmation
             obtained from Azure is present. Score 0 if the assistant says it
             cannot access Azure or lacks the tools, defers the work to the
