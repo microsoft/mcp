@@ -13,15 +13,15 @@ namespace Microsoft.Mcp.Core.Options;
 public class RetryPolicyOptions : IComparable<RetryPolicyOptions>, IEquatable<RetryPolicyOptions>
 {
     [JsonPropertyName("retry-delay")]
-    [Option(Name = "delay", Description = "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.")]
+    [Option(Name = "delay", Description = "Initial delay in seconds. For exponential backoff, this value is used as the base.")]
     public double? DelaySeconds { get; set; }
 
     [JsonPropertyName("retry-max-delay")]
-    [Option(Name = "max-delay", Description = "Maximum delay in seconds between retries, regardless of the retry strategy.")]
+    [Option(Name = "max-delay", Description = "Maximum delay in seconds, regardless of the retry strategy.")]
     public double? MaxDelaySeconds { get; set; }
 
     [JsonPropertyName("retry-max-retries")]
-    [Option(Name = "max-retries", Description = "Maximum number of retry attempts for failed operations before giving up.")]
+    [Option(Name = "max-retries", Description = "Maximum number of retry attempts.")]
     public int? MaxRetries { get; set; }
 
     [JsonPropertyName("retry-mode")]
@@ -29,7 +29,7 @@ public class RetryPolicyOptions : IComparable<RetryPolicyOptions>, IEquatable<Re
     public RetryMode? Mode { get; set; }
 
     [JsonPropertyName("retry-network-timeout")]
-    [Option(Name = "network-timeout", Description = "Network operation timeout in seconds. Operations taking longer than this will be cancelled.")]
+    [Option(Name = "network-timeout", Description = "Network operation timeout in seconds.")]
     public double? NetworkTimeoutSeconds { get; set; }
 
     // Derived flags indicating which options were explicitly provided by the caller.

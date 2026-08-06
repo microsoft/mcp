@@ -112,7 +112,13 @@ public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProx
     [Fact]
     public async Task Should_Not_Hang_On_Logging_SetLevel_Not_Supported()
     {
-        await Client.SetLoggingLevelAsync(LoggingLevel.Info, cancellationToken: TestContext.Current.CancellationToken);
+        // logging/setLevel was removed in MCP 2026-07-28 (SDK 2.0.0-preview.3).
+        // The method is no longer supported; per-request log level is now set via
+        // _meta/io.modelcontextprotocol/logLevel. The call should throw rather than hang.
+        var ex = await Assert.ThrowsAsync<McpProtocolException>(
+            async () => await Client.SetLoggingLevelAsync(LoggingLevel.Info,
+                cancellationToken: TestContext.Current.CancellationToken));
+        Assert.Contains("logging/setLevel", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

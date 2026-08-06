@@ -2,7 +2,32 @@
 
 
 
+## 3.0.32 (2026-08-04) (pre-release)
 
+### Fixed
+
+- Display a warning when VS Code MCP access is disabled and provide a shortcut to the MCP access setting.
+- Fixed a bug in EventHubs where creating a new event hub or consumer group could throw an `InvalidOperationException` instead of succeeding, because the `NullableResponse<T>.Value` accessor was dereferenced without checking `HasValue` first. [[#3187](https://github.com/microsoft/mcp/pull/3187)]
+
+## 3.0.31 (2026-07-31) (pre-release)
+
+### Changed
+
+- Removed `IServiceProvider` from `CommandContext` and downstream locations where no longer used. [[#3185](https://github.com/microsoft/mcp/pull/3185)]
+
+## 3.0.30 (2026-07-28) (pre-release)
+
+### Changed
+
+- **Breaking:** Removed unused parameters from Core tools. [[#3137](https://github.com/microsoft/mcp/pull/3137)]
+- **Breaking:** Removed legacy tool design creation. [[#3137](https://github.com/microsoft/mcp/pull/3137)]
+
+#### Dependency Updates
+- Updated `ModelContextProtocol` packages to `2.0.0-preview.3`. [[#3145](https://github.com/microsoft/mcp/pull/3145)]
+
+### Fixed
+
+- `sql database create` and `sql database update` now return a validation error for unrecognized `--read-scale` values instead of silently ignoring them. [[#3129](https://github.com/microsoft/mcp/pull/3129)]
 
 ## 3.0.29 (2026-07-23) (pre-release)
 

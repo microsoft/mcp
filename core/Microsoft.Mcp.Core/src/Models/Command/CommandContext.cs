@@ -3,22 +3,16 @@
 
 using System.Diagnostics;
 using System.Net;
-using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Models.Command;
 
 /// <summary>
-/// Provides context for command execution including service access and response management
+/// Provides context for command execution including response management
 /// </summary>
 public class CommandContext
 {
-    /// <summary>
-    /// The service provider for dependency injection
-    /// </summary>
-    private readonly IServiceProvider _serviceProvider;
-
     /// <summary>
     /// The response object that will be returned to the client
     /// </summary>
@@ -53,27 +47,14 @@ public class CommandContext
     /// <summary>
     /// Creates a new command context
     /// </summary>
-    /// <param name="serviceProvider">The service provider for dependency injection</param>
     /// <param name="activity">Optional telemetry activity for the command execution</param>
-    public CommandContext(IServiceProvider serviceProvider, Activity? activity = default)
+    public CommandContext(Activity? activity = default)
     {
-        _serviceProvider = serviceProvider;
         Activity = activity;
         Response = new CommandResponse
         {
             Status = HttpStatusCode.OK,
             Message = "Success"
         };
-    }
-
-    /// <summary>
-    /// Gets a required service from the service provider
-    /// </summary>
-    /// <typeparam name="T">The type of service to retrieve</typeparam>
-    /// <returns>The requested service instance</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the service is not registered</exception>
-    internal T GetService<T>() where T : class
-    {
-        return _serviceProvider.GetRequiredService<T>();
     }
 }

@@ -219,7 +219,7 @@ public class SingleProxyToolLoaderTests
         Assert.NotNull(textContent);
         Assert.NotEmpty(textContent.Text);
         // The actual behavior shows available tools list
-        Assert.Contains("Here are the available list of tools", textContent.Text);
+        Assert.Contains("Here are the available tools", textContent.Text);
     }
 
     [Fact]
@@ -304,7 +304,7 @@ public class SingleProxyToolLoaderTests
         var request = CreateCallToolRequest("storage");
 
         // Act
-        var tools = await toolLoader.GetToolListAsync(request, "storage", TestContext.Current.CancellationToken);
+        var tools = await toolLoader.GetMcpClientToolListAsync(request, "storage", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(tools);
@@ -347,7 +347,7 @@ public class SingleProxyToolLoaderTests
         var request = CreateCallToolRequest("storage");
 
         // Act
-        var tools = await toolLoader.GetToolListAsync(request, "storage", TestContext.Current.CancellationToken);
+        var tools = await toolLoader.GetMcpClientToolListAsync(request, "storage", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(tools);

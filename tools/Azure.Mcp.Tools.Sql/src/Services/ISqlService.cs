@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Sql.Models;
+using Azure.Mcp.Tools.Sql.Options.Database;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Sql.Services;
@@ -57,7 +58,7 @@ public interface ISqlService
         long? maxSizeBytes = null,
         string? elasticPoolName = null,
         bool? zoneRedundant = null,
-        string? readScale = null,
+        DatabaseReadScale? readScale = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
@@ -91,7 +92,7 @@ public interface ISqlService
         long? maxSizeBytes = null,
         string? elasticPoolName = null,
         bool? zoneRedundant = null,
-        string? readScale = null,
+        DatabaseReadScale? readScale = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 

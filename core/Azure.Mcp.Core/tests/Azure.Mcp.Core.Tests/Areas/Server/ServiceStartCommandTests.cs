@@ -744,9 +744,8 @@ public class ServiceStartCommandTests
 
     private async Task<CommandResponse> ExecuteAsync(List<string> args)
     {
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
         // Need to use IBaseCommand here for ExecuteAsync as it handles binding and validating the args.
-        return await ((IBaseCommand)_command).ExecuteAsync(context, _command.GetCommand().Parse(args), TestContext.Current.CancellationToken);
+        return await ((IBaseCommand)_command).ExecuteAsync(new(), _command.GetCommand().Parse(args), TestContext.Current.CancellationToken);
     }
 
     private string GetErrorMessage(Exception exception)

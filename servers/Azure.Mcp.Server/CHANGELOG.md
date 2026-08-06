@@ -2,6 +2,46 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
+## 3.0.0-beta.33 (Unreleased)
+
+### Features Added
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
+## 3.0.0-beta.32 (Unreleased)
+
+### Bugs Fixed
+
+- Display a warning when VS Code MCP access is disabled and provide a shortcut to the MCP access setting.
+- Fixed a bug in EventHubs where creating a new event hub or consumer group could throw an `InvalidOperationException` instead of succeeding, because the `NullableResponse<T>.Value` accessor was dereferenced without checking `HasValue` first. [[#3187](https://github.com/microsoft/mcp/pull/3187)]
+
+## 3.0.0-beta.31 (2026-07-31)
+
+### Other Changes
+
+- Removed `IServiceProvider` from `CommandContext` and downstream locations where no longer used. [[#3185](https://github.com/microsoft/mcp/pull/3185)]
+
+## 3.0.0-beta.30 (2026-07-28)
+
+### Breaking Changes
+
+- Removed unused parameters from Core tools. [[#3137](https://github.com/microsoft/mcp/pull/3137)]
+- Removed legacy tool design creation. [[#3137](https://github.com/microsoft/mcp/pull/3137)]
+
+### Bugs Fixed
+
+- `sql database create` and `sql database update` now return a validation error for unrecognized `--read-scale` values instead of silently ignoring them. [[#3129](https://github.com/microsoft/mcp/pull/3129)]
+
+### Other Changes
+
+#### Dependency Updates
+
+- Updated `ModelContextProtocol` packages to `2.0.0-preview.3`. [[#3145](https://github.com/microsoft/mcp/pull/3145)]
+
 ## 3.0.0-beta.29 (2026-07-23)
 
 ### Features Added

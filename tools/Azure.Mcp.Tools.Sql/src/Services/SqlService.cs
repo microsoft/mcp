@@ -11,6 +11,8 @@ using Azure.ResourceManager.Sql;
 using Azure.ResourceManager.Sql.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
+using DatabaseReadScaleOption = Azure.Mcp.Tools.Sql.Options.Database.DatabaseReadScale;
+using SdkDatabaseReadScale = Azure.ResourceManager.Sql.Models.DatabaseReadScale;
 
 namespace Azure.Mcp.Tools.Sql.Services;
 
@@ -57,6 +59,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     {
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+
         return await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName, cancellationToken: cancellationToken);
     }
 
@@ -90,7 +93,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         {
             var subscriptionId = await ResolveSubscriptionIdAsync(subscription, retryPolicy, cancellationToken);
             var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, retryPolicy, cancellationToken);
-
             var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
 
             return ConvertToSqlDatabaseModel(databaseResource.Value);
@@ -132,7 +134,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         long? maxSizeBytes = null,
         string? elasticPoolName = null,
         bool? zoneRedundant = null,
-        string? readScale = null,
+        DatabaseReadScaleOption? readScale = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
@@ -143,7 +145,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(databaseName), databaseName));
 
         var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
-
         var databaseData = new SqlDatabaseData(sqlServerResource.Data.Location);
 
         // Configure SKU if provided
@@ -185,12 +186,9 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         }
 
         // Configure read scale if provided
-        if (!string.IsNullOrEmpty(readScale))
+        if (readScale.HasValue)
         {
-            if (Enum.TryParse<DatabaseReadScale>(readScale, true, out var readScaleEnum))
-            {
-                databaseData.ReadScale = readScaleEnum;
-            }
+            databaseData.ReadScale = ToSdkReadScale(readScale.Value);
         }
 
         var operation = await sqlServerResource.GetSqlDatabases().CreateOrUpdateAsync(
@@ -240,7 +238,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         long? maxSizeBytes = null,
         string? elasticPoolName = null,
         bool? zoneRedundant = null,
-        string? readScale = null,
+        DatabaseReadScaleOption? readScale = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
@@ -251,7 +249,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(databaseName), databaseName));
 
         var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
-
         var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
         var databaseData = databaseResource.Value.Data;
 
@@ -292,10 +289,9 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             databaseData.IsZoneRedundant = zoneRedundant.Value;
         }
 
-        if (!string.IsNullOrEmpty(readScale) &&
-            Enum.TryParse<DatabaseReadScale>(readScale, true, out var readScaleEnum))
+        if (readScale.HasValue)
         {
-            databaseData.ReadScale = readScaleEnum;
+            databaseData.ReadScale = ToSdkReadScale(readScale.Value);
         }
 
         var operation = await sqlServerResource.GetSqlDatabases().CreateOrUpdateAsync(
@@ -303,6 +299,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             databaseName,
             databaseData,
             cancellationToken);
+
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
         var updatedDatabase = operation.Value;
@@ -313,6 +310,13 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
         return ConvertToSqlDatabaseModel(updatedDatabase);
     }
+
+    private static SdkDatabaseReadScale ToSdkReadScale(DatabaseReadScaleOption readScale) => readScale switch
+    {
+        DatabaseReadScaleOption.Enabled => SdkDatabaseReadScale.Enabled,
+        DatabaseReadScaleOption.Disabled => SdkDatabaseReadScale.Disabled,
+        _ => throw new ArgumentOutOfRangeException(nameof(readScale), readScale, null)
+    };
 
     /// <summary>
     /// Renames an existing SQL database to a new name.
@@ -344,21 +348,17 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
         var subscriptionId = subscriptionResource.Data.SubscriptionId;
-
         var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
-
         var currentDatabaseId = SqlDatabaseResource.CreateResourceIdentifier(
             subscriptionId,
             resourceGroup,
             serverName,
             databaseName);
-
         var targetDatabaseId = SqlDatabaseResource.CreateResourceIdentifier(
             subscriptionId,
             resourceGroup,
             serverName,
             newDatabaseName);
-
         var databaseResource = armClient.GetSqlDatabaseResource(currentDatabaseId);
         var moveDefinition = new SqlResourceMoveDefinition(targetDatabaseId);
 
@@ -397,8 +397,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
         var subscriptionId = await ResolveSubscriptionIdAsync(subscription, retryPolicy, cancellationToken);
         var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, retryPolicy, cancellationToken);
-
         var databases = new List<SqlDatabase>();
+
         await foreach (var database in sqlServerResource.GetSqlDatabases().GetAllAsync(cancellationToken: cancellationToken))
         {
             databases.Add(ConvertToSqlDatabaseModel(database));
@@ -435,8 +435,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(subscription), subscription));
 
         var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
-
         var administrators = new List<SqlServerEntraAdministrator>();
+
         await foreach (var admin in sqlServerResource.GetSqlServerAzureADAdministrators().GetAllAsync(cancellationToken))
         {
             administrators.Add(new(
@@ -483,8 +483,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
         var subscriptionId = await ResolveSubscriptionIdAsync(subscription, retryPolicy, cancellationToken);
         var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, retryPolicy, cancellationToken);
-
         var elasticPools = new List<SqlElasticPool>();
+
         await foreach (var elasticPool in sqlServerResource.GetElasticPools().GetAllAsync(cancellationToken: cancellationToken))
         {
             elasticPools.Add(ConvertToSqlElasticPoolModel(elasticPool));
@@ -521,8 +521,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(subscription), subscription));
 
         var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
-
         var firewallRules = new List<SqlServerFirewallRule>();
+
         await foreach (var firewallRule in sqlServerResource.GetSqlFirewallRules().GetAllAsync(cancellationToken))
         {
             firewallRules.Add(new(
@@ -574,7 +574,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(endIpAddress), endIpAddress));
 
         var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
-
         var firewallRuleData = new SqlFirewallRuleData()
         {
             StartIPAddress = startIpAddress,
@@ -586,6 +585,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             firewallRuleName,
             firewallRuleData,
             cancellationToken);
+
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
         var firewallRule = operation.Value;
@@ -626,10 +626,9 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         try
         {
             var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
-
             var firewallRuleResource = await sqlServerResource.GetSqlFirewallRules().GetAsync(firewallRuleName, cancellationToken);
-
             var deleteOperation = await firewallRuleResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+
             await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
 
             _logger.LogInformation(
@@ -687,7 +686,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         // Resolve the subscription (supports both subscription IDs and names) before navigating to the resource group
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-
         var serverData = new SqlServerData(location)
         {
             AdministratorLogin = administratorLogin,
@@ -699,12 +697,12 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                     ? ServerNetworkAccessFlag.Enabled
                     : ServerNetworkAccessFlag.Disabled
         };
-
         var operation = await resourceGroupResource.Value.GetSqlServers().CreateOrUpdateAsync(
             WaitUntil.Started,
             serverName,
             serverData,
             cancellationToken);
+
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
         var server = operation.Value;
@@ -784,6 +782,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
 
         ResourceManager.Resources.ResourceGroupResource resourceGroupResource;
+
         try
         {
             var response = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -822,8 +821,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         try
         {
             var serverResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
-
             var operation = await serverResource.DeleteAsync(WaitUntil.Started, cancellationToken);
+
             await WaitForLroCompletionAsync(operation, cancellationToken);
 
             return true;
@@ -865,10 +864,9 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         try
         {
             var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
-
             var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
-
             var deleteOperation = await databaseResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+
             await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
 
             _logger.LogInformation(

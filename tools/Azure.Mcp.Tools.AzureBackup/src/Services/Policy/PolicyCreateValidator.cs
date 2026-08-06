@@ -29,6 +29,18 @@ public static class PolicyCreateValidator
         var workload = (options.WorkloadType ?? string.Empty).Trim();
         var family = ClassifyWorkload(workload);
 
+        // Reject unknown workload types at the command boundary with an actionable message
+        // rather than letting invalid values reach the service layer.
+        if (family == WorkloadFamily.Unknown && !string.IsNullOrWhiteSpace(workload))
+        {
+            issues.Add(new PolicyValidationIssue(
+                $"--{AzureBackupOptionDefinitions.WorkloadTypeName}",
+                $"Unknown workload type '{workload}'. Supported types: " +
+                "VM, SQL, SAPHANA, SAPASE, AzureFileShare, AzureDisk, AzureBlob, AKS, " +
+                "ElasticSAN, PostgreSQLFlexible, ADLS, CosmosDB."));
+            return PolicyValidationResult.Fail(issues);
+        }
+
         // Rule D: CosmosDB pass-through  -  no special validator action; fall through to common rules.
         // (AKS gate removed in Stage 2  -  AKS now flows through normal DPP discrete validation.)
 

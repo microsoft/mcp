@@ -16,7 +16,9 @@ public class MockClientTests
     {
         return new McpServerOptions
         {
-            ProtocolVersion = "2024",
+            // Use a supported protocol version. preview.3 tightened validation and
+            // rejects bare '2024'; supported versions: 2024-11-05, 2025-11-25, 2026-07-28.
+            ProtocolVersion = "2025-11-25",
             InitializationTimeout = TimeSpan.FromSeconds(30),
             Handlers = serverHandlers ?? new(),
             ServerInfo = new Implementation { Name = "Azure MCP", Version = "1.0.0-beta" }
@@ -50,7 +52,7 @@ public class MockClientTests
                 Assert.NotNull(result);
                 Assert.Equal("Azure MCP", result.ServerInfo.Name);
                 Assert.Equal("1.0.0-beta", result.ServerInfo.Version);
-                Assert.Equal("2024", result.ProtocolVersion);
+                Assert.Equal("2025-11-25", result.ProtocolVersion);
             });
     }
 

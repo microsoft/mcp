@@ -213,7 +213,9 @@ public sealed class McpRuntime : IMcpRuntime
 
         try
         {
-            var result = await _toolLoader.ListToolsHandler(request!, cancellationToken);
+            var result = await _toolLoader.ListToolsHandler(request, cancellationToken);
+            result.CacheScope = CacheScope.Public; // ListTools results are safe to cache publicly, as they contain no sensitive information.
+            result.TimeToLive = TimeSpan.FromHours(1); // Cache ListTools results for 1 hour to reduce load on the tool loader.
             activity?.SetStatus(ActivityStatusCode.Ok);
 
             return result;

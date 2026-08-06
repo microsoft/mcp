@@ -6,6 +6,23 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| advisor_metadata_get | Get the Advisor metadata for recommendation type id <recommendation-type-id> |
+| advisor_metadata_get | What does Advisor recommendation type <recommendation-type-id> mean? |
+| advisor_metadata_get | Show me the catalog details for Advisor recommendation type <recommendation-type-id> |
+| advisor_metadata_get | Get the German (de) metadata for Advisor recommendation type <recommendation-type-id> |
+| advisor_metadata_get | What is the impact and category of Advisor recommendation type <recommendation-type-id>? |
+| advisor_metadata_get | Show the remediation actions for Advisor recommendation type <recommendation-type-id> |
+| advisor_metadata_get | When does Advisor recommendation type <recommendation-type-id> retire? |
+| advisor_metadata_list | List the Advisor recommendation metadata catalog |
+| advisor_metadata_list | Before I deploy any virtual machines, what kinds of recommendations could Advisor produce for them? |
+| advisor_metadata_list | List high-impact Advisor metadata for microsoft.sql/servers/databases |
+| advisor_metadata_list | Show the German metadata catalog for Advisor recommendations |
+| advisor_metadata_list | Which Advisor recommendation types include service-retirement details? |
+| advisor_metadata_list | List Advisor metadata in the ServiceUpgradeAndRetirement subcategory |
+| advisor_metadata_list | Find the Advisor service-retirement metadata with tracking ID QNY1-HB8 |
+| advisor_metadata_list | Show Advisor service retirements on or after March 31, 2026 |
+| advisor_recommendation_apply | Apply Advisor recommendations to this ARM template |
+| advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account |
 | advisor_recommendation_list | List all recommendations in my subscription |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription <subscription> |
 | advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> |
@@ -21,13 +38,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | advisor_recommendation_summary | Summarize high-impact Security recommendations by resource-type in subscription <subscription> |
 | advisor_recommendation_summary | Group Cost recommendations for storage accounts by impact in subscription <subscription> |
 | advisor_recommendation_summary | Summarize Advisor recommendations mentioning "encryption" by category in subscription <subscription> |
-| advisor_recommendation_apply | Apply Advisor recommendations to this ARM template |
-| advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account |
-| advisor_recommendation-type_list | List the catalog of Advisor recommendation types available in my tenant |
-| advisor_recommendation-type_list | Before I deploy any virtual machines, what kinds of recommendations could Advisor produce for them? |
-| advisor_recommendation-type_list | What recommendation types does Advisor have for microsoft.sql/servers/databases, filtered to high impact? |
-| advisor_recommendation-type_list | Show me the catalog of cost recommendations Advisor can generate for storage accounts |
-| advisor_recommendation-type_list | My tenant is brand new and has no Advisor recommendations yet — what kinds of recommendations could Advisor make? |
 
 ## Azure AI Search
 
@@ -161,6 +171,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> |
 | azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription |
 | azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> |
+| azurebackup_governance_find-unprotected | Find unprotected SQL databases and file shares discovered by backup vaults in my subscription |
+| azurebackup_governance_find-unprotected | Show all resources and sub-resources that need backup protection in resource group <resource_group> |
 | azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> |
 | azurebackup_governance_immutability | Set immutability to Enabled on vault <vault_name> in resource group <resource_group> |
 | azurebackup_governance_soft-delete | Configure soft delete on vault <vault_name> in resource group <resource_group> |
@@ -826,9 +838,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | monitor_table_type_list | Show me the available table types in the Log Analytics workspace <workspace_name> |
 | monitor_webtests_createorupdate | Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
 | monitor_webtests_createorupdate | Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
-| monitor_webtests_get | Get Web Test details for <webtest_resource_name> in my subscription in <resource_group> |
-| monitor_webtests_get | List all Web Test resources in my subscription |
-| monitor_webtests_get | List all Web Test resources in my subscription in <resource_group> |
 | monitor_workspace_list | List all Log Analytics workspaces in my subscription |
 | monitor_workspace_list | Show me my Log Analytics workspaces |
 | monitor_workspace_list | Show me the Log Analytics workspaces in my subscription |
@@ -1232,7 +1241,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| cloudarchitect_design | Please help me design an architecture for a large-scale file upload, storage, and retrieval service |
 | cloudarchitect_design | Help me design an Azure cloud service that will serve as an ATM for users |
 | cloudarchitect_design | I want to design a cloud app for ordering groceries |
 | cloudarchitect_design | How can I design a cloud service in Azure that will store and present videos for users? |
