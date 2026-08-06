@@ -2,17 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Net;
 using System.Net.Http;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.IoTHub.Services;
 
@@ -20,29 +21,30 @@ public class IoTHubDeviceService(
     IIoTHubService ioTHubService,
     IHttpClientFactory httpClientFactory,
     ITenantService tenantService,
-    ICacheService cacheService,
     ILogger<IoTHubDeviceService> logger)
     : BaseAzureService(tenantService), IIoTHubDeviceService
 {
     private readonly IIoTHubService _ioTHubService = ioTHubService ?? throw new ArgumentNullException(nameof(ioTHubService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-    private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ILogger<IoTHubDeviceService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    // Resolving the hub hostname and shared access keys requires two ARM control-plane round-trips
-    // (a hub GET and a listKeys POST). Cache the result briefly so repeated data-plane calls
-    // (list, query, twin) against the same hub don't pay that cost every time.
-    private const string ConnectionCacheGroup = "iothub-device-connection";
-    private static readonly TimeSpan s_connectionCacheDuration = TimeSpan.FromMinutes(15);
+    // API version for the IoT Hub service (data-plane) REST API.
+    private const string ApiVersion = "2021-04-12";
+
+    // Microsoft Entra ID scope for the IoT Hub service (data-plane) REST API. Data-plane calls
+    // authenticate with the caller's Entra ID token and RBAC role assignments; no shared access
+    // keys are fetched, held, or cached.
+    private const string IoTHubTokenScope = "https://iothubs.azure.net/.default";
 
     // Upper bound for a single IoT Hub operation (control-plane + data-plane). If exceeded the
     // caller gets a clear timeout error instead of appearing to hang indefinitely.
     private static readonly TimeSpan s_operationTimeout = TimeSpan.FromSeconds(100);
     private static readonly TimeSpan s_queryRunTimeout = TimeSpan.FromSeconds(30);
 
-    private sealed record HubConnection(string Hostname, List<IoTHubKey> Keys);
-
-    private async Task<HubConnection> GetHubConnectionAsync(
+    // Resolve the hub's data-plane hostname (control-plane GET) and mint a fresh Entra ID bearer
+    // token for each operation. Nothing is cached: the hostname is looked up per call and the token
+    // is acquired per call from the credential.
+    private async Task<(string Hostname, string Token)> ResolveHubAccessAsync(
         string name,
         string resourceGroup,
         string subscription,
@@ -50,28 +52,15 @@ public class IoTHubDeviceService(
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
-        var cacheKey = $"{subscription}/{resourceGroup}/{name}";
-        var cached = await _cacheService.GetAsync<HubConnection>(ConnectionCacheGroup, cacheKey, s_connectionCacheDuration, cancellationToken);
-        if (cached is not null)
-        {
-            _logger.LogDebug("Using cached IoT Hub connection details for hub {HubName} in resource group {ResourceGroup}.", name, resourceGroup);
-            return cached;
-        }
-
-        _logger.LogInformation("Resolving IoT Hub connection details for hub {HubName} in resource group {ResourceGroup}.", name, resourceGroup);
         var hub = await _ioTHubService.GetIoTHub(name, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
         var hostname = hub.HostName ?? throw new InvalidOperationException("IoT Hub hostname is null");
-        var keys = await _ioTHubService.GetIoTHubKeys(name, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
 
-        _logger.LogInformation("Resolved IoT Hub connection details for hub {HubName}. Hostname={Hostname}, KeyCount={KeyCount}.", name, hostname, keys.Count);
-        var connection = new HubConnection(hostname, keys);
-        await _cacheService.SetAsync(ConnectionCacheGroup, cacheKey, connection, s_connectionCacheDuration, cancellationToken);
-        return connection;
+        var credential = await GetCredential(tenant, cancellationToken);
+        var accessToken = await credential.GetTokenAsync(new TokenRequestContext([IoTHubTokenScope]), cancellationToken);
+
+        _logger.LogInformation("Resolved IoT Hub data-plane access for hub {HubName}. Hostname={Hostname}.", name, hostname);
+        return (hostname, accessToken.Token);
     }
-
-    private static IoTHubKey SelectKey(HubConnection connection, string requiredRight)
-        => connection.Keys.FirstOrDefault(k => k.Rights?.Contains(requiredRight) == true)
-            ?? throw new InvalidOperationException($"No key with {requiredRight} rights found");
 
     private async Task<T> ExecuteWithTimeoutAsync<T>(
         Func<CancellationToken, Task<T>> operation,
@@ -104,6 +93,53 @@ public class IoTHubDeviceService(
         return defaultTimeout;
     }
 
+    // Build an Azure.Core pipeline for a data-plane call so the caller's RetryPolicyOptions govern
+    // transient-failure retries (408/429/5xx and network errors), consistent with the ARM control-plane.
+    private static HttpPipeline BuildDataPlanePipeline(RetryPolicyOptions? retryPolicy, HttpClient httpClient)
+    {
+        var clientOptions = ConfigureRetryPolicy(AddDefaultPolicies(new IoTHubClientOptions()), retryPolicy);
+        clientOptions.Transport = new HttpClientTransport(httpClient);
+        return HttpPipelineBuilder.Build(clientOptions);
+    }
+
+    // Translate a failed IoT Hub data-plane response into an actionable exception. The thrown
+    // HttpRequestException carries the status code so the command surfaces the matching HTTP status.
+    private static void EnsureSuccessOrThrow(Response response)
+    {
+        if (!response.IsError)
+        {
+            return;
+        }
+
+        var statusCode = (HttpStatusCode)response.Status;
+        var detail = response.Content?.ToString();
+        detail = string.IsNullOrWhiteSpace(detail) ? "No additional error details were returned." : detail;
+
+        throw new HttpRequestException(
+            $"The IoT Hub request failed with status {response.Status} ({statusCode}). {ExplainStatusCode(statusCode)} {detail}",
+            inner: null,
+            statusCode: statusCode);
+    }
+
+    // Human-readable, actionable guidance for common IoT Hub data-plane failures.
+    private static string ExplainStatusCode(HttpStatusCode statusCode) => statusCode switch
+    {
+        HttpStatusCode.Unauthorized =>
+            "Authentication failed: the Microsoft Entra ID token was rejected. Verify you are signed in to the tenant that owns the hub and that the token has not expired.",
+        HttpStatusCode.Forbidden =>
+            "Authorization failed: the signed-in identity lacks data-plane access. Assign the 'IoT Hub Data Reader' role (or another role that grants device registry read) on the hub.",
+        HttpStatusCode.NotFound =>
+            "Not found: the IoT Hub, device, or endpoint could not be located. Verify the hub name, device ID, and that the resource exists in the specified subscription and resource group.",
+        HttpStatusCode.TooManyRequests =>
+            "Throttled: the IoT Hub rate limit was exceeded. Wait and retry, and consider a smaller --max-count.",
+        HttpStatusCode.RequestTimeout =>
+            "The request timed out; the hub may be busy. Retry the operation.",
+        HttpStatusCode.InternalServerError or HttpStatusCode.BadGateway or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout =>
+            "The IoT Hub service is temporarily unavailable. This is usually transient; retry the operation.",
+        _ =>
+            "The request could not be completed.",
+    };
+
     public async Task<DeviceIdentity> GetDevice(
         string deviceId,
         string name,
@@ -121,21 +157,21 @@ public class IoTHubDeviceService(
 
         return await ExecuteWithTimeoutAsync(async ct =>
         {
-            var connection = await GetHubConnectionAsync(name, resourceGroup, subscription, tenant, retryPolicy, ct);
-            var hostname = connection.Hostname;
-            var key = SelectKey(connection, "RegistryRead");
+            var (hostname, token) = await ResolveHubAccessAsync(name, resourceGroup, subscription, tenant, retryPolicy, ct);
 
             using var httpClient = _httpClientFactory.CreateClient();
-            var apiVersion = "2021-04-12";
-            var requestUri = $"https://{hostname}/devices/{Uri.EscapeDataString(deviceId)}?api-version={apiVersion}";
+            var pipeline = BuildDataPlanePipeline(retryPolicy, httpClient);
+            var requestUri = $"https://{hostname}/devices/{Uri.EscapeDataString(deviceId)}?api-version={ApiVersion}";
 
-            var token = GetSasToken(hostname, key.KeyName, key.PrimaryKey);
-            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SharedAccessSignature", token);
+            using var request = pipeline.CreateRequest();
+            request.Method = RequestMethod.Get;
+            request.Uri.Reset(new Uri(requestUri));
+            request.Headers.Add("Authorization", $"Bearer {token}");
 
-            using var response = await httpClient.GetAsync(requestUri, ct);
-            response.EnsureSuccessStatusCode();
+            using var response = await pipeline.SendRequestAsync(request, ct);
+            EnsureSuccessOrThrow(response);
 
-            var content = await response.Content.ReadAsStringAsync(ct);
+            var content = response.Content.ToString();
             return JsonSerializer.Deserialize(content, IoTHubJsonContext.Default.DeviceIdentity) ?? throw new InvalidOperationException("Failed to deserialize device identity");
         }, "get device", cancellationToken);
     }
@@ -157,21 +193,21 @@ public class IoTHubDeviceService(
 
         return await ExecuteWithTimeoutAsync(async ct =>
         {
-            var connection = await GetHubConnectionAsync(name, resourceGroup, subscription, tenant, retryPolicy, ct);
-            var hostname = connection.Hostname;
-            var key = SelectKey(connection, "ServiceConnect");
+            var (hostname, token) = await ResolveHubAccessAsync(name, resourceGroup, subscription, tenant, retryPolicy, ct);
 
             using var httpClient = _httpClientFactory.CreateClient();
-            var apiVersion = "2021-04-12";
-            var requestUri = $"https://{hostname}/twins/{Uri.EscapeDataString(deviceId)}?api-version={apiVersion}";
+            var pipeline = BuildDataPlanePipeline(retryPolicy, httpClient);
+            var requestUri = $"https://{hostname}/twins/{Uri.EscapeDataString(deviceId)}?api-version={ApiVersion}";
 
-            var token = GetSasToken(hostname, key.KeyName, key.PrimaryKey);
-            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SharedAccessSignature", token);
+            using var request = pipeline.CreateRequest();
+            request.Method = RequestMethod.Get;
+            request.Uri.Reset(new Uri(requestUri));
+            request.Headers.Add("Authorization", $"Bearer {token}");
 
-            using var response = await httpClient.GetAsync(requestUri, ct);
-            response.EnsureSuccessStatusCode();
+            using var response = await pipeline.SendRequestAsync(request, ct);
+            EnsureSuccessOrThrow(response);
 
-            var content = await response.Content.ReadAsStringAsync(ct);
+            var content = response.Content.ToString();
             return JsonSerializer.Deserialize(content, IoTHubJsonContext.Default.DeviceTwin) ?? throw new InvalidOperationException("Failed to deserialize device twin");
         }, "get device twin", cancellationToken);
     }
@@ -203,50 +239,47 @@ public class IoTHubDeviceService(
                 maxCount,
                 !string.IsNullOrEmpty(continuationToken));
 
-            var connection = await GetHubConnectionAsync(name, resourceGroup, subscription, tenant, retryPolicy, ct);
-            var hostname = connection.Hostname;
-            var key = SelectKey(connection, "ServiceConnect");
+            var (hostname, token) = await ResolveHubAccessAsync(name, resourceGroup, subscription, tenant, retryPolicy, ct);
             _logger.LogInformation("IoT Hub query connection resolved. Hub={HubName}, ElapsedMs={ElapsedMs}.", name, stopwatch.ElapsedMilliseconds);
 
             using var httpClient = _httpClientFactory.CreateClient();
-            var apiVersion = "2021-04-12";
-            var requestUri = $"https://{hostname}/devices/query?api-version={apiVersion}";
-
-            var token = GetSasToken(hostname, key.KeyName, key.PrimaryKey);
+            var pipeline = BuildDataPlanePipeline(retryPolicy, httpClient);
+            var requestUri = $"https://{hostname}/devices/query?api-version={ApiVersion}";
 
             var queryObject = new IoTHubQueryRequest(query);
             var queryJson = JsonSerializer.Serialize(queryObject, IoTHubJsonContext.Default.IoTHubQueryRequest);
 
             // IoT Hub query paging uses request/response headers: x-ms-max-item-count sets the page
             // size and x-ms-continuation carries the cursor for the next page.
-            using var request = new HttpRequestMessage(HttpMethod.Post, requestUri)
-            {
-                Content = new StringContent(queryJson, Encoding.UTF8, "application/json")
-            };
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SharedAccessSignature", token);
+            using var request = pipeline.CreateRequest();
+            request.Method = RequestMethod.Post;
+            request.Uri.Reset(new Uri(requestUri));
+            request.Headers.Add("Authorization", $"Bearer {token}");
+            request.Headers.Add("Content-Type", "application/json");
             if (maxCount.HasValue)
             {
-                request.Headers.TryAddWithoutValidation("x-ms-max-item-count", maxCount.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                request.Headers.Add("x-ms-max-item-count", maxCount.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
             }
             if (!string.IsNullOrEmpty(continuationToken))
             {
-                request.Headers.TryAddWithoutValidation("x-ms-continuation", continuationToken);
+                request.Headers.Add("x-ms-continuation", continuationToken);
             }
+            request.Content = RequestContent.Create(Encoding.UTF8.GetBytes(queryJson));
 
             _logger.LogInformation("Sending IoT Hub query request. Hub={HubName}, ElapsedMs={ElapsedMs}.", name, stopwatch.ElapsedMilliseconds);
-            using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+            using var response = await pipeline.SendRequestAsync(request, ct);
             _logger.LogInformation(
                 "Received IoT Hub query response headers. Hub={HubName}, StatusCode={StatusCode}, ElapsedMs={ElapsedMs}.",
                 name,
-                response.StatusCode,
+                response.Status,
                 stopwatch.ElapsedMilliseconds);
-            response.EnsureSuccessStatusCode();
+            EnsureSuccessOrThrow(response);
 
-            var nextContinuationToken = response.Headers.TryGetValues("x-ms-continuation", out var continuationValues)
-                ? continuationValues.FirstOrDefault()
+            var nextContinuationToken = response.Headers.TryGetValue("x-ms-continuation", out var continuationValue)
+                ? continuationValue
                 : null;
 
-            var responseContent = await response.Content.ReadAsStringAsync(ct);
+            var responseContent = response.Content.ToString();
             _logger.LogInformation(
                 "Read IoT Hub query response body. Hub={HubName}, ResponseLength={ResponseLength}, HasOutputContinuationToken={HasOutputContinuationToken}, ElapsedMs={ElapsedMs}.",
                 name,
@@ -280,37 +313,22 @@ public class IoTHubDeviceService(
 
         return await ExecuteWithTimeoutAsync(async ct =>
         {
-            var connection = await GetHubConnectionAsync(name, resourceGroup, subscription, tenant, retryPolicy, ct);
-            var hostname = connection.Hostname;
-            var key = SelectKey(connection, "RegistryRead");
+            var (hostname, token) = await ResolveHubAccessAsync(name, resourceGroup, subscription, tenant, retryPolicy, ct);
 
             using var httpClient = _httpClientFactory.CreateClient();
-            var apiVersion = "2021-04-12";
-            var requestUri = $"https://{hostname}/statistics/devices?api-version={apiVersion}";
+            var pipeline = BuildDataPlanePipeline(retryPolicy, httpClient);
+            var requestUri = $"https://{hostname}/statistics/devices?api-version={ApiVersion}";
 
-            var token = GetSasToken(hostname, key.KeyName, key.PrimaryKey);
-            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("SharedAccessSignature", token);
+            using var request = pipeline.CreateRequest();
+            request.Method = RequestMethod.Get;
+            request.Uri.Reset(new Uri(requestUri));
+            request.Headers.Add("Authorization", $"Bearer {token}");
 
-            using var response = await httpClient.GetAsync(requestUri, ct);
-            response.EnsureSuccessStatusCode();
+            using var response = await pipeline.SendRequestAsync(request, ct);
+            EnsureSuccessOrThrow(response);
 
-            var content = await response.Content.ReadAsStringAsync(ct);
+            var content = response.Content.ToString();
             return JsonSerializer.Deserialize(content, IoTHubJsonContext.Default.IoTHubRegistryStatistics) ?? throw new InvalidOperationException("Failed to deserialize device statistics");
         }, "get device statistics", cancellationToken);
-    }
-
-    private static string GetSasToken(string hostname, string policyName, string sharedAccessKey)
-    {
-        // Generate SAS token for IoT Hub authentication
-        var expiry = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds();
-        var resourceUri = Uri.EscapeDataString(hostname);
-        var toSign = $"{resourceUri}\n{expiry}";
-
-        var keyBytes = Convert.FromBase64String(sharedAccessKey);
-        using var hmac = new HMACSHA256(keyBytes);
-        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(toSign));
-        var signature = Uri.EscapeDataString(Convert.ToBase64String(hash));
-
-        return $"sr={resourceUri}&sig={signature}&se={expiry}&skn={policyName}";
     }
 }

@@ -137,7 +137,7 @@ public static partial class IoTHubQueryCompiler
         if (fields.Count == 0)
         {
             throw new ArgumentException(
-                $"Filter at index {index} references '{scopeName}.{field}', but no discovered fields were provided for scope '{scopeName}'. Run iothub query discover and pass its fields to query compile.");
+                $"Filter at index {index} references '{scopeName}.{field}', but no discovered fields were provided for scope '{scopeName}'. Run a bare 'SELECT * FROM devices' query and pass its discoveredFields to --discovered-fields.");
         }
 
         if (fields.Any(discoveredField => string.Equals(discoveredField.Field, field, StringComparison.OrdinalIgnoreCase)))

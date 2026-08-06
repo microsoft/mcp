@@ -16,12 +16,4 @@ public interface IIoTHubService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
-
-    Task<List<IoTHubKey>> GetIoTHubKeys(
-        string hubName,
-        string resourceGroup,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
 }

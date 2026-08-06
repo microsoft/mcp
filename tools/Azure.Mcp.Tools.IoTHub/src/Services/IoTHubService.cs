@@ -8,7 +8,6 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.ResourceManager;
-using Azure.ResourceManager.IotHub;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
@@ -50,44 +49,6 @@ public class IoTHubService(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving IoT Hub '{HubName}' in resource group '{ResourceGroup}' and subscription '{Subscription}'", hubName, resourceGroup, subscription);
-            throw;
-        }
-    }
-
-    public async Task<List<IoTHubKey>> GetIoTHubKeys(
-        string hubName,
-        string resourceGroup,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
-    {
-        ValidateRequiredParameters(
-            (nameof(subscription), subscription),
-            (nameof(resourceGroup), resourceGroup),
-            (nameof(hubName), hubName));
-
-        try
-        {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
-            var hub = await resourceGroupResource.Value.GetIotHubDescriptionAsync(hubName, cancellationToken);
-
-            var keys = new List<IoTHubKey>();
-            await foreach (var key in hub.Value.GetKeysAsync(cancellationToken))
-            {
-                keys.Add(new IoTHubKey(
-                    key.KeyName,
-                    key.PrimaryKey,
-                    key.SecondaryKey,
-                    key.Rights.ToString()));
-            }
-
-            return keys;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving IoT Hub keys for '{HubName}' in resource group '{ResourceGroup}' and subscription '{Subscription}'", hubName, resourceGroup, subscription);
             throw;
         }
     }

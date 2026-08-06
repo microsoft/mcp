@@ -86,6 +86,58 @@ public class IoTHubQueryFieldDiscovererTests
         AssertAllCompilable(result.Reported, PredicateScope.Reported);
     }
 
+    [Fact]
+    public void Discover_AggregatesTypesAndDeduplicatesExamplesAcrossTwins()
+    {
+        var twins = new[]
+        {
+            Parse("{ \"deviceId\": \"d1\", \"properties\": { \"reported\": { \"temperature\": 42, \"mode\": \"auto\" } } }"),
+            Parse("{ \"deviceId\": \"d2\", \"properties\": { \"reported\": { \"temperature\": 42, \"mode\": \"manual\" } } }"),
+            Parse("{ \"deviceId\": \"d3\", \"properties\": { \"reported\": { \"temperature\": 7, \"mode\": \"manual\" } } }"),
+        };
+
+        var result = IoTHubQueryFieldDiscoverer.Discover(twins);
+
+        var temperature = Assert.Single(result.Reported, f => f.Field == "temperature");
+        Assert.Equal("number", temperature.Type);
+        // 42 is seen twice but surfaced once; 7 adds a second distinct example.
+        Assert.Equal(2, temperature.Examples.Count);
+        Assert.Contains(temperature.Examples, e => e.GetInt32() == 42);
+        Assert.Contains(temperature.Examples, e => e.GetInt32() == 7);
+
+        var mode = Assert.Single(result.Reported, f => f.Field == "mode");
+        Assert.Equal("string", mode.Type);
+        Assert.Equal(2, mode.Examples.Count);
+    }
+
+    [Fact]
+    public void Discover_ReportsMixedTypeWhenValuesVary()
+    {
+        var twins = new[]
+        {
+            Parse("{ \"deviceId\": \"d1\", \"properties\": { \"reported\": { \"level\": 5 } } }"),
+            Parse("{ \"deviceId\": \"d2\", \"properties\": { \"reported\": { \"level\": \"high\" } } }"),
+        };
+
+        var result = IoTHubQueryFieldDiscoverer.Discover(twins);
+
+        var level = Assert.Single(result.Reported, f => f.Field == "level");
+        Assert.Equal("mixed", level.Type);
+    }
+
+    [Fact]
+    public void Discover_LimitsExamplesToThreePerField()
+    {
+        var twins = Enumerable.Range(1, 5)
+            .Select(i => Parse("{ \"deviceId\": \"d" + i + "\", \"properties\": { \"reported\": { \"reading\": " + i + " } } }"))
+            .ToArray();
+
+        var result = IoTHubQueryFieldDiscoverer.Discover(twins);
+
+        var reading = Assert.Single(result.Reported, f => f.Field == "reading");
+        Assert.Equal(3, reading.Examples.Count);
+    }
+
     private static void AssertAllCompilable(IEnumerable<QueryDiscoveredField> fields, PredicateScope scope)
     {
         foreach (var field in fields)

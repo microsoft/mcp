@@ -27,8 +27,6 @@ public class IoTHubSetup : IAreaSetup
         services.AddSingleton<IoTHubDeviceStatisticsCommand>();
         services.AddSingleton<IoTHubDeviceTwinGetCommand>();
         services.AddSingleton<IoTHubQueryRunCommand>();
-        services.AddSingleton<IoTHubQueryCompileCommand>();
-        services.AddSingleton<IoTHubQueryDiscoverCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -57,8 +55,6 @@ public class IoTHubSetup : IAreaSetup
         iothub.AddSubGroup(query);
 
         query.AddCommand<IoTHubQueryRunCommand>(serviceProvider);
-        query.AddCommand<IoTHubQueryCompileCommand>(serviceProvider);
-        query.AddCommand<IoTHubQueryDiscoverCommand>(serviceProvider);
 
         return iothub;
     }

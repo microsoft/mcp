@@ -2772,29 +2772,19 @@ azmcp iothub device twin get --subscription <subscription> \
                              --hub-name <iot-hub-name> \
                              --device-id <device-id>
 
-# Run an IoT Hub SQL-like query and return a single page of results
+# Run an IoT Hub query and return a single page of results. Provide --query (raw SQL) or --filters
+# (structured predicates compiled internally); a bare 'SELECT *' also returns a discoveredFields catalog.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp iothub query run --subscription <subscription> \
                        --resource-group <resource-group> \
                        --hub-name <iot-hub-name> \
-                       --query <query> \
+                       [--query <query>] \
+                       [--filters <filters-json>] \
+                       [--from <source>] \
+                       [--logical-operator <operator>] \
+                       [--discovered-fields <fields-json>] \
                        [--max-count <max-count>] \
                        [--continuation-token <continuation-token>]
-
-# Compile structured predicates into an IoT Hub query string (no network calls)
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp iothub query compile --filters <filters-json> \
-                           [--from <source>] \
-                           [--top <top>] \
-                           [--logical-operator <operator>] \
-                           [--discovered-fields <fields-json>]
-
-# Discover queryable IoT Hub device twin field paths by sampling devices
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp iothub query discover --subscription <subscription> \
-                            --resource-group <resource-group> \
-                            --hub-name <iot-hub-name> \
-                            [--max-count <max-count>]
 ```                     
 
 ### Azure Key Vault Operations

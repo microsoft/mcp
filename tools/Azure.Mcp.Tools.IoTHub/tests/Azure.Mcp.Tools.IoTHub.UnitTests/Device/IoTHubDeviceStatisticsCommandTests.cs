@@ -73,6 +73,30 @@ public class IoTHubDeviceStatisticsCommandTests : SubscriptionCommandUnitTestsBa
     }
 
     [Fact]
+    public async Task ExecuteAsync_PassesParsedArgumentsToService()
+    {
+        Service.GetDeviceStatistics(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new IoTHubRegistryStatistics(1, 4, 5));
+
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).GetDeviceStatistics(
+            "hub1",
+            "rg1",
+            "sub123",
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         Service.GetDeviceStatistics(

@@ -11,4 +11,5 @@ public record IoTHubQueryRunResult(
     [property: JsonPropertyName("count")] int Count,
     [property: JsonPropertyName("hasMore")] bool HasMore,
     [property: JsonPropertyName("continuationToken")] string? ContinuationToken,
-    [property: JsonPropertyName("message")] string? Message);
+    [property: JsonPropertyName("message")] string? Message,
+    [property: JsonPropertyName("discoveredFields")] QueryDiscoveredFields? DiscoveredFields = null);
