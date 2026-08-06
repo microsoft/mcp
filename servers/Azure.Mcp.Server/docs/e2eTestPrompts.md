@@ -176,7 +176,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_disasterrecovery_enable-crr | Enable cross-region restore on vault <vault_name> in resource group <resource_group> | none |
 | azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> | none |
 | azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription | none |
-| azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> |
+| azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> | none |
 | azurebackup_governance_find-unprotected | Find unprotected SQL databases and file shares discovered by backup vaults in my subscription | none |
 | azurebackup_governance_find-unprotected | Show all resources and sub-resources that need backup protection in resource group <resource_group> | none |
 | azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> | clarification-required |
