@@ -4,8 +4,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.ResourceManager.ResourceGraph;
@@ -15,12 +13,8 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Services;
 
-public class AdvisorService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    IHttpClientFactory httpClientFactory,
-    ILogger<AdvisorService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), IAdvisorService
+public class AdvisorService(IAzureService azureService, ILogger<AdvisorService> logger)
+    : BaseAzureResourceService(azureService), IAdvisorService
 {
     private const string AdvisorMetadataApiVersion = "2025-01-01";
 
@@ -53,9 +47,6 @@ public class AdvisorService(
         GroupByResourceType,
     ];
 
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-    private readonly ISubscriptionService _advisorSubscriptionService = subscriptionService;
     private readonly ILogger<AdvisorService> _logger = logger;
 
     public async Task<ResourceQueryResults<Recommendation>> ListRecommendationsAsync(
@@ -89,12 +80,12 @@ public class AdvisorService(
         string? category,
         CancellationToken cancellationToken = default)
     {
-        var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint
+        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint
             ?? throw new InvalidOperationException("Management endpoint is not configured.");
 
         var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
-        var client = _httpClientFactory.CreateClient();
+        var client = AzureService.GetClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
 
         var requestUri = new Uri(managementEndpoint, $"/providers/Microsoft.Advisor/metadata?api-version={AdvisorMetadataApiVersion}");
@@ -203,7 +194,7 @@ public class AdvisorService(
         ArgumentException.ThrowIfNullOrWhiteSpace(language);
 
         // The Advisor metadata catalog is tenant-invariant, so any accessible tenant can be used for the query.
-        var tenantResource = (await TenantService.GetTenants(cancellationToken)).FirstOrDefault()
+        var tenantResource = (await AzureService.GetTenants(cancellationToken)).FirstOrDefault()
             ?? throw new InvalidOperationException("No accessible tenants found.");
 
         var query =
@@ -295,8 +286,8 @@ public class AdvisorService(
         ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
         ArgumentException.ThrowIfNullOrWhiteSpace(groupBy);
 
-        var subscriptionResource = await _advisorSubscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-        var allTenants = await TenantService.GetTenants(cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var allTenants = await AzureService.GetTenants(cancellationToken);
         var tenantResource = allTenants.FirstOrDefault(t => t.Data.TenantId == subscriptionResource.Data.TenantId)
             ?? throw new InvalidOperationException($"No accessible tenant found for subscription '{subscription}'");
 

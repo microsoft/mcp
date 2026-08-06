@@ -3,8 +3,6 @@
 
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.FileShares.Models;
 using Azure.ResourceManager.FileShares;
 using Azure.ResourceManager.Resources;
@@ -17,12 +15,9 @@ namespace Azure.Mcp.Tools.FileShares.Services;
 /// <summary>
 /// Service for Azure File Shares operations using Azure Resource Manager SDK.
 /// </summary>
-public sealed class FileSharesService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ILogger<FileSharesService> logger) : BaseAzureService(tenantService), IFileSharesService
+public sealed class FileSharesService(IAzureService azureService, ILogger<FileSharesService> logger)
+    : BaseAzureService(azureService), IFileSharesService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ILogger<FileSharesService> _logger = logger;
     public const string HttpClientName = "AzureMcpFileSharesService";
 
@@ -346,7 +341,7 @@ public sealed class FileSharesService(
             (nameof(fileShareName), fileShareName),
             (nameof(location), location));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var content = new ResourceManager.FileShares.Models.FileShareNameAvailabilityContent
         {
             Name = fileShareName,
@@ -594,7 +589,7 @@ public sealed class FileSharesService(
             (nameof(subscription), subscription),
             (nameof(location), location));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var response = await subscriptionResource.GetLimitsAsync(new(location), cancellationToken);
 
         var output = response.Value.Properties;
@@ -637,7 +632,7 @@ public sealed class FileSharesService(
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
             var response = await subscriptionResource.GetUsageDataAsync(new(location), cancellationToken);
 
             var result = response.Value;
@@ -670,7 +665,7 @@ public sealed class FileSharesService(
             (nameof(location), location),
             (nameof(provisionedStorageGiB), provisionedStorageGiB.ToString()));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var response = await subscriptionResource.GetProvisioningRecommendationAsync(new(location), new(provisionedStorageGiB), cancellationToken);
 
         var output = response.Value.Properties;

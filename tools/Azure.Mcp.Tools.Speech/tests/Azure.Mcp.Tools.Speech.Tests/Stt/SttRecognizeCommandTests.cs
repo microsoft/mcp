@@ -4,6 +4,7 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Commands.Stt;
 using Azure.Mcp.Tools.Speech.Models;
@@ -28,7 +29,7 @@ public class SttRecognizeCommandTests : IDisposable
     private readonly IFastTranscriptionRecognizer _fastTranscriptionRecognizer;
     private readonly IRealtimeTranscriptionRecognizer _realtimeTranscriptionRecognizer;
     private readonly IRealtimeTtsSynthesizer _realtimeTtsSynthesizer;
-    private readonly ITenantService _tenantService;
+    private readonly IAzureService _azureService;
     private readonly ILogger<SttRecognizeCommand> _logger;
     private readonly ILogger<SpeechService> _speechServiceLogger;
     private readonly SttRecognizeCommand _command;
@@ -42,12 +43,12 @@ public class SttRecognizeCommandTests : IDisposable
         _fastTranscriptionRecognizer = Substitute.For<IFastTranscriptionRecognizer>();
         _realtimeTranscriptionRecognizer = Substitute.For<IRealtimeTranscriptionRecognizer>();
         _realtimeTtsSynthesizer = Substitute.For<IRealtimeTtsSynthesizer>();
-        _tenantService = Substitute.For<ITenantService>();
+        _azureService = Substitute.For<IAzureService>();
         _logger = Substitute.For<ILogger<SttRecognizeCommand>>();
         _speechServiceLogger = Substitute.For<ILogger<SpeechService>>();
 
         // Create real SpeechService with mocked dependencies
-        _speechService = new SpeechService(_tenantService, _speechServiceLogger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer);
+        _speechService = new SpeechService(_azureService, _speechServiceLogger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer);
 
         _command = new(_logger, _speechService);
         _commandDefinition = _command.GetCommand();

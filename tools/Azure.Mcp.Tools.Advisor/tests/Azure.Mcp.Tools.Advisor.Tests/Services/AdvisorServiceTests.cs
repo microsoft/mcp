@@ -4,8 +4,7 @@
 using System.Net;
 using System.Text;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Advisor.Services;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
@@ -16,9 +15,9 @@ using Xunit;
 namespace Azure.Mcp.Tools.Advisor.Tests.Services;
 
 // Focused unit tests for AdvisorService.ListRecommendationTypesAsync. The Advisor
-// metadata endpoint is hit via IHttpClientFactory so we stub the handler with a canned
+// metadata endpoint is hit via AzureService so we stub the handler with a canned
 // ARM payload; the ARM token path is short-circuited by stubbing
-// ITenantService.GetTokenCredentialAsync.
+// IAzureService.GetTokenCredentialAsync.
 //
 // The service only consumes the `recommendationType` entity (the one whose supportedValues
 // carry per-type linkage to category/impact/resourceType/subCategory). Other metadata
@@ -254,28 +253,23 @@ public class AdvisorServiceTests
         HttpStatusCode statusCode = HttpStatusCode.OK,
         string? reasonPhrase = null)
     {
-        var subscriptionService = Substitute.For<ISubscriptionService>();
-        var tenantService = Substitute.For<ITenantService>();
-        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        var azureService = Substitute.For<IAzureService>();
         var logger = Substitute.For<ILogger<AdvisorService>>();
 
         var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
         cloudConfig.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
-        tenantService.CloudConfiguration.Returns(cloudConfig);
+        azureService.CloudConfiguration.Returns(cloudConfig);
 
         var credential = Substitute.For<TokenCredential>();
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
             .Returns(new AccessToken("fake-token", DateTimeOffset.UtcNow.AddHours(1)));
-        tenantService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
+        azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(credential));
 
         var handler = new StubHttpHandler(responseBody, statusCode, reasonPhrase);
-        // AdvisorService calls _httpClientFactory.CreateClient() (parameterless), which is an
-        // extension method that delegates to CreateClient(Options.DefaultName) == "". Substitute
-        // the interface member it ultimately dispatches to.
-        httpClientFactory.CreateClient(Arg.Any<string>()).Returns(_ => new HttpClient(handler));
+        azureService.GetClient(Arg.Any<string>()).Returns(_ => new HttpClient(handler));
 
-        return new AdvisorService(subscriptionService, tenantService, httpClientFactory, logger);
+        return new AdvisorService(azureService, logger);
     }
 
     private sealed class StubHttpHandler(string body, HttpStatusCode statusCode, string? reasonPhrase) : HttpMessageHandler

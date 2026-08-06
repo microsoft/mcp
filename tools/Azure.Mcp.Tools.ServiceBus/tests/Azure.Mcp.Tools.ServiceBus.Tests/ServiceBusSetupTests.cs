@@ -164,7 +164,7 @@ public class ServiceBusSetupTests
         var services = new ServiceCollection();
         services.AddLogging();
         // Add required dependencies
-        services.AddSingleton(Substitute.For<ITenantService>());
+        services.AddSingleton(Substitute.For<IAzureService>());
         setup.ConfigureServices(services);
         return services.BuildServiceProvider();
     }

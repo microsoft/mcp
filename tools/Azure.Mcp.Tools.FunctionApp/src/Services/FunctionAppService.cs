@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.ResourceManager.AppService;
 using Microsoft.Extensions.Logging;
@@ -12,14 +10,10 @@ using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.FunctionApp.Services;
 
-public sealed class FunctionAppService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ICacheService cacheService,
-    ILogger<FunctionAppService> logger) : BaseAzureService(tenantService), IFunctionAppService
+public sealed class FunctionAppService(IAzureService azureService, ICacheService cacheService, ILogger<FunctionAppService> logger)
+    : BaseAzureService(azureService), IFunctionAppService
 {
     private const int MaxFunctionApps = 10_000;
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ILogger<FunctionAppService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -36,7 +30,7 @@ public sealed class FunctionAppService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var functionApps = new List<FunctionAppInfo>();
         if (string.IsNullOrEmpty(functionAppName))
         {

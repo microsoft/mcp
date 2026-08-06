@@ -5,15 +5,14 @@ using System.Buffers;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ConfidentialLedger.Models;
 using Azure.Security.ConfidentialLedger;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Services;
 
-public class ConfidentialLedgerService(ITenantService tenantService)
-    : BaseAzureService(tenantService), IConfidentialLedgerService
+public class ConfidentialLedgerService(IAzureService azureService)
+    : BaseAzureService(azureService), IConfidentialLedgerService
 {
     private static RequestContent CreateAppendEntryContent(string entryData)
     {
@@ -39,7 +38,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             (nameof(entryData), entryData));
 
         var ledgerUri = new Uri(GetLedgerUri(ledgerName));
-        var credential = await GetCredential(cancellationToken);
+        var credential = await GetCredential(null, cancellationToken);
 
         // Configure client (retry etc. could be extended later)
         ConfidentialLedgerClient client = new(ledgerUri, credential);
@@ -70,7 +69,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         }
 
         var ledgerUri = new Uri(GetLedgerUri(ledgerName));
-        var credential = await GetCredential(cancellationToken);
+        var credential = await GetCredential(null, cancellationToken);
         ConfidentialLedgerClient client = new(ledgerUri, credential);
 
         bool loaded = false;
@@ -114,7 +113,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
     {
         ValidateLedgerName(ledgerName);
 
-        return TenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
                 $"https://{ledgerName}.confidential-ledger.azure.com",

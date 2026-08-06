@@ -5,24 +5,16 @@
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Grafana.Models;
 using Azure.Mcp.Tools.Grafana.Services.Models;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Identity;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Grafana.Services;
 
-public class GrafanaService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ILogger<GrafanaService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), IGrafanaService
+public class GrafanaService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IGrafanaService
 {
-    private readonly ILogger<GrafanaService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
     public async Task<ResourceQueryResults<GrafanaWorkspace>> ListWorkspacesAsync(
         string subscription,
         string? resourceGroup = null,

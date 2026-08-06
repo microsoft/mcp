@@ -39,7 +39,7 @@ public sealed class LedgerEntryGetCommandTests : CommandUnitTestsBase<LedgerEntr
     [InlineData("ledgerName", " ")]
     public async Task GetLedgerEntryAsync_ThrowsArgumentNullException_WhenParametersInvalid(string? ledgerName, string? transactionId)
     {
-        var service = new ConfidentialLedgerService(Substitute.For<ITenantService>());
+        var service = new ConfidentialLedgerService(Substitute.For<IAzureService>());
         await Assert.ThrowsAsync<ArgumentException>(() =>
             service.GetLedgerEntryAsync(ledgerName!, transactionId!, null, TestContext.Current.CancellationToken));
     }
@@ -57,7 +57,7 @@ public sealed class LedgerEntryGetCommandTests : CommandUnitTestsBase<LedgerEntr
     [InlineData("-startswithhyphen")]
     public async Task GetLedgerEntryAsync_RejectsInvalidLedgerNames_PreventingSsrf(string ledgerName)
     {
-        var service = new ConfidentialLedgerService(Substitute.For<ITenantService>());
+        var service = new ConfidentialLedgerService(Substitute.For<IAzureService>());
         await Assert.ThrowsAsync<ArgumentException>(() =>
             service.GetLedgerEntryAsync(ledgerName, "1.0", null, TestContext.Current.CancellationToken));
     }
@@ -69,7 +69,7 @@ public sealed class LedgerEntryGetCommandTests : CommandUnitTestsBase<LedgerEntr
     [InlineData("name#fragment")]
     public async Task AppendEntryAsync_RejectsInvalidLedgerNames_PreventingSsrf(string ledgerName)
     {
-        var service = new ConfidentialLedgerService(Substitute.For<ITenantService>());
+        var service = new ConfidentialLedgerService(Substitute.For<IAzureService>());
         await Assert.ThrowsAsync<ArgumentException>(() =>
             service.AppendEntryAsync(ledgerName, "data", null, TestContext.Current.CancellationToken));
     }

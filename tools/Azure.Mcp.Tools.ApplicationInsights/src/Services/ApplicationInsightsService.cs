@@ -3,27 +3,16 @@
 
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.ApplicationInsights;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Services;
 
-public class ApplicationInsightsService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    IResourceGroupService resourceGroupService,
-    IProfilerDataService profilerDataClient,
-    ILogger<ApplicationInsightsService> logger) : BaseAzureService(tenantService), IApplicationInsightsService
+public class ApplicationInsightsService(IAzureService azureService, IProfilerDataService profilerDataClient)
+    : BaseAzureService(azureService), IApplicationInsightsService
 {
     private const int MaxRecommendations = 20;
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
-    private readonly IResourceGroupService _resourceGroupService = resourceGroupService;
     private readonly IProfilerDataService _profilerDataClient = profilerDataClient ?? throw new ArgumentNullException(nameof(profilerDataClient));
-    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<IEnumerable<JsonNode>> GetProfilerInsightsAsync(
         string subscription,
@@ -70,7 +59,7 @@ public class ApplicationInsightsService(
         }
 
         // Otherwise, query by resource group
-        var rgResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rgResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
         return await rgResource.GetApplicationInsightsComponents().GetAllAsync(cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -81,7 +70,7 @@ public class ApplicationInsightsService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var targetSubscription = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken).ConfigureAwait(false);
+        var targetSubscription = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken).ConfigureAwait(false);
         return await targetSubscription.GetApplicationInsightsComponentsAsync(cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }

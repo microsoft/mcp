@@ -131,7 +131,7 @@ public class SpeechSetupTests
         services.AddLogging();
         services.AddHttpClient();
         // Add required dependencies
-        services.AddSingleton(Substitute.For<ITenantService>());
+        services.AddSingleton(Substitute.For<IAzureService>());
         setup.ConfigureServices(services);
         return services.BuildServiceProvider();
     }

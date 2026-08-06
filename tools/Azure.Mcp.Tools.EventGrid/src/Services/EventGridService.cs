@@ -5,8 +5,6 @@ using System.Net.Mime;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Messaging.EventGrid;
@@ -19,12 +17,10 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.EventGrid.Services;
 
-public class EventGridService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventGridService> logger, IHttpClientFactory httpClientFactory)
-    : BaseAzureService(tenantService), IEventGridService
+public class EventGridService(IAzureService azureService, ILogger<EventGridService> logger)
+    : BaseAzureService(azureService), IEventGridService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<EventGridService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     public async Task<List<EventGridTopicInfo>> GetTopicsAsync(
         string subscription,
@@ -33,7 +29,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var topics = new List<EventGridTopicInfo>();
 
         if (!string.IsNullOrEmpty(resourceGroup))
@@ -69,7 +65,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         CancellationToken cancellationToken = default)
     {
         var subscriptions = new List<EventGridSubscriptionInfo>();
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
         // If specific topic is requested, get subscriptions for that topic only
         if (!string.IsNullOrEmpty(topicName))
@@ -101,7 +97,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
             // Find the topic to get its endpoint and access key
             var topic = await FindTopic(subscriptionResource, resourceGroup, topicName, cancellationToken);
@@ -126,7 +122,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             var eventGridEventSchemas = ParseAndValidateEventData(eventData, eventSchema ?? "EventGridEvent");
 
             // Create publisher client with HTTP client factory for test proxy support
-            var httpClient = _httpClientFactory.CreateClient(nameof(EventGridPublisherClient));
+            var httpClient = AzureService.GetClient(nameof(EventGridPublisherClient));
             var clientOptions = new EventGridPublisherClientOptions
             {
                 Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient)

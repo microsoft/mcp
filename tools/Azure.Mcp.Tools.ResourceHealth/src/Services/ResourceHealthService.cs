@@ -6,24 +6,15 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ResourceHealth.Models;
 using Azure.Mcp.Tools.ResourceHealth.Models.Internal;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Services;
 
-public class ResourceHealthService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    IHttpClientFactory httpClientFactory)
-    : BaseAzureService(tenantService), IResourceHealthService
+public class ResourceHealthService(IAzureService azureService)
+    : BaseAzureService(azureService), IResourceHealthService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-
     private const string ResourceHealthApiVersion = "2025-05-01";
 
     public async Task<AvailabilityStatus> GetAvailabilityStatusAsync(
@@ -36,11 +27,11 @@ public class ResourceHealthService(
         // Parse and validate resource ID format using Azure SDK
         var parsedResourceId = ResourceIdentifier.Parse(resourceId);
 
-        var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint ?? throw new InvalidOperationException("Management endpoint is not configured.");
+        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint ?? throw new InvalidOperationException("Management endpoint is not configured.");
 
         var token = await GetArmAccessTokenAsync(null, cancellationToken);
 
-        var client = _httpClientFactory.CreateClient();
+        var client = AzureService.GetClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
 
         // Construct URL safely using Uri to ensure path is relative to base
@@ -65,13 +56,13 @@ public class ResourceHealthService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
-        var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
+        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint;
         var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
-        var client = _httpClientFactory.CreateClient();
+        var client = AzureService.GetClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
 
         // Construct URL safely using Uri to ensure path is relative to base
@@ -107,14 +98,14 @@ public class ResourceHealthService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
-        var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
+        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint;
 
         var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
-        var client = _httpClientFactory.CreateClient();
+        var client = AzureService.GetClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
 
         // Build OData filter - using correct property paths for Azure Resource Health API
