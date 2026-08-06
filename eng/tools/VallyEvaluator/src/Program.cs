@@ -143,7 +143,9 @@ internal class Program
                 .Select(p =>
                 {
                     var prompt = p.Prompt.Replace("\\<", "<");
-                    p.Prompt = VallyUtilities.ReplaceAngleBracketPlaceholders(prompt, VallyUtilities.Replacements);
+                    p.Prompt = prompt;
+                    //p.Prompt = VallyUtilities.ReplaceAngleBracketPlaceholders(prompt, VallyUtilities.Replacements);
+
                     return p;
                 })
                 .OrderBy(p => p.Prompt)
