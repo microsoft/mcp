@@ -8,6 +8,9 @@ parameters:
 - name: VariableNamePrefix
   type: string 
   default: GH_TOKEN
+- name: AlwaysUseOwnerSuffix
+  type: boolean
+  default: false
 - name: ExportAsOutputVariable
   type: boolean 
   default: false
@@ -16,7 +19,6 @@ parameters:
 
 steps:
 - task: AzureCLI@2
-  name: GenerateGitHubToken
   displayName: "Login to GitHub"
   inputs:
     azureSubscription: 'AzureSDKEngKeyVault Secrets'
@@ -24,6 +26,7 @@ steps:
     scriptLocation: scriptPath
     scriptPath: ${{ parameters.ScriptDirectory }}/login-to-github.ps1
     arguments: >
-     -InstallationTokenOwners '${{ join(''',''', parameters.TokenOwners) }}'
-     -VariableNamePrefix '${{ parameters.VariableNamePrefix }}'
-     -ExportAsOutputVariable:$${{ parameters.ExportAsOutputVariable }}
+      -InstallationTokenOwners '${{ join(''',''', parameters.TokenOwners) }}'
+      -VariableNamePrefix '${{ parameters.VariableNamePrefix }}'
+      -AlwaysUseOwnerSuffix:$${{ parameters.AlwaysUseOwnerSuffix }}
+      -ExportAsOutputVariable:$${{ parameters.ExportAsOutputVariable }}
