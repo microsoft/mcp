@@ -12,7 +12,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.IoTHub.UnitTests.Device;
+namespace Azure.Mcp.Tools.IoTHub.Tests.Device;
 
 public class IoTHubDeviceListCommandTests : SubscriptionCommandUnitTestsBase<IoTHubDeviceListCommand, IIoTHubDeviceService>
 {
