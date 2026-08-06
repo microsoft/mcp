@@ -4,7 +4,9 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Monitor.OpenTelemetry.Exporter;
+#pragma warning disable IDE0005 // using isn't used in release builds.
 using Microsoft.Extensions.Azure;
+#pragma warning restore IDE0005 // using isn't used in release builds.
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

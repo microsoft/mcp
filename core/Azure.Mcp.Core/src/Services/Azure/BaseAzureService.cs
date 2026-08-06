@@ -7,7 +7,9 @@ using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
+#pragma warning disable IDE0005 // using isn't used in release builds.
 using Microsoft.Mcp.Core.Helpers;
+#pragma warning restore IDE0005 // using isn't used in release builds.
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure;
 
