@@ -31,6 +31,17 @@ belt-and-braces safety net, the `DeleteAfter` tag added here guarantees the grou
 is eventually reclaimed by the standard resource-cleanup job even if teardown
 never runs.
 
+Reports the identifiers it actually provisioned back to Invoke-VallyEval.ps1 as
+a PSCustomObject of `KEY = value` pairs - the LAST object written to the output
+stream (Write-Info/Write-Host logging above does not interfere, since it never
+touches that stream). The runner forwards each entry to vally as
+`--param KEY=value`, resolving the matching `${KEY}`/`${KEY=default}`
+placeholder each eval prompt references - see Vally's parameter resolution:
+https://microsoft.github.io/vally/reference/cli/eval/#parameter-resolution.
+This is what lets -ResourceGroup/-Namespace (or a future caller randomizing
+either to avoid colliding with a concurrent run) always flow through to the
+evals actually run, without ever having to hand-edit an eval spec.
+
 .PARAMETER ResourceGroup
 Resource group to create. Must match the resource group used in the eval prompts.
 Default: contoso-rg.
@@ -57,6 +68,12 @@ Default: orders, payments, shipments.
 
 .EXAMPLE
 ./New-EventHubsResources.ps1 -Subscription <subscription-id> -Location westus2
+
+.EXAMPLE
+# Provision against a non-default resource group directly (e.g. to inspect it
+# by hand). If Invoke-VallyEval.ps1 later runs with -SkipProvisioning against
+# this same resource group, pass -ResourceGroup so the eval prompts match.
+./New-EventHubsResources.ps1 -ResourceGroup my-rg -Namespace my-ns
 #>
 
 [CmdletBinding()]
@@ -138,5 +155,27 @@ finally {
 
 $provisionedNamespace = $deployment.properties.outputs.namespaceName.value
 $provisionedResourceGroup = $deployment.properties.outputs.resourceGroupName.value
+$provisionedDeletableNamespace = $deployment.properties.outputs.deletableNamespaceName.value
+$provisionedDeletableEventHub = $deployment.properties.outputs.deletableEventHubName.value
+$provisionedDeletableConsumerGroup = $deployment.properties.outputs.deletableConsumerGroupName.value
 
 Write-Info "Provisioning complete. Resource group '$provisionedResourceGroup' (namespace '$provisionedNamespace') will auto-delete after $deleteAfter if not removed sooner."
+
+# Report the actually-provisioned resource identifiers back to
+# Invoke-VallyEval.ps1 as the LAST object on the output stream. It forwards
+# each entry to vally as `--param KEY=value`, resolving the matching
+# `${KEY}`/`${KEY=default}` placeholder each eval prompt references - so the
+# evals always target what was truly provisioned here (this resource
+# group/namespace could be renamed, or even randomized, by a caller without
+# ever having to edit an eval spec). See the "Vally Parameter resolution"
+# feature: https://microsoft.github.io/vally/reference/cli/eval/#parameter-resolution
+[pscustomobject]@{
+    RESOURCE_GROUP             = $provisionedResourceGroup
+    EVENTHUBS_NAMESPACE        = $provisionedNamespace
+    EVENTHUBS_NAMESPACE_DELETE = $provisionedDeletableNamespace
+    EVENTHUB_ORDERS            = 'orders'
+    EVENTHUB_PAYMENTS          = 'payments'
+    EVENTHUB_TEMP              = $provisionedDeletableEventHub
+    CONSUMER_GROUP_BILLING     = 'billing'
+    CONSUMER_GROUP_TEMP        = $provisionedDeletableConsumerGroup
+}

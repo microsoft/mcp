@@ -85,7 +85,7 @@ stimuli:
     # Rubric for the outcome LLM judge, applied identically to both variants.
     rubric:
       - "The response contains the actual list of Event Hubs namespaces for the subscription, retrieved from Azure."
-      - "The list includes the provisioned namespace 'contoso-ehns'."
+      - "The list includes the provisioned namespace '${EVENTHUBS_NAMESPACE=contoso-ehns}'."
       - "The namespaces are real data obtained from a live lookup, not fabricated, guessed, or placeholder values."
       - "The assistant does not merely explain how the user could list the namespaces themselves."
     graders:
@@ -96,18 +96,18 @@ stimuli:
             Score whether the assistant actually retrieved and returned the real
             Event Hubs namespaces for the subscription, per the rubric. Score 1
             only if concrete Event Hubs namespaces obtained from Azure are
-            present (including 'contoso-ehns'). Score 0 if the assistant says it
+            present (including '${EVENTHUBS_NAMESPACE=contoso-ehns}'). Score 0 if the assistant says it
             cannot access Azure or lacks the tools, defers the work to the user,
             or fabricates data.
           scoring: binary
 
   - name: get-single-namespace
     prompt: |
-      Get the details of my Event Hubs namespace "contoso-ehns" in my resource
-      group "contoso-rg".
+      Get the details of my Event Hubs namespace "${EVENTHUBS_NAMESPACE=contoso-ehns}" in my resource
+      group "${RESOURCE_GROUP=contoso-rg}".
     # Rubric for the outcome LLM judge, applied identically to both variants.
     rubric:
-      - "The response contains the actual configuration/details of the 'contoso-ehns' namespace, retrieved from Azure."
+      - "The response contains the actual configuration/details of the '${EVENTHUBS_NAMESPACE=contoso-ehns}' namespace, retrieved from Azure."
       - "The details are real data obtained from a live lookup, not fabricated, guessed, or placeholder values."
       - "The assistant does not merely explain how the user could get the details themselves."
     graders:
@@ -116,7 +116,7 @@ stimuli:
         config:
           prompt: >-
             Score whether the assistant actually retrieved and returned the real
-            details of the 'contoso-ehns' Event Hubs namespace, per the rubric.
+            details of the '${EVENTHUBS_NAMESPACE=contoso-ehns}' Event Hubs namespace, per the rubric.
             Score 1 only if concrete namespace details obtained from Azure are
             present. Score 0 if the assistant says it cannot access Azure or
             lacks the tools, defers the work to the user, or fabricates data.

@@ -123,7 +123,13 @@ still cannot.
 ## Provisioning test resources
 
 The eval prompts reference concrete resources (resource group `contoso-rg`,
-namespace `contoso-ehns`, event hub `orders`). Two scripts create and remove them:
+namespace `contoso-ehns`, event hub `orders`). Rather than hardcoding those
+names, the eval specs reference them as
+[Vally parameters](https://microsoft.github.io/vally/reference/cli/eval/#parameter-resolution) -
+e.g. `${RESOURCE_GROUP=contoso-rg}` - so a prompt reads `resource group
+"${RESOURCE_GROUP=contoso-rg}"`. Without any override, the `=contoso-rg`
+inline default applies and the eval behaves exactly as if the name were
+hardcoded. Two scripts create and remove the underlying resources:
 
 - **`eventhubs/New-EventHubsResources.ps1`** - deploys
   `eventhubs/eventhubs-resources.bicep` (a subscription-scoped Bicep template,
@@ -131,7 +137,9 @@ namespace `contoso-ehns`, event hub `orders`). Two scripts create and remove the
   namespace, and the event hubs (including `orders`). It stamps a
   **`DeleteAfter`** tag (an ISO 8601 UTC timestamp, matching the repo's
   `TestResources` convention) on the resource group so the standard Azure
-  clean-up job reclaims it **even if teardown never runs**.
+  clean-up job reclaims it **even if teardown never runs**. As its last step it
+  emits a `PSCustomObject` reporting the identifiers it actually provisioned
+  (`RESOURCE_GROUP`, `EVENTHUBS_NAMESPACE`, etc.).
 - **`eventhubs/Remove-EventHubsResources.ps1`** - deletes the resource group and
   everything in it.
 
@@ -150,6 +158,28 @@ run the scripts directly:
 # ... run evals ...
 ./eventhubs/Remove-EventHubsResources.ps1 -Subscription <subscription-id>
 ```
+
+### How provisioned resource names reach the eval prompts
+
+`New-*Resources.ps1` is free to pick its own resource names at run time -
+including randomizing a suffix to avoid colliding with a concurrent run -
+rather than always using its own fixed defaults. It reports back whatever it
+actually created by emitting a `Hashtable`/`PSCustomObject` of `KEY = value`
+pairs (e.g. `[pscustomobject]@{ RESOURCE_GROUP = $rg; EVENTHUBS_NAMESPACE =
+$ns }`) as the **last** object on its output stream (`Write-Host`/`Write-Info`
+logging doesn't interfere - it never touches that stream). `Invoke-VallyEval.ps1`
+captures that object and forwards each entry to `vally experiment run` as
+`--param KEY=value`, which resolves the matching `${KEY}`/`${KEY=default}`
+placeholder in the eval prompts - so the eval always targets what was truly
+provisioned, never a name this runner has to guess. The reported
+`RESOURCE_GROUP` also flows to the post-eval teardown script (taking
+precedence over `-ResourceGroup`'s own default), so teardown targets the same
+resource group that was actually provisioned.
+
+If you skip provisioning (`-SkipProvisioning`) or run an eval spec standalone
+via `vally experiment run`, no params are forwarded and each placeholder's own
+inline `=default` applies - override it yourself with `vally`'s own `--param`
+flag if your pre-existing resources use different names.
 
 ## Running
 
@@ -350,7 +380,13 @@ considerations in the generated YAML comments.
    adjust the prompts, the `--namespace` argument, and the `prompt`/`rubric`
    outcome graders. Every prompt must come from
    `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`. Grading is outcome-only
-   (see above), so there are no tool-selection graders to maintain.
+   (see above), so there are no tool-selection graders to maintain. Reference
+   any provisioned resource name as a
+   [Vally parameter](https://microsoft.github.io/vally/reference/cli/eval/#parameter-resolution)
+   with an inline default matching the provisioning script, e.g.
+   `"${RESOURCE_GROUP=contoso-rg}"` / `"${EVENTHUBS_NAMESPACE=contoso-ehns}"`,
+   rather than hardcoding the literal name - see "How provisioned resource
+   names reach the eval prompts" above.
 3. Add the experiment named **`<tool>.experiment.yaml`** (e.g.
    `eventhub-update.experiment.yaml`) - copy `eventhubs/eventhub-get.experiment.yaml`,
    point its `evals:` at your new `.eval.yaml`, and keep the `baseline`,
@@ -360,7 +396,10 @@ considerations in the generated YAML comments.
    is needed - the variants are defined here.
 4. For a new area needing Azure resources, add `New-*Resources.ps1` and
    `Remove-*Resources.ps1` to that area folder (see the Event Hubs pair as a
-   template). They are discovered and run per area. For a destructive
+   template). They are discovered and run per area. Have `New-*Resources.ps1`
+   emit a `PSCustomObject` of the `KEY = value` pairs matching the params your
+   new eval spec references (as its last output object - see above) so the
+   runner forwards them to `vally` automatically. For a destructive
    (`_delete`) tool in an existing area, prefer extending that area's existing
    provisioning with a disposable, single-purpose resource (see
    `eventhubs/eventhubs-resources.bicep`'s `deletableEventHubName`/

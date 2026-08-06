@@ -82,8 +82,8 @@ environment:
 stimuli:
   - name: list-event-hubs-in-namespace
     prompt: |
-      List all of the Event Hubs in my Event Hubs namespace "contoso-ehns"
-      in resource group "contoso-rg".
+      List all of the Event Hubs in my Event Hubs namespace "${EVENTHUBS_NAMESPACE=contoso-ehns}"
+      in resource group "${RESOURCE_GROUP=contoso-rg}".
     # Rubric for the outcome LLM judge, applied identically to both variants.
     rubric:
       - "The response contains the actual list of Event Hubs for the requested namespace, retrieved from Azure."
@@ -103,11 +103,11 @@ stimuli:
 
   - name: get-single-event-hub
     prompt: |
-      Get the details of the event hub "orders" in my namespace "contoso-ehns"
-      and resource group "contoso-rg".
+      Get the details of the event hub "${EVENTHUB_ORDERS=orders}" in my namespace "${EVENTHUBS_NAMESPACE=contoso-ehns}"
+      and resource group "${RESOURCE_GROUP=contoso-rg}".
     # Rubric for the outcome LLM judge, applied identically to both variants.
     rubric:
-      - "The response contains the actual configuration/details of the 'orders' Event Hub, retrieved from Azure."
+      - "The response contains the actual configuration/details of the '${EVENTHUB_ORDERS=orders}' Event Hub, retrieved from Azure."
       - "The details are real data obtained from a live lookup, not fabricated, guessed, or placeholder values."
       - "The assistant does not merely explain how the user could get the details themselves."
     graders:
@@ -116,7 +116,7 @@ stimuli:
         config:
           prompt: >-
             Score whether the assistant actually retrieved and returned the real
-            details of the 'orders' Event Hub, per the rubric. Score 1 only if
+            details of the '${EVENTHUB_ORDERS=orders}' Event Hub, per the rubric. Score 1 only if
             concrete Event Hub details obtained from Azure are present. Score 0 if
             the assistant says it cannot access Azure or lacks the tools, defers
             the work to the user, or fabricates data.

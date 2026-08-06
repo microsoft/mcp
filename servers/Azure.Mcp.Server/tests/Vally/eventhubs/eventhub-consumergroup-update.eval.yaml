@@ -91,11 +91,11 @@ environment:
 stimuli:
   - name: create-consumer-group
     prompt: |
-      Create a new consumer group "billing" in my event hub "orders",
-      namespace "contoso-ehns", and resource group "contoso-rg".
+      Create a new consumer group "${CONSUMER_GROUP_BILLING=billing}" in my event hub "${EVENTHUB_ORDERS=orders}",
+      namespace "${EVENTHUBS_NAMESPACE=contoso-ehns}", and resource group "${RESOURCE_GROUP=contoso-rg}".
     # Rubric for the outcome LLM judge, applied identically to both variants.
     rubric:
-      - "The response confirms the 'billing' consumer group was created (or already exists and is confirmed) via a real Azure operation."
+      - "The response confirms the '${CONSUMER_GROUP_BILLING=billing}' consumer group was created (or already exists and is confirmed) via a real Azure operation."
       - "The confirmation reflects real data obtained from a live Azure call, not fabricated, guessed, or placeholder values."
       - "The assistant does not merely explain how the user could create the consumer group themselves."
     graders:
@@ -104,7 +104,7 @@ stimuli:
         config:
           prompt: >-
             Score whether the assistant actually performed (or confirmed) the
-            creation of the real 'billing' consumer group via Azure, per the
+            creation of the real '${CONSUMER_GROUP_BILLING=billing}' consumer group via Azure, per the
             rubric. Score 1 only if a concrete, real confirmation obtained
             from Azure is present. Score 0 if the assistant says it cannot
             access Azure or lacks the tools, defers the work to the user, or
@@ -113,12 +113,12 @@ stimuli:
 
   - name: update-consumer-group
     prompt: |
-      Update my consumer group "billing" in my event hub "orders", namespace
-      "contoso-ehns", and resource group "contoso-rg" to set its user
+      Update my consumer group "${CONSUMER_GROUP_BILLING=billing}" in my event hub "${EVENTHUB_ORDERS=orders}", namespace
+      "${EVENTHUBS_NAMESPACE=contoso-ehns}", and resource group "${RESOURCE_GROUP=contoso-rg}" to set its user
       metadata to "Owned by the billing team".
     # Rubric for the outcome LLM judge, applied identically to both variants.
     rubric:
-      - "The response confirms the 'billing' consumer group was updated (with user metadata set to 'Owned by the billing team') via a real Azure operation."
+      - "The response confirms the '${CONSUMER_GROUP_BILLING=billing}' consumer group was updated (with user metadata set to 'Owned by the billing team') via a real Azure operation."
       - "The confirmation reflects real data obtained from a live Azure call, not fabricated, guessed, or placeholder values."
       - "The assistant does not merely explain how the user could update the consumer group themselves."
     graders:
@@ -127,7 +127,7 @@ stimuli:
         config:
           prompt: >-
             Score whether the assistant actually performed (or confirmed) an
-            update of the real 'billing' consumer group via Azure, setting
+            update of the real '${CONSUMER_GROUP_BILLING=billing}' consumer group via Azure, setting
             its user metadata to "Owned by the billing team", per the
             rubric. Score 1 only if a concrete, real confirmation obtained
             from Azure is present. Score 0 if the assistant says it cannot

@@ -18,6 +18,19 @@ This is a wrapper around the vally CLI (https://microsoft.github.io/vally) that:
      resources the experiments expect, and always runs a post-evaluation teardown
      script afterwards (even when a run or provisioning fails), so resources are
      not leaked.
+
+     A provisioning script may report the resource identifiers it actually
+     created (e.g. a randomized resource group/namespace name, to avoid
+     colliding with a concurrent run) by emitting a single Hashtable/
+     PSCustomObject of `KEY = value` pairs as the LAST object on its output
+     stream. Those are forwarded to vally as `--param KEY=value` on the
+     experiment run, resolving any `${KEY}`/`${KEY=default}` placeholder the
+     eval spec's prompts reference, per vally's own eval-spec parameter
+     resolution (https://microsoft.github.io/vally/reference/cli/eval/#parameter-resolution).
+     This keeps the eval always targeting whatever was truly provisioned - the
+     script's own fixed default, or a name it randomized at run time - without
+     ever having to hardcode (or guess) that name in this runner or the eval
+     spec. See eventhubs/New-EventHubsResources.ps1 for a worked example.
   4. For each discovered tool, runs its experiment (<tool>.experiment.yaml) via
      `vally experiment run`. The experiment executes the shared eval spec as
      several variants for comparison:
@@ -95,14 +108,24 @@ Optional path to a provisioning script run BEFORE the evaluations (e.g.
 ./eventhubs/New-EventHubsResources.ps1). Use it to create the Azure resources the
 eval prompts reference. -ResourceGroup and -Subscription are forwarded to it.
 
+If the script emits a Hashtable/PSCustomObject of `KEY = value` pairs as the
+LAST object on its output stream, those are forwarded to vally as
+`--param KEY=value` for this area's experiments, resolving any
+`${KEY}`/`${KEY=default}` placeholder the eval prompts reference - so the eval
+targets whatever resource identifiers the script actually provisioned (fixed or
+randomized), never a hardcoded guess.
+
 If not specified (and -SkipProvisioning is not set), the runner auto-discovers a
 convention-named `New-*Resources.ps1` script next to the eval spec and uses that.
 
 .PARAMETER PostEvalScript
 Optional path to a teardown script run AFTER the evaluations (e.g.
 ./eventhubs/Remove-EventHubsResources.ps1). It runs in a finally block, so it
-executes even if the eval or the pre-eval provisioning fails. -ResourceGroup and
--Subscription are forwarded to it.
+executes even if the eval or the pre-eval provisioning fails. -Subscription is
+always forwarded, and -ResourceGroup is forwarded too UNLESS the pre-eval script
+reported a `RESOURCE_GROUP` value (see -PreEvalScript) - that reported value
+wins, so teardown targets the resource group actually provisioned (e.g. a
+randomized name) rather than this runner's own default guess.
 
 If not specified (and -SkipProvisioning is not set), the runner auto-discovers a
 convention-named `Remove-*Resources.ps1` script next to the eval spec and uses
@@ -124,7 +147,11 @@ Do not run (or auto-discover) any pre/post provisioning scripts. Use this when t
 Azure resources already exist and should be left untouched.
 
 .PARAMETER ResourceGroup
-Optional resource group name forwarded to the pre/post provisioning scripts.
+Optional resource group name forwarded to the pre/post provisioning scripts (when
+they declare a -ResourceGroup parameter). If omitted, each script's own default
+applies, and - if the pre-eval script reports back the resource group it
+actually used (see -PreEvalScript) - that reported value flows to both vally
+(as the `RESOURCE_GROUP` eval param) and the post-eval teardown script.
 
 .PARAMETER Subscription
 Optional Azure subscription (id or name) forwarded to the pre/post provisioning
@@ -334,13 +361,20 @@ function Invoke-VallyExperiment {
     param(
         [Parameter(Mandatory)] [string] $Label,
         [Parameter(Mandatory)] [string] $ExperimentFile,
-        [Parameter(Mandatory)] [string] $RunOutputDir
+        [Parameter(Mandatory)] [string] $RunOutputDir,
+        [System.Collections.IDictionary] $Params
     )
 
     $vallyArgs = @(
         'experiment', 'run', $ExperimentFile
         '--output-dir', $RunOutputDir
     )
+    # Forward every reported/overridden resource identifier as its own --param
+    # flag, so vally resolves any ${KEY}/${KEY=default} placeholder the eval
+    # spec references (e.g. the resource group/namespace the provisioning
+    # script actually created) per its parameter-resolution rules:
+    # https://microsoft.github.io/vally/reference/cli/eval/#parameter-resolution
+    foreach ($key in @($Params.Keys)) { $vallyArgs += @('--param', "$key=$($Params[$key])") }
     # NOTE: `vally experiment run` accepts only --variant/--output-dir/--workers/
     # --dry-run - it has NO --verbose option (that flag exists only on `vally eval`),
     # so we must not forward one here or vally exits with 'unknown option --verbose'.
@@ -821,12 +855,32 @@ function Write-NamespaceVsConsolidatedComparison {
     }
 }
 
-# Invokes a pre/post provisioning script, forwarding -ResourceGroup / -Subscription
-# only when the target script declares those parameters.
+# Invokes a pre/post provisioning script, forwarding entries from -ParamOverrides
+# (e.g. ResourceGroup / Subscription) only when the target script declares a
+# matching parameter, and captures whatever the script REPORTS BACK about the
+# resources it actually (dis)covered.
+#
+# A provisioning script is free to pick its own resource names at run time -
+# e.g. randomizing a resource group/namespace suffix to avoid collisions with a
+# concurrent run - rather than always using its own fixed defaults. To let the
+# eval specs reference whatever name was actually provisioned (not a name this
+# runner has to guess), the script may emit, as the LAST object on its output
+# (success) stream, a single Hashtable/PSCustomObject/OrderedDictionary of
+# `KEY = value` pairs (e.g. `[pscustomobject]@{ RESOURCE_GROUP = $rg }`). Those
+# become vally `--param KEY=value` values (see Vally's eval-spec parameter
+# resolution: https://microsoft.github.io/vally/reference/cli/eval/#parameter-resolution),
+# resolving any `${KEY}`/`${KEY=default}` placeholder the eval prompts
+# reference, so the eval always targets what was truly provisioned - fixed or
+# randomized. Write-Host/Write-Information logging in the script does not
+# interfere, since it never touches the success output stream captured here.
+#
+# Returns the reported key/value pairs (an ordered dictionary, possibly empty
+# when the script reports nothing).
 function Invoke-ProvisioningScript {
     param(
         [Parameter(Mandatory)] [string] $Label,
-        [Parameter(Mandatory)] [string] $Path
+        [Parameter(Mandatory)] [string] $Path,
+        [hashtable] $ParamOverrides = @{}
     )
 
     $resolved = Resolve-Path -Path $Path -ErrorAction SilentlyContinue
@@ -836,15 +890,33 @@ function Invoke-ProvisioningScript {
 
     $scriptArgs = @{}
     $scriptParams = (Get-Command $resolved.Path).Parameters
-    if ($ResourceGroup -and $scriptParams.ContainsKey('ResourceGroup')) { $scriptArgs['ResourceGroup'] = $ResourceGroup }
-    if ($Subscription -and $scriptParams.ContainsKey('Subscription')) { $scriptArgs['Subscription'] = $Subscription }
+    foreach ($key in $ParamOverrides.Keys) {
+        $value = $ParamOverrides[$key]
+        if ($value -and $scriptParams.ContainsKey($key)) { $scriptArgs[$key] = $value }
+    }
 
     Write-Info "[$Label] Running: $($resolved.Path)"
     $global:LASTEXITCODE = 0
-    & $resolved.Path @scriptArgs
+    $output = & $resolved.Path @scriptArgs
     if ($LASTEXITCODE) {
         throw "$Label script failed with exit code $LASTEXITCODE."
     }
+
+    # Find the LAST dictionary-shaped output object, if any, and treat it as the
+    # script's reported resource params. Anything else the script wrote to the
+    # output stream (rather than Write-Host) is otherwise ignored.
+    $reportedParams = [ordered]@{}
+    foreach ($item in @($output)) {
+        if ($item -is [System.Collections.IDictionary]) {
+            $reportedParams = [ordered]@{}
+            foreach ($key in $item.Keys) { $reportedParams[[string]$key] = [string]$item[$key] }
+        }
+        elseif ($item -is [pscustomobject]) {
+            $reportedParams = [ordered]@{}
+            foreach ($prop in $item.psobject.Properties) { $reportedParams[$prop.Name] = [string]$prop.Value }
+        }
+    }
+    return $reportedParams
 }
 
 # The experiment file name suffix. The tool name is the file name with this
@@ -928,13 +1000,28 @@ function Get-ExperimentResultsFromRuns {
         $provisioning = Resolve-AreaProvisioning -AreaDir $areaDir
         $provisioned = $true
 
+        # Resource identifiers reported back by the pre-eval provisioning script
+        # (e.g. a randomized resource group/namespace name it actually created),
+        # forwarded to vally as eval params. Falls back to an empty map when
+        # there's no pre-eval script, or it reports nothing.
+        $reportedParams = [ordered]@{}
+        # The resource group to forward to the POST-eval (teardown) script: the
+        # user's explicit -ResourceGroup wins; otherwise, if the pre-eval script
+        # reported the one it actually provisioned (e.g. a randomized name),
+        # teardown must target THAT one, not this runner's own default guess.
+        $teardownResourceGroup = $ResourceGroup
+
         try {
             # Provision once for the whole area. A provisioning failure fails the run:
             # record it, skip this area's evals (the resources aren't there), but still
             # run teardown below to clean up anything partially created.
             if ($provisioning.Pre) {
                 try {
-                    Invoke-ProvisioningScript -Label "[$areaName] pre-eval provisioning" -Path $provisioning.Pre
+                    $reportedParams = Invoke-ProvisioningScript -Label "[$areaName] pre-eval provisioning" -Path $provisioning.Pre `
+                        -ParamOverrides @{ ResourceGroup = $ResourceGroup; Subscription = $Subscription }
+                    if (-not $ResourceGroup -and $reportedParams.Contains('RESOURCE_GROUP')) {
+                        $teardownResourceGroup = $reportedParams['RESOURCE_GROUP']
+                    }
                 }
                 catch {
                     $provisioned = $false
@@ -969,7 +1056,8 @@ function Get-ExperimentResultsFromRuns {
                         $run = Invoke-VallyExperiment `
                             -Label $iterationLabel `
                             -ExperimentFile $eval.Experiment `
-                            -RunOutputDir $runRoot
+                            -RunOutputDir $runRoot `
+                            -Params $reportedParams
 
                         # Each variant's results.jsonl lives in <run>/<variant>/. Split
                         # the run's subfolders into the baseline (control) and the
@@ -997,7 +1085,8 @@ function Get-ExperimentResultsFromRuns {
             # Tear down the area even if provisioning or an eval threw.
             if ($provisioning.Post) {
                 try {
-                    Invoke-ProvisioningScript -Label "[$areaName] post-eval teardown" -Path $provisioning.Post
+                    $null = Invoke-ProvisioningScript -Label "[$areaName] post-eval teardown" -Path $provisioning.Post `
+                        -ParamOverrides @{ ResourceGroup = $teardownResourceGroup; Subscription = $Subscription }
                 }
                 catch {
                     Write-Warn "[$areaName] post-eval teardown failed: $($_.Exception.Message)"
