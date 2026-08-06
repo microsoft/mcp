@@ -5,25 +5,24 @@ using Azure.Mcp.Tools.Advisor.Services.Models;
 
 namespace Azure.Mcp.Tools.Advisor.Commands;
 
-[JsonSerializable(typeof(RecommendationListCommand.RecommendationListResult))]
-[JsonSerializable(typeof(RecommendationTypeListCommand.RecommendationTypeListResult))]
-[JsonSerializable(typeof(RecommendationSummaryCommand.RecommendationSummaryResult))]
 [JsonSerializable(typeof(MetadataGetCommand.MetadataGetResult))]
+[JsonSerializable(typeof(RecommendationMetadataListCommand.RecommendationMetadataListResult))]
+[JsonSerializable(typeof(RecommendationListCommand.RecommendationListResult))]
+[JsonSerializable(typeof(RecommendationSummaryCommand.RecommendationSummaryResult))]
 [JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(RecommendationData))]
 [JsonSerializable(typeof(RecommendationMetadataData))]
 [JsonSerializable(typeof(RecommendationMetadataDataProperties))]
-[JsonSerializable(typeof(RecommendationMetadataResourceMetadata))]
 [JsonSerializable(typeof(RecommendationMetadataActionData))]
-[JsonSerializable(typeof(RecommendationMetadataSourceProperties))]
-[JsonSerializable(typeof(RecommendationMetadataServiceRetirementData))]
+[JsonSerializable(typeof(RecommendationMetadataResourceMetadata))]
 [JsonSerializable(typeof(RecommendationMetadataServiceHealthData))]
+[JsonSerializable(typeof(RecommendationMetadataServiceRetirementData))]
+[JsonSerializable(typeof(RecommendationMetadataSourceProperties))]
 [JsonSerializable(typeof(Models.Recommendation))]
-[JsonSerializable(typeof(Models.RecommendationType))]
 [JsonSerializable(typeof(Models.RecommendationMetadata))]
-[JsonSerializable(typeof(RecommendationMetadataApiResponse))]
 [JsonSerializable(typeof(Models.RecommendationGroup))]
 [JsonSerializable(typeof(Models.RecommendationSummary))]
+[JsonSerializable(typeof(string))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
