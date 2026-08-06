@@ -6,7 +6,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 - `none`: The prompt contains enough information for direct tool invocation.
 - `clarification-required`: The user must provide missing command parameters.
-- `context-required`: The user must provide an attachment, project, or other external context.
+- `context-required`: The user must provide an attachment, project, or other external context. This includes the deployment of Azure resources.
 
 ## Azure Advisor
 
@@ -224,7 +224,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | extension_cli_generate | What's the Azure CLI command for getting a storage account's details? | none |
 | extension_cli_generate | List all virtual machines in my subscription using Azure CLI | none |
 | extension_cli_generate | Show me the details of the storage account <account_name> using Azure CLI commands | none |
-| extension_cli_install | \<Ask the MCP host to uninstall az cli on your machine and run test prompts for extension_cli_generate> | none |
+| extension_cli_install | \<Ask the MCP host to uninstall az cli on your machine and run test prompts for extension_cli_generate> | context-required |
 | extension_cli_install | How to install azd | none |
 | extension_cli_install | What is Azure Functions Core tools and how to install it | none |
 
@@ -277,7 +277,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | compute_vm_create | Create a new Linux VM named <vm-name> in resource group <resource-group-name> | none |
-| compute_vm_create | Create a virtual machine with Standard_D2s_v5 size in <resource-group-name> | none |
+| compute_vm_create | Create a virtual machine with Standard_D2s_v5 size in <resource-group-name> | clarification-required |
 | compute_vm_create | Create a Windows VM with password authentication in resource group <resource-group-name> | none |
 | compute_vm_create | Create VM <vm-name> in <location> with SSH key authentication | none |
 | compute_vm_create | Deploy a new VM with a 128GB Premium SSD OS disk in resource group <resource-group-name> | none |
@@ -313,7 +313,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vm_power-state | Power off and shut down VM <vm-name> in resource group <resource-group-name> | none |
 | compute_vm_power-state | Deallocate and power off VM <vm-name> to stop billing for compute resources while preserving the VM | none |
 | compute_vmss_create | Create a virtual machine scale set named <vmss-name> in resource group <resource-group-name> | none |
-| compute_vmss_create | Create a VMSS with 3 instances in <resource-group-name> | none |
+| compute_vmss_create | Create a VMSS with 3 instances in <resource-group-name> | clarification-required |
 | compute_vmss_create | Deploy a virtual machine scale set with Rolling upgrade policy and 5 instances | clarification-required |
 | compute_vmss_create | Create Linux VMSS with SSH authentication in <resource-group-name> | none |
 | compute_vmss_get | List all virtual machine scale sets in my subscription | none |
@@ -326,7 +326,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vmss_update | Update the capacity of scale set <vmss-name> to 10 | none |
 | compute_vmss_update | Enable automatic OS upgrades on VMSS <vmss-name> | none |
 | compute_vmss_update | Change upgrade policy to Rolling for <vmss-name> | none |
-| compute_vmss_update | Add tags to scale set <vmss-name> in resource group <resource-group-name> | none |
+| compute_vmss_update | Add tags to scale set <vmss-name> in resource group <resource-group-name> | clarification-required |
 | compute_vmss_delete | Delete scale set <vmss-name> in resource group <resource-group-name> | none |
 | compute_vmss_delete | Remove VMSS <vmss-name> from resource group <resource-group-name> | none |
 | compute_vmss_delete | Destroy virtual machine scale set <vmss-name> in resource group <resource-group-name> | none |
@@ -406,8 +406,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | cosmos_database_container_item_list-recent | Get the latest documents from <container_name> in <database_name> for cosmosdb account <account_name> | none |
 | cosmos_database_container_item_text-search | Search documents in container <container_name> from database <database_name> of the cosmosdb account <account_name> where <search_property> contains "<search_phrase>" | none |
 | cosmos_database_container_item_text-search | Run a full-text search for the word "<search_phrase>" against property <search_property> in container <container_name> of database <database_name> for cosmosdb account <account_name> | none |
-| cosmos_database_container_item_vector-search | Find documents similar to "<text_to_search>" in container <container_name> of database <database_name> in cosmosdb account <account_name> using vector property <vector_property> with Azure OpenAI endpoint <endpoint> and deployment <deployment> | none |
-| cosmos_database_container_item_vector-search | Show me the top <count> documents in container <container_name> of database <database_name> for cosmosdb account <account_name> most similar to "<text_to_search>" using vector property <vector_property>, embedding deployment <deployment> at endpoint <endpoint> with <embedding_dimensions> dimensions, and project only <properties_to_select> | none |
+| cosmos_database_container_item_vector-search | Find documents similar to "<text_to_search>" in container <container_name> of database <database_name> in cosmosdb account <account_name> using vector property <vector_property> with Azure OpenAI endpoint <endpoint> and deployment <deployment> | context-required |
+| cosmos_database_container_item_vector-search | Show me the top <count> documents in container <container_name> of database <database_name> for cosmosdb account <account_name> most similar to "<text_to_search>" using vector property <vector_property>, embedding deployment <deployment> at endpoint <endpoint> with <embedding_dimensions> dimensions, and project only <properties_to_select> | context-required |
 | cosmos_database_container_schema_infer | Infer the schema of container <container_name> in database <database_name> for cosmosdb account <account_name> | none |
 | cosmos_database_container_schema_infer | Sample <sample_size> documents from container <container_name> in database <database_name> of the cosmosdb account <account_name> and tell me the property names and types | none |
 
@@ -508,17 +508,17 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | eventhubs_eventhub_consumergroup_get | List all consumer groups in my event hub <event_hub_name> in namespace <namespace_name> | none |
 | eventhubs_eventhub_consumergroup_get | Get the details of my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> | none |
 | eventhubs_eventhub_consumergroup_update | Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> | none |
-| eventhubs_eventhub_consumergroup_update | Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> | none |
+| eventhubs_eventhub_consumergroup_update | Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> | clarification-required |
 | eventhubs_eventhub_delete | Delete my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> | none |
 | eventhubs_eventhub_get | List all Event Hubs in my namespace <namespace_name> | none |
 | eventhubs_eventhub_get | Get the details of my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> | none |
 | eventhubs_eventhub_update | Create a new event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> | none |
-| eventhubs_eventhub_update | Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> | none |
+| eventhubs_eventhub_update | Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> | clarification-required |
 | eventhubs_namespace_delete | Delete my namespace <namespace_name> in my resource group <resource_group_name> | none |
 | eventhubs_namespace_get | List all Event Hubs namespaces in my subscription | none |
 | eventhubs_namespace_get | Get the details of my namespace <namespace_name> in my resource group <resource_group_name> | none |
 | eventhubs_namespace_update | Create an new namespace <namespace_name> in my resource group <resource_group_name> | none |
-| eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name> | none |
+| eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name> | clarification-required |
 
 ## Azure File Shares
 
@@ -591,7 +591,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | functions_language_list | Check the available languages that Azure Functions supports. | none |
-| functions_language_list | Compare all Azure Functions languages side by side | none |
+| functions_language_list | Use Azure Functions language discovery to list the supported languages and compare them | none |
 | functions_language_list | What runtime versions are available for Azure Functions? | none |
 | functions_project_get | Set up a new Azure Functions project in Python | none |
 | functions_project_get | Generate the project files for a TypeScript Azure Functions app | none |
@@ -823,7 +823,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_instrumentation_orchestrator-start | Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step | none |
 | monitor_instrumentation_orchestrator-start | Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one | none |
 | monitor_instrumentation_send-brownfield-analysis | Send brownfield code analysis findings JSON <findings_json> to Azure Monitor instrumentation session <session_id> after analysis was requested | none |
-| monitor_instrumentation_send-brownfield-analysis | Continue migration orchestration by submitting analysis payload <findings_json> to session <session_id> | none |
+| monitor_instrumentation_send-brownfield-analysis | Submit brownfield analysis findings <findings_json> to Azure Monitor instrumentation session <session_id> | none |
 | monitor_instrumentation_send-brownfield-analysis | Send completed brownfield telemetry analysis <findings_json> for onboarding session <session_id> | none |
 | monitor_instrumentation_send-enhancement-select | Submit enhancement selection keys <enhancement_keys> for Azure Monitor instrumentation session <session_id> after enhancement options are presented | none |
 | monitor_instrumentation_send-enhancement-select | Continue instrumentation enhancement flow by sending selected keys <enhancement_keys> to session <session_id> | none |
@@ -955,7 +955,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | pricing_get | What is the price of Standard_D4s_v5 VMs? | none |
 | pricing_get | What's the price difference between Premium_LRS and Standard_LRS storage? | clarification-required |
 | pricing_get | Get consumption price for Standard_E8s_v5 in brazil | none |
-| pricing_get | What is the price for Virtual Machines? | none |
+| pricing_get | What is the price for Virtual Machines? | clarification-required |
 | pricing_get | How much does a Standard_D4s_v5 VM cost per hour? | none |
 | pricing_get | Which is cheaper- Standard_D4s_v5 in eastus vs westeurope | none |
 | pricing_get | Get pricing where productName contains 'Premium' | none |
@@ -1001,7 +1001,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | sql_db_create | Create a new database called <database_name> on SQL server <server_name> in resource group <resource_group_name> | none |
 | sql_db_delete | Delete the SQL database <database_name> from server <server_name> | none |
 | sql_db_delete | Remove database <database_name> from SQL server <server_name> in resource group <resource_group_name> | none |
-| sql_db_delete | Delete the database called <database_name> on server <server_name> | none |
+| sql_db_delete | Delete the database called <database_name> on server <server_name> | clarification-required |
 | sql_db_get | List all Azure SQL databases in server <server_name> | none |
 | sql_db_get | List all databases in the Azure SQL server <server_name> | none |
 | sql_db_get | Show me the Azure SQL database <database_name> details in server <server_name> | none |
@@ -1112,7 +1112,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | storage_account_create | Create a new storage account called testaccount123 in East US region | none |
-| storage_account_create | Create a storage account with premium performance and LRS replication | none |
+| storage_account_create | Create a storage account with premium performance and LRS replication | clarification-required |
 | storage_account_create | Create a new storage account with Data Lake Storage Gen2 enabled | clarification-required |
 | storage_account_get | Show me the details for my storage account <account> | none |
 | storage_account_get | Get details about the storage account <account> | none |
@@ -1150,7 +1150,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | storagesync_syncgroup_delete | Delete the sync group <syncgroup-name> from service <service-name> | none |
 | storagesync_syncgroup_get | Get the details of sync group <syncgroup-name> in service <service-name> | none |
 | storagesync_cloudendpoint_changedetection | Trigger change detection on cloud endpoint <endpoint-name> in sync group <syncgroup-name> in service <service-name> for directory path <path> | none |
-| storagesync_cloudendpoint_create | Create a new cloud endpoint named <endpoint-name> for Azure file share <share-name> in storage account <storage-account-name> | none |
+| storagesync_cloudendpoint_create | Create a new cloud endpoint named <endpoint-name> for Azure file share <share-name> in storage account <storage-account-name> | clarification-required |
 | storagesync_cloudendpoint_delete | Delete the cloud endpoint <endpoint-name> from sync group <syncgroup-name> | clarification-required |
 | storagesync_cloudendpoint_get | Get the details of cloud endpoint <endpoint-name> in sync group <syncgroup-name> | none |
 | storagesync_cloudendpoint_get | List all cloud endpoints in sync group <syncgroup-name> | none |
