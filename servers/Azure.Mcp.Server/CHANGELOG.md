@@ -60,6 +60,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added `azmcp iothub device list` to list device identities in an Azure IoT Hub device registry. The command returns device metadata without authentication keys, defaults `--max-count` to 100 and returns a validation error when it is less than 1 or greater than 100, and flags `truncated` (with an explanatory message) when the hub contains more devices than were returned.
 - Added Azure IoT Hub integration updates including command docs, e2e prompts, README service coverage, consolidated tool mapping, and CODEOWNERS ownership. [[#3005](https://github.com/microsoft/mcp/pull/3005)]
 
 ### Breaking Changes
