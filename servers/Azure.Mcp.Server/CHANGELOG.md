@@ -16,7 +16,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Added new telemetry collection for 'IsLearn' (indicates if the tool call attempted learning), 'ToolSource' (indication on where the invoked tool is from), 'ToolParameters' (the names of the tool parameters), and 'ToolAnnotations' (the annotations of the tool). [[#3156](https://github.com/microsoft/mcp/pull/3156)]
 
-## 3.0.0-beta.32 (Unreleased)
+## 3.0.0-beta.32 (2026-08-04)
 
 ### Bugs Fixed
 
