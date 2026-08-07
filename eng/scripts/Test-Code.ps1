@@ -4,7 +4,6 @@
 [CmdletBinding()]
 param(
     [string[]] $Paths,
-    [string[]] $Members,
     [ValidateSet('Live', 'Unit', 'All', 'Recorded')]
     [string] $TestType = 'Unit',
     [string] $TestResultsPath,
@@ -125,19 +124,29 @@ function CreateTestSolution {
 }
 
 function Create-CoverageReport {
-    # Find the coverage file
-    $coverageFile = Get-ChildItem -Path $TestResultsPath -Recurse -Filter "coverage.cobertura.*.xml"
-    | Where-Object { $_.FullName.Replace('\','/') -notlike "*/in/*" }
-    | Select-Object -First 1
+    # Find the coverage files
+    $coverageFiles = Get-ChildItem -Path $TestResultsPath -Recurse -Filter "coverage.cobertura.*.xml"
+        | Where-Object { $_.FullName.Replace('\','/') -notlike "*/in/*" }
 
-    if (-not $coverageFile) {
+    if (-not $coverageFiles -or $coverageFiles.Count -eq 0) {
         Write-Error "No coverage file found!"
         exit 1
     }
 
+    if (-not (Get-Command dotnet-coverage -ErrorAction SilentlyContinue)) {
+        Write-Host "Installing dotnet-coverage tool..."
+        dotnet tool install -g dotnet-coverage
+    }
+
+    $mergedFile = "$TestResultsPath/coverage.merged.cobertura.xml"
+    Write-Host "Merging coverage files into $mergedFile..."
+    Invoke-LoggedCommand ("dotnet-coverage merge $TestResultsPath/coverage.cobertura.*.xml" +
+        " --output '$mergedFile'" +
+        " --output-format cobertura")
+
     if ($env:TF_BUILD) {
         # Write the path to the cover file to a pipeline variable
-        Write-Host "##vso[task.setvariable variable=CoverageFile]$($coverageFile.FullName)"
+        Write-Host "##vso[task.setvariable variable=CoverageFile]$($mergedFile.FullName)"
     } else {
         # Ensure reportgenerator tool is installed
         if (-not (Get-Command reportgenerator -ErrorAction SilentlyContinue)) {
@@ -150,7 +159,7 @@ function Create-CoverageReport {
 
         $reportDirectory = "$TestResultsPath/coverageReport"
         Invoke-LoggedCommand ("reportgenerator" +
-        " -reports:'$coverageFile'" +
+        " -reports:'$mergedFile'" +
         " -targetdir:'$reportDirectory'" +
         " -reporttypes:'Html;HtmlSummary;Cobertura'" +
         " -assemblyfilters:'+azmcp'" +
@@ -186,7 +195,7 @@ function Create-CoverageReport {
     try{
         $CommandCoverageSummaryFile = "$TestResultsPath/Coverage.md"
 
-        $xml = [xml](Get-Content $coverageFile.FullName)
+        $xml = [xml](Get-Content $mergedFile.FullName)
 
         $classes = $xml.coverage.packages.package.classes.class |
             Where-Object { $_.name -match 'AzureMcp\.(.*\.)?Commands\.' -and $_.filename -notlike '*System.Text.Json.SourceGeneration*' }
@@ -296,7 +305,7 @@ try {
         exit $LastExitCode
     }
 
-    $coverageArg = $CollectCoverage ? "--coverlet" : ""
+    $coverageArg = $CollectCoverage ? "--coverlet --coverlet-output-format cobertura" : ""
     $resultsArg = "--results-directory '$TestResultsPath'"
     $loggerArg = "--report-xunit-trx --output 'Detailed'"
     $filterArg = switch ($TestType) {
@@ -306,20 +315,7 @@ try {
         default { "" }
     }
 
-    # if($Members.Count -gt 0) {
-    #     $memberFilterString = $Members | ForEach-Object { "FullyQualifiedName~$_" } | Join-String -Separator '|'
-    #     if ($filterArg) {
-    #         $filterArg += "&($memberFilterString)"
-    #     } else {
-    #         $filterArg = "$memberFilterString"
-    #     }
-    # }
-
     $command = "dotnet test $coverageArg $resultsArg $loggerArg $filterArg"
-
-    # if ($filterArg) {
-    #     $command += " --filter `"$filterArg`""
-    # }
 
     Invoke-LoggedMsBuildCommand -Command $command -AllowedExitCodes @(0, 1)
 }

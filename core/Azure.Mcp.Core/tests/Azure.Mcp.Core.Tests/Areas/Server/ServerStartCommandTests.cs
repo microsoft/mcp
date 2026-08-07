@@ -21,9 +21,10 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     protected ITestOutputHelper Output { get; } = output;
 
-    public async ValueTask InitializeAsync()
+    public ValueTask InitializeAsync()
     {
         Assert.SkipWhen(!TestExtensions.IsLiveTestMode(), "Skipping test in non-live mode");
+        return ValueTask.CompletedTask;
     }
 
     public ValueTask DisposeAsync()
