@@ -133,7 +133,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             null,
             null,
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<IProgress<string>?>(),
+            null,
             Arg.Any<CancellationToken>());
     }
 

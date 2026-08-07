@@ -88,7 +88,9 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
                 }
             }
 
-            IProgress<string> progress = new Progress<string>(msg => _ = NotifyProgressAsync(context, msg, cancellationToken));
+            IProgress<string>? progress = context.McpServer is not null && context.ProgressToken is not null
+                ? new Progress<string>(msg => _ = NotifyProgressAsync(context, msg, cancellationToken))
+                : null;
 
             var updatedNamespace = await _service.CreateOrUpdateNamespaceAsync(
                 options.Namespace,
