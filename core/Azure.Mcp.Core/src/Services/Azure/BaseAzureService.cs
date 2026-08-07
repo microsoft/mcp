@@ -409,13 +409,13 @@ public abstract class BaseAzureService
             Response response = await operation.UpdateStatusAsync(cancellationToken).ConfigureAwait(false);
             if (operation.HasCompleted)
             {
-                return operation.GetRawResponse();
+                return response;
             }
 
-            elapsed += pollInterval;
             progress.Report($"Still waiting for the operation to complete ({elapsed:mm\\:ss} elapsed)...");
 
             await Task.Delay(pollInterval, cancellationToken).ConfigureAwait(false);
+            elapsed += pollInterval;
         }
     }
 }
