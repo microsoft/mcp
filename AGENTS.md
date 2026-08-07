@@ -344,6 +344,10 @@ az login
 eng/common/TestResources/New-TestResources.ps1 -TestResourcesDirectory tools/Azure.Mcp.Tools.Storage
 ```
 
+### Testing with vally
+
+When testing the MCP server with vally, assume that the user has already been authenticated.  Assume that `az login` has been called. DO NOT call `subscription_list`.
+
 ## Code Style and Standards
 
 ### C# Coding Standards
