@@ -2,6 +2,18 @@
 
 
 
+
+## 3.0.33 (2026-08-06) (pre-release)
+
+### Added
+
+- Added `azmcp advisor metadata get` to retrieve the global Azure Advisor recommendation-type metadata catalog entry (by recommendation type id) from Azure Resource Graph. [[#3178](https://github.com/microsoft/mcp/pull/3178)]
+
+### Changed
+
+- **Breaking:** Renamed advisor_recommendation-type_list to advisor_metadata_list and moved recommendation-type discovery from the Advisor ARM API to the global Azure Resource Graph metadata catalog with richer localized details and filters for subcategory, Service Health tracking ID, and service-retirement date. Service-retirement filters (tracking ID or retirement date) apply to the ServiceUpgradeAndRetirement subcategory, and conflicting subcategory filters are rejected. [[#3197](https://github.com/microsoft/mcp/pull/3197)]
+- Added new telemetry collection for 'IsLearn' (indicates if the tool call attempted learning), 'ToolSource' (indication on where the invoked tool is from), 'ToolParameters' (the names of the tool parameters), and 'ToolAnnotations' (the annotations of the tool). [[#3156](https://github.com/microsoft/mcp/pull/3156)]
+
 ## 3.0.32 (2026-08-04) (pre-release)
 
 ### Fixed
