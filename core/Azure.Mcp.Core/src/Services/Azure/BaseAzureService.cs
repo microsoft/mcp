@@ -4,12 +4,25 @@
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Helpers;
 using Azure.ResourceManager;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Services.Azure;
 
 public abstract class BaseAzureService(IAzureService azureService)
 {
+    private static readonly TimeSpan? s_defaultPollInterval = null;
+
+    static BaseAzureService()
+    {
+#if DEBUG
+        if (EnvironmentHelpers.IsPlaybackTesting())
+        {
+            s_defaultPollInterval = TimeSpan.Zero;
+        }
+#endif
+    }
+
     /// <summary>
     /// Initializes the user agent policy to include the transport type for all Azure service calls.
     /// This method must be called once during application startup before creating any <see cref="BaseAzureService"/> instances.
@@ -45,7 +58,17 @@ public abstract class BaseAzureService(IAzureService azureService)
     /// </summary>
     /// <param name="value">The string value to escape</param>
     /// <returns>The escaped string safe for use in KQL queries</returns>
-    protected static string EscapeKqlString(string value) => AzureHelper.EscapeKqlString(value);
+    protected static string EscapeKqlString(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return string.Empty;
+        }
+
+        // Replace single quotes with double single quotes to escape them in KQL
+        // Also escape backslashes to prevent escape sequence issues
+        return value.Replace("\\", "\\\\").Replace("'", "''");
+    }
 
     protected async Task<TokenCredential> GetCredential(string? tenant, CancellationToken cancellationToken)
     {
@@ -116,8 +139,19 @@ public abstract class BaseAzureService(IAzureService azureService)
     /// <param name="operation">The long-running operation.</param>
     /// <param name="cancellationToken">The cancellation token that can cancel the request.</param>
     /// <returns>The response once the long-running operation completes.</returns>
-    protected static async Task WaitForLroCompletionAsync<T>(Operation<T> operation, CancellationToken cancellationToken = default) where T : notnull =>
-        await AzureHelper.WaitForLroCompletionAsync(operation, cancellationToken);
+    protected static async Task WaitForLroCompletionAsync<T>(Operation<T> operation, CancellationToken cancellationToken = default) where T : notnull
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+
+        if (s_defaultPollInterval.HasValue)
+        {
+            await WaitForLroCompletionInternalAsync(operation, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await operation.WaitForCompletionAsync(cancellationToken);
+        }
+    }
 
     /// <summary>
     /// Waits for the completion of a long-running operation, periodically polling the operation status until it completes.
@@ -125,6 +159,32 @@ public abstract class BaseAzureService(IAzureService azureService)
     /// <param name="operation">The long-running operation.</param>
     /// <param name="cancellationToken">The cancellation token that can cancel the request.</param>
     /// <returns>The response once the long-running operation completes.</returns>
-    protected static async Task WaitForLroCompletionAsync(Operation operation, CancellationToken cancellationToken = default) =>
-        await AzureHelper.WaitForLroCompletionAsync(operation, cancellationToken);
+    protected static async Task WaitForLroCompletionAsync(Operation operation, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+
+        if (s_defaultPollInterval.HasValue)
+        {
+            await WaitForLroCompletionInternalAsync(operation, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await operation.WaitForCompletionResponseAsync(cancellationToken);
+        }
+    }
+
+    private static async Task<Response> WaitForLroCompletionInternalAsync(Operation operation, CancellationToken cancellationToken)
+    {
+        while (true)
+        {
+            _ = await operation.UpdateStatusAsync(cancellationToken);
+            if (operation.HasCompleted)
+            {
+                return operation.GetRawResponse();
+            }
+
+            await Task.Delay(s_defaultPollInterval!.Value, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
 }

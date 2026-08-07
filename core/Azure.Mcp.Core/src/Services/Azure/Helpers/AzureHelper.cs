@@ -6,7 +6,6 @@ using System.Runtime.Versioning;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.ResourceManager;
-using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure;
 
@@ -32,7 +31,6 @@ public static class AzureHelper
     private static readonly string s_framework;
     private static readonly string s_platform;
     private static readonly string s_defaultUserAgent;
-    private static readonly TimeSpan? s_defaultPollInterval = null;
 
     internal static string UserAgent => s_userAgent ?? s_defaultUserAgent;
 
@@ -46,13 +44,6 @@ public static class AzureHelper
         // Initialize the default user agent policy without transport type
         s_defaultUserAgent = $"azmcp/{s_version} ({s_framework}; {s_platform})";
         s_sharedUserAgentPolicy = new UserAgentPolicy(s_defaultUserAgent);
-
-#if DEBUG
-        if (EnvironmentHelpers.IsPlaybackTesting())
-        {
-            s_defaultPollInterval = TimeSpan.Zero;
-        }
-#endif
     }
 
     /// <summary>
@@ -74,83 +65,23 @@ public static class AzureHelper
         }
     }
 
-    /// <summary>
-    /// Waits for the completion of a long-running operation, periodically polling the operation status until it completes.
-    /// </summary>
-    /// <typeparam name="T">The return type.</typeparam>
-    /// <param name="operation">The long-running operation.</param>
-    /// <param name="cancellationToken">The cancellation token that can cancel the request.</param>
-    /// <returns>The response once the long-running operation completes.</returns>
-    internal static async Task WaitForLroCompletionAsync<T>(Operation<T> operation, CancellationToken cancellationToken = default) where T : notnull
-    {
-        ArgumentNullException.ThrowIfNull(operation);
-
-        if (s_defaultPollInterval.HasValue)
-        {
-            await WaitForLroCompletionInternalAsync(operation, cancellationToken).ConfigureAwait(false);
-        }
-        else
-        {
-            await operation.WaitForCompletionAsync(cancellationToken);
-        }
-    }
-
-    /// <summary>
-    /// Waits for the completion of a long-running operation, periodically polling the operation status until it completes.
-    /// </summary>
-    /// <param name="operation">The long-running operation.</param>
-    /// <param name="cancellationToken">The cancellation token that can cancel the request.</param>
-    /// <returns>The response once the long-running operation completes.</returns>
-    internal static async Task WaitForLroCompletionAsync(Operation operation, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(operation);
-
-        if (s_defaultPollInterval.HasValue)
-        {
-            await WaitForLroCompletionInternalAsync(operation, cancellationToken).ConfigureAwait(false);
-        }
-        else
-        {
-            await operation.WaitForCompletionResponseAsync(cancellationToken);
-        }
-    }
-
-    private static async Task<Response> WaitForLroCompletionInternalAsync(Operation operation, CancellationToken cancellationToken)
-    {
-        while (true)
-        {
-            _ = await operation.UpdateStatusAsync(cancellationToken);
-            if (operation.HasCompleted)
-            {
-                return operation.GetRawResponse();
-            }
-
-            await Task.Delay(s_defaultPollInterval!.Value, cancellationToken).ConfigureAwait(false);
-        }
-    }
-
-    /// <summary>
-    /// Escapes a string value for safe use in KQL queries to prevent injection attacks.
-    /// </summary>
-    /// <param name="value">The string value to escape</param>
-    /// <returns>The escaped string safe for use in KQL queries</returns>
-    internal static string EscapeKqlString(string value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            return string.Empty;
-        }
-
-        // Replace single quotes with double single quotes to escape them in KQL
-        // Also escape backslashes to prevent escape sequence issues
-        return value.Replace("\\", "\\\\").Replace("'", "''");
-    }
-
     internal static T AddDefaultPolicies<T>(T clientOptions) where T : ClientOptions
     {
         clientOptions.AddPolicy(s_sharedUserAgentPolicy, HttpPipelinePosition.BeforeTransport);
         return clientOptions;
     }
+
+
+    /// <summary>
+    /// Disables upper bounds enforcement on retry policy values (delays, timeouts, max retries).
+    /// This method should be called once during application startup when the --dangerously-disable-retry-limits flag is set.
+    /// </summary>
+    internal static void DisableRetryLimits() => s_retryLimitsDisabled = true;
+
+    /// <summary>
+    /// Resets the retry limits flag. For testing only.
+    /// </summary>
+    internal static void ResetRetryLimits() => s_retryLimitsDisabled = false;
 
     /// <summary>
     /// Configures retry policy options on the provided client options
@@ -226,7 +157,7 @@ public static class AzureHelper
     }
 
     /// <inheritdoc/>
-    public static async Task<ArmClient> CreateArmClientAsync(
+    internal static async Task<ArmClient> CreateArmClientAsync(
         IAzureService azureService,
         string? tenantIdOrName = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -250,15 +181,4 @@ public static class AzureHelper
             throw new Exception($"Failed to create ARM client: {ex.Message}", ex);
         }
     }
-
-    /// <summary>
-    /// Disables upper bounds enforcement on retry policy values (delays, timeouts, max retries).
-    /// This method should be called once during application startup when the --dangerously-disable-retry-limits flag is set.
-    /// </summary>
-    internal static void DisableRetryLimits() => s_retryLimitsDisabled = true;
-
-    /// <summary>
-    /// Resets the retry limits flag. For testing only.
-    /// </summary>
-    internal static void ResetRetryLimits() => s_retryLimitsDisabled = false;
 }

@@ -785,8 +785,8 @@
       ]
     },
     {
-      "name": "list_azure_advisor_recommendation_types",
-      "description": "List the catalog of Azure Advisor recommendation types — every recommendation Advisor can possibly generate, with its category, impact, target resource type, and sub-category. Results are sorted by impact (High → Medium → Low) so the most important recommendations surface first. Use this in two scenarios: (1) greenfield/empty environments where no actual recommendations have been generated yet — the catalog still shows what Advisor would recommend once resources exist; (2) brownfield environments where a new resource type is being onboarded into an existing subscription — pass --resource-type to see exactly which recommendations will apply to it. Optionally narrow results with --resource-type (e.g. 'microsoft.compute/virtualmachines'), --impact (High|Medium|Low), and/or --category (Cost|HighAvailability|Security|Performance|OperationalExcellence).",
+      "name": "list_azure_advisor_recommendation_metadata",
+      "description": "List the global Azure Advisor recommendation metadata catalog, also known as recommendation types, from Azure Resource Graph. Use it even when no recommendation instances exist: discover available types for greenfield environments, filter by supported resource type during brownfield onboarding, or find service-retirement metadata by Service Health tracking ID and retirement date. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting subcategory filters are rejected. Returns localized IDs, names, categories, subcategories, impact, priority, descriptions, benefits, actions, scope, source query, and service-retirement details. Supports language, resource type, impact, category, subcategory, tracking ID, and retirement date filters, ordered High, Medium, then Low impact.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -814,7 +814,7 @@
         }
       },
       "mappedToolList": [
-        "advisor_recommendation-type_list"
+        "advisor_metadata_list"
       ]
     },
     {

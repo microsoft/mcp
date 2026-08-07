@@ -151,7 +151,7 @@ public class AdvisorMetadataConversionTests
     }
 
     [Fact]
-    public void Convert_MissingRecommendationTypeId_DefaultsToEmptyString()
+    public void Convert_MissingRecommendationTypeId_ThrowsJsonException()
     {
         var element = Parse("""
             {
@@ -162,10 +162,7 @@ public class AdvisorMetadataConversionTests
             }
             """);
 
-        var metadata = AdvisorService.ConvertToRecommendationMetadataModel(element);
-
-        Assert.Equal(string.Empty, metadata.RecommendationTypeId);
-        Assert.Equal("High", metadata.Impact);
+        Assert.Throws<JsonException>(() => AdvisorService.ConvertToRecommendationMetadataModel(element));
     }
 
     [Fact]
@@ -195,23 +192,18 @@ public class AdvisorMetadataConversionTests
     }
 
     [Fact]
-    public void Convert_MissingPropertiesObject_ReturnsEmptyMetadata()
+    public void Convert_MissingPropertiesObject_ThrowsJsonException()
     {
         var element = Parse("{}");
 
-        var metadata = AdvisorService.ConvertToRecommendationMetadataModel(element);
-
-        Assert.Equal(string.Empty, metadata.RecommendationTypeId);
-        Assert.Null(metadata.DisplayName);
-        Assert.Null(metadata.Actions);
-        Assert.Null(metadata.ServiceRetirement);
+        Assert.Throws<JsonException>(() => AdvisorService.ConvertToRecommendationMetadataModel(element));
     }
 
     [Fact]
-    public void Convert_JsonNullElement_ThrowsInvalidOperationException()
+    public void Convert_JsonNullElement_ThrowsJsonException()
     {
         var element = Parse("null");
 
-        Assert.Throws<InvalidOperationException>(() => AdvisorService.ConvertToRecommendationMetadataModel(element));
+        Assert.Throws<JsonException>(() => AdvisorService.ConvertToRecommendationMetadataModel(element));
     }
 }
