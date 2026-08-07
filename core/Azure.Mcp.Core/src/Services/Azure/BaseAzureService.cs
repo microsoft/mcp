@@ -395,9 +395,20 @@ public abstract class BaseAzureService
     /// <remarks>
     /// The s_defaultPollInterval value is set to TimeSpan.Zero during playback testing to avoid unnecessary delays in test execution. In production, it is null, and the method will wait for the operation to complete without polling unless a progress reporter is provided.
     /// </remarks>
-    private static async Task<Response> WaitForLroCompletionInternalAsync(Operation operation, IProgress<string>? progress, CancellationToken cancellationToken)
+    private static Task<Response> WaitForLroCompletionInternalAsync(
+        Operation operation,
+        IProgress<string>? progress,
+        CancellationToken cancellationToken) =>
+        WaitForLroCompletionInternalAsync(operation, progress, s_defaultPollInterval, s_progressPollInterval, cancellationToken);
+
+    internal static async Task<Response> WaitForLroCompletionInternalAsync(
+        Operation operation,
+        IProgress<string>? progress,
+        TimeSpan? defaultPollInterval,
+        TimeSpan progressPollInterval,
+        CancellationToken cancellationToken)
     {
-        if (s_defaultPollInterval.HasValue)
+        if (defaultPollInterval.HasValue)
         {
             // Loop polling the async operation status at a fixed interval until it completes.
             // This is used during playback testing to avoid the Azure SDK's default polling delay.
@@ -409,19 +420,15 @@ public abstract class BaseAzureService
                     return response;
                 }
 
-                await Task.Delay(s_defaultPollInterval.Value, cancellationToken).ConfigureAwait(false);
+                await Task.Delay(defaultPollInterval.Value, cancellationToken).ConfigureAwait(false);
             }
         }
 
-        if (progress is null)
-        {
-            return await operation.WaitForCompletionResponseAsync(cancellationToken);
-        }
-        else
+        else if (progress is not null)
         {
             Task<Response> completionTask = operation.WaitForCompletionResponseAsync(cancellationToken).AsTask();
             var startTime = DateTime.UtcNow;
-            using PeriodicTimer progressTimer = new(s_progressPollInterval);
+            using PeriodicTimer progressTimer = new(progressPollInterval);
 
             while (!completionTask.IsCompleted)
             {
@@ -439,6 +446,10 @@ public abstract class BaseAzureService
             }
 
             return await completionTask.ConfigureAwait(false);
+        }
+        else
+        {
+            return await operation.WaitForCompletionResponseAsync(cancellationToken);
         }
     }
 }
