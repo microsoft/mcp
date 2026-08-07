@@ -4,7 +4,9 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Monitor.OpenTelemetry.Exporter;
+#pragma warning disable IDE0005 // using isn't used in release builds.
 using Microsoft.Extensions.Azure;
+#pragma warning restore IDE0005 // using isn't used in release builds.
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -23,7 +25,9 @@ public static class OpenTelemetryExtensions
     /// <summary>
     /// The App Insights connection string to send telemetry to Microsoft.
     /// </summary>
+#pragma warning disable IDE0051 // Remove unused private members, used in conditional block
     private const string MicrosoftOwnedAppInsightsConnectionString = "InstrumentationKey=21e003c0-efee-4d3f-8a98-1868515aa2c9;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/;ApplicationId=f14f6a2d-6405-4f88-bd58-056f25fe274f";
+#pragma warning restore IDE0051
 
     public static void ConfigureOpenTelemetry(this IServiceCollection services)
     {
@@ -130,7 +134,9 @@ public static class OpenTelemetryExtensions
     /// </summary>
     /// <param name="otelBuilder">The OpenTelemetry builder to configure.</param>
     /// <param name="appInsightsConnectionString">The Application Insights connection string for Microsoft's telemetry instance.</param>
+#pragma warning disable IDE0051 // Remove unused private members, used in conditional block
     private static void ConfigureMicrosoftAzureMonitorExporter(OpenTelemetry.OpenTelemetryBuilder otelBuilder, string appInsightsConnectionString)
+#pragma warning restore IDE0051
     {
         // We don't configure logging for Microsoft telemetry to avoid sending potentially sensitive log data to Microsoft.
         otelBuilder.WithMetrics(metrics =>

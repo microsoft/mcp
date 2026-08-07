@@ -8,18 +8,15 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Acr.Models;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Acr.Services;
 
-public sealed class AcrService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AcrService> logger)
+public sealed class AcrService(ISubscriptionService subscriptionService, ITenantService tenantService)
     : BaseAzureResourceService(subscriptionService, tenantService), IAcrService
 {
-    private readonly ILogger<AcrService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
     public async Task<ResourceQueryResults<AcrRegistryInfo>> ListRegistries(
         string subscription,
         string? resourceGroup = null,

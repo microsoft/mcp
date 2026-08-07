@@ -18,7 +18,7 @@ internal static class BinaryContentHelper
 
     /// <summary>
     /// Serialize object to JSON UTF8 bytes and wrap into BinaryContent via BinaryData factory.
-    /// Avoid generic Create<T> which expects IPersistableModel.
+    /// Avoid generic Create&lt;T&gt; which expects IPersistableModel.
     /// </summary>
     public static BinaryContent FromObject<T>(T value, JsonSerializerOptions? jsonOptions = null)
     {

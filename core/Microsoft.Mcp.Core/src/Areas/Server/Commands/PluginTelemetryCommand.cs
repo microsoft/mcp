@@ -170,7 +170,7 @@ public sealed class PluginTelemetryCommand(
     /// </summary>
     /// <param name="context">The command execution context containing the response object.</param>
     /// <param name="options">The parsed command-line arguments containing telemetry event data.</param>
-    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A task containing the command response with status and any error messages.</returns>
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, PluginTelemetryOptions options, CancellationToken cancellationToken)
     {

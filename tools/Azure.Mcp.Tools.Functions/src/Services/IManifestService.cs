@@ -13,7 +13,7 @@ public interface IManifestService
     /// <summary>
     /// Fetches the template manifest from CDN, using cache when available.
     /// </summary>
-    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The template manifest.</returns>
     Task<TemplateManifest> FetchManifestAsync(CancellationToken cancellationToken);
 }

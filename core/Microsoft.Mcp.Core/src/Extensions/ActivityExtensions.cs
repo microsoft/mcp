@@ -10,6 +10,7 @@ public static class ActivityExtensions
     /// <summary>
     /// Sets a tag in the activity if, and only if, the tag does not already exist.
     /// </summary>
+    /// <param name="activity">The activity to set the tag on.</param>
     /// <param name="name">The name of the tag.</param>
     /// <param name="value">The value of the tag.</param>
     public static Activity SetTagIfNotExists(this Activity? activity, string name, object? value)

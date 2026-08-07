@@ -56,7 +56,7 @@ internal abstract class UnixMachineInformationProvider(ILogger<UnixMachineInform
     /// <param name="value">The value to write in the file.</param>
     /// <returns>True, if the value was successfully written.</returns>
     /// 
-    public async virtual Task<bool> WriteValueToDisk(string directoryPath, string fileName, string? value)
+    public virtual async Task<bool> WriteValueToDisk(string directoryPath, string fileName, string? value)
     {
         // If the value is not set, return immediately.
         if (string.IsNullOrWhiteSpace(value))
@@ -91,10 +91,10 @@ internal abstract class UnixMachineInformationProvider(ILogger<UnixMachineInform
     }
 
     /// <summary>
-    /// Try and read the value from disk. If <paramref name="value"/> is null or empty, this method will return false.
+    /// Try and read the value from disk.
     /// </summary>
     /// <returns>Returns a value if the value could be written on disk. Otherwise, false.</returns>
-    public async virtual Task<string?> ReadValueFromDisk(string directoryPath, string fileName)
+    public virtual async Task<string?> ReadValueFromDisk(string directoryPath, string fileName)
     {
         var path = Path.Combine(directoryPath, fileName);
 

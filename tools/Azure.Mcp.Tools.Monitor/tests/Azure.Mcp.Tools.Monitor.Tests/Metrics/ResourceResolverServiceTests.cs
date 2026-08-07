@@ -124,8 +124,8 @@ public class ResourceResolverServiceTests
         var subscription = Guid.NewGuid().ToString();
         var resourceName = "duplicate-resource";
 
-        var resource1 = CreateMockGenericResource($"/subscriptions/{subscription}/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/{resourceName}", "rg1", "Microsoft.Storage/storageAccounts", resourceName);
-        var resource2 = CreateMockGenericResource($"/subscriptions/{subscription}/resourceGroups/rg2/providers/Microsoft.Compute/virtualMachines/{resourceName}", "rg2", "Microsoft.Compute/virtualMachines", resourceName);
+        var resource1 = CreateMockGenericResource($"/subscriptions/{subscription}/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/{resourceName}", "Microsoft.Storage/storageAccounts", resourceName);
+        var resource2 = CreateMockGenericResource($"/subscriptions/{subscription}/resourceGroups/rg2/providers/Microsoft.Compute/virtualMachines/{resourceName}", "Microsoft.Compute/virtualMachines", resourceName);
 
         var resourcesAsyncPageable = CreateAsyncPageableWithItems(resource1, resource2);
 
@@ -147,7 +147,7 @@ public class ResourceResolverServiceTests
         var resourceName = "unique-resource";
         var expectedResourceId = $"/subscriptions/{subscription}/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/{resourceName}";
 
-        var resource = CreateMockGenericResource(expectedResourceId, "rg1", "Microsoft.Storage/storageAccounts", resourceName);
+        var resource = CreateMockGenericResource(expectedResourceId, "Microsoft.Storage/storageAccounts", resourceName);
 
         var subscriptionResource = Substitute.For<SubscriptionResource>();
         var resourcesAsyncPageable = CreateAsyncPageableWithItems(resource);
@@ -173,8 +173,8 @@ public class ResourceResolverServiceTests
         var expectedResourceId = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{resourceName}";
 
         // Create resources in different resource groups with same name
-        var resource1 = CreateMockGenericResource(expectedResourceId, "rg1", "Microsoft.Storage/storageAccounts", resourceName);
-        var resource2 = CreateMockGenericResource($"/subscriptions/{subscription}/resourceGroups/rg2/providers/Microsoft.Storage/storageAccounts/{resourceName}", "rg2", "Microsoft.Storage/storageAccounts", resourceName);
+        var resource1 = CreateMockGenericResource(expectedResourceId, "Microsoft.Storage/storageAccounts", resourceName);
+        var resource2 = CreateMockGenericResource($"/subscriptions/{subscription}/resourceGroups/rg2/providers/Microsoft.Storage/storageAccounts/{resourceName}", "Microsoft.Storage/storageAccounts", resourceName);
 
         var resourcesAsyncPageable = CreateAsyncPageableWithItems(resource1, resource2);
 
@@ -197,8 +197,8 @@ public class ResourceResolverServiceTests
         var expectedResourceId = $"/subscriptions/{subscription}/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/{resourceName}";
 
         // Create resources of different types with same name
-        var resource1 = CreateMockGenericResource(expectedResourceId, "rg1", "Microsoft.Storage/storageAccounts", resourceName);
-        var resource2 = CreateMockGenericResource($"/subscriptions/{subscription}/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/{resourceName}", "rg1", "Microsoft.Compute/virtualMachines", resourceName);
+        var resource1 = CreateMockGenericResource(expectedResourceId, "Microsoft.Storage/storageAccounts", resourceName);
+        var resource2 = CreateMockGenericResource($"/subscriptions/{subscription}/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/{resourceName}", "Microsoft.Compute/virtualMachines", resourceName);
 
         var resourcesAsyncPageable = CreateAsyncPageableWithItems(resource1, resource2);
 
@@ -215,7 +215,7 @@ public class ResourceResolverServiceTests
 
     #region Helper Methods
 
-    private static GenericResource CreateMockGenericResource(string resourceId, string resourceGroupName, string resourceType, string resourceName)
+    private static GenericResource CreateMockGenericResource(string resourceId, string resourceType, string resourceName)
     {
         var result = Substitute.For<GenericResource>();
 

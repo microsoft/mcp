@@ -6,6 +6,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Tests.Client;
 using Xunit;
+using ExtensionsOptions = Microsoft.Extensions.Options;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands;
 
@@ -24,7 +25,7 @@ public class ServiceInfoCommandTests : CommandUnitTestsBase<ServerInfoCommand, o
             Description = "Test Description",
             RootCommandGroupName = "azmcp"
         };
-        Services.AddSingleton(Microsoft.Extensions.Options.Options.Create(_mcpServerConfiguration));
+        Services.AddSingleton(ExtensionsOptions.Options.Create(_mcpServerConfiguration));
     }
 
     [Fact]

@@ -385,7 +385,7 @@ public class MonitorService(
             ?? throw new ArgumentException($"Unable to extract subscription ID from resource ID: {resourceId}");
 
         // Get the activity logs from the Azure Management API
-        var activityLogs = await CallActivityLogApiAsync(subscriptionId, resourceId, hours, eventLevel, tenant, retryPolicy, cancellationToken);
+        var activityLogs = await CallActivityLogApiAsync(subscriptionId, resourceId, hours, eventLevel, tenant, cancellationToken);
 
         // Take only the requested number of logs
         return activityLogs.Take(top).ToList();
@@ -397,7 +397,6 @@ public class MonitorService(
         double hours,
         ActivityLogEventLevel? eventLevel,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         var returnValue = new List<ActivityLogEventData>();

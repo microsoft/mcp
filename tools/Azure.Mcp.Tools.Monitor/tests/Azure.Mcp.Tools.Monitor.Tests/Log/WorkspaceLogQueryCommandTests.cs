@@ -17,7 +17,6 @@ public sealed class WorkspaceLogQueryCommandTests : SubscriptionCommandUnitTests
 {
     private const string _knownSubscription = "knownSubscription";
     private const string _knownWorkspace = "knownWorkspace";
-    private const string _knownResourceGroup = "knownResourceGroup";
     private const string _knownTable = "knownTable";
     private const string _knownTenant = "knownTenant";
     private const string _knownHours = "24";

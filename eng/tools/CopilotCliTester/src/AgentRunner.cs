@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using CopilotCliTester.Models;
@@ -15,8 +14,8 @@ namespace CopilotCliTester;
 /// </summary>
 internal sealed partial class AgentRunner(CopilotClient client, string serverExecutablePath, string? outputDir = null, string? workspacePath = null) : IAsyncDisposable
 {
-    private static readonly string TimeStamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss");
-    private readonly Lock eventLock = new();
+    private static readonly string s_timeStamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss");
+    private readonly Lock _eventLock = new();
     private readonly string _outputDirectory = outputDir ?? Path.Combine(AppContext.BaseDirectory, "reports");
 
     [GeneratedRegex(@"eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}")]
@@ -108,7 +107,7 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
 
                 session.On(ev =>
                 {
-                    lock (eventLock)
+                    lock (_eventLock)
                     {
                         if (isComplete)
                             return;
@@ -160,7 +159,7 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
-                    lock (eventLock)
+                    lock (_eventLock)
                     {
                         isComplete = true;
                     }
@@ -335,7 +334,7 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
 
     private string BuildReportFilePath(AgentRunConfig config)
     {
-        var runDir = $"test-run-{TimeStamp}";
+        var runDir = $"test-run-{s_timeStamp}";
         var ns = config.Namespace ?? "unknown";
         var tool = config.ToolName ?? $"test-{DateTime.UtcNow:yyyyMMdd-HHmmss}";
         var file = $"{tool}-{DateTimeOffset.UtcNow:HHmmssfff}.md";

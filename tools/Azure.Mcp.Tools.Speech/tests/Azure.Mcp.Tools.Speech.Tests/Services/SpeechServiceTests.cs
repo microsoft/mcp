@@ -18,7 +18,6 @@ public class SpeechServiceTests
     private readonly IFastTranscriptionRecognizer _fastTranscriptionRecognizer;
     private readonly IRealtimeTranscriptionRecognizer _realtimeTranscriptionRecognizer;
     private readonly IRealtimeTtsSynthesizer _realtimeTtsSynthesizer;
-    private readonly SpeechService _speechService;
 
     public SpeechServiceTests()
     {
@@ -27,8 +26,6 @@ public class SpeechServiceTests
         _fastTranscriptionRecognizer = Substitute.For<IFastTranscriptionRecognizer>();
         _realtimeTranscriptionRecognizer = Substitute.For<IRealtimeTranscriptionRecognizer>();
         _realtimeTtsSynthesizer = Substitute.For<IRealtimeTtsSynthesizer>();
-
-        _speechService = new SpeechService(_tenantService, _logger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer);
     }
 
     [Fact]

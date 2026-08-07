@@ -14,7 +14,7 @@ public interface IRedisService
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="tenant">Optional tenant ID for cross-tenant operations</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
-    /// <param name="cancellationToken">A cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>List of Redis resource details</returns>
     /// <exception cref="Exception">When the service request fails</exception>
     Task<IEnumerable<Resource>> ListResourcesAsync(
@@ -37,7 +37,7 @@ public interface IRedisService
     /// <param name="modules">The modules to enable (e.g. "RedisJSON", "RedisBloom")</param>
     /// <param name="tenant">Optional tenant ID for cross-tenant operations</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
-    /// <param name="cancellationToken">A cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>Details of the Redis resource being created.</returns>
     /// <exception cref="Exception">When the service request fails</exception>
     Task<Resource> CreateResourceAsync(

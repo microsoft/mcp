@@ -24,7 +24,7 @@ public interface IPlatformLandingZoneService
     /// <param name="environmentName">The environment name.</param>
     /// <param name="versionControlSystem">The version control system.</param>
     /// <param name="organizationName">The organization name.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The updated parameters.</returns>
     Task<PlatformLandingZoneParameters> UpdateParametersAsync(
         PlatformLandingZoneContext context,
@@ -44,7 +44,7 @@ public interface IPlatformLandingZoneService
     /// Checks if a platform landing zone already exists for the given context.
     /// </summary>
     /// <param name="context">The landing zone context.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>True if platform landing zone exists, false otherwise.</returns>
     Task<bool> CheckExistingAsync(
         PlatformLandingZoneContext context,
@@ -54,7 +54,7 @@ public interface IPlatformLandingZoneService
     /// Generates a platform landing zone.
     /// </summary>
     /// <param name="context">The landing zone context.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The download URL if successful, null otherwise.</returns>
     Task<string?> GenerateAsync(
         PlatformLandingZoneContext context,
@@ -65,7 +65,7 @@ public interface IPlatformLandingZoneService
     /// </summary>
     /// <param name="context">The platform landing zone context.</param>
     /// <param name="outputPath">The output path for the downloaded file.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The path to the downloaded file.</returns>
     Task<string> DownloadAsync(
         PlatformLandingZoneContext context,

@@ -16,9 +16,8 @@ namespace Microsoft.Mcp.Tests.Client;
 /// This version intentionally avoids dependencies on prior internal abstractions that were missing
 /// (e.g. TestEnvironment / ProcessTracker) while still providing stderr/stdout capture for failed tests.
 /// </summary>
-public sealed class TestProxy(bool debug = false) : IDisposable
+public sealed class TestProxy() : IDisposable
 {
-    private readonly bool _debug = debug;
     public StringBuilder stderr = new();
     public readonly StringBuilder stdout = new();
     private Process? _process;
@@ -46,7 +45,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     /// </summary>
     private static readonly SemaphoreSlim s_downloadLock = new(1, 1);
 
-    private async Task<string> EnsureProxyExecutableAsync(string repositoryRoot, string assetsJsonPath)
+    private async Task<string> EnsureProxyExecutableAsync()
     {
         if (_cachedExecutable != null)
         {
@@ -330,7 +329,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             return;
         }
 
-        var proxyExe = await EnsureProxyExecutableAsync(repositoryRoot, assetsJsonPath).ConfigureAwait(false);
+        var proxyExe = await EnsureProxyExecutableAsync().ConfigureAwait(false);
         await EnsureProxyRecordings(proxyExe, repositoryRoot, assetsJsonPath).ConfigureAwait(false);
 
         if (string.IsNullOrWhiteSpace(proxyExe) || !File.Exists(proxyExe))

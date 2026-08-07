@@ -6,7 +6,7 @@ using System.Numerics.Tensors;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.VectorData;
 
-namespace ToolSelection.VectorDb;
+namespace ToolDescriptionEvaluator.VectorDb;
 
 /// <summary>
 /// A record stored in the vector database. The properties are annotated with
@@ -125,7 +125,9 @@ public sealed class VectorDB : VectorStore
     public override VectorStoreCollection<object, Dictionary<string, object?>> GetDynamicCollection(string name, VectorStoreCollectionDefinition definition)
         => throw new NotSupportedException("Dynamic collections are not supported by the in-memory vector store.");
 
+#pragma warning disable IDE0391 // Make method synchronous
     public override async IAsyncEnumerable<string> ListCollectionNamesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+#pragma warning restore IDE0391 // Make method synchronous
     {
         List<string> names;
 

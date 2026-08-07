@@ -7,7 +7,6 @@ using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.ApplicationInsights;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Services;
@@ -16,14 +15,12 @@ public class ApplicationInsightsService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
     IResourceGroupService resourceGroupService,
-    IProfilerDataService profilerDataClient,
-    ILogger<ApplicationInsightsService> logger) : BaseAzureService(tenantService), IApplicationInsightsService
+    IProfilerDataService profilerDataClient) : BaseAzureService(tenantService), IApplicationInsightsService
 {
     private const int MaxRecommendations = 20;
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService;
     private readonly IProfilerDataService _profilerDataClient = profilerDataClient ?? throw new ArgumentNullException(nameof(profilerDataClient));
-    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<IEnumerable<JsonNode>> GetProfilerInsightsAsync(
         string subscription,

@@ -4,7 +4,7 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
-using ToolSelection.Models;
+using ToolDescriptionEvaluator.Models;
 
 namespace ToolMetadataExporter;
 
@@ -213,10 +213,10 @@ public partial class Utility(ILogger<Utility> logger)
 
     /// <summary>
     /// Traverse up from a starting directory to find the repo root.
-    /// Directory containing <see cref="Constants.RepositoryRootSolution"/> or .git).
+    /// Directory containing <see cref="RepositoryRootSolution"/> or .git).
     /// </summary>
     /// <param name="startDir">Directory to start upwards traversal</param>
-    /// <returns>Directory containing <see cref="Constants.RepositoryRootSolution"/> or .git</returns>
+    /// <returns>Directory containing <see cref="RepositoryRootSolution"/> or .git</returns>
     /// <exception cref="InvalidOperationException">If the solution cannot be found.</exception>
     internal static string FindRepoRoot(string startDir)
     {

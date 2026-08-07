@@ -20,7 +20,6 @@ public class OneLakeServiceLroTests
     private const string OperationId = "op-lro-12345";
     private const string OperationUrl = $"https://dailyapi.fabric.microsoft.com/v1/operations/{OperationId}";
     private const string ResultUrl = $"https://dailyapi.fabric.microsoft.com/v1/operations/{OperationId}/result";
-    private const string ShortcutsUrl = $"https://dailyapi.fabric.microsoft.com/v1/workspaces/{WorkspaceId}/items/{ItemId}/shortcuts/bulkCreate";
 
     private static OneLakeService CreateService(Func<HttpRequestMessage, HttpResponseMessage> handler)
     {

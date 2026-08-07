@@ -858,30 +858,4 @@ public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fi
             }
         }
     }
-
-    /// <summary>
-    /// Sanitizes and records a value based on the test mode.
-    /// - In Live mode: returns the original unsanitized value
-    /// - In Record mode: registers the sanitized value for recording, but returns the original value for API calls
-    /// - In Playback mode: returns the sanitized value from TestVariables
-    /// </summary>
-    private string SanitizeAndRecord(string unsanitizedValue, string name)
-    {
-        if (TestMode == TestMode.Live)
-        {
-            // Live tests don't record anything, so just use the actual value.
-            return unsanitizedValue;
-        }
-        else if (TestMode == TestMode.Record)
-        {
-            // Record tests need to sanitize and register the value, but use the actual value in the test.
-            RegisterVariable(name, "Sanitized");
-            return unsanitizedValue;
-        }
-        else
-        {
-            // Playback tests need to use the sanitized value.
-            return TestVariables[name];
-        }
-    }
 }

@@ -57,7 +57,7 @@ public class TenantService : BaseAzureService, ITenantService
         var options = AddDefaultPolicies(new ArmClientOptions());
         options.Transport = new HttpClientTransport(GetClient());
         options.Environment = CloudConfiguration.ArmEnvironment;
-        var client = new ArmClient(await GetCredential(cancellationToken), default, options);
+        var client = new ArmClient(await GetTokenCredentialAsync(null, cancellationToken), default, options);
 
         await foreach (var tenant in client.GetTenants().WithCancellation(cancellationToken))
         {

@@ -172,7 +172,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
         else if (IsClassicAspNet(projectDir, doc))
         {
             // Differentiate between MVC and WebForms
-            if (HasMvcIndicators(projectDir, doc))
+            if (HasMvcIndicators(projectDir))
             {
                 appType = AppType.AspNetMvc;
                 entryPoint = FindGlobalAsax(projectDir);
@@ -376,7 +376,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
         return false;
     }
 
-    private static bool HasMvcIndicators(string projectDir, XDocument doc)
+    private static bool HasMvcIndicators(string projectDir)
     {
         // Check for MVC packages
         var packagesConfig = Path.Combine(projectDir, "packages.config");

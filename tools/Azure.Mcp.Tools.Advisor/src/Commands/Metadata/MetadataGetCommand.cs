@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Linq;
 using System.Net;
 using Azure.Mcp.Tools.Advisor.Options.Metadata;
 using Azure.Mcp.Tools.Advisor.Services;

@@ -25,7 +25,7 @@ public static class McpServerElicitationExtensions
     /// </remarks>
     /// <param name="server">The MCP server instance.</param>
     /// <param name="request">The elicitation request parameters.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A task that represents the asynchronous elicitation operation.</returns>
     public static async Task<ElicitationResponse> RequestElicitationAsync(
         this McpServer server,
@@ -204,10 +204,9 @@ public static class McpServerElicitationExtensions
     /// Checks if elicitation should be triggered for a tool based on its metadata.
     /// </summary>
     /// <param name="server">The MCP server instance.</param>
-    /// <param name="toolName">The name of the tool.</param>
     /// <param name="toolMetadata">The tool metadata to check.</param>
     /// <returns>True if elicitation should be triggered, false otherwise.</returns>
-    public static bool ShouldTriggerElicitation(this McpServer server, string toolName, object? toolMetadata)
+    public static bool ShouldTriggerElicitation(this McpServer server, object? toolMetadata)
     {
         if (!server.SupportsElicitation())
         {

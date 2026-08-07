@@ -15,6 +15,7 @@ indent_size = 4
 
 # C# files
 [*.cs]
+file_header_template = Copyright (c) Microsoft Corporation.\nLicensed under the MIT License.
 # New line preferences
 csharp_new_line_before_open_brace = all # vs-default: any
 csharp_new_line_before_else = true # vs-default: true
@@ -33,7 +34,7 @@ csharp_indent_switch_labels = true # vs-default: true
 csharp_indent_labels = one_less_than_current # vs-default: one_less_than_current
 
 # Modifier preferences
-csharp_preferred_modifier_order = public,private,protected,internal,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,volatile,async:suggestion
+csharp_preferred_modifier_order = public,private,protected,internal,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,volatile,async:error
 
 # avoid this. unless absolutely necessary
 dotnet_style_qualification_for_field = false:suggestion # vs-default: false:none
@@ -83,7 +84,7 @@ dotnet_naming_style.camel_case_underscore_style.required_prefix = _
 dotnet_naming_style.camel_case_underscore_style.capitalization = camel_case
 
 # Code style defaults
-csharp_using_directive_placement = outside_namespace:suggestion
+csharp_using_directive_placement = outside_namespace:error
 dotnet_sort_system_directives_first = true # vs-default: true
 csharp_prefer_braces = true:refactoring
 csharp_preserve_single_line_blocks = true # vs-default: true
@@ -91,10 +92,13 @@ csharp_preserve_single_line_statements = false # vs-default: true
 csharp_prefer_static_local_function = true:suggestion
 csharp_prefer_simple_using_statement = false:none
 csharp_style_prefer_switch_expression = true:suggestion
+csharp_style_namespace_declarations = file_scoped:error
+csharp_style_namespace_match_folder = true:error
 
 # Code quality
 dotnet_style_readonly_field = true:suggestion
-dotnet_code_quality_unused_parameters = non_public:suggestion
+# Safe to warn on all unused parameters as the project is shipped as an application and not a library.
+dotnet_code_quality_unused_parameters = all:error
 
 # Expression-level preferences
 dotnet_style_object_initializer = true:suggestion # vs-default: true:suggestion
@@ -166,6 +170,23 @@ dotnet_code_quality.ca1802.api_surface = private, internal
 
 # CA2016: Forward the CancellationToken parameter to methods that take one
 dotnet_diagnostic.CA2016.severity = error
+
+# Diagnostics without corresponding editorconfig options
+# Unused usings
+dotnet_diagnostic.IDE0005.severity = error
+# Invalid string formatting
+dotnet_diagnostic.IDE0043.severity = error
+# Unused/unread private members
+dotnet_diagnostic.IDE0051.severity = error
+dotnet_diagnostic.IDE0052.severity = error
+# Require file header
+dotnet_diagnostic.IDE0073.severity = error
+# Make methods synchronous (remove async modifier from methods without any await statements)
+dotnet_diagnostic.IDE0390.severity = error
+dotnet_diagnostic.IDE0391.severity = error
+
+# 
+dotnet_diagnostic.CS1591.severity = none
 
 # Xml project files
 [*.{csproj,vcxproj,vcxproj.filters,proj,nativeproj,locproj}]

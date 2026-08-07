@@ -24,8 +24,6 @@ public class PostgresServiceRowLimitTests
     private readonly IDbProvider _dbProvider = Substitute.For<IDbProvider>();
     private readonly PostgresService _postgresService;
 
-    private const string SubscriptionId = "test-sub";
-    private const string ResourceGroup = "test-rg";
     private const string User = "test-user";
     private const string Server = "test-server";
     private const string Database = "test-db";

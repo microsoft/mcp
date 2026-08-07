@@ -13,7 +13,6 @@ public sealed class LiveServerFixture() : IAsyncLifetime
     private readonly SemaphoreSlim _startLock = new(1, 1);
     private Process? _httpServerProcess;
     private McpClient? _mcpClient;
-    private string? _serverUrl;
     private bool _started;
 
     public Dictionary<string, string?> EnvironmentVariables { get; set; } = new();
@@ -49,7 +48,6 @@ public sealed class LiveServerFixture() : IAsyncLifetime
                 Settings?.SettingsDirectory);
 
             _mcpClient = client;
-            _serverUrl = serverUrl;
             _started = true;
         }
         finally

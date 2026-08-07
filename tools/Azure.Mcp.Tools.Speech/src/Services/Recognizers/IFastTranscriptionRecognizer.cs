@@ -20,6 +20,7 @@ public interface IFastTranscriptionRecognizer
     /// <param name="phrases">Optional phrases to improve recognition accuracy</param>
     /// <param name="profanity">Profanity filtering option</param>
     /// <param name="retryPolicy">Optional retry policy for resilience</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>Continuous recognition result converted from Fast Transcription response</returns>
     Task<FastTranscriptionResult> RecognizeAsync(
         string endpoint,

@@ -42,7 +42,7 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
                 options.ResourceGroup,
                 options.DisplayName,
                 options.SerializedContent,
-                /**
+                /*
                  * The source ID is optional, defaulting to "azure monitor" if not provided.
                  * "azure monitor" is the default for workbooks created in the Azure Monitor extension,
                  * otherwise the workbook will display an error when opening.
