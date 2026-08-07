@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
-using Microsoft.Mcp.Tests.Attributes;
+using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
@@ -21,7 +21,11 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     protected ITestOutputHelper Output { get; } = output;
 
-    public ValueTask InitializeAsync() => ValueTask.CompletedTask;
+    public ValueTask InitializeAsync()
+    {
+        Assert.SkipWhen(!TestExtensions.IsLiveTestMode(), "Skipping test in non-live mode");
+        return ValueTask.CompletedTask;
+    }
 
     public ValueTask DisposeAsync()
     {
@@ -47,8 +51,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
     {
         string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
 
-        LiveTestSettings? settings = null;
-        LiveTestSettings.TryLoadTestSettings(out settings);
+        LiveTestSettings.TryLoadTestSettings(out var settings);
         Dictionary<string, string?> envVars = settings?.EnvironmentVariables.ToDictionary(k => k.Key, v => (string?)v.Value) ?? [];
 
         var (client, serverUrl) = await McpTestUtilities.CreateMcpClientAsync(
@@ -65,7 +68,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     #region Default Mode Tests
 
-    [LiveTestOnly]
     [Fact]
     public async Task DefaultMode_LoadsNamespaceTools()
     {
@@ -105,7 +107,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         }
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task DefaultMode_CanCallSubscriptionList()
     {
@@ -129,7 +130,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         Output.WriteLine($"Subscription list result: {firstContent}");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task DefaultMode_CanCallGroupList()
     {
@@ -157,7 +157,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     #region All Mode Tests
 
-    [LiveTestOnly]
     [Fact]
     public async Task AllMode_LoadsAllIndividualTools()
     {
@@ -197,7 +196,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     #region Single Tool Proxy Mode Tests
 
-    [LiveTestOnly]
     [Fact]
     public async Task SingleProxyMode_LoadsSingleAzureTool()
     {
@@ -218,7 +216,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         Output.WriteLine($"Description: {tool.Description}");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task SingleProxyMode_WithNamespaceFilter_StillLoadsSingleAzureTool()
     {
@@ -236,7 +233,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         Output.WriteLine("Single proxy mode with namespace filter still loaded 1 tool");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task SingleProxyMode_WithReadOnlyFlag_LoadsSingleAzureTool()
     {
@@ -269,7 +265,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     #region Namespace Proxy Mode Tests
 
-    [LiveTestOnly]
     [Fact]
     public async Task NamespaceProxyMode_LoadsNamespaceTools()
     {
@@ -297,7 +292,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         }
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task NamespaceProxyMode_WithSpecificNamespaces_LoadsNamespaceSpecificTools()
     {
@@ -343,7 +337,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         Output.WriteLine($"Namespace proxy mode with [documentation, keyvault, storage] loaded {toolNames.Count} tools");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task NamespaceProxyMode_StorageToolLearnMode_ReturnsStorageCommands()
     {
@@ -387,7 +380,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     #region Default Mode with Filters Tests
 
-    [LiveTestOnly]
     [Fact]
     public async Task DefaultMode_WithNamespaceFilter_LoadsFilteredTools()
     {
@@ -417,7 +409,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         }
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task AllMode_WithNamespaceFilter_LoadsFilteredIndividualTools()
     {
@@ -445,7 +436,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         Output.WriteLine($"All mode with namespaces [storage, keyvault] loaded {toolNames.Count} tools");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task AllMode_WithReadOnlyFlag_LoadsOnlyReadOnlyTools()
     {
@@ -501,7 +491,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     #region Negative Tests - Invalid Modes and Namespaces
 
-    [LiveTestOnly]
     [Fact]
     public async Task InvalidMode_FailsToStartServer()
     {
@@ -516,7 +505,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         });
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task InvalidNamespace_LoadsGracefully()
     {
@@ -543,7 +531,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     #region Consolidated Proxy Mode Tests
 
-    [LiveTestOnly]
     [Fact]
     public async Task ConsolidatedProxyMode_LoadsConsolidatedTools()
     {
@@ -573,7 +560,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         }
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task ConsolidatedProxyMode_ToolLearnMode_ReturnsConsolidatedCommands()
     {
@@ -614,7 +600,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         Output.WriteLine($"✓ Learn mode returned {responseText.Length} characters of consolidated command information");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task ConsolidatedProxyMode_WithNamespaceFilter_LoadsFilteredConsolidatedTools()
     {
@@ -645,7 +630,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         }
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task ConsolidatedProxyMode_WithReadOnlyFlag_LoadsOnlyReadOnlyConsolidatedTools()
     {
@@ -688,7 +672,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         }
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task ConsolidatedProxyMode_CanCallConsolidatedTool()
     {
@@ -717,7 +700,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     #region Tool Mode Tests
 
-    [LiveTestOnly]
     [Fact]
     public async Task ToolMode_AutomaticallyChangesToAllMode()
     {
@@ -738,7 +720,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         Assert.Contains("subscription_list", toolNames);
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task ToolMode_OverridesExplicitNamespaceMode()
     {
