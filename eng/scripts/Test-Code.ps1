@@ -146,7 +146,7 @@ function Create-CoverageReport {
 
     if ($env:TF_BUILD) {
         # Write the path to the cover file to a pipeline variable
-        Write-Host "##vso[task.setvariable variable=CoverageFile]$($mergedFile.FullName)"
+        Write-Host "##vso[task.setvariable variable=CoverageFile]$($mergedFile)"
     } else {
         # Ensure reportgenerator tool is installed
         if (-not (Get-Command reportgenerator -ErrorAction SilentlyContinue)) {
@@ -195,7 +195,7 @@ function Create-CoverageReport {
     try{
         $CommandCoverageSummaryFile = "$TestResultsPath/Coverage.md"
 
-        $xml = [xml](Get-Content $mergedFile.FullName)
+        $xml = [xml](Get-Content $mergedFile)
 
         $classes = $xml.coverage.packages.package.classes.class |
             Where-Object { $_.name -match 'AzureMcp\.(.*\.)?Commands\.' -and $_.filename -notlike '*System.Text.Json.SourceGeneration*' }
