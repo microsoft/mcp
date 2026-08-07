@@ -37,9 +37,10 @@ public sealed class StorageIntelligenceService(
         var scope = GetRequiredEnvironmentVariable(ScopeEnvironmentVariable);
         var tenant = Environment.GetEnvironmentVariable(TenantEnvironmentVariable);
         ValidateEndpoint(endpoint);
-        if (!Uri.TryCreate(scope, UriKind.Absolute, out _))
+        if (!IsValidApplicationScope(scope))
         {
-            throw new InvalidOperationException($"{ScopeEnvironmentVariable} must be an absolute application scope URI.");
+            throw new InvalidOperationException(
+                $"{ScopeEnvironmentVariable} must be an absolute scope URI or use the format <application-id>/.default.");
         }
 
         var effectiveResourceId = resourceId;
@@ -115,5 +116,17 @@ public sealed class StorageIntelligenceService(
         {
             throw new InvalidOperationException($"{EndpointEnvironmentVariable} must be an absolute HTTPS URL.");
         }
+    }
+
+    private static bool IsValidApplicationScope(string scope)
+    {
+        if (Uri.TryCreate(scope, UriKind.Absolute, out _))
+        {
+            return true;
+        }
+
+        const string defaultScopeSuffix = "/.default";
+        return scope.EndsWith(defaultScopeSuffix, StringComparison.OrdinalIgnoreCase) &&
+            Guid.TryParse(scope[..^defaultScopeSuffix.Length], out _);
     }
 }
