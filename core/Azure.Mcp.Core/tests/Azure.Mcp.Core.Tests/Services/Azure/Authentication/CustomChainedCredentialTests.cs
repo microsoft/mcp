@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Reflection;
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Services.Azure.Authentication;
@@ -284,8 +284,7 @@ public class CustomChainedCredentialTests
         // Arrange
         using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "DeviceCodeCredential");
-        var credentialType = GetCustomChainedCredentialType();
-        SetActiveTransport(credentialType, transport);
+        SetActiveTransport(transport);
 
         try
         {
@@ -297,7 +296,7 @@ public class CustomChainedCredentialTests
         }
         finally
         {
-            SetActiveTransport(credentialType, string.Empty);
+            SetActiveTransport(string.Empty);
         }
     }
 
@@ -311,8 +310,7 @@ public class CustomChainedCredentialTests
     public void DefaultBehavior_InServerTransportMode_CreatesCredentialSuccessfully(string transport)
     {
         // Arrange
-        var credentialType = GetCustomChainedCredentialType();
-        SetActiveTransport(credentialType, transport);
+        SetActiveTransport(transport);
 
         try
         {
@@ -325,7 +323,7 @@ public class CustomChainedCredentialTests
         }
         finally
         {
-            SetActiveTransport(credentialType, string.Empty);
+            SetActiveTransport(string.Empty);
         }
     }
 
@@ -341,8 +339,7 @@ public class CustomChainedCredentialTests
         // Arrange
         using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "dev");
-        var credentialType = GetCustomChainedCredentialType();
-        SetActiveTransport(credentialType, transport);
+        SetActiveTransport(transport);
 
         try
         {
@@ -355,7 +352,7 @@ public class CustomChainedCredentialTests
         }
         finally
         {
-            SetActiveTransport(credentialType, string.Empty);
+            SetActiveTransport(string.Empty);
         }
     }
 
@@ -458,7 +455,7 @@ public class CustomChainedCredentialTests
         // Trigger the lazy credential construction (authentication will fail in test environment, that's expected).
         try
         {
-            credential.GetToken(new TokenRequestContext(["https://management.azure.com/.default"]), CancellationToken.None);
+            credential.GetToken(new(["https://management.azure.com/.default"]), CancellationToken.None);
         }
         catch
         {
@@ -484,18 +481,17 @@ public class CustomChainedCredentialTests
     public async Task GetToken_ConcurrentCalls_CredentialIsInitializedAfterConcurrentAccess()
     {
         // Arrange
+        using var env = new EnvironmentScope("TEST_MODE");
+        Environment.SetEnvironmentVariable("TEST_MODE", "Playback"); // force playback mode to avoid real auth calls
         var credential = CreateCustomChainedCredential();
-        var credentialType = GetCustomChainedCredentialType();
-        var lazyField = credentialType.GetField("_credential",
-            BindingFlags.Instance | BindingFlags.NonPublic);
-        Assert.NotNull(lazyField);
+        Assert.NotNull(credential.Credential);
 
         // Act — fire 20 concurrent GetToken calls before the chain is initialized
         var tasks = Enumerable.Range(0, 20).Select(_ => Task.Run(() =>
         {
             try
             {
-                credential.GetToken(new TokenRequestContext(["https://management.azure.com/.default"]), CancellationToken.None);
+                credential.GetToken(new(["https://management.azure.com/.default"]), CancellationToken.None);
             }
             catch
             {
@@ -506,83 +502,19 @@ public class CustomChainedCredentialTests
         await Task.WhenAll(tasks);
 
         // Assert — the Lazy<T> value was created and is a single shared instance
-        var lazyValue = lazyField.GetValue(credential);
-        Assert.NotNull(lazyValue);
-        var isValueCreated = (bool)lazyValue.GetType()
-            .GetProperty("IsValueCreated")!.GetValue(lazyValue)!;
-        Assert.True(isValueCreated);
+        Assert.NotNull(credential.Credential);
+        Assert.True(credential.Credential.IsValueCreated);
     }
 
     /// <summary>
     /// Helper method to create CustomChainedCredential using reflection since it's an internal class.
     /// </summary>
-    private static TokenCredential CreateCustomChainedCredential(bool forceBrowserFallback = false)
-    {
-        var assembly = typeof(global::Microsoft.Mcp.Core.Services.Azure.Authentication.IAzureTokenCredentialProvider).Assembly;
-        var customChainedCredentialType = assembly.GetType("Microsoft.Mcp.Core.Services.Azure.Authentication.CustomChainedCredential");
+    private static CustomChainedCredential CreateCustomChainedCredential(bool forceBrowserFallback = false) => new(null, null, forceBrowserFallback);
 
-        Assert.NotNull(customChainedCredentialType);
+    private static CustomChainedCredential CreateCustomChainedCredentialWithLoggerFactory(ILoggerFactory factory) =>
+        new(null, factory.CreateLogger<CustomChainedCredential>(), false);
 
-        var constructor = customChainedCredentialType.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-            .FirstOrDefault(c =>
-            {
-                var parameters = c.GetParameters();
-                return parameters.Length == 3 &&
-                       parameters[0].ParameterType == typeof(string) &&
-                       parameters[1].ParameterType == typeof(ILogger<>).MakeGenericType(customChainedCredentialType) &&
-                       parameters[2].ParameterType == typeof(bool);
-            });
-
-        Assert.NotNull(constructor);
-
-        var credential = constructor.Invoke([null, null, forceBrowserFallback]) as TokenCredential;
-        Assert.NotNull(credential);
-
-        return credential;
-    }
-
-    private static TokenCredential CreateCustomChainedCredentialWithLoggerFactory(ILoggerFactory factory)
-    {
-        var assembly = typeof(global::Microsoft.Mcp.Core.Services.Azure.Authentication.IAzureTokenCredentialProvider).Assembly;
-        var customChainedCredentialType = assembly.GetType("Microsoft.Mcp.Core.Services.Azure.Authentication.CustomChainedCredential");
-        Assert.NotNull(customChainedCredentialType);
-
-        // Build a correctly-typed ILogger<CustomChainedCredential> from the factory via the concrete Logger<T> class.
-        var loggerConcreteType = typeof(Logger<>).MakeGenericType(customChainedCredentialType);
-        var logger = Activator.CreateInstance(loggerConcreteType, factory);
-
-        var constructor = customChainedCredentialType.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-            .FirstOrDefault(c =>
-            {
-                var parameters = c.GetParameters();
-                return parameters.Length == 3 &&
-                       parameters[0].ParameterType == typeof(string) &&
-                       parameters[1].ParameterType == typeof(ILogger<>).MakeGenericType(customChainedCredentialType) &&
-                       parameters[2].ParameterType == typeof(bool);
-            });
-
-        Assert.NotNull(constructor);
-
-        var credential = constructor.Invoke([null, logger, false]) as TokenCredential;
-        Assert.NotNull(credential);
-        return credential;
-    }
-
-    private static Type GetCustomChainedCredentialType()
-    {
-        var assembly = typeof(global::Microsoft.Mcp.Core.Services.Azure.Authentication.IAzureTokenCredentialProvider).Assembly;
-        var type = assembly.GetType("Microsoft.Mcp.Core.Services.Azure.Authentication.CustomChainedCredential");
-        Assert.NotNull(type);
-        return type;
-    }
-
-    private static void SetActiveTransport(Type credentialType, string value)
-    {
-        var prop = credentialType.GetProperty("ActiveTransport",
-            BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
-        Assert.NotNull(prop);
-        prop.SetValue(null, value);
-    }
+    private static void SetActiveTransport(string value) => CustomChainedCredential.ActiveTransport = value;
 
     /// <summary>
     /// Saves the current values of the specified environment variables and restores them on disposal.
@@ -596,7 +528,9 @@ public class CustomChainedCredentialTests
         public void Dispose()
         {
             foreach (var (name, value) in _saved)
+            {
                 Environment.SetEnvironmentVariable(name, value);
+            }
         }
     }
 
