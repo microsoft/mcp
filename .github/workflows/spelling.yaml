@@ -20,6 +20,10 @@ jobs:
   spellcheck:
     name: SpellCheck
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    concurrency:
+      group: spellcheck-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
 
     steps:
       - name: Checkout repository
@@ -31,6 +35,8 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24
+          cache: npm
+          cache-dependency-path: eng/common/spelling/package-lock.json
 
       - name: Run spelling check
         run: |
