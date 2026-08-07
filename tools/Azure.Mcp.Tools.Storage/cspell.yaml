@@ -1,0 +1,14 @@
+# Spell-check overrides for this toolset/server.
+# Inherits the global config at the repo root.
+#
+# Add words that only appear in this folder here, in alphabetical order.
+# Cross-cutting terms should go in the root cspell.yaml instead.
+version: "0.2"
+import:
+  - ../../cspell.yaml
+words:
+  - existingaccount
+  - nonexistentaccount
+  - nonexistentrg
+  - testacct
+  - testfilesystem

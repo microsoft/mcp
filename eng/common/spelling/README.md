@@ -4,29 +4,38 @@ This directory contains a script to run cspell (Code Spell Checker) on the repos
 
 ## Adding Legitimate Words
 
-If the spell checker flags legitimate words as misspelled, you can add them to the dictionary configuration file located at `.vscode/cspell.json`.
+If the spell checker flags legitimate words as misspelled, add project-specific terms to the `cspell.yaml` in that project folder. Add cross-cutting terms used by multiple projects to the root `cspell.yaml`.
 
 ### Where to Add Words
 
 There are two main places to add legitimate words. Maintain alphabetical order when adding words to keep the dictionary organized:
 
-1. **Root-level words array**: Add words to the `"words"` array at the root level of the configuration file. This is the preferred location for project-specific terms, technical vocabulary, and commonly used words.
+1. **Project words array**: Add project-specific terms, technical vocabulary, and proper nouns to the `words` array in that project's `cspell.yaml`.
 
-2. **Baseline dictionary**: Add words to the `"baseline"` dictionary under `"dictionaryDefinitions"`. This is typically used for words that were already present in the codebase when the spell checker was first introduced.
+2. **Root baseline dictionary**: Add cross-cutting terms used by multiple projects to the `baseline` dictionary under `dictionaryDefinitions` in the root `cspell.yaml`.
 
 
 ### Example
 
-To add new words, edit `.vscode/cspell.json` and add them to the `"words"` array:
+To add project-specific words, edit the `cspell.yaml` in that project folder:
 
-```json
-{
-    "words": [
-        "myprojectname",
-        "customterm",
-        "technicalword"
-    ]
-}
+```yaml
+version: "0.2"
+import:
+    - ../../cspell.yaml
+words:
+    - customterm
+    - myprojectname
+    - technicalword
+```
+
+To add a cross-cutting word, add it alphabetically to the existing `baseline` dictionary in the root `cspell.yaml`:
+
+```yaml
+dictionaryDefinitions:
+    - name: baseline
+        words:
+            - crosscuttingterm
 ```
 
 ### Guidelines
@@ -60,7 +69,7 @@ To add new words, edit `.vscode/cspell.json` and add them to the `"words"` array
 
 - **Job Type**: The cspell command to run (default: `lint`)
 - **Scan Globs**: File patterns to check for spelling
-- **Config Path**: Location of the cspell.json configuration file
+- **Config Path**: Location of the `cspell.yaml` configuration file
 - **Spell Check Root**: Root directory for relative paths
 - **Package Cache**: Working directory for npm dependencies
 - **Leave Cache**: Option to preserve the npm package cache
@@ -68,7 +77,7 @@ To add new words, edit `.vscode/cspell.json` and add them to the `"words"` array
 ## Requirements
 
 - Node.js and npm must be installed
-- The `.vscode/cspell.json` configuration file must exist
+- The root `cspell.yaml` configuration file must exist
 - `jq` command-line JSON processor (for bash version)
 
 ## How It Works
