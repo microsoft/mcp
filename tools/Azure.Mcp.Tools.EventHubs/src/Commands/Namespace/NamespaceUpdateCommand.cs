@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using ModelContextProtocol;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
@@ -87,6 +88,8 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
                 }
             }
 
+            IProgress<string> progress = new Progress<string>(msg => _ = NotifyProgressAsync(context, msg, cancellationToken));
+
             var updatedNamespace = await _service.CreateOrUpdateNamespaceAsync(
                 options.Namespace,
                 options.ResourceGroup,
@@ -102,6 +105,7 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
                 tags,
                 options.Tenant,
                 options.RetryPolicy,
+                progress,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
@@ -116,6 +120,27 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
         }
 
         return context.Response;
+    }
+
+    /// <summary>
+    /// Sends a progress notification to the client. Used to keep long-running namespace updates (e.g. SKU/capacity
+    /// changes) from appearing idle to the client while the ARM operation is still in progress.
+    /// </summary>
+    private static async Task NotifyProgressAsync(CommandContext context, string message, CancellationToken cancellationToken)
+    {
+        if (context.McpServer is null || context.ProgressToken is null)
+        {
+            return;
+        }
+
+        await context.McpServer.NotifyProgressAsync(
+            context.ProgressToken.Value,
+            new ProgressNotificationValue
+            {
+                Progress = 0f,
+                Message = message,
+            },
+            cancellationToken: cancellationToken);
     }
 
     public sealed record NamespaceUpdateCommandResult(Models.Namespace Namespace);

@@ -38,6 +38,7 @@ public interface IEventHubsService
         Dictionary<string, string>? tags = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
+        IProgress<string>? progress = null,
         CancellationToken cancellationToken = default);
 
     Task<bool> DeleteNamespaceAsync(

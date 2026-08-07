@@ -172,6 +172,7 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         Dictionary<string, string>? tags = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
+        IProgress<string>? progress = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
@@ -241,7 +242,15 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         // Create or update the namespace
         var operation = await resourceGroupResource.Value.GetEventHubsNamespaces()
             .CreateOrUpdateAsync(WaitUntil.Started, namespaceName, namespaceData, cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        if (progress != null)
+        {
+            await WaitForLroCompletionAsync(operation, progress, cancellationToken);
+        }
+        else
+        {
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+        }
 
         if (operation?.Value == null)
         {

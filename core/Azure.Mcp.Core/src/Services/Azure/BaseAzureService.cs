@@ -298,6 +298,14 @@ public abstract class BaseAzureService
     }
 
     /// <summary>
+    /// Interval at which <see cref="WaitForLroCompletionAsync{T}(Operation{T}, IProgress{string}, CancellationToken)"/> polls
+    /// the operation and reports progress. This keeps the caller (and any MCP client watching for session activity)
+    /// informed while a genuinely long-running Azure operation is still in progress, instead of appearing idle for the
+    /// entire duration of the wait.
+    /// </summary>
+    private static readonly TimeSpan s_progressPollInterval = TimeSpan.FromSeconds(15);
+
+    /// <summary>
     /// Waits for the completion of a long-running operation, periodically polling the operation status until it completes.
     /// </summary>
     /// <typeparam name="T">The return type.</typeparam>
@@ -316,6 +324,26 @@ public abstract class BaseAzureService
         {
             await operation.WaitForCompletionAsync(cancellationToken);
         }
+    }
+
+    /// <summary>
+    /// Waits for the completion of a long-running operation, periodically polling the operation status until it completes
+    /// while reporting progress to keep the caller informed during long waits.
+    /// </summary>
+    /// <typeparam name="T">The return type.</typeparam>
+    /// <param name="operation">The long-running operation.</param>
+    /// <param name="progress">
+    /// Progress reporter. A status message is reported at a fixed interval while the operation is still running so that
+    /// callers can surface liveness (e.g. via MCP progress notifications) during long waits.
+    /// </param>
+    /// <param name="cancellationToken">The cancellation token that can cancel the request.</param>
+    /// <returns>The response once the long-running operation completes.</returns>
+    protected static async Task WaitForLroCompletionAsync<T>(Operation<T> operation, IProgress<string> progress, CancellationToken cancellationToken = default) where T : notnull
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(progress);
+
+        await WaitForLroCompletionWithProgressAsync(operation, progress, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -338,6 +366,25 @@ public abstract class BaseAzureService
         }
     }
 
+    /// <summary>
+    /// Waits for the completion of a long-running operation, periodically polling the operation status until it completes
+    /// while reporting progress to keep the caller informed during long waits.
+    /// </summary>
+    /// <param name="operation">The long-running operation.</param>
+    /// <param name="progress">
+    /// Progress reporter. A status message is reported at a fixed interval while the operation is still running so that
+    /// callers can surface liveness (e.g. via MCP progress notifications) during long waits.
+    /// </param>
+    /// <param name="cancellationToken">The cancellation token that can cancel the request.</param>
+    /// <returns>The response once the long-running operation completes.</returns>
+    protected static async Task WaitForLroCompletionAsync(Operation operation, IProgress<string> progress, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(progress);
+
+        await WaitForLroCompletionWithProgressAsync(operation, progress, cancellationToken).ConfigureAwait(false);
+    }
+
     private static async Task<Response> WaitForLroCompletionInternalAsync(Operation operation, CancellationToken cancellationToken)
     {
         while (true)
@@ -349,6 +396,26 @@ public abstract class BaseAzureService
             }
 
             await Task.Delay(s_defaultPollInterval!.Value, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private static async Task<Response> WaitForLroCompletionWithProgressAsync(Operation operation, IProgress<string> progress, CancellationToken cancellationToken)
+    {
+        var pollInterval = s_defaultPollInterval ?? s_progressPollInterval;
+        var elapsed = TimeSpan.Zero;
+
+        while (true)
+        {
+            Response response = await operation.UpdateStatusAsync(cancellationToken).ConfigureAwait(false);
+            if (operation.HasCompleted)
+            {
+                return operation.GetRawResponse();
+            }
+
+            elapsed += pollInterval;
+            progress.Report($"Still waiting for the operation to complete ({elapsed:mm\\:ss} elapsed)...");
+
+            await Task.Delay(pollInterval, cancellationToken).ConfigureAwait(false);
         }
     }
 }
