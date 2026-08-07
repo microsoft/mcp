@@ -115,7 +115,9 @@ public sealed class SingleProxyToolLoader(
     /// <returns>A <see cref="CallToolResult"/> representing the result of the operation.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request));
+
         var args = request.Params?.Arguments;
         string? intent = null;
         bool learn = false;
@@ -178,15 +180,14 @@ public sealed class SingleProxyToolLoader(
     }
 
     /// <summary>
-    /// Gets all of the <see cref="IAreaSetup"/>'s available in the server.
+    /// Gets and caches all of the <see cref="IAreaSetup"/>'s available in the server.
     /// </summary>
-    /// <returns>The list of available tools.</returns>
     /// <param name="cancellationToken">A cancellation token.</param>
-    private async Task<List<Tool>> GetRootToolsAsync(CancellationToken cancellationToken)
+    private async Task InitializeRootToolsCacheAsync(CancellationToken cancellationToken)
     {
         if (_cachedTools != null)
         {
-            return _cachedTools.Value.Tools;
+            return;
         }
 
         var serverList = await _discoveryStrategy.DiscoverServersAsync(cancellationToken);
@@ -203,7 +204,7 @@ public sealed class SingleProxyToolLoader(
 
         var json = JsonSerializer.Serialize(tools.Select(t => new ToolCommandInfo(t, false)), ServerJsonContext.Default.IEnumerableToolCommandInfo);
         _cachedTools = (tools, json);
-        return tools;
+        return;
     }
 
     /// <summary>
@@ -254,8 +255,9 @@ public sealed class SingleProxyToolLoader(
 
     private async Task<CallToolResult> RootLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
-        var tools = await GetRootToolsAsync(cancellationToken);
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.IsLearn, true);
+        await InitializeRootToolsCacheAsync(cancellationToken);
         var learnResponse = new CallToolResult
         {
             Content =
@@ -286,6 +288,7 @@ public sealed class SingleProxyToolLoader(
     private async Task<CallToolResult> ToolLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, string tool, CancellationToken cancellationToken)
     {
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.IsLearn, true)
             .SetTag(TagName.ToolArea, tool);
 
         var result = await GetToolCommandsAsync(request, tool, cancellationToken);
@@ -354,6 +357,10 @@ public sealed class SingleProxyToolLoader(
 
             if (resolvedTool != null)
             {
+                var tooldId = McpHelper.GetToolIdFromMeta(resolvedTool.ProtocolTool.Meta);
+                Activity.Current?.SetTag(TagName.ToolId, tooldId)
+                    .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(resolvedTool.ProtocolTool));
+
                 if (_options.Value.ReadOnly && resolvedTool.ProtocolTool.Annotations?.ReadOnlyHint != true)
                 {
                     return McpHelper.InjectToolIdMetadata(new CallToolResult
@@ -366,7 +373,7 @@ public sealed class SingleProxyToolLoader(
                             }
                         ],
                         IsError = true,
-                    }, resolvedTool.ProtocolTool.Meta);
+                    }, tooldId);
                 }
 
                 if (_options.Value.IsHttpMode && McpHelper.HasHint(resolvedTool.ProtocolTool, McpHelper.LocalRequiredHintMetaKey))
@@ -381,7 +388,7 @@ public sealed class SingleProxyToolLoader(
                             }
                         ],
                         IsError = true,
-                    }, resolvedTool.ProtocolTool.Meta);
+                    }, tooldId);
                 }
             }
         }

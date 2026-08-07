@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http.Json;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -10,29 +9,21 @@ using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
-using Microsoft.Extensions.Logging;
+using Azure.ResourceManager.Resources;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Services;
 
 public class AdvisorService(
     ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    IHttpClientFactory httpClientFactory,
-    ILogger<AdvisorService> logger)
+    ITenantService tenantService)
     : BaseAzureResourceService(subscriptionService, tenantService), IAdvisorService
 {
-    private const string AdvisorMetadataApiVersion = "2025-01-01";
+    private const string RetirementDateProperty =
+        "properties.sourceProperties.serviceRetirement.retirementDate";
+    private const string TrackingIdsProperty =
+        "properties.sourceProperties.serviceRetirement.serviceHealth.trackingIds";
 
-    // ARM metadata entity name whose supportedValues[] carry the per-recommendation-type
-    // linkage we surface to callers (id, displayName, category, impact, resourceType, subCategory).
-    // The other entities (recommendationCategory, recommendationImpact, supportedResourceType)
-    // only enumerate dimension labels and are intentionally not surfaced here — that's a
-    // separate concern best handled by a future `metadata list` command.
-    private const string RecommendationTypeEntityName = "recommendationType";
-
-    // Impact ordering for client-side sorting. High → Medium → Low → (anything unknown).
-    // Lookup is case-insensitive so we don't depend on ARM always returning "High" vs "high".
     private static readonly Dictionary<string, int> ImpactRank = new(StringComparer.OrdinalIgnoreCase)
     {
         ["High"] = 0,
@@ -53,10 +44,7 @@ public class AdvisorService(
         GroupByResourceType,
     ];
 
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ISubscriptionService _advisorSubscriptionService = subscriptionService;
-    private readonly ILogger<AdvisorService> _logger = logger;
 
     public async Task<ResourceQueryResults<Recommendation>> ListRecommendationsAsync(
         string subscription,
@@ -82,116 +70,259 @@ public class AdvisorService(
             cancellationToken: cancellationToken);
     }
 
-    public async Task<List<RecommendationType>> ListRecommendationTypesAsync(
-        string? tenant,
-        string? resourceType,
-        string? impact,
-        string? category,
+    public async Task<ResourceQueryResults<RecommendationMetadata>> ListRecommendationMetadataAsync(
+        string language,
+        RecommendationMetadataFilters? filters,
         CancellationToken cancellationToken = default)
     {
-        var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint
-            ?? throw new InvalidOperationException("Management endpoint is not configured.");
+        ArgumentException.ThrowIfNullOrWhiteSpace(language);
 
-        var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
+        var tenantResource = await GetTenantResourceAsync(cancellationToken);
+        var queryContent = new ResourceQueryContent(
+            BuildMetadataListQuery(language, filters));
 
-        var client = _httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
-
-        var requestUri = new Uri(managementEndpoint, $"/providers/Microsoft.Advisor/metadata?api-version={AdvisorMetadataApiVersion}");
-
-        using var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-        if (!response.IsSuccessStatusCode)
+        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
+        if (result == null || result.Count == 0)
         {
-            // Read the error response body for diagnostic logging only; do NOT include it in the
-            // thrown exception message because that message is surfaced to the caller and the body
-            // may contain verbose ARM error details we don't want to leak to the user.
-            //
-            // NOTE: This truncation applies ONLY to the *error* body we write to the log. It does
-            // not affect the successful response below, which is deserialized in full via
-            // ReadFromJsonAsync (no size cap), so all recommendation types are always returned.
-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
-            const int maxLoggedErrorBodyLength = 2048;
-            var truncatedBody = body.Length > maxLoggedErrorBodyLength
-                ? body[..maxLoggedErrorBodyLength] + "... [truncated]"
-                : body;
-            _logger.LogError(
-                "Advisor metadata API returned non-success. Status: {Status}, Reason: {Reason}, Body: {Body}",
-                (int)response.StatusCode, response.ReasonPhrase, truncatedBody);
-            throw new HttpRequestException(
-                $"Advisor metadata API returned {(int)response.StatusCode} {response.ReasonPhrase}.",
-                inner: null,
-                response.StatusCode);
+            return new([], false);
         }
 
-        var apiResponse = await response.Content.ReadFromJsonAsync(
-            AdvisorJsonContext.Default.RecommendationMetadataApiResponse,
-            cancellationToken);
-
-        if (apiResponse?.Value == null)
+        var results = new List<RecommendationMetadata>();
+        using var jsonDocument = JsonDocument.Parse(result.Data);
+        if (jsonDocument.RootElement.ValueKind != JsonValueKind.Array)
         {
-            return [];
+            throw new JsonException("Azure Resource Graph returned an invalid recommendation metadata payload.");
         }
 
-        // We only consume the `recommendationType` entity — its supportedValues[] entries are the
-        // only ones that carry per-type linkage (category/impact/resourceType/subCategory).
-        var typeEntity = apiResponse.Value.FirstOrDefault(e =>
-            string.Equals(e.Name, RecommendationTypeEntityName, StringComparison.OrdinalIgnoreCase));
-
-        var supportedValues = typeEntity?.Properties?.SupportedValues;
-        if (supportedValues == null || supportedValues.Count == 0)
+        foreach (var item in jsonDocument.RootElement.EnumerateArray())
         {
-            return [];
+            results.Add(ConvertToRecommendationMetadataModel(item));
         }
 
-        // Normalize filter inputs once. Empty/whitespace means "no filter on this dimension".
-        var trimmedResourceType = string.IsNullOrWhiteSpace(resourceType) ? null : resourceType.Trim();
-        var trimmedImpact = string.IsNullOrWhiteSpace(impact) ? null : impact.Trim();
-        var trimmedCategory = string.IsNullOrWhiteSpace(category) ? null : category.Trim();
-
-        var results = new List<RecommendationType>(supportedValues.Count);
-        foreach (var value in supportedValues)
-        {
-            if (string.IsNullOrEmpty(value.Id))
-            {
-                continue;
-            }
-
-            // Apply client-side filters case-insensitively. Data volume here is small
-            // (a few hundred recommendation types) so this is acceptable; server-side
-            // filtering on the ARM metadata endpoint is not currently supported.
-            if (trimmedResourceType != null &&
-                !string.Equals(value.SupportedResourceType, trimmedResourceType, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            if (trimmedImpact != null &&
-                !string.Equals(value.RecommendationImpact, trimmedImpact, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            if (trimmedCategory != null &&
-                !string.Equals(value.RecommendationCategory, trimmedCategory, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            results.Add(new RecommendationType(
-                Id: value.Id,
-                DisplayName: value.DisplayName ?? value.Id,
-                Category: value.RecommendationCategory,
-                Impact: value.RecommendationImpact,
-                ResourceType: value.SupportedResourceType,
-                SubCategory: value.RecommendationSubCategory));
-        }
-
-        // Sort by impact (High → Medium → Low → Unknown), then by displayName for stable ordering.
-        // This surfaces the most important recommendations first, which matches the meeting outcome
-        // (Sachin: "return all recommendations for that resource type, sorted by impact level").
-        return [.. results
+        return new(
+            [.. results
             .OrderBy(r => ImpactRank.TryGetValue(r.Impact ?? string.Empty, out var rank) ? rank : int.MaxValue)
-            .ThenBy(r => r.DisplayName, StringComparer.OrdinalIgnoreCase)];
+            .ThenBy(r => r.DisplayName, StringComparer.OrdinalIgnoreCase)],
+            result.ResultTruncated == ResultTruncated.True);
+    }
+
+    internal static string BuildMetadataListQuery(
+        string language,
+        RecommendationMetadataFilters? filters)
+    {
+        var query =
+            "advisorresources " +
+            "| where type =~ 'microsoft.advisor/metadata' " +
+            $"| where tostring(properties.language) =~ '{EscapeKqlString(language.Trim())}'";
+
+        if (!string.IsNullOrWhiteSpace(filters?.ResourceType))
+        {
+            query += $" | where tostring(properties.supportedResourceType) =~ '{EscapeKqlString(filters.ResourceType.Trim())}'";
+        }
+
+        if (!string.IsNullOrWhiteSpace(filters?.Impact))
+        {
+            query += $" | where tostring(properties.recommendationImpact) =~ '{EscapeKqlString(filters.Impact.Trim())}'";
+        }
+
+        var category = string.IsNullOrWhiteSpace(filters?.Category)
+            ? null
+            : filters.Category.Trim();
+        var subCategory = string.IsNullOrWhiteSpace(filters?.SubCategory)
+            ? null
+            : filters.SubCategory.Trim();
+        var trackingId = string.IsNullOrWhiteSpace(filters?.TrackingId)
+            ? null
+            : filters.TrackingId.Trim();
+        var retirementDate = filters?.RetirementDate;
+        var retirementDateOperator = string.IsNullOrWhiteSpace(filters?.RetirementDateOperator)
+            ? null
+            : filters.RetirementDateOperator.Trim();
+
+        if ((retirementDate is null) != (retirementDateOperator is null))
+        {
+            throw new ArgumentException(
+                "RetirementDate and RetirementDateOperator must be provided together.",
+                nameof(filters));
+        }
+
+        var hasTrackingIdFilter = trackingId is not null;
+        var hasRetirementDateFilter = retirementDate is not null && retirementDateOperator is not null;
+        var hasServiceRetirementFilter = hasTrackingIdFilter || hasRetirementDateFilter;
+        subCategory = ResolveServiceRetirementSubCategory(
+            subCategory,
+            hasServiceRetirementFilter);
+
+        if (category is not null)
+        {
+            query += $" | where tostring(properties.recommendationCategory) =~ '{EscapeKqlString(category)}'";
+        }
+
+        if (subCategory is not null)
+        {
+            query += $" | where tostring(properties.recommendationSubCategory) =~ '{EscapeKqlString(subCategory)}'";
+        }
+
+        if (trackingId is not null)
+        {
+            query += $" | mv-expand trackingId = {TrackingIdsProperty}";
+            query += $" | where tostring(trackingId) =~ '{EscapeKqlString(trackingId)}'";
+        }
+
+        if (retirementDate is { } date && retirementDateOperator is not null)
+        {
+            query += $" | where isnotempty(tostring({RetirementDateProperty}))";
+            query += $" | where startofday(todatetime({RetirementDateProperty})) " +
+                $"{GetKqlComparisonOperator(retirementDateOperator)} " +
+                $"datetime({date:yyyy-MM-dd})";
+        }
+
+        return query + " | project properties";
+    }
+
+    private static string? ResolveServiceRetirementSubCategory(
+        string? subCategory,
+        bool hasServiceRetirementFilter)
+    {
+        var isServiceUpgradeAndRetirement = subCategory?.Equals(
+            RecommendationMetadataFilters.ServiceRetirementSubCategory,
+            StringComparison.OrdinalIgnoreCase) == true;
+
+        if (hasServiceRetirementFilter && subCategory is not null && !isServiceUpgradeAndRetirement)
+        {
+            throw new ArgumentException(
+                "TrackingId and retirement-date filters are only valid for the " +
+                $"{RecommendationMetadataFilters.ServiceRetirementSubCategory} subcategory.",
+                nameof(subCategory));
+        }
+
+        if (!hasServiceRetirementFilter && !isServiceUpgradeAndRetirement)
+        {
+            return subCategory;
+        }
+
+        return subCategory ?? RecommendationMetadataFilters.ServiceRetirementSubCategory;
+    }
+
+    private static string GetKqlComparisonOperator(string comparisonOperator) =>
+        comparisonOperator.ToLowerInvariant() switch
+        {
+            "eq" => "==",
+            "lt" => "<",
+            "le" => "<=",
+            "gt" => ">",
+            "ge" => ">=",
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(comparisonOperator),
+                comparisonOperator,
+                "Unsupported retirement-date comparison operator.")
+        };
+
+    internal static RecommendationMetadata ConvertToRecommendationMetadataModel(JsonElement item)
+    {
+        var data = Models.RecommendationMetadataData.FromJson(item)
+            ?? throw new JsonException("Failed to parse Advisor recommendation metadata data.");
+
+        var properties = data.Properties
+            ?? throw new JsonException("Recommendation metadata record is missing its properties payload.");
+        if (string.IsNullOrWhiteSpace(properties.RecommendationTypeId))
+        {
+            throw new JsonException("Recommendation metadata record is missing recommendationTypeId.");
+        }
+
+        RecommendationServiceRetirement? serviceRetirement = null;
+        var retirement = properties.SourceProperties?.ServiceRetirement;
+        if (retirement is not null)
+        {
+            serviceRetirement = new RecommendationServiceRetirement(
+                RetirementDate: retirement.RetirementDate,
+                RetirementFeatureName: retirement.RetirementFeatureName,
+                TrackingIds: retirement.ServiceHealth?.TrackingIds,
+                AshUrls: retirement.ServiceHealth?.AshUrls);
+        }
+
+        IReadOnlyList<RecommendationMetadataAction>? actions = null;
+        if (properties.Actions is { Count: > 0 } actionList)
+        {
+            actions = actionList
+                .Select(ConvertMetadataAction)
+                .ToList();
+        }
+
+        return new RecommendationMetadata(
+            RecommendationTypeId: properties.RecommendationTypeId,
+            DisplayName: properties.DisplayName,
+            Label: properties.Label,
+            Category: properties.RecommendationCategory,
+            SubCategory: properties.RecommendationSubCategory,
+            Impact: properties.RecommendationImpact,
+            PriorityScore: properties.PriorityScore,
+            PotentialBenefits: properties.PotentialBenefits,
+            DetailedDescription: properties.DetailedDescription,
+            LearnMoreLink: properties.LearnMoreLink,
+            SupportedResourceType: properties.SupportedResourceType,
+            Scope: properties.RecommendationScope,
+            DataSourceQuery: properties.RecommendationDataSourceQuery,
+            ResourceSingularName: properties.ResourceMetadata?.Singular,
+            ResourcePluralName: properties.ResourceMetadata?.Plural,
+            Actions: actions,
+            Language: properties.Language,
+            LastRefreshed: properties.LastRefreshed,
+            ServiceRetirement: serviceRetirement);
+    }
+
+    private static RecommendationMetadataAction ConvertMetadataAction(
+        Models.RecommendationMetadataActionData action) =>
+        new(
+            ActionType: action.ActionType,
+            Caption: action.Caption,
+            DocumentLink: action.DocumentLink,
+            BladeName: action.BladeName);
+
+    private async Task<TenantResource> GetTenantResourceAsync(CancellationToken cancellationToken)
+    {
+        var tenants = await TenantService.GetTenants(cancellationToken);
+        if (tenants.Count == 0)
+        {
+            throw new InvalidOperationException("No accessible Azure tenants were found.");
+        }
+
+        return tenants[0];
+    }
+
+    public async Task<RecommendationMetadata?> GetRecommendationMetadataAsync(
+        string recommendationTypeId,
+        string language,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(recommendationTypeId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(language);
+
+        var tenantResource = await GetTenantResourceAsync(cancellationToken);
+
+        var query =
+            "advisorresources " +
+            "| where type =~ 'microsoft.advisor/metadata' " +
+            $"and tostring(properties.recommendationTypeId) =~ '{EscapeKqlString(recommendationTypeId)}' " +
+            $"and tostring(properties.language) =~ '{EscapeKqlString(language)}' " +
+            "| limit 1";
+
+        var queryContent = new ResourceQueryContent(query);
+
+        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
+        if (result == null || result.Count == 0)
+        {
+            return null;
+        }
+
+        using var jsonDocument = JsonDocument.Parse(result.Data);
+        var dataArray = jsonDocument.RootElement;
+        if (dataArray.ValueKind != JsonValueKind.Array || dataArray.GetArrayLength() == 0)
+        {
+            return null;
+        }
+
+        return ConvertToRecommendationMetadataModel(dataArray[0]);
     }
 
     public async Task<RecommendationSummary> SummarizeRecommendationsAsync(
