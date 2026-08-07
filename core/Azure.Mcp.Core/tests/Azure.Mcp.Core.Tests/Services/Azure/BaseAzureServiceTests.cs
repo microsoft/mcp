@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Concurrent;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -289,6 +290,69 @@ public class BaseAzureServiceTests
         // Assert
         var expected = expectedTimeout != null ? TimeSpan.FromSeconds(expectedTimeout.Value) : defaultClientOptions.Retry.NetworkTimeout;
         Assert.Equal(expected, clientOptions.Retry.NetworkTimeout);
+    }
+
+    [Fact]
+    public async Task WaitForLroCompletionInternalAsync_DefaultPollInterval_PollsUntilComplete()
+    {
+        var response = Substitute.For<Response>();
+        var operation = new TestOperation<string>("complete", response, updatesBeforeCompletion: 3);
+
+        Response result = await BaseAzureService.WaitForLroCompletionInternalAsync(
+            operation,
+            progress: null,
+            defaultPollInterval: TimeSpan.Zero,
+            progressPollInterval: TimeSpan.FromMilliseconds(10),
+            TestContext.Current.CancellationToken);
+
+        Assert.Same(response, result);
+        Assert.Equal(3, operation.UpdateCount);
+    }
+
+    [Fact]
+    public async Task WaitForLroCompletionInternalAsync_NoProgress_UsesSdkCompletion()
+    {
+        var response = Substitute.For<Response>();
+        var operation = new TestOperation<string>("complete", response, updatesBeforeCompletion: 1);
+
+        Response result = await BaseAzureService.WaitForLroCompletionInternalAsync(
+            operation,
+            progress: null,
+            defaultPollInterval: null,
+            progressPollInterval: TimeSpan.FromMilliseconds(10),
+            TestContext.Current.CancellationToken);
+
+        Assert.Same(response, result);
+        Assert.Equal(1, operation.UpdateCount);
+    }
+
+    [Fact]
+    public async Task WaitForLroCompletionInternalAsync_Progress_ReportsWhileSdkCompletionWaits()
+    {
+        var response = Substitute.For<Response>();
+        var releaseUpdate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var messages = new ConcurrentQueue<string>();
+        var progress = new Progress<string>(message =>
+        {
+            messages.Enqueue(message);
+            releaseUpdate.TrySetResult();
+        });
+        var operation = new TestOperation<string>(
+            "complete",
+            response,
+            updatesBeforeCompletion: 1,
+            cancellationToken => releaseUpdate.Task.WaitAsync(cancellationToken));
+
+        Response result = await BaseAzureService.WaitForLroCompletionInternalAsync(
+            operation,
+            progress,
+            defaultPollInterval: null,
+            progressPollInterval: TimeSpan.FromMilliseconds(10),
+            TestContext.Current.CancellationToken);
+
+        Assert.Same(response, result);
+        Assert.Equal(1, operation.UpdateCount);
+        Assert.Contains(messages, message => message.StartsWith("Still waiting for the operation to complete", StringComparison.Ordinal));
     }
 
     private sealed class TestAzureService(ITenantService tenantService) : BaseAzureService(tenantService)
