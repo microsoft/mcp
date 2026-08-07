@@ -11,6 +11,8 @@ namespace McpToolEvaluator.Core;
 /// </summary>
 public static partial class PromptParser
 {
+    private const string ExtensionKeyword = "extension";
+
     [GeneratedRegex(@"^## (.+)$")]
     private static partial Regex SectionHeaderRegex();
 
@@ -25,8 +27,14 @@ public static partial class PromptParser
     internal static string GetNamespace(string tool)
     {
         if (tool.StartsWith("get_azure_bestpractices_", StringComparison.OrdinalIgnoreCase))
+        {
             return "get_azure_bestpractices";
-        return tool.Split('_')[0];
+        }
+        else
+        {
+            return tool.Split('_')[0];
+        }
+
     }
 
     public static List<string> ParseNamespaces(string filePath)
@@ -62,6 +70,12 @@ public static partial class PromptParser
             {
                 var tool = rowMatch.Groups[1].Value.Trim();
                 var prompt = rowMatch.Groups[2].Value.Trim();
+                var toolNamespace = GetNamespace(tool);
+
+                if (ExtensionKeyword.Equals(toolNamespace, StringComparison.OrdinalIgnoreCase))
+                {
+                    toolNamespace = tool;
+                }
 
                 // Skip header rows
                 if (tool.Equals("Tool Name", StringComparison.OrdinalIgnoreCase) ||
@@ -74,7 +88,7 @@ public static partial class PromptParser
                     ? PromptInteractionExtensions.Parse(interactionRowMatch.Groups[3].Value)
                     : PromptInteraction.None;
 
-                prompts.Add(new TestPrompt(currentSection, tool, prompt, GetNamespace(tool), interaction));
+                prompts.Add(new TestPrompt(currentSection, tool, prompt, toolNamespace, interaction));
             }
         }
 

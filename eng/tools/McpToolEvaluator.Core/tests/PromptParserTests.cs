@@ -108,6 +108,32 @@ public sealed class PromptParserTests : IDisposable
     }
 
     [Fact]
+    public void ParseFile_PromptContainsExtension_IsParsedCorrectly()
+    {
+        File.WriteAllText(_tempFile, """
+            ## Azure CLI
+
+            | Tool Name | Prompt | Interaction |
+            |-----------|--------|-------------|
+            | extension_cli_list | shows cli | equals 'cli list' |
+            """);
+
+        var result = PromptParser.ParseFile(_tempFile);
+
+        Assert.Single(result);
+
+        var first = result[0];
+
+        Assert.Equal("Azure CLI", first.Section);
+        Assert.Equal(
+            "shows cli | equals 'cli list'",
+            first.Prompt);
+        Assert.Equal(PromptInteraction.None, first.Interaction);
+        Assert.Equal("extension_cli_list", first.Namespace);
+        Assert.Equal("extension_cli_list", first.Tool);
+    }
+
+    [Fact]
     public void ParseFile_InteractionColumn_ParsesInteraction()
     {
         File.WriteAllText(_tempFile, """
