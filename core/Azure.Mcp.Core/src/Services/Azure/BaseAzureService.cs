@@ -298,10 +298,10 @@ public abstract class BaseAzureService
     }
 
     /// <summary>
-    /// Interval at which <see cref="WaitForLroCompletionAsync{T}(Operation{T}, IProgress{string}, CancellationToken)"/> polls
-    /// the operation and reports progress. This keeps the caller (and any MCP client watching for session activity)
-    /// informed while a genuinely long-running Azure operation is still in progress, instead of appearing idle for the
-    /// entire duration of the wait.
+    /// Interval at which <see cref="WaitForLroCompletionAsync{T}(Operation{T}, IProgress{string}, CancellationToken)"/>
+    /// reports progress while the Azure SDK waits for the operation to complete. This keeps the caller (and any MCP client
+    /// watching for session activity) informed while a genuinely long-running Azure operation is still in progress,
+    /// instead of appearing idle for the entire duration of the wait.
     /// </summary>
     private static readonly TimeSpan s_progressPollInterval = TimeSpan.FromSeconds(15);
 
@@ -318,7 +318,7 @@ public abstract class BaseAzureService
 
         if (s_defaultPollInterval.HasValue)
         {
-            await WaitForLroCompletionInternalAsync(operation, cancellationToken).ConfigureAwait(false);
+            await WaitForLroCompletionInternalAsync(operation, null, cancellationToken).ConfigureAwait(false);
         }
         else
         {
@@ -343,7 +343,7 @@ public abstract class BaseAzureService
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(progress);
 
-        await WaitForLroCompletionWithProgressAsync(operation, progress, cancellationToken).ConfigureAwait(false);
+        await WaitForLroCompletionInternalAsync(operation, progress, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -356,14 +356,7 @@ public abstract class BaseAzureService
     {
         ArgumentNullException.ThrowIfNull(operation);
 
-        if (s_defaultPollInterval.HasValue)
-        {
-            await WaitForLroCompletionInternalAsync(operation, cancellationToken).ConfigureAwait(false);
-        }
-        else
-        {
-            await operation.WaitForCompletionResponseAsync(cancellationToken);
-        }
+        await WaitForLroCompletionInternalAsync(operation, null, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -382,40 +375,74 @@ public abstract class BaseAzureService
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(progress);
 
-        await WaitForLroCompletionWithProgressAsync(operation, progress, cancellationToken).ConfigureAwait(false);
+        await WaitForLroCompletionInternalAsync(operation, progress, cancellationToken).ConfigureAwait(false);
     }
 
-    private static async Task<Response> WaitForLroCompletionInternalAsync(Operation operation, CancellationToken cancellationToken)
+
+    /// <summary>
+    /// Waits for the completion of a long-running operation, periodically polling the operation status until it completes.
+    /// 
+    /// There are three cases for how this method behaves:
+    /// 1. If no progress reporter is provided and no default poll interval is set, the method will simply wait for the operation to complete without reporting progress.
+    /// 2. If a progress reporter is provided, the method will report progress at a fixed interval while waiting for the operation to complete.
+    /// 3. If no progress reporter is provided but a default poll interval is set, the method will wait for the specified interval before checking the status again.
+    /// </summary>
+    /// 
+    /// <param name="operation">The long-running operation.</param>
+    /// <param name="progress">A progress callback that reports the status of the operation at regular intervals.</param>
+    /// <param name="cancellationToken">The cancellation token that can cancel the request.</param>
+    /// <returns>The response once the long-running operation completes.</returns>
+    private static async Task<Response> WaitForLroCompletionInternalAsync(Operation operation, IProgress<string>? progress, CancellationToken cancellationToken)
     {
         while (true)
         {
-            Response response = await operation.UpdateStatusAsync(cancellationToken);
-            if (operation.HasCompleted)
+            // Base case: No progress, no default poll interval. Just wait for the operation to complete.
+            if (progress == null && !s_defaultPollInterval.HasValue)
             {
-                return operation.GetRawResponse();
+                return await operation.WaitForCompletionResponseAsync(cancellationToken);
             }
-
-            await Task.Delay(s_defaultPollInterval!.Value, cancellationToken).ConfigureAwait(false);
-        }
-    }
-
-    private static async Task<Response> WaitForLroCompletionWithProgressAsync(Operation operation, IProgress<string> progress, CancellationToken cancellationToken)
-    {
-        var pollInterval = s_defaultPollInterval ?? s_progressPollInterval;
-        var elapsed = TimeSpan.Zero;
-
-        while (true)
-        {
-            Response response = await operation.UpdateStatusAsync(cancellationToken).ConfigureAwait(false);
-            if (operation.HasCompleted)
+            else
             {
-                return operation.GetRawResponse();
+                // We want to poll the operation status at a fixed interval, either because a default poll interval is set or because progress reporting is requested.
+                Response response = await operation.UpdateStatusAsync(cancellationToken);
+                if (operation.HasCompleted)
+                {
+                    return operation.GetRawResponse();
+                }
+
+                // Next case: A default poll interval is set. Wait for the specified interval before checking the status again.
+                if (s_defaultPollInterval.HasValue)
+                {
+
+                    await Task.Delay(s_defaultPollInterval!.Value, cancellationToken).ConfigureAwait(false);
+                }
+                else if (progress != null)
+                {
+                    // If progress is specified, we will report progress at a fixed interval while waiting for the operation to complete.
+                    // Capture the operation completion task and the start time to calculate elapsed time for progress reporting.
+                    Task<Response> completionTask = operation.WaitForCompletionResponseAsync(cancellationToken).AsTask();
+                    using PeriodicTimer progressTimer = new(s_progressPollInterval);
+                    var startTime = DateTime.UtcNow; // Initialize elapsed time to zero
+
+                    // While the completion task is not completed, we will wait for either the completion task or the progress timer to tick.
+                    while (!completionTask.IsCompleted)
+                    {
+                        Task<bool> progressTimerTask = progressTimer.WaitForNextTickAsync(cancellationToken).AsTask();
+                        if (await Task.WhenAny(completionTask, progressTimerTask).ConfigureAwait(false) == completionTask)
+                        {
+                            break;
+                        }
+
+                        if (await progressTimerTask.ConfigureAwait(false))
+                        {
+                            var currentElapsed = DateTime.UtcNow - startTime;
+                            progress.Report($"Still waiting for the operation to complete ({currentElapsed:mm\\:ss} elapsed)...");
+                        }
+                    }
+
+                    return await completionTask.ConfigureAwait(false);
+                }
             }
-
-            elapsed += pollInterval;
-            progress.Report($"Still waiting for the operation to complete ({elapsed:mm\\:ss} elapsed)...");
-
-            await Task.Delay(pollInterval, cancellationToken).ConfigureAwait(false);
         }
     }
 }
