@@ -1,4 +1,5 @@
 import type {
+  GraderResult,
   RunArtifacts,
   RunCompletionStatus,
   TrialResult,
@@ -21,6 +22,21 @@ export type EffectivenessCategory =
   | "NO BASELINE"
   | "NO DATA";
 
+/**
+ * A single failing grader (or nested rubric criterion) extracted from a
+ * trial's {@link GraderResult}. Graders such as `panel`/`prompt` nest
+ * per-judge and per-criterion results under `details`; this shape preserves
+ * that nesting so a failure summary can point at the specific criterion that
+ * failed instead of only the top-level grader name.
+ */
+export interface GraderFailureDetail {
+  name: string;
+  evidence: string;
+  score?: number;
+  label?: string;
+  details?: GraderFailureDetail[];
+}
+
 export interface TrialSnapshot {
   evalName: string;
   variant: string;
@@ -34,6 +50,7 @@ export interface TrialSnapshot {
   aiCredits: number;
   failedGraders: string[];
   failureEvidence?: string;
+  graderFailures: GraderFailureDetail[];
   error?: string;
 }
 
@@ -52,6 +69,8 @@ export interface StimulusSummary extends MetricSummary {
   passed: boolean;
   failedGraders: string[];
   failureEvidence?: string;
+  graderFailures: GraderFailureDetail[];
+  error?: string;
 }
 
 export interface VariantSummary extends MetricSummary {
@@ -104,12 +123,56 @@ export interface AzureMcpVallyAggregateReport {
   runs: AzureMcpVallyReport[];
 }
 
+/**
+ * Recursively walk a {@link GraderResult} tree and collect the leaf failures.
+ *
+ * Panel/prompt graders nest per-judge and per-criterion results under
+ * `details`, so a single top-level "prompt" failure often hides the specific
+ * rubric criterion (with its own evidence/score) that actually failed. When a
+ * node has failing children, only the children are reported (they are more
+ * specific); a node with no failing children that itself failed is reported
+ * as a leaf. Passing nodes are omitted entirely.
+ */
+export function collectFailingGraderDetails(
+  result: GraderResult | null | undefined,
+): GraderFailureDetail[] {
+  if (!result) {
+    return [];
+  }
+
+  const failingChildren = (result.details ?? [])
+    .filter((detail) => !detail.passed)
+    .flatMap((detail) => {
+      const nested = collectFailingGraderDetails(detail);
+      return nested.length > 0 ? nested : [toGraderFailureDetail(detail)];
+    });
+  if (failingChildren.length > 0) {
+    return failingChildren;
+  }
+
+  return result.passed ? [] : [toGraderFailureDetail(result)];
+}
+
+function toGraderFailureDetail(result: GraderResult): GraderFailureDetail {
+  const nestedFailures = (result.details ?? [])
+    .filter((detail) => !detail.passed)
+    .map(toGraderFailureDetail);
+  return {
+    name: result.name,
+    evidence: result.evidence,
+    ...(typeof result.score === "number" ? { score: result.score } : {}),
+    ...(result.label ? { label: result.label } : {}),
+    ...(nestedFailures.length > 0 ? { details: nestedFailures } : {}),
+  };
+}
+
 export function snapshotTrial(item: TrialWorkItem, result: TrialResult): TrialSnapshot {
   const metrics = result.trajectory?.metrics;
+  const graderFailures = collectFailingGraderDetails(result.grade);
   const failedGraders = result.grade?.details
     ?.filter((detail) => !detail.passed)
     .map((detail) => detail.name) ?? [];
-  const failureEvidence = result.grade?.details?.find((detail) => !detail.passed)?.evidence
+  const failureEvidence = graderFailures[0]?.evidence
     ?? (!result.grade?.passed ? result.grade?.evidence : undefined);
   const cost = metrics?.tokenUsage.cost;
 
@@ -125,6 +188,7 @@ export function snapshotTrial(item: TrialWorkItem, result: TrialResult): TrialSn
     wallTimeMs: metrics?.wallTimeMs ?? result.durationMs,
     aiCredits: cost?.unit === "nano-aiu" ? cost.amount / NANO_AIU_PER_CREDIT : 0,
     failedGraders,
+    graderFailures,
     ...(failureEvidence ? { failureEvidence } : {}),
     ...(result.error ? { error: result.error } : {}),
   };
@@ -151,8 +215,10 @@ function summarizeStimulus(stimulus: string, trials: readonly TrialSnapshot[]): 
     stimulus,
     passed: trials.length > 0 && trials.every((trial) => trial.passed),
     failedGraders: [...new Set(trials.flatMap((trial) => trial.failedGraders))],
+    graderFailures: trials.flatMap((trial) => (trial.passed ? [] : trial.graderFailures)),
     ...summarizeMetrics(trials),
     ...(failedTrial?.failureEvidence ? { failureEvidence: failedTrial.failureEvidence } : {}),
+    ...(failedTrial?.error ? { error: failedTrial.error } : {}),
   };
 }
 
@@ -255,6 +321,98 @@ export function buildReport(
   };
 }
 
+export interface FailureDetail {
+  evalName: string;
+  variant: string;
+  stimulus: string;
+  passRate: number;
+  failedGraders: string[];
+  graderFailures: GraderFailureDetail[];
+  failureEvidence?: string;
+  error?: string;
+}
+
+/**
+ * Scan every non-baseline variant/stimulus for failures and return the
+ * detail needed to diagnose each one without having to open the raw
+ * `results.jsonl` artifacts by hand.
+ */
+export function collectFailureDetails(
+  evals: readonly { evalName: string; variants: readonly VariantSummary[] }[],
+): FailureDetail[] {
+  const details: FailureDetail[] = [];
+  for (const evalReport of evals) {
+    for (const variant of evalReport.variants) {
+      if (variant.variant === BASELINE_VARIANT) {
+        continue;
+      }
+      for (const stimulusSummary of variant.stimuli) {
+        if (stimulusSummary.passed) {
+          continue;
+        }
+        details.push({
+          evalName: evalReport.evalName,
+          variant: variant.variant,
+          stimulus: stimulusSummary.stimulus,
+          passRate: stimulusSummary.passRate,
+          failedGraders: stimulusSummary.failedGraders,
+          graderFailures: stimulusSummary.graderFailures ?? [],
+          ...(stimulusSummary.failureEvidence ? { failureEvidence: stimulusSummary.failureEvidence } : {}),
+          ...(stimulusSummary.error ? { error: stimulusSummary.error } : {}),
+        });
+      }
+    }
+  }
+  return details;
+}
+
+function renderGraderFailureLines(detail: GraderFailureDetail, indent: string): string[] {
+  const score = typeof detail.score === "number" ? ` (score ${detail.score.toFixed(2)})` : "";
+  const label = detail.label ? ` [${detail.label}]` : "";
+  const lines = [`${indent}- **${detail.name}**${score}${label}: ${detail.evidence}`];
+  for (const nested of detail.details ?? []) {
+    lines.push(...renderGraderFailureLines(nested, `${indent}  `));
+  }
+  return lines;
+}
+
+/** Render a `## Candidate failures` section pinpointing what to inspect next. */
+export function renderFailureSummary(details: readonly FailureDetail[]): string {
+  if (details.length === 0) {
+    return "";
+  }
+
+  const lines = ["## Candidate failures", ""];
+  for (const detail of details) {
+    lines.push(
+      `### ${detail.evalName} — ${detail.variant} / ${detail.stimulus}`
+      + ` (${formatPercent(detail.passRate)} passed)`,
+      "",
+    );
+    if (detail.error) {
+      lines.push(`- **Trial error**: ${detail.error}`);
+    }
+    if (detail.graderFailures.length > 0) {
+      for (const graderFailure of detail.graderFailures) {
+        lines.push(...renderGraderFailureLines(graderFailure, ""));
+      }
+    } else if (detail.failureEvidence) {
+      lines.push(`- ${detail.failureEvidence}`);
+    } else if (detail.failedGraders.length > 0) {
+      lines.push(`- Failed graders: ${detail.failedGraders.join(", ")}`);
+    } else if (!detail.error) {
+      lines.push(
+        "- No passing trials and no grader evidence was captured. This usually means the "
+        + "executor/backend failed before grading (e.g. a timeout) — inspect that variant's "
+        + "`results.jsonl` for a `\"status\":\"error\"` entry.",
+      );
+    }
+    lines.push("");
+  }
+
+  return `${lines.join("\n")}\n`;
+}
+
 export function renderMarkdown(report: AzureMcpVallyReport): string {
   const lines = [
     "# Azure MCP Vally experiment report",
@@ -282,6 +440,11 @@ export function renderMarkdown(report: AzureMcpVallyReport): string {
       lines.push(`| ${comparison.candidate} | ${comparison.stimulus} | **${comparison.category}** |`);
     }
     lines.push("");
+  }
+
+  const failureSummary = renderFailureSummary(collectFailureDetails(report.evals));
+  if (failureSummary) {
+    lines.push(failureSummary);
   }
 
   return `${lines.join("\n")}\n`;
@@ -369,6 +532,11 @@ export function renderAggregateMarkdown(report: AzureMcpVallyAggregateReport): s
     lines.push("");
   }
 
+  const failureSummary = renderFailureSummary(collectFailureDetails(report.evals));
+  if (failureSummary) {
+    lines.push(failureSummary);
+  }
+
   return `${lines.join("\n")}\n`;
 }
 
@@ -431,6 +599,7 @@ function combineStimulusSummaries(
       ? 0
       : summaries.reduce((sum, summary) => sum + selector(summary) * summary.trialCount, 0) / trialCount;
   const failureEvidence = summaries.find((summary) => summary.failureEvidence)?.failureEvidence;
+  const error = summaries.find((summary) => summary.error)?.error;
 
   return {
     stimulus,
@@ -443,9 +612,12 @@ function combineStimulusSummaries(
     avgWallTimeMs: weightedAverage((summary) => summary.avgWallTimeMs),
     avgAiCredits: weightedAverage((summary) => summary.avgAiCredits),
     failedGraders: [...new Set(summaries.flatMap((summary) => summary.failedGraders))],
+    graderFailures: summaries.flatMap((summary) => summary.graderFailures ?? []),
     ...(failureEvidence ? { failureEvidence } : {}),
+    ...(error ? { error } : {}),
   };
 }
+
 
 function average(values: readonly number[]): number {
   return values.length === 0 ? 0 : values.reduce((sum, value) => sum + value, 0) / values.length;

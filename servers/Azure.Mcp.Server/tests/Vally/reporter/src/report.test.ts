@@ -1,10 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import type { GraderResult } from "@microsoft/vally";
 import {
   aggregateReports,
   buildReport,
+  collectFailingGraderDetails,
+  collectFailureDetails,
   getEffectivenessCategory,
+  renderFailureSummary,
   renderMarkdown,
+  snapshotTrial,
   type StimulusSummary,
   type TrialSnapshot,
 } from "./report.js";
@@ -27,6 +32,7 @@ function trial(
     wallTimeMs: variant === "baseline" ? 20_000 : 10_000,
     aiCredits: variant === "baseline" ? 2 : 1,
     failedGraders: [],
+    graderFailures: [],
     ...overrides,
   };
 }
@@ -43,6 +49,7 @@ function stimulus(passed: boolean): StimulusSummary {
     avgWallTimeMs: 1,
     avgAiCredits: 1,
     failedGraders: [],
+    graderFailures: [],
   };
 }
 
@@ -167,3 +174,129 @@ test("aggregates reports across wrapper iterations", () => {
   assert.equal(namespace?.avgTokens, 200);
   assert.deepEqual(aggregate.evals[0]?.comparisons[0]?.categories, { VALUABLE: 2 });
 });
+
+function graderResult(overrides: Partial<GraderResult> = {}): GraderResult {
+  return {
+    name: "prompt",
+    kind: "llm",
+    passed: false,
+    score: 0,
+    evidence: "top-level evidence",
+    ...overrides,
+  };
+}
+
+test("collectFailingGraderDetails reports the specific failing rubric criterion, not just the parent grader", () => {
+  const grade = graderResult({
+    name: "panel",
+    passed: false,
+    score: 0.4,
+    details: [
+      graderResult({
+        name: "panel/gpt-5",
+        passed: false,
+        score: 0.4,
+        evidence: "Overall verdict evidence",
+        details: [
+          graderResult({ name: "panel/gpt-5/accuracy", passed: true, score: 1, evidence: "Accurate." }),
+          graderResult({
+            name: "panel/gpt-5/completeness",
+            passed: false,
+            score: 0.2,
+            label: "incorrect",
+            evidence: "The agent never confirmed the update completed.",
+          }),
+        ],
+      }),
+    ],
+  });
+
+  const failures = collectFailingGraderDetails(grade);
+
+  // Only the failing leaf criterion is surfaced — not the passing sibling or
+  // the less-specific parent evidence.
+  assert.equal(failures.length, 1);
+  assert.equal(failures[0]?.name, "panel/gpt-5/completeness");
+  assert.equal(failures[0]?.label, "incorrect");
+  assert.equal(failures[0]?.evidence, "The agent never confirmed the update completed.");
+});
+
+test("collectFailingGraderDetails falls back to the grader itself when it has no sub-details", () => {
+  const grade = graderResult({ name: "created-namespace", passed: false, evidence: "Namespace was not found." });
+  const failures = collectFailingGraderDetails(grade);
+
+  assert.deepEqual(failures, [{ name: "created-namespace", evidence: "Namespace was not found.", score: 0 }]);
+});
+
+test("snapshotTrial captures grader failures for diagnosis", () => {
+  const snapshot = snapshotTrial(
+    {
+      evalName: "eventhubs-namespace-update-eval",
+      variant: "namespace",
+      stimulus: { name: "update-namespace" },
+      trialIndex: 0,
+    } as never,
+    {
+      itemId: "item-0",
+      durationMs: 1000,
+      status: "success",
+      trajectory: null,
+      grade: graderResult({
+        name: "updated-namespace",
+        passed: false,
+        evidence: "The namespace SKU was not updated.",
+      }),
+    } as never,
+  );
+
+  assert.equal(snapshot.graderFailures.length, 1);
+  assert.equal(snapshot.graderFailures[0]?.name, "updated-namespace");
+  assert.equal(snapshot.failureEvidence, "The namespace SKU was not updated.");
+});
+
+test("renderFailureSummary surfaces a timeout with no grader output", () => {
+  const details = collectFailureDetails([
+    {
+      evalName: "eventhubs-namespace-update-eval",
+      variants: [
+        {
+          variant: "namespace",
+          trialCount: 1,
+          passCount: 0,
+          passRate: 0,
+          avgTokens: 0,
+          avgTurnCount: 0,
+          avgWallTimeMs: 300_558,
+          avgAiCredits: 0,
+          stimuli: [
+            {
+              stimulus: "update-namespace",
+              passed: false,
+              trialCount: 1,
+              passCount: 0,
+              passRate: 0,
+              avgTokens: 0,
+              avgTurnCount: 0,
+              avgWallTimeMs: 300_558,
+              avgAiCredits: 0,
+              failedGraders: [],
+              graderFailures: [],
+              error: "Timeout after 300000ms waiting for session.idle",
+            },
+          ],
+        },
+      ],
+    },
+  ]);
+
+  assert.equal(details.length, 1);
+  const summary = renderFailureSummary(details);
+  assert.match(summary, /## Candidate failures/);
+  assert.match(summary, /namespace \/ update-namespace/);
+  assert.match(summary, /Timeout after 300000ms waiting for session\.idle/);
+});
+
+test("renderFailureSummary is empty when there are no candidate failures", () => {
+  assert.equal(renderFailureSummary([]), "");
+});
+
