@@ -478,6 +478,7 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
 
         if (status is not null)
         {
+            // cspell:ignore SENDDISABLED RECEIVEDISABLED
             eventHubData.Status = status.ToUpperInvariant() switch
             {
                 "ACTIVE" => EventHubEntityStatus.Active,
