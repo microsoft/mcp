@@ -4,11 +4,8 @@
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Kusto.Models;
 using Azure.Mcp.Tools.Kusto.Validation;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Caching;
@@ -17,20 +14,12 @@ using Microsoft.Mcp.Core.Validation;
 namespace Azure.Mcp.Tools.Kusto.Services;
 
 
-public sealed class KustoService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ICacheService cacheService,
-    IHttpClientFactory httpClientFactory,
-    ILogger<KustoService> logger) : BaseAzureResourceService(subscriptionService, tenantService), IKustoService
+public sealed class KustoService(IAzureService azureService, ICacheService cacheService)
+    : BaseAzureResourceService(azureService), IKustoService
 {
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-    private readonly ILogger<KustoService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private const string CacheGroup = "kusto";
-    private const string KustoClustersCacheKey = "clusters";
-    private static readonly TimeSpan s_cacheDuration = CacheDurations.ServiceData;
     private static readonly TimeSpan s_providerCacheDuration = CacheDurations.AuthenticatedClient;
 
     /// <summary>
@@ -340,7 +329,7 @@ public sealed class KustoService(
         if (kustoClient == null)
         {
             var tokenCredential = await GetCredential(tenant, cancellationToken);
-            kustoClient = new KustoClient(clusterUri, tokenCredential, UserAgent, _httpClientFactory);
+            kustoClient = new KustoClient(clusterUri, tokenCredential, UserAgent, AzureService);
             await _cacheService.SetAsync(CacheGroup, providerCacheKey, kustoClient, s_providerCacheDuration, cancellationToken);
         }
 
@@ -354,7 +343,7 @@ public sealed class KustoService(
         if (kustoClient == null)
         {
             var tokenCredential = await GetCredential(tenant, cancellationToken);
-            kustoClient = new KustoClient(clusterUri, tokenCredential, UserAgent, _httpClientFactory);
+            kustoClient = new KustoClient(clusterUri, tokenCredential, UserAgent, AzureService);
             await _cacheService.SetAsync(CacheGroup, providerCacheKey, kustoClient, s_providerCacheDuration, cancellationToken);
         }
 

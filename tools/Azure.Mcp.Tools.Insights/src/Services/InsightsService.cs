@@ -3,8 +3,6 @@
 
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Insights.Options;
 using Azure.Mcp.Tools.Insights.Services.Models;
 using Azure.ResourceManager.ResourceGraph;
@@ -17,23 +15,14 @@ using Microsoft.Mcp.Core.Services.Caching;
 namespace Azure.Mcp.Tools.Insights.Services;
 
 /// <inheritdoc cref="IInsightsService"/>
-public sealed class InsightsService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ICacheService cacheService,
-    ILogger<InsightsService> logger)
-    : BaseAzureService(tenantService), IInsightsService
+public sealed class InsightsService(IAzureService azureService, ICacheService cacheService, ILogger<InsightsService> logger)
+    : BaseAzureService(azureService), IInsightsService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-
     private readonly ILogger<InsightsService> _logger = logger;
 
     private const int PageSize = 1000;
-
     private const int MaxPages = 100;
-
     private const string CacheGroup = "insights";
 
     // Cache ARG data for 1 hour
@@ -67,7 +56,7 @@ public sealed class InsightsService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
         // Cache ARG data by subscription ID
         var cacheKey = $"sub:{subscriptionResource.Data.SubscriptionId}";
@@ -118,7 +107,7 @@ public sealed class InsightsService(
         IProgress<string>? progress = null,
         bool noCache = false)
     {
-        var subscriptions = await _subscriptionService.GetSubscriptions(tenant, retryPolicy, cancellationToken);
+        var subscriptions = await AzureService.GetSubscriptions(tenant, retryPolicy, cancellationToken);
         if (subscriptions.Count == 0)
         {
             throw new InvalidOperationException("No accessible subscriptions were found in the tenant.");
@@ -275,7 +264,7 @@ public sealed class InsightsService(
             throw new ArgumentException("Tenant ID cannot be null.", nameof(tenantId));
         }
 
-        var allTenants = await TenantService.GetTenants(cancellationToken);
+        var allTenants = await AzureService.GetTenants(cancellationToken);
         var tenantResource = allTenants.FirstOrDefault(t => t.Data.TenantId == tenantId.Value)
             ?? throw new InvalidOperationException($"No accessible tenant found for tenant ID '{tenantId}'.");
         return tenantResource;

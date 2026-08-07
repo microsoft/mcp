@@ -3,7 +3,6 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Services.Util;
 using Azure.ResourceManager;
@@ -11,29 +10,23 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services;
 
-public class QuotaService(
-    ITenantService tenantService,
-    ILoggerFactory loggerFactory,
-    IHttpClientFactory httpClientFactory)
-    : BaseAzureService(tenantService), IQuotaService
+public class QuotaService(IAzureService azureService, ILoggerFactory loggerFactory)
+    : BaseAzureService(azureService), IQuotaService
 {
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-
     public async Task<Dictionary<string, List<UsageInfo>>> GetAzureQuotaAsync(
         List<string> resourceTypes,
         string subscriptionId,
         string location,
         CancellationToken cancellationToken)
     {
-        TokenCredential credential = await GetCredential(cancellationToken);
+        TokenCredential credential = await GetCredential(null, cancellationToken);
         return await AzureQuotaService.GetAzureQuotaAsync(
             credential,
             resourceTypes,
             subscriptionId,
             location,
-            TenantService,
+            AzureService,
             loggerFactory,
-            _httpClientFactory,
             cancellationToken);
     }
 

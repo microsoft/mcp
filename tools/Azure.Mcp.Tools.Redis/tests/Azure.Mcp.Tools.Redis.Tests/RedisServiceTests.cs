@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Redis.Services;
 using Azure.ResourceManager.Redis.Models;
 using Azure.ResourceManager.Resources;
@@ -16,23 +15,19 @@ namespace Azure.Mcp.Tools.Redis.Tests;
 
 public class RedisServiceTests
 {
-    private static RedisService CreateService(ISubscriptionService subscriptionService)
-    {
-        var tenantService = Substitute.For<ITenantService>();
-        var logger = Substitute.For<ILogger<RedisService>>();
-        return new RedisService(subscriptionService, tenantService, logger);
-    }
+    private static RedisService CreateService(IAzureService azureService) =>
+        new(azureService, Substitute.For<ILogger<RedisService>>());
 
     [Fact]
     public async Task ListResourcesAsync_ThrowsKeyNotFoundException_WhenSubscriptionNotFound()
     {
         // Arrange - GetSubscription returning null should surface as a typed
         // not-found exception (404) rather than a plain Exception (500). See #458.
-        var subscriptionService = Substitute.For<ISubscriptionService>();
-        subscriptionService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        var azureService = Substitute.For<IAzureService>();
+        azureService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns((SubscriptionResource)null!);
 
-        var service = CreateService(subscriptionService);
+        var service = CreateService(azureService);
 
         // Act & Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(
@@ -43,11 +38,11 @@ public class RedisServiceTests
     public async Task CreateResourceAsync_ThrowsKeyNotFoundException_WhenSubscriptionNotFound()
     {
         // Arrange
-        var subscriptionService = Substitute.For<ISubscriptionService>();
-        subscriptionService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        var azureService = Substitute.For<IAzureService>();
+        azureService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns((SubscriptionResource)null!);
 
-        var service = CreateService(subscriptionService);
+        var service = CreateService(azureService);
 
         // Act & Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(

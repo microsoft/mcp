@@ -461,8 +461,8 @@ Choose the appropriate base class based on operations:
 
 **For Azure Resource Read Operations (recommended):**
 ```csharp
-public class StorageService(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), IStorageService
+public class StorageService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IStorageService
 {
     public async Task<ResourceQueryResults<StorageAccount>> ListAccountsAsync(string subscription, string? resourceGroup, RetryPolicyOptions? retryPolicy)
     {
@@ -479,11 +479,9 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
 
 **For Azure Resource Write Operations:**
 ```csharp
-public class StorageService(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureService(tenantService), IStorageService
+public class StorageService(IAzureService azureService)
+    : BaseAzureService(azureService), IStorageService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
-
     public async Task<StorageAccountResult> CreateStorageAccount(
         string account,
         string resourceGroup,
@@ -495,7 +493,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy);
         // Use subscriptionResource for write operations
     }
 }

@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Azure.Mcp.Tools.AzureBackup.Services.Policy;
@@ -18,8 +17,7 @@ public class AzureBackupServiceTests
 {
     private readonly IRsvBackupOperations _rsvOps;
     private readonly IDppBackupOperations _dppOps;
-    private readonly ITenantService _tenantService;
-    private readonly ISubscriptionService _subscriptionService;
+    private readonly IAzureService _azureService;
     private readonly ILogger<AzureBackupService> _logger;
     private readonly AzureBackupService _service;
 
@@ -27,10 +25,9 @@ public class AzureBackupServiceTests
     {
         _rsvOps = Substitute.For<IRsvBackupOperations>();
         _dppOps = Substitute.For<IDppBackupOperations>();
-        _tenantService = Substitute.For<ITenantService>();
-        _subscriptionService = Substitute.For<ISubscriptionService>();
+        _azureService = Substitute.For<IAzureService>();
         _logger = Substitute.For<ILogger<AzureBackupService>>();
-        _service = new AzureBackupService(_rsvOps, _dppOps, _tenantService, _subscriptionService, _logger);
+        _service = new AzureBackupService(_rsvOps, _dppOps, _azureService, _logger);
     }
 
     #region ResolveVaultType - Auto-detection fallback
@@ -555,7 +552,7 @@ public class AzureBackupServiceTests
             state: Azure.ResourceManager.Resources.Models.SubscriptionState.Enabled);
         var subResource = Substitute.For<Azure.ResourceManager.Resources.SubscriptionResource>();
         subResource.Data.Returns(subData);
-        _subscriptionService.GetSubscription(name, null, null, Arg.Any<CancellationToken>()).Returns(subResource);
+        _azureService.GetSubscription(name, null, null, Arg.Any<CancellationToken>()).Returns(subResource);
 
         _rsvOps.ListVaultsAsync(resolvedId, null, null, Arg.Any<CancellationToken>()).Returns([]);
         _dppOps.ListVaultsAsync(resolvedId, null, null, Arg.Any<CancellationToken>()).Returns([]);
@@ -569,10 +566,10 @@ public class AzureBackupServiceTests
     }
 
     [Fact]
-    public async Task ListVaultsAsync_WhenSubscriptionIsGuid_DoesNotCallSubscriptionService()
+    public async Task ListVaultsAsync_WhenSubscriptionIsGuid_DoesNotCallAzureService()
     {
         // NEW-3: GUID short-circuit - ResolveSubscriptionIdAsync must NOT call out
-        // to ISubscriptionService when the value already parses as a Guid.
+        // to IAzureService when the value already parses as a Guid.
         const string guid = "44444444-4444-4444-4444-444444444444";
 
         _rsvOps.ListVaultsAsync(guid, null, null, Arg.Any<CancellationToken>()).Returns([]);
@@ -580,7 +577,7 @@ public class AzureBackupServiceTests
 
         await _service.ListVaultsAsync(guid, null, null, null, null, CancellationToken.None);
 
-        await _subscriptionService.DidNotReceive().GetSubscription(
+        await _azureService.DidNotReceive().GetSubscription(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
