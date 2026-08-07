@@ -1,0 +1,28 @@
+{
+  "name": "@microsoft/azure-mcp-vally-reporter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/plugin.js",
+  "types": "./dist/plugin.d.ts",
+  "bin": {
+    "azure-mcp-vally-report": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "tsc --build --clean",
+    "report": "node dist/cli.js",
+    "test": "npm run build && node --test dist/*.test.js"
+  },
+  "devDependencies": {
+    "@microsoft/vally": "0.11.0",
+    "@types/node": "24.10.1",
+    "typescript": "5.9.3"
+  }
+}

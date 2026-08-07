@@ -114,10 +114,13 @@ still cannot.
    and make sure `vally` is on your `PATH`.
 2. **.NET SDK** - required to build the `azmcp` server (see the repo root
    `global.json` for the pinned version).
-3. **Azure sign-in** - `az login`. Required to provision real Event Hubs (see
+3. **Node.js and npm** - required to compile the custom TypeScript reporter.
+   The runner installs its pinned dependencies on first use and type-checks it
+   before every run so Vally reporter API changes fail during compilation.
+4. **Azure sign-in** - `az login`. Required to provision real Event Hubs (see
    below) and for the server candidates to return real data; the outcome-graded
    baseline needs real data to be a fair test.
-4. **Azure CLI** - `az` on your `PATH`, only needed if you use the provisioning
+5. **Azure CLI** - `az` on your `PATH`, only needed if you use the provisioning
    scripts.
 
 ## Provisioning test resources
@@ -193,7 +196,10 @@ The script builds `Azure.Mcp.Server`, prepends the freshly built `azmcp` to
 `PATH` (vally does not expand environment variables inside eval specs),
 **discovers every `<tool>.experiment.yaml` under every area subfolder**, and for
 each one provisions the area, runs the experiment (the baseline plus every server
-candidate variant), and tears the area down. It prints a per-tool comparison. Its
+candidate variant), and tears the area down. Each experiment loads the local
+TypeScript reporter from `reporter/`, which receives Vally's typed lifecycle
+events and writes the post-experiment comparison. The wrapper then consolidates
+those artifacts across tools and iterations. Its
 exit code is non-zero if any *candidate* variant fails (baseline failures are
 expected). Useful switches:
 
@@ -241,6 +247,155 @@ per variant (`baseline`, `namespace`, and `consolidated`), each containing:
   `trajectory.metrics.turnCount`, `trajectory.metrics.wallTimeMs`), and
 - `eval-results.md` - a human-readable Markdown summary.
 
+The custom reporter also writes these files at the experiment-run root:
+
+- `azure-mcp-report.json` - versioned, dashboard-ready data containing
+  per-variant metrics and candidate-vs-baseline effectiveness categories.
+- `azure-mcp-report.md` - the corresponding per-experiment Markdown report.
+
+After all selected tools and iterations finish, the reporter's offline
+aggregator writes `azure-mcp-summary.json` and `azure-mcp-summary.md` at the
+wrapper's top-level run directory. These combine all selected experiment
+reports and are the intended upload boundary for a future experiment dashboard.
+
+### Experiment output schema
+
+The JSON files are the cross-repository integration contract for consumers such
+as dashboards. Producers must emit `schemaVersion: 2`; consumers must reject
+unknown major versions rather than silently interpreting them as version 2.
+Optional properties are omitted, not written as `null`. Timestamps use ISO 8601
+UTC strings.
+
+The normative TypeScript definitions are in
+[`reporter/src/report.ts`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/tests/Vally/reporter/src/report.ts). The following JSONC
+describes the version 2 per-experiment artifact, `azure-mcp-report.json`:
+
+```jsonc
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-04T23:15:00.000Z",
+  "status": "completed", // "completed", "failed", or "cancelled"
+  "failed": false,
+  "evals": [
+    {
+      "evalName": "eventhubs-eventhub-get-eval",
+      "bestVariant": "namespace", // optional when no variant has data
+      "variants": [
+        {
+          "variant": "namespace",
+          "trialCount": 2,
+          "passCount": 2,
+          "passRate": 1.0,
+          "avgTokens": 10234.5,
+          "avgTurnCount": 3.5,
+          "avgWallTimeMs": 12850.0,
+          "avgAiCredits": 1.25,
+          "stimuli": [
+            {
+              "stimulus": "list-event-hubs",
+              "passed": true,
+              "trialCount": 2,
+              "passCount": 2,
+              "passRate": 1.0,
+              "avgTokens": 10234.5,
+              "avgTurnCount": 3.5,
+              "avgWallTimeMs": 12850.0,
+              "avgAiCredits": 1.25,
+              "failedGraders": [],
+              "failureEvidence": "..." // optional; first failed-trial evidence
+            }
+          ]
+        }
+      ],
+      "comparisons": [
+        {
+          "candidate": "namespace",
+          "stimulus": "list-event-hubs",
+          "category": "VALUABLE",
+          "candidateResult": {}, // optional StimulusSummary
+          "baselineResult": {} // optional StimulusSummary
+        }
+      ]
+    }
+  ]
+}
+```
+
+`azure-mcp-summary.json` uses the same version and embeds every source report so
+an uploader can preserve provenance:
+
+```jsonc
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-04T23:16:00.000Z",
+  "failed": false,
+  "runCount": 3,
+  "evals": [
+    {
+      "evalName": "eventhubs-eventhub-get-eval",
+      "bestVariant": "namespace",
+      "variants": [], // VariantSummary values aggregated across runs
+      "comparisons": [
+        {
+          "candidate": "namespace",
+          "stimulus": "list-event-hubs",
+          "categories": {
+            "VALUABLE": 2,
+            "CANDIDATE AND BASELINE PASS": 1
+          }
+        }
+      ]
+    }
+  ],
+  "runs": [] // complete AzureMcpVallyReport objects
+}
+```
+
+#### Field semantics
+
+| Field | Type | Meaning |
+|:------|:-----|:--------|
+| `schemaVersion` | integer | Output contract version. Version 2 is currently the only supported value. |
+| `generatedAt` | string | ISO 8601 UTC time when the report was generated. |
+| `status` | string | Vally reporter lifecycle result: `completed`, `failed`, or `cancelled`. Present only on per-experiment reports. |
+| `failed` | boolean | `true` when execution did not complete, any candidate trial failed, or a `REGRESSION` occurred. Baseline failure alone does not set it. The consolidated value is true when any source report failed. |
+| `runCount` | integer | Number of per-experiment reports included in a consolidated report. |
+| `evals` | array | Reports grouped by Vally eval name. |
+| `runs` | array | Complete source `AzureMcpVallyReport` objects included in a consolidated report. |
+| `evalName` | string | Vally eval `name`, used as the stable experiment identity across runs. |
+| `bestVariant` | string, optional | Variant, including `baseline`, selected by highest pass rate, then lowest average tokens, turns, wall time, AI credits, and finally lexical variant name. |
+| `variant` | string | Experiment variant name. The control variant is named `baseline`; every other value is treated as a candidate. |
+| `stimulus` | string | Vally stimulus `name`. |
+| `passed` | boolean | For a stimulus summary, true only when every included trial passed. |
+| `trialCount` | integer | Number of Vally trials represented by the summary. |
+| `passCount` | integer | Number of represented trials that passed. |
+| `passRate` | number | `passCount / trialCount`, in the inclusive range 0 through 1. |
+| `avgTokens` | number | Mean `trajectory.metrics.tokenUsage.totalTokens` per represented trial. |
+| `avgTurnCount` | number | Mean `trajectory.metrics.turnCount` per represented trial. |
+| `avgWallTimeMs` | number | Mean `trajectory.metrics.wallTimeMs` per represented trial, in milliseconds. |
+| `avgAiCredits` | number | Mean provider-reported cost per trial in AI Credits. Vally reports nano-AIU; the reporter divides by 1,000,000,000. Missing cost contributes zero. |
+| `failedGraders` | string array | Distinct names of graders that failed in the represented trials. |
+| `failureEvidence` | string, optional | Evidence from the first represented failed trial. |
+| `candidateResult` | object, optional | Candidate `StimulusSummary`; omitted when candidate data is unavailable. |
+| `baselineResult` | object, optional | Baseline `StimulusSummary`; omitted when baseline data is unavailable. |
+| `categories` | object | Consolidated count of each effectiveness category observed for one candidate and stimulus across runs. Missing category keys mean zero occurrences. |
+
+The `category` value in a per-experiment comparison is one of:
+
+| Category | Meaning |
+|:---------|:--------|
+| `VALUABLE` | Candidate passed and baseline failed. |
+| `REGRESSION` | Candidate failed and baseline passed. |
+| `CANDIDATE AND BASELINE PASS` | The candidate and baseline in this pairwise comparison both passed. Other candidates are reported in separate comparison entries. |
+| `INCONCLUSIVE` | Candidate and baseline both failed. |
+| `NO BASELINE` | Candidate data exists but the corresponding baseline data is absent. |
+| `NO DATA` | Candidate data is absent. |
+
+Consumers should key comparisons by `(evalName, candidate, stimulus)` and should
+not depend on array ordering. Repositories reusing this contract may use
+different candidate names, but must reserve `baseline` for the control variant
+if they want candidate-vs-baseline classification.
+
 Running an experiment by hand still targets one tool's directory directly (no
 run-timestamp level, since you're not going through the wrapper script):
 
@@ -267,22 +422,23 @@ delete at any time between runs.
 ### Interpreting effectiveness
 
 The point of the candidate-vs-baseline pairing is to measure the Azure MCP
-server's *effectiveness*. After the runs complete, the script reads the newest
-`results.jsonl` from the baseline and from each candidate (`namespace`,
-`consolidated`) and compares each candidate against the baseline **per stimulus**:
+server's *effectiveness*. During the run, the custom reporter receives each typed `TrialResult` directly
+from Vally and compares every candidate (`namespace`, `consolidated`) against
+the baseline **per stimulus**:
 
 | Baseline (no server) | Candidate (with server) | Category | Meaning |
 |:---------------------|:------------------------|:---------|:--------|
 | FAIL | PASS | **VALUABLE** | The server enabled an outcome the agent could not achieve without it. |
 | PASS | FAIL | **REGRESSION** | The agent succeeded *without* the server but failed *with* it - the server hurt the outcome. |
-| PASS | PASS | **BOTH PASS** | The server was not required for the outcome. Efficiency decides: lower **tokens**, **turns**, and **wall time** are better; the script prints each metric and the candidate-vs-baseline delta. |
+| PASS | PASS | **CANDIDATE AND BASELINE PASS** | The server was not required for the outcome. Efficiency decides: lower **tokens**, **turns**, and **wall time** are better; the reporter ranks all variants, including baseline. |
 | FAIL | FAIL | **INCONCLUSIVE** | Neither achieved the outcome. |
 
-A **BOTH PASS** result is common and expected: the baseline agent can shell out to
-the Azure CLI via its built-in `powershell` tool, so it often retrieves the data
-without the MCP server. That is not a problem in itself - it just means this
-stimulus does not *require* the server, and the comparison falls through to
-efficiency (fewer tokens/turns/less wall-clock time is better).
+A **CANDIDATE AND BASELINE PASS** result is common and expected: the baseline
+agent can shell out to the Azure CLI via its built-in `powershell` tool, so it
+often retrieves the data without the MCP server. Each result describes one
+candidate-vs-baseline pair; experiments with multiple candidates have one entry
+per pair. The best-variant ranking covers all variants, so baseline wins when it
+passes with better efficiency.
 
 The process exit code is `0` when every *candidate* eval verdict passes, and `1`
 if any candidate eval fails, an effectiveness **REGRESSION** is detected, **or**
@@ -313,9 +469,9 @@ them from saved artifacts.
 
 ### Re-reporting without re-running
 
-Every run's verdicts and metrics are saved to `results.jsonl`, so the summary can
-be regenerated from those artifacts without building, provisioning, or invoking
-vally again. Pass `-ReportOnly` (offline, free, and instant) to re-read the
+Every run's verdicts and metrics are saved to `azure-mcp-report.json`, so the
+summary can be regenerated without building the server, provisioning, or invoking
+vally again. Pass `-ReportOnly` (offline and free) to re-read the
 **newest run directory** under `--output-dir`:
 
 ```powershell
@@ -337,9 +493,21 @@ selects how many of the newest timestamped iterations, within the selected run
 directory, to report per tool (oldest-first, so iteration numbers read
 chronologically). The vally exit code isn't persisted in
 the artifacts, so report-only relies on the per-stimulus verdicts in each
-`results.jsonl`; the process still exits non-zero if a candidate stimulus failed
+custom reporter artifacts; the process still exits non-zero if a reporter
+artifact is unavailable or a candidate stimulus failed
 or an effectiveness **REGRESSION** is detected. This is handy for re-examining or
-debugging a prior run - it's exactly how the summary logic itself is validated.
+debugging a prior run.
+
+### Developing the reporter
+
+The reporter imports `PlanReporter`, `ReporterRegistry`, `TrialResult`, and the
+other lifecycle types from `@microsoft/vally`. Its pinned Vally dependency makes
+reporter API changes compile-time failures instead of runtime surprises.
+
+```powershell
+npm install --prefix ./reporter
+npm test --prefix ./reporter
+```
 
 ## Adding more tool evaluations
 
@@ -365,7 +533,8 @@ tools"*) and it will, per tool:
   including disposable resources for destructive `_delete` tools so they
   don't clobber other tools' evals, and
 - validate with `Invoke-VallyEval.ps1` and report the
-  `VALUABLE`/`REGRESSION`/`BOTH PASS`/`INCONCLUSIVE` comparison per stimulus.
+  `VALUABLE`/`REGRESSION`/`CANDIDATE AND BASELINE PASS`/`INCONCLUSIVE`
+  comparison per stimulus.
 
 See the skill file for the full step-by-step process, including how it
 decides area boundaries and how it flags destructive-tool safety
