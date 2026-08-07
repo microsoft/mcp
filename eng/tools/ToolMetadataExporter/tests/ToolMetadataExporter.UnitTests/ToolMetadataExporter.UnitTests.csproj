@@ -2,7 +2,6 @@
   <PropertyGroup>
     <IsTestProject>true</IsTestProject>
     <OutputType>Exe</OutputType>
-    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NSubstitute" />

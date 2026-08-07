@@ -131,7 +131,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
     private readonly TestProxyFixture Fixture;
     private readonly LiveServerFixture LiveServerFixture;
     private ITestOutputHelper CollectedOutput = Substitute.For<ITestOutputHelper>();
-    private RecordedCommandTestHarness? _defaultHarness;
+    private RecordedCommandTestHarness? DefaultHarness;
 
     public RecordedCommandTestsBaseTest()
     {
@@ -144,13 +144,13 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
     [Fact]
     public async Task ProxyRecordProducesRecording()
     {
-        await _defaultHarness!.InitializeAsync();
+        await DefaultHarness!.InitializeAsync();
 
         Assert.NotNull(Fixture.Proxy);
         Assert.False(string.IsNullOrWhiteSpace(Fixture.Proxy!.BaseUri));
 
-        _defaultHarness!.RegisterVariable("sampleKey", "sampleValue");
-        await _defaultHarness!.DisposeAsync();
+        DefaultHarness!.RegisterVariable("sampleKey", "sampleValue");
+        await DefaultHarness!.DisposeAsync();
 
         var recordingPath = Path.Combine(Fixture.PathResolver.RepositoryRoot, ".assets", "437w6mqk5i", RecordingFileLocation);
 
@@ -171,16 +171,16 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         Assert.True(activeMatcher!.CompareBodies);
         Assert.True(activeMatcher.IgnoreQueryOrdering);
 
-        _defaultHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture, LiveServerFixture)
+        DefaultHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture, LiveServerFixture)
         {
             DesiredMode = TestMode.Record,
             EnableDefaultSanitizerAdditions = false,
         };
         var recordingId = string.Empty;
 
-        await _defaultHarness.InitializeAsync();
-        _defaultHarness.RegisterVariable("attrKey", "attrValue");
-        await _defaultHarness.DisposeAsync();
+        await DefaultHarness.InitializeAsync();
+        DefaultHarness.RegisterVariable("attrKey", "attrValue");
+        await DefaultHarness.DisposeAsync();
 
         var playbackHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture, LiveServerFixture)
         {
@@ -230,7 +230,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
     [Fact]
     public async Task GlobalMatcherAndSanitizerAppliesWhenPresent()
     {
-        _defaultHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture, LiveServerFixture)
+        DefaultHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture, LiveServerFixture)
         {
             DesiredMode = TestMode.Record,
             TestMatcher = new CustomDefaultMatcher
@@ -240,15 +240,15 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
             }
         };
 
-        _defaultHarness.GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
+        DefaultHarness.GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
         {
             Regex = "sample",
             Value = "sanitized",
         }));
-        _defaultHarness.DisabledDefaultSanitizers.Add("UriSubscriptionIdSanitizer");
+        DefaultHarness.DisabledDefaultSanitizers.Add("UriSubscriptionIdSanitizer");
 
-        await _defaultHarness.InitializeAsync();
-        await _defaultHarness.DisposeAsync();
+        await DefaultHarness.InitializeAsync();
+        await DefaultHarness.DisposeAsync();
 
         CollectedOutput.Received().WriteLine(Arg.Is<string>(s => s.Contains("Applying custom matcher to global settings")));
     }
@@ -257,9 +257,9 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
     [Fact]
     public async Task VariableSurvivesRecordPlaybackRoundtrip()
     {
-        await _defaultHarness!.InitializeAsync();
-        _defaultHarness.RegisterVariable("roundtrip", "value");
-        await _defaultHarness.DisposeAsync();
+        await DefaultHarness!.InitializeAsync();
+        DefaultHarness.RegisterVariable("roundtrip", "value");
+        await DefaultHarness.DisposeAsync();
 
         var playbackHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture, LiveServerFixture)
         {
@@ -287,7 +287,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
             File.Delete(RecordingFileLocation);
         }
 
-        _defaultHarness = harness;
+        DefaultHarness = harness;
         return ValueTask.CompletedTask;
     }
 

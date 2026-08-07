@@ -21,6 +21,7 @@
     -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902</WarningsNotAsErrors>
     <EnableMSTestRunner>true</EnableMSTestRunner>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">

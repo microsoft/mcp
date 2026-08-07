@@ -5,7 +5,6 @@
     <IsPackable>false</IsPackable>
     <HasLiveTests>false</HasLiveTests>
     <HasUnitTests>true</HasUnitTests>
-    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 
   <ItemGroup>

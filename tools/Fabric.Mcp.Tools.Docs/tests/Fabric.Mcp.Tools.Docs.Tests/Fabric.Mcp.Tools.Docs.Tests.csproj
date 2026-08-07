@@ -6,7 +6,6 @@
     <OutputType>Exe</OutputType>
     <HasLiveTests>false</HasLiveTests>
     <HasUnitTests>true</HasUnitTests>
-    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 
   <ItemGroup>
