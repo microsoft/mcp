@@ -20,7 +20,7 @@ public class StorageServiceDiskDiagnoseTests
     private const string TenantEnvironmentVariable = "AZURE_MCP_STORAGE_INTELLIGENCE_TENANT_ID";
     private const string ResourceId = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm";
     private const string StorageIntelligenceEndpoint = "https://storage-intelligence.example.com/api/Disk/analyzeV2";
-    private const string StorageIntelligenceScope = "api://00000000-0000-0000-0000-000000000002/.default";
+    private const string StorageIntelligenceScope = "00000000-0000-0000-0000-000000000002/.default";
     private const string StorageIntelligenceTenantId = "00000000-0000-0000-0000-000000000003";
 
     [Fact]
@@ -164,6 +164,21 @@ public class StorageServiceDiskDiagnoseTests
             cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains(EndpointEnvironmentVariable, exception.Message);
+        Assert.Null(handler.Request);
+    }
+
+    [Fact]
+    public async Task DiagnoseDiskAsync_InvalidScopeConfigurationThrows()
+    {
+        var handler = new RecordingHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        var (service, _, _, _) = CreateService(handler);
+        Environment.SetEnvironmentVariable(ScopeEnvironmentVariable, "not-an-application-scope");
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => service.DiagnoseDiskAsync(
+            ResourceId,
+            cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Contains(ScopeEnvironmentVariable, exception.Message);
         Assert.Null(handler.Request);
     }
 
