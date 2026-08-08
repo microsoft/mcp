@@ -11,6 +11,11 @@ var goalAssignmentName = take('ga${uniqueSuffix}', 24)
 var recoveryPlanName = take('rp${uniqueSuffix}', 24)
 var storageAccountName = toLower(take('st${uniqueSuffix}', 24))
 
+// Isolated service group + resource group used only by the "create" live tests, so those tests
+// don't mutate the pre-provisioned service group / resource group used by the get and recovery tests.
+var createServiceGroupName = 'sgc${uniqueSuffix}'
+var createResourceGroupName = take('${resourceGroup().name}-create', 90)
+
 // The test identity is automatically granted access to this resource group by the
 // test harness (New-TestResources.ps1), so no explicit role assignment is created here.
 
@@ -56,3 +61,5 @@ output goalTemplateName string = goalTemplateName
 output goalAssignmentName string = goalAssignmentName
 output recoveryPlanName string = recoveryPlanName
 output storageAccountName string = storageAccountName
+output createServiceGroupName string = createServiceGroupName
+output createResourceGroupName string = createResourceGroupName

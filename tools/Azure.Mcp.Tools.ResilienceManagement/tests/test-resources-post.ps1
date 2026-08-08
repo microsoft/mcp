@@ -1,6 +1,7 @@
 param(
     [string] $TenantId,
     [string] $TestApplicationId,
+    [string] $TestApplicationOid,
     [string] $ResourceGroupName,
     [string] $BaseName,
     [hashtable] $DeploymentOutputs,
@@ -40,6 +41,8 @@ $enrollmentName = $DeploymentOutputs['ENROLLMENTNAME']
 $goalTemplateName = $DeploymentOutputs['GOALTEMPLATENAME']
 $goalAssignmentName = $DeploymentOutputs['GOALASSIGNMENTNAME']
 $recoveryPlanName = $DeploymentOutputs['RECOVERYPLANNAME']
+$createResourceGroupName = $DeploymentOutputs['CREATERESOURCEGROUPNAME']
+$createServiceGroupName = $DeploymentOutputs['CREATESERVICEGROUPNAME']
 
 $serviceGroupApiVersion = '2024-02-01-preview'
 $membershipApiVersion = '2023-09-01-preview'
@@ -125,6 +128,44 @@ Invoke-ResilienceRestPut -Path $serviceGroupPath -Body @{
     }
 } | Out-Null
 Wait-ResilienceProvisioning -Path $serviceGroupPath
+
+# 1b) Create an ISOLATED resource group and service group used only by the "create" live tests.
+#     These are kept separate from the pre-provisioned service group / resource group above so the
+#     create tests can freely create usage plans and enrollments
+#     without mutating the resources the get/recovery tests depend on.
+#     NOTE: this resource group is created outside the test harness's managed resource group, so it
+#     is NOT deleted by Remove-TestResources.ps1. It is named "<rg>-create" for easy manual cleanup,
+#     and carries the same Owners/DeleteAfter tags as the managed resource group so subscription-wide
+#     expiry-based clean-up (see New-TestResources.ps1's DeleteAfterHours) reclaims it automatically.
+$managedResourceGroup = Get-AzResourceGroup -Name $ResourceGroupName
+New-AzResourceGroup -Name $createResourceGroupName -Location $managedResourceGroup.Location -Tag $managedResourceGroup.Tags -Force | Out-Null
+
+$createResourceGroupRoleAssigned = Get-AzRoleAssignment `
+    -ObjectId $TestApplicationOid `
+    -RoleDefinitionName 'Owner' `
+    -ResourceGroupName $createResourceGroupName `
+    -ErrorAction SilentlyContinue
+
+if (!$createResourceGroupRoleAssigned) {
+    Retry {
+        New-AzRoleAssignment `
+            -ObjectId $TestApplicationOid `
+            -RoleDefinitionName 'Owner' `
+            -ResourceGroupName $createResourceGroupName `
+            -ErrorAction Stop
+    } | Out-Null
+}
+
+$createServiceGroupPath = "/providers/Microsoft.Management/serviceGroups/$createServiceGroupName`?api-version=$serviceGroupApiVersion"
+Invoke-ResilienceRestPut -Path $createServiceGroupPath -Body @{
+    properties = @{
+        displayName = $createServiceGroupName
+        parent      = @{
+            resourceId = "/providers/Microsoft.Management/serviceGroups/$tenantId"
+        }
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $createServiceGroupPath
 
 # 2) Add the resource group as a member of the service group so its resources
 #    (e.g. the storage account) surface as goal/recovery resource targets.
