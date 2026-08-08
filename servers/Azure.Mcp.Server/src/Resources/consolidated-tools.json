@@ -719,7 +719,7 @@
     },
     {
       "name": "audit_azure_resources_compliance",
-      "description": "Generate compliance and security audit reports for Azure resources using Azure Quick Review (azqr).",
+      "description": "Scan an Azure subscription (or resource group) for compliance issues and provide compliance recommendations using Azure Quick Review (azqr). Generates a compliance and security assessment report identifying non-compliant configurations and recommending improvements. Use this to scan, check, review, or assess a subscription for compliance issues or compliance recommendations. Distinct from Azure Policy assignments and Azure Advisor recommendations for cost, security, reliability, operational excellence, and performance improvements.",
       "toolMetadata": {
         "destructive": {
           "value": false,
