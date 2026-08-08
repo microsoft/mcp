@@ -10,6 +10,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- The npm wrapper no longer writes `@azure/mcp-<platform>-<arch>` into the calling project's `package.json` and lockfile when it auto-installs a missing platform package. The install now targets a private directory inside the wrapper package instead of the inherited working directory, and its output no longer goes to stdout, which carries the MCP protocol stream in `server start`. [[#3184](https://github.com/microsoft/mcp/pull/3184)]
+
 ### Other Changes
 
 ## 3.0.0-beta.33 (2026-08-06)
