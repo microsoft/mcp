@@ -135,14 +135,30 @@ internal static class SqlQueryValidator
             throw new CommandValidationException("Only single read-only SELECT statements are allowed.");
         }
 
+        // Decode Unicode escape sequences (U&'...' or U&"...") to detect obfuscation attacks.
+        // Example attack vectors this prevents:
+        // - U&"pg_sl\\0065ep"(10) → pg_sleep(10) DoS
+        // - U&'pg_read_fil\\0065'('/etc/passwd') → pg_read_file(...) file read
+        // - U&'dblink_exe\\0063'('...', 'DELETE ...') → dblink_exec(...) lateral movement
+        var decodedForValidation = DecodeUnicodeEscapes(core);
+
         // Strip single-quoted string literals before checking for comment markers to avoid
         // false positives (e.g., 'foo--bar' or '/* not a comment */' are not comments).
         // Standard literals use only doubled quotes ('') as escape; backslash is literal
         // (standard_conforming_strings = on, the default since PostgreSQL 9.1).
         // E-prefixed strings (E'...') additionally support backslash escapes (e.g., \').
+        // Unicode string literals (U&'...') have been decoded for validation above.
+        // U&"..." are identifiers, NOT string literals, and must remain visible for tokenization
+        // so that obfuscated dangerous functions (e.g., U&"pg_slee\0070") are still caught.
         // The E-string pattern must appear first so the alternation matches it before
         // the standard pattern consumes the opening quote.
-        var withoutStrings = Regex.Replace(core, "[eE]'([^'\\\\]|\\\\.|'')*'|'([^']|'')*'", "'str'", RegexOptions.Compiled, RegexHelper.DefaultRegexTimeout);
+        var withoutStrings = Regex.Replace(decodedForValidation, "[uU]&'([^'\\\\]|\\\\.)*'|[eE]'([^'\\\\]|\\\\.|'')*'|'([^']|'')*'", "'str'", RegexOptions.Compiled, RegexHelper.DefaultRegexTimeout);
+
+        // The UESCAPE directive allows an alternate unicode escape character. Block this so that
+        // `SELECT U&"pg_slee!0070" UESCAPE '!' (10);` is blocked.
+        if (decodedForValidation.Contains('uescape', StringComparison.OrdinalIgnoreCase) {
+            throw new CommandValidationException("UESCAPE sequences are not allowed.")
+        }
 
         // Reject inline / block comments which can hide stacked statements or alter logic.
         if (withoutStrings.Contains("--", StringComparison.Ordinal) || withoutStrings.Contains("/*", StringComparison.Ordinal))
@@ -156,7 +172,7 @@ internal static class SqlQueryValidator
             throw new CommandValidationException("Multiple or stacked SQL statements are not allowed.");
         }
 
-        var lower = core.ToLowerInvariant();
+        var lower = decodedForValidation.ToLowerInvariant();
 
         // Naive detection of tautology patterns still applied before token-level allow list.
         if (lower.Contains(" or 1=1") || lower.Contains(" or '1'='1"))
@@ -165,6 +181,9 @@ internal static class SqlQueryValidator
         }
 
         // Tokenize: capture word tokens (letters / underscore). Numerics & punctuation ignored.
+        // Use withoutStrings so that dangerous keywords mentioned inside string literals
+        // (e.g., SELECT 'drop table' AS msg) don't cause false positives, while still catching
+        // obfuscated U&"..." identifiers which were decoded and then stripped above.
         var matches = Regex.Matches(withoutStrings, "[A-Za-z_]+", RegexOptions.Compiled, RegexHelper.DefaultRegexTimeout);
         if (matches.Count == 0)
         {
@@ -194,5 +213,44 @@ internal static class SqlQueryValidator
                     HttpStatusCode.BadRequest);
             }
         }
+    }
+
+    /// <summary>
+    /// Decodes PostgreSQL Unicode escape sequences in U&-prefix strings to detect obfuscated function names.
+    /// Unicode escape forms: \\XXXX (4 hex digits) or \\+XXXXXX (6+ hex digits with optional +)
+    /// Examples:
+    /// - U&"pg_sl\\0065ep" → pg_sleep (0065 = 'e')
+    /// - U&'pg_read_fil\\0065' → pg_read_file (0065 = 'e')
+    /// - U&'dblink_exe\\0063' → dblink_exec (0063 = 'c')
+    /// </summary>
+    private static string DecodeUnicodeEscapes(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+        {
+            return input;
+        }
+
+        // Decode Unicode escapes: \\XXXX (4 hex) or \\+XXXXXX (6+ hex with optional +)
+        return Regex.Replace(
+            input,
+            @"\\(\+)?([0-9A-Fa-f]{4}(?:[0-9A-Fa-f]{2})?)",
+            match =>
+            {
+                string hexPart = match.Groups[2].Value;
+                if (int.TryParse(hexPart, System.Globalization.NumberStyles.HexNumber, null, out int codePoint))
+                {
+                    try
+                    {
+                        return char.ConvertFromUtf32(codePoint);
+                    }
+                    catch
+                    {
+                        return match.Value;
+                    }
+                }
+                return match.Value;
+            },
+            RegexOptions.Compiled,
+            RegexHelper.DefaultRegexTimeout);
     }
 }
