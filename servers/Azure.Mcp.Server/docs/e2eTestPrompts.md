@@ -617,6 +617,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | iothub_hub_get | Show IoT Hub <hub_name> in resource group <resource_group_name> for subscription <subscription_id> |
 | iothub_hub_get | Retrieve IoT Hub <hub_name> metadata from resource group <resource_group_name> |
 
+## Azure IoT Operations
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| iotoperations_instance_get | Get details for Azure IoT Operations instance <instance_name> in resource group <resource_group_name> |
+| iotoperations_instance_get | Show the Azure IoT Operations instance <instance_name> in resource group <resource_group_name> |
+| iotoperations_instance_list | List all Azure IoT Operations instances in my subscription |
+| iotoperations_instance_list | What Azure IoT Operations instances do I have in resource group <resource_group_name>? |
+
 ## Azure Key Vault
 
 | Tool Name | Test Prompt |
