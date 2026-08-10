@@ -4,9 +4,9 @@
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Helpers;
 using Azure.ResourceManager;
-#pragma warning disable IDE0005 // using isn't used in release builds.
+#if DEBUG
 using Microsoft.Mcp.Core.Helpers;
-#pragma warning restore IDE0005 // using isn't used in release builds.
+#endif
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Services.Azure;
