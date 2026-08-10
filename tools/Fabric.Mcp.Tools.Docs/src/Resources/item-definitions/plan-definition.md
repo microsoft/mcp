@@ -149,7 +149,7 @@ Root definition for a Plan artifact containing the semantic model reference and 
 
 ### ConnectionReferenceOrVar
 
-Either an inline connection reference or a reference to a [variable library](variable-library-definition.md) variable of type `ConnectionReference`.
+Either an inline connection reference or a reference to a [variable library](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/variable-library-definition) variable of type `ConnectionReference`.
 
 | Property | Type | Required | Description |
 |---|---|---|---|
@@ -157,7 +157,7 @@ Either an inline connection reference or a reference to a [variable library](var
 
 ### ItemReferenceOrVar
 
-Either an inline item reference or a reference to a [variable library](variable-library-definition.md) variable of type `ItemReference`.
+Either an inline item reference or a reference to a [variable library](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/variable-library-definition) variable of type `ItemReference`.
 
 | Property | Type | Required | Description |
 |---|---|---|---|
