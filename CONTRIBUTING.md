@@ -652,7 +652,7 @@ To ensure consistent spelling across the codebase, run the spelling check before
 .\eng\common\spelling\Invoke-Cspell.ps1
 ```
 
-This will check all files for spelling errors using the project's dictionary. Add any new technical terms or proper nouns to `.vscode/cspell.json` if needed.
+This will check all files for spelling errors using the project's dictionary. Add project-specific technical terms or proper nouns to the `cspell.yaml` in that project folder. Add cross-cutting terms used by multiple projects to the root `cspell.yaml`.
 
 #### Requirements
 
@@ -786,7 +786,7 @@ The registry structure follows this format:
 - Use the `url` property to specify the endpoint
 - Supports HTTP-based communication with automatic transport mode detection
 - Best for web-based MCP servers and remote endpoints
-- Use `title` as the dislay name for the namespace tool (optional)
+- Use `title` as the display name for the namespace tool (optional)
 - Use `description` as the description of the namespace tool for the MCP server
 - Use `toolPrefix` to assign unique prefix to tools of the MCP server
 - If the MCP server requires authentication, use `oauthScopes` to specify the Entra client registration representing the MCP server
