@@ -9,6 +9,7 @@ import {
   getEffectivenessCategory,
   renderFailureSummary,
   renderMarkdown,
+  renderAggregateMarkdown,
   snapshotTrial,
   type StimulusSummary,
   type TrialSnapshot,
@@ -173,6 +174,18 @@ test("aggregates reports across wrapper iterations", () => {
   assert.equal(aggregate.evals[0]?.bestVariant, "namespace");
   assert.equal(namespace?.avgTokens, 200);
   assert.deepEqual(aggregate.evals[0]?.comparisons[0]?.categories, { VALUABLE: 2 });
+  assert.match(renderAggregateMarkdown(aggregate), /VALUABLE: 2\/2 runs/);
+});
+
+test("omits redundant counts from single-run aggregate summaries", () => {
+  const report = aggregateReports([buildReport([
+    trial("baseline", "list-event-hubs", false),
+    trial("namespace", "list-event-hubs", true),
+  ])]);
+
+  const markdown = renderAggregateMarkdown(report);
+  assert.match(markdown, /\| namespace \| list-event-hubs \| VALUABLE \|/);
+  assert.doesNotMatch(markdown, /VALUABLE: 1\/1 runs/);
 });
 
 function graderResult(overrides: Partial<GraderResult> = {}): GraderResult {
@@ -299,4 +312,3 @@ test("renderFailureSummary surfaces a timeout with no grader output", () => {
 test("renderFailureSummary is empty when there are no candidate failures", () => {
   assert.equal(renderFailureSummary([]), "");
 });
-

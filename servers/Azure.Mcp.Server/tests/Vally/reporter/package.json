@@ -21,7 +21,7 @@
     "test": "npm run build && node --test dist/*.test.js"
   },
   "devDependencies": {
-    "@microsoft/vally": "0.11.0",
+    "@microsoft/vally": "0.13.0",
     "@types/node": "24.10.1",
     "typescript": "5.9.3"
   }

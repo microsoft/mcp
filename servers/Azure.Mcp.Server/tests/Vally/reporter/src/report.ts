@@ -525,7 +525,9 @@ export function renderAggregateMarkdown(report: AzureMcpVallyAggregateReport): s
     lines.push("", "| Candidate | Stimulus | Results across runs |", "|:--|:--|:--|");
     for (const comparison of evalReport.comparisons) {
       const categories = Object.entries(comparison.categories)
-        .map(([category, count]) => `${category}: ${count}`)
+        .map(([category, count]) => report.runCount > 1
+          ? `${category}: ${count}/${report.runCount} runs`
+          : category)
         .join(", ");
       lines.push(`| ${comparison.candidate} | ${comparison.stimulus} | ${categories} |`);
     }

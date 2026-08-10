@@ -378,7 +378,7 @@ an uploader can preserve provenance:
 | `failureEvidence` | string, optional | Evidence from the first represented failed trial. |
 | `candidateResult` | object, optional | Candidate `StimulusSummary`; omitted when candidate data is unavailable. |
 | `baselineResult` | object, optional | Baseline `StimulusSummary`; omitted when baseline data is unavailable. |
-| `categories` | object | Consolidated count of each effectiveness category observed for one candidate and stimulus across runs. Missing category keys mean zero occurrences. |
+| `categories` | object | Consolidated count of each effectiveness category observed for one candidate and stimulus across runs. Missing category keys mean zero occurrences. In rendered Markdown, counts are shown as `count/runCount` (for example, `CANDIDATE AND BASELINE PASS: 1/3 runs`). |
 
 The `category` value in a per-experiment comparison is one of:
 
