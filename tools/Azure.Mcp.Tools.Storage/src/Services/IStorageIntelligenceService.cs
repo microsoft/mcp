@@ -15,5 +15,6 @@ public interface IStorageIntelligenceService
         string[]? diskNames = null,
         string? startTime = null,
         string? endTime = null,
+        bool includeHostLatency = false,
         CancellationToken cancellationToken = default);
 }

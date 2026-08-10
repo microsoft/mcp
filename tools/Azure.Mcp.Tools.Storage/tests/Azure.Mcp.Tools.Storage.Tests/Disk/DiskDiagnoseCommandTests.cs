@@ -55,6 +55,7 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
                 Arg.Any<string[]?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
+                Arg.Any<bool>(),
                 Arg.Any<CancellationToken>())
             .Returns(analysis);
 
@@ -82,6 +83,7 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
                 Arg.Any<string[]?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
+                Arg.Any<bool>(),
                 Arg.Any<CancellationToken>())
             .Returns(CreateJsonElement("""{"status":"Healthy"}"""));
 
@@ -89,7 +91,8 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
             "--resource-id", VmResourceId,
             "--disk", "test-disk",
             "--start-time", startTime,
-            "--end-time", endTime);
+            "--end-time", endTime,
+            "--include-host-latency");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).DiagnoseDiskAsync(
@@ -100,6 +103,7 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
             Arg.Is<string[]?>(values => values != null && values.SequenceEqual(new[] { "test-disk" })),
             startTime,
             endTime,
+            true,
             Arg.Any<CancellationToken>());
     }
 
@@ -115,6 +119,7 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
                 Arg.Any<string[]?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
+                Arg.Any<bool>(),
                 Arg.Any<CancellationToken>())
             .Returns(CreateJsonElement("""{"status":"Healthy"}"""));
 
@@ -132,6 +137,7 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
             Arg.Is<string[]?>(values => values != null && values.SequenceEqual(new[] { "test-disk" })),
             null,
             null,
+            false,
             Arg.Any<CancellationToken>());
     }
 
@@ -156,7 +162,7 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains(expectedMessage, response.Message, StringComparison.OrdinalIgnoreCase);
         await Service.DidNotReceiveWithAnyArgs().DiagnoseDiskAsync(
-            default, default, default, default, default, default, default, TestContext.Current.CancellationToken);
+            default, default, default, default, default, default, default, default, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -170,6 +176,7 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
                 Arg.Any<string[]?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
+                Arg.Any<bool>(),
                 Arg.Any<CancellationToken>())
             .Returns(CreateJsonElement("""{"status":"Healthy"}"""));
 
@@ -192,7 +199,7 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("cannot exceed 2048 characters", response.Message);
         await Service.DidNotReceiveWithAnyArgs().DiagnoseDiskAsync(
-            default, default, default, default, default, default, default, TestContext.Current.CancellationToken);
+            default, default, default, default, default, default, default, default, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -206,6 +213,7 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
                 Arg.Any<string[]?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
+                Arg.Any<bool>(),
                 Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Analysis unavailable"));
 
