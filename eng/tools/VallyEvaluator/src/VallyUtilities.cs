@@ -19,6 +19,7 @@ internal class VallyUtilities
         new StaticSerializerBuilder(new VallyYamlStaticContext())
             .EnsureRoundtrip()
             .WithIndentedSequences()
+            .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitDefaults)
             .WithNamingConvention(HyphenatedNamingConvention.Instance)
             .Build();
 
