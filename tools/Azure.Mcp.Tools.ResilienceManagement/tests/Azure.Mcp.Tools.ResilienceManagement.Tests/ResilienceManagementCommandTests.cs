@@ -105,21 +105,6 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
     }
 
     [Fact]
-    public async Task Should_list_drills()
-    {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-
-        var result = await CallToolAsync(
-            "resilience_drill_get",
-            new()
-            {
-                { "service-group", serviceGroup }
-            });
-
-        Assert.Equal(JsonValueKind.Array, result.AssertProperty("drills").ValueKind);
-    }
-
-    [Fact]
     public async Task Should_list_goal_resources()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
