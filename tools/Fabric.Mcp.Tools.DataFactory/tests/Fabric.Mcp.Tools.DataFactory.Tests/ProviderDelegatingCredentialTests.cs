@@ -5,6 +5,7 @@ using Azure.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.DataFactory.Tests;
 

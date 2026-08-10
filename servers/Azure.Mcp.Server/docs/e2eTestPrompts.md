@@ -6,6 +6,23 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| advisor_metadata_get | Get the Advisor metadata for recommendation type id <recommendation-type-id> |
+| advisor_metadata_get | What does Advisor recommendation type <recommendation-type-id> mean? |
+| advisor_metadata_get | Show me the catalog details for Advisor recommendation type <recommendation-type-id> |
+| advisor_metadata_get | Get the German (de) metadata for Advisor recommendation type <recommendation-type-id> |
+| advisor_metadata_get | What is the impact and category of Advisor recommendation type <recommendation-type-id>? |
+| advisor_metadata_get | Show the remediation actions for Advisor recommendation type <recommendation-type-id> |
+| advisor_metadata_get | When does Advisor recommendation type <recommendation-type-id> retire? |
+| advisor_metadata_list | List the Advisor recommendation metadata catalog |
+| advisor_metadata_list | Before I deploy any virtual machines, what kinds of recommendations could Advisor produce for them? |
+| advisor_metadata_list | List high-impact Advisor metadata for microsoft.sql/servers/databases |
+| advisor_metadata_list | Show the German metadata catalog for Advisor recommendations |
+| advisor_metadata_list | Which Advisor recommendation types include service-retirement details? |
+| advisor_metadata_list | List Advisor metadata in the ServiceUpgradeAndRetirement subcategory |
+| advisor_metadata_list | Find the Advisor service-retirement metadata with tracking ID QNY1-HB8 |
+| advisor_metadata_list | Show Advisor service retirements on or after March 31, 2026 |
+| advisor_recommendation_apply | Apply Advisor recommendations to this ARM template |
+| advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account |
 | advisor_recommendation_list | List all recommendations in my subscription |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription <subscription> |
 | advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> |
@@ -21,13 +38,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | advisor_recommendation_summary | Summarize high-impact Security recommendations by resource-type in subscription <subscription> |
 | advisor_recommendation_summary | Group Cost recommendations for storage accounts by impact in subscription <subscription> |
 | advisor_recommendation_summary | Summarize Advisor recommendations mentioning "encryption" by category in subscription <subscription> |
-| advisor_recommendation_apply | Apply Advisor recommendations to this ARM template |
-| advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account |
-| advisor_recommendation-type_list | List the catalog of Advisor recommendation types available in my tenant |
-| advisor_recommendation-type_list | Before I deploy any virtual machines, what kinds of recommendations could Advisor produce for them? |
-| advisor_recommendation-type_list | What recommendation types does Advisor have for microsoft.sql/servers/databases, filtered to high impact? |
-| advisor_recommendation-type_list | Show me the catalog of cost recommendations Advisor can generate for storage accounts |
-| advisor_recommendation-type_list | My tenant is brand new and has no Advisor recommendations yet — what kinds of recommendations could Advisor make? |
 
 ## Azure AI Search
 
