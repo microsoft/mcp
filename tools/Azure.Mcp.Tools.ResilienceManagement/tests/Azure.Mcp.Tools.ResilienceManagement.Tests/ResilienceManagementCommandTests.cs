@@ -13,7 +13,6 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests;
 /// <summary>
 /// Live / recorded integration tests for the Resilience Management toolset.
 /// Resources are provisioned by test-resources.bicep + test-resources-post.ps1.
-/// Drill tools are not part of this toolset (they are onboarded separately).
 /// </summary>
 public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
@@ -103,6 +102,21 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
 
         var assignment = result.AssertProperty("goalAssignment");
         Assert.False(string.IsNullOrEmpty(assignment.AssertProperty("name").GetString()));
+    }
+
+    [Fact]
+    public async Task Should_list_drills()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+
+        var result = await CallToolAsync(
+            "resilience_drill_get",
+            new()
+            {
+                { "service-group", serviceGroup }
+            });
+
+        Assert.Equal(JsonValueKind.Array, result.AssertProperty("drills").ValueKind);
     }
 
     [Fact]
