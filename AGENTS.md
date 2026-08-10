@@ -725,7 +725,8 @@ When adding new commands:
 # Check spelling across codebase
 .\eng\common\spelling\Invoke-Cspell.ps1
 
-# Add new technical terms to .vscode/cspell.json if needed
+# Add project-specific terms to that project's cspell.yaml.
+# Add cross-cutting terms to the root cspell.yaml.
 ```
 
 ## Git Workflow and Automation
