@@ -19,8 +19,8 @@ public sealed class ResilienceManagementService(
     ITenantService tenantService)
     : BaseAzureResourceService(subscriptionService, tenantService), IResilienceManagementService
 {
-
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
+
     public async Task<IEnumerable<ResourceSummary>> ListGoalTemplatesAsync(string serviceGroup, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
