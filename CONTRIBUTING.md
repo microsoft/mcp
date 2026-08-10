@@ -786,7 +786,7 @@ The registry structure follows this format:
 - Use the `url` property to specify the endpoint
 - Supports HTTP-based communication with automatic transport mode detection
 - Best for web-based MCP servers and remote endpoints
-- Use `title` as the dislay name for the namespace tool (optional)
+- Use `title` as the display name for the namespace tool (optional)
 - Use `description` as the description of the namespace tool for the MCP server
 - Use `toolPrefix` to assign unique prefix to tools of the MCP server
 - If the MCP server requires authentication, use `oauthScopes` to specify the Entra client registration representing the MCP server
