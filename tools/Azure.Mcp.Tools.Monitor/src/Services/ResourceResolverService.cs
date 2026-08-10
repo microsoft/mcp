@@ -3,18 +3,14 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class ResourceResolverService(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureService(tenantService), IResourceResolverService
+public class ResourceResolverService(IAzureService azureService)
+    : BaseAzureService(azureService), IResourceResolverService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-
     public async Task<ResourceIdentifier> ResolveResourceIdAsync(
         string subscription,
         string? resourceGroup,
@@ -39,7 +35,7 @@ public class ResourceResolverService(ISubscriptionService subscriptionService, I
         }
 
         // Need to discover the resource - get subscription resource
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
         // Get all resources matching the name
         var allMatchingResources = await subscriptionResource.GetGenericResourcesAsync(cancellationToken: cancellationToken)

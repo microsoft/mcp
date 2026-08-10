@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Models.HealthModels;
 using Azure.ResourceManager.CloudHealth;
 using Azure.ResourceManager.Models;
@@ -12,10 +10,9 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorHealthModelService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<MonitorHealthModelService> logger)
-    : BaseAzureService(tenantService), IMonitorHealthModelService
+public class MonitorHealthModelService(IAzureService azureService, ILogger<MonitorHealthModelService> logger)
+    : BaseAzureService(azureService), IMonitorHealthModelService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<MonitorHealthModelService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     internal static HealthModelSummary ToSummary(HealthModelData data) =>
@@ -37,7 +34,7 @@ public class MonitorHealthModelService(ISubscriptionService subscriptionService,
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var results = new List<HealthModelSummary>();
 
         if (string.IsNullOrEmpty(resourceGroup))
@@ -102,7 +99,7 @@ public class MonitorHealthModelService(ISubscriptionService subscriptionService,
             (nameof(resourceGroup), resourceGroup),
             (nameof(healthModelName), healthModelName));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var model = await resourceGroupResource.Value.GetHealthModels().GetAsync(healthModelName, cancellationToken);
         var healthState = await TryGetRootHealthStateAsync(model.Value, healthModelName, cancellationToken);

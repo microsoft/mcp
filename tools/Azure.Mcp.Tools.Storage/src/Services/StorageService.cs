@@ -6,8 +6,6 @@ using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Data.Tables;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services.Models;
@@ -19,11 +17,9 @@ using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Storage.Services;
 
-public sealed class StorageService(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), IStorageService
+public sealed class StorageService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IStorageService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
-
     private static readonly HashSet<string> s_validSkus = new(StringComparer.OrdinalIgnoreCase)
     {
         "Standard_LRS", "Standard_GRS", "Standard_RAGRS", "Standard_ZRS", "Premium_LRS", "Premium_ZRS",
@@ -95,9 +91,9 @@ public sealed class StorageService(ISubscriptionService subscriptionService, ITe
 
         // Resolve subscription display name to GUID (consistent with all other storage operations).
         // Skip resolution when subscription is already a GUID to avoid an unnecessary round-trip.
-        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+        var subscriptionId = AzureService.IsSubscriptionId(subscription)
             ? subscription
-            : (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+            : (await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
 
         // Prepare data
         ResourceIdentifier accountId = new($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{account}");
@@ -336,7 +332,7 @@ public sealed class StorageService(ISubscriptionService subscriptionService, ITe
     {
         var uri = GetBlobEndpoint(account);
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new BlobClientOptions()), retryPolicy);
-        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new BlobServiceClient(new(uri), await GetCredential(tenant, cancellationToken), options);
     }
 
@@ -430,7 +426,7 @@ public sealed class StorageService(ISubscriptionService subscriptionService, ITe
         CancellationToken cancellationToken = default)
     {
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new TableClientOptions()), retryPolicy);
-        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
         var defaultUri = GetTableEndpoint(account);
         return new TableServiceClient(new(defaultUri), await GetCredential(tenant, cancellationToken), options);
     }
@@ -487,7 +483,8 @@ public sealed class StorageService(ISubscriptionService subscriptionService, ITe
     {
         account = account.ToLowerInvariant();
         ValidateStorageAccountName(account);
-        return TenantService.CloudConfiguration.CloudType switch
+
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.blob.core.windows.net",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{account}.blob.core.chinacloudapi.cn",
@@ -500,7 +497,8 @@ public sealed class StorageService(ISubscriptionService subscriptionService, ITe
     {
         account = account.ToLowerInvariant();
         ValidateStorageAccountName(account);
-        return TenantService.CloudConfiguration.CloudType switch
+
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.table.core.windows.net",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{account}.table.core.chinacloudapi.cn",

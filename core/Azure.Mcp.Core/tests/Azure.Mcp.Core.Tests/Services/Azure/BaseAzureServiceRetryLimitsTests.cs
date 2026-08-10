@@ -3,7 +3,6 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -22,17 +21,17 @@ public class BaseAzureServiceRetryLimitsCollection;
 [Collection("BaseAzureService RetryLimits")]
 public class BaseAzureServiceRetryLimitsTests
 {
-    private readonly ITenantService _tenantService = Substitute.For<ITenantService>();
-    private readonly TestAzureService _azureService;
+    private readonly IAzureService _azureService = Substitute.For<IAzureService>();
+    private readonly TestAzureService _testAzureService;
 
     public BaseAzureServiceRetryLimitsTests()
     {
         var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
         cloudConfig.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
         cloudConfig.AuthorityHost.Returns(new Uri("https://login.microsoftonline.com"));
-        _tenantService.CloudConfiguration.Returns(cloudConfig);
+        _azureService.CloudConfiguration.Returns(cloudConfig);
 
-        _azureService = new TestAzureService(_tenantService);
+        _testAzureService = new TestAzureService(_azureService);
     }
 
     [Fact]
@@ -52,7 +51,7 @@ public class BaseAzureServiceRetryLimitsTests
             var clientOptions = new ArmClientOptions();
 
             // Act
-            _azureService.ConfigureRetryPolicyPublic(clientOptions, retryPolicy);
+            _testAzureService.ConfigureRetryPolicyPublic(clientOptions, retryPolicy);
 
             // Assert - values should pass through unclamped
             Assert.Equal(100, clientOptions.Retry.MaxRetries);
@@ -81,7 +80,7 @@ public class BaseAzureServiceRetryLimitsTests
             var clientOptions = new ArmClientOptions();
 
             // Act
-            _azureService.ConfigureRetryPolicyPublic(clientOptions, retryPolicy);
+            _testAzureService.ConfigureRetryPolicyPublic(clientOptions, retryPolicy);
 
             // Assert - values below normal min should pass through
             Assert.Equal(TimeSpan.FromSeconds(0.001), clientOptions.Retry.Delay);
@@ -93,7 +92,7 @@ public class BaseAzureServiceRetryLimitsTests
         }
     }
 
-    private sealed class TestAzureService(ITenantService tenantService) : BaseAzureService(tenantService)
+    private sealed class TestAzureService(IAzureService azureService) : BaseAzureService(azureService)
     {
         public T ConfigureRetryPolicyPublic<T>(T clientOptions, RetryPolicyOptions? retryPolicy) where T : ClientOptions =>
             ConfigureRetryPolicy(clientOptions, retryPolicy);

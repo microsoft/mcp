@@ -7,6 +7,7 @@
                     {
                         "id": "6952a7b2-aea3-414f-9d85-6c0fe5d34539",
                         "displayName": "ContosoConnection1",
+                        "gatewayId": "8f72eea3-d989-4a5a-aeed-02b3aaa2ddd0",
                         "connectivityType": "ShareableCloud",
                         "connectionDetails": {
                             "type": "Web",

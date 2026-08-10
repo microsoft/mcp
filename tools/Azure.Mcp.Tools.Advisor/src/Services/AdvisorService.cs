@@ -3,8 +3,6 @@
 
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
@@ -13,10 +11,8 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Services;
 
-public class AdvisorService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), IAdvisorService
+public class AdvisorService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IAdvisorService
 {
     private const string RetirementDateProperty =
         "properties.sourceProperties.serviceRetirement.retirementDate";
@@ -42,8 +38,6 @@ public class AdvisorService(
         GroupByImpact,
         GroupByResourceType,
     ];
-
-    private readonly ISubscriptionService _advisorSubscriptionService = subscriptionService;
 
     public async Task<ResourceQueryResults<Recommendation>> ListRecommendationsAsync(
         string subscription,
@@ -280,7 +274,7 @@ public class AdvisorService(
 
     private async Task<TenantResource> GetTenantResourceAsync(CancellationToken cancellationToken)
     {
-        var tenants = await TenantService.GetTenants(cancellationToken);
+        var tenants = await AzureService.GetTenants(cancellationToken);
         if (tenants.Count == 0)
         {
             throw new InvalidOperationException("No accessible Azure tenants were found.");
@@ -336,8 +330,8 @@ public class AdvisorService(
         ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
         ArgumentException.ThrowIfNullOrWhiteSpace(groupBy);
 
-        var subscriptionResource = await _advisorSubscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-        var allTenants = await TenantService.GetTenants(cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var allTenants = await AzureService.GetTenants(cancellationToken);
         var tenantResource = allTenants.FirstOrDefault(t => t.Data.TenantId == subscriptionResource.Data.TenantId)
             ?? throw new InvalidOperationException($"No accessible tenant found for subscription '{subscription}'");
 

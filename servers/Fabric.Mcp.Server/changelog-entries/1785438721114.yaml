@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Removed IServiceProvider from CommandContext and downstream locations where no longer used."

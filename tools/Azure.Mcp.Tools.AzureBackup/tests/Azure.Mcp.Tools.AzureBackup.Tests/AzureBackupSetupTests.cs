@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Xunit;
@@ -137,8 +137,7 @@ public class AzureBackupSetupTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddSingleton(Substitute.For<ITenantService>());
-        services.AddSingleton(Substitute.For<ISubscriptionService>());
+        services.AddSingleton(Substitute.For<IAzureService>());
         services.AddSingleton(Substitute.For<ISubscriptionResolver>());
         setup.ConfigureServices(services);
         return services.BuildServiceProvider();

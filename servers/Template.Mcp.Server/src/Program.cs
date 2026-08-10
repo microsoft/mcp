@@ -153,7 +153,7 @@ internal class Program
     /// </para>
     /// <para>
     /// For example, most <see cref="IBaseCommand"/> instances take an indirect dependency
-    /// on ITenantService or <see cref="ICacheService"/>, both of which have
+    /// on IAzureService or <see cref="ICacheService"/>, both of which have
     /// transport-specific implementations. This method can add the stdio-specific
     /// implementation to allow the first container (used for command picking) to work,
     /// but such transport-specific registrations must be overridden within
@@ -166,7 +166,7 @@ internal class Program
     /// project if needed. Below is the list of known differences:
     /// </para>
     /// <list type="bullet">
-    /// <item>Template's Program.cs doesn't add ITenantService.</item>
+    /// <item>Template's Program.cs doesn't add IAzureService.</item>
     /// </list>
     /// </summary>
     /// <param name="services">A service collection.</param>

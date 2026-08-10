@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using System.Text.RegularExpressions;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options.Threads;
@@ -28,28 +25,24 @@ namespace Azure.Mcp.Tools.SreAgent.Services;
 /// <c>59f0a04a-b322-4310-adc9-39ac41e9631e/.default</c> (matches <c>SRE_API_AUDIENCE</c>
 /// in the Node SRE Agent CLI at <c>src/Agent/Agent.Cli.Node/src/services/auth.ts</c>).
 /// </remarks>
-public sealed class SreAgentService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    IHttpClientFactory httpClientFactory,
-    ILogger<SreAgentService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), ISreAgentService
+public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgentService> logger)
+    : BaseAzureResourceService(azureService), ISreAgentService
 {
     private const string SreAgentResourceType = "Microsoft.App/agents";
     // Audience for SRE Agent data-plane tokens. Matches SRE_API_AUDIENCE in the Node CLI
     // (src/Agent/Agent.Cli.Node/src/services/auth.ts).
-    private static readonly string[] DataPlaneScopes = ["59f0a04a-b322-4310-adc9-39ac41e9631e/.default"];
+    private static readonly string[] s_dataPlaneScopes = ["59f0a04a-b322-4310-adc9-39ac41e9631e/.default"];
     private const string ArmApiVersion = "2025-05-01-preview";
     private const string FollowUpPrompt = "Please proceed with the investigation using all available tools and information. Use your best judgment and provide your complete findings including root cause analysis and recommended next steps.";
 
-    private static readonly string[] DirectionPatterns =
+    private static readonly string[] s_directionPatterns =
     [
         "do you want me to", "would you like me to", "shall i", "should i proceed", "should i continue",
         "do you prefer", "would you prefer", "what would you like me to", "how would you like me to",
         "do you want to proceed", "would you like to proceed"
     ];
 
-    private static readonly string[] DataRequestPatterns =
+    private static readonly string[] s_dataRequestPatterns =
     [
         "could you provide", "can you provide", "please provide", "could you share", "can you share", "please share",
         "could you clarify", "can you clarify", "please clarify", "please specify", "i need more information",
@@ -58,10 +51,9 @@ public sealed class SreAgentService(
     ];
 
     // ARM endpoint and scope are resolved from the cloud configuration to support sovereign clouds.
-    private string ArmHost => TenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
-    private string[] ArmScopes => [TenantService.CloudConfiguration.ArmEnvironment.DefaultScope];
+    private string ArmHost => AzureService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
+    private string[] ArmScopes => [AzureService.CloudConfiguration.ArmEnvironment.DefaultScope];
 
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ILogger<SreAgentService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<SreAgentResource>> ListAgentsAsync(
@@ -132,24 +124,24 @@ public sealed class SreAgentService(
         if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var endpointUri) ||
             (endpointUri.Scheme != Uri.UriSchemeHttps))
         {
-            throw new ArgumentException($"SRE Agent endpoint must be an absolute https URL. Got: '{endpoint}'.", nameof(endpoint));
+            throw new ArgumentException($"SRE Agent endpoint must be an absolute HTTPS URL. Got: '{endpoint}'.", nameof(endpoint));
         }
 
         ValidateDataPlaneEndpoint(endpointUri);
 
         var credential = await GetCredential(tenant, cancellationToken);
-        var token = await credential.GetTokenAsync(new TokenRequestContext(DataPlaneScopes), cancellationToken);
+        var token = await credential.GetTokenAsync(new TokenRequestContext(s_dataPlaneScopes), cancellationToken);
 
         var requestUri = new Uri(endpointUri, path);
         using var request = new HttpRequestMessage(method, requestUri);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        request.Headers.Authorization = new("Bearer", token.Token);
+        request.Headers.Accept.Add(new("application/json"));
         if (jsonBody is not null)
         {
             request.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
         }
 
-        using var http = _httpClientFactory.CreateClient();
+        using var http = AzureService.GetClient();
         using var response = await http.SendAsync(request, cancellationToken);
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
 
@@ -206,14 +198,14 @@ public sealed class SreAgentService(
         var separator = path.Contains('?') ? "&" : "?";
         var requestUri = new Uri($"{ArmHost}{path}{separator}api-version={ArmApiVersion}");
         using var request = new HttpRequestMessage(method, requestUri);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        request.Headers.Authorization = new("Bearer", token.Token);
+        request.Headers.Accept.Add(new("application/json"));
         if (jsonBody is not null)
         {
             request.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
         }
 
-        using var http = _httpClientFactory.CreateClient();
+        using var http = AzureService.GetClient();
         using var response = await http.SendAsync(request, cancellationToken);
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
 
@@ -509,7 +501,7 @@ public sealed class SreAgentService(
         return new SreAgentDeleteResult(name, "ExtendedAgentSkill", true);
     }
 
-    private static T DeserializeRequired<T>(string body, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo, string resourceName)
+    private static T DeserializeRequired<T>(string body, JsonTypeInfo<T> jsonTypeInfo, string resourceName)
     {
         if (string.IsNullOrWhiteSpace(body))
         {
@@ -520,7 +512,7 @@ public sealed class SreAgentService(
             ?? throw new InvalidOperationException($"The SRE Agent data-plane response for {resourceName} could not be deserialized.");
     }
 
-    private static T DeserializeOrDefault<T>(string body, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo, T defaultValue)
+    private static T DeserializeOrDefault<T>(string body, JsonTypeInfo<T> jsonTypeInfo, T defaultValue)
     {
         if (string.IsNullOrWhiteSpace(body))
         {
@@ -530,7 +522,7 @@ public sealed class SreAgentService(
         return JsonSerializer.Deserialize(body, jsonTypeInfo) ?? defaultValue;
     }
 
-    private static List<T> DeserializeList<T>(string body, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo)
+    private static List<T> DeserializeList<T>(string body, JsonTypeInfo<T> jsonTypeInfo)
     {
         if (string.IsNullOrWhiteSpace(body))
         {
@@ -790,7 +782,7 @@ public sealed class SreAgentService(
     }
 
     // Keys whose values should never be returned to MCP clients. Matched case-insensitively.
-    private static readonly HashSet<string> SensitiveExtendedPropertyKeys = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> s_sensitiveExtendedPropertyKeys = new(StringComparer.OrdinalIgnoreCase)
     {
         "bearerToken",
         "apiKey",
@@ -820,7 +812,7 @@ public sealed class SreAgentService(
 
         foreach (var key in properties.Keys.ToList())
         {
-            if (SensitiveExtendedPropertyKeys.Contains(key))
+            if (s_sensitiveExtendedPropertyKeys.Contains(key))
             {
                 properties[key] = RedactedValue;
                 continue;
@@ -843,7 +835,7 @@ public sealed class SreAgentService(
                 var dict = new Dictionary<string, object>();
                 foreach (var prop in element.EnumerateObject())
                 {
-                    if (SensitiveExtendedPropertyKeys.Contains(prop.Name))
+                    if (s_sensitiveExtendedPropertyKeys.Contains(prop.Name))
                     {
                         dict[prop.Name] = RedactedValue;
                     }
@@ -1126,12 +1118,12 @@ public sealed class SreAgentService(
         }
 
         var text = (last.Text ?? string.Empty).ToLowerInvariant().Trim();
-        if (DataRequestPatterns.Any(text.Contains))
+        if (s_dataRequestPatterns.Any(text.Contains))
         {
             return FollowUpAction.NeedsData;
         }
 
-        return DirectionPatterns.Any(text.Contains) ? FollowUpAction.Auto : FollowUpAction.None;
+        return s_directionPatterns.Any(text.Contains) ? FollowUpAction.Auto : FollowUpAction.None;
     }
 
     private enum FollowUpAction
@@ -1306,16 +1298,16 @@ public sealed class SreAgentService(
         }
         var requestUri = new Uri(endpointUri, "/api/v1/AgentMemory/upload");
         var credential = await GetCredential(tenant, cancellationToken);
-        var token = await credential.GetTokenAsync(new TokenRequestContext(DataPlaneScopes), cancellationToken);
+        var token = await credential.GetTokenAsync(new TokenRequestContext(s_dataPlaneScopes), cancellationToken);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+        request.Headers.Authorization = new("Bearer", token.Token);
         using var multipartContent = new MultipartFormDataContent();
         var fileContent = new StringContent(content ?? string.Empty, Encoding.UTF8, "text/markdown");
         multipartContent.Add(fileContent, "files", fileName);
         request.Content = multipartContent;
 
-        using var http = _httpClientFactory.CreateClient();
+        using var http = AzureService.GetClient();
         using var response = await http.SendAsync(request, cancellationToken);
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
         if (!response.IsSuccessStatusCode)

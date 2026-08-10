@@ -3,6 +3,7 @@
 
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.Core.Tests;
 

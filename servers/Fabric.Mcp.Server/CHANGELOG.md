@@ -5,15 +5,24 @@ All notable changes to the Microsoft Fabric MCP Server will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.3.0 (Unreleased)
+## 1.3.0 (2026-08-10)
 
 ### Features Added
 
 ### Breaking Changes
 
+- Removed unused parameters from Fabric tools. [[#3097](https://github.com/microsoft/mcp/pull/3097)]
+- Removed legacy tool design creation. [[#3137](https://github.com/microsoft/mcp/pull/3137)]
+
 ### Bugs Fixed
 
 ### Other Changes
+
+- Updated Fabric REST API specifications and item definition documentation. [[#3234](https://github.com/microsoft/mcp/pull/3234)]
+
+#### Dependency Updates
+
+- Updated `@microsoft/vscode-azext-utils` from ~2 to ~4 (4.1.1) and `@vscode/vsce` from 3.7.1 to 3.9.2 in the VS Code extension. [[#3001](https://github.com/microsoft/mcp/pull/3001)]
 
 ## 1.2.0 (2026-07-08)
 

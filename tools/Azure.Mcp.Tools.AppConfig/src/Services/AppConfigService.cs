@@ -5,8 +5,6 @@ using System.Text.Json;
 using Azure.Core.Pipeline;
 using Azure.Data.AppConfiguration;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Identity;
@@ -15,11 +13,9 @@ using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.AppConfig.Services;
 
-public sealed class AppConfigService(ISubscriptionService subscriptionService, ITenantService tenantService, IHttpClientFactory httpClientFactory)
-    : BaseAzureResourceService(subscriptionService, tenantService), IAppConfigService
+public sealed class AppConfigService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IAppConfigService
 {
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-
     public async Task<ResourceQueryResults<AppConfigurationAccount>> GetAppConfigAccounts(
         string subscription,
         string? resourceGroup = null,
@@ -178,12 +174,12 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
             throw new InvalidOperationException($"The App Configuration store '{accountName}' does not have a valid endpoint.");
         }
 
-        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "appconfig", TenantService.CloudConfiguration.ArmEnvironment);
+        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "appconfig", AzureService.CloudConfiguration.ArmEnvironment);
 
         var credential = await GetCredential(tenant, cancellationToken);
 
         var endpointUri = new Uri(endpoint);
-        var httpClient = _httpClientFactory.CreateClient();
+        var httpClient = AzureService.GetClient();
         var options = CreateConfigurationClientOptions(GetAppConfigurationAudience(), retryPolicy, httpClient, endpointUri);
 
         return new ConfigurationClient(endpointUri, credential, options);
@@ -283,7 +279,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
     private AppConfigurationAudience GetAppConfigurationAudience()
     {
-        return TenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => AppConfigurationAudience.AzurePublicCloud,
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => AppConfigurationAudience.AzureChina,

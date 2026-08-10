@@ -7,6 +7,7 @@ using System.Text.Json;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Fabric.Mcp.Tools.OneLake.Tests.TestSupport;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Services;
 

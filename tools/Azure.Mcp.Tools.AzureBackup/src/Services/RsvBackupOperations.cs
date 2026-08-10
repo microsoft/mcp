@@ -3,7 +3,6 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.ResourceManager;
 using Azure.ResourceManager.RecoveryServices;
@@ -15,7 +14,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
-public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzureService(tenantService), IRsvBackupOperations
+public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureService(azureService), IRsvBackupOperations
 {
     private const string VaultType = VaultTypeResolver.Rsv;
     private const string FabricName = "Azure";

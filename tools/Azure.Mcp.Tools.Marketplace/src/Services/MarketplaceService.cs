@@ -6,18 +6,15 @@ using System.Text.Json.Serialization.Metadata;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Marketplace.Commands;
 using Azure.Mcp.Tools.Marketplace.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Marketplace.Services;
 
-public class MarketplaceService(ITenantService tenantService)
-    : BaseAzureService(tenantService), IMarketplaceService
+public class MarketplaceService(IAzureService azureService)
+    : BaseAzureService(azureService), IMarketplaceService
 {
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-
     private const string ApiVersion = "2025-05-01";
 
     /// <summary>
@@ -54,7 +51,7 @@ public class MarketplaceService(ITenantService tenantService)
             (nameof(productId), productId),
             (nameof(subscription), subscription));
 
-        var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
+        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
         string productUrl = BuildProductUrl(managementEndpoint, subscription, productId, includeStopSoldPlans, language,
             lookupOfferInTenantLevel, planId, skuId, includeServiceInstructionTemplates);
 
@@ -93,7 +90,7 @@ public class MarketplaceService(ITenantService tenantService)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
+        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
         string productsUrl = BuildProductsListUrl(managementEndpoint, subscription, language, search, filter, orderBy, select, nextCursor, expand);
 
         return await GetMarketplaceListProductsResponseAsync(productsUrl, tenantId, retryPolicy, cancellationToken);
@@ -214,7 +211,7 @@ public class MarketplaceService(ITenantService tenantService)
     )
     {
         // Use Azure Core pipeline approach consistently
-        using var httpClient = TenantService.GetClient();
+        using var httpClient = AzureService.GetClient();
         var clientOptions = ConfigureRetryPolicy(
             AddDefaultPolicies(new MarketplaceClientOptions()),
             retryPolicy);

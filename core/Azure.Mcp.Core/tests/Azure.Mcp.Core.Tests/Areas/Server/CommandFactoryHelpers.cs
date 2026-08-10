@@ -3,9 +3,8 @@
 
 using Azure.Mcp.Core.Areas.Group;
 using Azure.Mcp.Core.Areas.Subscription;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Acr;
 using Azure.Mcp.Tools.Advisor;
 using Azure.Mcp.Tools.Aks;
@@ -176,9 +175,7 @@ internal class CommandFactoryHelpers
         var builder = new ServiceCollection()
             .AddLogging()
             .AddSingleton<ITelemetryService, NoopTelemetryService>()
-            .AddSingleton(Substitute.For<ISubscriptionService>())
-            .AddSingleton(Substitute.For<IResourceGroupService>())
-            .AddSingleton(Substitute.For<ITenantService>())
+            .AddSingleton(Substitute.For<IAzureService>())
             .AddSingleton(Substitute.For<IHttpClientFactory>())
             .AddSingleton(Substitute.For<ICacheService>())
             .AddSingleton(Substitute.For<IDateTimeProvider>())

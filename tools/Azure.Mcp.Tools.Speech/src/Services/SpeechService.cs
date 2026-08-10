@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Services.Recognizers;
 using Azure.Mcp.Tools.Speech.Services.Synthesizers;
@@ -12,12 +11,12 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Speech.Services;
 
 public class SpeechService(
-    ITenantService tenantService,
+    IAzureService azureService,
     ILogger<SpeechService> logger,
     IFastTranscriptionRecognizer fastTranscriptionRecognizer,
     IRealtimeTranscriptionRecognizer realtimeTranscriptionRecognizer,
     IRealtimeTtsSynthesizer speechSynthesizer)
-    : BaseAzureService(tenantService), ISpeechService
+    : BaseAzureService(azureService), ISpeechService
 {
     private readonly ILogger<SpeechService> _logger = logger;
     private readonly IFastTranscriptionRecognizer _fastTranscriptionRecognizer = fastTranscriptionRecognizer;
