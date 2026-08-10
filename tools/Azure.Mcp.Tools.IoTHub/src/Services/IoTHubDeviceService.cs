@@ -6,7 +6,6 @@ using System.Text.Json;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Microsoft.Mcp.Core.Options;
@@ -16,8 +15,8 @@ namespace Azure.Mcp.Tools.IoTHub.Services;
 public class IoTHubDeviceService(
     IIoTHubHostnameResolver hostnameResolver,
     IHttpClientFactory httpClientFactory,
-    ITenantService tenantService)
-    : BaseAzureService(tenantService), IIoTHubDeviceService
+    IAzureService azureService)
+    : BaseAzureService(azureService), IIoTHubDeviceService
 {
     private readonly IIoTHubHostnameResolver _hostnameResolver = hostnameResolver ?? throw new ArgumentNullException(nameof(hostnameResolver));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));

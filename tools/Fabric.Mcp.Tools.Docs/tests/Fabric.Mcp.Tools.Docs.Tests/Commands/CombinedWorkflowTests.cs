@@ -9,7 +9,9 @@ using Fabric.Mcp.Tools.Docs.Commands.BestPractices;
 using Fabric.Mcp.Tools.Docs.Commands.PublicApis;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.Docs.Tests.Commands;
 
@@ -268,8 +270,8 @@ public class CombinedWorkflowTests : IDisposable
         Assert.Equal(workloads1.OrderBy(w => w), workloads2.OrderBy(w => w));
     }
 
-    private Task<CommandResponse> ExecuteCommandAsync(IBaseCommand command, params string[] args)
-        => command.ExecuteAsync(new(_serviceProvider), command.GetCommand().Parse(args), TestContext.Current.CancellationToken);
+    private static Task<CommandResponse> ExecuteCommandAsync(IBaseCommand command, params string[] args)
+        => command.ExecuteAsync(new(), command.GetCommand().Parse(args), TestContext.Current.CancellationToken);
 
     private static IEnumerable<string> ValidateAndDeserializeWorkloadsResponse(CommandResponse response)
     {

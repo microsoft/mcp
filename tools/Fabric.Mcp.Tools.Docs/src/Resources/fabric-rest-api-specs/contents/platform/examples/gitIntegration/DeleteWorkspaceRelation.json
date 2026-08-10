@@ -1,0 +1,9 @@
+{
+    "parameters": {
+        "workspaceId": "55555555-5555-5555-5555-555555555555",
+        "workspaceRelationId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+    },
+    "responses": {
+        "200": {}
+    }
+}

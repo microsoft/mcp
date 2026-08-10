@@ -4,7 +4,7 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Speech.Commands.Stt;
 using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Models.FastTranscription;
@@ -12,7 +12,6 @@ using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Azure.Mcp.Tools.Speech.Services;
 using Azure.Mcp.Tools.Speech.Services.Recognizers;
 using Azure.Mcp.Tools.Speech.Services.Synthesizers;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -25,16 +24,14 @@ namespace Azure.Mcp.Tools.Speech.Tests.Stt;
 
 public class SttRecognizeCommandTests : IDisposable
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly ISpeechService _speechService;
     private readonly IFastTranscriptionRecognizer _fastTranscriptionRecognizer;
     private readonly IRealtimeTranscriptionRecognizer _realtimeTranscriptionRecognizer;
     private readonly IRealtimeTtsSynthesizer _realtimeTtsSynthesizer;
-    private readonly ITenantService _tenantService;
+    private readonly IAzureService _azureService;
     private readonly ILogger<SttRecognizeCommand> _logger;
     private readonly ILogger<SpeechService> _speechServiceLogger;
     private readonly SttRecognizeCommand _command;
-    private readonly CommandContext _context;
     private readonly Command _commandDefinition;
     private readonly string _knownEndpoint = "https://eastus.cognitiveservices.azure.com/";
     private readonly List<string> _testFilesToCleanup = [];
@@ -45,18 +42,14 @@ public class SttRecognizeCommandTests : IDisposable
         _fastTranscriptionRecognizer = Substitute.For<IFastTranscriptionRecognizer>();
         _realtimeTranscriptionRecognizer = Substitute.For<IRealtimeTranscriptionRecognizer>();
         _realtimeTtsSynthesizer = Substitute.For<IRealtimeTtsSynthesizer>();
-        _tenantService = Substitute.For<ITenantService>();
+        _azureService = Substitute.For<IAzureService>();
         _logger = Substitute.For<ILogger<SttRecognizeCommand>>();
         _speechServiceLogger = Substitute.For<ILogger<SpeechService>>();
 
         // Create real SpeechService with mocked dependencies
-        _speechService = new SpeechService(_tenantService, _speechServiceLogger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer);
+        _speechService = new SpeechService(_azureService, _speechServiceLogger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer);
 
-        var collection = new ServiceCollection();
-
-        _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger, _speechService);
-        _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
 
@@ -158,7 +151,7 @@ public class SttRecognizeCommandTests : IDisposable
         await ExecuteCommandAsync(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
     private async Task<CommandResponse> ExecuteCommandAsync(params string[] args) =>
-        await ((IBaseCommand)_command).ExecuteAsync(_context, _commandDefinition.Parse(args), TestContext.Current.CancellationToken);
+        await ((IBaseCommand)_command).ExecuteAsync(new(), _commandDefinition.Parse(args), TestContext.Current.CancellationToken);
 
     private static SttRecognizeCommand.SttRecognizeCommandResult DeserializeResult(CommandResponse response) =>
         JsonSerializer.Deserialize(JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult)!;

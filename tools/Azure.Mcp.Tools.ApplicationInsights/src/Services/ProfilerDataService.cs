@@ -1,13 +1,14 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System.Collections.Specialized;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization.Metadata;
 using System.Web;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ApplicationInsights.Commands;
 using Azure.Mcp.Tools.ApplicationInsights.Models;
 using Azure.ResourceManager;
@@ -22,14 +23,9 @@ namespace Azure.Mcp.Tools.ApplicationInsights.Services;
 /// A simple client to call Profiler dataplane. This is not a full fledged client.
 /// Expect to be replaced by Azure SDK in future.
 /// </summary>
-public class ProfilerDataService(
-    IHttpClientFactory httpClientFactory,
-    ILogger<ProfilerDataService> logger,
-    ITenantService tenantService)
-    : BaseAzureService(tenantService), IProfilerDataService
+public class ProfilerDataService(ILogger<ProfilerDataService> logger, IAzureService azureService)
+    : BaseAzureService(azureService), IProfilerDataService
 {
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -64,10 +60,10 @@ public class ProfilerDataService(
             throw new ArgumentException($"'{nameof(appIds)}' cannot be empty.", nameof(appIds));
         }
 
-        return GetInsightsImpAsync(appIds, startDateTimeUtc, endDateTimeUtc, ApplicationInsightsJsonContext.Default.IEnumerableJsonNode, cancellationToken);
+        return GetInsightsImpAsync(appIds, startDateTimeUtc, endDateTimeUtc, cancellationToken);
     }
 
-    private async Task<IEnumerable<T>> GetInsightsImpAsync<T>(IEnumerable<Guid> appIds, DateTime? startDateTimeUtc, DateTime? endDateTimeUtc, JsonTypeInfo<IEnumerable<T>> jsonTypeInfo, CancellationToken cancellationToken)
+    private async Task<IEnumerable<JsonNode>> GetInsightsImpAsync(IEnumerable<Guid> appIds, DateTime? startDateTimeUtc, DateTime? endDateTimeUtc, CancellationToken cancellationToken)
     {
         endDateTimeUtc ??= DateTime.UtcNow;
         startDateTimeUtc ??= endDateTimeUtc.Value.AddDays(-1);
@@ -87,12 +83,10 @@ public class ProfilerDataService(
         using JsonContent appsPostBody = JsonContent.Create(bulkAppsPostBody, ApplicationInsightsJsonContext.Default.BulkAppsPostBody, mediaType: MediaTypeHeaderValue.Parse("application/json"));
         using HttpResponseMessage response = await PostAsync(path, queries, apiVersion: "2025-01-07-preview", clientRequestId: null, appsPostBody, additionalHeaders: null, cancellationToken: cancellationToken).ConfigureAwait(false);
 
-        IEnumerable<T>? result = await ReadAsAsync(
+        return await JsonSerializer.DeserializeAsync(
             await response.Content.ReadAsStreamAsync(cancellationToken),
-            jsonTypeInfo,
-            cancellationToken).ConfigureAwait(false);
-
-        return result ?? [];
+            ApplicationInsightsJsonContext.Default.IEnumerableJsonNode,
+            cancellationToken).ConfigureAwait(false) ?? [];
     }
 
     private async Task<HttpRequestMessage> CreateRequestAsync(HttpMethod method, string path, IDictionary<string, string>? queries, string apiVersion, string? clientRequestId, HttpContent? httpContent, IDictionary<string, IEnumerable<string>>? additionalHeaders, CancellationToken cancellationToken)
@@ -122,10 +116,10 @@ public class ProfilerDataService(
         };
         string clientRequestIdLocal = clientRequestId ?? Guid.NewGuid().ToString();
         TokenRequestContext tokenRequestContext = new(scopes, clientRequestIdLocal);
-        TokenCredential tokenCredential = await GetCredential(cancellationToken).ConfigureAwait(false);
+        TokenCredential tokenCredential = await GetCredential(null, cancellationToken).ConfigureAwait(false);
         AccessToken accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken).ConfigureAwait(false);
 
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
+        request.Headers.Authorization = new("Bearer", accessToken.Token);
         request.Headers.Add("x-ms-client-request-id", clientRequestIdLocal);
 
         if (additionalHeaders is not null)
@@ -149,21 +143,6 @@ public class ProfilerDataService(
         return request;
     }
 
-    private static ValueTask<T?> ReadAsAsync<T>(Stream stream, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken)
-    {
-        if (stream is null)
-        {
-            throw new ArgumentNullException(nameof(stream));
-        }
-
-        if (jsonTypeInfo is null)
-        {
-            throw new ArgumentNullException(nameof(jsonTypeInfo));
-        }
-
-        return JsonSerializer.DeserializeAsync(stream, jsonTypeInfo, cancellationToken: cancellationToken);
-    }
-
     /// <summary>
     /// Call the given path on the data plane, passing the tenant ID and object ID of the
     /// caller in headers. Posted with content.
@@ -177,7 +156,7 @@ public class ProfilerDataService(
     internal async ValueTask<HttpResponseMessage> PostAsync(string path, IDictionary<string, string>? queries, string apiVersion, string? clientRequestId, HttpContent? httpContent, IDictionary<string, IEnumerable<string>>? additionalHeaders, CancellationToken cancellationToken)
     {
         using HttpRequestMessage request = await CreateRequestAsync(HttpMethod.Post, path, queries, apiVersion, clientRequestId, httpContent, additionalHeaders, cancellationToken);
-        var client = _httpClientFactory.CreateClient();
+        var client = AzureService.GetClient();
         return await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
     }
 
@@ -201,7 +180,7 @@ public class ProfilerDataService(
 
     private string GetDiagnosticServiceEndpoint()
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://dataplane.diagnosticservices.azure.com",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://dataplane.diagnosticservices.azure.cn",
@@ -212,7 +191,7 @@ public class ProfilerDataService(
 
     private string GetDiagnosticServicesScope()
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "api://dataplane.diagnosticservices.azure.com/.default",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "api://dataplane.diagnosticservices.azure.cn/.default",

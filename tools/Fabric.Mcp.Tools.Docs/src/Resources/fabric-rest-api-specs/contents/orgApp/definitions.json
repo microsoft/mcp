@@ -116,28 +116,15 @@
             }
         },
         "OrgAppPublicDefinition": {
-            "description": "OrgApp public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/org-app-definition) for more details on the structure of the OrgApp definition.",
+            "description": "OrgApp public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/orgapp-definition) for more details on the structure of the OrgApp definition.",
             "type": "object",
             "required": [
                 "parts"
             ],
             "properties": {
                 "format": {
-                    "description": "The format of the item definition. Additional `format` types may be added over time.",
+                    "description": "The format of the OrgApp definition.",
                     "type": "string",
-                    "enum": [
-                        "OrgAppV1"
-                    ],
-                    "x-ms-enum": {
-                        "name": "OrgAppDefinitionFormat",
-                        "modelAsString": true,
-                        "values": [
-                            {
-                                "value": "OrgAppV1",
-                                "description": "The V1 JSON format for the OrgApp public definition, specifically designed to support CI/CD scenarios in Fabric. See [OrgApp - OrgAppV1 specification](/rest/api/fabric/articles/item-management/definitions/org-app-definition/OrgAppV1) for more details."
-                            }
-                        ]
-                    },
                     "readOnly": false
                 },
                 "parts": {

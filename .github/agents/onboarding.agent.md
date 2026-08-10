@@ -299,7 +299,7 @@ You can duplicate an existing configuration to debug your own new command.
 6. **Submitting multiple tools in one PR** — slows down review significantly
 7. **Using `CommandUnitTestsBase` for subscription commands** — use `SubscriptionCommandUnitTestsBase` instead
 8. **Skipping `eng/scripts/Update-Solutions.ps1 -All`** after adding a new project — solution files won't include it
-9. **Hardcoding cloud URLs** — use `TenantService.CloudConfiguration.CloudType` switch for sovereign cloud support
+9. **Hardcoding cloud URLs** — use `AzureService.CloudConfiguration.CloudType` switch for sovereign cloud support
 
 ## Standard Commands Reference
 

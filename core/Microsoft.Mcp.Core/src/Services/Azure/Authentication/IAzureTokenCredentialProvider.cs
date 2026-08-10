@@ -15,7 +15,7 @@ namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 /// <remarks>
 /// <para>
 /// <b>Callers</b> can either directly depend on this interface or indirectly depend on it through
-/// <see cref="ITenantService"/>.
+/// <see cref="IAzureService"/>.
 /// </para>
 /// <para>
 /// <b>Implementors</b> of this interface are responsible for generating, caching, and retrieving tokens

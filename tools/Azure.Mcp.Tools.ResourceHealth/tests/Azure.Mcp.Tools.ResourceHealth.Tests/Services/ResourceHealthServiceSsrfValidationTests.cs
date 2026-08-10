@@ -4,8 +4,7 @@
 using System.Net;
 using System.Text;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
@@ -22,17 +21,13 @@ namespace Azure.Mcp.Tools.ResourceHealth.Tests.Services;
 /// </summary>
 public class ResourceHealthServiceSsrfValidationTests
 {
-    private readonly ISubscriptionService _subscriptionService;
-    private readonly ITenantService _tenantService;
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IAzureService _azureService;
     private readonly ResourceHealthService _service;
 
     public ResourceHealthServiceSsrfValidationTests()
     {
-        _subscriptionService = Substitute.For<ISubscriptionService>();
-        _tenantService = Substitute.For<ITenantService>();
-        _httpClientFactory = Substitute.For<IHttpClientFactory>();
-        _service = new ResourceHealthService(_subscriptionService, _tenantService, _httpClientFactory);
+        _azureService = Substitute.For<IAzureService>();
+        _service = new ResourceHealthService(_azureService);
     }
 
     private void SetupMocksForValidRequest(HttpResponseMessage response, string subscriptionId = "12345678-1234-1234-1234-123456789012")
@@ -41,26 +36,26 @@ public class ResourceHealthServiceSsrfValidationTests
         var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
         cloudConfig.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
         cloudConfig.AuthorityHost.Returns(new Uri("https://login.microsoftonline.com"));
-        _tenantService.CloudConfiguration.Returns(cloudConfig);
+        _azureService.CloudConfiguration.Returns(cloudConfig);
 
         // Mock TokenCredential
         var mockCredential = Substitute.For<TokenCredential>();
         mockCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
             .Returns(new ValueTask<AccessToken>(new AccessToken("test-token", DateTimeOffset.UtcNow.AddHours(1))));
 
-        // Mock TenantService to return the credential
-        _tenantService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
+        // Mock AzureService to return the credential
+        _azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(mockCredential));
 
         var subscriptionResource = Substitute.For<SubscriptionResource>();
         subscriptionResource.Id.Returns(SubscriptionResource.CreateResourceIdentifier(subscriptionId));
-        _subscriptionService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        _azureService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(subscriptionResource);
 
         // Mock HttpClientFactory
         var mockHttpMessageHandler = new MockHttpMessageHandler(response);
         var httpClient = new HttpClient(mockHttpMessageHandler);
-        _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(httpClient);
+        _azureService.GetClient().Returns(httpClient);
     }
 
     [Theory]

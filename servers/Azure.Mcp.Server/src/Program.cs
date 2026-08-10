@@ -4,9 +4,7 @@
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -288,7 +286,7 @@ internal class Program
     /// </para>
     /// <para>
     /// For example, most <see cref="IBaseCommand"/> instances take an indirect dependency
-    /// on <see cref="ITenantService"/> or <see cref="ICacheService"/>, both of which have
+    /// on <see cref="IAzureService"/> or <see cref="ICacheService"/>, both of which have
     /// transport-specific implementations. This method can add the stdio-specific
     /// implementation to allow the first container (used for command picking) to work,
     /// but such transport-specific registrations must be overridden within
@@ -326,17 +324,15 @@ internal class Program
         services.AddMemoryCache();
         services.AddSingleton<IExternalProcessService, ExternalProcessService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
-        services.AddSingleton<IResourceGroupService, ResourceGroupService>();
-        services.AddSingleton<ISubscriptionService, SubscriptionService>();
         services.AddSingleton<ICommandFactory, CommandFactory>();
         services.AddSingleton<ISubscriptionResolver, SubscriptionResolver>();
 
         // !!! WARNING !!!
-        // stdio-transport-specific implementations of ITenantService and ICacheService.
+        // stdio-transport-specific implementations of IAzureService and ICacheService.
         // The http-transport-specific implementations and configurations must be registered
         // within ServiceStartCommand.ExecuteAsync().
         services.AddHttpClientServices(configureDefaults: true);
-        services.AddAzureTenantService();
+        services.AddAzureService();
         services.AddSingleUserCliCacheService(disabled: true);
 
         foreach (var area in Areas)
