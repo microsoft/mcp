@@ -1511,6 +1511,10 @@ For a complete history of changes included in this release, see entries for vers
 
 ## 2.0.0-beta.8 (2025-12-11)
 
+### Breaking Changes
+
+- Retired the `azureaibestpractices` namespace and moved its AI app best practices tool into the `bestpractices` namespace. `azmcp azureaibestpractices get` (tool `azureaibestpractices_get`) became `azmcp get bestpractices ai_app` (tool `get_bestpractices_ai_app`), which was later renamed to `get azure bestpractices ai app` in 3.0.0-beta.8. [[#1323](https://github.com/microsoft/mcp/pull/1323)]
+
 ### Bugs Fixed
 
 - Fixed an issue where the AI Best Practices tool would get called instead of the Best Practices tool. [[#1323](https://github.com/microsoft/mcp/pull/1323)]
