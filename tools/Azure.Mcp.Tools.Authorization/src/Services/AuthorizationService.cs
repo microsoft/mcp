@@ -177,6 +177,11 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
     private Uri CreateArmUri(string pathAndQuery)
     {
         var relativePathAndQuery = pathAndQuery.TrimStart('/');
+        if (Uri.TryCreate(relativePathAndQuery, UriKind.Absolute, out _))
+        {
+            throw new ArgumentException("ARM request path must be relative.", nameof(pathAndQuery));
+        }
+
         return new Uri(TenantService.CloudConfiguration.ArmEnvironment.Endpoint, relativePathAndQuery);
     }
 

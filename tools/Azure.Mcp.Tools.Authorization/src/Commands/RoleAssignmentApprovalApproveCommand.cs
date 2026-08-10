@@ -2,14 +2,12 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Options;
 using Azure.Mcp.Tools.Authorization.Services;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Authorization.Commands;
 
@@ -28,40 +26,17 @@ namespace Azure.Mcp.Tools.Authorization.Commands;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class RoleAssignmentApprovalApproveCommand(ILogger<RoleAssignmentApprovalApproveCommand> logger, IAuthorizationService authorizationService)
-    : SubscriptionCommand<RoleAssignmentApprovalApproveOptions>
+public sealed class RoleAssignmentApprovalApproveCommand(
+    ILogger<RoleAssignmentApprovalApproveCommand> logger,
+    IAuthorizationService authorizationService,
+    ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<RoleAssignmentApprovalApproveOptions, RoleAssignmentApprovalApproveCommand.RoleAssignmentApprovalApproveCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<RoleAssignmentApprovalApproveCommand> _logger = logger;
     private readonly IAuthorizationService _authorizationService = authorizationService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RoleAssignmentApprovalApproveOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Authorization.Scope.AsRequired());
-        command.Options.Add(AuthorizationOptionDefinitions.Approval.AsRequired());
-        command.Options.Add(AuthorizationOptionDefinitions.Stage.AsRequired());
-        command.Options.Add(AuthorizationOptionDefinitions.Justification.AsRequired());
-    }
-
-    protected override RoleAssignmentApprovalApproveOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Scope = parseResult.GetValueOrDefault(OptionDefinitions.Authorization.Scope);
-        options.Approval = parseResult.GetValueOrDefault(AuthorizationOptionDefinitions.Approval);
-        options.Stage = parseResult.GetValueOrDefault(AuthorizationOptionDefinitions.Stage);
-        options.Justification = parseResult.GetValueOrDefault(AuthorizationOptionDefinitions.Justification);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var stage = await _authorizationService.ApproveRoleAssignmentApprovalAsync(
@@ -87,5 +62,5 @@ public sealed class RoleAssignmentApprovalApproveCommand(ILogger<RoleAssignmentA
         return context.Response;
     }
 
-    internal record RoleAssignmentApprovalApproveCommandResult(RoleAssignmentApprovalStage Stage);
+    public sealed record RoleAssignmentApprovalApproveCommandResult(RoleAssignmentApprovalStage Stage);
 }
