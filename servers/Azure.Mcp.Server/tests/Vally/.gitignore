@@ -1,3 +1,5 @@
 # Vally run artifacts (trajectories, results.jsonl, eval-results.md, etc.)
 .vally-results/
 vally-results/
+reporter/dist/
+reporter/tsconfig.tsbuildinfo

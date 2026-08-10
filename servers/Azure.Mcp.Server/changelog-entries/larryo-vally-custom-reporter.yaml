@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Changed Azure MCP Vally experiment post-processing to use a typed custom reporter plugin that produces versioned, dashboard-ready JSON and Markdown reports."

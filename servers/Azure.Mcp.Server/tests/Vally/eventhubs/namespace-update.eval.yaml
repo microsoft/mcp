@@ -50,7 +50,14 @@ type: capability
 
 defaults:
   runs: 1
-  timeout: 5m
+  # Namespace create/update calls a real ARM PUT and polls until the async
+  # operation completes, which can occasionally run past the default 5m
+  # trial timeout (observed as "Timeout after 300000ms waiting for
+  # session.idle" on the `namespace` variant's update-namespace stimulus).
+  # Bumped for the whole eval file since there's no per-stimulus timeout
+  # override in the eval schema (only `constraints.max_duration`, a
+  # separate hard cap that FAILS the trial rather than extending it).
+  timeout: 8m
   model: claude-opus-4.6
   # Model used by the outcome `prompt` LLM judge graders below.
   judge_model: gpt-5.5
