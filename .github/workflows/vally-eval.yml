@@ -39,7 +39,7 @@ jobs:
       - name: Install .NET SDK
         uses: actions/setup-dotnet@v5.4.0
 
-      - run: npm install -g @microsoft/vally-cli
+      - run: npm install -g @microsoft/vally-cli@0.13.0
 
       - name: Set BUILD_REASON environment variable
         if: ${{ github.event_name == 'pull_request' }}
