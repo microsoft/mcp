@@ -1,0 +1,91 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+#
+# Vally EXPERIMENT for the Azure MCP "create/update Event Hub consumer group"
+# capability (eventhubs_eventhub_consumergroup_update).
+#
+# An experiment runs one shared eval spec
+# (eventhub-consumergroup-update.eval.yaml) as several controlled VARIANTS
+# and compares them. Here the variants differ only in how (or whether) the
+# Azure MCP server is present:
+#
+#   * baseline     - the CONTROL: the shared eval's
+#                    `environment.mcpServers.azure` is deleted, so the agent
+#                    has NO Azure Event Hubs tool. It can only succeed by
+#                    other means (e.g. shelling out to `az`) or fail. This is
+#                    the point of comparison.
+#   * namespace    - inherits the eval spec unchanged, WITH the Azure MCP
+#                    server in its default `namespace` proxy mode.
+#   * consolidated - WITH the Azure MCP server, but overrides `--mode` to
+#                    `consolidated` so related operations are grouped into
+#                    consolidated tools.
+#
+# `baseline` is the control; `namespace` and `consolidated` are the server
+# CANDIDATES. Each candidate is compared against the baseline, so the delta
+# isolates the Azure MCP server's contribution in that mode.
+#
+# All variants share the eval's stimuli, graders and scoring (a variant may
+# only override `overrides` and `environment`), so they are graded identically
+# on task OUTCOME. The delta between them isolates the Azure MCP server's
+# contribution.
+#
+# `vary` lists the JSON Pointer paths allowed to differ between variants;
+# anything differing outside these paths is a hard error. We only vary the
+# MCP servers map (the consolidated variant changes its `--mode` arg, and the
+# baseline deletes the server entirely).
+#
+# Run it with the helper script (builds azmcp, provisions, compares variants):
+#   ./servers/Azure.Mcp.Server/tests/Vally/Invoke-VallyEval.ps1 -Tool eventhub-consumergroup-update
+#
+# ...or directly, if `azmcp` is already on your PATH:
+#   vally experiment run ./eventhub-consumergroup-update.experiment.yaml --output-dir ./.vally-results
+#
+# See https://microsoft.github.io/vally/
+
+name: eventhubs-eventhub-consumergroup-update-experiment
+
+# The shared eval spec every variant runs. Path is relative to this file.
+evals:
+  - ./eventhub-consumergroup-update.eval.yaml
+
+# Only the MCP servers map may differ between variants.
+vary:
+  - /environment/mcpServers
+
+# The control variant used as the baseline for comparison reports.
+baseline: baseline
+
+variants:
+  # Control: remove the Azure MCP server the eval spec declares. Setting the
+  # map entry to null deletes it from the inherited environment, leaving the
+  # agent with only its built-in tools.
+  baseline:
+    environment:
+      mcpServers:
+        azure: null
+
+  # Candidate: inherit the eval spec as-is (Azure MCP server present in its
+  # default `namespace` proxy mode). The empty override keeps the variant
+  # explicit and symmetric with the others.
+  namespace: {}
+
+  # Candidate: same server, but run in `consolidated` proxy mode. A variant's
+  # mcpServers entry is validated (and applied) as a whole, so this repeats the
+  # full `azure` block from the eval spec with `--mode consolidated` instead of
+  # inheriting individual fields.
+  consolidated:
+    environment:
+      mcpServers:
+        azure:
+          type: stdio
+          command: azmcp
+          args:
+            - server
+            - start
+            - --namespace
+            - eventhubs
+            - --mode
+            - consolidated
+            - --dangerously-disable-elicitation
+          env:
+            AZURE_TOKEN_CREDENTIALS: AzureCliCredential

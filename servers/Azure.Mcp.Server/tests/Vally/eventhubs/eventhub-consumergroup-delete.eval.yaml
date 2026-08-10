@@ -1,0 +1,129 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+#
+# Vally eval spec for the Azure MCP "delete Event Hub consumer group"
+# capability (eventhubs_eventhub_consumergroup_delete).
+#
+# DESTRUCTIVE TOOL NOTE: this stimulus actually deletes an Azure resource.
+# It targets the disposable "contoso-temp-cg" consumer group on the "orders"
+# event hub, provisioned specifically for this eval by
+# New-EventHubsResources.ps1 (via eventhubs-resources.bicep's
+# `deletableConsumerGroupName` parameter), distinct from "billing"/
+# "analytics", which the consumergroup-get/update evals depend on - so
+# deleting it here cannot break those evals. Because the same disposable
+# consumer group is shared across every variant of this experiment, an
+# earlier candidate variant may already have deleted it by the time a later
+# one runs; the rubric below treats "already deleted" as an equally valid,
+# real outcome.
+#
+# This spec is the shared scenario for the eventhub-consumergroup-delete
+# EXPERIMENT (eventhub-consumergroup-delete.experiment.yaml), which runs it
+# as three variants:
+#   * namespace    - WITH the Azure MCP server in its default `namespace`
+#                    proxy mode (the `environment.mcpServers` block below),
+#   * consolidated - WITH the Azure MCP server in `consolidated` proxy mode
+#                    (the variant overrides `--mode` to `consolidated`), and
+#   * baseline     - WITHOUT it (the baseline variant deletes
+#                    `environment.mcpServers.azure`).
+# The delta between each server variant (candidate) and the baseline
+# isolates the Azure MCP server's contribution in that mode.
+#
+# Because a vally experiment variant may only override `overrides` and
+# `environment` - never graders or stimuli - all variants are graded
+# IDENTICALLY on task OUTCOME: an LLM `prompt` judge checks the agent
+# actually deleted the requested consumer group. Tool-SELECTION assertions
+# are intentionally NOT graded here: the baseline has no MCP tool to call,
+# so a `tool-calls` grader could never be satisfied consistently across
+# variants. Outcome parity is exactly what makes the baseline vs
+# server-variant comparisons meaningful.
+#
+# Run it with the helper script (builds azmcp, provisions, runs the
+# experiment, compares variants):
+#   ./servers/Azure.Mcp.Server/tests/Vally/Invoke-VallyEval.ps1 -Tool eventhub-consumergroup-delete
+#
+# ...or drive the experiment directly, if `azmcp` is already on your PATH:
+#   vally experiment run ./eventhub-consumergroup-delete.experiment.yaml --output-dir ./.vally-results
+#
+# See https://microsoft.github.io/vally/get-started/run-your-first-eval/
+
+name: eventhubs-eventhub-consumergroup-delete-eval
+description: >-
+  Evaluates whether the agent deletes the requested Azure Event Hubs
+  consumer group. Run as three variants (namespace/consolidated server
+  modes, and a server-less baseline) by
+  eventhub-consumergroup-delete.experiment.yaml to isolate the server's
+  contribution.
+version: "1.0"
+type: capability
+
+defaults:
+  runs: 1
+  timeout: 5m
+  model: claude-opus-4.6
+  # Model used by the outcome `prompt` LLM judge graders below.
+  judge_model: gpt-5.5
+  executor: copilot-sdk
+
+environment:
+  # This is the default server environment, inherited unchanged by the
+  # `namespace` variant. The `consolidated` variant overrides `--mode` to
+  # `consolidated`, and the baseline variant in
+  # eventhub-consumergroup-delete.experiment.yaml deletes `mcpServers.azure`
+  # so the agent runs without any Azure Event Hubs tool.
+  mcpServers:
+    azure:
+      type: stdio
+      # `azmcp` must be resolvable on PATH. Invoke-VallyEval.ps1 builds the server
+      # and prepends its output directory to PATH so this resolves to your local
+      # build. To run the experiment by hand, install the server first, e.g.:
+      #   npx -y @azure/mcp@latest server start ...
+      command: azmcp
+      args:
+        - server
+        - start
+        # Only load the Event Hubs area. `--mode namespace` is the server's
+        # default proxy mode; the consolidated variant overrides it.
+        - --namespace
+        - eventhubs
+        - --mode
+        - namespace
+        # Non-interactive: never block waiting for user confirmation during a run.
+        - --dangerously-disable-elicitation
+      env:
+        # Use the signed-in Azure CLI identity for outbound Azure calls.
+        AZURE_TOKEN_CREDENTIALS: AzureCliCredential
+
+stimuli:
+  - name: delete-consumer-group
+    prompt: |
+      Delete my consumer group "${CONSUMER_GROUP_TEMP=contoso-temp-cg}" in my event hub "${EVENTHUB_ORDERS=orders}",
+      namespace "${EVENTHUBS_NAMESPACE=contoso-ehns}", and resource group "${RESOURCE_GROUP=contoso-rg}".
+    # Rubric for the outcome LLM judge, applied identically to both variants.
+    # Because the disposable consumer group is shared across every variant
+    # of this experiment run, an earlier candidate may already have deleted
+    # it, so "it's already gone" is an equally valid, real outcome as "I
+    # just deleted it".
+    rubric:
+      - "The response confirms the '${CONSUMER_GROUP_TEMP=contoso-temp-cg}' consumer group was actually deleted via a real Azure operation, OR the assistant made a real Azure call, found it already deleted/absent, and reported that accurately."
+      - "The confirmation reflects a real check/deletion carried out against Azure, not fabricated, guessed, or placeholder confirmation."
+      - "The assistant does not merely explain how the user could delete the consumer group themselves."
+    graders:
+      - type: prompt
+        name: deleted-consumer-group
+        config:
+          prompt: >-
+            Score whether the assistant actually performed the deletion of the
+            real '${CONSUMER_GROUP_TEMP=contoso-temp-cg}' consumer group via Azure, OR made a real
+            Azure lookup that confirmed it no longer exists (a valid outcome
+            if a prior variant already deleted it), per the rubric. Score 1
+            only if a concrete, real confirmation obtained from Azure is
+            present. Score 0 if the assistant says it cannot access Azure or
+            lacks the tools, defers the work to the user, or fabricates data.
+          scoring: binary
+
+scoring:
+  # Outcome-based: the single `prompt` judge decides pass/fail, identically for
+  # both experiment variants. threshold 1.0 => the outcome must be achieved.
+  weights:
+    prompt: 1.0
+  threshold: 1.0
