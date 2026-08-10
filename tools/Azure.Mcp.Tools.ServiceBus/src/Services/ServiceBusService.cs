@@ -3,7 +3,6 @@
 
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
@@ -12,7 +11,8 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ServiceBus.Services;
 
-public sealed class ServiceBusService(ITenantService tenantService) : BaseAzureService(tenantService), IServiceBusService
+public sealed class ServiceBusService(IAzureService azureService)
+    : BaseAzureService(azureService), IServiceBusService
 {
     private void ValidateNamespace(string namespaceName)
     {
@@ -28,7 +28,7 @@ public sealed class ServiceBusService(ITenantService tenantService) : BaseAzureS
         EndpointValidator.ValidateAzureServiceEndpoint(
             $"https://{namespaceName}/",
             "servicebus",
-            TenantService.CloudConfiguration.ArmEnvironment);
+            AzureService.CloudConfiguration.ArmEnvironment);
     }
 
     private async Task<ServiceBusAdministrationClient> CreateAdministrationClient(
@@ -39,7 +39,7 @@ public sealed class ServiceBusService(ITenantService tenantService) : BaseAzureS
     {
         var credential = await GetCredential(tenantId, cancellationToken);
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new ServiceBusAdministrationClientOptions()), retryPolicy);
-        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new ServiceBusAdministrationClient(namespaceName, credential, options);
     }
 

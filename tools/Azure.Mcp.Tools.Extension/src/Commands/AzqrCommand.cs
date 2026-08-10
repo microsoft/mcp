@@ -4,6 +4,7 @@
 using System.Net;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Extension.Options;
 using Microsoft.Extensions.Logging;
@@ -27,7 +28,7 @@ namespace Azure.Mcp.Tools.Extension.Commands;
     LocalRequired = false)]
 public sealed class AzqrCommand(
     ILogger<AzqrCommand> logger,
-    ISubscriptionService subscriptionService,
+    IAzureService azureService,
     IDateTimeProvider dateTimeProvider,
     IExternalProcessService processService,
     ISubscriptionResolver subscriptionResolver,
@@ -35,7 +36,7 @@ public sealed class AzqrCommand(
     : SubscriptionCommand<AzqrOptions, AzqrReportResult>(subscriptionResolver)
 {
     private readonly ILogger<AzqrCommand> _logger = logger;
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
+    private readonly IAzureService _azureService = azureService;
     private readonly IDateTimeProvider _dateTimeProvider = dateTimeProvider;
     private readonly IExternalProcessService _processService = processService;
     private readonly int _processTimeoutSeconds = processTimeoutSeconds;
@@ -49,7 +50,7 @@ public sealed class AzqrCommand(
         {
             var azqrPath = FindAzqrCliPath() ?? throw new FileNotFoundException("Azure Quick Review CLI (azqr) executable not found in PATH. Please ensure azqr is installed. Go to https://aka.ms/azqr to learn more about how to install Azure Quick Review CLI.");
 
-            var subscription = await _subscriptionService.GetSubscription(options.Subscription!, options.Tenant, cancellationToken: cancellationToken);
+            var subscription = await _azureService.GetSubscription(options.Subscription!, options.Tenant, cancellationToken: cancellationToken);
 
             // Compose azqr command
             var command = $"scan --subscription-id {subscription.Id}";

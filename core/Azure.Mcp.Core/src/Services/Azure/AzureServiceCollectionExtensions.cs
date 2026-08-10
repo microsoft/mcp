@@ -5,15 +5,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
-namespace Azure.Mcp.Core.Services.Azure.Tenant;
+namespace Azure.Mcp.Core.Services.Azure;
 
 /// <summary>
-/// Extension methods for configuring Azure tenant services.
+/// Extension methods for configuring Azure services.
 /// </summary>
-public static class TenantServiceCollectionExtensions
+public static class AzureServiceCollectionExtensions
 {
     /// <summary>
-    /// Adds <see cref="TenantService"/> as <see cref="ITenantService"/> with lifetime
+    /// Adds <see cref="AzureService"/> as <see cref="IAzureService"/> with lifetime
     /// <see cref="ServiceLifetime.Singleton"/> into the service collection.
     /// </summary>
     /// <param name="services">The service collection.</param>
@@ -21,7 +21,7 @@ public static class TenantServiceCollectionExtensions
     /// <remarks>
     /// <para>
     /// This method follows the dependency graph pattern by ensuring all dependencies of
-    /// <see cref="TenantService"/> are registered by calling their respective extension methods.
+    /// <see cref="AzureService"/> are registered by calling their respective extension methods.
     /// </para>
     /// <para>
     /// Dependencies registered:
@@ -36,7 +36,7 @@ public static class TenantServiceCollectionExtensions
     /// </item>
     /// </list>
     /// </remarks>
-    public static IServiceCollection AddAzureTenantService(this IServiceCollection services)
+    public static IServiceCollection AddAzureService(this IServiceCollection services)
     {
         // !!! HACK !!!
         // Program.cs for the CLI servers have their own DI containers vs ServiceStartCommand.
@@ -49,7 +49,7 @@ public static class TenantServiceCollectionExtensions
         // running as a remote HTTP MCP service.
         services.AddSingleIdentityTokenCredentialProvider();
 
-        services.TryAddSingleton<ITenantService, TenantService>();
+        services.TryAddSingleton<IAzureService, AzureService>();
         return services;
     }
 }

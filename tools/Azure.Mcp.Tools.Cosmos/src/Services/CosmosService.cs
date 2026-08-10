@@ -5,8 +5,6 @@ using System.Security;
 using System.Text.Json;
 using Azure.AI.OpenAI;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Cosmos.Models;
 using Azure.ResourceManager.CosmosDB;
 using Azure.ResourceManager.Resources;
@@ -21,12 +19,9 @@ using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.Cosmos.Services;
 
-public sealed class CosmosService(ISubscriptionService subscriptionService, ITenantService tenantService, ICacheService cacheService, IHttpClientFactory httpClientFactory, ILogger<CosmosService> logger)
-    : BaseAzureService(tenantService), ICosmosService, IAsyncDisposable
+public sealed class CosmosService(IAzureService azureService, ICacheService cacheService, ILogger<CosmosService> logger)
+    : BaseAzureService(azureService), ICosmosService, IAsyncDisposable
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ILogger<CosmosService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private const string CacheGroup = "cosmos";
@@ -47,7 +42,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(accountName), accountName));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
         // Fast path: when the resource group is known, look the account up directly
         // instead of enumerating every Cosmos DB account in the subscription.
@@ -110,7 +105,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
                 clientOptions.MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(maxDelaySeconds);
         }
 
-        clientOptions.HttpClientFactory = () => _httpClientFactory.CreateClient();
+        clientOptions.HttpClientFactory = () => AzureService.GetClient();
 
         CosmosClient cosmosClient;
         switch (authMethod)
@@ -135,7 +130,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
 
     private string GetCosmosBaseUri(string accountName)
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{accountName}.documents.azure.com:443/",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{accountName}.documents.azure.us:443/",
@@ -183,7 +178,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var accounts = new List<string>();
 
         if (!string.IsNullOrEmpty(resourceGroup))
@@ -783,7 +778,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         var credential = await GetCredential(tenant, cancellationToken);
         var clientOptions = new AzureOpenAIClientOptions
         {
-            Transport = new System.ClientModel.Primitives.HttpClientPipelineTransport(_httpClientFactory.CreateClient()),
+            Transport = new System.ClientModel.Primitives.HttpClientPipelineTransport(AzureService.GetClient()),
         };
 
         var openAi = new AzureOpenAIClient(new Uri(request!.Endpoint!), credential, clientOptions);
@@ -803,7 +798,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
 
     private void ValidateOpenAIEndpoint(string endpoint)
     {
-        var armEnvironment = _tenantService.CloudConfiguration.ArmEnvironment;
+        var armEnvironment = AzureService.CloudConfiguration.ArmEnvironment;
         Exception? lastError = null;
 
         foreach (var serviceType in s_openAIEndpointServiceTypes)

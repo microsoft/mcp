@@ -3,7 +3,6 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.ResourceManager;
 using Azure.ResourceManager.DataProtectionBackup;
@@ -13,7 +12,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
-public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzureService(tenantService), IDppBackupOperations
+public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureService(azureService), IDppBackupOperations
 {
     private const string VaultType = VaultTypeResolver.Dpp;
 

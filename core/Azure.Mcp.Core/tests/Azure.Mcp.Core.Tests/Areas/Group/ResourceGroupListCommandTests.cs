@@ -3,7 +3,7 @@
 
 using System.Net;
 using Azure.Mcp.Core.Areas.Group.Commands;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tests.Helpers;
 using Microsoft.Mcp.Core.Models.ResourceGroup;
@@ -14,7 +14,7 @@ using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Group;
 
-public class ResourceGroupListCommandTests : SubscriptionCommandUnitTestsBase<GroupListCommand, IResourceGroupService>
+public class ResourceGroupListCommandTests : SubscriptionCommandUnitTestsBase<GroupListCommand, IAzureService>
 {
     [Fact]
     public async Task ExecuteAsync_WithValidSubscription_ReturnsResourceGroups()

@@ -4,7 +4,7 @@
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Subscription.Commands;
-using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.ResourceManager.Resources;
 using Microsoft.Mcp.Core.Options;
@@ -14,7 +14,7 @@ using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Subscription;
 
-public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<SubscriptionListCommand, ISubscriptionService>
+public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<SubscriptionListCommand, IAzureService>
 {
     [Fact]
     public async Task ExecuteAsync_NoParameters_ReturnsSubscriptions()

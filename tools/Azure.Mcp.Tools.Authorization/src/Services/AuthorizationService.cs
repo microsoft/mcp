@@ -4,16 +4,14 @@
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Services.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Authorization.Services;
 
-public class AuthorizationService(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), IAuthorizationService
+public class AuthorizationService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IAuthorizationService
 {
     public async Task<ResourceQueryResults<RoleAssignment>> ListRoleAssignmentsAsync(
         string subscription,

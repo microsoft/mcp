@@ -4,8 +4,6 @@
 using System.Text.RegularExpressions;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.ResourceManager.RecoveryServicesBackup;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
@@ -18,8 +16,8 @@ using SdkBackupStatusResult = Azure.ResourceManager.RecoveryServicesBackup.Model
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
-public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperations dppOps, ITenantService tenantService, ISubscriptionService subscriptionService, ILogger<AzureBackupService> logger)
-    : BaseAzureService(tenantService), IAzureBackupService
+public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperations dppOps, IAzureService azureService, ILogger<AzureBackupService> logger)
+    : BaseAzureService(azureService), IAzureBackupService
 {
     /// <summary>
     /// NEW-3 fix: resolve subscription name -> GUID before passing through to ops layers that
@@ -36,7 +34,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             return subscription;
         }
 
-        var resource = await subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var resource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         return resource.Data.SubscriptionId;
     }
 

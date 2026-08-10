@@ -3,8 +3,6 @@
 
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Redis.Commands;
 using Azure.Mcp.Tools.Redis.Models;
 using Azure.Mcp.Tools.Redis.Models.CacheForRedis;
@@ -20,11 +18,8 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Redis.Services;
 
-public class RedisService(
-    ISubscriptionService _subscriptionService,
-    ITenantService _tenantService,
-    ILogger<RedisService> _logger)
-    : BaseAzureService(_tenantService), IRedisService
+public class RedisService(IAzureService _azureService, ILogger<RedisService> _logger)
+    : BaseAzureService(_azureService), IRedisService
 {
     public async Task<IEnumerable<Resource>> ListResourcesAsync(
         string subscription,
@@ -34,7 +29,7 @@ public class RedisService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
             ?? throw new KeyNotFoundException($"Subscription '{subscription}' not found");
 
         var resources = new List<Resource>();
@@ -91,7 +86,7 @@ public class RedisService(
             sku = "Balanced_B0";
         }
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
             ?? throw new KeyNotFoundException($"Subscription '{subscription}' not found");
 
         var resourceGroups = subscriptionResource.GetResourceGroups();
