@@ -44,9 +44,11 @@ jobs:
       - name: Set BUILD_REASON environment variable
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          echo "BUILD_REASON=PullRequest" >> $GITHUB_ENV
-          echo "SYSTEM_PULLREQUEST_TARGETBRANCH=${{ github.base_ref }}" >> $GITHUB_ENV
-          echo "SYSTEM_PULLREQUEST_SOURCECOMMITID=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
+          {
+            echo "BUILD_REASON=PullRequest"
+            echo "SYSTEM_PULLREQUEST_TARGETBRANCH=${{ github.base_ref }}"
+            echo "SYSTEM_PULLREQUEST_SOURCECOMMITID=${{ github.event.pull_request.head.sha }}"
+          } >> "$GITHUB_ENV"
 
       - name: Create build_info.json
         shell: pwsh
