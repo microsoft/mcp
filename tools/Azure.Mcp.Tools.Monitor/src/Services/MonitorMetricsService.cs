@@ -4,7 +4,6 @@
 using System.Globalization;
 using System.Xml;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.ResourceManager.Monitor;
 using Azure.ResourceManager.Monitor.Models;
@@ -15,8 +14,8 @@ using MetricResult = Azure.Mcp.Tools.Monitor.Models.MetricResult;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorMetricsService(IResourceResolverService resourceResolverService, ITenantService tenantService)
-    : BaseAzureService(tenantService), IMonitorMetricsService
+public class MonitorMetricsService(IResourceResolverService resourceResolverService, IAzureService azureService)
+    : BaseAzureService(azureService), IMonitorMetricsService
 {
     private readonly IResourceResolverService _resourceResolverService = resourceResolverService ?? throw new ArgumentNullException(nameof(resourceResolverService));
 

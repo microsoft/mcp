@@ -3,8 +3,6 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.EventHubs.Models;
 using Azure.ResourceManager.EventHubs;
 using Azure.ResourceManager.EventHubs.Models;
@@ -13,10 +11,9 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.EventHubs.Services;
 
-public sealed class EventHubsService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventHubsService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), IEventHubsService
+public sealed class EventHubsService(IAzureService azureService, ILogger<EventHubsService> logger)
+    : BaseAzureResourceService(azureService), IEventHubsService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ILogger<EventHubsService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     // Event Hub entity/consumer group creation exhibits read-after-write lag: the PUT can
@@ -267,9 +264,9 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
 
         try
         {
-            var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+            var subscriptionId = AzureService.IsSubscriptionId(subscription)
                 ? subscription
-                : await _subscriptionService.GetSubscriptionIdByName(subscription, tenant, retryPolicy, cancellationToken);
+                : await AzureService.GetSubscriptionIdByName(subscription, tenant, retryPolicy, cancellationToken);
 
             var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
             var namespaceId = EventHubsNamespaceResource.CreateResourceIdentifier(subscriptionId, resourceGroup, namespaceName);
@@ -836,9 +833,9 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
-        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+        var subscriptionId = AzureService.IsSubscriptionId(subscription)
             ? subscription
-            : await _subscriptionService.GetSubscriptionIdByName(subscription, tenant, retryPolicy, cancellationToken);
+            : await AzureService.GetSubscriptionIdByName(subscription, tenant, retryPolicy, cancellationToken);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         return armClient.GetSubscriptionResource(

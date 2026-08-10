@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -24,7 +25,7 @@ public sealed class ExtensionSetupTests
         setup.ConfigureServices(services);
 
         services.AddSingleton(Substitute.For<IExternalProcessService>());
-        services.AddSingleton(Substitute.For<ISubscriptionService>());
+        services.AddSingleton(Substitute.For<IAzureService>());
         services.AddSingleton(Substitute.For<IDateTimeProvider>());
         services.AddSingleton(Substitute.For<IAzureTokenCredentialProvider>());
         services.AddSingleton(Substitute.For<IAzureCloudConfiguration>());

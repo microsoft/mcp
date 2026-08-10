@@ -4,8 +4,6 @@
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Policy.Models;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.Resources;
@@ -14,10 +12,9 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Policy.Services;
 
-public class PolicyService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<PolicyService> logger)
-    : BaseAzureService(tenantService), IPolicyService
+public class PolicyService(IAzureService azureService, ILogger<PolicyService> logger)
+    : BaseAzureService(azureService), IPolicyService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<PolicyService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<PolicyAssignment>> ListPolicyAssignmentsAsync(
@@ -27,7 +24,7 @@ public class PolicyService(ISubscriptionService subscriptionService, ITenantServ
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
         var armClient = await CreateArmClientAsync(tenantId, retryPolicy, cancellationToken: cancellationToken);
 
         var assignments = new List<PolicyAssignment>();
@@ -116,7 +113,7 @@ public class PolicyService(ISubscriptionService subscriptionService, ITenantServ
             var subscriptionId = resourceId.SubscriptionId;
             if (!string.IsNullOrEmpty(subscriptionId))
             {
-                var subscriptionResource = await _subscriptionService.GetSubscription(subscriptionId, tenantId, retryPolicy, cancellationToken);
+                var subscriptionResource = await AzureService.GetSubscription(subscriptionId, tenantId, retryPolicy, cancellationToken);
                 policyDefinitionResource = await subscriptionResource.GetSubscriptionPolicyDefinitionAsync(policyDefinitionName, cancellationToken);
             }
         }
@@ -124,11 +121,11 @@ public class PolicyService(ISubscriptionService subscriptionService, ITenantServ
         {
             // Built-in (tenant-level) policy definition - try to get from any subscription's built-in definitions
             // Built-in policies are accessible from any subscription
-            var subscriptions = await _subscriptionService.GetSubscriptions(tenantId, retryPolicy, cancellationToken);
+            var subscriptions = await AzureService.GetSubscriptions(tenantId, retryPolicy, cancellationToken);
             if (subscriptions.Count > 0)
             {
                 var firstSubscriptionId = subscriptions[0].SubscriptionId;
-                var subscriptionResource = await _subscriptionService.GetSubscription(firstSubscriptionId, tenantId, retryPolicy, cancellationToken);
+                var subscriptionResource = await AzureService.GetSubscription(firstSubscriptionId, tenantId, retryPolicy, cancellationToken);
                 policyDefinitionResource = await subscriptionResource.GetSubscriptionPolicyDefinitionAsync(policyDefinitionName, cancellationToken);
             }
         }

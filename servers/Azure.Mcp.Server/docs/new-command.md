@@ -199,8 +199,8 @@ Choose the appropriate base class for your service based on the operations neede
    - Handles subscription resolution, tenant lookup, and Resource Graph query execution
    - Example:
    ```csharp
-   public class MyService(ISubscriptionService subscriptionService, ITenantService tenantService)
-       : BaseAzureResourceService(subscriptionService, tenantService), IMyService
+   public class MyService(IAzureService azureService)
+       : BaseAzureResourceService(azureService), IMyService
    {
        public async Task<ResourceQueryResults<MyResource>> ListResourcesAsync(
            string resourceGroup,
@@ -255,18 +255,16 @@ Choose the appropriate base class for your service based on the operations neede
    - Use when you need direct ARM resource manipulation (create, update, delete)
    - Example:
    ```csharp
-   public class MyService(ISubscriptionService subscriptionService, ITenantService tenantService)
-       : BaseAzureService(tenantService), IMyService
+   public class MyService(IAzureService azureService)
+       : BaseAzureService(azureService), IMyService
    {
-       private readonly ISubscriptionService _subscriptionService = subscriptionService;
-
        public async Task<MyResource> CreateResourceAsync(
            string subscription,
            string? tenant = null,
            RetryPolicyOptions? retryPolicy,
            CancellationToken cancellationToken)
        {
-           var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+           var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy);
            // Use subscriptionResource for Azure Resource write operations
        }
    }
@@ -386,8 +384,8 @@ When using `BaseAzureResourceService` or `CreateArmClientWithApiVersionAsync`, e
 ```csharp
 // Resource Graph queries and ARM write operations use the correct cloud endpoint automatically.
 // Inheriting from BaseAzureResourceService is sufficient — no endpoint configuration needed.
-public class MyService(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), IMyService
+public class MyService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IMyService
 {
     public async Task<ResourceQueryResults<MyResource>> ListResourcesAsync(
         string resourceGroup,
@@ -410,19 +408,15 @@ public class MyService(ISubscriptionService subscriptionService, ITenantService 
 
 #### When Service-Specific Data Plane Endpoints Are Required
 
-Some Azure services use data plane SDKs that require an explicit endpoint URL (e.g., Blob Storage, Table Storage, Cosmos DB, Azure Search). In these cases, **never hardcode the endpoint**. Instead, resolve it from `ITenantService.CloudConfiguration.CloudType` using a switch expression:
+Some Azure services use data plane SDKs that require an explicit endpoint URL (e.g., Blob Storage, Table Storage, Cosmos DB, Azure Search). In these cases, **never hardcode the endpoint**. Instead, resolve it from `IAzureService.CloudConfiguration.CloudType` using a switch expression:
 
-1. Ensure `ITenantService` is available in the service (it is already a dependency when inheriting from `BaseAzureResourceService`).
-2. Store it as `private readonly ITenantService _tenantService`.
-3. Add a private method that switches on `CloudType` and returns the cloud-correct URL.
+1. Ensure `IAzureService` is available in the service (it is already a dependency when inheriting from `BaseAzureService` or `BaseAzureResourceService`).
+2. Add a private method that switches on `CloudType` and returns the cloud-correct URL.
 
 ```csharp
-public class MyService(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), IMyService
+public class MyService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IMyService
 {
-    private readonly ITenantService _tenantService = tenantService
-        ?? throw new ArgumentNullException(nameof(tenantService));
-
     private async Task<MyDataPlaneClient> CreateDataPlaneClientAsync(
         string resourceName,
         string? tenant = null,
@@ -431,7 +425,7 @@ public class MyService(ISubscriptionService subscriptionService, ITenantService 
     {
         var endpoint = GetResourceEndpoint(resourceName);
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new MyClientOptions()), retryPolicy);
-        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new MyDataPlaneClient(
             new Uri(endpoint),
             await GetCredential(tenant, cancellationToken),
@@ -440,7 +434,7 @@ public class MyService(ISubscriptionService subscriptionService, ITenantService 
 
     private string GetResourceEndpoint(string resourceName)
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
                 $"https://{resourceName}.service.core.windows.net",
@@ -460,7 +454,7 @@ public class MyService(ISubscriptionService subscriptionService, ITenantService 
 |----------|-------------|
 | Resource Graph or ARM operations (via `BaseAzureResourceService`) | ✅ Cloud-aware automatically — no extra steps |
 | ARM write operations (via `CreateArmClientWithApiVersionAsync`) | ✅ Cloud-aware automatically — no extra steps |
-| Data plane SDK requiring an explicit URL | ✅ Use `_tenantService.CloudConfiguration.CloudType` switch |
+| Data plane SDK requiring an explicit URL | ✅ Use `_azureService.CloudConfiguration.CloudType` switch |
 | Any hardcoded `*.windows.net`, `*.azure.com`, `*.chinacloudapi.cn`, etc. | ❌ **Not allowed** — always use the switch pattern |
 
 **Reference implementations**: `StorageService` (blob and table endpoints), `CosmosService`, `SearchService`, and `ConfidentialLedgerService`.
@@ -955,7 +949,7 @@ public interface I<Toolset>Service
 ```
 
 ```csharp
-public class <Toolset>Service(ISubscriptionService subscriptionService, ITenantService tenantService, ICacheService cacheService) : BaseAzureService(tenantService), I<Toolset>Service
+public class <Toolset>Service(IAzureService azureService, ICacheService cacheService) : BaseAzureService(azureService), I<Toolset>Service
 {
    ...
 }
@@ -1121,11 +1115,9 @@ public abstract class Base{Resource}Command<
 }
 
 // Service implementation example with subscription resolution
-public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureService(tenantService), I{Toolset}Service
+public class {Toolset}Service(IAzureService azureService)
+    : BaseAzureService(azureService), I{Toolset}Service
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-
     public async Task<{Resource}> GetResourceAsync(
         string subscription,
         string resourceGroup,
@@ -1134,8 +1126,8 @@ public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantS
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
-        // Always use subscription service for resolution
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        // Always use Azure service for resolution
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy);
 
         var resourceGroupResource = await subscriptionResource
             .GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -1986,11 +1978,11 @@ Task<List<ResourceModel>> GetResources(
 ```
 
 **Issue: Wrong subscription resolution pattern**
-- **Solution**: Always use `ISubscriptionService.GetSubscription()` instead of manual ARM client creation
+- **Solution**: Always use `IAzureService.GetSubscription()` instead of manual ARM client creation
 - **Pattern**:
 ```csharp
 // Correct pattern
-var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, retryPolicy);
 ```
 
 ### Command Option Patterns
@@ -2252,12 +2244,12 @@ catch (Exception ex)
 
 **Issue: Subscription not properly resolved**
 - **Cause**: Using direct ARM client creation instead of subscription service
-- **Solution**: Always inject and use `ISubscriptionService.GetSubscription()`
+- **Solution**: Always inject and use `IAzureService.GetSubscription()`
 - **Fix**: Replace manual subscription resource creation with service call
 - **Pattern**:
 ```csharp
 // Correct - use service
-var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
 // Wrong - manual creation
 var armClient = await CreateArmClientAsync(tenant, retryPolicy);
@@ -2538,9 +2530,9 @@ When implementing services that call Azure, use `IAzureTokenCredentialProvider`:
 
 ```csharp
 public class StorageService(
-    ITenantService tenantService,
+    IAzureService azureService,
     ILogger<StorageService> logger)
-    : BaseAzureService(tenantService), IStorageService
+    : BaseAzureService(azureService), IStorageService
 {
     private readonly ILogger<StorageService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -2643,7 +2635,7 @@ public async Task<List<Resource>> GetResourcesAsync(
     RetryPolicyOptions? retryPolicy,
     CancellationToken cancellationToken)
 {
-    // ✅ ITenantService handles tenant resolution for all modes
+    // ✅ IAzureService handles tenant resolution for all modes
     // - In On Behalf Of mode: Validates tenant matches user's token
     // - In hosting environment mode: Uses provided tenant or default
     // - In stdio mode: Uses Azure CLI/VS Code default tenant
@@ -2822,8 +2814,8 @@ Before submitting:
 - [ ] All Azure SDK property names verified and correct
 - [ ] Resource access patterns use collections (e.g., `.GetSqlServers().GetAsync()`)
 - [ ] Use cancellation token when using async methods (e.g., `GetAsync(serverName, cancellationToken: cancellationToken)`)
-- [ ] Subscription resolution uses `ISubscriptionService.GetSubscription()`
-- [ ] Service constructor includes `ISubscriptionService` injection for Azure resources
+- [ ] Subscription resolution uses `IAzureService.GetSubscription()`
+- [ ] Service constructor includes `IAzureService` injection for Azure resources
 
 ### Documentation Requirements
 

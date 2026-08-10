@@ -4,6 +4,7 @@
 using Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Tests.Client;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Shortcut;
 

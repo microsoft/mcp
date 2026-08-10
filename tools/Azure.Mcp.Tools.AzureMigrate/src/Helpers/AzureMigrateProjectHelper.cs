@@ -3,8 +3,6 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureMigrate.Models;
 using Microsoft.Mcp.Core.Options;
 
@@ -13,13 +11,9 @@ namespace Azure.Mcp.Tools.AzureMigrate.Helpers;
 /// <summary>
 /// Helper for creating Azure Migrate projects.
 /// </summary>
-public sealed class AzureMigrateProjectHelper(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService)
+public sealed class AzureMigrateProjectHelper(IAzureService azureService)
+    : BaseAzureResourceService(azureService)
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
-
     private const string MigrateProjectResourceType = "Microsoft.Migrate/MigrateProjects";
     private const string MigrateProjectApiVersion = "2020-06-01-preview";
 
@@ -50,7 +44,7 @@ public sealed class AzureMigrateProjectHelper(
                 retryPolicy,
                 cancellationToken);
 
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
             ResourceIdentifier projectId = new(
                 $"/subscriptions/{subscriptionResource.Data.SubscriptionId}/resourceGroups/{resourceGroup}/providers/{MigrateProjectResourceType}/{projectName}");
 

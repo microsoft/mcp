@@ -3,7 +3,7 @@
 
 using System.Net;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Insights.Commands;
 using Azure.Mcp.Tools.Insights.Services;
 using Azure.Mcp.Tools.Insights.Services.Models;
@@ -23,12 +23,12 @@ namespace Azure.Mcp.Tools.Insights.UnitTests;
 public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, IInsightsService>
 {
     private readonly ISamplingService _samplingService = Substitute.For<ISamplingService>();
-    private readonly ISubscriptionService _subscriptionService = Substitute.For<ISubscriptionService>();
+    private readonly IAzureService _azureService = Substitute.For<IAzureService>();
 
     public InsightsGetCommandTests()
     {
         Services.AddSingleton(_samplingService);
-        Services.AddSingleton(_subscriptionService);
+        Services.AddSingleton(_azureService);
     }
 
     [Fact]
@@ -183,7 +183,7 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
     [Fact]
     public async Task ExecuteAsync_SubscriptionScopeWithNoDefault_ReturnsBadRequest()
     {
-        _subscriptionService.GetDefaultSubscriptionId().Returns((string?)null);
+        _azureService.GetDefaultSubscriptionId().Returns((string?)null);
 
         var response = await ExecuteWithSamplingAsync();
 
@@ -196,7 +196,7 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
     [Fact]
     public async Task ExecuteAsync_UsesDefaultSubscription_WhenNotProvided()
     {
-        _subscriptionService.GetDefaultSubscriptionId().Returns("default-sub");
+        _azureService.GetDefaultSubscriptionId().Returns("default-sub");
         Service.AggregateSubscriptionAsync(default!, default, default, TestContext.Current.CancellationToken)
             .ReturnsForAnyArgs(CreatePopulatedAggregation());
         _samplingService.SampleTextAsync(default!, default!, default!, default, TestContext.Current.CancellationToken)

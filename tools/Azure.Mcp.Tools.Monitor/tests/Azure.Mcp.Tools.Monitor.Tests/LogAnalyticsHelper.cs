@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Core;
 using Azure.Core.Pipeline;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Monitor.Services;
 using Azure.Monitor.Ingestion;
 using Microsoft.Extensions.Logging;
@@ -24,8 +24,7 @@ public class LogAnalyticsHelper(
     string workspaceName,
     string subscription,
     IMonitorService monitorService,
-    ITenantService tenantService,
-    IHttpClientFactory httpClientFactory,
+    IAzureService azureService,
     string? tenantId = null,
     string logType = "TestLogs_CL",
     ILogger? logger = null)
@@ -35,8 +34,7 @@ public class LogAnalyticsHelper(
     private readonly string _logType = logType;
     private readonly string? _tenantId = tenantId;
     private readonly IMonitorService _monitorService = monitorService ?? throw new ArgumentNullException(nameof(monitorService));
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    private readonly IAzureService _azureService = azureService ?? throw new ArgumentNullException(nameof(azureService));
     private readonly ILogger _logger = logger ?? NullLogger.Instance;
     private readonly SemaphoreSlim _clientInitLock = new(1, 1);
     private string? _workspaceId;
@@ -88,10 +86,10 @@ public class LogAnalyticsHelper(
                     Delay = TimeSpan.FromSeconds(2),
                     MaxDelay = TimeSpan.FromSeconds(10)
                 },
-                Transport = new HttpClientTransport(_httpClientFactory.CreateClient())
+                Transport = new HttpClientTransport(_azureService.GetClient())
             };
 
-            TokenCredential credential = await _tenantService.GetTokenCredentialAsync(_tenantId, cancellationToken).ConfigureAwait(false);
+            TokenCredential credential = await _azureService.GetTokenCredentialAsync(_tenantId, cancellationToken).ConfigureAwait(false);
             _logsIngestionClient = new LogsIngestionClient(endpoint, credential, options);
             return _logsIngestionClient;
         }

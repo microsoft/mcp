@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.SignalR.Models;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.SignalR;
@@ -17,14 +15,9 @@ namespace Azure.Mcp.Tools.SignalR.Services;
 /// <summary>
 /// Service for Azure SignalR operations using Resource Graph API.
 /// </summary>
-public sealed class SignalRService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ICacheService cacheService) : BaseAzureService(tenantService), ISignalRService
+public sealed class SignalRService(IAzureService azureService, ICacheService cacheService)
+    : BaseAzureService(azureService), ISignalRService
 {
-    private readonly ISubscriptionService _subscriptionService =
-        subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
 
     private const string CacheGroup = "signalr";
@@ -39,7 +32,7 @@ public sealed class SignalRService(
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var runtimes = new List<Runtime>();
         if (string.IsNullOrEmpty(signalRName))
         {

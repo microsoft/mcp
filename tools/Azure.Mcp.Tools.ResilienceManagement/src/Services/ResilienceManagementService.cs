@@ -4,8 +4,6 @@
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.ResourceManager;
 using Azure.ResourceManager.ResilienceManagement;
@@ -14,13 +12,9 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Services;
 
-public sealed class ResilienceManagementService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), IResilienceManagementService
+public sealed class ResilienceManagementService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IResilienceManagementService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
-
     public async Task<IEnumerable<ResourceSummary>> ListGoalTemplatesAsync(string serviceGroup, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
@@ -142,9 +136,9 @@ public sealed class ResilienceManagementService(
 
     public async Task<IEnumerable<ResourceSummary>> ListUsagePlansAsync(string resourceGroup, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
-        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+        var subscriptionId = AzureService.IsSubscriptionId(subscription)
             ? subscription
-            : (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+            : (await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
 
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
@@ -165,9 +159,9 @@ public sealed class ResilienceManagementService(
 
     public async Task<IEnumerable<ResourceSummary>> ListUsagePlansBySubscriptionAsync(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
-        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+        var subscriptionId = AzureService.IsSubscriptionId(subscription)
             ? subscription
-            : (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+            : (await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
 
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
@@ -216,9 +210,9 @@ public sealed class ResilienceManagementService(
 
     public async Task<UsagePlanInfo> GetUsagePlanAsync(string resourceGroup, string usagePlan, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
-        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+        var subscriptionId = AzureService.IsSubscriptionId(subscription)
             ? subscription
-            : (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+            : (await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
 
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
@@ -232,9 +226,9 @@ public sealed class ResilienceManagementService(
 
     public async Task<IEnumerable<ResourceSummary>> ListUsagePlanEnrollmentsAsync(string resourceGroup, string usagePlan, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
-        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+        var subscriptionId = AzureService.IsSubscriptionId(subscription)
             ? subscription
-            : (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+            : (await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
 
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
@@ -255,9 +249,9 @@ public sealed class ResilienceManagementService(
 
     public async Task<UsagePlanEnrollmentInfo> GetUsagePlanEnrollmentAsync(string resourceGroup, string usagePlan, string enrollment, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
-        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+        var subscriptionId = AzureService.IsSubscriptionId(subscription)
             ? subscription
-            : (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+            : (await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
 
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
@@ -493,9 +487,8 @@ public sealed class ResilienceManagementService(
 
     public async Task<UsagePlanInfo> CreateUsagePlanAsync(string resourceGroup, string usagePlan, UsagePlanKind planType, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
-        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
-            ? subscription
-            : (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionId = subscriptionResource.Data.SubscriptionId;
 
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
@@ -523,9 +516,8 @@ public sealed class ResilienceManagementService(
 
     public async Task<UsagePlanEnrollmentInfo> CreateUsagePlanEnrollmentAsync(string resourceGroup, string usagePlan, string enrollment, string serviceGroup, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
-        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
-            ? subscription
-            : (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionId = subscriptionResource.Data.SubscriptionId;
 
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 

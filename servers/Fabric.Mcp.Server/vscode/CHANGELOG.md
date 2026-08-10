@@ -1,5 +1,14 @@
 # Release History
 
+## 1.3.0 (2026-08-10) (pre-release)
+
+### Changed
+
+- **Breaking:** Removed unused parameters from Fabric tools. [[#3097](https://github.com/microsoft/mcp/pull/3097)]
+- **Breaking:** Removed legacy tool design creation. [[#3137](https://github.com/microsoft/mcp/pull/3137)]
+- Updated Fabric REST API specifications and item definition documentation. [[#3234](https://github.com/microsoft/mcp/pull/3234)]
+- Updated `@microsoft/vscode-azext-utils` from ~2 to ~4 (4.1.1) and `@vscode/vsce` from 3.7.1 to 3.9.2. [[#3001](https://github.com/microsoft/mcp/pull/3001)]
+
 ## 1.2.0 (2026-07-08)
 
 ### Added

@@ -9,7 +9,9 @@ using Fabric.Mcp.Tools.Docs.Commands.BestPractices;
 using Fabric.Mcp.Tools.Docs.Commands.PublicApis;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.Docs.Tests.Commands;
 
