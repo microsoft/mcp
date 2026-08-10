@@ -144,7 +144,6 @@ internal class Program
                 {
                     var prompt = p.Prompt.Replace("\\<", "<");
                     p.Prompt = prompt;
-                    //p.Prompt = VallyUtilities.ReplaceAngleBracketPlaceholders(prompt, VallyUtilities.Replacements);
 
                     return p;
                 })
