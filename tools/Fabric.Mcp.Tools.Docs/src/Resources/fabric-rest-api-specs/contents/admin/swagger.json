@@ -1409,6 +1409,13 @@
             "required": false
           },
           {
+            "in": "query",
+            "name": "withAssignedWorkspacesOnly",
+            "description": "When true, only return domains that have at least one workspace assigned to them, or to any of their subdomains. Default: false.",
+            "type": "boolean",
+            "required": false
+          },
+          {
             "name": "preview",
             "in": "query",
             "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
@@ -3107,8 +3114,8 @@
     },
     "/workspaces/networking/communicationpolicies": {
       "get": {
-        "summary": "Returns network communication policy settings for list of workspaces enabled with either Inbound or Outbound Access Protection.",
-        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination) With the continuation token provided in the response, you can get the next set of records.\n\n## Permissions\n\nThe caller must be a Fabric administrator or authenticate using a service principal.\n\n## Required Delegated Scopes\n\nTenant.Read.All or Tenant.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes | |\n\n## Interface",
+        "summary": "Returns network communication policy settings for all workspaces in the tenant.",
+        "description": "Returns paginated network communication policy details for all workspaces. The response includes inbound access protection settings (public access rules and IP firewall rules), outbound access protection settings (public access rules, connection rules, gateway rules, Git policy, and managed private endpoints), and workspace metadata.\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination). With the continuation token provided in the response, you can get the next set of records.\n\n## Permissions\n\nThe caller must be a Fabric administrator or authenticate using a service principal.\n\n## Required Delegated Scopes\n\nTenant.Read.All or Tenant.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Workspaces"
         ],
@@ -3124,6 +3131,13 @@
             "in": "query",
             "name": "continuationToken",
             "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "description": "Filters workspaces by policy direction. Supported filter expressions: `inbound/publicAccessRules/defaultAction eq 'deny'`, `outbound/publicAccessRules/defaultAction eq 'deny'`, or both combined with `or`.",
             "type": "string",
             "required": false
           }
@@ -3149,15 +3163,18 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* InsufficientPrivileges - The caller doesn't have permissions to call the API.\n\n",
+            "description": "Common error codes:\n\n* InsufficientPrivileges - The caller doesn't have permissions to call the API.\n\n* InvalidFilterExpression - The filter expression is invalid or contains unsupported properties.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           }
         },
         "x-ms-examples": {
-          "Get network communication policy settings for list of workspaces enabled with either Inbound or Outbound Access Protection for example": {
+          "List network communication policy settings for all workspaces example": {
             "$ref": "./examples/ListNetworkingCommunicationPolicies.json"
+          },
+          "List network communication policy settings filtered by inbound policy example": {
+            "$ref": "./examples/ListNetworkingCommunicationPoliciesFilteredByInbound.json"
           }
         }
       }

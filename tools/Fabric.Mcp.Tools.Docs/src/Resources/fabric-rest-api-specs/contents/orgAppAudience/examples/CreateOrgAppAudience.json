@@ -5,10 +5,9 @@
             "displayName": "OrgAppAudience 1",
             "description": "A OrgAppAudience description.",
             "definition": {
-                "format": "OrgAppAudienceV1",
                 "parts": [
                     {
-                        "path": "OrgAppAudienceV1.json",
+                        "path": "definition.json",
                         "payload": "eyJleGVjdXRhYmxlRm..OWRmNDhhY2ZmZTgifQ==",
                         "payloadType": "InlineBase64"
                     },

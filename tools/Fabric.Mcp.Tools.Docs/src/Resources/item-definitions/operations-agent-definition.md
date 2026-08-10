@@ -38,7 +38,7 @@ Root shape of the definition payload.
 | dataSources | Object (dictionary of [DataSource](#datasource-contents) or [variable reference](#variable-references-in-datasources)) | true | Map of user-chosen data source aliases to data source objects (or variable reference strings) |
 | actions | Object (dictionary of [Action](#action-contents)) | true | Map of user-chosen action aliases to action objects |
 | messageDestination | [MessageDestination](#messagedestination-contents) | false | Where the agent sends notifications. Polymorphic — use the `kind` discriminator to select the destination type |
-| identity | [AgentIdentity](#agentidentity-contents) | false | Identity information used when the agent executes |
+| identity | [AgentIdentity](#agentidentity-contents) | false | User-provided identity settings for the agent. For GA, only `sponsor` is supported in definition payloads |
 
 Notes:
 
@@ -138,14 +138,11 @@ Supported `kind` values:
 
 ### AgentIdentity contents
 
-Identity information for the agent. Used to support agent OBO / app-only scenarios on ALM import/export.
+User-provided identity settings for the agent in definition payloads.
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| principalId | String | false | The principal ID for the agent identity |
-| blueprintId | String | false | The agent identity blueprint ID |
-| mode | String (enum) | false | Execution mode. Currently `Delegated` |
-| sponsor | String | false | The UPN of the sponsor user. Required when `messageDestination` is a non-`Recipient` kind (for example, `TeamsChannel`), since the agent needs a user identity to act on behalf of |
+| sponsor | String | false | Sponsor alias provided by the user |
 
 ## OperationsAgentDefinition JSON skeleton
 
@@ -216,10 +213,7 @@ run the remediation pipeline.",
       "channelId": "19:xyz5678@thread.tacv2"
     },
     "identity": {
-      "principalId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-      "blueprintId": "ffffffff-0000-1111-2222-333333333333",
-      "mode": "Delegated",
-      "sponsor": "AdminUser01@contoso.onmicrosoft.com"
+      "sponsor": "<<alias>>"
     }
   },
   "playbook": {},
