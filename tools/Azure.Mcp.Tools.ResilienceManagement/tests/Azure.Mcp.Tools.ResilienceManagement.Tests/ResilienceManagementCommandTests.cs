@@ -39,6 +39,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_usageplan_get",
             new()
             {
+                { "tenant", Settings.TenantId },
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "name", usagePlanName }
@@ -59,6 +60,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_usageplan_enrollment_get",
             new()
             {
+                { "tenant", Settings.TenantId },
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "usage-plan", usagePlanName },
@@ -79,6 +81,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_goal_template_get",
             new()
             {
+                { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
                 { "name", goalTemplate }
             });
@@ -97,6 +100,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_goal_assignment_get",
             new()
             {
+                { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
                 { "name", goalAssignment }
             });
@@ -115,6 +119,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_goal_resource_get",
             new()
             {
+                { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
                 { "goal-assignment", goalAssignment }
             });
@@ -132,6 +137,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_recovery_plan_get",
             new()
             {
+                { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
                 { "name", recoveryPlan }
             });
@@ -150,6 +156,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_recovery_plan_resource_get",
             new()
             {
+                { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
                 { "recovery-plan", recoveryPlan }
             });
@@ -168,6 +175,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_recovery_job_get",
             new()
             {
+                { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
                 { "recovery-plan", recoveryPlan },
                 { "name", recoveryJob }
@@ -188,6 +196,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_recovery_job_resource_get",
             new()
             {
+                { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
                 { "recovery-plan", recoveryPlan },
                 { "recovery-job", recoveryJob }
@@ -199,13 +208,14 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
     [Fact]
     public async Task Should_create_usage_plan()
     {
-        var resourceGroupName = RegisterOrRetrieveDeploymentOutputVariable("createResourceGroupName", "CREATERESOURCEGROUPNAME");
+        var resourceGroupName = RegisterOrRetrieveVariable("createResourceGroupName", Settings.ResourceGroupName);
         const string usagePlanName = "mcp-usage-plan";
 
         var result = await CallToolAsync(
             "resilience_usageplan_create",
             new()
             {
+                { "tenant", Settings.TenantId },
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "usage-plan", usagePlanName },
@@ -219,26 +229,16 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
     [Fact]
     public async Task Should_create_usage_plan_enrollment()
     {
-        var resourceGroupName = RegisterOrRetrieveDeploymentOutputVariable("createResourceGroupName", "CREATERESOURCEGROUPNAME");
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("createServiceGroupName", "CREATESERVICEGROUPNAME");
-        const string usagePlanName = "mcp-enroll-plan";
-        const string enrollmentName = "mcp-enrollment";
-
-        // An enrollment requires an existing usage plan; create one first so the test is self-contained.
-        await CallToolAsync(
-            "resilience_usageplan_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", resourceGroupName },
-                { "usage-plan", usagePlanName },
-                { "plan-type", "Basic" }
-            });
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var usagePlanName = RegisterOrRetrieveDeploymentOutputVariable("usagePlanName", "USAGEPLANNAME");
+        var enrollmentName = RegisterOrRetrieveDeploymentOutputVariable("enrollmentName", "ENROLLMENTNAME");
 
         var result = await CallToolAsync(
             "resilience_usageplan_enrollment_create",
             new()
             {
+                { "tenant", Settings.TenantId },
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "usage-plan", usagePlanName },

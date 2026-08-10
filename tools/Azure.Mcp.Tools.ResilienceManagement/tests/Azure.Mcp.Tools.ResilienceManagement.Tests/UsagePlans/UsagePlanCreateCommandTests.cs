@@ -60,6 +60,30 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
         }
     }
 
+    [Theory]
+    [InlineData("bad_name")]
+    [InlineData("1234567890123456789012345")]
+    [InlineData("../plan")]
+    public async Task ExecuteAsync_RejectsInvalidUsagePlanName(string usagePlan)
+    {
+        var response = await ExecuteCommandAsync(
+            "--resource-group", "rg",
+            "--usage-plan", usagePlan,
+            "--plan-type", "Basic",
+            "--subscription", "sub");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("3 to 24 characters", response.Message);
+        await Service.DidNotReceive().CreateUsagePlanAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<UsagePlanKind>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
     [Fact]
     public async Task ExecuteAsync_ReturnsCreatedUsagePlan()
     {
@@ -84,7 +108,7 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesUsagePlanAlreadyExists()
+    public async Task ExecuteAsync_HandlesConflictWithoutAssumingNameCollision()
     {
         // Arrange
         Service.CreateUsagePlanAsync(
@@ -95,14 +119,39 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Usage plan name already exists"));
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Provider-specific conflict details"));
 
         // Act
         var response = await ExecuteCommandAsync(ValidArgs);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
-        Assert.Contains("already exists", response.Message);
+        Assert.Contains("conflicts with the current resource state", response.Message);
+        Assert.DoesNotContain("Provider-specific conflict details", response.Message);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.Forbidden, "Authorization failed")]
+    [InlineData(HttpStatusCode.NotFound, "Resource group not found")]
+    [InlineData(HttpStatusCode.BadRequest, "request failed")]
+    public async Task ExecuteAsync_SanitizesRequestFailedException(HttpStatusCode status, string expectedMessage)
+    {
+        const string providerDetails = "Sensitive provider details: request-id=123; endpoint=https://example.invalid";
+        Service.CreateUsagePlanAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<UsagePlanKind>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
+
+        var response = await ExecuteCommandAsync(ValidArgs);
+
+        Assert.Equal(status, response.Status);
+        Assert.Contains(expectedMessage, response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(providerDetails, response.Message);
     }
 
     [Fact]
