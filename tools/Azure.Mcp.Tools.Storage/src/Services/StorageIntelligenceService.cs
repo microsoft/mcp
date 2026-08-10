@@ -31,6 +31,7 @@ public sealed class StorageIntelligenceService(
         string[]? diskNames = null,
         string? startTime = null,
         string? endTime = null,
+        bool includeHostLatency = false,
         CancellationToken cancellationToken = default)
     {
         var endpoint = GetRequiredEnvironmentVariable(EndpointEnvironmentVariable);
@@ -78,7 +79,8 @@ public sealed class StorageIntelligenceService(
             ResourceId = effectiveResourceId,
             SubResourceIds = selectedDiskResourceIds,
             IssueStartTime = startTime,
-            IssueEndTime = endTime
+            IssueEndTime = endTime,
+            IncludeHostLatency = includeHostLatency
         };
         var requestJson = JsonSerializer.Serialize(requestBody, StorageJsonContext.Default.DiskAnalysisRequest);
 

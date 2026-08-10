@@ -19,7 +19,7 @@ public class StorageServiceDiskDiagnoseTests
     private const string ScopeEnvironmentVariable = "AZURE_MCP_STORAGE_INTELLIGENCE_SCOPE";
     private const string TenantEnvironmentVariable = "AZURE_MCP_STORAGE_INTELLIGENCE_TENANT_ID";
     private const string ResourceId = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm";
-    private const string StorageIntelligenceEndpoint = "https://storage-intelligence.example.com/api/Disk/analyzeV2";
+    private const string StorageIntelligenceEndpoint = "https://storage-intelligence.example.com/api/Disk/analyze";
     private const string StorageIntelligenceScope = "00000000-0000-0000-0000-000000000002/.default";
     private const string StorageIntelligenceTenantId = "00000000-0000-0000-0000-000000000003";
 
@@ -44,6 +44,7 @@ public class StorageServiceDiskDiagnoseTests
             diskNames: ["test-disk"],
             startTime: "2026-07-19T00:00:00Z",
             endTime: "2026-07-19T12:00:00Z",
+            includeHostLatency: true,
             cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal("Healthy", result.GetProperty("status").GetString());
@@ -60,6 +61,7 @@ public class StorageServiceDiskDiagnoseTests
         Assert.Equal(diskResourceId, requestRoot.GetProperty("subResourceIds")[0].GetString());
         Assert.Equal("2026-07-19T00:00:00Z", requestRoot.GetProperty("issueStartTime").GetString());
         Assert.Equal("2026-07-19T12:00:00Z", requestRoot.GetProperty("issueEndTime").GetString());
+        Assert.True(requestRoot.GetProperty("includeHostLatency").GetBoolean());
 
         await attachedDiskService.DidNotReceiveWithAnyArgs().ResolveFriendlySelectorAsync(
             default!, default!, default!, default, TestContext.Current.CancellationToken);
@@ -122,6 +124,7 @@ public class StorageServiceDiskDiagnoseTests
 
         using var requestDocument = JsonDocument.Parse(handler.RequestBody!);
         Assert.Equal(ResourceId, requestDocument.RootElement.GetProperty("resourceId").GetString());
+        Assert.False(requestDocument.RootElement.TryGetProperty("includeHostLatency", out _));
         Assert.Equal(
             "/subscriptions/sub/resourceGroups/disk-rg/providers/Microsoft.Compute/disks/data-disk",
             requestDocument.RootElement.GetProperty("subResourceIds")[0].GetString());
