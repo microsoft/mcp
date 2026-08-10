@@ -1117,7 +1117,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| storage_account_create | Create a new storage account called testaccount123 in East US region | none |
+| storage_account_create | Create a new storage account called testaccount123 in East US region | clarification-required |
 | storage_account_create | Create a storage account with premium performance and LRS replication | clarification-required |
 | storage_account_create | Create a new storage account with Data Lake Storage Gen2 enabled | clarification-required |
 | storage_account_get | Show me the details for my storage account <account> | none |
@@ -1208,10 +1208,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azureterraform_aztfexport_resourcegroup | Export resource group my-rg to Terraform using the azapi provider | none |
 | azureterraform_aztfexport_query | Export all storage accounts in my subscription using a resource graph query | none |
 | azureterraform_aztfexport_query | Generate an aztfexport query command to export resources matching "type == 'Microsoft.Storage/storageAccounts'" | none |
-| azureterraform_conftest_workspace | Validate Terraform files in ./my-terraform-folder against Azure security policies | none |
-| azureterraform_conftest_workspace | Validate Terraform files in ./infra using the avmsec policy set | none |
+| azureterraform_conftest_workspace | Validate Terraform files in ./my-terraform-folder against Azure security policies | context-required |
+| azureterraform_conftest_workspace | Validate Terraform files in ./infra using the avmsec policy set | context-required |
 | azureterraform_conftest_plan | Validate my Terraform plan file against Azure-Proactive-Resiliency-Library-v2 policies | context-required |
-| azureterraform_conftest_plan | Validate a Terraform plan JSON file in ./plan-output against Azure policies with high severity filter | none |
+| azureterraform_conftest_plan | Validate a Terraform plan JSON file in ./plan-output against Azure policies with high severity filter | context-required |
 
 ## Azure Virtual Desktop
 
