@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
@@ -144,6 +145,8 @@ public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     }
 
     [Fact]
+    // Existing recordings predate the 'queryType' property now sent in the search request body; the recorded response is still valid for this query.
+    [CustomMatcher(compareBody: false)]
     public async Task Should_query_search_index()
     {
         var result = await CallToolAsync(

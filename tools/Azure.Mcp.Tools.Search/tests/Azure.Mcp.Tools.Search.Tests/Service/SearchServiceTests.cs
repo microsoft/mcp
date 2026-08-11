@@ -3,9 +3,13 @@
 
 using System.Text;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.Mcp.Tools.Search.Services;
 using Azure.ResourceManager;
+using Azure.Search.Documents;
+using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.KnowledgeBases.Models;
+using Azure.Search.Documents.Models;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
@@ -296,6 +300,74 @@ public class SearchServiceTests
         var content = Assert.IsType<KnowledgeBaseMessageTextContent>(message.Content.Single());
         Assert.Equal("Explain search", content.Text);
     }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(IndexQueryType.Full)]
+    public void ConfigureQueryType_UsesFullLuceneSyntax_ByDefault(IndexQueryType? queryType)
+    {
+        var options = new SearchOptions();
+
+        SearchService.ConfigureQueryType(options, CreateIndex(), queryType);
+
+        Assert.Equal(SearchQueryType.Full, options.QueryType);
+        Assert.Null(options.SemanticSearch);
+    }
+
+    [Fact]
+    public void ConfigureQueryType_UsesSimpleSyntax_WhenRequested()
+    {
+        var options = new SearchOptions();
+
+        SearchService.ConfigureQueryType(options, CreateIndex(), IndexQueryType.Simple);
+
+        Assert.Equal(SearchQueryType.Simple, options.QueryType);
+        Assert.Null(options.SemanticSearch);
+    }
+
+    [Fact]
+    public void ConfigureQueryType_UsesDefaultSemanticConfiguration_WhenSemanticRequested()
+    {
+        var index = CreateIndex();
+        index.SemanticSearch = new SemanticSearch
+        {
+            DefaultConfigurationName = "default-config"
+        };
+        index.SemanticSearch.Configurations.Add(new SemanticConfiguration("other-config", new SemanticPrioritizedFields()));
+        var options = new SearchOptions();
+
+        SearchService.ConfigureQueryType(options, index, IndexQueryType.Semantic);
+
+        Assert.Equal(SearchQueryType.Semantic, options.QueryType);
+        Assert.Equal("default-config", options.SemanticSearch?.SemanticConfigurationName);
+    }
+
+    [Fact]
+    public void ConfigureQueryType_UsesFirstSemanticConfiguration_WhenNoDefaultConfigured()
+    {
+        var index = CreateIndex();
+        index.SemanticSearch = new SemanticSearch();
+        index.SemanticSearch.Configurations.Add(new SemanticConfiguration("only-config", new SemanticPrioritizedFields()));
+        var options = new SearchOptions();
+
+        SearchService.ConfigureQueryType(options, index, IndexQueryType.Semantic);
+
+        Assert.Equal(SearchQueryType.Semantic, options.QueryType);
+        Assert.Equal("only-config", options.SemanticSearch?.SemanticConfigurationName);
+    }
+
+    [Fact]
+    public void ConfigureQueryType_Throws_WhenSemanticRequestedWithoutConfiguration()
+    {
+        var options = new SearchOptions();
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => SearchService.ConfigureQueryType(options, CreateIndex(), IndexQueryType.Semantic));
+
+        Assert.Contains("semantic configuration", exception.Message);
+    }
+
+    private static SearchIndex CreateIndex() => new("test-index");
 
     private static async Task<string> InvokeProcessRetrieveResponse(string json)
     {

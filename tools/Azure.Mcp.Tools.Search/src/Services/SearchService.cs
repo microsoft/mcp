@@ -377,7 +377,7 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         }
     }
 
-    private static void ConfigureQueryType(SearchOptions options, SearchIndex indexDefinition, IndexQueryType? queryType)
+    internal static void ConfigureQueryType(SearchOptions options, SearchIndex indexDefinition, IndexQueryType? queryType)
     {
         switch (queryType)
         {
