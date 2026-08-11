@@ -38,6 +38,7 @@ public class MySqlServiceServerNameValidationTests
             _mysqlService.ListDatabasesAsync(
                 "test-sub", "test-rg", "test-user",
                 maliciousServer,
+                null,
                 TestContext.Current.CancellationToken));
 
         Assert.Contains("not a valid Azure Database for MySQL hostname", ex.Message);
@@ -52,6 +53,7 @@ public class MySqlServiceServerNameValidationTests
             _mysqlService.ExecuteQueryAsync(
                 "test-sub", "test-rg", "test-user",
                 maliciousServer, "testdb", "SELECT 1",
+                null,
                 TestContext.Current.CancellationToken));
 
         Assert.Contains("not a valid Azure Database for MySQL hostname", ex.Message);
@@ -66,6 +68,7 @@ public class MySqlServiceServerNameValidationTests
             _mysqlService.GetTablesAsync(
                 "test-sub", "test-rg", "test-user",
                 maliciousServer, "testdb",
+                null,
                 TestContext.Current.CancellationToken));
 
         Assert.Contains("not a valid Azure Database for MySQL hostname", ex.Message);
@@ -80,6 +83,7 @@ public class MySqlServiceServerNameValidationTests
             _mysqlService.GetTableSchemaAsync(
                 "test-sub", "test-rg", "test-user",
                 maliciousServer, "testdb", "test_table",
+                null,
                 TestContext.Current.CancellationToken));
 
         Assert.Contains("not a valid Azure Database for MySQL hostname", ex.Message);

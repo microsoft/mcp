@@ -17,6 +17,9 @@ public class MySqlServerOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }
 
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 }

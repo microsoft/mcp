@@ -26,7 +26,7 @@ public class PostgresListCommandTests : SubscriptionCommandUnitTestsBase<Postgre
     public async Task ExecuteAsync_ListsServers_WhenNoServerOrDatabaseProvided()
     {
         var expectedServers = new List<string> { "postgres-server-1", "postgres-server-2", "postgres-server-3" };
-        Service.ListServersAsync("sub123", "rg1", Arg.Any<CancellationToken>()).Returns(expectedServers);
+        Service.ListServersAsync("sub123", "rg1", null, Arg.Any<CancellationToken>()).Returns(expectedServers);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -43,7 +43,7 @@ public class PostgresListCommandTests : SubscriptionCommandUnitTestsBase<Postgre
     public async Task ExecuteAsync_ListsAllServersInSubscription_WhenNoResourceGroupProvided()
     {
         var expectedServers = new List<string> { "postgres-server-1", "postgres-server-2" };
-        Service.ListServersAsync("sub123", null, Arg.Any<CancellationToken>()).Returns(expectedServers);
+        Service.ListServersAsync("sub123", null, null, Arg.Any<CancellationToken>()).Returns(expectedServers);
 
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
@@ -75,6 +75,7 @@ public class PostgresListCommandTests : SubscriptionCommandUnitTestsBase<Postgre
             "user1",
             null,
             "server1",
+            null,
             Arg.Any<CancellationToken>())
             .Returns(new DatabaseListResult(expectedDatabases, false));
 
@@ -104,6 +105,7 @@ public class PostgresListCommandTests : SubscriptionCommandUnitTestsBase<Postgre
             "server1",
             "db1",
             "public",
+            null,
             Arg.Any<CancellationToken>())
             .Returns(new TableListResult(expectedTables, false));
 
@@ -134,6 +136,7 @@ public class PostgresListCommandTests : SubscriptionCommandUnitTestsBase<Postgre
             "server1",
             "db1",
             "public",
+            null,
             Arg.Any<CancellationToken>())
             .Returns(new TableListResult(expectedTables, true));
 
@@ -162,6 +165,7 @@ public class PostgresListCommandTests : SubscriptionCommandUnitTestsBase<Postgre
             "user1",
             null,
             "server1",
+            null,
             Arg.Any<CancellationToken>())
             .Returns(new DatabaseListResult(expectedDatabases, true));
 
@@ -183,7 +187,7 @@ public class PostgresListCommandTests : SubscriptionCommandUnitTestsBase<Postgre
     [Fact]
     public async Task ExecuteAsync_ReturnsNull_WhenNoServersExist()
     {
-        Service.ListServersAsync("sub123", "rg1", Arg.Any<CancellationToken>()).Returns([]);
+        Service.ListServersAsync("sub123", "rg1", null, Arg.Any<CancellationToken>()).Returns([]);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -205,6 +209,7 @@ public class PostgresListCommandTests : SubscriptionCommandUnitTestsBase<Postgre
             "user1",
             null,
             "server1",
+            null,
             Arg.Any<CancellationToken>())
             .Returns(new DatabaseListResult([], false));
 
@@ -233,6 +238,7 @@ public class PostgresListCommandTests : SubscriptionCommandUnitTestsBase<Postgre
             "server1",
             "db1",
             "public",
+            null,
             Arg.Any<CancellationToken>())
             .Returns(new TableListResult([], false));
 
@@ -264,6 +270,7 @@ public class PostgresListCommandTests : SubscriptionCommandUnitTestsBase<Postgre
             "server1",
             "db1",
             "analytics",
+            null,
             Arg.Any<CancellationToken>())
             .Returns(new TableListResult(expectedTables, false));
 
@@ -282,7 +289,7 @@ public class PostgresListCommandTests : SubscriptionCommandUnitTestsBase<Postgre
         Assert.Null(result.Databases);
         Assert.Equal(expectedTables, result.Tables);
         await Service.Received(1).ListTablesAsync(
-            AuthTypes.MicrosoftEntra, "user1", null, "server1", "db1", "analytics", Arg.Any<CancellationToken>());
+            AuthTypes.MicrosoftEntra, "user1", null, "server1", "db1", "analytics", null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -295,6 +302,7 @@ public class PostgresListCommandTests : SubscriptionCommandUnitTestsBase<Postgre
             "server1",
             "db1",
             "public",
+            null,
             Arg.Any<CancellationToken>())
             .Returns(new TableListResult(["users"], false));
 
@@ -309,14 +317,14 @@ public class PostgresListCommandTests : SubscriptionCommandUnitTestsBase<Postgre
         ValidateAndDeserializeResponse(response, PostgresJsonContext.Default.PostgresListCommandResult);
 
         await Service.Received(1).ListTablesAsync(
-            AuthTypes.MicrosoftEntra, "user1", null, "server1", "db1", "public", Arg.Any<CancellationToken>());
+            AuthTypes.MicrosoftEntra, "user1", null, "server1", "db1", "public", null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenListServersThrows()
     {
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
-        Service.ListServersAsync("sub123", "rg1", Arg.Any<CancellationToken>())
+        Service.ListServersAsync("sub123", "rg1", null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var response = await ExecuteCommandAsync(
@@ -337,6 +345,7 @@ public class PostgresListCommandTests : SubscriptionCommandUnitTestsBase<Postgre
             "user1",
             null,
             "server1",
+            null,
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -363,6 +372,7 @@ public class PostgresListCommandTests : SubscriptionCommandUnitTestsBase<Postgre
             "server1",
             "db1",
             "public",
+            null,
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

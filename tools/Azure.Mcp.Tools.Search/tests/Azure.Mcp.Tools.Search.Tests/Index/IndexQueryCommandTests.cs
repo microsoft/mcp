@@ -43,6 +43,7 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(serviceName),
             Arg.Is(indexName),
             Arg.Is(queryText),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResults);
@@ -73,6 +74,7 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(serviceName),
             Arg.Is(indexName),
             Arg.Is(queryText),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));

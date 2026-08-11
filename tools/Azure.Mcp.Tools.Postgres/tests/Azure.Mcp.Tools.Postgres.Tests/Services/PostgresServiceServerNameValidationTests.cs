@@ -55,6 +55,7 @@ public class PostgresServiceServerNameValidationTests
             _postgresService.ExecuteQueryAsync(
                 AuthTypes.MicrosoftEntra, "test-user", null,
                 maliciousServer, "testdb", "SELECT 1",
+                null,
                 TestContext.Current.CancellationToken));
 
         Assert.Contains("not a valid Azure Database for PostgreSQL hostname", ex.Message);
@@ -69,6 +70,7 @@ public class PostgresServiceServerNameValidationTests
             _postgresService.ListDatabasesAsync(
                 AuthTypes.MicrosoftEntra, "test-user", null,
                 maliciousServer,
+                null,
                 TestContext.Current.CancellationToken));
 
         Assert.Contains("not a valid Azure Database for PostgreSQL hostname", ex.Message);
@@ -83,6 +85,7 @@ public class PostgresServiceServerNameValidationTests
             _postgresService.ListTablesAsync(
                 AuthTypes.MicrosoftEntra, "test-user", null,
                 maliciousServer, "testdb", "public",
+                null,
                 TestContext.Current.CancellationToken));
 
         Assert.Contains("not a valid Azure Database for PostgreSQL hostname", ex.Message);
@@ -97,6 +100,7 @@ public class PostgresServiceServerNameValidationTests
             _postgresService.GetTableSchemaAsync(
                 AuthTypes.MicrosoftEntra, "test-user", null,
                 maliciousServer, "testdb", "test_table",
+                null,
                 TestContext.Current.CancellationToken));
 
         Assert.Contains("not a valid Azure Database for PostgreSQL hostname", ex.Message);
@@ -113,6 +117,7 @@ public class PostgresServiceServerNameValidationTests
         await _postgresService.ExecuteQueryAsync(
             AuthTypes.MicrosoftEntra, "test-user", null,
             validServer, "testdb", "SELECT 1",
+            null,
             TestContext.Current.CancellationToken);
 
         Assert.NotNull(_capturedConnectionString);
@@ -127,6 +132,7 @@ public class PostgresServiceServerNameValidationTests
         await _postgresService.ExecuteQueryAsync(
             AuthTypes.MicrosoftEntra, "test-user", null,
             "myserver", "testdb", "SELECT 1",
+            null,
             TestContext.Current.CancellationToken);
 
         Assert.NotNull(_capturedConnectionString);

@@ -18,7 +18,7 @@ public class DatabaseQueryCommandTests : SubscriptionCommandUnitTestsBase<Databa
     public async Task ExecuteAsync_ReturnsResults_WhenQuerySucceeds()
     {
         var expectedResults = new List<string> { "id, name", "1, John", "2, Jane" };
-        Service.ExecuteQueryAsync("sub123", "rg1", "user1", "server1", "db1", "SELECT * FROM users", Arg.Any<CancellationToken>()).Returns(expectedResults);
+        Service.ExecuteQueryAsync("sub123", "rg1", "user1", "server1", "db1", "SELECT * FROM users", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedResults);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -35,7 +35,7 @@ public class DatabaseQueryCommandTests : SubscriptionCommandUnitTestsBase<Databa
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenQueryFails()
     {
-        Service.ExecuteQueryAsync("sub123", "rg1", "user1", "server1", "db1", "INVALID SQL", Arg.Any<CancellationToken>()).ThrowsAsync(new InvalidOperationException("Syntax error"));
+        Service.ExecuteQueryAsync("sub123", "rg1", "user1", "server1", "db1", "INVALID SQL", Arg.Any<string?>(), Arg.Any<CancellationToken>()).ThrowsAsync(new InvalidOperationException("Syntax error"));
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",

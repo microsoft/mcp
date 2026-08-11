@@ -32,7 +32,7 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger,
     {
         try
         {
-            var result = await _mysqlService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup, options.Server, options.Param, options.Value, cancellationToken);
+            var result = await _mysqlService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup, options.Server, options.Param, options.Value, options.Tenant, cancellationToken);
             context.Response.Results = !string.IsNullOrEmpty(result) ?
                 ResponseResult.Create(new(options.Param!, result), MySqlJsonContext.Default.ServerParamSetCommandResult) :
                 null;

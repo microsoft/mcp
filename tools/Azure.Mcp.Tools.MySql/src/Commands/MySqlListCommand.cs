@@ -59,6 +59,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
                     options.User!,
                     options.Server!,
                     options.Database!,
+                    options.Tenant,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -73,6 +74,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
                     options.ResourceGroup ?? string.Empty,
                     options.User!,
                     options.Server!,
+                    options.Tenant,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -85,6 +87,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
                 List<string> servers = await _mysqlService.ListServersAsync(
                     options.Subscription!,
                     options.ResourceGroup,
+                    options.Tenant,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -96,6 +99,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
                 // List all servers in the subscription
                 List<string> servers = await _mysqlService.ListServersInSubscriptionAsync(
                     options.Subscription!,
+                    options.Tenant,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(

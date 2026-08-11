@@ -11,6 +11,7 @@ public interface IQuotaService
         List<string> resourceTypes,
         string subscriptionId,
         string location,
+        string? tenant,
         CancellationToken cancellationToken);
 
     Task<List<string>> GetAvailableRegionsForResourceTypesAsync(
@@ -19,5 +20,6 @@ public interface IQuotaService
         string? cognitiveServiceModelName = null,
         string? cognitiveServiceModelVersion = null,
         string? cognitiveServiceDeploymentSkuName = null,
+        string? tenant = null,
         CancellationToken cancellationToken = default);
 }

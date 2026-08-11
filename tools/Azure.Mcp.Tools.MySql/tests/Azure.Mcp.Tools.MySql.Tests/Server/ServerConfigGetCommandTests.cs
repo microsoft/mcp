@@ -29,7 +29,7 @@ public class ServerConfigGetCommandTests : SubscriptionCommandUnitTestsBase<Serv
             GeoRedundantBackup = "Disabled"
         }, MySqlJsonContext.Default.ServerConfigGetResult);
 
-        Service.GetServerConfigAsync("sub123", "rg1", "test-server", Arg.Any<CancellationToken>()).Returns(expectedConfig);
+        Service.GetServerConfigAsync("sub123", "rg1", "test-server", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedConfig);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -43,7 +43,7 @@ public class ServerConfigGetCommandTests : SubscriptionCommandUnitTestsBase<Serv
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenServiceThrows()
     {
-        Service.GetServerConfigAsync("sub123", "rg1", "test-server", Arg.Any<CancellationToken>())
+        Service.GetServerConfigAsync("sub123", "rg1", "test-server", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
         var response = await ExecuteCommandAsync(

@@ -20,6 +20,9 @@ public sealed class AvailabilityListOptions : ISubscriptionOption
     [Option(Description = "Optional deployment SKU name for cognitive services. Only needed when Microsoft.CognitiveServices is included in resource types.")]
     public string? CognitiveServiceDeploymentSkuName { get; set; }
 
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 }

@@ -32,7 +32,7 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger,
     {
         try
         {
-            var schema = await _mysqlService.GetTableSchemaAsync(options.Subscription!, options.ResourceGroup, options.User, options.Server, options.Database, options.Table, cancellationToken);
+            var schema = await _mysqlService.GetTableSchemaAsync(options.Subscription!, options.ResourceGroup, options.User, options.Server, options.Database, options.Table, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(schema ?? []), MySqlJsonContext.Default.TableSchemaGetCommandResult);
         }
         catch (Exception ex)

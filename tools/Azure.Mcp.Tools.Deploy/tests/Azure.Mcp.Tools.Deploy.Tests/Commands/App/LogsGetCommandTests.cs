@@ -23,6 +23,7 @@ public class LogsGetCommandTests : SubscriptionCommandUnitTestsBase<LogsGetComma
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<int?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedLogs);
 
@@ -50,6 +51,7 @@ public class LogsGetCommandTests : SubscriptionCommandUnitTestsBase<LogsGetComma
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<int?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedLogs);
 
@@ -76,6 +78,7 @@ public class LogsGetCommandTests : SubscriptionCommandUnitTestsBase<LogsGetComma
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<int?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns("No logs found.");
 
@@ -102,6 +105,7 @@ public class LogsGetCommandTests : SubscriptionCommandUnitTestsBase<LogsGetComma
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<int?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(errorMessage);
 
@@ -127,6 +131,7 @@ public class LogsGetCommandTests : SubscriptionCommandUnitTestsBase<LogsGetComma
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<int?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Failed to connect to Azure"));
 

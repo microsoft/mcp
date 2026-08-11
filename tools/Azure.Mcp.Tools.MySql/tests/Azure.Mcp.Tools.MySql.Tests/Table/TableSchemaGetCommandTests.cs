@@ -18,7 +18,7 @@ public class TableSchemaGetCommandTests : SubscriptionCommandUnitTestsBase<Table
     public async Task ExecuteAsync_ReturnsSchema_WhenSuccessful()
     {
         var expectedSchema = new List<string> { "id INT PRIMARY KEY", "name VARCHAR(100) NOT NULL", "email VARCHAR(255)" };
-        Service.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db1", "users", Arg.Any<CancellationToken>()).Returns(expectedSchema);
+        Service.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db1", "users", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedSchema);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -35,7 +35,7 @@ public class TableSchemaGetCommandTests : SubscriptionCommandUnitTestsBase<Table
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenTableNotFound()
     {
-        Service.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db1", "nonexistent", Arg.Any<CancellationToken>()).ThrowsAsync(new ArgumentException("Table not found"));
+        Service.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db1", "nonexistent", Arg.Any<string?>(), Arg.Any<CancellationToken>()).ThrowsAsync(new ArgumentException("Table not found"));
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",

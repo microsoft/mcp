@@ -14,6 +14,9 @@ public sealed class CheckOptions : ISubscriptionOption
     [Option(Description = "Comma-separated list of Azure resource types that are going to be deployed. E.g. 'Microsoft.App/containerApps,Microsoft.Web/sites,Microsoft.CognitiveServices/accounts', etc.")]
     public required string ResourceTypes { get; set; }
 
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 }

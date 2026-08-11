@@ -28,6 +28,7 @@ public class KnowledgeBaseGetCommandTests : CommandUnitTestsBase<KnowledgeBaseGe
         Service.ListKnowledgeBases(
             Arg.Is("service123"),
             Arg.Is((string?)null),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedBases);
@@ -53,6 +54,7 @@ public class KnowledgeBaseGetCommandTests : CommandUnitTestsBase<KnowledgeBaseGe
         Service.ListKnowledgeBases(
             Arg.Is("service123"),
             Arg.Is("base1"),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([expectedBase]);
@@ -70,6 +72,7 @@ public class KnowledgeBaseGetCommandTests : CommandUnitTestsBase<KnowledgeBaseGe
     {
         Service.ListKnowledgeBases(
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -90,6 +93,7 @@ public class KnowledgeBaseGetCommandTests : CommandUnitTestsBase<KnowledgeBaseGe
 
         Service.ListKnowledgeBases(
             Arg.Is(serviceName),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())

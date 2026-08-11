@@ -38,7 +38,7 @@ public class ApplicationInsightsService(IAzureService azureService, IProfilerDat
         List<JsonNode> results = [];
         var components = await GetApplicationInsightsComponentsAsync(subscription, resourceGroup, tenant, retryPolicy, cancellationToken).ConfigureAwait(false);
 
-        var insights = await _profilerDataClient.GetInsightsAsync(resourceIds: components.Select(c => c.Id), cancellationToken: cancellationToken).ConfigureAwait(false);
+        var insights = await _profilerDataClient.GetInsightsAsync(resourceIds: components.Select(c => c.Id), tenant: tenant, cancellationToken: cancellationToken).ConfigureAwait(false);
         results.AddRange(insights);
 
         // Return all results for this resource group (outer method enforces global max)
