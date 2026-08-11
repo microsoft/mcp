@@ -4298,7 +4298,7 @@ azmcp storage account create --subscription <subscription> \
                              --location <location> \
                              [--sku <sku>] \
                              [--access-tier <access-tier>] \
-                             [--enable-hierarchical-namespace false] \
+                             [--enable-hierarchical-namespace <true|false>] \
                              [--tenant <tenant>]
 ```
 
