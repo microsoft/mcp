@@ -136,13 +136,6 @@ function Get-PythonCommand {
 function BuildServerPackages([hashtable] $server, [bool] $native) {
     $serverDirectory = "$ArtifactsPath/$($server.artifactPath)"
 
-    $pythonVersion = [AzureEngSemanticVersion]::ParsePythonVersionString($server.version)
-    if (!$pythonVersion) {
-        Write-Error "Server version '$($server.version)' is not a valid semantic version for PyPI packaging."
-        return
-    }
-    $pythonVersion = $pythonVersion.ToString()
-
     if (!(Test-Path $serverDirectory)) {
         $message = "Server directory $serverDirectory does not exist."
         if ($ignoreMissingArtifacts) {
@@ -169,6 +162,13 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         Write-Host "Skipping $($server.name) - no PyPI package name configured" -ForegroundColor Yellow
         return
     }
+
+    $pythonVersion = [AzureEngSemanticVersion]::ParsePythonVersionString($server.version)
+    if (!$pythonVersion) {
+        Write-Error "Server version '$($server.version)' is not a valid semantic version for PyPI packaging."
+        return
+    }
+    $pythonVersion = $pythonVersion.ToString()
     
     $description = if ([string]::IsNullOrWhiteSpace($server.pypiDescription)) { $server.description } else { $server.pypiDescription }
     $cliName = $server.cliName

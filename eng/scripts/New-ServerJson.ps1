@@ -51,13 +51,6 @@ if (!$server) {
     exit 1
 }
 
-$pythonVersion = [AzureEngSemanticVersion]::ParsePythonVersionString($server.version)
-if (!$pythonVersion) {
-    LogError "Server version '$($server.version)' is not a valid semantic version for PyPI packaging."
-    exit 1
-}
-$pythonVersion = $pythonVersion.ToString()
-
 $serverJsonPath = "$RepoRoot/$($server.serverJsonPath)"
 
 if (!(Test-Path $serverJsonPath)) {
@@ -72,7 +65,15 @@ ReplacePropertyValue -HashTable $jsonHashTable -PropertyName 'version' -NewValue
 
 foreach ($package in $jsonHashTable.packages) {
     if ($package.ContainsKey('version')) {
-        $packageVersion = if ($package.registryType -eq 'pypi') { $pythonVersion } else { $server.version }
+        $packageVersion = $server.version
+        if ($package.registryType -eq 'pypi') {
+            $pythonVersion = [AzureEngSemanticVersion]::ParsePythonVersionString($server.version)
+            if (!$pythonVersion) {
+                LogError "Server version '$($server.version)' is not a valid semantic version for PyPI packaging."
+                exit 1
+            }
+            $packageVersion = $pythonVersion.ToString()
+        }
         ReplacePropertyValue -HashTable $package -PropertyName 'version' -NewValue $packageVersion
     }
 

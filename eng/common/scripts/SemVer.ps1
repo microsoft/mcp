@@ -54,6 +54,12 @@ class AzureEngSemanticVersion : IComparable {
     }
 
     $version.SetupPythonConventions()
+    if ($version.PrereleaseLabel -eq "beta") {
+      $version.PrereleaseLabel = "b"
+    }
+    elseif ($version.PrereleaseLabel -eq "alpha") {
+      $version.PrereleaseLabel = "a"
+    }
     return $version
   }
   
