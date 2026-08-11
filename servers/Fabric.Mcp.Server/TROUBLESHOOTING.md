@@ -3,7 +3,7 @@
 This document provides practical troubleshooting steps for the Microsoft Fabric MCP Server. It focuses on verifiable solutions for common issues you might encounter when setting up or running the server locally.
 
 ## Quick Checklist
-- Verify .NET 9.x SDK: `dotnet --version`
+- Verify .NET 10.x SDK: `dotnet --version`
 - Build the server: `dotnet build servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj`
 - Test server startup: `dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- --help`
 - Verify available commands: `dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis list`
@@ -20,7 +20,7 @@ dotnet --list-runtimes
 ```
 
 **Resolution:**
-- Install .NET 9.x SDK from https://dotnet.microsoft.com/download/dotnet/9.0
+- Install .NET 10.x SDK from https://dotnet.microsoft.com/download/dotnet/10.0
 - Restart your terminal after installation
 - Check `global.json` in repository root for any pinned SDK versions
 
