@@ -3711,6 +3711,23 @@ azmcp resilience recovery plan get --subscription <subscription> \
                                    --service-group <service-group> \
                                    [--name <name>]
 
+# Create or fully update a Zonal resilience recovery plan. New plans use a system-assigned identity by default; optionally provide a pre-provisioned user-assigned identity. Updates preserve the existing identity and recovery groups.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recovery plan create --service-group <service-group> \
+                                      --recovery-plan <recovery-plan> \
+                                      --plan-type Zonal \
+                                      --plan-description <plan-description> \
+                                      [--user-assigned-identity <user-assigned-identity-resource-id>] \
+                                      [--default-group-description <default-group-description>]
+
+# After creating a plan with the default system-assigned identity, verify that the new principal has the Azure RBAC roles required by every recovery resource before running recovery operations. For a user-assigned identity, grant those roles before use. Recovery Orchestration attempts role assignment as best effort, so successful plan creation does not guarantee that authorization is complete.
+# On update, omit --user-assigned-identity to preserve the current identity, or repeat the same user-assigned identity resource ID. This complete update cannot change identity.
+
+# Delete a resilience recovery plan. Returns deleted=false when the plan does not exist.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recovery plan delete --service-group <service-group> \
+                                      --recovery-plan <recovery-plan>
+
 # Get a resource (member) of a recovery plan, or list all resources of the plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recovery plan resource get --subscription <subscription> \

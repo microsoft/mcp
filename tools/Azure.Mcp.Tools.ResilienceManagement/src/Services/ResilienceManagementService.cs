@@ -6,6 +6,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.ResourceManager;
+using Azure.ResourceManager.Models;
 using Azure.ResourceManager.ResilienceManagement;
 using Azure.ResourceManager.ResilienceManagement.Models;
 using Microsoft.Mcp.Core.Options;
@@ -392,6 +393,130 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
         using JsonDocument document = JsonDocument.Parse(response.GetRawResponse().Content.ToMemory());
         return document.RootElement.Clone();
+    }
+
+    public async Task<JsonElement> CreateRecoveryPlanAsync(string serviceGroup, string recoveryPlan, RecoveryPlanKind planType, string planDescription, string? userAssignedIdentity = null, string? defaultGroupDescription = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
+        RecoveryPlanCollection recoveryPlans = armClient.GetRecoveryPlans(serviceGroupId);
+        NullableResponse<RecoveryPlanResource> existingPlan = await recoveryPlans.GetIfExistsAsync(recoveryPlan, cancellationToken);
+        RecoveryGroupsSetting? existingRecoveryGroups = existingPlan.HasValue
+            ? existingPlan.Value?.Data?.Properties?.RecoveryGroupsSetting
+            : null;
+        RecoveryGroupsSetting recoveryGroups = CreateRecoveryGroupsSetting(existingRecoveryGroups, defaultGroupDescription);
+        ManagedServiceIdentity identity = CreateRecoveryPlanIdentity(existingPlan.Value?.Data?.Identity, userAssignedIdentity);
+        var data = new RecoveryPlanData
+        {
+            Identity = identity,
+            Properties = new RecoveryPlanProperties(
+                new RecoveryPlanType(planType.ToString()),
+                planDescription,
+                recoveryGroups)
+        };
+
+        ArmOperation<RecoveryPlanResource> operation = await recoveryPlans.CreateOrUpdateAsync(
+            WaitUntil.Completed,
+            recoveryPlan,
+            data,
+            cancellationToken);
+
+        using JsonDocument document = JsonDocument.Parse(operation.GetRawResponse().Content.ToMemory());
+        return document.RootElement.Clone();
+    }
+
+    public async Task<bool> DeleteRecoveryPlanAsync(string serviceGroup, string recoveryPlan, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
+        RecoveryPlanCollection recoveryPlans = armClient.GetRecoveryPlans(serviceGroupId);
+        NullableResponse<RecoveryPlanResource> existingPlan = await recoveryPlans.GetIfExistsAsync(recoveryPlan, cancellationToken);
+        if (!existingPlan.HasValue || existingPlan.Value is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            await existingPlan.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+            return true;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            return false;
+        }
+    }
+
+    internal static RecoveryGroupsSetting CreateRecoveryGroupsSetting(RecoveryGroupsSetting? existingRecoveryGroups, string? defaultGroupDescription)
+    {
+        RecoveryGroup? existingDefaultGroup = existingRecoveryGroups?.DefaultGroup;
+        string defaultGroupId = existingDefaultGroup?.Properties?.GroupUniqueId ?? Guid.NewGuid().ToString();
+        defaultGroupDescription ??= existingDefaultGroup?.Properties?.Description ?? "Default recovery group";
+        var defaultGroup = new RecoveryGroup
+        {
+            Properties = new RecoveryGroupProperties(defaultGroupId, 0, defaultGroupDescription)
+        };
+        var recoveryGroups = new RecoveryGroupsSetting(defaultGroup);
+        foreach (RecoveryGroup additionalGroup in existingRecoveryGroups?.AdditionalGroups ?? [])
+        {
+            recoveryGroups.AdditionalGroups.Add(additionalGroup);
+        }
+
+        return recoveryGroups;
+    }
+
+    internal static ManagedServiceIdentity CreateRecoveryPlanIdentity(ManagedServiceIdentity? existingIdentity, string? userAssignedIdentity)
+    {
+        if (existingIdentity is not null)
+        {
+            if (!string.IsNullOrWhiteSpace(userAssignedIdentity))
+            {
+                ResourceIdentifier suppliedIdentityResourceId = ParseUserAssignedIdentityResourceId(userAssignedIdentity);
+                if (!existingIdentity.UserAssignedIdentities.ContainsKey(suppliedIdentityResourceId))
+                {
+                    throw new ArgumentException(
+                        "The supplied user-assigned identity does not match the recovery plan's existing identity. Identity cannot be changed during a complete update; omit --user-assigned-identity because the existing identity is preserved.",
+                        nameof(userAssignedIdentity));
+                }
+            }
+
+            return existingIdentity;
+        }
+
+        if (string.IsNullOrWhiteSpace(userAssignedIdentity))
+        {
+            return new ManagedServiceIdentity(ManagedServiceIdentityType.SystemAssigned);
+        }
+
+        ResourceIdentifier identityResourceId = ParseUserAssignedIdentityResourceId(userAssignedIdentity);
+        var identity = new ManagedServiceIdentity(ManagedServiceIdentityType.UserAssigned);
+        identity.UserAssignedIdentities.Add(identityResourceId, new UserAssignedIdentity());
+        return identity;
+    }
+
+    internal static ResourceIdentifier ParseUserAssignedIdentityResourceId(string userAssignedIdentity)
+    {
+        try
+        {
+            var identityResourceId = new ResourceIdentifier(userAssignedIdentity);
+            if (!string.Equals(identityResourceId.ResourceType.ToString(), "Microsoft.ManagedIdentity/userAssignedIdentities", StringComparison.OrdinalIgnoreCase) ||
+                string.IsNullOrWhiteSpace(identityResourceId.SubscriptionId) ||
+                string.IsNullOrWhiteSpace(identityResourceId.ResourceGroupName) ||
+                string.IsNullOrWhiteSpace(identityResourceId.Name))
+            {
+                throw new FormatException();
+            }
+
+            return identityResourceId;
+        }
+        catch (Exception ex) when (ex is ArgumentException or FormatException)
+        {
+            throw new ArgumentException(
+                "The user-assigned identity must be a valid Azure resource ID in the format /subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identity}.",
+                nameof(userAssignedIdentity));
+        }
     }
 
     public async Task<IEnumerable<ResourceSummary>> ListRecoveryResourcesAsync(string serviceGroup, string recoveryPlan, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)

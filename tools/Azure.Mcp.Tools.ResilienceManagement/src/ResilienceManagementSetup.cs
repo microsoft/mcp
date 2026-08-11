@@ -35,6 +35,8 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<UsagePlanEnrollmentGetCommand>();
         services.AddSingleton<UsagePlanEnrollmentCreateCommand>();
         services.AddSingleton<RecoveryPlanGetCommand>();
+        services.AddSingleton<RecoveryPlanCreateCommand>();
+        services.AddSingleton<RecoveryPlanDeleteCommand>();
         services.AddSingleton<RecoveryResourceGetCommand>();
         services.AddSingleton<RecoveryJobGetCommand>();
         services.AddSingleton<RecoveryJobResourceGetCommand>();
@@ -94,6 +96,8 @@ public class ResilienceManagementSetup : IAreaSetup
         recovery.AddSubGroup(recoveryPlans);
 
         recoveryPlans.AddCommand<RecoveryPlanGetCommand>(serviceProvider);
+        recoveryPlans.AddCommand<RecoveryPlanCreateCommand>(serviceProvider);
+        recoveryPlans.AddCommand<RecoveryPlanDeleteCommand>(serviceProvider);
 
         // Create resource subgroup under recovery plan
         var recoveryResources = new CommandGroup("resource", "Resilience recovery resource operations - Commands for listing and getting the resources (members) of a resilience recovery plan.");

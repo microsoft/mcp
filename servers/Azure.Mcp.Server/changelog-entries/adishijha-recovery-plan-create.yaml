@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the 'azmcp resilience recovery plan create' command to create a Zonal recovery plan with a system-assigned identity by default or an optional user-assigned identity, or fully update a plan while preserving its existing identity and recovery groups."

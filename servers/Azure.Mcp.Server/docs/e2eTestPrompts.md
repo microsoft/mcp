@@ -900,6 +900,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | resilience_recovery_job_get | Get the details of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> |
 | resilience_recovery_job_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> |
 | resilience_recovery_job_resource_get | Get the recovery job resource <resource_name> for recovery job <recovery_job_name> of recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_recovery_plan_create | Create a Zonal resilience recovery plan <recovery_plan_name> in service group <service_group> with the default system-assigned identity, description <plan_description>, and default recovery group described as <default_group_description>; remind me to verify the identity has the RBAC roles required by the recovery resources |
+| resilience_recovery_plan_create | Create a Zonal resilience recovery plan <recovery_plan_name> in service group <service_group> with pre-provisioned user-assigned identity <user_assigned_identity_resource_id>, description <plan_description>, and default recovery group described as <default_group_description>; remind me to grant the identity the RBAC roles required by the recovery resources |
+| resilience_recovery_plan_create | Fully update resilience recovery plan <recovery_plan_name> in service group <service_group>, preserving its managed identity, Zonal plan type, and recovery groups, with description <plan_description> |
+| resilience_recovery_plan_delete | Delete resilience recovery plan <recovery_plan_name> from service group <service_group> |
+| resilience_recovery_plan_delete | Remove recovery plan <recovery_plan_name> from resilience service group <service_group>; report whether it existed |
 | resilience_recovery_plan_get | List all resilience recovery plans in service group <service_group> |
 | resilience_recovery_plan_get | Get the details of recovery plan <recovery_plan_name> in service group <service_group> |
 | resilience_recovery_plan_resource_get | List all resources (members) of recovery plan <recovery_plan_name> in service group <service_group> |

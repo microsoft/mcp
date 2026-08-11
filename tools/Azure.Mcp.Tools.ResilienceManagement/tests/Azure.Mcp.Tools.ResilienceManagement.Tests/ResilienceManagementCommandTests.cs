@@ -147,6 +147,125 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
     }
 
     [Fact]
+    public async Task Should_update_recovery_plan()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+        var existingResult = await CallToolAsync(
+            "resilience_recovery_plan_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "name", recoveryPlan }
+            });
+        var existingPlan = existingResult.AssertProperty("recoveryPlan");
+        var existingIdentity = existingPlan.AssertProperty("identity").Clone();
+        var existingRecoveryGroups = existingPlan
+            .AssertProperty("properties")
+            .AssertProperty("recoveryGroupsSetting");
+        var existingDefaultGroupProperties = existingRecoveryGroups
+            .AssertProperty("defaultGroup")
+            .AssertProperty("properties");
+        string[] existingAdditionalGroups = existingRecoveryGroups
+            .AssertProperty("additionalGroups")
+            .EnumerateArray()
+            .Select(group => group.GetRawText())
+            .ToArray();
+        var defaultGroupId = existingDefaultGroupProperties.AssertProperty("groupUniqueId").GetString();
+        var defaultGroupDescription = existingDefaultGroupProperties.AssertProperty("description").GetString();
+        Assert.False(string.IsNullOrEmpty(defaultGroupId));
+        Assert.False(string.IsNullOrEmpty(defaultGroupDescription));
+
+        var result = await CallToolAsync(
+            "resilience_recovery_plan_create",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan },
+                { "plan-type", "Zonal" },
+                { "plan-description", "Recovery plan created by Azure MCP tests." }
+            });
+
+        var plan = result.AssertProperty("recoveryPlan");
+        Assert.Equal(recoveryPlan, plan.AssertProperty("name").GetString());
+        Assert.True(JsonElement.DeepEquals(existingIdentity, plan.AssertProperty("identity")));
+        var updatedRecoveryGroups = plan
+            .AssertProperty("properties")
+            .AssertProperty("recoveryGroupsSetting");
+        var updatedDefaultGroupProperties = updatedRecoveryGroups
+            .AssertProperty("defaultGroup")
+            .AssertProperty("properties");
+        Assert.Equal(defaultGroupId, updatedDefaultGroupProperties.AssertProperty("groupUniqueId").GetString());
+        Assert.Equal(defaultGroupDescription, updatedDefaultGroupProperties.AssertProperty("description").GetString());
+        Assert.Equal(
+            existingAdditionalGroups,
+            updatedRecoveryGroups.AssertProperty("additionalGroups").EnumerateArray().Select(group => group.GetRawText()));
+    }
+
+    [Fact]
+    public async Task Should_delete_recovery_plan_idempotently()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveVariable("deleteRecoveryPlanName", $"mcpdel-{Guid.NewGuid().ToString("N")[..8]}");
+        bool recoveryPlanExists = false;
+
+        try
+        {
+            await CallToolAsync(
+                "resilience_recovery_plan_create",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "recovery-plan", recoveryPlan },
+                    { "plan-type", "Zonal" },
+                    { "plan-description", "Temporary recovery plan for delete testing." }
+                });
+            recoveryPlanExists = true;
+
+            var deletedResult = await CallToolAsync(
+                "resilience_recovery_plan_delete",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "recovery-plan", recoveryPlan }
+                });
+            recoveryPlanExists = false;
+
+            Assert.True(deletedResult.AssertProperty("deleted").GetBoolean());
+            Assert.Equal(recoveryPlan, deletedResult.AssertProperty("recoveryPlan").GetString());
+
+            var alreadyDeletedResult = await CallToolAsync(
+                "resilience_recovery_plan_delete",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "recovery-plan", recoveryPlan }
+                });
+
+            Assert.False(alreadyDeletedResult.AssertProperty("deleted").GetBoolean());
+        }
+        finally
+        {
+            if (recoveryPlanExists)
+            {
+                await CallToolAsync(
+                    "resilience_recovery_plan_delete",
+                    new()
+                    {
+                        { "tenant", Settings.TenantId },
+                        { "service-group", serviceGroup },
+                        { "recovery-plan", recoveryPlan }
+                    });
+            }
+        }
+    }
+
+    [Fact]
     public async Task Should_list_recovery_resources()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
