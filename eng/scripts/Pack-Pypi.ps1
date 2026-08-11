@@ -136,6 +136,13 @@ function Get-PythonCommand {
 function BuildServerPackages([hashtable] $server, [bool] $native) {
     $serverDirectory = "$ArtifactsPath/$($server.artifactPath)"
 
+    $pythonVersion = [AzureEngSemanticVersion]::ParsePythonVersionString($server.version)
+    if (!$pythonVersion) {
+        Write-Error "Server version '$($server.version)' is not a valid semantic version for PyPI packaging."
+        return
+    }
+    $pythonVersion = $pythonVersion.ToString()
+
     if (!(Test-Path $serverDirectory)) {
         $message = "Server directory $serverDirectory does not exist."
         if ($ignoreMissingArtifacts) {
@@ -228,7 +235,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
 
         $pyprojectContent = $pyprojectTemplate `
             -replace '{{PACKAGE_NAME}}', $basePackageName `
-            -replace '{{VERSION}}', $server.version `
+            -replace '{{VERSION}}', $pythonVersion `
             -replace '{{DESCRIPTION}}', $description `
             -replace '{{KEYWORDS}}', (Get-KeywordsString $keywords) `
             -replace '{{OS_CLASSIFIER}}', $osClassifier `
@@ -243,7 +250,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         # Update version in __init__.py
         $initPyPath = "$tempFolder/src/$moduleName/__init__.py"
         $initPyContent = Get-Content $initPyPath -Raw
-        $initPyContent = $initPyContent -replace '__version__ = "0\.0\.0"', "__version__ = `"$($server.version)`""
+        $initPyContent = $initPyContent -replace '__version__ = "0\.0\.0"', "__version__ = `"$pythonVersion`""
         $initPyContent | Out-File -FilePath $initPyPath -Encoding utf8 -Force
 
         # Set executable permissions on non-Windows
