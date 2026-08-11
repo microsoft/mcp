@@ -147,7 +147,7 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         };
 
         var vectorFields = FindVectorFields(indexDefinition.Value);
-        // TODO (alzimmer): this isn't useed and probably should be.
+        // TODO (alzimmer): this isn't used and probably should be.
         var vectorizableFields = FindVectorizableFields(indexDefinition.Value, vectorFields);
         ConfigureSearchOptions(searchText, options, indexDefinition.Value, vectorFields);
         ConfigureQueryType(options, indexDefinition.Value, queryType);
