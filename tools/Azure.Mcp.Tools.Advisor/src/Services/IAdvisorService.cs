@@ -27,10 +27,13 @@ public interface IAdvisorService
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
-    Task<List<RecommendationType>> ListRecommendationTypesAsync(
-        string? tenant,
-        string? resourceType,
-        string? impact,
-        string? category,
+    Task<ResourceQueryResults<RecommendationMetadata>> ListRecommendationMetadataAsync(
+        string language,
+        RecommendationMetadataFilters? filters,
+        CancellationToken cancellationToken = default);
+
+    Task<RecommendationMetadata?> GetRecommendationMetadataAsync(
+        string recommendationTypeId,
+        string language,
         CancellationToken cancellationToken = default);
 }

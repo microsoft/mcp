@@ -6,25 +6,23 @@ using System.Text.Json;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Identity.Broker;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 using Microsoft.Mcp.Tests;
-using Microsoft.Mcp.Tests.Attributes;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Services.Azure.Authentication;
 
-[Trait("TestType", "Live")]
 public class AuthenticationIntegrationTests : IAsyncLifetime
 {
     private readonly ServiceProvider _serviceProvider;
-    private readonly ISubscriptionService _subscriptionService;
+    private readonly IAzureService _azureService;
     private readonly ITestOutputHelper _output;
 
     public AuthenticationIntegrationTests(ITestOutputHelper output)
@@ -35,29 +33,29 @@ public class AuthenticationIntegrationTests : IAsyncLifetime
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton(Substitute.For<ICacheService>());
-        services.AddSingleton(Substitute.For<ITenantService>());
-        services.AddSingleton(Substitute.For<ILogger<SubscriptionService>>());
-        services.AddSingleton<ISubscriptionService, SubscriptionService>();
+        services.AddSingleton(Substitute.For<ILogger<AzureService>>());
+        services.AddSingleton(Substitute.For<IAzureTokenCredentialProvider>());
+        services.AddSingleton(Substitute.For<IHttpClientFactory>());
+        services.AddSingleton(Substitute.For<IAzureCloudConfiguration>());
         services.AddSingleton<ISubscriptionResolver, SubscriptionResolver>();
+        services.AddSingleton<IAzureService, AzureService>();
 
         _serviceProvider = services.BuildServiceProvider();
-        _subscriptionService = _serviceProvider.GetRequiredService<ISubscriptionService>();
+        _azureService = _serviceProvider.GetRequiredService<IAzureService>();
     }
 
-    public ValueTask InitializeAsync() => ValueTask.CompletedTask;
-
-    public async ValueTask DisposeAsync()
+    public async ValueTask InitializeAsync()
     {
-        await _serviceProvider.DisposeAsync();
+        Assert.SkipWhen(!TestExtensions.IsLiveTestMode(), "Skipping test in non-live mode");
+        Assert.SkipWhen(TestExtensions.IsRunningInNonInteractiveEnvironment(), TestExtensions.RunningInNonInteractiveEnvironment);
+        Assert.SkipWhen(RuntimeInformation.IsOSPlatform(OSPlatform.OSX), "Identity broker is not supported on MacOS");
     }
 
-    [LiveTestOnly]
+    public async ValueTask DisposeAsync() => await _serviceProvider.DisposeAsync();
+
     [Fact]
     public async Task LoginWithIdentityBroker_ThenListSubscriptions_ShouldSucceed()
     {
-        Assert.SkipWhen(TestExtensions.IsRunningFromDotnetTest(), TestExtensions.RunningFromDotnetTestReason);
-        Assert.SkipWhen(RuntimeInformation.IsOSPlatform(OSPlatform.OSX), "Identity broker is not supported on MacOS");
-
         _output.WriteLine("Testing InteractiveBrowserCredential with identity broker...");
 
         await AuthenticateWithBrokerAsync();
@@ -66,7 +64,7 @@ public class AuthenticationIntegrationTests : IAsyncLifetime
         // Step 2: Now test the subscription service which will use our CustomChainedCredential internally
         _output.WriteLine("Testing subscription listing with authenticated credential...");
 
-        var subscriptions = await _subscriptionService.GetSubscriptions(cancellationToken: TestContext.Current.CancellationToken);
+        var subscriptions = await _azureService.GetSubscriptions(cancellationToken: TestContext.Current.CancellationToken);
         ValidateAndLogSubscriptions(subscriptions);
     }
 

@@ -1,0 +1,15 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+  },
+  "responses": {
+    "200": {
+      "headers": {
+        "ETag": "\"a1b2c3d4\""
+      },
+      "body": {
+        "defaultAction": "Deny"
+      }
+    }
+  }
+}

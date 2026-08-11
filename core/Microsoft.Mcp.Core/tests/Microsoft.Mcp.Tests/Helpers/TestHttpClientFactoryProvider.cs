@@ -20,7 +20,7 @@ public static class TestHttpClientFactoryProvider
     /// <returns>
     /// A <see cref="ServiceProvider"/> containing the configured HTTP client services for use in tests.
     /// </returns>
-    public static ServiceProvider Create(TestProxyFixture? fixture = null)
+    public static ServiceProvider Create(TestProxyFixture? fixture = null, Action<ServiceCollection>? configureServices = null)
     {
         Func<Uri?>? recordingProxyResolver = fixture == null ? null : fixture.GetProxyUri;
 
@@ -29,6 +29,8 @@ public static class TestHttpClientFactoryProvider
         services.Configure<HttpClientOptions>(_ => { });
         services.Configure<ServerStartOptions>(_ => { });
         services.AddHttpClient();
+
+        configureServices?.Invoke(services);
 
         services.ConfigureDefaultHttpClient(recordingProxyResolver);
         return services.BuildServiceProvider();

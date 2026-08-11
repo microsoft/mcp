@@ -3,8 +3,6 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Utilities;
 using Azure.ResourceManager;
@@ -22,11 +20,10 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Compute.Services;
 
 public class ComputeService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
+    IAzureService azureService,
     ILogger<ComputeService> logger,
     IOptions<ServerStartOptions> serviceStartOptions)
-    : BaseAzureResourceService(subscriptionService, tenantService), IComputeService
+    : BaseAzureResourceService(azureService), IComputeService
 {
     private readonly ILogger<ComputeService> _logger = logger;
     private readonly IOptions<ServerStartOptions> _serviceStartOptions = serviceStartOptions;
@@ -1580,7 +1577,7 @@ public class ComputeService(
         // Default to the resource group's location if not specified
         var resolvedLocation = location ?? rgResource.Value.Data.Location.Name;
 
-        var creationData = CreateDiskCreationData(source, TenantService.CloudConfiguration.ArmEnvironment, galleryImageReference, galleryImageReferenceLun, uploadType, uploadSizeBytes);
+        var creationData = CreateDiskCreationData(source, AzureService.CloudConfiguration.ArmEnvironment, galleryImageReference, galleryImageReferenceLun, uploadType, uploadSizeBytes);
 
         var diskData = new ManagedDiskData(new(resolvedLocation))
         {

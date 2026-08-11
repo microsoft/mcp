@@ -118,7 +118,7 @@ public class HostpoolListCommandTests : SubscriptionCommandUnitTestsBase<Hostpoo
     }
 
     [Fact]
-    public async Task ExecuteAsync_CallsResourceGroupService_WhenResourceGroupProvided()
+    public async Task ExecuteAsync_CallsAzureService_WhenResourceGroupProvided()
     {
         // Arrange
         var expectedHostpools = new List<HostPool>
@@ -141,7 +141,7 @@ public class HostpoolListCommandTests : SubscriptionCommandUnitTestsBase<Hostpoo
     }
 
     [Fact]
-    public async Task ExecuteAsync_CallsSubscriptionService_WhenNoResourceGroup()
+    public async Task ExecuteAsync_CallsAzureService_WhenNoResourceGroup()
     {
         // Arrange
         var expectedHostpools = new List<HostPool>

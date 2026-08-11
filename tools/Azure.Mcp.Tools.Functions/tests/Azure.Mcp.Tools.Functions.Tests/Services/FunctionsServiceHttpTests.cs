@@ -270,6 +270,41 @@ public sealed class FunctionsServiceHttpTests
     #region FetchTemplateFilesViaArchiveAsync Tests
 
     [Fact]
+    public async Task GetFunctionTemplateAsync_GoAddMode_IncludesGoMergeGuidance()
+    {
+        var zipBytes = CreateTestZipArchive(new Dictionary<string, string>
+        {
+            ["Azure-repo-abc123/main.go"] = "package main",
+            ["Azure-repo-abc123/go.mod"] = "module example.com/functions",
+            ["Azure-repo-abc123/go.sum"] = "",
+            ["Azure-repo-abc123/host.json"] = "{\"version\": \"2.0\"}"
+        });
+        var handler = new MockHttpMessageHandler(zipBytes, HttpStatusCode.OK);
+        var httpClientFactory = CreateHttpClientFactory(handler);
+        var manifest = new TemplateManifest
+        {
+            Version = "1.0",
+            Templates = [CreateTestEntry("go", ".", "http-trigger-go-azd")]
+        };
+        _manifestService.FetchManifestAsync(Arg.Any<CancellationToken>()).Returns(manifest);
+        var service = CreateService(httpClientFactory);
+
+        var result = await service.GetFunctionTemplateAsync(
+            SupportedLanguages.Go,
+            "http-trigger-go-azd",
+            null,
+            TemplateOutput.Add,
+            CancellationToken.None);
+
+        Assert.Contains("Go: Place `.go` files in the project root", result.MergeInstructions);
+        Assert.NotNull(result.FunctionFiles);
+        Assert.NotNull(result.ProjectFiles);
+        Assert.Contains(result.FunctionFiles, file => file.FileName == "main.go");
+        Assert.Contains(result.ProjectFiles, file => file.FileName == "go.mod");
+        Assert.Contains(result.ProjectFiles, file => file.FileName == "go.sum");
+    }
+
+    [Fact]
     public async Task FetchTemplateFilesViaArchiveAsync_ExtractsFiles_FromZipball()
     {
         // Arrange - create a real ZIP in memory
