@@ -3,7 +3,6 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Options;
@@ -18,8 +17,8 @@ public class BaseAzureServiceTests
     private const string TenantId = "test-tenant-id";
     private const string TenantName = "test-tenant-name";
 
-    private readonly ITenantService _tenantService = Substitute.For<ITenantService>();
-    private readonly TestAzureService _azureService;
+    private readonly IAzureService _azureService = Substitute.For<IAzureService>();
+    private readonly TestAzureService _testAzureService;
 
     public BaseAzureServiceTests()
     {
@@ -27,15 +26,15 @@ public class BaseAzureServiceTests
         var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
         cloudConfig.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
         cloudConfig.AuthorityHost.Returns(new Uri("https://login.microsoftonline.com"));
-        _tenantService.CloudConfiguration.Returns(cloudConfig);
+        _azureService.CloudConfiguration.Returns(cloudConfig);
 
-        _azureService = new TestAzureService(_tenantService);
-        _tenantService.GetTenantId(TenantName, Arg.Any<CancellationToken>()).Returns(TenantId);
-        _tenantService.GetTokenCredentialAsync(
+        _testAzureService = new TestAzureService(_azureService);
+        _azureService.GetTenantId(TenantName, Arg.Any<CancellationToken>()).Returns(TenantId);
+        _azureService.GetTokenCredentialAsync(
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(Substitute.For<TokenCredential>());
-        _tenantService.GetClient().Returns(_ => new HttpClient(new HttpClientHandler()));
+        _azureService.GetClient().Returns(_ => new HttpClient(new HttpClientHandler()));
     }
 
     [Fact]
@@ -45,7 +44,7 @@ public class BaseAzureServiceTests
         var tenantName2 = "Other-Tenant-Name";
         var tenantId2 = "Other-Tenant-Id";
 
-        _tenantService.GetTenantId(tenantName2, Arg.Any<CancellationToken>()).Returns(tenantId2);
+        _azureService.GetTenantId(tenantName2, Arg.Any<CancellationToken>()).Returns(tenantId2);
 
         var retryPolicyArgs = new RetryPolicyOptions
         {
@@ -54,25 +53,18 @@ public class BaseAzureServiceTests
             MaxRetries = 3
         };
 
-        var client = await _azureService.GetArmClientAsync(TenantName, retryPolicyArgs);
-        var client2 = await _azureService.GetArmClientAsync(TenantName, retryPolicyArgs);
+        var client = await _testAzureService.GetArmClientAsync(TenantName, retryPolicyArgs);
+        var client2 = await _testAzureService.GetArmClientAsync(TenantName, retryPolicyArgs);
 
         Assert.NotEqual(client, client2);
 
-        var otherClient = await _azureService.GetArmClientAsync(tenantName2, retryPolicyArgs);
+        var otherClient = await _testAzureService.GetArmClientAsync(tenantName2, retryPolicyArgs);
 
         Assert.NotEqual(client, otherClient);
 
         // Not tested: we'd like to, but can't, verify the TokenCredential is reused
         // between client and client2 but NOT with otherClient. ArmClient doesn't expose
         // the credential nor the HttpPipeline the credential is included within.
-    }
-
-    [Fact]
-    public async Task ResolveTenantIdAsync_ReturnsNullOnNull()
-    {
-        string? actual = await _azureService.ResolveTenantId(null, TestContext.Current.CancellationToken);
-        Assert.Null(actual);
     }
 
     [Fact]
@@ -83,7 +75,7 @@ public class BaseAzureServiceTests
         var expected = "resource''with''quotes";
 
         // Act
-        var result = _azureService.EscapeKqlStringTest(input);
+        var result = TestAzureService.EscapeKqlStringTest(input);
 
         // Assert
         Assert.Equal(expected, result);
@@ -97,7 +89,7 @@ public class BaseAzureServiceTests
         var expected = @"resource\\with\\backslashes";
 
         // Act
-        var result = _azureService.EscapeKqlStringTest(input);
+        var result = TestAzureService.EscapeKqlStringTest(input);
 
         // Assert
         Assert.Equal(expected, result);
@@ -111,7 +103,7 @@ public class BaseAzureServiceTests
         var expected = @"resource\\''with\\''mixed";
 
         // Act
-        var result = _azureService.EscapeKqlStringTest(input);
+        var result = TestAzureService.EscapeKqlStringTest(input);
 
         // Assert
         Assert.Equal(expected, result);
@@ -121,8 +113,8 @@ public class BaseAzureServiceTests
     public void EscapeKqlString_HandlesNullAndEmptyStrings()
     {
         // Act & Assert
-        Assert.Equal(string.Empty, _azureService.EscapeKqlStringTest(null!));
-        Assert.Equal(string.Empty, _azureService.EscapeKqlStringTest(string.Empty));
+        Assert.Equal(string.Empty, TestAzureService.EscapeKqlStringTest(null!));
+        Assert.Equal(string.Empty, TestAzureService.EscapeKqlStringTest(string.Empty));
     }
 
     [Fact]
@@ -132,7 +124,7 @@ public class BaseAzureServiceTests
         var input = "regular-resource-name";
 
         // Act
-        var result = _azureService.EscapeKqlStringTest(input);
+        var result = TestAzureService.EscapeKqlStringTest(input);
 
         // Assert
         Assert.Equal(input, result);
@@ -143,7 +135,7 @@ public class BaseAzureServiceTests
     {
         // Initialize the user agent policy before creating test service
         BaseAzureService.InitializeUserAgentPolicy(TransportTypes.StdIo);
-        TestAzureService testAzureService = new TestAzureService(_tenantService);
+        TestAzureService testAzureService = new TestAzureService(_azureService);
         Assert.NotNull(testAzureService.GetUserAgent());
         Assert.Contains("azmcp-stdio", testAzureService.GetUserAgent());
     }
@@ -169,11 +161,11 @@ public class BaseAzureServiceTests
         var credential = Substitute.For<TokenCredential>();
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
             .Returns(new ValueTask<AccessToken>(new AccessToken("token", DateTimeOffset.UtcNow.AddHours(1))));
-        _tenantService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
+        _azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(credential);
 
         // Act
-        await _azureService.GetArmAccessTokenPublicAsync(TestContext.Current.CancellationToken);
+        await _testAzureService.GetArmAccessTokenPublicAsync(TestContext.Current.CancellationToken);
 
         // Assert: ARM default scope is passed in the TokenRequestContext
         await credential.Received(1).GetTokenAsync(
@@ -187,15 +179,17 @@ public class BaseAzureServiceTests
         // Arrange
         var credential = Substitute.For<TokenCredential>();
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<AccessToken>(new AccessToken("token", DateTimeOffset.UtcNow.AddHours(1))));
-        _tenantService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new AccessToken("token", DateTimeOffset.UtcNow.AddHours(1)));
+        _azureService.ResolveTenantIdAsync(TenantName, Arg.Any<CancellationToken>())
+            .Returns(TenantId);
+        _azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(credential);
 
         // Act
-        await _azureService.GetArmAccessTokenPublicAsync(TenantName, TestContext.Current.CancellationToken);
+        await _testAzureService.GetArmAccessTokenPublicAsync(TenantName, TestContext.Current.CancellationToken);
 
         // Assert: TenantName is resolved to TenantId and forwarded to GetTokenCredentialAsync
-        await _tenantService.Received(1).GetTokenCredentialAsync(TenantId, Arg.Any<CancellationToken>());
+        await _azureService.Received(1).GetTokenCredentialAsync(TenantId, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -204,15 +198,15 @@ public class BaseAzureServiceTests
         // Arrange
         var credential = Substitute.For<TokenCredential>();
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<AccessToken>(new AccessToken("token", DateTimeOffset.UtcNow.AddHours(1))));
-        _tenantService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new AccessToken("token", DateTimeOffset.UtcNow.AddHours(1)));
+        _azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(credential);
 
         // Act
-        await _azureService.GetArmAccessTokenPublicAsync(TestContext.Current.CancellationToken);
+        await _testAzureService.GetArmAccessTokenPublicAsync(TestContext.Current.CancellationToken);
 
         // Assert: null tenant is passed through as null
-        await _tenantService.Received(1).GetTokenCredentialAsync(null, Arg.Any<CancellationToken>());
+        await _azureService.Received(1).GetTokenCredentialAsync(null, Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -227,7 +221,7 @@ public class BaseAzureServiceTests
         var clientOptions = new ArmClientOptions();
         var defaultClientOptions = new ArmClientOptions();
         // Act
-        _azureService.ConfigureRetryPolicyPublic(clientOptions, retryPolicy);
+        TestAzureService.ConfigureRetryPolicyPublic(clientOptions, retryPolicy);
         // Assert
         var expected = expectedMaxRetries ?? defaultClientOptions.Retry.MaxRetries;
         Assert.Equal(expected, clientOptions.Retry.MaxRetries);
@@ -247,7 +241,7 @@ public class BaseAzureServiceTests
         var clientOptions = new ArmClientOptions();
         var defaultClientOptions = new ArmClientOptions();
         // Act
-        _azureService.ConfigureRetryPolicyPublic(clientOptions, retryPolicy);
+        TestAzureService.ConfigureRetryPolicyPublic(clientOptions, retryPolicy);
         // Assert
         var expected = expectedDelay != null ? TimeSpan.FromSeconds(expectedDelay.Value) : defaultClientOptions.Retry.Delay;
         Assert.Equal(expected, clientOptions.Retry.Delay);
@@ -267,7 +261,7 @@ public class BaseAzureServiceTests
         var clientOptions = new ArmClientOptions();
         var defaultClientOptions = new ArmClientOptions();
         // Act
-        _azureService.ConfigureRetryPolicyPublic(clientOptions, retryPolicy);
+        TestAzureService.ConfigureRetryPolicyPublic(clientOptions, retryPolicy);
         // Assert
         var expected = expectedMaxDelay != null ? TimeSpan.FromSeconds(expectedMaxDelay.Value) : defaultClientOptions.Retry.MaxDelay;
         Assert.Equal(expected, clientOptions.Retry.MaxDelay);
@@ -285,13 +279,13 @@ public class BaseAzureServiceTests
         var clientOptions = new ArmClientOptions();
         var defaultClientOptions = new ArmClientOptions();
         // Act
-        _azureService.ConfigureRetryPolicyPublic(clientOptions, retryPolicy);
+        TestAzureService.ConfigureRetryPolicyPublic(clientOptions, retryPolicy);
         // Assert
         var expected = expectedTimeout != null ? TimeSpan.FromSeconds(expectedTimeout.Value) : defaultClientOptions.Retry.NetworkTimeout;
         Assert.Equal(expected, clientOptions.Retry.NetworkTimeout);
     }
 
-    private sealed class TestAzureService(ITenantService tenantService) : BaseAzureService(tenantService)
+    private sealed class TestAzureService(IAzureService azureService) : BaseAzureService(azureService)
     {
         public Task<ArmClient> GetArmClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null) =>
             CreateArmClientAsync(tenant, retryPolicy);
@@ -302,14 +296,11 @@ public class BaseAzureServiceTests
         public Task<AccessToken> GetArmAccessTokenPublicAsync(string? tenant, CancellationToken cancellationToken) =>
             GetArmAccessTokenAsync(tenant, cancellationToken);
 
-        // Expose the protected ResolveTenantIdAsync method for testing
-        public Task<string?> ResolveTenantId(string? tenant, CancellationToken cancellationToken) => ResolveTenantIdAsync(tenant, cancellationToken);
-
-        public string EscapeKqlStringTest(string value) => EscapeKqlString(value);
+        public static string EscapeKqlStringTest(string value) => EscapeKqlString(value);
 
         public string GetUserAgent() => UserAgent;
 
-        public T ConfigureRetryPolicyPublic<T>(T clientOptions, RetryPolicyOptions? retryPolicy) where T : ClientOptions =>
+        public static T ConfigureRetryPolicyPublic<T>(T clientOptions, RetryPolicyOptions? retryPolicy) where T : ClientOptions =>
             ConfigureRetryPolicy(clientOptions, retryPolicy);
     }
 }

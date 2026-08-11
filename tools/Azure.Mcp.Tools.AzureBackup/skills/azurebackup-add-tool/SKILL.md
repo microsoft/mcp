@@ -260,7 +260,7 @@ dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.
 .\eng\common\spelling\Invoke-Cspell.ps1
 ```
 
-If new technical terms are flagged, add them to `.vscode/cspell.json`.
+If new Azure Backup-specific technical terms are flagged, add them to `tools/Azure.Mcp.Tools.AzureBackup/cspell.yaml`. Add cross-cutting terms used by multiple projects to the root `cspell.yaml`.
 
 #### 5f. Full Build Verification
 

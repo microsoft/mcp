@@ -4,7 +4,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
-using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Insights.Options;
 using Azure.Mcp.Tools.Insights.Services;
 using Azure.Mcp.Tools.Insights.Services.Models;
@@ -40,7 +40,7 @@ public sealed partial class InsightsGetCommand(
     ILogger<InsightsGetCommand> logger,
     IInsightsService insightsService,
     ISamplingService samplingService,
-    ISubscriptionService subscriptionService)
+    IAzureService azureService)
     : AuthenticatedCommand<InsightsGetOptions, InsightsGetCommand.InsightsGetCommandResult>()
 {
     private readonly ILogger<InsightsGetCommand> _logger = logger;
@@ -49,7 +49,7 @@ public sealed partial class InsightsGetCommand(
 
     private readonly ISamplingService _samplingService = samplingService;
 
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
+    private readonly IAzureService _azureService = azureService;
 
     private const int SamplingMaxTokens = 20000;
 
@@ -166,7 +166,7 @@ public sealed partial class InsightsGetCommand(
         // Use default subscription if not provided
         if (scope == InsightsOptionDefinitions.ScopeSubscription && !explicitSubscription)
         {
-            options.Subscription = _subscriptionService.GetDefaultSubscriptionId();
+            options.Subscription = _azureService.GetDefaultSubscriptionId();
             if (string.IsNullOrEmpty(options.Subscription))
             {
                 context.Response.Status = System.Net.HttpStatusCode.BadRequest;

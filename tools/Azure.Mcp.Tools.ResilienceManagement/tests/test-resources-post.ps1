@@ -1,6 +1,7 @@
 param(
     [string] $TenantId,
     [string] $TestApplicationId,
+    [string] $TestApplicationOid,
     [string] $ResourceGroupName,
     [string] $BaseName,
     [hashtable] $DeploymentOutputs,

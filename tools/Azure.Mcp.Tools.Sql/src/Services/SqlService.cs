@@ -5,8 +5,6 @@ using System.Net;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.ResourceManager.Sql;
 using Azure.ResourceManager.Sql.Models;
@@ -17,10 +15,9 @@ using SdkDatabaseReadScale = Azure.ResourceManager.Sql.Models.DatabaseReadScale;
 
 namespace Azure.Mcp.Tools.Sql.Services;
 
-public class SqlService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<SqlService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), ISqlService
+public class SqlService(IAzureService azureService, ILogger<SqlService> logger)
+    : BaseAzureResourceService(azureService), ISqlService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ILogger<SqlService> _logger = logger;
 
     /// <summary>
@@ -37,9 +34,9 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
-        return _subscriptionService.IsSubscriptionId(subscription)
+        return AzureService.IsSubscriptionId(subscription)
             ? subscription
-            : await _subscriptionService.GetSubscriptionIdByName(subscription, null, retryPolicy, cancellationToken);
+            : await AzureService.GetSubscriptionIdByName(subscription, null, retryPolicy, cancellationToken);
     }
 
     /// <summary>
@@ -58,7 +55,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
         return await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName, cancellationToken: cancellationToken);
@@ -347,7 +344,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(subscription), subscription),
             (nameof(newDatabaseName), newDatabaseName));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
         var subscriptionId = subscriptionResource.Data.SubscriptionId;
         var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
         var currentDatabaseId = SqlDatabaseResource.CreateResourceIdentifier(
@@ -685,7 +682,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(administratorPassword), administratorPassword));
 
         // Resolve the subscription (supports both subscription IDs and names) before navigating to the resource group
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serverData = new SqlServerData(location)
         {
@@ -780,7 +777,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
 
         ResourceManager.Resources.ResourceGroupResource resourceGroupResource;
 
