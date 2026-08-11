@@ -20,7 +20,7 @@ dotnet --list-runtimes
 ```
 
 **Resolution:**
-- Install .NET 10.x SDK from https://dotnet.microsoft.com/download/dotnet/10.0
+- Install the latest .NET SDK LTS from https://dotnet.microsoft.com/download/dotnet
 - Restart your terminal after installation
 - Check `global.json` in repository root for any pinned SDK versions
 

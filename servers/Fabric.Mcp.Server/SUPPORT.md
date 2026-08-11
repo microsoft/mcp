@@ -146,7 +146,7 @@ We welcome contributions! The Fabric MCP Server is part of the broader Microsoft
 ### Development Setup
 
 **Prerequisites:**
-- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- [Latest .NET SDK LTS](https://dotnet.microsoft.com/download/dotnet)
 - Git
 
 **Build steps:**
