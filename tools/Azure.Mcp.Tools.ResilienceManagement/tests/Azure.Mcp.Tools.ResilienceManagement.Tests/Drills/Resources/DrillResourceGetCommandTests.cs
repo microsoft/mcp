@@ -24,6 +24,32 @@ public class DrillResourceGetCommandTests : CommandUnitTestsBase<DrillResourceGe
         => JsonDocument.Parse($"{{\"id\":\"id1\",\"name\":\"{name}\"}}").RootElement.Clone();
 
     [Fact]
+    public void Constructor_InitializesCommandCorrectly()
+    {
+        var command = Command.GetCommand();
+        Assert.Equal("get", command.Name);
+        Assert.NotNull(command.Description);
+        Assert.NotEmpty(command.Description);
+    }
+
+    [Theory]
+    [InlineData("--service-group sg1 --drill drill1", true)]
+    [InlineData("--service-group sg1", false)]
+    [InlineData("", false)]
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        if (shouldSucceed)
+        {
+            Service.ListDrillResourcesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                .Returns([]);
+        }
+
+        var response = await ExecuteCommandAsync(args);
+
+        Assert.Equal(shouldSucceed ? System.Net.HttpStatusCode.OK : System.Net.HttpStatusCode.BadRequest, response.Status);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_ListsDrillResources_WhenNameOmitted()
     {
         var expected = new List<ResourceSummary> { new("id1", "target1"), new("id2", "target2") };

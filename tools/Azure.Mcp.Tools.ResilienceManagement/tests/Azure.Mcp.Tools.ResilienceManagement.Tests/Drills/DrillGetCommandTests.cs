@@ -22,6 +22,31 @@ public class DrillGetCommandTests : CommandUnitTestsBase<DrillGetCommand, IResil
         => new("id1", name);
 
     [Fact]
+    public void Constructor_InitializesCommandCorrectly()
+    {
+        var command = Command.GetCommand();
+        Assert.Equal("get", command.Name);
+        Assert.NotNull(command.Description);
+        Assert.NotEmpty(command.Description);
+    }
+
+    [Theory]
+    [InlineData("--service-group sg1", true)]
+    [InlineData("", false)]
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        if (shouldSucceed)
+        {
+            Service.ListDrillsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                .Returns([]);
+        }
+
+        var response = await ExecuteCommandAsync(args);
+
+        Assert.Equal(shouldSucceed ? System.Net.HttpStatusCode.OK : System.Net.HttpStatusCode.BadRequest, response.Status);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_ListsDrills_WhenNameOmitted()
     {
         var expected = new List<ResourceSummary> { new("id1", "drill1"), new("id2", "drill2") };

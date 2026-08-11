@@ -40,6 +40,7 @@ $enrollmentName = $DeploymentOutputs['ENROLLMENTNAME']
 $goalTemplateName = $DeploymentOutputs['GOALTEMPLATENAME']
 $goalAssignmentName = $DeploymentOutputs['GOALASSIGNMENTNAME']
 $recoveryPlanName = $DeploymentOutputs['RECOVERYPLANNAME']
+$drillName = $DeploymentOutputs['DRILLNAME']
 
 $serviceGroupApiVersion = '2024-02-01-preview'
 $membershipApiVersion = '2023-09-01-preview'
@@ -61,6 +62,24 @@ function Invoke-ResilienceRestPut {
         throw "PUT $Path failed with status $($response.StatusCode): $($response.Content)"
     }
     return $response
+}
+
+# Creates a resource only if it does not already exist.
+# Performs a GET first; if the resource is found (2xx) it is skipped.
+# If it is not found (404) or a GET fails for any other reason, the PUT is attempted.
+function Invoke-ResilienceRestPutIfNotExists {
+    param(
+        [string]    $Path,
+        [hashtable] $Body
+    )
+
+    $check = Invoke-AzRestMethod -Method GET -Path $Path
+    if ($check.StatusCode -ge 200 -and $check.StatusCode -lt 300) {
+        Write-Host "SKIP (already exists) $Path"
+        return $check
+    }
+
+    return Invoke-ResilienceRestPut -Path $Path -Body $Body
 }
 
 function Invoke-ResilienceRestPost {
@@ -144,9 +163,9 @@ Invoke-ResilienceRestPut -Path $enrollmentPath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $enrollmentPath
 
-# 4) Create a goal template on the service group.
+# 4) Create a goal template on the service group (skip if already exists from a previous deployment).
 $goalTemplatePath = "$serviceGroupResilienceBase/goalTemplates/$goalTemplateName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPut -Path $goalTemplatePath -Body @{
+Invoke-ResilienceRestPutIfNotExists -Path $goalTemplatePath -Body @{
     properties = @{
         goalType                       = 'Resiliency'
         requireHighAvailability        = 'Required'
@@ -157,9 +176,9 @@ Invoke-ResilienceRestPut -Path $goalTemplatePath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $goalTemplatePath
 
-# 5) Assign the goal template to the service group.
+# 5) Assign the goal template to the service group (skip if already exists from a previous deployment).
 $goalAssignmentPath = "$serviceGroupResilienceBase/goalAssignments/$goalAssignmentName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPut -Path $goalAssignmentPath -Body @{
+Invoke-ResilienceRestPutIfNotExists -Path $goalAssignmentPath -Body @{
     properties = @{
         goalAssignmentType = 'Resiliency'
         goalTemplateId     = "$serviceGroupResilienceBase/goalTemplates/$goalTemplateName"
@@ -167,9 +186,9 @@ Invoke-ResilienceRestPut -Path $goalAssignmentPath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $goalAssignmentPath
 
-# 6) Create a recovery plan on the service group.
+# 6) Create a recovery plan on the service group (skip if already exists from a previous deployment).
 $recoveryPlanPath = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPut -Path $recoveryPlanPath -Body @{
+Invoke-ResilienceRestPutIfNotExists -Path $recoveryPlanPath -Body @{
     identity   = @{
         type = 'SystemAssigned'
     }
@@ -196,6 +215,54 @@ Wait-ResilienceProvisioning -Path $recoveryPlanPath
 $checkReadinessPath = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName/checkReadiness`?api-version=$resilienceApiVersion"
 Invoke-ResilienceRestPost -Path $checkReadinessPath | Out-Null
 Wait-ResilienceProvisioning -Path $recoveryPlanPath
+
+# 8) Create a drill on the service group (skip if already exists from a previous deployment).
+$drillPath = "$serviceGroupResilienceBase/drills/$drillName`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPutIfNotExists -Path $drillPath -Body @{
+    identity   = @{
+        type = 'SystemAssigned'
+    }
+    properties = @{
+        drillType               = 'Zonal'
+        rbacSetupMode           = 'AutomatedBuiltinRoles'
+        drillAssetProperties    = @{
+            subscription  = $subscriptionId
+            region        = 'westus2'
+            resourceGroup = $ResourceGroupName
+        }
+        chaosResourceProperties = @{
+            identity                       = @{ type = 'SystemAssigned' }
+            chaosResourceIdentityForFaults = @{ type = 'SystemAssigned' }
+        }
+        recoveryPlanProperties  = @{
+            recoveryPlanId = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName"
+            identity       = @{ type = 'SystemAssigned' }
+        }
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $drillPath
+
+# Capture the drill resource created by the drill provisioning so the
+# drill/resource live tests can read them from deployment outputs. The drill resources appear
+# asynchronously, so poll the list until one shows up.
+$drillResourcesPath = "$serviceGroupResilienceBase/drills/$drillName/drillResources`?api-version=$resilienceApiVersion"
+$drillResourceName = $null
+$deadline = (Get-Date).AddSeconds(300)
+while (-not $drillResourceName -and (Get-Date) -lt $deadline) {
+    $drillResources = (Invoke-AzRestMethod -Method GET -Path $drillResourcesPath).Content | ConvertFrom-Json
+    $drillResourceName = $drillResources.value | Select-Object -First 1 -ExpandProperty name
+    if (-not $drillResourceName) {
+        Write-Host "  waiting for drill resources to appear..."
+        Start-Sleep -Seconds 15
+    }
+}
+
+if ($drillResourceName) {
+    $DeploymentOutputs['DRILLRESOURCENAME'] = $drillResourceName
+}
+else {
+    Write-Warning "No drill resources appeared after provisioning; DRILLRESOURCENAME was not set."
+}
 
 # Capture the recovery job created by the readiness check (and its first resource, if any) so the
 # recovery job/resource live tests can read them from deployment outputs. The job appears
@@ -229,4 +296,4 @@ else {
     Write-Warning "No recovery job appeared after the readiness check; RECOVERYJOBNAME was not set."
 }
 
-Write-Host "Resilience test resources are ready (service group: $serviceGroupName, usage plan: $usagePlanName, enrollment: $enrollmentName, goal template: $goalTemplateName, goal assignment: $goalAssignmentName, recovery plan: $recoveryPlanName)."
+Write-Host "Resilience test resources are ready (service group: $serviceGroupName, usage plan: $usagePlanName, enrollment: $enrollmentName, goal template: $goalTemplateName, goal assignment: $goalAssignmentName, recovery plan: $recoveryPlanName, drill: $drillName)."

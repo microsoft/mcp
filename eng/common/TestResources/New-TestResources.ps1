@@ -114,6 +114,11 @@ param (
     [Parameter()]
     [switch] $ServicePrincipalAuth,
 
+    # Optional additional tags to merge into the resource group tags.
+    # Use this to satisfy subscription-level tag policies (e.g. ManagerAlias, Owner, Workload).
+    [Parameter()]
+    [hashtable] $AdditionalResourceGroupTags = @{},
+
     # Captures any arguments not declared here (no parameter errors)
     # This enables backwards compatibility with old script versions in
     # hotfix branches if and when the dynamic subscription configuration
@@ -382,7 +387,7 @@ try {
         $ProvisionerApplicationOid = $sp.Id
     }
 
-    $tags = @{ Owners = (GetUserName) }
+    $tags = @{ Owners = (GetUserName) } + $AdditionalResourceGroupTags
 
     if ($ServiceDirectory) {
         $tags['ServiceDirectory'] = $ServiceDirectory

@@ -105,6 +105,60 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
     }
 
     [Fact]
+    public async Task Should_list_drills()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+
+        var result = await CallToolAsync(
+            "resilience_drill_get",
+            new()
+            {
+                { "service-group", serviceGroup }
+            });
+
+        var drills = result.AssertProperty("drills");
+        Assert.Equal(JsonValueKind.Array, drills.ValueKind);
+        Assert.Contains(drills.EnumerateArray(), d =>
+            d.TryGetProperty("id", out var id) &&
+            (id.GetString()?.EndsWith(drillName, StringComparison.OrdinalIgnoreCase) ?? false));
+    }
+
+    [Fact]
+    public async Task Should_list_drill_resources()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+
+        var result = await CallToolAsync(
+            "resilience_drill_resource_get",
+            new()
+            {
+                { "service-group", serviceGroup },
+                { "drill", drillName }
+            });
+
+        Assert.Equal(JsonValueKind.Array, result.AssertProperty("drillResources").ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_return_400_when_drill_missing_for_drill_resource_get()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+
+        var status = await CallToolAsync(
+            "resilience_drill_resource_get",
+            new()
+            {
+                { "service-group", serviceGroup }
+                // drill parameter intentionally omitted
+            },
+            resultProcessor: elem => elem.TryGetProperty("status", out var s) ? s : null);
+
+        Assert.Equal(400, status?.GetInt32());
+    }
+
+    [Fact]
     public async Task Should_list_goal_resources()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
