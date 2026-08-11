@@ -32,13 +32,12 @@ public class FoundryExtensionsSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var description = 
-        """
+        var description = """
             Use this tool for Microsoft Foundry knowledge indexes and OpenAI-compatible APIs: list knowledge indexes, get 
             index schemas, create completions, generate embeddings, list models, and inspect Foundry resources. Use this
             tool for any knowledge-index request. Use foundry instead for deployments, agents, evaluations, sessions, 
             connections, monitoring, and data-generation jobs.
-        """;
+            """;
         var foundryExtensions = new CommandGroup(Name, description, Title);
 
         var knowledge = new CommandGroup("knowledge", "Foundry knowledge operations - Commands for managing knowledge bases and indexes in Microsoft Foundry.");
