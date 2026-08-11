@@ -8,6 +8,7 @@ using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Models;
+using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.ResourceManager.Search;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Indexes;
@@ -126,6 +127,7 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         string serviceName,
         string indexName,
         string searchText,
+        IndexQueryType? queryType = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
@@ -148,6 +150,7 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         // TODO (alzimmer): this isn't useed and probably should be.
         var vectorizableFields = FindVectorizableFields(indexDefinition.Value, vectorFields);
         ConfigureSearchOptions(searchText, options, indexDefinition.Value, vectorFields);
+        ConfigureQueryType(options, indexDefinition.Value, queryType);
 
         var searchResponse = await client.SearchAsync(searchText, SearchJsonContext.Default.JsonElement, options, cancellationToken: cancellationToken);
 
@@ -371,6 +374,32 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         foreach (var vf in vectorFields)
         {
             options.VectorSearch.Queries.Add(new VectorizableTextQuery(q) { Fields = { vf }, KNearestNeighborsCount = 50 });
+        }
+    }
+
+    private static void ConfigureQueryType(SearchOptions options, SearchIndex indexDefinition, IndexQueryType? queryType)
+    {
+        switch (queryType)
+        {
+            case IndexQueryType.Simple:
+                options.QueryType = SearchQueryType.Simple;
+                break;
+
+            case IndexQueryType.Semantic:
+                var semanticConfiguration = indexDefinition.SemanticSearch?.DefaultConfigurationName
+                    ?? indexDefinition.SemanticSearch?.Configurations?.FirstOrDefault()?.Name
+                    ?? throw new InvalidOperationException(
+                        $"Index '{indexDefinition.Name}' doesn't have a semantic configuration, semantic queries cannot be used against it.");
+
+                options.QueryType = SearchQueryType.Semantic;
+                options.SemanticSearch = new SemanticSearchOptions { SemanticConfigurationName = semanticConfiguration };
+                break;
+
+            // Full Lucene syntax is used by default as it is a superset of the simple syntax.
+            case IndexQueryType.Full:
+            default:
+                options.QueryType = SearchQueryType.Full;
+                break;
         }
     }
 

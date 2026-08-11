@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using Azure.Mcp.Tools.Search.Models;
+using Azure.Mcp.Tools.Search.Options.Index;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Search.Services;
@@ -38,6 +39,7 @@ public interface ISearchService
         string serviceName,
         string indexName,
         string searchText,
+        IndexQueryType? queryType = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
