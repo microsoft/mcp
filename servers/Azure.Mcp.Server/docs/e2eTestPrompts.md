@@ -904,6 +904,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | resilience_recovery_plan_get | Get the details of recovery plan <recovery_plan_name> in service group <service_group> |
 | resilience_recovery_plan_resource_get | List all resources (members) of recovery plan <recovery_plan_name> in service group <service_group> |
 | resilience_recovery_plan_resource_get | Get the recovery resource <resource_name> for recovery plan <recovery_plan_name> in service group <service_group> |
+| resilience_usageplan_create | Create a resilience usage plan <usage_plan_name> with plan type Basic in resource group <resource_group_name> |
+| resilience_usageplan_create | Set up a Basic resilience usage plan named <usage_plan_name> in resource group <resource_group_name> |
+| resilience_usageplan_create | Update resilience usage plan <usage_plan_name> in resource group <resource_group_name> to use the Basic plan type |
+| resilience_usageplan_enrollment_create | Create a usage plan enrollment <enrollment_name> for usage plan <usage_plan_name> associated with service group <service_group> in resource group <resource_group_name> |
+| resilience_usageplan_enrollment_create | Enroll service group <service_group> in usage plan <usage_plan_name> as <enrollment_name> in resource group <resource_group_name> |
+| resilience_usageplan_enrollment_create | Update enrollment <enrollment_name> under usage plan <usage_plan_name> to use service group <service_group> in resource group <resource_group_name> |
 | resilience_usageplan_enrollment_get | List all enrollments of usage plan <usage_plan_name> in resource group <resource_group_name> |
 | resilience_usageplan_enrollment_get | Get the details of usage plan enrollment <enrollment_name> for usage plan <usage_plan_name> in resource group <resource_group_name> |
 | resilience_usageplan_get | List all resilience usage plans in my subscription |
