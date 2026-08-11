@@ -4,9 +4,6 @@
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Helpers;
 using Azure.ResourceManager;
-#if DEBUG
-using Microsoft.Mcp.Core.Helpers;
-#endif
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Services.Azure;
@@ -18,7 +15,8 @@ public abstract class BaseAzureService(IAzureService azureService)
     static BaseAzureService()
     {
 #if DEBUG
-        if (EnvironmentHelpers.IsPlaybackTesting())
+        // Use fully qualified namespace within preprocessor directives to avoid unused using directive warnings in release builds.
+        if (Microsoft.Mcp.Core.Helpers.EnvironmentHelpers.IsPlaybackTesting())
         {
             s_defaultPollInterval = TimeSpan.Zero;
         }
