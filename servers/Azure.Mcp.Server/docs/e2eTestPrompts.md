@@ -38,6 +38,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | advisor_recommendation_summary | Summarize high-impact Security recommendations by resource-type in subscription <subscription> |
 | advisor_recommendation_summary | Group Cost recommendations for storage accounts by impact in subscription <subscription> |
 | advisor_recommendation_summary | Summarize Advisor recommendations mentioning "encryption" by category in subscription <subscription> |
+| advisor_remediation_get | Get the remediation package for Advisor recommendation <recommendation-id> |
+| advisor_remediation_get | How do I fix Advisor recommendation <recommendation-id>? |
+| advisor_remediation_get | Show me the remediation steps for recommendation <recommendation-id> |
+| advisor_remediation_get | Give me the CLI and PowerShell scripts to remediate recommendation <recommendation-id> |
+| advisor_remediation_get | Get the ARM and Bicep artifacts to fix Advisor recommendation <recommendation-id> |
 
 ## Azure AI Search
 
