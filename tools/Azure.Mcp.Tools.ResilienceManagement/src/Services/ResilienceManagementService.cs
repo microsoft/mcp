@@ -570,6 +570,8 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         }
 
         return tags;
+    }
+
     public async Task<UsagePlanInfo> CreateUsagePlanAsync(string resourceGroup, string usagePlan, UsagePlanKind planType, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         var subscriptionId = AzureService.IsSubscriptionId(subscription)
