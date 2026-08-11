@@ -272,17 +272,20 @@ dictionaryDefinitions:
 words:
   # cross-repo project terms (always at root) and cross-cutting Azure/dev terms
   - 1espt
+  - aaaac
   - aarch
   - accesspolicy
   - activitylog
   - adls
   - adminprovider
+  - adminuser
   - aieval
   - aisearch
   - akscluster
   - aksservice
   - alcoop
   - alwayson
+  - amba
   - amlfs
   - aoai
   - apim
@@ -291,6 +294,7 @@ words:
   - appconfig
   - applens
   - appservice
+  - appsettings
   - aprl
   - aspnetcore
   - australiacentral
@@ -308,6 +312,7 @@ words:
   - azsdk
   - aztfexport
   - azureadmin
+  - azureaibestpractices
   - azureappservice
   - azurebackup
   - azurebackuprg
@@ -319,11 +324,14 @@ words:
   - azuredatabaseformysql
   - azuredatabaseforpostgresql
   - azuredeveloperclicredential
+  - azuredevops
   - azurefileshare
+  - azurefirewall
   - azurefunctions
   - azureisv
   - azuremcp
   - azuremcpserver
+  - azuremigrate
   - azureopenai
   - azurepowershellcredential
   - azureresourcegroups
@@ -343,25 +351,33 @@ words:
   - bdylan
   - bestpractices
   - bicepschema
+  - bienvenido
   - binutils
   - blobupload
   - breathability
   - buildable
   - burstable
+  - byos
   - centralus
+  - changedetection
   - cicd
   - cloudarchitect
+  - cloudendpoint
   - codeium
   - codesign
   - codespace
   - cognitiveservices
+  - commonprompts
   - conftest
+  - consumergroup
   - containerapp
   - containerapps
   - contentazurefileconnectionstring
   - contentshare
   - contoso
   - cosell
+  - createmigrateproject
+  - createorupdate
   - csdevkit
   - cvzf
   - datalake
@@ -376,6 +392,7 @@ words:
   - deregistering
   - devbox
   - devcontainers
+  - deviceregistry
   - disasterrecovery
   - diskname
   - distributedtask
@@ -390,15 +407,22 @@ words:
   - esrprelpacmantest
   - eventgrid
   - eventhouse
+  - eventhub
+  - eventhubs
   - exfiltration
   - fabmcp
   - facetable
   - filefilters
   - fileshare
+  - fileshares
   - filesystem
   - filesystems
   - fnames
+  - foundryextensions
   - functionapp
+  - gensecond
+  - getguidance
+  - gethealth
   - grpcio
   - gsaascend
   - gsamas
@@ -408,10 +432,12 @@ words:
   - healthmodels
   - hostpool
   - hostpools
+  - hubspoke
   - iaasvmcontainerv
   - idempotency
   - idtyp
   - intelli
+  - iothub
   - jspm
   - kcsb
   - keyvault
@@ -431,9 +457,12 @@ words:
   - macos
   - macpool
   - macvmimage
+  - managedcluster
   - managedidentitycredential
   - managedlustre
   - markitdown
+  - mbps
+  - mcpb
   - mcpserver
   - mcptmp
   - microbundle
@@ -441,7 +470,9 @@ words:
   - midsole
   - modelcontextprotocol
   - monitoredresources
+  - monitorinstrumentation
   - msal
+  - msmcp
   - myaccount
   - myapp
   - mycluster
@@ -451,8 +482,10 @@ words:
   - myworkbook
   - netstandard
   - newtonsoft
+  - nocache
   - nodepool
   - nodepools
+  - nodetype
   - norequired
   - northcentralus
   - northeurope
@@ -467,16 +500,22 @@ words:
   - openai
   - openapi
   - operationalinsights
+  - overprovision
+  - overprovisioning
   - overridable
   - packability
   - pageable
+  - parameterless
   - payg
   - paygo
+  - peconnection
   - persistable
   - pgrep
   - pids
   - pitr
+  - platformlandingzone
   - predeploy
+  - prioritise
   - protectable
   - protectableitem
   - protecteditem
@@ -488,6 +527,7 @@ words:
   - ragzrs
   - rainfly
   - recoverypoint
+  - registeredserver
   - requesturl
   - resourcegroup
   - resourcegroups
@@ -498,23 +538,32 @@ words:
   - runtimes
   - sapase
   - saphana
+  - scheduledtasks
+  - serverendpoint
   - serverfarms
   - servicebus
+  - servicefabric
+  - serviceguide
+  - servicios
   - sessionhost
   - setparam
   - setpermission
   - signalr
   - siteextensions
+  - sles
   - southeastasia
   - sqldatabase
+  - sreagent
   - staticwebapp
   - storageaccount
   - storageaccounts
+  - storagesync
   - streamable
   - submode
   - subnetsize
   - subresource
   - swedencentral
+  - syncgroup
   - syslib
   - systemassigned
   - testaccount
@@ -525,14 +574,17 @@ words:
   - timespan
   - toolset
   - toolsets
+  - triggerchangedetection
   - typespec
   - uaenorth
   - uksouth
   - undelete
   - upns
+  - usageplan
   - userassigned
   - usersession
   - vectorizable
+  - vianet
   - virtualdesktop
   - virtualmachine
   - virtualmachines
@@ -545,11 +597,14 @@ words:
   - vsmarketplace
   - vsts
   - vuepress
+  - vwan
+  - wellarchitectedframework
   - westeurope
   - westus
   - westus2
   - windowsos
   - windowspool
+  - windowsserver
   - windowsvmimage
   - winget
   - workloadidentitycredential

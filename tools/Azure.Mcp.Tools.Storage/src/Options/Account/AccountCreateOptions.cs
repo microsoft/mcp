@@ -14,10 +14,10 @@ public class AccountCreateOptions : ISubscriptionOption
     [Option(Description = "The Azure region where the storage account will be created (e.g., 'eastus', 'westus2').")]
     public required string Location { get; set; }
 
-    [Option(Description = "The storage account SKU. Valid values: Standard_LRS, Standard_GRS, Standard_RAGRS, Standard_ZRS, Premium_LRS, Premium_ZRS, Standard_GZRS, Standard_RAGZRS.")]
+    [Option(Description = "The storage account SKU for StorageV2 accounts. Valid values: Standard_LRS, Standard_GRS, Standard_RAGRS, Standard_ZRS, Premium_LRS, Premium_ZRS, Standard_GZRS, Standard_RAGZRS. Defaults to Standard_LRS.")]
     public string? Sku { get; set; }
 
-    [Option(Description = "The default access tier for blob storage. Valid values: Hot, Cool.")]
+    [Option(Description = "The default access tier for blob storage. Valid values: Hot, Cool, Cold, Premium.")]
     public string? AccessTier { get; set; }
 
     [Option(Description = "Whether to enable hierarchical namespace (Data Lake Storage Gen2) for the storage account.")]
