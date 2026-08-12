@@ -508,17 +508,17 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | eventhubs_eventhub_consumergroup_get | List all consumer groups in my event hub <event_hub_name> in namespace <namespace_name> | none |
 | eventhubs_eventhub_consumergroup_get | Get the details of my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> | none |
 | eventhubs_eventhub_consumergroup_update | Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> | none |
-| eventhubs_eventhub_consumergroup_update | Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> | clarification-required |
+| eventhubs_eventhub_consumergroup_update | Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> to set its user metadata to <user_metadata> | none |
 | eventhubs_eventhub_delete | Delete my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> | none |
 | eventhubs_eventhub_get | List all Event Hubs in my namespace <namespace_name> | none |
 | eventhubs_eventhub_get | Get the details of my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> | none |
 | eventhubs_eventhub_update | Create a new event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> | none |
-| eventhubs_eventhub_update | Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> | clarification-required |
+| eventhubs_eventhub_update | Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> to use a message retention of <message_retention_hours> hours | clarification-required |
 | eventhubs_namespace_delete | Delete Azure Event Hubs namespace <namespace_name> in resource group <resource_group_name> | none |
 | eventhubs_namespace_get | List all Event Hubs namespaces in my subscription | none |
 | eventhubs_namespace_get | Get the details of my namespace <namespace_name> in my resource group <resource_group_name> | none |
-| eventhubs_namespace_update | Create a new Azure Event Hubs namespace <namespace_name> in resource group <resource_group_name> | none |
-| eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name> | clarification-required |
+| eventhubs_namespace_update | Create a new namespace <namespace_name> in my resource group <resource_group_name> in the <location> region using the <sku_name> SKU | none |
+| eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name> to use the <sku_name> SKU with a capacity of <sku_capacity> | clarification-required |
 
 ## Azure File Shares
 
