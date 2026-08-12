@@ -11,7 +11,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests.Services;
 
 public sealed class ResilienceManagementServiceTests
 {
-    private const string UserAssignedIdentityResourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/uami";
+    private const string UserAssignedIdentityResourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/testIdentity";
 
     [Fact]
     public void CreateRecoveryGroupsSetting_ForNewPlan_GeneratesDefaultGroupId()

@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests.Recovery.Plans;
 
 public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<RecoveryPlanCreateCommand, IResilienceManagementService>
 {
-    private const string UserAssignedIdentityResourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/uami";
+    private const string UserAssignedIdentityResourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/testIdentity";
     private const string ValidArgs = "--service-group sg1 --recovery-plan plan1 --plan-type Zonal --plan-description description --identity-type UserAssigned --user-assigned-identity " + UserAssignedIdentityResourceId + " --default-group-description default";
 
     [Fact]

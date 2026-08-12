@@ -3,6 +3,8 @@ param(
     [string] $TestSettingsPath = (Join-Path $PSScriptRoot '.testsettings.json')
 )
 
+# cspell:ignore rhub
+
 $ErrorActionPreference = 'Stop'
 
 if (!(Test-Path $TestSettingsPath)) {

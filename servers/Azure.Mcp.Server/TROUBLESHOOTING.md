@@ -1068,7 +1068,7 @@ If authentication still fails after switching clouds, check the following:
 
 #### Sovereign cloud in Remote (using Azure Container Apps)
 
-When authenicating in remote, the following environment variables need to be set on the container:
+When authenticating in remote, the following environment variables need to be set on the container:
 
 - AZURE_CLOUD
 - AzureAd__ClientCredentials__0__TokenExchangeUrl
