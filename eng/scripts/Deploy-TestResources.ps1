@@ -8,8 +8,7 @@ param(
     [int]$DeleteAfterHours = 12,
     [switch]$Unique,
     [switch]$Parallel,
-    [switch]$UseHttpTransport,
-    [hashtable]$AdditionalResourceGroupTags = @{}
+    [switch]$UseHttpTransport
 )
 
 $ErrorActionPreference = 'Stop'
@@ -29,7 +28,7 @@ $coreDirectories = Get-ChildItem -Path "$RepoRoot/core" -Directory
 
 $testablePaths = @($toolDirectories + $serverDirectories + $coreDirectories)
 | Where-Object { Test-Path "$_/tests/test-resources.bicep" }
-| ForEach-Object { (Resolve-Path -Path $_ -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./')}
+| ForEach-Object { (Resolve-Path -Path $_ -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./') }
 
 $normalizedPathFilters = $Paths | ForEach-Object { "*$($_.Replace('\', '/'))*" }
 
@@ -74,7 +73,6 @@ function Deploy-TestResources
         [string]$Location,
         [int]$DeleteAfterHours,
         [string]$TestResourcesDirectory,
-        [hashtable]$AdditionalResourceGroupTags = @{},
         [switch]$AsJob
     )
 
@@ -92,7 +90,7 @@ Deploying$($AsJob ? ' in background job' : ''):
 
     if($AsJob) {
         Start-Job -ScriptBlock {
-            param($RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $testResourcesDirectory, $DeleteAfterHours, $UseHttpTransport, $AdditionalResourceGroupTags)
+            param($RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $testResourcesDirectory, $DeleteAfterHours, $UseHttpTransport)
 
             & "$RepoRoot/eng/common/TestResources/New-TestResources.ps1" `
                 -SubscriptionId $SubscriptionId `
@@ -102,10 +100,9 @@ Deploying$($AsJob ? ' in background job' : ''):
                 -TestResourcesDirectory $testResourcesDirectory `
                 -DeleteAfterHours $DeleteAfterHours `
                 -UseHttpTransport:$UseHttpTransport `
-                -AdditionalResourceGroupTags $AdditionalResourceGroupTags `
                 -Force
 
-        } -ArgumentList $RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $TestResourcesDirectory, $DeleteAfterHours, $UseHttpTransport, $AdditionalResourceGroupTags
+        } -ArgumentList $RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $TestResourcesDirectory, $DeleteAfterHours, $UseHttpTransport
     } else {
         & "$RepoRoot/eng/common/TestResources/New-TestResources.ps1" `
             -SubscriptionId $SubscriptionId `
@@ -115,7 +112,6 @@ Deploying$($AsJob ? ' in background job' : ''):
             -TestResourcesDirectory $testResourcesDirectory `
             -DeleteAfterHours $DeleteAfterHours `
             -UseHttpTransport:$UseHttpTransport `
-            -AdditionalResourceGroupTags $AdditionalResourceGroupTags `
             -Force
     }
 }
@@ -141,7 +137,6 @@ $jobInputs = $testablePaths | ForEach-Object {
         Location = $Location
         DeleteAfterHours = $DeleteAfterHours
         TestResourcesDirectory = Resolve-Path -Path "$RepoRoot/$_/tests"
-        AdditionalResourceGroupTags = $AdditionalResourceGroupTags
     }
 }
 
