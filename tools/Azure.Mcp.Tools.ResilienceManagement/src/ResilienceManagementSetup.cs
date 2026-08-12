@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Templates;
-using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
-using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
