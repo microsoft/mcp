@@ -8,6 +8,7 @@ import:
   - ../../.vscode/cspell.json
 words:
   - agentic
+  - applicationgatewaywebapplicationfirewallpolicies
   - appsettings
   - azureicon
   - azuremigrate
@@ -16,21 +17,32 @@ words:
   - codeowners
   - cloudendpoint
   - commonprompts
+  - connectedclusters
   - consumergroup
+  - containerregistry
+  - containerservice
   - createorupdate
+  - databaseaccounts
   - deviceregistry
   - discoverability
+  - domainservices
   - elicitations
   - enumerables
   - eventhub
   - eventhubs
+  - expressrouteports
   - fileshares
+  - flexibleservers
   - foundryextensions
+  - frontdoorwebapplicationfirewallpolicies
   - getguidance
   - groq
   - hotmail
   - iothub
+  - kubernetesconfiguration
   - managedcluster
+  - managedclusters
+  - managedinstances
   - mypass
   - mysvc
   - myuser
@@ -46,10 +58,12 @@ words:
   - servicefabric
   - serviceguide
   - sreagent
+  - staticsites
   - storagesync
   - structs
   - syncgroup
   - targetdir
   - toolsets
   - usageplan
+  - virtualmachinescalesets
   - wellarchitectedframework

@@ -353,7 +353,6 @@ azmcp advisor recommendation summary --subscription <subscription> \
 
 # Apply Advisor recommendation to create or modify IaaC files (like ARM, Terraform) for Azure resources
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-<!-- cspell:ignore domainservices virtualmachinescalesets containerregistry containerservice managedclusters flexibleservers databaseaccounts connectedclusters kubernetesconfiguration applicationgatewaywebapplicationfirewallpolicies expressrouteports frontdoorwebapplicationfirewallpolicies managedinstances staticsites -->
 # Valid --resource values: aad_domainservices, apimanagement_service, cognitiveservices_accounts,
 # compute_virtualmachines, compute_virtualmachinescalesets, containerregistry_registries,
 # containerservice_managedclusters, dbforpostgresql_flexibleservers, documentdb_databaseaccounts,
