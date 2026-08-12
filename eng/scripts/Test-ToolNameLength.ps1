@@ -176,7 +176,6 @@ foreach ($serverInfo in $serversToTest) {
                 $violations += [PSCustomObject]@{
                     Server = $currentServerName
                     ToolName = $tool
-                    Command = ""
                     Length = $fullLength
                     Excess = $fullLength - $MaxLength
                 }
