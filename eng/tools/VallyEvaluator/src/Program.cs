@@ -8,6 +8,12 @@ namespace VallyEvaluator;
 
 internal class Program
 {
+    private static readonly IReadOnlyDictionary<string, string> s_promptNamespaceAliases =
+        new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
+        {
+            ["resiliencemanagement"] = "resilience"
+        };
+
     public static async Task<int> Main(string[] args)
     {
         var configuration = new ConfigurationBuilder()
@@ -80,10 +86,11 @@ internal class Program
 
             var lastPeriod = split[1].LastIndexOf('.');
             var possibleNamespace = split[1].Substring(lastPeriod + 1).ToLowerInvariant();
+            var promptNamespace = ResolvePromptNamespace(possibleNamespace, promptNamespaces);
 
-            if (promptNamespaces.Contains(possibleNamespace))
+            if (promptNamespace != null)
             {
-                results.Add(possibleNamespace);
+                results.Add(promptNamespace);
             }
             else
             {
@@ -92,6 +99,18 @@ internal class Program
         }
 
         return results.ToList();
+    }
+
+    internal static string? ResolvePromptNamespace(string possibleNamespace, IReadOnlySet<string> promptNamespaces)
+    {
+        if (promptNamespaces.Contains(possibleNamespace))
+        {
+            return possibleNamespace;
+        }
+
+        return s_promptNamespaceAliases.TryGetValue(possibleNamespace, out var alias) && promptNamespaces.Contains(alias)
+            ? alias
+            : null;
     }
 
     private static async Task CreateEvalsAsync(string repoRoot, RunConfiguration configuration, BuildInfo? buildInfo = null)

@@ -2,6 +2,6 @@ changes:
   - section: "Features Added"
     description: "Added the 'azmcp resilience recovery plan create' command to create or fully update a Zonal recovery plan with an explicitly selected system-assigned or user-assigned identity. Updates can switch identity types while preserving existing recovery groups."
   - section: "Features Added"
-    description: "Added the 'azmcp resilience recovery plan delete' command to safely repeat deletion of a recovery plan from an Azure service group and report whether the plan existed."
+    description: "Added the 'azmcp resilience recovery plan delete' command to delete a recovery plan from an Azure service group. The command is idempotent and reports whether a plan was deleted."
   - section: "Features Added"
     description: "Added the 'azmcp resilience recovery plan update-resources' command to include, exclude, configure, or remove recovery resources, including their recovery groups, associated identities, and protection settings."

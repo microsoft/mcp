@@ -3735,10 +3735,6 @@ azmcp resilience recovery plan update-resources --service-group <service-group> 
                                                 [--resources-to-update '<json-array>'] \
                                                 [--resources-to-remove '<json-array>']
 
-# Each update item requires properties.recoveryResourceUniqueId. The read-only id may be omitted; when supplied, it must identify that resource in the selected plan.
-# Example update item:
-# [{"properties":{"recoveryResourceUniqueId":"<resource-id>","inclusionState":"Included","selectedProtectionSolutionType":"AzureNative","selectedProtectionSolutionSetting":{"protectionSolutionType":"AzureNative"}}}]
-
 # Get a resource (member) of a recovery plan, or list all resources of the plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recovery plan resource get --subscription <subscription> \
