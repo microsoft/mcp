@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.34 (Unreleased)
+## 3.0.0-beta.35 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,17 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 3.0.0-beta.34 (2026-08-11)
+
+### Features Added
+
+- Added the 'azmcp resilience usageplan create' command to create or update a resilience usage plan in a resource group, including its plan type. [[#3166](https://github.com/microsoft/mcp/pull/3166)]
+- Added the 'azmcp resilience usageplan enrollment create' command to create or update an enrollment under a resilience usage plan, associating it with a service group. [[#3166](https://github.com/microsoft/mcp/pull/3166)]
+
+### Bugs Fixed
+
+- Improved the Azure Quick Review (azqr) tool, extension namespace, and consolidated tool descriptions so that prompts asking to scan a subscription for compliance issues or compliance recommendations reliably select the `extension_azqr` tool in All and Namespace modes. [[#3134](https://github.com/microsoft/mcp/pull/3134)]
 
 ## 3.0.0-beta.33 (2026-08-06)
 
@@ -928,7 +939,7 @@ For a complete history of changes included in this release, see entries for vers
 
 - Added skill name and tool name validation to the plugin-telemetry tool. Skill names are validated against an allowlist to prevent logging of customer-defined custom skill names. Tool names are validated by stripping known client prefixes (Claude Code, VS Code, Copilot CLI) and matching against registered commands or area names, with normalized names logged for consistent telemetry. Added an allowlist for Azure extension tools that are not azmcp commands but still tracked. Expanded the plugin file-reference allowlist with additional azure-enterprise-infra-planner reference paths. [[#2149](https://github.com/microsoft/mcp/pull/2149)]
 - Refactored PluginTelemetryCommand to use constructor injection for allowlist providers and lazy resolution of ICommandFactory via IServiceProvider to avoid circular dependency during startup.
-- Improved tool descriptions to enahnce LLM selection accuracy for the following tools: [[#2131](https://github.com/microsoft/mcp/pull/2131)]
+- Improved tool descriptions to enhance LLM selection accuracy for the following tools: [[#2131](https://github.com/microsoft/mcp/pull/2131)]
   - `extension_azqr`
   - `extension_cli_generate`
   - `extension_cli_install`
@@ -1510,6 +1521,10 @@ For a complete history of changes included in this release, see entries for vers
 - Updated `Microsoft.Azure.Mcp.AzTypes.Internal.Compact` from `0.2.802` to `0.2.804`. [[#1348](https://github.com/microsoft/mcp/pull/1348)]
 
 ## 2.0.0-beta.8 (2025-12-11)
+
+### Breaking Changes
+
+- Retired the `azureaibestpractices` namespace and moved its AI app best practices tool into the `bestpractices` namespace. `azmcp azureaibestpractices get` (tool `azureaibestpractices_get`) became `azmcp get bestpractices ai_app` (tool `get_bestpractices_ai_app`), which was later renamed to `azmcp get azure bestpractices ai_app` (tool `get_azure_bestpractices_ai_app`) in 2.0.0-beta.11. [[#1323](https://github.com/microsoft/mcp/pull/1323)]
 
 ### Bugs Fixed
 

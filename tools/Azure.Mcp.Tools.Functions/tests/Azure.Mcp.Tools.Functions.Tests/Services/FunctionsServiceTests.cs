@@ -10,6 +10,38 @@ namespace Azure.Mcp.Tools.Functions.Tests.Services;
 
 public sealed class FunctionsServiceTests
 {
+    [Fact]
+    public void LanguageMetadataProvider_Go_ReturnsNativeWorkerMetadata()
+    {
+        var provider = new LanguageMetadataProvider();
+        var runtimeVersions = new Dictionary<string, RuntimeVersionInfo>
+        {
+            ["Go"] = new() { Supported = [], Preview = ["1.0"], Default = "1.0" }
+        };
+
+        var result = provider.GetLanguageInfo("go", runtimeVersions);
+
+        Assert.NotNull(result);
+        Assert.Equal("Go", result.Name);
+        Assert.Equal("native", result.Runtime);
+        Assert.Equal("Native Go worker SDK", result.ProgrammingModel);
+        Assert.Equal("go mod init <module-name>", result.InitCommand);
+        Assert.Equal("go build ./...", result.BuildCommand);
+        Assert.Contains("go.mod", result.ProjectFiles);
+        Assert.Contains("go.sum", result.ProjectFiles);
+        Assert.Equal("1.0", result.RuntimeVersions.Default);
+        Assert.Contains("1.0", result.RuntimeVersions.Preview!);
+    }
+
+    [Fact]
+    public void LanguageMetadataProvider_KnownProjectFiles_IncludesGoModuleFiles()
+    {
+        var provider = new LanguageMetadataProvider();
+
+        Assert.Contains("go.mod", provider.KnownProjectFiles);
+        Assert.Contains("go.sum", provider.KnownProjectFiles);
+    }
+
     #region BuildRawGitHubUrl Tests
 
     [Theory]
