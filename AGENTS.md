@@ -726,7 +726,7 @@ When adding new commands:
 .\eng\common\spelling\Invoke-Cspell.ps1
 
 # Add project-specific terms to that project's cspell.yaml.
-# Add cross-cutting terms to the root cspell.yaml.
+# Add cross-cutting terms to .vscode/cspell.json.
 ```
 
 ## Git Workflow and Automation
