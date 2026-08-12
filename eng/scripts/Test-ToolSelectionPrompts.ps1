@@ -68,9 +68,9 @@ function Read-PromptFile {
 
             ## <ToolArea>
 
-            | Tool Name | Test Prompt |
-            |:----------|:----------|
-            | <tool_name> | <prompt text> |
+            | Tool Name | Test Prompt | Interaction |
+            |:----------|:------------|:------------|
+            | <tool_name> | <prompt text> | <interaction>
 
     .PARAMETER PromptsFile
         Path to the Markdown file to parse. Must exist and follow the expected format.
@@ -184,6 +184,8 @@ Write-Host "Testing $($serversToTest.Count) server(s)"
 Write-Host ""
 
 [int]$violationsCount = 0
+[int]$testedServers = 0
+[int]$skippedServers = 0
 
 foreach ($serverInfo in $serversToTest) {
     $currentServerName = $serverInfo.name
@@ -198,6 +200,8 @@ foreach ($serverInfo in $serversToTest) {
 
     if (!(Test-Path $serverPromptsFile)) {
         Write-Host "Prompts file not found: $serverPromptsFile - skipping prompt validation"
+        $skippedServers++
+        Write-Host ""
         continue
     }
     else {
@@ -214,6 +218,8 @@ foreach ($serverInfo in $serversToTest) {
 
     if (-not $builtPlatform) {
         Write-Warning "No built platform found for $currentServerName - skipping tool prompt validation"
+        $skippedServers++
+        Write-Host ""
         continue
     }
 
@@ -234,7 +240,7 @@ foreach ($serverInfo in $serversToTest) {
     #   "results": {
     #     "names": [ 
     #        "acr_registry_list",
-    #         "acr_registry_repository_list",
+    #        "acr_registry_repository_list",
     #     ]
     #   }
     # }
@@ -247,6 +253,8 @@ foreach ($serverInfo in $serversToTest) {
 
     if ([string]::IsNullOrWhiteSpace($toolsJson)) {
         Write-Warning "No output received from '$currentServerName tools list --name-only' - skipping"
+        $skippedServers++
+        Write-Host ""
         continue
     }
 
@@ -255,18 +263,24 @@ foreach ($serverInfo in $serversToTest) {
 
     if ($null -eq $tools) {
         Write-Warning "Server [$currentServerName] 'tools list' command did not return any tools - skipping"
+        $skippedServers++
+        Write-Host ""
         continue
     } elseif ($null -eq $tools.names) {
         Write-Warning "Server [$currentServerName] No 'names' property found in response - skipping. Response: `n$toolsJson`n"
+        $skippedServers++
+        Write-Host ""
         continue
     } elseif ($tools.names.Count -eq 0) {
         Write-Warning "Server [$currentServerName] No tool names found - skipping"
+        $skippedServers++
+        Write-Host ""
         continue
     }
 
     Write-Host "Loaded $($tools.names.Count) tools"
+    $testedServers++
 
-    
     $allPrompts = Read-PromptFile -PromptsFile $serverPromptsFile
     $violations = [System.Collections.Generic.List[Prompt]]::new()
 
@@ -289,9 +303,22 @@ foreach ($serverInfo in $serversToTest) {
     }
 }
 
-if ($violationsCount -eq 0) {
+# Final summary
+Write-Host "=================================================="
+Write-Host "SUMMARY"
+Write-Host "=================================================="
+Write-Host "Servers tested: $testedServers"
+Write-Host "Servers skipped: $skippedServers"
+Write-Host "Total violations: $violationsCount"
+Write-Host ""
+
+if ($testedServers -gt 0 -and $violationsCount -eq 0) {
     Write-Host "All tested servers passed validation!" -ForegroundColor Green
     exit 0
+}
+elseif ($testedServers -eq 0) {
+    Write-Error "No servers were successfully tested. All $($skippedServers) server(s) were skipped."
+    exit 1
 }
 else {
     Write-Host "Validation failed - see violations above" -ForegroundColor Red
