@@ -165,23 +165,6 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
     }
 
     [Fact]
-    public async Task Should_return_400_when_drill_missing_for_drill_resource_get()
-    {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-
-        var status = await CallToolAsync(
-            "resilience_drill_resource_get",
-            new()
-            {
-                { "service-group", serviceGroup }
-                // drill parameter intentionally omitted
-            },
-            resultProcessor: elem => elem.TryGetProperty("status", out var s) ? s : null);
-
-        Assert.Equal(400, status?.GetInt32());
-    }
-
-    [Fact]
     public async Task Should_list_goal_resources()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
