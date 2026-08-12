@@ -147,7 +147,6 @@ if (!$OutputPath) {
 
 # Use the build infrastructure - New-BuildInfo.ps1 and Build-Code.ps1
 $buildInfoPath = "$RepoRoot/.work/build_info.json"
-$buildOutputPath = $OutputPath
 
 if ($ServerName) {
     Write-Host "Validating tool selection prompts for $ServerName"
@@ -159,7 +158,7 @@ if ($SkipServerBuild) {
     Write-Host "Skipping server build. Reusing existing build info and existing build artifacts."
 } else {
     # Clean up previous build artifacts
-    Remove-Item -Path $buildOutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+    Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 
     # Create build metadata
     & "$RepoRoot/eng/scripts/New-BuildInfo.ps1" `
@@ -174,7 +173,7 @@ if ($SkipServerBuild) {
 
     # Build the servers
     $platformName = Get-PlatformName
-    & "$RepoRoot/eng/scripts/Build-Code.ps1" -BuildInfoPath $buildInfoPath -PlatformName $platformName -OutputPath $buildOutputPath
+    & "$RepoRoot/eng/scripts/Build-Code.ps1" -BuildInfoPath $buildInfoPath -PlatformName $platformName -OutputPath $OutputPath
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Failed to build servers."
         exit 1
@@ -224,7 +223,7 @@ foreach ($serverInfo in $serversToTest) {
 
     # Find the first platform that was actually built
     $builtPlatform = $serverInfo.platforms | Where-Object { 
-        Test-Path "$buildOutputPath/$($_.artifactPath)" 
+        Test-Path "$OutputPath/$($_.artifactPath)" 
     } | Select-Object -First 1
 
     if (-not $builtPlatform) {
@@ -234,7 +233,7 @@ foreach ($serverInfo in $serversToTest) {
         continue
     }
 
-    $executablePath = "$buildOutputPath/$($builtPlatform.artifactPath)/$executableName"
+    $executablePath = "$OutputPath/$($builtPlatform.artifactPath)/$executableName"
 
     if (-not (Test-Path $executablePath)) {
         Write-Error "Executable not found at $executablePath for $currentServerName"
