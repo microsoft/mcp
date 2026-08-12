@@ -5,24 +5,51 @@
 # Cross-cutting terms should go in the root cspell.yaml instead.
 version: "0.2"
 import:
-  - ../../cspell.yaml
+  - ../../.vscode/cspell.json
 words:
   - agentic
+  - appsettings
   - azureicon
+  - azuremigrate
   - azuremanagedlustre
+  - changedetection
   - codeowners
+  - cloudendpoint
+  - commonprompts
+  - consumergroup
+  - createorupdate
+  - deviceregistry
   - discoverability
   - elicitations
   - enumerables
+  - eventhub
+  - eventhubs
+  - fileshares
+  - foundryextensions
+  - getguidance
   - groq
   - hotmail
+  - iothub
+  - managedcluster
   - mypass
   - mysvc
   - myuser
   - nettrace
   - newname
+  - nodetype
   - nslookup
   - ollama
+  - peconnection
+  - platformlandingzone
+  - registeredserver
+  - scheduledtasks
+  - servicefabric
+  - serviceguide
+  - sreagent
+  - storagesync
   - structs
+  - syncgroup
   - targetdir
   - toolsets
+  - usageplan
+  - wellarchitectedframework

@@ -55,14 +55,33 @@
 # ServiceOwners:                       @g2vinay @hallipr @microsoft/azure-mcp
 
 ##################
+# Core
+##################
+/core/Azure.Mcp.Core/                 @microsoft/azure-mcp
+/core/Fabric.Mcp.Core/                @microsoft/fabric-mcp
+/core/Microsoft.Mcp.Core/             @microsoft/azure-mcp
+
+##################
 # Servers
 ##################
+
+# PRLabel: %server-Azure.Mcp
+/servers/Azure.Mcp.Server/             @microsoft/azure-mcp
 
 # ServiceLabel: %server-Azure.Mcp
 # ServiceOwners:                       @microsoft/azure-mcp
 
+# PRLabel: %server-Fabric.Mcp
+/servers/Fabric.Mcp.Server/            @microsoft/fabric-mcp
+
 # ServiceLabel: %server-Fabric.Mcp
 # ServiceOwners:                       @microsoft/fabric-mcp
+
+# PRLabel: %server-Template.Mcp
+/servers/Template.Mcp.Server/          @microsoft/azure-mcp
+
+# ServiceLabel: %server-Template.Mcp
+# ServiceOwners:                       @microsoft/azure-mcp
 
 ##################
 # Tools
@@ -450,7 +469,5 @@ tools/Azure.Mcp.Tools.IoTHub/         @rrao @microsoft/azure-mcp
 ##################
 # Fabric MCP
 ##################
-/core/Fabric.Mcp.Core/                @microsoft/fabric-mcp
-/servers/Fabric.Mcp.Server/           @microsoft/fabric-mcp
 /tools/Fabric.Mcp.Tools.PublicApi/    @microsoft/fabric-mcp
 /tools/Fabric.Mcp.Tools.OneLake/      @microsoft/fabric-mcp

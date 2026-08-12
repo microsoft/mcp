@@ -254,6 +254,10 @@ Real product code under unit testing must be passed `Xunit.TestContext.Current.C
 
 End-to-end tests are performed manually. Command authors must thoroughly test each command to ensure correct tool invocation and results. At least one prompt per tool is required and should be added to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`.
 
+### Running evals with vally
+
+vally is the evaluation framework used to test the performance/accuracy of Azure MCP server and its tools. See `/docs/testing-with-vally.md`.
+
 ### Testing Local Build with VS Code
 
 To run the Azure MCP server from source for local development:
@@ -652,7 +656,7 @@ To ensure consistent spelling across the codebase, run the spelling check before
 .\eng\common\spelling\Invoke-Cspell.ps1
 ```
 
-This will check all files for spelling errors using the project's dictionary. Add project-specific technical terms or proper nouns to the `cspell.yaml` in that project folder. Add cross-cutting terms used by multiple projects to the root `cspell.yaml`.
+This will check all files for spelling errors using the project's dictionary. Add project-specific technical terms or proper nouns to the `cspell.yaml` in that project folder. Add cross-cutting terms used by multiple projects to `.vscode/cspell.json`.
 
 #### Requirements
 
