@@ -49,7 +49,7 @@ Before contributing, ensure you have:
 |------|-------|
 | [VS Code](https://code.visualstudio.com/download) or [Insiders](https://code.visualstudio.com/insiders) | Recommended editor. Insiders required for some agent-mode features. |
 | [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) + [Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) | Used for command scaffolding via skills. |
-| [Node.js 20+](https://nodejs.org/en/download) | Ensure `node` and `npm` are on PATH. |
+| [Latest Node.js LTS](https://nodejs.org/en/download) | Ensure `node` and `npm` are on PATH. |
 | [PowerShell 7.0+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) | Required for build/test scripts in `eng/scripts`. |
 | .NET SDK | Version pinned in `global.json`. |
 
