@@ -140,9 +140,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | appservice_database_add | Connect database <database_name> to my app service <app_name> using connection string <connection_string> in resource group <resource_group> | none |
 | appservice_database_add | Set up database <database_name> for app service <app_name> with connection string <connection_string> under resource group <resource_group> | none |
 | appservice_database_add | Configure database <database_name> for app service <app_name> with the connection string <connection_string> in resource group <resource_group> | none |
-| appservice_webapp_diagnostic_diagnose | Diagnose web app <webapp> in <resource_group> with detector <detector_name> | none |
-| appservice_webapp_diagnostic_diagnose | Diagnose web app <webapp> in <resource_group> with detector <detector_name> between <start_time> and <end_time> with interval <interval> | none |
-| appservice_webapp_diagnostic_list | List the diagnostic detectors for web app <webapp> in <resource_group> | none |
+| appservice_webapp_diagnostic_diagnose | Use Azure App Service diagnostics to diagnose web app <webapp> in <resource_group> with detector <detector_name> | none |
+| appservice_webapp_diagnostic_diagnose | Use Azure App Service diagnostics to diagnose web app <webapp> in <resource_group> with detector <detector_name> between <start_time> and <end_time> with interval <interval> | none |
+| appservice_webapp_diagnostic_list | List the Azure App Service diagnostic detectors for web app <webapp> in <resource_group> | none |
 | appservice_webapp_change-state | Start the web app <app> in <resource_group> | none |
 | appservice_webapp_change-state | Stop the web app <app> in <resource_group> | none |
 | appservice_webapp_change-state | Restart the web app <app> in <resource_group> | none |
@@ -165,7 +165,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | applicationinsights_recommendation_list | List code optimization recommendations across my Application Insights components | none |
 | applicationinsights_recommendation_list | Show me code optimization recommendations for all Application Insights resources in my subscription | none |
 | applicationinsights_recommendation_list | List profiler recommendations for Application Insights in resource group <resource_group_name> | none |
-| applicationinsights_recommendation_list | Show me performance improvement recommendations from Application Insights | none |
+| applicationinsights_recommendation_list | List Application Insights code optimization recommendations for improving application performance | none |
 
 ## Azure Backup
 
@@ -178,10 +178,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription | none |
 | azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> | none |
 | azurebackup_governance_find-unprotected | Find unprotected SQL databases and file shares discovered by backup vaults in my subscription | none |
-| azurebackup_governance_find-unprotected | Show all resources and sub-resources that need backup protection in resource group <resource_group> | none |
+| azurebackup_governance_find-unprotected | Find all resources and sub-resources in resource group <resource_group> that are not protected by Azure Backup | none |
 | azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> | clarification-required |
 | azurebackup_governance_immutability | Set immutability to Enabled on vault <vault_name> in resource group <resource_group> | none |
-| azurebackup_governance_soft-delete | Configure soft delete on vault <vault_name> in resource group <resource_group> | none |
+| azurebackup_governance_soft-delete | Configure soft delete on Azure Backup vault <vault_name> in resource group <resource_group> | clarification-required |
 | azurebackup_governance_soft-delete | Set soft delete state to AlwaysOn for vault <vault_name> in resource group <resource_group> | none |
 | azurebackup_job_get | Get backup job <job_id> from vault <vault_name> in resource group <resource_group> | none |
 | azurebackup_job_get | Show me the status of backup job <job_id> in vault <vault_name> under resource group <resource_group> | none |
@@ -213,9 +213,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv' | none |
 | azurebackup_vault_create | Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp' | none |
 | azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> | none |
-| azurebackup_vault_get | Show me information about vault <vault_name> in resource group <resource_group> | none |
-| azurebackup_vault_update | Update vault <vault_name> in resource group <resource_group> to enable soft delete | none |
-| azurebackup_vault_update | Change the identity type of vault <vault_name> in resource group <resource_group> to SystemAssigned | none |
+| azurebackup_vault_get | Show me information about Azure Backup vault <vault_name> in resource group <resource_group> | none |
+| azurebackup_vault_update | Update Azure Backup vault <vault_name> in resource group <resource_group> to enable soft delete | none |
+| azurebackup_vault_update | Change the identity type of Azure Backup vault <vault_name> in resource group <resource_group> to SystemAssigned | none |
 
 ## Azure CLI
 
@@ -287,7 +287,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vm_get | What virtual machines do I have? | none |
 | compute_vm_get | Get all virtual machines in resource group <resource-group-name> | none |
 | compute_vm_get | Show me VMs in resource group <resource-group-name> | none |
-| compute_vm_get | What VMs are in resource group <resource-group-name>? | none |
+| compute_vm_get | List the Azure virtual machines in resource group <resource-group-name> | none |
 | compute_vm_get | Get details for virtual machine <vm-name> in resource group <resource-group-name> | none |
 | compute_vm_get | Show me virtual machine <vm-name> in resource group <resource-group-name> | none |
 | compute_vm_get | What are the details of VM <vm-name> in resource group <resource-group-name>? | none |
@@ -297,7 +297,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vm_get | Get VM <vm-name> status and provisioning state in resource group <resource-group-name> | none |
 | compute_vm_get | Show me the current status of VM <vm-name> | none |
 | compute_vm_update | Add tags to VM <vm-name> in resource group <resource-group-name> | clarification-required |
-| compute_vm_update | Update virtual machine <vm-name> with environment=production tag | none |
+| compute_vm_update | Set the environment=production tag on Azure virtual machine <vm-name> | none |
 | compute_vm_update | Update VM <vm-name> to enable boot diagnostics in resource group <resource-group-name> | none |
 | compute_vm_update | Change the size of VM <vm-name> to Standard_D4s_v3 | none |
 | compute_vm_delete | Delete VM <vm-name> in resource group <resource-group-name> | none |
@@ -349,7 +349,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_disk_create | Create a managed disk from gallery image version <image-version-resource-id> in resource group <resource-group> | none |
 | compute_disk_create | Create a data disk from LUN 0 of gallery image version <image-version-resource-id> in resource group <resource-group> | none |
 | compute_disk_create | Create a disk ready for upload named <disk-name> in resource group <resource-group> with upload size 20972032 bytes | none |
-| compute_disk_create | Create a Trusted Launch upload disk named <disk-name> in resource group <resource-group> with UploadWithSecurityData type and security-type TrustedLaunch | none |
+| compute_disk_create | Create an Azure managed disk named <disk-name> in resource group <resource-group> as a Trusted Launch upload disk with UploadWithSecurityData type and TrustedLaunch security type | none |
 | compute_disk_create | Create an UltraSSD_LRS disk named <disk-name> in resource group <resource-group> with 256 GB, 10000 IOPS, and 500 MBps throughput | none |
 | compute_disk_create | Create a shared managed disk named <disk-name> in resource group <resource-group> with 512 GB and max shares set to 3 | none |
 | compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> with network access policy DenyAll and disk access <disk-access-resource-id> | none |
@@ -514,10 +514,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | eventhubs_eventhub_get | Get the details of my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> | none |
 | eventhubs_eventhub_update | Create a new event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> | none |
 | eventhubs_eventhub_update | Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> | clarification-required |
-| eventhubs_namespace_delete | Delete my namespace <namespace_name> in my resource group <resource_group_name> | none |
+| eventhubs_namespace_delete | Delete Azure Event Hubs namespace <namespace_name> in resource group <resource_group_name> | none |
 | eventhubs_namespace_get | List all Event Hubs namespaces in my subscription | none |
 | eventhubs_namespace_get | Get the details of my namespace <namespace_name> in my resource group <resource_group_name> | none |
-| eventhubs_namespace_update | Create an new namespace <namespace_name> in my resource group <resource_group_name> | none |
+| eventhubs_namespace_update | Create a new Azure Event Hubs namespace <namespace_name> in resource group <resource_group_name> | none |
 | eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name> | clarification-required |
 
 ## Azure File Shares
@@ -536,14 +536,14 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_get | Show me the file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_get | What file shares exist in resource group <resource_group_name>? | none |
 | fileshares_limits | Get the file share limits for subscription <subscription> in location <location> | none |
-| fileshares_limits | What are the file share limits in my subscription for location <location>? | none |
+| fileshares_limits | Get the Azure Files share service limits in my subscription for location <location> | none |
 | fileshares_limits | Show me the file share service limits in location <location> | none |
 | fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in <location> in subscription <subscription> | none |
 | fileshares_fileshare_check-name-availability | Is the file share name <file_share_name> available in <location>? | none |
 | fileshares_fileshare_check-name-availability | Verify availability of file share name <file_share_name> in <location> | none |
-| fileshares_rec | Get provisioning recommendations for file share <file_share_name> in resource group <resource_group_name> | none |
+| fileshares_rec | Get Azure Files provisioning recommendations for file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_rec | Show me provisioning recommendations for file share <file_share_name> | none |
-| fileshares_rec | What are the recommended provisioning settings for file share <file_share_name>? | none |
+| fileshares_rec | Get the Azure Files recommended provisioning settings for file share <file_share_name> | none |
 | fileshares_fileshare_snapshot_create | Create a snapshot of file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_snapshot_create | Create a snapshot for file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_snapshot_create | Take a snapshot of file share <file_share_name> | none |
@@ -565,9 +565,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_update | Update file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_update | Update the provisioned storage for file share <file_share_name> to 200 GB | none |
 | fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings | clarification-required |
-| fileshares_usage | Get usage data for file share <file_share_name> in resource group <resource_group_name> | none |
+| fileshares_usage | Get Azure Files usage data for file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_usage | Show me the usage statistics for file share <file_share_name> | none |
-| fileshares_usage | What is the current usage of file share <file_share_name>? | none |
+| fileshares_usage | Get the current Azure Files usage for file share <file_share_name> | none |
 
 ## Azure Function App
 
@@ -592,10 +592,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | functions_language_list | Check the available languages that Azure Functions supports. | none |
 | functions_language_list | Use Azure Functions language discovery to list the supported languages and compare them | none |
-| functions_language_list | What runtime versions are available for Azure Functions? | none |
+| functions_language_list | Use Azure Functions runtime discovery to list the available runtime versions | none |
 | functions_project_get | Set up a new Azure Functions project in Python | none |
 | functions_project_get | Generate the project files for a TypeScript Azure Functions app | none |
-| functions_project_get | Create the boilerplate for a Java Azure Functions app using JDK 21 | none |
+| functions_project_get | Use an Azure Functions project template to create boilerplate for a Java app using JDK 21 | none |
 | functions_template_get | Get the available triggers and bindings for C# Azure Functions. | none |
 | functions_template_get | Show me all the Python Azure Function templates | none |
 | functions_template_get | Create a Timer trigger function in C# that runs every 5 minutes | none |
@@ -609,7 +609,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | insights_get | Generate insights from my current subscription | none |
 | insights_get | Summarize what's deployed across my Azure environment and highlight notable patterns | none |
 | insights_get | Analyze my tenant and give me insights about the overall infrastructure | none |
-| insights_get | What can you tell me about my existing Azure environment? | none |
+| insights_get | Use Azure Insights to analyze my existing Azure environment and summarize its deployed resources | none |
 | insights_get | Analyze subscription <subscription_id> for architectural patterns | none |
 | insights_get | Analyze my Azure infrastructure and surface patterns to help me plan my next project | none |
 | insights_get | Generate insights about my Azure environment to help me plan a new data analytics platform | none |
@@ -629,7 +629,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | keyvault_admin_settings_get | Get the account settings for my key vault <key_vault_account_name> | none |
 | keyvault_admin_settings_get | Show me the account settings for managed HSM keyvault <key_vault_account_name> | none |
-| keyvault_admin_settings_get | What's the value of the <setting_name> setting in my key vault with name <key_vault_account_name> | none |
+| keyvault_admin_settings_get | Get the value of the <setting_name> administrative setting in Key Vault <key_vault_account_name> | none |
 | keyvault_certificate_create | Create a new certificate called <certificate_name> in the key vault <key_vault_account_name> | none |
 | keyvault_certificate_create | Generate a certificate named <certificate_name> in key vault <key_vault_account_name> | none |
 | keyvault_certificate_create | Request creation of certificate <certificate_name> in the key vault <key_vault_account_name> | none |
@@ -787,9 +787,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azuremigrate_platformlandingzone_getguidance | Get guidance for changing resource naming patterns in my Landing Zone | none |
 | azuremigrate_platformlandingzone_getguidance | Show me how to modify network topology in my Landing Zone | none |
 | azuremigrate_platformlandingzone_getguidance | Get guidance for updating management groups in my Platform Landing Zone | none |
-| azuremigrate_platformlandingzone_getguidance | Search for DDoS policies in my Platform Landing Zone | none |
+| azuremigrate_platformlandingzone_getguidance | Get Azure Migrate Platform Landing Zone guidance for configuring DDoS protection in an existing landing zone | none |
 | azuremigrate_platformlandingzone_getguidance | List all available policies by archetype in my Landing Zone | none |
-| azuremigrate_platformlandingzone_getguidance | Find policies related to storage encryption in my Platform Landing Zone | none |
+| azuremigrate_platformlandingzone_getguidance | Use Azure Migrate Platform Landing Zone guidance to find policy assignments related to storage encryption in the landing-zone policy catalog | none |
 | azuremigrate_platformlandingzone_request | Check if a platform landing zone already exists for migrate project <migrate-project-name> in resource group <resource-group-name> | none |
 | azuremigrate_platformlandingzone_request | Update the landing zone parameters for migrate project <migrate-project-name> in resource group <resource-group-name> | none |
 | azuremigrate_platformlandingzone_request | Set up a single region landing zone with Azure Firewall for migrate project <migrate-project-name> | none |
@@ -812,22 +812,22 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_healthmodels_list | What health models are in resource group <resource_group>? | none |
 | monitor_instrumentation_get-learning-resource | Get the onboarding learning resource at path <resource_path> | none |
 | monitor_instrumentation_get-learning-resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource_path> | none |
-| monitor_instrumentation_get-learning-resource | Get the content of the Azure Monitor learning resource file at path <resource_path> | none |
+| monitor_instrumentation_get-learning-resource | Use Azure Monitor instrumentation onboarding to get the learning resource file at path <resource_path> | none |
 | monitor_instrumentation_get-learning-resource | List all available Azure Monitor onboarding learning resources | none |
 | monitor_instrumentation_get-learning-resource | Show me all learning resource paths for Azure Monitor instrumentation | none |
 | monitor_instrumentation_get-learning-resource | What learning resources are available for Azure Monitor instrumentation onboarding? | none |
 | monitor_instrumentation_orchestrator-next | After completing the previous Azure Monitor instrumentation step, get the next action for session <session_id> with completion note <completion_note> | none |
-| monitor_instrumentation_orchestrator-next | Get the next onboarding action using session <session_id> after I completed <completion_note> | none |
+| monitor_instrumentation_orchestrator-next | Get the next Azure Monitor instrumentation onboarding action for session <session_id> after I completed <completion_note> | none |
 | monitor_instrumentation_orchestrator-next | I finished the previous instrumentation step; return the next step for session <session_id> with note <completion_note> | none |
 | monitor_instrumentation_orchestrator-start | Start Azure Monitor instrumentation orchestration for workspace <workspace_path> | none |
 | monitor_instrumentation_orchestrator-start | Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step | none |
 | monitor_instrumentation_orchestrator-start | Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one | none |
 | monitor_instrumentation_send-brownfield-analysis | Send brownfield code analysis findings JSON <findings_json> to Azure Monitor instrumentation session <session_id> after analysis was requested | none |
 | monitor_instrumentation_send-brownfield-analysis | Submit brownfield analysis findings <findings_json> to Azure Monitor instrumentation session <session_id> | none |
-| monitor_instrumentation_send-brownfield-analysis | Send completed brownfield telemetry analysis <findings_json> for onboarding session <session_id> | none |
+| monitor_instrumentation_send-brownfield-analysis | Send completed brownfield telemetry analysis <findings_json> to Azure Monitor instrumentation onboarding session <session_id> | none |
 | monitor_instrumentation_send-enhancement-select | Submit enhancement selection keys <enhancement_keys> for Azure Monitor instrumentation session <session_id> after enhancement options are presented | none |
 | monitor_instrumentation_send-enhancement-select | Continue instrumentation enhancement flow by sending selected keys <enhancement_keys> to session <session_id> | none |
-| monitor_instrumentation_send-enhancement-select | Send chosen enhancement option key list <enhancement_keys> for onboarding session <session_id> | none |
+| monitor_instrumentation_send-enhancement-select | Send chosen enhancement option keys <enhancement_keys> to Azure Monitor instrumentation onboarding session <session_id> | none |
 | monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace | none |
 | monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> | none |
 | monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> | none |
@@ -1059,8 +1059,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | sreagent_agents_list | List all Azure SRE Agent resources in my subscription | none |
 | sreagent_agents_get | Show me the details of SRE Agent <agent_name> in resource group <resource_group> | none |
-| sreagent_agents_create | Create a sub-agent called <name> on SRE Agent <agent_name> | none |
-| sreagent_agents_delete | Delete the sub-agent <name> from SRE Agent <agent_name> | none |
+| sreagent_agents_create | Use SRE Agent sub-agent management to create sub-agent <name> on SRE Agent <agent_name> | none |
+| sreagent_agents_delete | Use SRE Agent sub-agent management to delete sub-agent <name> from SRE Agent <agent_name> | none |
 | sreagent_agents_tools_list | List the custom tools attached to SRE Agent <agent_name> | none |
 | sreagent_agents_tools_get | Get the definition of custom tool <tool_name> from SRE Agent <agent_name> | none |
 | sreagent_agents_tools_create | Create a custom tool called <tool_name> on SRE Agent <agent_name> | none |
@@ -1083,7 +1083,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | sreagent_threads_get | Show me thread <thread_id> on SRE Agent <agent_name> | none |
 | sreagent_threads_create | Start a new thread on SRE Agent <agent_name> | none |
 | sreagent_threads_send_message | Send a message to thread <thread_id> on SRE Agent <agent_name> | none |
-| sreagent_threads_investigate | Investigate the following issue with SRE Agent <agent_name>: <issue> | none |
+| sreagent_threads_investigate | Use SRE Agent <agent_name> to investigate this issue: <issue> | none |
 | sreagent_threads_investigate_yolo | Investigate <issue> on SRE Agent <agent_name> in yolo mode, automatically granting all pending approvals without waiting | none |
 | sreagent_threads_delete | Delete thread <thread_id> from SRE Agent <agent_name> | none |
 | sreagent_scheduledtasks_list | List the scheduled tasks on SRE Agent <agent_name> | none |
@@ -1096,10 +1096,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | sreagent_incidents_create | Create a new incident investigation for SRE Agent <agent_name> with title <title> | none |
 | sreagent_incidents_plans_list | List the incident response plans configured on SRE Agent <agent_name> | none |
 | sreagent_incidents_plans_create | Enable a new incident response plan on SRE Agent <agent_name> with alert filter <filter> and handler <handler> | none |
-| sreagent_incidents_setup_pagerduty | Connect SRE Agent <agent_name> to PagerDuty | none |
-| sreagent_incidents_setup_servicenow | Connect SRE Agent <agent_name> to ServiceNow | none |
+| sreagent_incidents_setup_pagerduty | Configure the PagerDuty incident-management integration for SRE Agent <agent_name> | none |
+| sreagent_incidents_setup_servicenow | Configure the ServiceNow incident-management integration for SRE Agent <agent_name> | none |
 | sreagent_workflows_generate | Generate a YAML workflow for a tool named <tool_name> | clarification-required |
-| sreagent_workflows_validate | Validate the following SRE Agent workflow YAML | none |
+| sreagent_workflows_validate | Validate the following SRE Agent workflow YAML | context-required |
 | sreagent_workflows_apply | Apply the workflow YAML to SRE Agent <agent_name> | none |
 | sreagent_docs_get | Show me the SRE Agent documentation for the topic <topic> | none |
 | sreagent_docs_memories_list | Get a complete list of all indexed knowledge base documents stored in SRE Agent <agent_name> memory without filtering | none |
@@ -1107,7 +1107,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | sreagent_docs_memories_add | Add a document called <name> to the SRE Agent knowledge base | none |
 | sreagent_docs_memories_delete | Confirm and delete knowledge base document <name> from SRE Agent <agent_name> | none |
 | sreagent_docs_memories_reindex | Reindex the knowledge base documents for SRE Agent <agent_name> | none |
-| sreagent_architecture_plan | Plan an SRE Agent architecture for the following requirements: <requirements> | none |
+| sreagent_architecture_plan | Use SRE Agent architecture planning for these requirements: <requirements> | none |
 | sreagent_commonprompts_list | List the common prompts on SRE Agent <agent_name> | none |
 | sreagent_commonprompts_get | Show me the common prompt <prompt_name> on SRE Agent <agent_name> | none |
 | sreagent_commonprompts_create | Create a common prompt called <prompt_name> on SRE Agent <agent_name> | none |
@@ -1206,7 +1206,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azureterraform_aztfexport_resource | Generate an aztfexport command to export a single Azure resource to Terraform | clarification-required |
 | azureterraform_aztfexport_resourcegroup | Export all resources in resource group my-rg to Terraform | none |
 | azureterraform_aztfexport_resourcegroup | Export resource group my-rg to Terraform using the azapi provider | none |
-| azureterraform_aztfexport_query | Export all storage accounts in my subscription using a resource graph query | none |
+| azureterraform_aztfexport_query | Generate an aztfexport command that uses a resource graph query to export all storage accounts in my subscription | none |
 | azureterraform_aztfexport_query | Generate an aztfexport query command to export resources matching "type == 'Microsoft.Storage/storageAccounts'" | none |
 | azureterraform_conftest_workspace | Validate Terraform files in ./my-terraform-folder against Azure security policies | context-required |
 | azureterraform_conftest_workspace | Validate Terraform files in ./infra using the avmsec policy set | context-required |
@@ -1241,7 +1241,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | workbooks_list | What workbooks do I have in resource group <resource_group_name>? | none |
 | workbooks_show | Get information about the workbook with resource ID <workbook_resource_id> | none |
 | workbooks_show | Show me the workbook with resource ID <workbook_resource_id> | none |
-| workbooks_update | Update the workbook <workbook_resource_id> with a new text step | none |
+| workbooks_update | Update the workbook <workbook_resource_id> with a new text step | clarification-required |
 
 ## Bicep
 
@@ -1270,7 +1270,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | foundryextensions_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" using my Microsoft Foundry resource | none |
 | foundryextensions_openai_embeddings-create | Create vector embeddings for my text using my Microsoft Foundry resource | none |
 | foundryextensions_openai_models-list | List all available OpenAI models in my Microsoft Foundry resource | none |
-| foundryextensions_openai_models-list | Show me the OpenAI model deployments in my Microsoft Foundry resource | none |
-| foundryextensions_resource_get | List all Microsoft Foundry resources in my subscription | none |
-| foundryextensions_resource_get | Show me the Microsoft Foundry resources in resource group <resource_group_name> | none |
-| foundryextensions_resource_get | Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name> | none |
+| foundryextensions_openai_models-list | Use Microsoft Foundry Extensions to list the OpenAI model deployments in my Microsoft Foundry resource | none |
+| foundryextensions_resource_get | Use Microsoft Foundry Extensions to list all Microsoft Foundry resources in my subscription | none |
+| foundryextensions_resource_get | Use Microsoft Foundry Extensions to list Microsoft Foundry resources in resource group <resource_group_name> | none |
+| foundryextensions_resource_get | Use Microsoft Foundry Extensions to get details for resource <resource_name> in resource group <resource_group_name> | none |
