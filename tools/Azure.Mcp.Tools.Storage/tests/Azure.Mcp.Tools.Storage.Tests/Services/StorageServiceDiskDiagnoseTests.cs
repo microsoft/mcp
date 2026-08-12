@@ -44,7 +44,6 @@ public class StorageServiceDiskDiagnoseTests
             diskNames: ["test-disk"],
             startTime: "2026-07-19T00:00:00Z",
             endTime: "2026-07-19T12:00:00Z",
-            includeHostLatency: true,
             cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal("Healthy", result.GetProperty("status").GetString());
@@ -61,7 +60,7 @@ public class StorageServiceDiskDiagnoseTests
         Assert.Equal(diskResourceId, requestRoot.GetProperty("subResourceIds")[0].GetString());
         Assert.Equal("2026-07-19T00:00:00Z", requestRoot.GetProperty("issueStartTime").GetString());
         Assert.Equal("2026-07-19T12:00:00Z", requestRoot.GetProperty("issueEndTime").GetString());
-        Assert.True(requestRoot.GetProperty("includeHostLatency").GetBoolean());
+        Assert.False(requestRoot.TryGetProperty("includeHostLatency", out _));
 
         await attachedDiskService.DidNotReceiveWithAnyArgs().ResolveFriendlySelectorAsync(
             default!, default!, default!, default, TestContext.Current.CancellationToken);

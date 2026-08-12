@@ -12,6 +12,4 @@ public sealed class DiskAnalysisRequest
     public string? IssueStartTime { get; init; }
 
     public string? IssueEndTime { get; init; }
-
-    public bool IncludeHostLatency { get; init; }
 }
