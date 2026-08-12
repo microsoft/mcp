@@ -24,7 +24,7 @@ steps:
     displayName: 'Resolve .NET SDK version from global.json'
 
   - task: UseDotNet@2
-    displayName: "Use .NET SDK from global.json ($(DotNetSdkVersion))"
+    displayName: "Use .NET SDK from global.json"
     retryCountOnTaskFailure: 3
     inputs:
       version: $(DotNetSdkVersion)
