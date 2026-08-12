@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Id = "ace3cbba-d572-47dc-a452-ab2cb349e17b",
     Name = "update-resources",
     Title = "Update Resilience Recovery Plan Resources",
-    Description = "Includes a recovery resource in an Azure Resilience recovery plan and configures its protection solution type and settings. Excludes a resource from a recovery plan. Removes a recovery resource from a recovery plan. Also assigns recovery groups and managed identities.",
+    Description = "Includes a recovery resource in a recovery plan in an Azure service group, excludes a recovery resource from a recovery plan in an Azure service group, or removes a recovery resource from a recovery plan in an Azure service group. Updates individual recovery plan resources with a protection solution type and settings, recovery groups, and managed identities.",
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

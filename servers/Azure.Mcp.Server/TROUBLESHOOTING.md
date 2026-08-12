@@ -255,7 +255,7 @@ When a newly registered command appears in `all` mode but is missing from consol
     dotnet test core/Azure.Mcp.Core/tests/Azure.Mcp.Core.Tests/Azure.Mcp.Core.Tests.csproj -- --filter-class '*ConsolidatedToolDiscoveryStrategyTests'
     ```
 
-See the [new command guide](docs/new-command.md#consolidated-mode-requirements) for the complete authoring checklist.
+See the [new command guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md#consolidated-mode-requirements) for the complete authoring checklist.
 
 ### VS Code Permission Dialog for Language Model Calls
 

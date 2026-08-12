@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added the 'azmcp resilience recovery plan delete' command to safely repeat deletion of a recovery plan from an Azure service group and report whether the plan existed."

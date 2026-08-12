@@ -33,7 +33,7 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
         Assert.Equal("update-resources", command.Name);
         Assert.NotNull(command.Description);
         Assert.Contains("includes a recovery resource", command.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("excludes a resource from a recovery plan", command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("excludes a recovery resource from a recovery plan", command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("removes a recovery resource from a recovery plan", command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("protection solution type and settings", command.Description, StringComparison.OrdinalIgnoreCase);
     }

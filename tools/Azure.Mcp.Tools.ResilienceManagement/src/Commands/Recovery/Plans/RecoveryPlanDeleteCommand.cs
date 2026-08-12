@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Id = "e694c9e4-f134-48b2-b6ed-5f6a617d7d8d",
     Name = "delete",
     Title = "Delete Resilience Recovery Plan",
-    Description = "Deletes a resilience recovery plan from an Azure service group. This idempotent operation returns Deleted = false when the recovery plan does not exist.",
+    Description = "Deletes a resilience recovery plan from an Azure service group. Use this tool to delete a recovery plan and report whether the entire plan existed.",
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

@@ -63,6 +63,29 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
         }
     }
 
+    [Fact]
+    public async Task ExecuteAsync_ReportsMissingIdentityType()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recovery-plan", "plan1",
+            "--plan-type", "Zonal",
+            "--plan-description", "description");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal("Missing Required options: --identity-type", response.Message);
+        await Service.DidNotReceive().CreateRecoveryPlanAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RecoveryPlanKind>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            TestContext.Current.CancellationToken);
+    }
+
     [Theory]
     [InlineData("plan")]
     [InlineData("1234567890123456789012345")]

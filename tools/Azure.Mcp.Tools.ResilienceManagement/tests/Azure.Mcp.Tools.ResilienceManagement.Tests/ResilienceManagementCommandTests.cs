@@ -4,6 +4,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
@@ -16,9 +17,16 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests;
 /// Resources are provisioned by test-resources.bicep + test-resources-post.ps1.
 /// Drill tools are not part of this toolset (they are onboarded separately).
 /// </summary>
-public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+[Collection(ResilienceManagementLiveTestCollection.Name)]
+public class ResilienceManagementCommandTests(
+    ITestOutputHelper output,
+    TestProxyFixture fixture,
+    LiveServerFixture liveServerFixture,
+    ResilienceManagementTestCleanupFixture cleanupFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    private readonly ResilienceManagementTestCleanupFixture _cleanupFixture = cleanupFixture;
+
     // Prepend the base sanitizers (e.g. WWW-Authenticate) then add tool-specific ones.
     // Sanitize x-ms-operation-identifier response header which contains the real tenant ID and object ID.
     public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
@@ -27,6 +35,14 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
         new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("x-ms-operation-identifier")
         {
             Value = "sanitized"
+        }),
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("operation-id")
+        {
+            Value = "sanitized"
+        }),
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("Location")
+        {
+            Value = ""
         })
     ];
 
@@ -190,7 +206,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             });
 
         var plan = result.AssertProperty("recoveryPlan");
-        Assert.Equal(recoveryPlan, plan.AssertProperty("name").GetString());
+        Assert.EndsWith($"/recoveryPlans/{recoveryPlan}", plan.AssertProperty("id").GetString());
         Assert.Equal("SystemAssigned", plan.AssertProperty("identity").AssertProperty("type").GetString());
         var updatedRecoveryGroups = plan
             .AssertProperty("properties")
@@ -206,6 +222,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
     }
 
     [Fact]
+    [CustomMatcher(compareBody: false)]
     public async Task Should_create_update_and_delete_recovery_plan()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("lifecycleServiceGroupName", "LIFECYCLESERVICEGROUPNAME");
@@ -229,7 +246,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             recoveryPlanExists = true;
 
             var createdPlan = createResult.AssertProperty("recoveryPlan");
-            Assert.Equal(recoveryPlan, createdPlan.AssertProperty("name").GetString());
+            Assert.EndsWith($"/recoveryPlans/{recoveryPlan}", createdPlan.AssertProperty("id").GetString());
             Assert.Equal("SystemAssigned", createdPlan.AssertProperty("identity").AssertProperty("type").GetString());
             var createdDefaultGroup = createdPlan
                 .AssertProperty("properties")
@@ -248,7 +265,9 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
                     { "service-group", serviceGroup },
                     { "name", recoveryPlan }
                 });
-            Assert.Equal(recoveryPlan, getResult.AssertProperty("recoveryPlan").AssertProperty("name").GetString());
+            Assert.EndsWith(
+                $"/recoveryPlans/{recoveryPlan}",
+                getResult.AssertProperty("recoveryPlan").AssertProperty("id").GetString());
 
             var updateResult = await CallToolAsync(
                 "resilience_recovery_plan_create",
@@ -344,7 +363,8 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
                 { "recovery-plan", recoveryPlan }
             });
         var resourceSummary = listedResources.AssertProperty("recoveryResources").EnumerateArray().First();
-        var resourceName = resourceSummary.AssertProperty("name").GetString();
+        var resourceId = resourceSummary.AssertProperty("id").GetString();
+        var resourceName = resourceId?.Split('/').Last();
         Assert.False(string.IsNullOrEmpty(resourceName));
 
         var resourceResult = await CallToolAsync(
@@ -357,8 +377,18 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
                 { "name", resourceName }
             });
         var recoveryResource = resourceResult.AssertProperty("recoveryResource");
-        var updatedResource = JsonNode.Parse(recoveryResource.GetRawText())!.AsObject();
-        updatedResource["properties"]!["inclusionState"] = "Excluded";
+        var recoveryResourceUniqueId = recoveryResource
+            .AssertProperty("properties")
+            .AssertProperty("recoveryResourceUniqueId")
+            .GetString();
+        var updatedResource = new JsonObject
+        {
+            ["properties"] = new JsonObject
+            {
+                ["recoveryResourceUniqueId"] = recoveryResourceUniqueId,
+                ["inclusionState"] = "Excluded"
+            }
+        };
 
         var result = await CallToolAsync(
             "resilience_recovery_plan_update-resources",

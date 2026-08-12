@@ -906,16 +906,16 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_recovery_job_get | Get the details of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> | none |
 | resilience_recovery_job_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> | none |
 | resilience_recovery_job_resource_get | Get the recovery job resource <resource_name> for recovery job <recovery_job_name> of recovery plan <recovery_plan_name> in service group <service_group> | none |
-| resilience_recovery_plan_create | Create a Zonal resilience recovery plan <recovery_plan_name> in service group <service_group> with a system-assigned identity, description <plan_description>, and default recovery group described as <default_group_description> | none |
-| resilience_recovery_plan_create | Create a Zonal resilience recovery plan <recovery_plan_name> in service group <service_group> with user-assigned identity <user_assigned_identity_resource_id>, description <plan_description>, and default recovery group described as <default_group_description> | none |
-| resilience_recovery_plan_create | Fully update resilience recovery plan <recovery_plan_name> in service group <service_group>, switching it to a system-assigned identity while preserving its Zonal plan type and recovery groups, with description <plan_description> | none |
-| resilience_recovery_plan_delete | Delete resilience recovery plan <recovery_plan_name> from service group <service_group> | none |
-| resilience_recovery_plan_delete | Remove recovery plan <recovery_plan_name> from resilience service group <service_group>; report whether it existed | none |
+| resilience_recovery_plan_create | Set up a Zonal recovery plan named <recovery_plan_name> in service group <service_group>. Use a system-assigned managed identity, description <plan_description>, and default recovery group description <default_group_description> | none |
+| resilience_recovery_plan_create | Create Zonal recovery plan <recovery_plan_name> in service group <service_group> and attach user-assigned managed identity <user_assigned_identity_resource_id>. Use <plan_description> for the plan description and <default_group_description> for the default recovery group | none |
+| resilience_recovery_plan_create | Change recovery plan <recovery_plan_name> in service group <service_group> to a system-assigned managed identity and description <plan_description>. Keep its Zonal plan type and existing recovery groups | none |
+| resilience_recovery_plan_delete | Delete the entire recovery plan <recovery_plan_name> from service group <service_group> | none |
+| resilience_recovery_plan_delete | Recovery plan <recovery_plan_name> is no longer needed. Delete it from resilience service group <service_group> | none |
 | resilience_recovery_plan_get | List all resilience recovery plans in service group <service_group> | none |
 | resilience_recovery_plan_get | Get the details of recovery plan <recovery_plan_name> in service group <service_group> | none |
-| resilience_recovery_plan_update-resources | Include recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group> using protection solution <protection_solution_type> and protection settings <protection_settings_json> | none |
-| resilience_recovery_plan_update-resources | Exclude recovery resource <recovery_resource_id> from recovery plan <recovery_plan_name> in service group <service_group> | none |
-| resilience_recovery_plan_update-resources | Remove recovery resource <recovery_resource_id> from recovery plan <recovery_plan_name> in service group <service_group> | none |
+| resilience_recovery_plan_update-resources | Include recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group>, using protection solution <protection_solution_type> with settings <protection_settings_json> | none |
+| resilience_recovery_plan_update-resources | Keep recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group>, but mark it as Excluded | none |
+| resilience_recovery_plan_update-resources | Remove the individual recovery resource <recovery_resource_id> from recovery plan <recovery_plan_name> in service group <service_group> without deleting the recovery plan | none |
 | resilience_recovery_plan_resource_get | List all resources (members) of recovery plan <recovery_plan_name> in service group <service_group> | none |
 | resilience_recovery_plan_resource_get | Get the recovery resource <resource_name> for recovery plan <recovery_plan_name> in service group <service_group> | none |
 | resilience_usageplan_create | Create a resilience usage plan <usage_plan_name> with plan type Basic in resource group <resource_group_name> | none |
