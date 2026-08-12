@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the `advisor remediation get` tool to retrieve executable remediation packages (ordered steps plus CLI, PowerShell, Bicep, and ARM artifacts) for a specific Azure Advisor recommendation."
