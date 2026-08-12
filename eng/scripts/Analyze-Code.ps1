@@ -61,16 +61,6 @@ try {
         Write-Host "✅ Tool description evaluation did not detect any issues."
     }
 
-    # Run tool prompt validation
-    & "$PSScriptRoot/Test-ToolSelectionPrompts.ps1" -SkipServerBuild
-
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "❌ E2E tool prompt validation failed."
-        $hasErrors = $true
-    } else {
-        Write-Host "✅ E2E tool prompt validation did not detect any issues."
-    }
-
     # Run tool name length validation
     $toolNameResult = & "$PSScriptRoot/Test-ToolNameLength.ps1"
 
@@ -92,6 +82,16 @@ try {
         $hasErrors = $true
     } else {
         Write-Host "✅ Tool id validation passed."
+    }
+
+    # Run tool prompt validation
+    & "$PSScriptRoot/Test-ToolSelectionPrompts.ps1" -SkipServerBuild
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "❌ E2E tool prompt validation failed."
+        $hasErrors = $true
+    } else {
+        Write-Host "✅ E2E tool prompt validation did not detect any issues."
     }
 
     if($hasErrors) {
