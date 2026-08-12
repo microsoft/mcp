@@ -260,6 +260,7 @@ while (-not $drillResourceName -and (Get-Date) -lt $deadline) {
 
 if ($drillResourceName) {
     $DeploymentOutputs['DRILLRESOURCENAME'] = $drillResourceName
+    New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot | Out-Null
 }
 else {
     Write-Warning "No drill resources appeared after provisioning; DRILLRESOURCENAME was not set."

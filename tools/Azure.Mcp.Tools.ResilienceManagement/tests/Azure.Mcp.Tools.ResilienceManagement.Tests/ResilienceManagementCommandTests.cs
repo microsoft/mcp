@@ -146,6 +146,25 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
     }
 
     [Fact]
+    public async Task Should_get_drill_resource()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+        var drillResourceName = RegisterOrRetrieveDeploymentOutputVariable("drillResourceName", "DRILLRESOURCENAME");
+
+        var result = await CallToolAsync(
+            "resilience_drill_resource_get",
+            new()
+            {
+                { "service-group", serviceGroup },
+                { "drill", drillName },
+                { "name", drillResourceName }
+            });
+
+        Assert.Equal(JsonValueKind.Object, result.AssertProperty("drillResource").ValueKind);
+    }
+
+    [Fact]
     public async Task Should_return_400_when_drill_missing_for_drill_resource_get()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
