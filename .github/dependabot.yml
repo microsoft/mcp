@@ -11,3 +11,12 @@ updates:
     # Feel free to extend this to other packages as needed
     allow:
       - dependency-name: "Azure.Bicep.Types"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    groups:
+      github-actions:
+        patterns: ["*"]
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
