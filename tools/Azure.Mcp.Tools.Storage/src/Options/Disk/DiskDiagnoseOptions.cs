@@ -28,7 +28,4 @@ public class DiskDiagnoseOptions
 
     [Option(Description = "The analysis end time in ISO 8601 format. If omitted, the analysis ends at the current time. The analysis window cannot exceed 24 hours.")]
     public string? EndTime { get; set; }
-
-    [Option(Description = "Include host-side disk latency signals showing whether I/O exceeded the 1-second or 5-second thresholds.")]
-    public bool IncludeHostLatency { get; set; }
 }

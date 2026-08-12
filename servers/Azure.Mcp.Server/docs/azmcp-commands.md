@@ -4865,8 +4865,7 @@ authentication so the authenticated caller tenant is used.
 azmcp storage disk diagnose --resource-id <vm-or-managed-disk-resource-id> \
                             [--disk <attached-disk-name>...] \
                             [--start-time <iso-8601-timestamp>] \
-                            [--end-time <iso-8601-timestamp>] \
-                            [--include-host-latency]
+                            [--end-time <iso-8601-timestamp>]
 
 # Diagnose a VM by friendly name, optionally selecting attached disks by name
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4875,8 +4874,7 @@ azmcp storage disk diagnose --subscription <subscription> \
                             --vm <virtual-machine-name> \
                             [--disk <attached-disk-name>...] \
                             [--start-time <iso-8601-timestamp>] \
-                            [--end-time <iso-8601-timestamp>] \
-                            [--include-host-latency]
+                            [--end-time <iso-8601-timestamp>]
 ```
 
 #### Table Storage

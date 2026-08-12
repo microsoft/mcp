@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.Storage.Commands.Disk;
     Id = "65d4c07d-212c-46c9-bf88-6991189aeb6e",
     Name = "diagnose",
     Title = "Diagnose Azure Disk Performance",
-    Description = "Diagnoses Azure virtual machine disk performance through the Storage Intelligence service. Identify the target with a VM or attached managed disk resource ID, or with subscription, resource group, and VM name. Optionally select attached disks by name, an ISO 8601 time window of up to 24 hours, and host-side latency enrichment for I/O exceeding the 1-second or 5-second thresholds. Returns disk configuration, performance metrics, throttling intervals, per-LUN analysis, optional latency metrics, and recommendations.",
+    Description = "Diagnoses Azure virtual machine disk performance through the Storage Intelligence service. Identify the target with a VM or attached managed disk resource ID, or with subscription, resource group, and VM name. Optionally select attached disks by name and an ISO 8601 time window of up to 24 hours. Returns disk configuration, performance metrics, throttling intervals, per-LUN analysis, host-side latency metrics when provided by the service, and recommendations.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -125,7 +125,6 @@ public sealed class DiskDiagnoseCommand(
                 options.Disk,
                 options.StartTime,
                 options.EndTime,
-                options.IncludeHostLatency,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
