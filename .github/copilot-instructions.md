@@ -47,6 +47,8 @@
 
 ## Code Review Guidelines
 
+When reviewing a pull request, use the `mcp-code-reviewer` skill. Return draft findings for human approval before posting them.
+
 When reviewing PRs that add or modify MCP tools, cross-reference the [pre-merge checklist](PULL_REQUEST_TEMPLATE.md) and check the following repository-specific completeness requirements:
 
 - **`consolidated-tools.json`**: If a tool is renamed or removed, `servers/Azure.Mcp.Server/src/Resources/consolidated-tools.json` must be updated. Flag a tool rename when this file is not in the diff.

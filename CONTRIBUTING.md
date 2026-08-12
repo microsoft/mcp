@@ -854,6 +854,16 @@ External servers integrate seamlessly with the Azure MCP Server's tool aggregati
 3. Reference the original issue
 4. Wait for review and address any feedback
 
+#### Assisted Pull Request Review
+
+The repository includes an [`mcp-code-reviewer` skill](.github/skills/mcp-code-reviewer/SKILL.md) for consistent, repository-aware reviews in supported IDE and CLI review sessions.
+
+1. Open the repository in the pull request branch or worktree.
+2. Ask the reviewing agent to `Review pull request <number> using the mcp-code-reviewer skill. Return draft inline comments only and do not post them.`
+3. Inspect each draft finding against the diff and post only the comments you agree with.
+
+The skill does not replace maintainer judgment, required validation, or the security inspection required before authorizing live tests for an untrusted contribution.
+
 ### Builds and Releases (Internal)
 
 **For instructions on managing Azure MCP releases, follow the [release checklist](https://eng.ms/docs/products/azure-developer-experience/mcp/release-checklist).**
