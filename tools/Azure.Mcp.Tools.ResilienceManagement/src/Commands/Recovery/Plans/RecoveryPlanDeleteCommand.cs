@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Microsoft.Extensions.Logging;
@@ -77,5 +78,7 @@ public sealed class RecoveryPlanDeleteCommand(ILogger<RecoveryPlanDeleteCommand>
         _ => base.GetErrorMessage(ex)
     };
 
-    public sealed record RecoveryPlanDeleteCommandResult(bool Deleted, string RecoveryPlan);
+    public sealed record RecoveryPlanDeleteCommandResult(
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.Never)] bool Deleted,
+        string RecoveryPlan);
 }

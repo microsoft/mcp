@@ -38,6 +38,8 @@ $subscriptionId = $testSettings.SubscriptionId
 $serviceGroupName = $DeploymentOutputs['SERVICEGROUPNAME']
 $usagePlanName = $DeploymentOutputs['USAGEPLANNAME']
 $enrollmentName = $DeploymentOutputs['ENROLLMENTNAME']
+$lifecycleEnrollmentName = $DeploymentOutputs['LIFECYCLEENROLLMENTNAME']
+$lifecycleServiceGroupName = $DeploymentOutputs['LIFECYCLESERVICEGROUPNAME']
 $goalTemplateName = $DeploymentOutputs['GOALTEMPLATENAME']
 $goalAssignmentName = $DeploymentOutputs['GOALASSIGNMENTNAME']
 $recoveryPlanName = $DeploymentOutputs['RECOVERYPLANNAME']
@@ -48,6 +50,7 @@ $resilienceApiVersion = '2026-04-01-preview'
 
 $serviceGroupId = "/providers/Microsoft.Management/serviceGroups/$serviceGroupName"
 $serviceGroupResilienceBase = "$serviceGroupId/providers/Microsoft.AzureResilienceManagement"
+$lifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$lifecycleServiceGroupName"
 
 function Invoke-ResilienceRestPut {
     param(
@@ -127,6 +130,19 @@ Invoke-ResilienceRestPut -Path $serviceGroupPath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $serviceGroupPath
 
+# Create a second enrolled service group without a recovery plan. Lifecycle tests use it
+# to exercise create and delete without disturbing the shared plan used by other tests.
+$lifecycleServiceGroupPath = "$lifecycleServiceGroupId`?api-version=$serviceGroupApiVersion"
+Invoke-ResilienceRestPut -Path $lifecycleServiceGroupPath -Body @{
+    properties = @{
+        displayName = $lifecycleServiceGroupName
+        parent      = @{
+            resourceId = "/providers/Microsoft.Management/serviceGroups/$tenantId"
+        }
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $lifecycleServiceGroupPath
+
 # 2) Add the resource group as a member of the service group so its resources
 #    (e.g. the storage account) surface as goal/recovery resource targets.
 $membershipPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/rhub-rg-member`?api-version=$membershipApiVersion"
@@ -144,6 +160,14 @@ Invoke-ResilienceRestPut -Path $enrollmentPath -Body @{
     }
 } | Out-Null
 Wait-ResilienceProvisioning -Path $enrollmentPath
+
+$lifecycleEnrollmentPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName/enrollments/$lifecycleEnrollmentName`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPut -Path $lifecycleEnrollmentPath -Body @{
+    properties = @{
+        serviceGroupId = $lifecycleServiceGroupId
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $lifecycleEnrollmentPath
 
 # 4) Create a goal template on the service group.
 $goalTemplatePath = "$serviceGroupResilienceBase/goalTemplates/$goalTemplateName`?api-version=$resilienceApiVersion"

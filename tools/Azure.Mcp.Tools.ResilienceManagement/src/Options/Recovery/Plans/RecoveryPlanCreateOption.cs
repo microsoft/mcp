@@ -18,13 +18,16 @@ public class RecoveryPlanCreateOptions
     [Option(Description = "The recovery plan type. Supported value: Zonal. The type cannot be changed after creation.")]
     public required RecoveryPlanKind PlanType { get; set; }
 
-    [Option(Description = "The recovery plan description, up to 50 characters.")]
+    [Option(Description = "The recovery plan description, from 5 to 50 characters.")]
     public required string PlanDescription { get; set; }
 
-    [Option(Description = "The full resource ID of a pre-provisioned user-assigned managed identity. Omit when creating a plan to use a system-assigned identity. On update, omit to preserve the existing identity or specify the same user-assigned identity. Ensure the identity has the Azure RBAC roles required by the recovery resources because Recovery Orchestration role assignment is best effort.")]
+    [Option(Description = "The managed identity type for the recovery plan. Supported values: SystemAssigned and UserAssigned. Specify this on every create or update; updates can switch identity types.")]
+    public required RecoveryPlanIdentityKind IdentityType { get; set; }
+
+    [Option(Description = "The full resource ID of the user-assigned managed identity. Required when --identity-type is UserAssigned and not allowed when it is SystemAssigned.")]
     public string? UserAssignedIdentity { get; set; }
 
-    [Option(Description = "The default recovery group description. On update, the existing description is preserved when omitted.")]
+    [Option(Description = "The default recovery group description, from 5 to 50 characters. On update, the existing description is preserved when omitted.")]
     public string? DefaultGroupDescription { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]

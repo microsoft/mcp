@@ -3,8 +3,8 @@
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Models;
 
-public enum RecoveryPlanKind
+public enum RecoveryPlanIdentityKind
 {
-    Regional,
-    Zonal
+    SystemAssigned,
+    UserAssigned
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -160,7 +161,6 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
                 { "name", recoveryPlan }
             });
         var existingPlan = existingResult.AssertProperty("recoveryPlan");
-        var existingIdentity = existingPlan.AssertProperty("identity").Clone();
         var existingRecoveryGroups = existingPlan
             .AssertProperty("properties")
             .AssertProperty("recoveryGroupsSetting");
@@ -185,12 +185,13 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
                 { "service-group", serviceGroup },
                 { "recovery-plan", recoveryPlan },
                 { "plan-type", "Zonal" },
-                { "plan-description", "Recovery plan created by Azure MCP tests." }
+                { "plan-description", "Recovery plan created by Azure MCP tests." },
+                { "identity-type", "SystemAssigned" }
             });
 
         var plan = result.AssertProperty("recoveryPlan");
         Assert.Equal(recoveryPlan, plan.AssertProperty("name").GetString());
-        Assert.True(JsonElement.DeepEquals(existingIdentity, plan.AssertProperty("identity")));
+        Assert.Equal("SystemAssigned", plan.AssertProperty("identity").AssertProperty("type").GetString());
         var updatedRecoveryGroups = plan
             .AssertProperty("properties")
             .AssertProperty("recoveryGroupsSetting");
@@ -205,15 +206,15 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
     }
 
     [Fact]
-    public async Task Should_delete_recovery_plan_idempotently()
+    public async Task Should_create_update_and_delete_recovery_plan()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var recoveryPlan = RegisterOrRetrieveVariable("deleteRecoveryPlanName", $"mcpdel-{Guid.NewGuid().ToString("N")[..8]}");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("lifecycleServiceGroupName", "LIFECYCLESERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveVariable("lifecycleRecoveryPlanName", $"mcplife-{Guid.NewGuid().ToString("N")[..8]}");
         bool recoveryPlanExists = false;
 
         try
         {
-            await CallToolAsync(
+            var createResult = await CallToolAsync(
                 "resilience_recovery_plan_create",
                 new()
                 {
@@ -221,11 +222,58 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
                     { "service-group", serviceGroup },
                     { "recovery-plan", recoveryPlan },
                     { "plan-type", "Zonal" },
-                    { "plan-description", "Temporary recovery plan for delete testing." }
+                    { "plan-description", "Recovery plan lifecycle test." },
+                    { "identity-type", "SystemAssigned" },
+                    { "default-group-description", "Lifecycle default group" }
                 });
             recoveryPlanExists = true;
 
-            var deletedResult = await CallToolAsync(
+            var createdPlan = createResult.AssertProperty("recoveryPlan");
+            Assert.Equal(recoveryPlan, createdPlan.AssertProperty("name").GetString());
+            Assert.Equal("SystemAssigned", createdPlan.AssertProperty("identity").AssertProperty("type").GetString());
+            var createdDefaultGroup = createdPlan
+                .AssertProperty("properties")
+                .AssertProperty("recoveryGroupsSetting")
+                .AssertProperty("defaultGroup")
+                .AssertProperty("properties");
+            var defaultGroupId = createdDefaultGroup.AssertProperty("groupUniqueId").GetString();
+            Assert.False(string.IsNullOrEmpty(defaultGroupId));
+            Assert.Equal("Lifecycle default group", createdDefaultGroup.AssertProperty("description").GetString());
+
+            var getResult = await CallToolAsync(
+                "resilience_recovery_plan_get",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "name", recoveryPlan }
+                });
+            Assert.Equal(recoveryPlan, getResult.AssertProperty("recoveryPlan").AssertProperty("name").GetString());
+
+            var updateResult = await CallToolAsync(
+                "resilience_recovery_plan_create",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "recovery-plan", recoveryPlan },
+                    { "plan-type", "Zonal" },
+                    { "plan-description", "Updated recovery plan lifecycle test." },
+                    { "identity-type", "SystemAssigned" }
+                });
+            var updatedPlan = updateResult.AssertProperty("recoveryPlan");
+            Assert.Equal(
+                "Updated recovery plan lifecycle test.",
+                updatedPlan.AssertProperty("properties").AssertProperty("planDescription").GetString());
+            var updatedDefaultGroup = updatedPlan
+                .AssertProperty("properties")
+                .AssertProperty("recoveryGroupsSetting")
+                .AssertProperty("defaultGroup")
+                .AssertProperty("properties");
+            Assert.Equal(defaultGroupId, updatedDefaultGroup.AssertProperty("groupUniqueId").GetString());
+            Assert.Equal("Lifecycle default group", updatedDefaultGroup.AssertProperty("description").GetString());
+
+            var deleteResult = await CallToolAsync(
                 "resilience_recovery_plan_delete",
                 new()
                 {
@@ -234,11 +282,10 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
                     { "recovery-plan", recoveryPlan }
                 });
             recoveryPlanExists = false;
+            Assert.True(deleteResult.AssertProperty("deleted").GetBoolean());
+            Assert.Equal(recoveryPlan, deleteResult.AssertProperty("recoveryPlan").GetString());
 
-            Assert.True(deletedResult.AssertProperty("deleted").GetBoolean());
-            Assert.Equal(recoveryPlan, deletedResult.AssertProperty("recoveryPlan").GetString());
-
-            var alreadyDeletedResult = await CallToolAsync(
+            var repeatedDeleteResult = await CallToolAsync(
                 "resilience_recovery_plan_delete",
                 new()
                 {
@@ -246,8 +293,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
                     { "service-group", serviceGroup },
                     { "recovery-plan", recoveryPlan }
                 });
-
-            Assert.False(alreadyDeletedResult.AssertProperty("deleted").GetBoolean());
+            Assert.False(repeatedDeleteResult.AssertProperty("deleted").GetBoolean());
         }
         finally
         {
@@ -281,6 +327,50 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             });
 
         Assert.Equal(JsonValueKind.Array, result.AssertProperty("recoveryResources").ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_update_recovery_plan_resources()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+
+        var listedResources = await CallToolAsync(
+            "resilience_recovery_plan_resource_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan }
+            });
+        var resourceSummary = listedResources.AssertProperty("recoveryResources").EnumerateArray().First();
+        var resourceName = resourceSummary.AssertProperty("name").GetString();
+        Assert.False(string.IsNullOrEmpty(resourceName));
+
+        var resourceResult = await CallToolAsync(
+            "resilience_recovery_plan_resource_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan },
+                { "name", resourceName }
+            });
+        var recoveryResource = resourceResult.AssertProperty("recoveryResource");
+        var updatedResource = JsonNode.Parse(recoveryResource.GetRawText())!.AsObject();
+        updatedResource["properties"]!["inclusionState"] = "Excluded";
+
+        var result = await CallToolAsync(
+            "resilience_recovery_plan_update-resources",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan },
+                { "resources-to-update", $"[{updatedResource.ToJsonString()}]" }
+            });
+
+        Assert.Equal(JsonValueKind.Array, result.AssertProperty("result").AssertProperty("failedResources").ValueKind);
     }
 
     [Fact]

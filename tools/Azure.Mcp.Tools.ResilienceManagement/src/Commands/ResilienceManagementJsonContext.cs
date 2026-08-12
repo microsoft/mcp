@@ -43,6 +43,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands;
 [JsonSerializable(typeof(RecoveryPlanGetCommand.RecoveryPlanGetCommandResult))]
 [JsonSerializable(typeof(RecoveryPlanCreateCommand.RecoveryPlanCreateCommandResult))]
 [JsonSerializable(typeof(RecoveryPlanDeleteCommand.RecoveryPlanDeleteCommandResult))]
+[JsonSerializable(typeof(RecoveryPlanUpdateResourcesCommand.RecoveryPlanUpdateResourcesCommandResult))]
 [JsonSerializable(typeof(RecoveryResourceGetCommand.RecoveryResourceGetCommandResult))]
 [JsonSerializable(typeof(RecoveryJobGetCommand.RecoveryJobGetCommandResult))]
 [JsonSerializable(typeof(RecoveryJobResourceGetCommand.RecoveryJobResourceGetCommandResult))]

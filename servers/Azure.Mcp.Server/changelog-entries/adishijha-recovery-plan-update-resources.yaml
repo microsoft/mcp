@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the 'azmcp resilience recovery plan update-resources' command to include, exclude, configure, or remove recovery resources, including their recovery groups, associated identities, and protection settings."

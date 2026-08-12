@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ClientModel.Primitives;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
@@ -406,7 +407,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             ? existingPlan.Value?.Data?.Properties?.RecoveryGroupsSetting
             : null;
         RecoveryGroupsSetting recoveryGroups = CreateRecoveryGroupsSetting(existingRecoveryGroups, defaultGroupDescription);
-        ManagedServiceIdentity identity = CreateRecoveryPlanIdentity(existingPlan.Value?.Data?.Identity, userAssignedIdentity);
+        ManagedServiceIdentity identity = CreateRecoveryPlanIdentity(userAssignedIdentity);
         var data = new RecoveryPlanData
         {
             Identity = identity,
@@ -449,6 +450,34 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         }
     }
 
+    public async Task<JsonElement> UpdateRecoveryPlanResourcesAsync(string serviceGroup, string recoveryPlan, UpdateRecoveryResourcesContent content, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var recoveryPlanId = RecoveryPlanResource.CreateResourceIdentifier(serviceGroup, recoveryPlan);
+        RecoveryPlanResource recoveryPlanResource = await armClient.GetRecoveryPlanResource(recoveryPlanId).GetAsync(cancellationToken);
+        ArmOperation<UpdateRecoveryResourcesResult> operation = await recoveryPlanResource.UpdateResourcesAsync(
+            WaitUntil.Completed,
+            Guid.NewGuid().ToString(),
+            content,
+            cancellationToken);
+
+        if (operation.Value.FailedResources.Count == 0)
+        {
+            using JsonDocument emptyResult = JsonDocument.Parse("""{"failedResources":[]}""");
+            return emptyResult.RootElement.Clone();
+        }
+
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream))
+        {
+            ((IJsonModel<UpdateRecoveryResourcesResult>)operation.Value).Write(writer, ModelReaderWriterOptions.Json);
+        }
+
+        using JsonDocument document = JsonDocument.Parse(stream.ToArray());
+        return document.RootElement.Clone();
+    }
+
     internal static RecoveryGroupsSetting CreateRecoveryGroupsSetting(RecoveryGroupsSetting? existingRecoveryGroups, string? defaultGroupDescription)
     {
         RecoveryGroup? existingDefaultGroup = existingRecoveryGroups?.DefaultGroup;
@@ -467,30 +496,14 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return recoveryGroups;
     }
 
-    internal static ManagedServiceIdentity CreateRecoveryPlanIdentity(ManagedServiceIdentity? existingIdentity, string? userAssignedIdentity)
+    internal static ManagedServiceIdentity CreateRecoveryPlanIdentity(string? userAssignedIdentity)
     {
-        if (existingIdentity is not null)
-        {
-            if (!string.IsNullOrWhiteSpace(userAssignedIdentity))
-            {
-                ResourceIdentifier suppliedIdentityResourceId = ParseUserAssignedIdentityResourceId(userAssignedIdentity);
-                if (!existingIdentity.UserAssignedIdentities.ContainsKey(suppliedIdentityResourceId))
-                {
-                    throw new ArgumentException(
-                        "The supplied user-assigned identity does not match the recovery plan's existing identity. Identity cannot be changed during a complete update; omit --user-assigned-identity because the existing identity is preserved.",
-                        nameof(userAssignedIdentity));
-                }
-            }
-
-            return existingIdentity;
-        }
-
         if (string.IsNullOrWhiteSpace(userAssignedIdentity))
         {
             return new ManagedServiceIdentity(ManagedServiceIdentityType.SystemAssigned);
         }
 
-        ResourceIdentifier identityResourceId = ParseUserAssignedIdentityResourceId(userAssignedIdentity);
+        ResourceIdentifier identityResourceId = ParseUserAssignedIdentityResourceId(userAssignedIdentity!);
         var identity = new ManagedServiceIdentity(ManagedServiceIdentityType.UserAssigned);
         identity.UserAssignedIdentities.Add(identityResourceId, new UserAssignedIdentity());
         return identity;

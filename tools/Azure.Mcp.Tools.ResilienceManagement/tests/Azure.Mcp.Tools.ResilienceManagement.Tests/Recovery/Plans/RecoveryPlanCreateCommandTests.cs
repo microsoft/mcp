@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests.Recovery.Plans;
 public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<RecoveryPlanCreateCommand, IResilienceManagementService>
 {
     private const string UserAssignedIdentityResourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/uami";
-    private const string ValidArgs = "--service-group sg1 --recovery-plan plan1 --plan-type Zonal --plan-description description --user-assigned-identity " + UserAssignedIdentityResourceId + " --default-group-description default";
+    private const string ValidArgs = "--service-group sg1 --recovery-plan plan1 --plan-type Zonal --plan-description description --identity-type UserAssigned --user-assigned-identity " + UserAssignedIdentityResourceId + " --default-group-description default";
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -31,7 +31,8 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
 
     [Theory]
     [InlineData(ValidArgs, true)]
-    [InlineData("--service-group sg1 --recovery-plan plan1 --plan-type Zonal --plan-description description", true)]
+    [InlineData("--service-group sg1 --recovery-plan plan1 --plan-type Zonal --plan-description description --identity-type SystemAssigned", true)]
+    [InlineData("--service-group sg1 --recovery-plan plan1 --plan-type Zonal --plan-description description", false)]
     [InlineData("--recovery-plan plan1 --plan-type Zonal --plan-description description --default-group-description default", false)]
     [InlineData("--service-group sg1 --plan-type Zonal --plan-description description --default-group-description default", false)]
     [InlineData("--service-group sg1 --recovery-plan plan1 --plan-description description --default-group-description default", false)]
@@ -74,6 +75,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "--recovery-plan", recoveryPlan,
             "--plan-type", "Zonal",
             "--plan-description", "description",
+            "--identity-type", "SystemAssigned",
             "--default-group-description", "default");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -90,18 +92,120 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             TestContext.Current.CancellationToken);
     }
 
-    [Fact]
-    public async Task ExecuteAsync_RejectsPlanDescriptionOver50Characters()
+    [Theory]
+    [InlineData("plan1")]
+    [InlineData("123456789012345678901234")]
+    public async Task ExecuteAsync_AcceptsRecoveryPlanNameBoundaryLengths(string recoveryPlan)
+    {
+        Service.CreateRecoveryPlanAsync(
+            Arg.Any<string>(),
+            recoveryPlan,
+            Arg.Any<RecoveryPlanKind>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(Element(recoveryPlan));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recovery-plan", recoveryPlan,
+            "--plan-type", "Zonal",
+            "--plan-description", "description",
+            "--identity-type", "SystemAssigned");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Theory]
+    [InlineData("four")]
+    [InlineData("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
+    public async Task ExecuteAsync_RejectsPlanDescriptionOutsideAllowedLength(string planDescription)
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
             "--recovery-plan", "plan1",
             "--plan-type", "Zonal",
-            "--plan-description", new string('a', 51),
+            "--plan-description", planDescription,
+            "--identity-type", "SystemAssigned",
             "--default-group-description", "default");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("must not exceed 50 characters", response.Message);
+        Assert.Contains("5 to 50 characters", response.Message);
+    }
+
+    [Theory]
+    [InlineData("12345")]
+    [InlineData("12345678901234567890123456789012345678901234567890")]
+    public async Task ExecuteAsync_AcceptsPlanDescriptionBoundaryLengths(string planDescription)
+    {
+        Service.CreateRecoveryPlanAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RecoveryPlanKind>(),
+            planDescription,
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(Element("plan1"));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recovery-plan", "plan1",
+            "--plan-type", "Zonal",
+            "--plan-description", planDescription,
+            "--identity-type", "SystemAssigned");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Theory]
+    [InlineData("four")]
+    [InlineData("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
+    public async Task ExecuteAsync_RejectsDefaultGroupDescriptionOutsideAllowedLength(string defaultGroupDescription)
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recovery-plan", "plan1",
+            "--plan-type", "Zonal",
+            "--plan-description", "description",
+            "--identity-type", "SystemAssigned",
+            "--default-group-description", defaultGroupDescription);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("default recovery group description must be 5 to 50 characters", response.Message);
+    }
+
+    [Theory]
+    [InlineData("12345")]
+    [InlineData("12345678901234567890123456789012345678901234567890")]
+    public async Task ExecuteAsync_AcceptsDefaultGroupDescriptionBoundaryLengths(string defaultGroupDescription)
+    {
+        Service.CreateRecoveryPlanAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RecoveryPlanKind>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            defaultGroupDescription,
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(Element("plan1"));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recovery-plan", "plan1",
+            "--plan-type", "Zonal",
+            "--plan-description", "description",
+            "--identity-type", "SystemAssigned",
+            "--default-group-description", defaultGroupDescription);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Fact]
@@ -112,6 +216,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "--recovery-plan", "plan1",
             "--plan-type", "Regional",
             "--plan-description", "description",
+            "--identity-type", "SystemAssigned",
             "--default-group-description", "default");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -179,6 +284,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "--recovery-plan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
+            "--identity-type", "UserAssigned",
             "--user-assigned-identity", UserAssignedIdentityResourceId);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -214,6 +320,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "--recovery-plan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
+            "--identity-type", "UserAssigned",
             "--user-assigned-identity", "/subscriptions/id/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/account");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -231,7 +338,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
     }
 
     [Fact]
-    public async Task ExecuteAsync_ForwardsNullToCreateSystemAssignedIdentityWhenUserAssignedIdentityIsOmitted()
+    public async Task ExecuteAsync_ForwardsNullForSystemAssignedIdentity()
     {
         Service.CreateRecoveryPlanAsync(
             "sg1",
@@ -249,7 +356,8 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "--service-group", "sg1",
             "--recovery-plan", "plan1",
             "--plan-type", "Zonal",
-            "--plan-description", "description");
+            "--plan-description", "description",
+            "--identity-type", "SystemAssigned");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).CreateRecoveryPlanAsync(
@@ -262,6 +370,35 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsUserAssignedIdentityTypeWithoutResourceId()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recovery-plan", "plan1",
+            "--plan-type", "Zonal",
+            "--plan-description", "description",
+            "--identity-type", "UserAssigned");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--user-assigned-identity is required", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsUserAssignedIdentityForSystemAssignedType()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recovery-plan", "plan1",
+            "--plan-type", "Zonal",
+            "--plan-description", "description",
+            "--identity-type", "SystemAssigned",
+            "--user-assigned-identity", UserAssignedIdentityResourceId);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("not allowed", response.Message);
     }
 
     [Theory]

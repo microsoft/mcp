@@ -111,4 +111,21 @@ public sealed class RecoveryPlanDeleteCommandTests : CommandUnitTestsBase<Recove
         Assert.Contains(expectedMessage, response.Message, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(providerDetails, response.Message);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesUnexpectedServiceError()
+    {
+        Service.DeleteRecoveryPlanAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception("Test error"));
+
+        var response = await ExecuteCommandAsync(ValidArgs);
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.StartsWith("Test error", response.Message);
+    }
 }

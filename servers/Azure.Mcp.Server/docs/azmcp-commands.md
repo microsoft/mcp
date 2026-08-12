@@ -3711,22 +3711,33 @@ azmcp resilience recovery plan get --subscription <subscription> \
                                    --service-group <service-group> \
                                    [--name <name>]
 
-# Create or fully update a Zonal resilience recovery plan. New plans use a system-assigned identity by default; optionally provide a pre-provisioned user-assigned identity. Updates preserve the existing identity and recovery groups.
+# Create or fully update a Zonal resilience recovery plan. An identity is required, and updates can switch between system-assigned and user-assigned identities.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recovery plan create --service-group <service-group> \
                                       --recovery-plan <recovery-plan> \
                                       --plan-type Zonal \
                                       --plan-description <plan-description> \
+                                      --identity-type <SystemAssigned|UserAssigned> \
                                       [--user-assigned-identity <user-assigned-identity-resource-id>] \
                                       [--default-group-description <default-group-description>]
 
-# After creating a plan with the default system-assigned identity, verify that the new principal has the Azure RBAC roles required by every recovery resource before running recovery operations. For a user-assigned identity, grant those roles before use. Recovery Orchestration attempts role assignment as best effort, so successful plan creation does not guarantee that authorization is complete.
-# On update, omit --user-assigned-identity to preserve the current identity, or repeat the same user-assigned identity resource ID. This complete update cannot change identity.
+# Provide --user-assigned-identity only when --identity-type is UserAssigned.
 
 # Delete a resilience recovery plan. Returns deleted=false when the plan does not exist.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recovery plan delete --service-group <service-group> \
                                       --recovery-plan <recovery-plan>
+
+# Configure recovery-plan resource inclusions, exclusions, removals, recovery groups, identities, and protection settings. At least one JSON array is required.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recovery plan update-resources --service-group <service-group> \
+                                                --recovery-plan <recovery-plan> \
+                                                [--resources-to-update '<json-array>'] \
+                                                [--resources-to-remove '<json-array>']
+
+# Each update item requires properties.recoveryResourceUniqueId. The read-only id may be omitted; when supplied, it must identify that resource in the selected plan.
+# Example update item:
+# [{"properties":{"recoveryResourceUniqueId":"<resource-id>","inclusionState":"Included","selectedProtectionSolutionType":"AzureNative","selectedProtectionSolutionSetting":{"protectionSolutionType":"AzureNative"}}}]
 
 # Get a resource (member) of a recovery plan, or list all resources of the plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

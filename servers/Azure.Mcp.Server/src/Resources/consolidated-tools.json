@@ -74,7 +74,8 @@
         "resilience_usageplan_create",
         "resilience_usageplan_enrollment_create",
         "resilience_recovery_plan_create",
-        "resilience_recovery_plan_delete"
+        "resilience_recovery_plan_delete",
+        "resilience_recovery_plan_update-resources"
       ]
     },
     {

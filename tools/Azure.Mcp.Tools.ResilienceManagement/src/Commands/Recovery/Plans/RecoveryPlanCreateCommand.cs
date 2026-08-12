@@ -16,11 +16,9 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Name = "create",
     Title = "Create or Update Resilience Recovery Plan",
     Description = """
-        Create or fully update a Zonal resilience recovery plan in my service group. New plans use a system-assigned
-        managed identity by default, or an optional pre-provisioned user-assigned identity. Ensure the selected
-        identity has the Azure RBAC roles required by the recovery resources; Recovery Orchestration role assignment
-        is best effort. Updates preserve the existing managed identity, default recovery group ID, additional
-        recovery groups, and omitted default group description.
+        Create or fully update a Zonal resilience recovery plan in my service group with a required system-assigned
+        or user-assigned managed identity. Updates can switch between identity types and preserve the default recovery
+        group ID, additional recovery groups, and omitted default group description.
         """,
     Destructive = true,
     Idempotent = true,
@@ -48,12 +46,25 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
             validationResult.Errors.Add("The recovery plan name must be 5 to 24 characters and contain only ASCII letters, numbers, or hyphens.");
         }
 
-        if (options.PlanDescription.Length > 50)
+        if (options.PlanDescription.Length is < 5 or > 50)
         {
-            validationResult.Errors.Add("The recovery plan description must not exceed 50 characters.");
+            validationResult.Errors.Add("The recovery plan description must be 5 to 50 characters.");
         }
 
-        if (!string.IsNullOrWhiteSpace(options.UserAssignedIdentity))
+        if (options.DefaultGroupDescription is not null && options.DefaultGroupDescription.Length is < 5 or > 50)
+        {
+            validationResult.Errors.Add("The default recovery group description must be 5 to 50 characters when specified.");
+        }
+
+        if (options.IdentityType == Models.RecoveryPlanIdentityKind.UserAssigned && string.IsNullOrWhiteSpace(options.UserAssignedIdentity))
+        {
+            validationResult.Errors.Add("--user-assigned-identity is required when --identity-type is UserAssigned.");
+        }
+        else if (options.IdentityType == Models.RecoveryPlanIdentityKind.SystemAssigned && !string.IsNullOrWhiteSpace(options.UserAssignedIdentity))
+        {
+            validationResult.Errors.Add("--user-assigned-identity is not allowed when --identity-type is SystemAssigned.");
+        }
+        else if (!string.IsNullOrWhiteSpace(options.UserAssignedIdentity))
         {
             try
             {

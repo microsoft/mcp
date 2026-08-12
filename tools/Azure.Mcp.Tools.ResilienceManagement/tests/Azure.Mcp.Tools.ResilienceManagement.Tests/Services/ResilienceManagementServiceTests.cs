@@ -53,69 +53,21 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
-    public void CreateRecoveryPlanIdentity_ForNewPlan_UsesUserAssignedIdentity()
+    public void CreateRecoveryPlanIdentity_UsesUserAssignedIdentity()
     {
-        ManagedServiceIdentity result = ResilienceManagementService.CreateRecoveryPlanIdentity(null, UserAssignedIdentityResourceId);
+        ManagedServiceIdentity result = ResilienceManagementService.CreateRecoveryPlanIdentity(UserAssignedIdentityResourceId);
 
         Assert.Equal(ManagedServiceIdentityType.UserAssigned, result.ManagedServiceIdentityType);
         Assert.Contains(new ResourceIdentifier(UserAssignedIdentityResourceId), result.UserAssignedIdentities.Keys);
     }
 
     [Fact]
-    public void CreateRecoveryPlanIdentity_ForNewPlanWithoutUserAssignedIdentity_UsesSystemAssignedIdentity()
+    public void CreateRecoveryPlanIdentity_UsesSystemAssignedIdentityWhenResourceIdIsNull()
     {
-        ManagedServiceIdentity result = ResilienceManagementService.CreateRecoveryPlanIdentity(null, null);
+        ManagedServiceIdentity result = ResilienceManagementService.CreateRecoveryPlanIdentity(null);
 
         Assert.Equal(ManagedServiceIdentityType.SystemAssigned, result.ManagedServiceIdentityType);
         Assert.Empty(result.UserAssignedIdentities);
-    }
-
-    [Theory]
-    [InlineData("SystemAssigned")]
-    [InlineData("UserAssigned")]
-    [InlineData("SystemAssigned, UserAssigned")]
-    public void CreateRecoveryPlanIdentity_ForUpdate_PreservesExistingIdentity(string identityType)
-    {
-        var existingIdentity = new ManagedServiceIdentity(new ManagedServiceIdentityType(identityType));
-        if (identityType.Contains("UserAssigned", StringComparison.Ordinal))
-        {
-            existingIdentity.UserAssignedIdentities.Add(
-                new ResourceIdentifier("/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/uami"),
-                new UserAssignedIdentity());
-        }
-
-        ManagedServiceIdentity result = ResilienceManagementService.CreateRecoveryPlanIdentity(existingIdentity, null);
-
-        Assert.Same(existingIdentity, result);
-        Assert.Equal(identityType, result.ManagedServiceIdentityType.ToString());
-        Assert.Equal(existingIdentity.UserAssignedIdentities, result.UserAssignedIdentities);
-    }
-
-    [Fact]
-    public void CreateRecoveryPlanIdentity_ForUpdateWithIdentityOption_RejectsIdentityChange()
-    {
-        var existingIdentity = new ManagedServiceIdentity(ManagedServiceIdentityType.SystemAssigned);
-
-        ArgumentException exception = Assert.Throws<ArgumentException>(
-            () => ResilienceManagementService.CreateRecoveryPlanIdentity(existingIdentity, UserAssignedIdentityResourceId));
-
-        Assert.Contains("cannot be changed", exception.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("existing identity is preserved", exception.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public void CreateRecoveryPlanIdentity_ForIdempotentUpdate_AcceptsExistingUserAssignedIdentity()
-    {
-        var existingIdentity = new ManagedServiceIdentity(ManagedServiceIdentityType.UserAssigned);
-        existingIdentity.UserAssignedIdentities.Add(
-            new ResourceIdentifier(UserAssignedIdentityResourceId),
-            new UserAssignedIdentity());
-
-        ManagedServiceIdentity result = ResilienceManagementService.CreateRecoveryPlanIdentity(
-            existingIdentity,
-            UserAssignedIdentityResourceId);
-
-        Assert.Same(existingIdentity, result);
     }
 
     [Theory]
