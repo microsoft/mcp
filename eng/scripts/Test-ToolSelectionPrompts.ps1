@@ -24,6 +24,9 @@ Optional server name to validate. If omitted, all servers from build metadata ar
 .PARAMETER PromptsFile
 Optional path to a markdown prompts file. If omitted, the server default prompts path is used.
 
+.PARAMETER SkipServerBuild
+Skips building the server and uses existing build artifacts from OutputPath.
+
 .OUTPUTS
 None. Writes validation results to standard output and exits with status code 0 or 1.
 
@@ -38,13 +41,18 @@ Builds and validates only Azure.Mcp.Server with its default prompts file.
 .EXAMPLE
 ./eng/scripts/Test-ToolSelectionPrompts.ps1 -ServerName Azure.Mcp.Server -PromptsFile ./servers/Azure.Mcp.Server/docs/e2eTestPrompts.md
 Validates Azure.Mcp.Server using the provided prompts file.
+
+.EXAMPLE
+./eng/scripts/Test-ToolSelectionPrompts.ps1 -ServerName Azure.Mcp.Server -SkipServerBuild
+Validates Azure.Mcp.Server using existing build artifacts without rebuilding the server.
 #>
 [CmdletBinding()]
 param (
     # Common Parameters
     [string]$OutputPath,
     [string]$ServerName,
-    [string]$PromptsFile
+    [string]$PromptsFile,
+    [switch]$SkipServerBuild
 )
 
 $ErrorActionPreference = 'Stop'
@@ -141,33 +149,36 @@ if (!$OutputPath) {
 $buildInfoPath = "$RepoRoot/.work/build_info.json"
 $buildOutputPath = $OutputPath
 
-
 if ($ServerName) {
     Write-Host "Validating tool selection prompts for $ServerName"
 } else {
     Write-Host "Validating tool selection prompts for all servers"
 }
 
-# Clean up previous build artifacts
-Remove-Item -Path $buildOutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+if ($SkipServerBuild) {
+    Write-Host "Skipping server build. Reusing existing build info and existing build artifacts."
+} else {
+    # Clean up previous build artifacts
+    Remove-Item -Path $buildOutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 
-# Create build metadata
-& "$RepoRoot/eng/scripts/New-BuildInfo.ps1" `
-    -ServerName $ServerName `
-    -PublishTarget none `
-    -BuildId 12345
+    # Create build metadata
+    & "$RepoRoot/eng/scripts/New-BuildInfo.ps1" `
+        -ServerName $ServerName `
+        -PublishTarget none `
+        -BuildId 12345
 
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "Failed to create build info"
-    exit 1
-}
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to create build info"
+        exit 1
+    }
 
-# Build the servers
-$platformName = Get-PlatformName
-& "$RepoRoot/eng/scripts/Build-Code.ps1" -BuildInfoPath $buildInfoPath -PlatformName $platformName -OutputPath $buildOutputPath
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "Failed to build servers."
-    exit 1
+    # Build the servers
+    $platformName = Get-PlatformName
+    & "$RepoRoot/eng/scripts/Build-Code.ps1" -BuildInfoPath $buildInfoPath -PlatformName $platformName -OutputPath $buildOutputPath
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to build servers."
+        exit 1
+    }
 }
 
 # Read build_info.json to get server information

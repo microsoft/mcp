@@ -62,7 +62,7 @@ try {
     }
 
     # Run tool prompt validation
-    & "$PSScriptRoot/Test-ToolSelectionPrompts.ps1"
+    & "$PSScriptRoot/Test-ToolSelectionPrompts.ps1" -SkipServerBuild
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "❌ E2E tool prompt validation failed."
