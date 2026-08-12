@@ -10,7 +10,7 @@ path: path/to/file.cs
 line: 42
 summary: Short statement of the issue
 detail: Concrete consequence and required correction
-lens: security
+lenses: [security]
 confidence: high | medium | low
 ```
 
@@ -41,24 +41,26 @@ Use only high-confidence findings by default. A medium-confidence finding is acc
 
 ## Severity
 
-- `blocking`: Security vulnerability, correctness bug, deterministic build or runtime failure, data loss, cross-user leakage, required merge artifact missing, or unplanned public contract break.
+- `blocking`: Security vulnerability, correctness bug, deterministic build or runtime failure, data loss, cross-user leakage, required merge artifact missing, or an unexpected breaking change to a shipped MCP tool contract such as its name, input options, or result shape.
 - `warning`: Material reliability, maintainability, test evidence, documentation, or design gap that should be addressed but does not meet the blocking threshold.
 - `nit`: Optional polish with a concrete codebase-consistency or clarity benefit. Prefix the inline text with `nit:`.
 
 Do not inflate severity to attract attention.
+Do not treat every source-level API improvement as blocking. Escalate it only when the repository promises compatibility for that API or consumers cannot migrate safely.
 
 ## Merge and Order
 
 1. Merge candidates that describe the same root cause.
 2. Prefer the finding with the clearest consequence and smallest complete fix.
 3. Group findings by file and order them by line.
-4. If several lenses support one finding, keep one comment and record the strongest lens.
+4. If several lenses support one finding, keep one comment and record every contributing lens.
 5. Limit the final review to the findings that materially improve the change.
 
 ## Diff Anchoring
 
-- Anchor each inline comment to a changed line on the new side of the diff.
-- Use `startLine` only when the full changed range is needed to understand the issue.
+- Anchor each inline comment to the smallest relevant changed range.
+- Use `RIGHT` for added or modified code and `LEFT` for removed code.
+- Use `startLine` and `startSide` only when the full changed range is needed to understand the issue.
 - Never invent a line number or attach a comment to an unrelated changed line.
 - Put a verified cross-cutting issue in the review body when no valid changed line exists.
 
@@ -82,12 +84,14 @@ body: "One concise sentence. Include a cross-cutting finding here only when it c
 comments:
   - path: "relative/path/to/file.cs"
     line: 42
+    side: RIGHT
     startLine: 39
+    startSide: RIGHT
     severity: blocking
     body: "Inline comment text."
 ```
 
-Omit `startLine` for a single-line comment. If no findings survive triage, return:
+Omit `startLine` and `startSide` for a single-line comment. If no findings survive triage, return:
 
 ```yaml
 body: "No blocking findings identified."

@@ -9,6 +9,7 @@ Apply each relevant lens to the same pull request context and change map. These 
 - Prove each concern from the diff, surrounding code, repository guidance, or linked requirements.
 - Do not summarize the change or repeat checklist items that the pull request satisfies.
 - Do not flag style preferences without a concrete correctness or maintenance consequence.
+- Do not report conventions that deterministic repository checks already enforce. Improve the check separately when enforcement is missing.
 - Use the candidate format from [findings.md](findings.md).
 
 ## Fixed Lenses
@@ -36,7 +37,6 @@ Focus on:
 - Warning-producing code in projects that treat warnings as errors
 - Source-generated `System.Text.Json` coverage for response and model types
 - Reflection, dynamic activation, or serialization patterns that are unsafe for trimming or native compilation
-- Command naming, primary constructors, sealed command classes, and static members when deviations create repository inconsistency
 - Error handling that bypasses `HandleException` or returns a success-shaped failure
 
 Treat a deterministic compile failure, runtime failure, or AOT break as blocking.
@@ -57,18 +57,18 @@ Verify uncertain SDK behavior against current official documentation when docume
 
 ### 4. Architecture and Remote Execution
 
-Focus on:
+Require:
 
-- Transport-agnostic command behavior
-- Stateless, thread-safe command and service implementations
-- Dependency injection lifetimes and per-request state
-- Direct `HttpContext` access or transport-specific branching
-- On-behalf-of identity and hosting-identity behavior across concurrent users
-- Abstractions that duplicate existing helpers or put responsibilities in the wrong layer
-- Public API, option, wire-format, and command compatibility
-- Failure modes, rollback safety, and blast radius
+- Commands remain transport agnostic.
+- Commands and services remain stateless and thread safe, with request state held in the request scope.
+- Dependency injection lifetimes match the state and concurrency guarantees of each service.
+- Commands do not access `HttpContext` or branch on transport.
+- On-behalf-of and hosting-identity flows preserve tenant and user isolation under concurrent requests.
+- Changes reuse established helpers and keep responsibilities in the existing command, service, and core boundaries.
+- Shipped tool names, input options, result shapes, and wire formats remain compatible unless the change has an explicit migration plan.
+- Failure modes are bounded, observable, and safe to retry or roll back where applicable.
 
-A cross-user data leak, shared mutable request state, or unplanned breaking change is blocking.
+A cross-user data leak, shared mutable request state, or unexpected break to a shipped MCP tool contract is blocking.
 
 ### 5. Testing and Validation
 
@@ -79,7 +79,8 @@ Focus on:
 - Recorded live tests for commands that interact with Azure resources
 - Required test infrastructure, assets metadata, and post-deployment setup
 - Correct use of `RecordedCommandTestsBase` when transitioning live tests
-- `IHttpClientFactory.CreateClient` use in clients involved in recorded tests
+- `IAzureService.GetClient` use by Azure service implementations that need HTTP or SDK client transport
+- Runtime services consume injected `IHttpClientFactory` for non-Azure HTTP calls; recorded tests rely on framework injection rather than accessing the factory directly
 - Deterministic fixtures, sanitization, cleanup, and playback behavior
 - RBAC coverage for remote and on-behalf-of scenarios when permissions affect behavior
 - Validation claims in the pull request that are absent, stale, or contradicted by checks
@@ -95,7 +96,7 @@ Cross-reference the repository instructions and pull request checklist. Focus on
 - Response model registration in the correct JSON serialization context
 - Command reference and README updates
 - End-to-end prompt coverage
-- Consolidated tool mappings for new, renamed, or removed tools
+- Consolidated tool mappings for new, renamed, or removed Azure MCP tools; do not apply this check to Fabric MCP changes
 - Tool description evaluation evidence when descriptions change
 - Changelog entry schema and required entries
 - Rename, compatibility, and breaking-change requirements
