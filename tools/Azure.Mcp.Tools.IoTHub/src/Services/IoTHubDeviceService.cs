@@ -21,8 +21,7 @@ public class IoTHubDeviceService(
     private readonly IIoTHubHostnameResolver _hostnameResolver = hostnameResolver ?? throw new ArgumentNullException(nameof(hostnameResolver));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
-    // Upper bound for a single IoT Hub operation (control-plane + data-plane). If exceeded the
-    // caller gets a clear timeout error instead of appearing to hang indefinitely.
+    // Upper bound for a single IoT Hub operation (control-plane + data-plane).
     private static readonly TimeSpan s_operationTimeout = TimeSpan.FromSeconds(100);
 
     // API version for the IoT Hub device registry data-plane REST API.
