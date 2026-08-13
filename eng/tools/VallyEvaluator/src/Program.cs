@@ -119,18 +119,14 @@ internal class Program
             else if (mcpServerInformation != null)
             {
                 var assemblyName = split[1];
-                var matching = mcpServerInformation.AssemblyNameToToolsMap.Values
-                    .FirstOrDefault(x => x.AssemblyName.Equals(assemblyName, StringComparison.InvariantCultureIgnoreCase));
-
-                if (matching != null)
+                if (mcpServerInformation.AssemblyNameToToolsMap.TryGetValue(assemblyName, out var matching))
                 {
                     results.Add(matching.ToolNamespace);
                 }
                 else
                 {
-                    Console.Error.WriteLine($"Namespace not found in MCP server referenced assemblies: {possibleNamespace}. Original: {split[1]}");
+                    Console.Error.WriteLine($"Namespace not found in MCP server referenced assemblies: {possibleNamespace}. Original: {assemblyName}");
                 }
-            }
             else
             {
                 Console.Error.WriteLine($"Namespace not found.  No MCP server to probe for namespaces: {possibleNamespace}. Original: {split[1]}");
@@ -164,7 +160,7 @@ internal class Program
             throw new InvalidOperationException($"Artifact path does not exist: {artifactPath}");
         }
 
-        return Task.Run(() => new McpServerInformation(artifactPath));
+        return Task.FromResult(new McpServerInformation(artifactPath));
     }
 
     private static async Task CreateEvalsAsync(string repoRoot, RunConfiguration configuration, BuildInfo? buildInfo = null, McpServerInformation? mcpServerInformation = null)
@@ -173,7 +169,7 @@ internal class Program
         {
             // Assuming that Azure.Mcp.Tools.Acr will also have E2E prompts that are `acr_`
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("WARNING: MCP server information is null. Using assuming that the assembly name and tool area match.");
+            Console.WriteLine("WARNING: MCP server information is null. Assuming the assembly name and tool area match.");
             Console.ResetColor();
         }
 

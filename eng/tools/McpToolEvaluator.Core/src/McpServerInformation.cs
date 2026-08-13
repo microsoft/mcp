@@ -145,28 +145,21 @@ public class McpServerInformation
         // ldstr — "load string literal" — is opcode 0x72, followed by a 4-byte operand.
         const byte Ldstr = 0x72;
 
-        // The `i + 4 < il.Length` bound guarantees the 4 operand bytes we're about to read
-        // are actually inside the array (protects ToInt32 if a stray 0x72 sits near the end).
-        for (int i = 0; i + 4 < il.Length; i++)
+        // Skip leading NOPs (debug builds may inject them).
+        int i = 0;
+        while (i < il.Length && il[i] == 0x00)
         {
-            if (il[i] != Ldstr)
-                continue;
-
-            // The 4 operand bytes are a metadata token, stored little-endian (per the spec,
-            // matching x86/x64). ToInt32 reads them in that order.
-            int token = BitConverter.ToInt32(il, i + 1);
-
-            // A metadata token packs a table id in the top byte and a row/offset in the low
-            // 3 bytes. An ldstr token always points into the user-string (#US) heap, whose
-            // table byte is 0x70 — so a real token looks like 0x70000001, 0x7000000A, etc.
-            // Mask off the 0x70 tag to get the raw offset into the heap...
-            var handle = MetadataTokens.UserStringHandle(token & 0x00FFFFFF);
-
-            // ...then dereference that offset to pull the actual UTF-16 string the compiler
-            // stored there. The token was the address; this is the lookup.
-            return mr.GetUserString(handle);
+            i++;
         }
 
-        return null;
+        // Expect the first real instruction to be `ldstr <token>` for expression-bodied getters.
+        if (i + 4 >= il.Length || il[i] != Ldstr)
+        {
+            return null;
+        }
+
+        int token = BitConverter.ToInt32(il, i + 1);
+        var handle = MetadataTokens.UserStringHandle(token & 0x00FFFFFF);
+        return mr.GetUserString(handle);
     }
 }
