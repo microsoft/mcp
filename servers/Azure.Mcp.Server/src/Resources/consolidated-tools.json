@@ -4372,7 +4372,7 @@
     },
     {
       "name": "ingest_azure_sre_agent_events_and_memories",
-      "description": "Append memory entries, trigger memory reindexing, and create incidents or response plans on an Azure SRE Agent resource. Each call is non-idempotent and may produce a new record.",
+      "description": "Append memory entries, trigger memory re-indexing, and create incidents or response plans on an Azure SRE Agent resource. Each call is non-idempotent and may produce a new record.",
       "toolMetadata": {
         "destructive": {
           "value": false,
