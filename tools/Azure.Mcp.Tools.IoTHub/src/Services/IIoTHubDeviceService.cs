@@ -8,6 +8,15 @@ namespace Azure.Mcp.Tools.IoTHub.Services;
 
 public interface IIoTHubDeviceService
 {
+    Task<DeviceListResult> ListDevices(
+        string hubName,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        int? maxCount = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
     Task<DeviceIdentity> GetDevice(
         string deviceId,
         string name,

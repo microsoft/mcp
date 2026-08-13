@@ -619,6 +619,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
+| iothub_device_list | List devices in IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_device_list | Show all devices registered to IoT Hub <hub_name> | none |
+| iothub_device_list | Get the device registry for IoT Hub <hub_name> in subscription <subscription_id> | none |
 | iothub_device_show | Show device <device_id> in IoT Hub <hub_name> in resource group <resource_group_name> | none |
 | iothub_device_show | Get the device identity for <device_id> in IoT Hub <hub_name> | none |
 | iothub_device_stats | Show device statistics for IoT Hub <hub_name> in resource group <resource_group_name> | none |

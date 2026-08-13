@@ -13,7 +13,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.IoTHub.UnitTests.Query;
+namespace Azure.Mcp.Tools.IoTHub.Tests.Query;
 
 public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHubQueryRunCommand, IIoTHubDeviceService>
 {

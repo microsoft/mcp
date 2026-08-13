@@ -6,7 +6,7 @@ using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.Mcp.Tools.IoTHub.Query;
 using Xunit;
 
-namespace Azure.Mcp.Tools.IoTHub.UnitTests.Query;
+namespace Azure.Mcp.Tools.IoTHub.Tests.Query;
 
 public class IoTHubQueryFieldDiscovererTests
 {

@@ -1130,6 +1130,7 @@ Example prompts that generate Azure CLI commands:
 
 * "Show me IoT Hub 'my-iot-hub' in resource group 'my-resource-group' of my subscription 'my-subscription'"
 * "Get details for IoT Hub 'my-iot-hub' in resource group 'my-resource-group' of my subscription 'my-subscription'"
+* "List devices in IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
 * "Show device 'my-device' in IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
 * "Show device statistics for IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
 * "Get the device twin for 'my-device' in IoT Hub 'my-iot-hub'"

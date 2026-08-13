@@ -30,7 +30,7 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.Query;
         The --continuation-token input must be the opaque continuationToken string returned by a previous iothub_query_run response; do not pass hasMore=true/false or any boolean value.
         """,
     Destructive = false,
-    Idempotent = true,
+    Idempotent = false,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,

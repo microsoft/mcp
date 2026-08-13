@@ -13,6 +13,7 @@ namespace Azure.Mcp.Tools.IoTHub.Commands;
 [JsonSerializable(typeof(IoTHubProperties))]
 [JsonSerializable(typeof(DeviceIdentity))]
 [JsonSerializable(typeof(List<DeviceIdentity>))]
+[JsonSerializable(typeof(DeviceListResult))]
 [JsonSerializable(typeof(DeviceTwin))]
 [JsonSerializable(typeof(List<DeviceTwin>))]
 [JsonSerializable(typeof(IoTHubRegistryStatistics))]

@@ -20,9 +20,11 @@ public class IoTHubSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IIoTHubService, IoTHubService>();
+        services.AddSingleton<IIoTHubHostnameResolver, IoTHubHostnameResolver>();
         services.AddSingleton<IIoTHubDeviceService, IoTHubDeviceService>();
 
         services.AddSingleton<IoTHubGetCommand>();
+        services.AddSingleton<IoTHubDeviceListCommand>();
         services.AddSingleton<IoTHubDeviceShowCommand>();
         services.AddSingleton<IoTHubDeviceStatisticsCommand>();
         services.AddSingleton<IoTHubDeviceTwinGetCommand>();
@@ -37,23 +39,20 @@ public class IoTHubSetup : IAreaSetup
 
         var hub = new CommandGroup("hub", "IoT Hub resource operations.");
         iothub.AddSubGroup(hub);
-
         hub.AddCommand<IoTHubGetCommand>(serviceProvider);
 
         var device = new CommandGroup("device", "IoT Hub device registry operations.");
         iothub.AddSubGroup(device);
-
+        device.AddCommand<IoTHubDeviceListCommand>(serviceProvider);
         device.AddCommand<IoTHubDeviceShowCommand>(serviceProvider);
         device.AddCommand<IoTHubDeviceStatisticsCommand>(serviceProvider);
 
         var twin = new CommandGroup("twin", "IoT Hub device twin operations.");
         device.AddSubGroup(twin);
-
         twin.AddCommand<IoTHubDeviceTwinGetCommand>(serviceProvider);
 
         var query = new CommandGroup("query", "IoT Hub query operations.");
         iothub.AddSubGroup(query);
-
         query.AddCommand<IoTHubQueryRunCommand>(serviceProvider);
 
         return iothub;
