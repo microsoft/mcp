@@ -11,6 +11,8 @@
     <NoWarn>$(NoWarn);SYSLIB0020</NoWarn>
     <!-- Suppress MCPEXP001 for experimental features in MCP -->
     <NoWarn>$(NoWarn);MCPEXP001</NoWarn>
+    <!-- Suppress missing XML comments on public members. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
     <BuildNative Condition="'$(BuildNative)' == ''">false</BuildNative>
     <!-- Identify Server Projects -->
     <_RelativeProjectDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)').Replace($([System.IO.Path]::GetFullPath('$(RepoRoot)')), ''))</_RelativeProjectDir>

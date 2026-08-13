@@ -185,7 +185,8 @@ dotnet_diagnostic.IDE0073.severity = error
 dotnet_diagnostic.IDE0390.severity = error
 dotnet_diagnostic.IDE0391.severity = error
 
-# 
+# Ignore missing XML comments on public members (we don't ship this as a library)
+# This would be nice to clean up in the long run but isn't required now.
 dotnet_diagnostic.CS1591.severity = none
 
 # Xml project files
