@@ -529,7 +529,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
         var drillId = ResilienceManagementDrillResource.CreateResourceIdentifier(serviceGroup, drill);
-        ResilienceManagementDrillResource drillResource = await armClient.GetResilienceManagementDrillResource(drillId).GetAsync(cancellationToken);
+        ResilienceManagementDrillResource drillResource = armClient.GetResilienceManagementDrillResource(drillId);
         DrillTargetCollection drillTargets = drillResource.GetDrillTargets();
 
         var result = new List<ResourceSummary>();
@@ -548,7 +548,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
         var drillId = ResilienceManagementDrillResource.CreateResourceIdentifier(serviceGroup, drill);
-        ResilienceManagementDrillResource drillInstanceResource = await armClient.GetResilienceManagementDrillResource(drillId).GetAsync(cancellationToken);
+        ResilienceManagementDrillResource drillInstanceResource = armClient.GetResilienceManagementDrillResource(drillId);
         DrillTargetCollection drillTargets = drillInstanceResource.GetDrillTargets();
         Response<DrillTargetResource> response = await drillTargets.GetAsync(drillResource, cancellationToken);
 
@@ -571,7 +571,6 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
         return tags;
     }
-
     public async Task<UsagePlanInfo> CreateUsagePlanAsync(string resourceGroup, string usagePlan, UsagePlanKind planType, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         var subscriptionId = AzureService.IsSubscriptionId(subscription)

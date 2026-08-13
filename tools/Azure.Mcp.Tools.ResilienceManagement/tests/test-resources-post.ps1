@@ -65,24 +65,6 @@ function Invoke-ResilienceRestPut {
     return $response
 }
 
-# Creates a resource only if it does not already exist.
-# Performs a GET first; if the resource is found (2xx) it is skipped.
-# If it is not found (404) or a GET fails for any other reason, the PUT is attempted.
-function Invoke-ResilienceRestPutIfNotExists {
-    param(
-        [string]    $Path,
-        [hashtable] $Body
-    )
-
-    $check = Invoke-AzRestMethod -Method GET -Path $Path
-    if ($check.StatusCode -ge 200 -and $check.StatusCode -lt 300) {
-        Write-Host "SKIP (already exists) $Path"
-        return $check
-    }
-
-    return Invoke-ResilienceRestPut -Path $Path -Body $Body
-}
-
 function Invoke-ResilienceRestPost {
     param(
         [string] $Path
@@ -164,9 +146,9 @@ Invoke-ResilienceRestPut -Path $enrollmentPath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $enrollmentPath
 
-# 4) Create a goal template on the service group (skip if already exists from a previous deployment).
+# 4) Create a goal template on the service group.
 $goalTemplatePath = "$serviceGroupResilienceBase/goalTemplates/$goalTemplateName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPutIfNotExists -Path $goalTemplatePath -Body @{
+Invoke-ResilienceRestPut -Path $goalTemplatePath -Body @{
     properties = @{
         goalType                       = 'Resiliency'
         requireHighAvailability        = 'Required'
@@ -177,9 +159,9 @@ Invoke-ResilienceRestPutIfNotExists -Path $goalTemplatePath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $goalTemplatePath
 
-# 5) Assign the goal template to the service group (skip if already exists from a previous deployment).
+# 5) Assign the goal template to the service group.
 $goalAssignmentPath = "$serviceGroupResilienceBase/goalAssignments/$goalAssignmentName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPutIfNotExists -Path $goalAssignmentPath -Body @{
+Invoke-ResilienceRestPut -Path $goalAssignmentPath -Body @{
     properties = @{
         goalAssignmentType = 'Resiliency'
         goalTemplateId     = "$serviceGroupResilienceBase/goalTemplates/$goalTemplateName"
@@ -187,9 +169,9 @@ Invoke-ResilienceRestPutIfNotExists -Path $goalAssignmentPath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $goalAssignmentPath
 
-# 6) Create a recovery plan on the service group (skip if already exists from a previous deployment).
+# 6) Create a recovery plan on the service group.
 $recoveryPlanPath = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPutIfNotExists -Path $recoveryPlanPath -Body @{
+Invoke-ResilienceRestPut -Path $recoveryPlanPath -Body @{
     identity   = @{
         type = 'SystemAssigned'
     }
@@ -217,9 +199,9 @@ $checkReadinessPath = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanNa
 Invoke-ResilienceRestPost -Path $checkReadinessPath | Out-Null
 Wait-ResilienceProvisioning -Path $recoveryPlanPath
 
-# 8) Create a drill on the service group (skip if already exists from a previous deployment).
+# 8) Create a drill on the service group.
 $drillPath = "$serviceGroupResilienceBase/drills/$drillName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPutIfNotExists -Path $drillPath -Body @{
+Invoke-ResilienceRestPut -Path $drillPath -Body @{
     identity   = @{
         type = 'SystemAssigned'
     }

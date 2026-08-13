@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure;
 using System.Net;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
@@ -85,5 +86,17 @@ public class DrillGetCommandTests : CommandUnitTestsBase<DrillGetCommand, IResil
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesNotFoundException()
+    {
+        Service.ListDrillsAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Drill not found"));
+
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.StartsWith("Drill not found. Verify the drill and service group exist and you have access.", response.Message);
     }
 }
