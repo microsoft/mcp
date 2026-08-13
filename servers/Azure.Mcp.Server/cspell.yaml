@@ -8,10 +8,12 @@ import:
   - ../../.vscode/cspell.json
 words:
   - agentic
+  - asyncio
   - appsettings
   - azureicon
   - azuremigrate
   - azuremanagedlustre
+  - byok
   - changedetection
   - codeowners
   - cloudendpoint
@@ -26,20 +28,24 @@ words:
   - eventhubs
   - fileshares
   - foundryextensions
+  - getattr
   - getguidance
   - groq
+  - hasattr
   - hotmail
   - iothub
   - managedcluster
   - mypass
   - mysvc
   - myuser
+  - myvault
   - nettrace
   - newname
   - nodetype
   - nslookup
   - ollama
   - peconnection
+  - pipx
   - platformlandingzone
   - registeredserver
   - scheduledtasks
@@ -51,5 +57,6 @@ words:
   - syncgroup
   - targetdir
   - toolsets
+  - toplist
   - usageplan
   - wellarchitectedframework
