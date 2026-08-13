@@ -3,8 +3,6 @@
 
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.StorageSync.Models;
 using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.StorageSync;
@@ -17,10 +15,8 @@ namespace Azure.Mcp.Tools.StorageSync.Services;
 /// <summary>
 /// Implementation of IStorageSyncService.
 /// </summary>
-public sealed class StorageSyncService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ILogger<StorageSyncService> logger) : BaseAzureResourceService(subscriptionService, tenantService), IStorageSyncService
+public sealed class StorageSyncService(IAzureService azureService, ILogger<StorageSyncService> logger)
+    : BaseAzureResourceService(azureService), IStorageSyncService
 {
     private readonly ILogger<StorageSyncService> _logger = logger;
 

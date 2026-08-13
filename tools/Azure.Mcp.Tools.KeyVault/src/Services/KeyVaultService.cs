@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Security.KeyVault.Administration;
 using Azure.Security.KeyVault.Certificates;
 using Azure.Security.KeyVault.Keys;
@@ -12,7 +11,8 @@ using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.KeyVault.Services;
 
-public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureService(tenantService), IKeyVaultService
+public sealed class KeyVaultService(IAzureService azureService)
+    : BaseAzureService(azureService), IKeyVaultService
 {
     public async Task<List<string>> ListKeys(
         string vaultName,
@@ -235,7 +235,7 @@ public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureSer
     {
         ValidateVaultName(vaultName);
 
-        switch (TenantService.CloudConfiguration.CloudType)
+        switch (AzureService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
                 return $"https://{vaultName}.vault.azure.net";
@@ -253,7 +253,7 @@ public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureSer
     {
         ValidateVaultName(vaultName);
 
-        switch (TenantService.CloudConfiguration.CloudType)
+        switch (AzureService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
                 return $"https://{vaultName}.managedhsm.azure.net";
@@ -297,7 +297,7 @@ public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureSer
     private KeyClient CreateKeyClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
         var vaultUri = new Uri(BuildVaultUri(vaultName));
-        var httpClient = TenantService.GetClient();
+        var httpClient = AzureService.GetClient();
         httpClient.BaseAddress = vaultUri;
         var options = new KeyClientOptions();
         options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
@@ -308,7 +308,7 @@ public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureSer
     private SecretClient CreateSecretClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
         var vaultUri = new Uri(BuildVaultUri(vaultName));
-        var httpClient = TenantService.GetClient();
+        var httpClient = AzureService.GetClient();
         httpClient.BaseAddress = vaultUri;
         var options = new SecretClientOptions();
         options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
@@ -319,7 +319,7 @@ public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureSer
     private CertificateClient CreateCertificateClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
         var vaultUri = new Uri(BuildVaultUri(vaultName));
-        var httpClient = TenantService.GetClient();
+        var httpClient = AzureService.GetClient();
         httpClient.BaseAddress = vaultUri;
         var options = new CertificateClientOptions();
         options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
@@ -345,7 +345,7 @@ public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureSer
 
     private KeyVaultSettingsClient CreateSettingsClient(Uri hsmUri, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
-        var httpClient = TenantService.GetClient();
+        var httpClient = AzureService.GetClient();
         httpClient.BaseAddress = hsmUri;
         var options = new KeyVaultAdministrationClientOptions();
         options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);

@@ -1,0 +1,97 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Text.RegularExpressions;
+using McpToolEvaluator.Core.Models;
+
+namespace McpToolEvaluator.Core;
+
+/// <summary>
+/// Parses test prompts from e2eTestPrompts.md
+/// </summary>
+public static partial class PromptParser
+{
+    private const string ExtensionKeyword = "extension";
+
+    [GeneratedRegex(@"^## (.+)$")]
+    private static partial Regex SectionHeaderRegex();
+
+    [GeneratedRegex(@"^\|\s*([a-z0-9_-]+)\s*\|\s*(.+)\s*\|$", RegexOptions.IgnoreCase)]
+    private static partial Regex TableRowRegex();
+
+    [GeneratedRegex(
+        @"^\|\s*([a-z0-9_-]+)\s*\|\s*(.+?)\s*\|\s*([a-z-]+)\s*\|$",
+        RegexOptions.IgnoreCase)]
+    private static partial Regex InteractionTableRowRegex();
+
+    internal static string GetNamespace(string tool)
+    {
+        if (tool.StartsWith("get_azure_bestpractices_", StringComparison.OrdinalIgnoreCase))
+        {
+            return "get_azure_bestpractices";
+        }
+        else
+        {
+            return tool.Split('_')[0];
+        }
+
+    }
+
+    public static List<string> ParseNamespaces(string filePath)
+    {
+        return ParseFile(filePath)
+            .Select(p => p.Namespace)
+            .Where(ns => !string.IsNullOrEmpty(ns))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    public static List<TestPrompt> ParseFile(string filePath)
+    {
+        var lines = File.ReadAllLines(filePath);
+        var prompts = new List<TestPrompt>();
+        var currentSection = string.Empty;
+
+        foreach (var line in lines)
+        {
+            var sectionMatch = SectionHeaderRegex().Match(line);
+            if (sectionMatch.Success)
+            {
+                currentSection = sectionMatch.Groups[1].Value;
+                continue;
+            }
+
+            // Parse table rows
+            var interactionRowMatch = InteractionTableRowRegex().Match(line);
+            var rowMatch = interactionRowMatch.Success
+                ? interactionRowMatch
+                : TableRowRegex().Match(line);
+            if (rowMatch.Success)
+            {
+                var tool = rowMatch.Groups[1].Value.Trim();
+                var prompt = rowMatch.Groups[2].Value.Trim();
+                var toolNamespace = GetNamespace(tool);
+
+                if (ExtensionKeyword.Equals(toolNamespace, StringComparison.OrdinalIgnoreCase))
+                {
+                    toolNamespace = tool;
+                }
+
+                // Skip header rows
+                if (tool.Equals("Tool Name", StringComparison.OrdinalIgnoreCase) ||
+                    tool.All(c => c == '-'))
+                {
+                    continue;
+                }
+
+                var interaction = interactionRowMatch.Success
+                    ? PromptInteractionExtensions.Parse(interactionRowMatch.Groups[3].Value)
+                    : PromptInteraction.None;
+
+                prompts.Add(new TestPrompt(currentSection, tool, prompt, toolNamespace, interaction));
+            }
+        }
+
+        return prompts;
+    }
+}

@@ -143,7 +143,7 @@ Microsoft MCP (Model Context Protocol) servers provide AI agents with structured
 2. **GitHub Copilot**: Install [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions
 3. **Node.js**: [Latest Node.js LTS](https://nodejs.org/en/download) (ensure `node` and `npm` are in PATH)
 4. **PowerShell**: [PowerShell 7.0+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) (required for build/test scripts)
-5. **.NET SDK**: .NET 10.0.201 (configured in `global.json`)
+5. **.NET SDK**: .NET 10 SDK (configured in `global.json`)
 6. **Azure PowerShell**: For live tests - [Install Azure PowerShell](https://learn.microsoft.com/powershell/azure/install-azure-powershell)
 7. **Azure Bicep**: For test infrastructure - [Install Azure Bicep](https://learn.microsoft.com/azure/azure-resource-manager/bicep/install#install-manually)
 
@@ -344,6 +344,10 @@ az login
 eng/common/TestResources/New-TestResources.ps1 -TestResourcesDirectory tools/Azure.Mcp.Tools.Storage
 ```
 
+### Testing with vally
+
+When testing the MCP server with vally, assume that the user has already been authenticated.  Assume that `az login` has been called. DO NOT call `subscription_list`.
+
 ## Code Style and Standards
 
 ### C# Coding Standards
@@ -461,8 +465,8 @@ Choose the appropriate base class based on operations:
 
 **For Azure Resource Read Operations (recommended):**
 ```csharp
-public class StorageService(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), IStorageService
+public class StorageService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IStorageService
 {
     public async Task<ResourceQueryResults<StorageAccount>> ListAccountsAsync(string subscription, string? resourceGroup, RetryPolicyOptions? retryPolicy)
     {
@@ -479,11 +483,9 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
 
 **For Azure Resource Write Operations:**
 ```csharp
-public class StorageService(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureService(tenantService), IStorageService
+public class StorageService(IAzureService azureService)
+    : BaseAzureService(azureService), IStorageService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
-
     public async Task<StorageAccountResult> CreateStorageAccount(
         string account,
         string resourceGroup,
@@ -495,7 +497,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy);
         // Use subscriptionResource for write operations
     }
 }
@@ -727,7 +729,8 @@ When adding new commands:
 # Check spelling across codebase
 .\eng\common\spelling\Invoke-Cspell.ps1
 
-# Add new technical terms to .vscode/cspell.json if needed
+# Add project-specific terms to that project's cspell.yaml.
+# Add cross-cutting terms to .vscode/cspell.json.
 ```
 
 ## Git Workflow and Automation

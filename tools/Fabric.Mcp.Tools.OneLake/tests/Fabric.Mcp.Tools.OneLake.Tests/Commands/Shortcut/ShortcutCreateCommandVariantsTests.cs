@@ -5,10 +5,11 @@ using System.Net;
 using Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Shortcut;
 
@@ -262,10 +263,6 @@ public class ShortcutCreateCommandVariantsTests
         return service;
     }
 
-    private static async Task<CommandResponse> ExecuteAsync(IBaseCommand command, params string[] args)
-    {
-        using var serviceProvider = new ServiceCollection().BuildServiceProvider();
-        var context = new CommandContext(serviceProvider);
-        return await command.ExecuteAsync(context, command.GetCommand().Parse(args), CancellationToken.None);
-    }
+    private static async Task<CommandResponse> ExecuteAsync(IBaseCommand command, params string[] args) =>
+        await command.ExecuteAsync(new(), command.GetCommand().Parse(args), CancellationToken.None);
 }

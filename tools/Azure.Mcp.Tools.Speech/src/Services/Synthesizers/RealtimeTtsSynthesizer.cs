@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Models;
 using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
@@ -16,10 +15,9 @@ namespace Azure.Mcp.Tools.Speech.Services.Synthesizers;
 /// Neural speech synthesizer using Azure AI Services Speech SDK.
 /// Implements streaming synthesis for efficient memory management with large texts.
 /// </summary>
-public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<RealtimeTtsSynthesizer> logger)
-    : BaseAzureService(tenantService), IRealtimeTtsSynthesizer
+public class RealtimeTtsSynthesizer(IAzureService azureService, ILogger<RealtimeTtsSynthesizer> logger)
+    : BaseAzureService(azureService), IRealtimeTtsSynthesizer
 {
-    private readonly ITenantService _tenantService = tenantService;
     private readonly ILogger<RealtimeTtsSynthesizer> _logger = logger;
 
     /// <inheritdoc/>
@@ -106,7 +104,7 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
         CancellationToken cancellationToken = default)
     {
         // Get Azure AD credential and token
-        var credential = await GetCredential(cancellationToken);
+        var credential = await GetCredential(null, cancellationToken);
 
         // Get access token for Cognitive Services with proper scope
         var accessToken = await credential.GetTokenAsync(new([GetCognitiveServicesScope()]), cancellationToken);
@@ -284,7 +282,7 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
 
     private string GetCognitiveServicesScope()
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://cognitiveservices.azure.com/.default",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://cognitiveservices.azure.us/.default",

@@ -181,7 +181,7 @@ Use one of the following options to configure your `mcp.json`:
 <!-- remove-section: start npm;pypi remove_dotnet_config_sub_section -->
 <!-- remove-section: start nuget remove_dotnet_config_sub_header -->
 #### Option 1: Configure using .NET tool (dnx)<!-- remove-section: end remove_dotnet_config_sub_header -->
-- To use Azure MCP server from .NET, you must have [.NET 10 Preview 6 or later](https://dotnet.microsoft.com/download/dotnet/10.0) installed. This version of .NET adds a command, dnx, which is used to download, install, and run the MCP server from [nuget.org](https://www.nuget.org).
+- To use Azure MCP server from .NET, you must have the latest [.NET 10 SDK LTS](https://dotnet.microsoft.com/download/dotnet) installed. .NET 10 and later adds a command, dnx, which is used to download, install, and run the MCP server from [nuget.org](https://www.nuget.org).
 To verify the .NET version, run the following command in the terminal: `dotnet --info`
 -  Configure the `mcp.json` file with the following:
 
@@ -209,7 +209,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
 <!-- remove-section: start nuget;pypi remove_node_config_sub_section -->
 <!-- remove-section: start npm remove_node_config_sub_header -->
 #### Option 2: Configure using Node.js (npm/npx)<!-- remove-section: end remove_node_config_sub_header -->
-- To use Azure MCP server from node one must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
+- To use Azure MCP server from node one must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend the latest Node.js LTS version. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
 -  Configure the `mcp.json` file with the following:
 
     ```json
@@ -934,7 +934,9 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 
 * "List my Advisor recommendations"
 * "Apply Advisor recommendations to IaaC files"
-* "List all Advisor recommendation types from catalog"
+* "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
+* "Show Advisor service retirements on or after March 31, 2026"
+* "Get Advisor metadata for a recommendation type id"
 
 ### 🔎 Azure AI Search
 
@@ -1242,6 +1244,8 @@ Example prompts that generate Azure CLI commands:
 * "List all resilience recovery plans in service group 'my-service-group'"
 * "Get the recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "List the recovery jobs of recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
+* "Enroll service group 'my-service-group' into usage plan 'my-plan' in resource group 'my-rg'"
 
 ### Azure Resource Manager
 

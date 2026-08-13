@@ -9,7 +9,6 @@ using System.Text.Json;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Microsoft.Extensions.Logging;
@@ -20,9 +19,9 @@ namespace Azure.Mcp.Tools.IoTHub.Services;
 public class IoTHubDeviceService(
     IIoTHubService ioTHubService,
     IHttpClientFactory httpClientFactory,
-    ITenantService tenantService,
+    IAzureService azureService,
     ILogger<IoTHubDeviceService> logger)
-    : BaseAzureService(tenantService), IIoTHubDeviceService
+    : BaseAzureService(azureService), IIoTHubDeviceService
 {
     private readonly IIoTHubService _ioTHubService = ioTHubService ?? throw new ArgumentNullException(nameof(ioTHubService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
