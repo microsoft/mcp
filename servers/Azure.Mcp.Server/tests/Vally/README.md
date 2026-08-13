@@ -1,30 +1,33 @@
 # Vally evaluations for the Azure MCP Server
 
-This directory holds [vally](https://microsoft.github.io/vally) evaluations that measure how
-*effectively* an agent uses individual Azure MCP tools. Unlike the end-to-end
+This directory holds the shared [vally](https://microsoft.github.io/vally) runner for evaluations that measure how
+*effectively* an agent uses individual Azure MCP tools. The tool-specific specs
+live with their corresponding tool under `tools/Azure.Mcp.Tools.<Area>/tests/Vally`.
+Unlike the end-to-end
 tests in `CopilotCliTester`, vally evals are declarative eval specs graded by
 vally's built-in, reference-free graders (no gold-standard answer required).
 
-The runner (`Invoke-VallyEval.ps1`) **discovers** every evaluation under this
-directory, so adding a new tool evaluation is just a matter of dropping files in
-the right place with the right names - no script changes needed.
+The runner (`Invoke-VallyEval.ps1`) **discovers** every evaluation under the
+tool test trees, so adding a new tool evaluation is just a matter of dropping
+files in the right tool directory with the right names - no script changes needed.
 
 ## Layout and naming convention
 
-Evaluations are organized by **area** (a subfolder, usually an Azure MCP
-namespace) and, within each area, by **tool**:
+Evaluations are organized by **area** (the corresponding Azure MCP tool
+project) and, within each area, by **tool**:
 
 ```
-tests/Vally/
-|-- Invoke-VallyEval.ps1              # Discovers, builds azmcp, provisions, runs, tears down
-|-- eventhubs/                        # An AREA (one subfolder per namespace)
-|   |-- eventhub-get.experiment.yaml      # <tool>.experiment.yaml - defines baseline + server-mode variants (required)
-|   |-- eventhub-get.eval.yaml            # <tool>.eval.yaml        - the shared eval spec every variant runs (required)
-|   |-- namespace-get.experiment.yaml     # another tool in the same area
-|   |-- namespace-get.eval.yaml           #   (each tool is an independent experiment)
-|   |-- New-EventHubsResources.ps1        # New-*Resources.ps1    - per-area provisioning (optional)
-|   |-- Remove-EventHubsResources.ps1     # Remove-*Resources.ps1 - per-area teardown     (optional)
-|-- README.md                         # This file
+servers/Azure.Mcp.Server/tests/Vally/
+|-- Invoke-VallyEval.ps1                    # shared runner
+|-- README.md                               # this file
+
+tools/Azure.Mcp.Tools.EventHubs/tests/Vally/
+|-- eventhub-get.experiment.yaml            # <tool>.experiment.yaml - server-mode variants (required)
+|-- eventhub-get.eval.yaml                  # <tool>.eval.yaml - shared eval spec (required)
+|-- namespace-get.experiment.yaml           # another independent tool experiment
+|-- namespace-get.eval.yaml
+|-- New-EventHubsResources.ps1              # per-area provisioning (optional)
+|-- Remove-EventHubsResources.ps1           # per-area teardown (optional)
 ```
 
 The **tool name** is the experiment file name with the `.experiment.yaml` suffix
@@ -32,7 +35,7 @@ removed (e.g. `eventhub-get`). Each area can hold many tools (e.g. `eventhub-get
 `namespace-get`, etc.), each an independent experiment. Provisioning scripts are
 discovered **per area** and run once for all of that area's tools.
 
-The first area, `eventhubs/`, evaluates every Event Hubs tool
+The first area, `tools/Azure.Mcp.Tools.EventHubs/tests/Vally`, evaluates every Event Hubs tool
 (`eventhubs_namespace_get`/`_update`/`_delete`, `eventhubs_eventhub_get`/`_update`/`_delete`,
 and `eventhubs_eventhub_consumergroup_get`/`_update`/`_delete`) - one
 `<tool>.experiment.yaml` per tool. Each experiment runs its shared
@@ -114,11 +117,10 @@ still cannot.
    and make sure `vally` is on your `PATH`.
 2. **.NET SDK** - required to build the `azmcp` server (see the repo root
    `global.json` for the pinned version).
-3. **Azure sign-in** - `az login`. Required to provision real Event Hubs (see
-   below) and for the server candidates to return real data; the outcome-graded
-   baseline needs real data to be a fair test.
-4. **Azure CLI** - `az` on your `PATH`, only needed if you use the provisioning
-   scripts.
+3. **Azure sign-in** - `az login` for the agents running the evaluations and
+  `Connect-AzAccount` for the shared test-resource provisioning harness.
+4. **Azure CLI and Azure PowerShell** - required to evaluate against and
+  provision real Event Hubs resources.
 
 ## Provisioning test resources
 
@@ -131,16 +133,17 @@ e.g. `${RESOURCE_GROUP=contoso-rg}` - so a prompt reads `resource group
 inline default applies and the eval behaves exactly as if the name were
 hardcoded. Two scripts create and remove the underlying resources:
 
-- **`eventhubs/New-EventHubsResources.ps1`** - deploys
-  `eventhubs/eventhubs-resources.bicep` (a subscription-scoped Bicep template,
-  via `az deployment sub create`) to create the resource group, the Event Hubs
-  namespace, and the event hubs (including `orders`). It stamps a
+- **`tools/Azure.Mcp.Tools.EventHubs/tests/Vally/New-EventHubsResources.ps1`** - deploys
+  `tools/Azure.Mcp.Tools.EventHubs/tests/Vally/test-resources.bicep` through the repository's shared
+  `eng/common/TestResources/New-TestResources.ps1` harness, which creates the
+  resource group and then the Event Hubs namespace and event hubs (including
+  `orders`). It stamps a
   **`DeleteAfter`** tag (an ISO 8601 UTC timestamp, matching the repo's
   `TestResources` convention) on the resource group so the standard Azure
   clean-up job reclaims it **even if teardown never runs**. As its last step it
   emits a `PSCustomObject` reporting the identifiers it actually provisioned
   (`RESOURCE_GROUP`, `EVENTHUBS_NAMESPACE`, etc.).
-- **`eventhubs/Remove-EventHubsResources.ps1`** - deletes the resource group and
+- **`tools/Azure.Mcp.Tools.EventHubs/tests/Vally/Remove-EventHubsResources.ps1`** - deletes the resource group and
   everything in it.
 
 The runner runs these **automatically**: for each area it evaluates, it
@@ -154,9 +157,9 @@ or `-PreEvalScript` / `-PostEvalScript` to point at specific scripts. You can al
 run the scripts directly:
 
 ```powershell
-./eventhubs/New-EventHubsResources.ps1 -Subscription <subscription-id>
+../../../../tools/Azure.Mcp.Tools.EventHubs/tests/Vally/New-EventHubsResources.ps1 -Subscription <subscription-id>
 # ... run evals ...
-./eventhubs/Remove-EventHubsResources.ps1 -Subscription <subscription-id>
+../../../../tools/Azure.Mcp.Tools.EventHubs/tests/Vally/Remove-EventHubsResources.ps1 -Subscription <subscription-id>
 ```
 
 ### How provisioned resource names reach the eval prompts
@@ -191,7 +194,7 @@ From this directory:
 
 The script builds `Azure.Mcp.Server`, prepends the freshly built `azmcp` to
 `PATH` (vally does not expand environment variables inside eval specs),
-**discovers every `<tool>.experiment.yaml` under every area subfolder**, and for
+**discovers every `<tool>.experiment.yaml` under each tool's `tests/Vally` directory**, and for
 each one provisions the area, runs the experiment (the baseline plus every server
 candidate variant), and tears the area down. It prints a per-tool comparison. Its
 exit code is non-zero if any *candidate* variant fails (baseline failures are
@@ -220,7 +223,7 @@ expected). Useful switches:
 ./Invoke-VallyEval.ps1 -ReportFrom ./.vally-results/2026-07-29T18-19-30-496Z
 
 # Run one explicit experiment (its baseline variant is defined in the experiment spec)
-./Invoke-VallyEval.ps1 -ExperimentSpec ./eventhubs/eventhub-get.experiment.yaml
+./Invoke-VallyEval.ps1 -ExperimentSpec ../../../../tools/Azure.Mcp.Tools.EventHubs/tests/Vally/eventhub-get.experiment.yaml
 ```
 
 ## Results
@@ -247,7 +250,7 @@ run-timestamp level, since you're not going through the wrapper script):
 ```powershell
 # Runs the shared eval spec as every variant (baseline + namespace + consolidated)
 # and writes each under a timestamped subfolder of --output-dir.
-vally experiment run ./eventhubs/eventhub-get.experiment.yaml --output-dir ./.vally-results/eventhubs/eventhub-get
+vally experiment run ../../../../tools/Azure.Mcp.Tools.EventHubs/tests/Vally/eventhub-get.experiment.yaml --output-dir ./.vally-results/eventhubs/eventhub-get
 ```
 
 ### `session-state/` scratch folder
@@ -373,10 +376,11 @@ considerations in the generated YAML comments.
 
 ### Manual steps
 
-1. Pick an **area** subdirectory (reuse an existing one such as `eventhubs/`, or
-   create a new one named after the namespace, e.g. `storage/`).
+1. Use the corresponding tool's `tests/Vally` directory, for example
+  `tools/Azure.Mcp.Tools.EventHubs/tests/Vally`. Create it if this is the
+  first experiment for that tool area.
 2. Add the shared eval spec named **`<tool>.eval.yaml`** (e.g.
-   `eventhub-update.eval.yaml`) - copy `eventhubs/eventhub-get.eval.yaml` and
+  `eventhub-update.eval.yaml`) - copy the Event Hubs `eventhub-get.eval.yaml` and
    adjust the prompts, the `--namespace` argument, and the `prompt`/`rubric`
    outcome graders. Every prompt must come from
    `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`. Grading is outcome-only
@@ -388,7 +392,7 @@ considerations in the generated YAML comments.
    rather than hardcoding the literal name - see "How provisioned resource
    names reach the eval prompts" above.
 3. Add the experiment named **`<tool>.experiment.yaml`** (e.g.
-   `eventhub-update.experiment.yaml`) - copy `eventhubs/eventhub-get.experiment.yaml`,
+  `eventhub-update.experiment.yaml`) - copy the Event Hubs `eventhub-get.experiment.yaml`,
    point its `evals:` at your new `.eval.yaml`, and keep the `baseline`,
    `namespace`, and `consolidated` variants (the baseline deletes
    `environment.mcpServers.azure`; the `consolidated` variant overrides `--mode`,
@@ -402,7 +406,7 @@ considerations in the generated YAML comments.
    runner forwards them to `vally` automatically. For a destructive
    (`_delete`) tool in an existing area, prefer extending that area's existing
    provisioning with a disposable, single-purpose resource (see
-   `eventhubs/eventhubs-resources.bicep`'s `deletableEventHubName`/
+  the Event Hubs `test-resources.bicep` file's `deletableEventHubName`/
    `deletableConsumerGroupName`/`deletableNamespaceName` parameters) rather
    than deleting a resource other evals depend on.
 5. Run everything with `./Invoke-VallyEval.ps1`, or just the new one with

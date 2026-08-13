@@ -8,7 +8,7 @@ Tears down the Azure Event Hubs resources created by New-EventHubsResources.ps1.
 .DESCRIPTION
 Deletes the resource group (default: contoso-rg) and everything in it, including
 the Event Hubs namespace and its event hubs that were provisioned by the
-companion eventhubs-resources.bicep deployment. Uses the Azure CLI (`az`) -
+companion test-resources.bicep deployment. Uses the Azure CLI (`az`) -
 deleting the resource group removes the deployment's resources regardless of
 the fact they were created via Bicep.
 

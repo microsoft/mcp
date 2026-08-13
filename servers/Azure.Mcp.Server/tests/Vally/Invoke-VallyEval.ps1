@@ -13,7 +13,7 @@ This is a wrapper around the vally CLI (https://microsoft.github.io/vally) that:
   2. Prepends the build output directory to PATH so the `command: azmcp` entry in
      each eval spec resolves to your local build (vally does not interpolate
      environment variables inside eval specs).
-  3. Discovers experiments laid out by area and tool (see below). For each area it
+    3. Discovers experiments laid out under each tool's tests/Vally directory. For each area it
      optionally runs a pre-evaluation provisioning script to create the Azure
      resources the experiments expect, and always runs a post-evaluation teardown
      script afterwards (even when a run or provisioning fails), so resources are
@@ -30,7 +30,8 @@ This is a wrapper around the vally CLI (https://microsoft.github.io/vally) that:
      This keeps the eval always targeting whatever was truly provisioned - the
      script's own fixed default, or a name it randomized at run time - without
      ever having to hardcode (or guess) that name in this runner or the eval
-     spec. See eventhubs/New-EventHubsResources.ps1 for a worked example.
+        spec. See tools/Azure.Mcp.Tools.EventHubs/tests/Vally/New-EventHubsResources.ps1
+        for a worked example.
   4. For each discovered tool, runs its experiment (<tool>.experiment.yaml) via
      `vally experiment run`. The experiment executes the shared eval spec as
      several variants for comparison:
@@ -47,8 +48,7 @@ This is a wrapper around the vally CLI (https://microsoft.github.io/vally) that:
 
 Layout / naming convention (discovered automatically):
 
-    tests/Vally/
-      <area>/                          # e.g. eventhubs
+    tools/Azure.Mcp.Tools.<Area>/tests/Vally/
         <tool>.experiment.yaml         # experiment (required)
         <tool>.eval.yaml               # shared eval spec the experiment runs
         New-*Resources.ps1             # per-area provisioning (optional)
@@ -105,7 +105,7 @@ consolidated). Defaults to ./.vally-results next to this script.
 
 .PARAMETER PreEvalScript
 Optional path to a provisioning script run BEFORE the evaluations (e.g.
-./eventhubs/New-EventHubsResources.ps1). Use it to create the Azure resources the
+../../../../tools/Azure.Mcp.Tools.EventHubs/tests/Vally/New-EventHubsResources.ps1). Use it to create the Azure resources the
 eval prompts reference. -ResourceGroup and -Subscription are forwarded to it.
 
 If the script emits a Hashtable/PSCustomObject of `KEY = value` pairs as the
@@ -120,7 +120,7 @@ convention-named `New-*Resources.ps1` script next to the eval spec and uses that
 
 .PARAMETER PostEvalScript
 Optional path to a teardown script run AFTER the evaluations (e.g.
-./eventhubs/Remove-EventHubsResources.ps1). It runs in a finally block, so it
+../../../../tools/Azure.Mcp.Tools.EventHubs/tests/Vally/Remove-EventHubsResources.ps1). It runs in a finally block, so it
 executes even if the eval or the pre-eval provisioning fails. -Subscription is
 always forwarded, and -ResourceGroup is forwarded too UNLESS the pre-eval script
 reported a `RESOURCE_GROUP` value (see -PreEvalScript) - that reported value
@@ -132,8 +132,8 @@ convention-named `Remove-*Resources.ps1` script next to the eval spec and uses
 that.
 
 .PARAMETER Area
-Optional filter: only run experiments under the named area subdirectory (e.g.
-'eventhubs'). Matches the immediate subfolder name under this script's directory.
+Optional filter: only run experiments for the named tool area (e.g.
+'eventhubs'). Matches the suffix of the owning Azure.Mcp.Tools.<Area> directory.
 Repeatable. When omitted, all areas are discovered.
 
 .PARAMETER Tool
@@ -184,8 +184,8 @@ Note: `vally experiment run` has no --verbose option (only `vally eval` does), s
 full agent output is not available through the experiment runner.
 
 .EXAMPLE
-# Discover and run every <tool>.experiment.yaml under every area subfolder,
-# provisioning + tearing down each area as needed.
+# Discover and run every tool-owned <tool>.experiment.yaml, provisioning +
+# tearing down each area as needed.
 ./Invoke-VallyEval.ps1 -Subscription <subscription-id>
 
 .EXAMPLE
@@ -202,7 +202,7 @@ full agent output is not available through the experiment runner.
 
 .EXAMPLE
 # Run one explicit experiment
-./Invoke-VallyEval.ps1 -ExperimentSpec ./eventhubs/eventhub-get.experiment.yaml -SkipProvisioning
+./Invoke-VallyEval.ps1 -ExperimentSpec ../../../../tools/Azure.Mcp.Tools.EventHubs/tests/Vally/eventhub-get.experiment.yaml -SkipProvisioning
 
 .EXAMPLE
 # Run every experiment three times and report each iteration's outcome
@@ -256,6 +256,7 @@ $OutputEncoding = [System.Text.UTF8Encoding]::new()
 # Repo root is four levels up: servers/Azure.Mcp.Server/tests/Vally -> repo root
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..' '..' '..' '..')
 $ServerProject = Join-Path $RepoRoot 'servers' 'Azure.Mcp.Server' 'src' 'Azure.Mcp.Server.csproj'
+$ToolsRoot = Join-Path $RepoRoot 'tools'
 
 function Write-Info($Message) { Write-Host "[vally-eval] $Message" -ForegroundColor Cyan }
 function Write-Warn($Message) { Write-Host "[vally-eval] $Message" -ForegroundColor Yellow }
@@ -923,6 +924,31 @@ function Invoke-ProvisioningScript {
 # suffix removed (e.g. 'eventhub-get.experiment.yaml' -> 'eventhub-get').
 $ExperimentSuffix = '.experiment.yaml'
 
+# Resolves the owning area from tools/Azure.Mcp.Tools.<Area>/tests/Vally. Keep
+# AreaDir at the experiment's parent so adjacent provisioning scripts continue
+# to be discovered by convention.
+function Get-ExperimentLocation {
+    param([Parameter(Mandatory)] [System.IO.FileInfo] $Spec)
+
+    $vallyDir = $Spec.Directory
+    while ($vallyDir -and $vallyDir.Name -ne 'Vally') {
+        $vallyDir = $vallyDir.Parent
+    }
+
+    $toolDir = $vallyDir ? $vallyDir.Parent.Parent : $null
+    if ($toolDir -and $toolDir.Name.StartsWith('Azure.Mcp.Tools.', [StringComparison]::OrdinalIgnoreCase)) {
+        return [pscustomobject]@{
+            Area    = $toolDir.Name.Substring('Azure.Mcp.Tools.'.Length).ToLowerInvariant()
+            AreaDir = $Spec.Directory.FullName
+        }
+    }
+
+    return [pscustomobject]@{
+        Area    = $Spec.Directory.Name
+        AreaDir = $Spec.Directory.FullName
+    }
+}
+
 # Resolves the pre/post provisioning scripts for an area directory: an explicit
 # override (if given) wins, otherwise auto-discover by convention.
 function Resolve-AreaProvisioning {
@@ -1409,8 +1435,8 @@ function Write-ConsolidatedSummary {
 # An experiment (<tool>.experiment.yaml) runs a shared eval spec as a baseline
 # variant (no Azure MCP server) and one or more server candidate variants
 # (namespace + consolidated modes). Experiments
-# are grouped by their area (the immediate subdirectory of this script) so
-# provisioning runs once per area.
+# are grouped by their owning Azure.Mcp.Tools.<Area> directory so provisioning
+# runs once per area.
 if ($ExperimentSpec -and ($Area -or $Tool)) {
     throw '-ExperimentSpec cannot be combined with -Area or -Tool.'
 }
@@ -1434,12 +1460,15 @@ if ($ExperimentSpec) {
     $experimentFiles.Add((Get-Item $resolvedSpec.Path))
 }
 else {
-    # Every *.experiment.yaml under any subfolder.
-    $candidates = Get-ChildItem -Path $PSScriptRoot -Recurse -File -Filter "*$ExperimentSuffix" -ErrorAction SilentlyContinue |
+    # Every *.experiment.yaml under tools/Azure.Mcp.Tools.*/tests/Vally.
+    $vallyRoots = Get-ChildItem -Path $ToolsRoot -Directory -Filter 'Azure.Mcp.Tools.*' -ErrorAction SilentlyContinue |
+        ForEach-Object { Get-Item -LiteralPath (Join-Path $_.FullName 'tests' 'Vally') -ErrorAction SilentlyContinue }
+    $candidates = $vallyRoots | Get-ChildItem -Recurse -File -Filter "*$ExperimentSuffix" -ErrorAction SilentlyContinue |
     Sort-Object FullName
 
     foreach ($c in $candidates) {
-        $areaName = Split-Path (Split-Path $c.FullName -Parent) -Leaf
+        $location = Get-ExperimentLocation -Spec $c
+        $areaName = $location.Area
         $toolName = $c.Name.Substring(0, $c.Name.Length - $ExperimentSuffix.Length)
 
         if ($Area -and -not ($Area | Where-Object { $areaName -like $_ })) { continue }
@@ -1455,13 +1484,12 @@ if ($experimentFiles.Count -eq 0) {
 
 # Build the ordered list of experiment descriptors and group them by area directory.
 $evals = foreach ($spec in $experimentFiles) {
-    $areaDir = Split-Path $spec.FullName -Parent
-    $areaName = Split-Path $areaDir -Leaf
+    $location = Get-ExperimentLocation -Spec $spec
     $toolName = $spec.Name.Substring(0, $spec.Name.Length - $ExperimentSuffix.Length)
 
     [pscustomobject]@{
-        Area       = $areaName
-        AreaDir    = $areaDir
+        Area       = $location.Area
+        AreaDir    = $location.AreaDir
         Tool       = $toolName
         Experiment = $spec.FullName
     }

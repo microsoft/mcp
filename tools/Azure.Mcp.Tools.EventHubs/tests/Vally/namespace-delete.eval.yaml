@@ -7,7 +7,7 @@
 # DESTRUCTIVE TOOL NOTE: this stimulus actually deletes an Azure resource.
 # It targets the disposable "contoso-ehns-delete" namespace provisioned
 # specifically for this eval by New-EventHubsResources.ps1 (via
-# eventhubs-resources.bicep's `deletableNamespaceName` parameter), which is
+# test-resources.bicep's `deletableNamespaceName` parameter), which is
 # NOT referenced by any other eventhubs eval - so deleting it here cannot
 # break the get/update evals that depend on "contoso-ehns". If the delete
 # succeeds, the namespace won't exist for a re-run within the same

@@ -1,6 +1,6 @@
 ---
 name: create-vally-tool-experiments
-description: 'Create a Vally experiment (baseline vs. namespace vs. consolidated) that evaluates how effectively an agent uses a specific Azure MCP tool. USE WHEN: create vally eval, add tool experiment, evaluate azmcp tool, measure MCP tool effectiveness, add eval spec, create experiment.yaml.'
+description: 'Create a Vally experiment (baseline vs. namespace vs. consolidated) that evaluates how effectively an agent uses a specific Azure MCP tool. USE WHEN: create Vally eval, add tool experiment, evaluate azmcp tool, measure MCP tool effectiveness, add eval spec, create experiment.yaml.'
 argument-hint: 'Name the tool to evaluate (e.g., "eventhubs_eventhub_get" or "storage account list") or the area (e.g., "storage")'
 ---
 
@@ -8,11 +8,11 @@ argument-hint: 'Name the tool to evaluate (e.g., "eventhubs_eventhub_get" or "st
 
 ## Purpose
 
-Add a new [vally](https://microsoft.github.io/vally) **experiment** (a shared
+Add a new [Vally](https://microsoft.github.io/vally) **experiment** (a shared
 eval spec run as `baseline` / `namespace` / `consolidated` variants) that
 measures how effectively an agent uses one specific Azure MCP tool, following
 the pattern established in
-`servers/Azure.Mcp.Server/tests/Vally/eventhubs/eventhub-get.*.yaml` and
+`tools/Azure.Mcp.Tools.EventHubs/tests/Vally/eventhub-get.*.yaml` and
 `namespace-get.*.yaml`.
 
 **Compatible with:** GitHub Copilot (primary; this skill lives under
@@ -38,17 +38,16 @@ document as ground truth; if the two ever disagree, the README wins.
 ## Step 1: Identify the target tool and its area
 
 1. Resolve the tool to its full MCP tool name, `<area>_<resource>_<operation>`
-   (e.g. `eventhubs_eventhub_get`), and its **tool name** in the vally sense —
+   (e.g. `eventhubs_eventhub_get`), and its **tool name** in the Vally sense —
    the same string minus the area prefix pattern used for file naming, e.g.
    `eventhub-get` (kebab-case, matching an existing `<tool>.experiment.yaml` if
    one exists for a sibling operation).
 2. Find the command implementation to confirm the namespace/mode and the
    options it needs (subscription, resource group, resource-specific names):
    `tools/Azure.Mcp.Tools.{Area}/src/Commands/**/*Command.cs`.
-3. Decide the **area** subfolder under `servers/Azure.Mcp.Server/tests/Vally/`
-   (reuse an existing one, e.g. `eventhubs/`, if the tool belongs to a
-   namespace already evaluated there; otherwise create a new folder named
-   after the namespace, e.g. `storage/`).
+3. Use the corresponding tool's `tests/Vally` directory, for example
+  `tools/Azure.Mcp.Tools.EventHubs/tests/Vally`. Create it if this is the
+  first experiment for that tool area.
 
 ## Step 2: Collect the REQUIRED stimuli from e2eTestPrompts.md
 
@@ -71,7 +70,7 @@ This is the step that must not be shortcut.
 4. Replace any placeholder tokens in the prompt (e.g. `<namespace_name>`,
    `<resource_group_name>`, `<event_hub_name>`) with concrete values that match
    real (or to-be-provisioned) test resources — reuse the existing
-   `contoso-*` naming convention from `eventhubs/` when the area already has
+  `contoso-*` naming convention from the Event Hubs Vally directory when the area already has
    one, or invent a consistent `contoso-*` name for a new area. Keep the rest
    of the prompt wording **verbatim** from `e2eTestPrompts.md` — do not
    paraphrase the instructional text itself.
@@ -85,7 +84,7 @@ This is the step that must not be shortcut.
 
 ## Step 3: Write `<tool>.eval.yaml`
 
-Copy `eventhubs/eventhub-get.eval.yaml` as the template and adapt:
+Copy `tools/Azure.Mcp.Tools.EventHubs/tests/Vally/eventhub-get.eval.yaml` as the template and adapt:
 
 - `name`: `<area>-<tool>-eval`.
 - `description`: one sentence — what capability/outcome is evaluated.
@@ -113,7 +112,7 @@ Copy `eventhubs/eventhub-get.eval.yaml` as the template and adapt:
 
 ## Step 4: Write `<tool>.experiment.yaml`
 
-Copy `eventhubs/eventhub-get.experiment.yaml` and adapt:
+Copy `tools/Azure.Mcp.Tools.EventHubs/tests/Vally/eventhub-get.experiment.yaml` and adapt:
 
 - `name`: `<area>-<tool>-experiment`.
 - `evals: [./<tool>.eval.yaml]`.
@@ -130,15 +129,16 @@ Copy `eventhubs/eventhub-get.experiment.yaml` and adapt:
 ## Step 5: Provisioning (only if the area needs new Azure resources)
 
 If the target area already has `New-*Resources.ps1` / `Remove-*Resources.ps1`
-(e.g. `eventhubs/`), reuse the resources they provision — do not add a second
+(e.g. the Event Hubs Vally directory), reuse the resources they provision — do not add a second
 provisioning pair for the same area unless the new tool needs resources the
 existing scripts don't create (then extend the existing scripts/Bicep rather
 than duplicating them).
 
 For a brand-new area, add a `New-<Area>Resources.ps1` / `Remove-<Area>Resources.ps1`
 pair plus a Bicep template, modeled directly on
-`eventhubs/New-EventHubsResources.ps1` / `eventhubs/Remove-EventHubsResources.ps1`
-/ `eventhubs/eventhubs-resources.bicep`:
+`tools/Azure.Mcp.Tools.EventHubs/tests/Vally/New-EventHubsResources.ps1` /
+`tools/Azure.Mcp.Tools.EventHubs/tests/Vally/Remove-EventHubsResources.ps1` /
+`tools/Azure.Mcp.Tools.EventHubs/tests/Vally/test-resources.bicep`:
 
 - Subscription-scoped Bicep deployed via `az deployment sub create`.
 - Stamp a `DeleteAfter` tag (ISO 8601 UTC) on the resource group so the repo's
