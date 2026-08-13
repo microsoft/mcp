@@ -4,6 +4,13 @@
 
 
 
+
+## 3.0.35 (2026-08-13) (pre-release)
+
+### Changed
+
+- Improved `foundry` and `foundryexensions` namespace-level tool descriptions.
+
 ## 3.0.34 (2026-08-11) (pre-release)
 
 ### Added
