@@ -16,9 +16,10 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Name = "get",
     Title = "Get or List Resilience Drills",
     Description = """
-        Gets resilience drills in the specified service group. Provide a drill name to get the full
-        details of that drill. Omit the name to list all drills in the service group, returning only
-        their id and name.
+        Gets or lists resilience drill definitions in a service group. Provide a drill name to get the
+        full details of that drill definition. Omit the name to list all drills in the service group,
+        returning only their id and name. This tool returns the drills themselves, not the resources or
+        targets exercised by a drill; to get a drill's resources or targets, use the drill resource tool.
         """,
     Destructive = false,
     Idempotent = true,

@@ -489,7 +489,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
-        var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
+        var serviceGroupId = CreateServiceGroupResourceIdentifier(serviceGroup);
         ResilienceManagementDrillCollection drills = armClient.GetResilienceManagementDrills(serviceGroupId);
 
         var result = new List<ResourceSummary>();
@@ -507,7 +507,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
-        var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
+        var serviceGroupId = CreateServiceGroupResourceIdentifier(serviceGroup);
         ResilienceManagementDrillCollection drills = armClient.GetResilienceManagementDrills(serviceGroupId);
         Response<ResilienceManagementDrillResource> response = await drills.GetAsync(drill, cancellationToken);
 
@@ -543,7 +543,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return result;
     }
 
-    public async Task<JsonElement> GetDrillResourceAsync(string serviceGroup, string drill, string drillResource, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    public async Task<DrillResourceInfo> GetDrillResourceAsync(string serviceGroup, string drill, string drillResource, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
@@ -553,7 +553,27 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         Response<DrillTargetResource> response = await drillTargets.GetAsync(drillResource, cancellationToken);
 
         using JsonDocument document = JsonDocument.Parse(response.GetRawResponse().Content.ToMemory());
-        return document.RootElement.Clone();
+        JsonElement root = document.RootElement;
+
+        return new DrillResourceInfo(
+            Id: root.TryGetProperty("id", out JsonElement idElement) ? idElement.GetString() ?? string.Empty : string.Empty,
+            Name: root.TryGetProperty("name", out JsonElement nameElement) ? nameElement.GetString() ?? string.Empty : string.Empty,
+            ResourceType: root.TryGetProperty("type", out JsonElement typeElement) ? typeElement.GetString() : null,
+            Location: root.TryGetProperty("location", out JsonElement locationElement) ? locationElement.GetString() : null,
+            Tags: GetTagsOrNull(root),
+            Properties: root.TryGetProperty("properties", out JsonElement propertiesElement) ? propertiesElement.Clone() : default,
+            SystemData: root.TryGetProperty("systemData", out JsonElement systemDataElement) ? systemDataElement.Clone() : default);
+    }
+
+    private static ResourceIdentifier CreateServiceGroupResourceIdentifier(string serviceGroup)
+    {
+        // Validate the caller-supplied segment before interpolating it into a raw ARM resource path.
+        if (string.IsNullOrWhiteSpace(serviceGroup) || serviceGroup.Contains('/'))
+        {
+            throw new ArgumentException("Service group name must be a single non-empty path segment.", nameof(serviceGroup));
+        }
+
+        return new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
     }
 
     private static Dictionary<string, string>? GetTagsOrNull(JsonElement root)

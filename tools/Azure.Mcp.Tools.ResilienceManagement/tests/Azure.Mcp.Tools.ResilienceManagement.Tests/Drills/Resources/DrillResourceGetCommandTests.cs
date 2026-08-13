@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
@@ -20,8 +19,7 @@ public class DrillResourceGetCommandTests : CommandUnitTestsBase<DrillResourceGe
     private const string ServiceGroup = "sg1";
     private const string Drill = "drill1";
 
-    private static JsonElement Element(string name)
-        => JsonDocument.Parse($"{{\"id\":\"id1\",\"name\":\"{name}\"}}").RootElement.Clone();
+    private static DrillResourceInfo Info(string name) => new(Id: "id1", Name: name);
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -67,13 +65,13 @@ public class DrillResourceGetCommandTests : CommandUnitTestsBase<DrillResourceGe
     public async Task ExecuteAsync_GetsDrillResource_WhenNameProvided()
     {
         Service.GetDrillResourceAsync(ServiceGroup, Drill, "target1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(Element("target1"));
+            .Returns(Info("target1"));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill, "--name", "target1");
 
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.DrillResourceGetCommandResult);
         Assert.Null(result.DrillResources);
-        Assert.Equal("target1", result.DrillResource.GetProperty("name").GetString());
+        Assert.Equal("target1", result.DrillResource!.Name);
     }
 
     [Fact]
