@@ -6,5 +6,6 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Models;
 public enum RecoveryPlanIdentityKind
 {
     SystemAssigned,
-    UserAssigned
+    UserAssigned,
+    SystemAndUserAssigned
 }

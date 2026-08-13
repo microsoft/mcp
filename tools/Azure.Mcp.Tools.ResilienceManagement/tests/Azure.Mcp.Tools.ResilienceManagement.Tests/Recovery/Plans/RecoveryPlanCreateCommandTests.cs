@@ -32,6 +32,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
     [Theory]
     [InlineData(ValidArgs, true)]
     [InlineData("--service-group sg1 --recovery-plan plan1 --plan-type Zonal --plan-description description --identity-type SystemAssigned", true)]
+    [InlineData("--service-group sg1 --recovery-plan plan1 --plan-type Zonal --identity-type SystemAssigned", true)]
     [InlineData("--service-group sg1 --recovery-plan plan1 --plan-type Zonal --plan-description description", false)]
     [InlineData("--recovery-plan plan1 --plan-type Zonal --plan-description description --default-group-description default", false)]
     [InlineData("--service-group sg1 --plan-type Zonal --plan-description description --default-group-description default", false)]
@@ -45,7 +46,8 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<RecoveryPlanKind>(),
-                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<RecoveryPlanIdentityKind>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
@@ -79,6 +81,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string>(),
             Arg.Any<RecoveryPlanKind>(),
             Arg.Any<string>(),
+            Arg.Any<RecoveryPlanIdentityKind>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -108,6 +111,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string>(),
             Arg.Any<RecoveryPlanKind>(),
             Arg.Any<string>(),
+            Arg.Any<RecoveryPlanIdentityKind>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -125,6 +129,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             recoveryPlan,
             Arg.Any<RecoveryPlanKind>(),
             Arg.Any<string>(),
+            Arg.Any<RecoveryPlanIdentityKind>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -169,6 +174,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string>(),
             Arg.Any<RecoveryPlanKind>(),
             planDescription,
+            Arg.Any<RecoveryPlanIdentityKind>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -213,6 +219,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string>(),
             Arg.Any<RecoveryPlanKind>(),
             Arg.Any<string>(),
+            Arg.Any<RecoveryPlanIdentityKind>(),
             Arg.Any<string?>(),
             defaultGroupDescription,
             Arg.Any<string?>(),
@@ -249,6 +256,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string>(),
             Arg.Any<RecoveryPlanKind>(),
             Arg.Any<string>(),
+            Arg.Any<RecoveryPlanIdentityKind>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -264,6 +272,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "plan1",
             RecoveryPlanKind.Zonal,
             "description",
+            RecoveryPlanIdentityKind.UserAssigned,
             UserAssignedIdentityResourceId,
             "default",
             null,
@@ -280,6 +289,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "plan1",
             RecoveryPlanKind.Zonal,
             "description",
+            RecoveryPlanIdentityKind.UserAssigned,
             UserAssignedIdentityResourceId,
             "default",
             null,
@@ -295,6 +305,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "plan1",
             RecoveryPlanKind.Zonal,
             "description",
+            RecoveryPlanIdentityKind.UserAssigned,
             UserAssignedIdentityResourceId,
             null,
             null,
@@ -316,6 +327,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "plan1",
             RecoveryPlanKind.Zonal,
             "description",
+            RecoveryPlanIdentityKind.UserAssigned,
             UserAssignedIdentityResourceId,
             null,
             null,
@@ -353,6 +365,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string>(),
             Arg.Any<RecoveryPlanKind>(),
             Arg.Any<string>(),
+            Arg.Any<RecoveryPlanIdentityKind>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -368,6 +381,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "plan1",
             RecoveryPlanKind.Zonal,
             "description",
+            RecoveryPlanIdentityKind.SystemAssigned,
             null,
             null,
             null,
@@ -388,6 +402,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "plan1",
             RecoveryPlanKind.Zonal,
             "description",
+            RecoveryPlanIdentityKind.SystemAssigned,
             null,
             null,
             null,
@@ -396,14 +411,54 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
     }
 
     [Fact]
-    public async Task ExecuteAsync_RejectsUserAssignedIdentityTypeWithoutResourceId()
+    public async Task ExecuteAsync_ForwardsSystemAndUserAssignedIdentity()
+    {
+        Service.CreateRecoveryPlanAsync(
+            "sg1",
+            "plan1",
+            RecoveryPlanKind.Zonal,
+            "description",
+            RecoveryPlanIdentityKind.SystemAndUserAssigned,
+            UserAssignedIdentityResourceId,
+            null,
+            null,
+            null,
+            Arg.Any<CancellationToken>())
+            .Returns(Element("plan1"));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recovery-plan", "plan1",
+            "--plan-type", "Zonal",
+            "--plan-description", "description",
+            "--identity-type", "SystemAndUserAssigned",
+            "--user-assigned-identity", UserAssignedIdentityResourceId);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).CreateRecoveryPlanAsync(
+            "sg1",
+            "plan1",
+            RecoveryPlanKind.Zonal,
+            "description",
+            RecoveryPlanIdentityKind.SystemAndUserAssigned,
+            UserAssignedIdentityResourceId,
+            null,
+            null,
+            null,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(RecoveryPlanIdentityKind.UserAssigned)]
+    [InlineData(RecoveryPlanIdentityKind.SystemAndUserAssigned)]
+    public async Task ExecuteAsync_RejectsIdentityTypeWithoutRequiredUserAssignedResourceId(RecoveryPlanIdentityKind identityType)
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
             "--recovery-plan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
-            "--identity-type", "UserAssigned");
+            "--identity-type", identityType.ToString());
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("--user-assigned-identity is required", response.Message);
@@ -448,6 +503,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string>(),
             Arg.Any<RecoveryPlanKind>(),
             Arg.Any<string>(),
+            Arg.Any<RecoveryPlanIdentityKind>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -471,6 +527,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string>(),
             Arg.Any<RecoveryPlanKind>(),
             Arg.Any<string>(),
+            Arg.Any<RecoveryPlanIdentityKind>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),

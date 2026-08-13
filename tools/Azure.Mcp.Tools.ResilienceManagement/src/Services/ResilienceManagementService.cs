@@ -396,24 +396,27 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return document.RootElement.Clone();
     }
 
-    public async Task<JsonElement> CreateRecoveryPlanAsync(string serviceGroup, string recoveryPlan, RecoveryPlanKind planType, string planDescription, string? userAssignedIdentity = null, string? defaultGroupDescription = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    public async Task<JsonElement> CreateRecoveryPlanAsync(string serviceGroup, string recoveryPlan, RecoveryPlanKind planType, string? planDescription, RecoveryPlanIdentityKind identityType, string? userAssignedIdentity = null, string? defaultGroupDescription = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
         var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
         RecoveryPlanCollection recoveryPlans = armClient.GetRecoveryPlans(serviceGroupId);
         NullableResponse<RecoveryPlanResource> existingPlan = await recoveryPlans.GetIfExistsAsync(recoveryPlan, cancellationToken);
+        string effectivePlanDescription = ResolveRecoveryPlanDescription(
+            planDescription,
+            existingPlan.HasValue ? existingPlan.Value?.Data?.Properties?.PlanDescription : null);
         RecoveryGroupsSetting? existingRecoveryGroups = existingPlan.HasValue
             ? existingPlan.Value?.Data?.Properties?.RecoveryGroupsSetting
             : null;
         RecoveryGroupsSetting recoveryGroups = CreateRecoveryGroupsSetting(existingRecoveryGroups, defaultGroupDescription);
-        ManagedServiceIdentity identity = CreateRecoveryPlanIdentity(userAssignedIdentity);
+        ManagedServiceIdentity identity = CreateRecoveryPlanIdentity(identityType, userAssignedIdentity, existingPlan.HasValue ? existingPlan.Value?.Data?.Identity : null);
         var data = new RecoveryPlanData
         {
             Identity = identity,
             Properties = new RecoveryPlanProperties(
                 new RecoveryPlanType(planType.ToString()),
-                planDescription,
+                effectivePlanDescription,
                 recoveryGroups)
         };
 
@@ -426,6 +429,10 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         using JsonDocument document = JsonDocument.Parse(operation.GetRawResponse().Content.ToMemory());
         return document.RootElement.Clone();
     }
+
+    internal static string ResolveRecoveryPlanDescription(string? planDescription, string? existingPlanDescription)
+        => planDescription ?? existingPlanDescription
+            ?? throw new ArgumentException("--plan-description is required when creating a recovery plan.", nameof(planDescription));
 
     public async Task<bool> DeleteRecoveryPlanAsync(string serviceGroup, string recoveryPlan, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
@@ -496,15 +503,26 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return recoveryGroups;
     }
 
-    internal static ManagedServiceIdentity CreateRecoveryPlanIdentity(string? userAssignedIdentity)
+    internal static ManagedServiceIdentity CreateRecoveryPlanIdentity(RecoveryPlanIdentityKind identityType, string? userAssignedIdentity, ManagedServiceIdentity? existingIdentity = null)
     {
-        if (string.IsNullOrWhiteSpace(userAssignedIdentity))
+        if (identityType == RecoveryPlanIdentityKind.SystemAssigned)
         {
             return new ManagedServiceIdentity(ManagedServiceIdentityType.SystemAssigned);
         }
 
         ResourceIdentifier identityResourceId = ParseUserAssignedIdentityResourceId(userAssignedIdentity!);
-        var identity = new ManagedServiceIdentity(ManagedServiceIdentityType.UserAssigned);
+        ManagedServiceIdentityType managedServiceIdentityType = identityType == RecoveryPlanIdentityKind.SystemAndUserAssigned
+            ? ManagedServiceIdentityType.SystemAssignedUserAssigned
+            : ManagedServiceIdentityType.UserAssigned;
+        var identity = new ManagedServiceIdentity(managedServiceIdentityType);
+        foreach (ResourceIdentifier existingIdentityResourceId in existingIdentity?.UserAssignedIdentities.Keys ?? [])
+        {
+            if (existingIdentityResourceId != identityResourceId)
+            {
+                throw new ArgumentException("Replacing an existing user-assigned managed identity with a different identity is not currently supported.", nameof(userAssignedIdentity));
+            }
+        }
+
         identity.UserAssignedIdentities.Add(identityResourceId, new UserAssignedIdentity());
         return identity;
     }

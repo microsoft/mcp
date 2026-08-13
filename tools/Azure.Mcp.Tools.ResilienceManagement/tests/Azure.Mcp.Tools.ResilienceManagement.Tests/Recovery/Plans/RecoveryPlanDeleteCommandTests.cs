@@ -50,27 +50,6 @@ public sealed class RecoveryPlanDeleteCommandTests : CommandUnitTestsBase<Recove
     }
 
     [Theory]
-    [InlineData("plan")]
-    [InlineData("1234567890123456789012345")]
-    [InlineData("bad_name")]
-    [InlineData("../plan")]
-    public async Task ExecuteAsync_RejectsInvalidRecoveryPlanName(string recoveryPlan)
-    {
-        var response = await ExecuteCommandAsync(
-            "--service-group", "sg1",
-            "--recovery-plan", recoveryPlan);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("5 to 24 characters", response.Message);
-        await Service.DidNotReceive().DeleteRecoveryPlanAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            TestContext.Current.CancellationToken);
-    }
-
-    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public async Task ExecuteAsync_ReturnsDeleteResult(bool deleted)

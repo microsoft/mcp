@@ -16,9 +16,13 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Name = "create",
     Title = "Create or Update Resilience Recovery Plan",
     Description = """
-        Create or fully update a Zonal resilience recovery plan in my service group with a required system-assigned
-        or user-assigned managed identity. Updates can switch between identity types and preserve the default recovery
-        group ID, additional recovery groups, and omitted default group description.
+        Create or fully update a Zonal resilience recovery plan in my service group with a required system-assigned,
+        user-assigned, or combined managed identity. Updates can switch between identity types and preserve the default recovery
+        group ID, additional recovery groups, and omitted plan or default group descriptions. The plan description is required
+        when creating a plan. A user-assigned identity update
+        must include the full identity resource ID. If it is not provided, ask the user for it instead of assuming the
+        recovery plan's existing user-assigned identity. Directly replacing one user-assigned identity with another is
+        not currently supported.
         """,
     Destructive = true,
     Idempotent = true,
@@ -46,7 +50,7 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
             validationResult.Errors.Add("The recovery plan name must be 5 to 24 characters and contain only ASCII letters, numbers, or hyphens.");
         }
 
-        if (options.PlanDescription.Length is < 5 or > 50)
+        if (options.PlanDescription is not null && options.PlanDescription.Length is < 5 or > 50)
         {
             validationResult.Errors.Add("The recovery plan description must be 5 to 50 characters.");
         }
@@ -56,9 +60,9 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
             validationResult.Errors.Add("The default recovery group description must be 5 to 50 characters when specified.");
         }
 
-        if (options.IdentityType == Models.RecoveryPlanIdentityKind.UserAssigned && string.IsNullOrWhiteSpace(options.UserAssignedIdentity))
+        if (options.IdentityType != Models.RecoveryPlanIdentityKind.SystemAssigned && string.IsNullOrWhiteSpace(options.UserAssignedIdentity))
         {
-            validationResult.Errors.Add("--user-assigned-identity is required when --identity-type is UserAssigned.");
+            validationResult.Errors.Add("--user-assigned-identity is required when --identity-type is UserAssigned or SystemAndUserAssigned.");
         }
         else if (options.IdentityType == Models.RecoveryPlanIdentityKind.SystemAssigned && !string.IsNullOrWhiteSpace(options.UserAssignedIdentity))
         {
@@ -86,6 +90,7 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
                 options.RecoveryPlan,
                 options.PlanType,
                 options.PlanDescription,
+                options.IdentityType,
                 options.UserAssignedIdentity,
                 options.DefaultGroupDescription,
                 options.Tenant,

@@ -3711,17 +3711,18 @@ azmcp resilience recovery plan get --subscription <subscription> \
                                    --service-group <service-group> \
                                    [--name <name>]
 
-# Create or fully update a Zonal resilience recovery plan. An identity is required, and updates can switch between system-assigned and user-assigned identities.
+# Create or fully update a Zonal resilience recovery plan. An identity is required, and updates can use system-assigned, user-assigned, or both identity types. The plan description is required on create and preserved when omitted on update.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recovery plan create --service-group <service-group> \
                                       --recovery-plan <recovery-plan> \
                                       --plan-type Zonal \
-                                      --plan-description <plan-description> \
-                                      --identity-type <SystemAssigned|UserAssigned> \
+                                      [--plan-description <plan-description>] \
+                                      --identity-type <SystemAssigned|UserAssigned|SystemAndUserAssigned> \
                                       [--user-assigned-identity <user-assigned-identity-resource-id>] \
                                       [--default-group-description <default-group-description>]
 
-# Provide --user-assigned-identity only when --identity-type is UserAssigned.
+# Provide --user-assigned-identity when --identity-type is UserAssigned or SystemAndUserAssigned.
+# Directly replacing one user-assigned identity with another is not currently supported.
 
 # Delete a resilience recovery plan. Returns deleted=false when the plan does not exist.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired

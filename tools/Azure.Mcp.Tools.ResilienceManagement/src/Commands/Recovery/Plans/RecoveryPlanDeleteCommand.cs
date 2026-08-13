@@ -28,16 +28,6 @@ public sealed class RecoveryPlanDeleteCommand(ILogger<RecoveryPlanDeleteCommand>
     private readonly ILogger<RecoveryPlanDeleteCommand> _logger = logger;
     private readonly IResilienceManagementService _resilienceManagementService = resilienceManagementService;
 
-    public override void ValidateOptions(RecoveryPlanDeleteOptions options, ValidationResult validationResult)
-    {
-        base.ValidateOptions(options, validationResult);
-
-        if (options.RecoveryPlan.Length is < 5 or > 24 || !options.RecoveryPlan.All(IsValidRecoveryPlanNameCharacter))
-        {
-            validationResult.Errors.Add("The recovery plan name must be 5 to 24 characters and contain only ASCII letters, numbers, or hyphens.");
-        }
-    }
-
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecoveryPlanDeleteOptions options, CancellationToken cancellationToken)
     {
         try
@@ -63,9 +53,6 @@ public sealed class RecoveryPlanDeleteCommand(ILogger<RecoveryPlanDeleteCommand>
 
         return context.Response;
     }
-
-    private static bool IsValidRecoveryPlanNameCharacter(char character) =>
-        character is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9' or '-';
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {

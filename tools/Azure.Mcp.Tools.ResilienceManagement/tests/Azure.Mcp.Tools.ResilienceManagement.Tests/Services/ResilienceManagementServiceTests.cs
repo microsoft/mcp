@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
+using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.ResilienceManagement.Models;
@@ -53,18 +54,73 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public void ResolveRecoveryPlanDescription_ForUpdate_PreservesExistingDescription()
+    {
+        string result = ResilienceManagementService.ResolveRecoveryPlanDescription(null, "Existing description");
+
+        Assert.Equal("Existing description", result);
+    }
+
+    [Fact]
+    public void ResolveRecoveryPlanDescription_ForCreate_RequiresDescription()
+    {
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ResolveRecoveryPlanDescription(null, null));
+
+        Assert.Contains("--plan-description is required", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void CreateRecoveryPlanIdentity_UsesUserAssignedIdentity()
     {
-        ManagedServiceIdentity result = ResilienceManagementService.CreateRecoveryPlanIdentity(UserAssignedIdentityResourceId);
+        ManagedServiceIdentity result = ResilienceManagementService.CreateRecoveryPlanIdentity(RecoveryPlanIdentityKind.UserAssigned, UserAssignedIdentityResourceId);
 
         Assert.Equal(ManagedServiceIdentityType.UserAssigned, result.ManagedServiceIdentityType);
         Assert.Contains(new ResourceIdentifier(UserAssignedIdentityResourceId), result.UserAssignedIdentities.Keys);
     }
 
     [Fact]
+    public void CreateRecoveryPlanIdentity_AllowsExistingUserAssignedIdentity()
+    {
+        var identityResourceId = new ResourceIdentifier(UserAssignedIdentityResourceId);
+        var existingIdentity = new ManagedServiceIdentity(ManagedServiceIdentityType.UserAssigned);
+        existingIdentity.UserAssignedIdentities.Add(identityResourceId, new UserAssignedIdentity());
+
+        ManagedServiceIdentity result = ResilienceManagementService.CreateRecoveryPlanIdentity(RecoveryPlanIdentityKind.UserAssigned, UserAssignedIdentityResourceId, existingIdentity);
+
+        Assert.Equal(ManagedServiceIdentityType.UserAssigned, result.ManagedServiceIdentityType);
+        Assert.NotNull(result.UserAssignedIdentities[identityResourceId]);
+    }
+
+    [Fact]
+    public void CreateRecoveryPlanIdentity_RejectsReplacingExistingUserAssignedIdentity()
+    {
+        var existingIdentityResourceId = new ResourceIdentifier("/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/oldIdentity");
+        var existingIdentity = new ManagedServiceIdentity(ManagedServiceIdentityType.UserAssigned);
+        existingIdentity.UserAssignedIdentities.Add(existingIdentityResourceId, new UserAssignedIdentity());
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.CreateRecoveryPlanIdentity(RecoveryPlanIdentityKind.UserAssigned, UserAssignedIdentityResourceId, existingIdentity));
+
+        Assert.Contains("not currently supported", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void CreateRecoveryPlanIdentity_UsesSystemAndUserAssignedIdentity()
+    {
+        ManagedServiceIdentity result = ResilienceManagementService.CreateRecoveryPlanIdentity(RecoveryPlanIdentityKind.SystemAndUserAssigned, UserAssignedIdentityResourceId);
+
+        Assert.Equal(ManagedServiceIdentityType.SystemAssignedUserAssigned, result.ManagedServiceIdentityType);
+        Assert.NotNull(result.UserAssignedIdentities[new ResourceIdentifier(UserAssignedIdentityResourceId)]);
+    }
+
+    [Fact]
     public void CreateRecoveryPlanIdentity_UsesSystemAssignedIdentityWhenResourceIdIsNull()
     {
-        ManagedServiceIdentity result = ResilienceManagementService.CreateRecoveryPlanIdentity(null);
+        var existingIdentity = new ManagedServiceIdentity(ManagedServiceIdentityType.UserAssigned);
+        existingIdentity.UserAssignedIdentities.Add(new ResourceIdentifier(UserAssignedIdentityResourceId), new UserAssignedIdentity());
+
+        ManagedServiceIdentity result = ResilienceManagementService.CreateRecoveryPlanIdentity(RecoveryPlanIdentityKind.SystemAssigned, null, existingIdentity);
 
         Assert.Equal(ManagedServiceIdentityType.SystemAssigned, result.ManagedServiceIdentityType);
         Assert.Empty(result.UserAssignedIdentities);
