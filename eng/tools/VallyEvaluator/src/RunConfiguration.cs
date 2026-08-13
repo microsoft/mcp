@@ -34,6 +34,12 @@ public class RunConfiguration
     public string BuildInfo { get; set; } = string.Empty;
 
     /// <summary>
+    /// Name of the MCP server to use for evals.  If not set, will default to "Azure.Mcp.Server".
+    /// </summary>
+    [ConfigurationKeyName("serverName")]
+    public string ServerName { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets the base directory for Vally artifacts, which is a subdirectory of the working directory.
     /// </summary>
     public string VallyBaseDirectory
@@ -41,6 +47,17 @@ public class RunConfiguration
         get
         {
             return Path.Combine(WorkingDirectory, "vally");
+        }
+    }
+
+    /// <summary>
+    /// Gets the build directory for server artifacts, which is a subdirectory of the working directory.
+    /// </summary>
+    public string BuildDirectory
+    {
+        get
+        {
+            return Path.Combine(WorkingDirectory, "build");
         }
     }
 }
