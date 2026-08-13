@@ -50,7 +50,7 @@ internal class Program
 
         if (string.IsNullOrEmpty(runConfig.PromptFilePath))
         {
-            Console.WriteLine("No prompts file specified specified. Using prompts from Azure.Mcp.Server");
+            Console.WriteLine("No prompts file specified. Using prompts from Azure.Mcp.Server");
             runConfig.PromptFilePath = Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "docs", "e2eTestPrompts.md");
         }
         else
@@ -127,14 +127,11 @@ internal class Program
                 {
                     Console.Error.WriteLine($"Namespace not found in MCP server referenced assemblies: {possibleNamespace}. Original: {assemblyName}");
                 }
-            else
-                {
-                    Console.Error.WriteLine($"Namespace not found.  No MCP server to probe for namespaces: {possibleNamespace}. Original: {split[1]}");
-                }
             }
-
-            return results.ToList();
         }
+
+        return results.ToList();
+    }
 
     internal static Task<McpServerInformation> GetMcpServerInfo(RunConfiguration configuration, BuildInfo buildInfo)
     {
