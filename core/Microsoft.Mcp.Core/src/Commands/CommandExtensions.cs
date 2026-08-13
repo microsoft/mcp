@@ -28,6 +28,7 @@ public static class CommandExtensions
         }
 
         var args = new List<string>();
+        var invalidKeys = new List<string>();
 
         foreach (var (key, value) in arguments)
         {
@@ -47,10 +48,11 @@ public static class CommandExtensions
 
             if (option == null)
             {
+                invalidKeys.Add(key);
                 continue;
             }
 
-            if (value.ValueKind == JsonValueKind.Null)
+            if (value.ValueKind == JsonValueKind.Null || invalidKeys.Count > 0)
             {
                 continue;
             }
@@ -83,6 +85,11 @@ public static class CommandExtensions
             }
         }
 
+        if (invalidKeys.Count > 0)
+        {
+            throw new ArgumentException($"Request rejected without unknown arguments: {string.Join(", ", invalidKeys)}");
+        }
+
         return command.Parse([.. args]);
     }
 
@@ -93,8 +100,7 @@ public static class CommandExtensions
         // Try to find an option named "raw-mcp-tool-input" (normalized), otherwise fall back to first option
         var option = command.Options.FirstOrDefault(o =>
             string.Equals(NameNormalization.NormalizeOptionName(o.Name), "raw-mcp-tool-input", StringComparison.OrdinalIgnoreCase)
-            || o.Aliases.Any(a => string.Equals(NameNormalization.NormalizeOptionName(a), "raw-mcp-tool-input", StringComparison.OrdinalIgnoreCase))
-        );
+            || o.Aliases.Any(a => string.Equals(NameNormalization.NormalizeOptionName(a), "raw-mcp-tool-input", StringComparison.OrdinalIgnoreCase)));
 
         option ??= command.Options.FirstOrDefault();
 
