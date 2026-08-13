@@ -128,13 +128,13 @@ internal class Program
                     Console.Error.WriteLine($"Namespace not found in MCP server referenced assemblies: {possibleNamespace}. Original: {assemblyName}");
                 }
             else
-            {
-                Console.Error.WriteLine($"Namespace not found.  No MCP server to probe for namespaces: {possibleNamespace}. Original: {split[1]}");
+                {
+                    Console.Error.WriteLine($"Namespace not found.  No MCP server to probe for namespaces: {possibleNamespace}. Original: {split[1]}");
+                }
             }
-        }
 
-        return results.ToList();
-    }
+            return results.ToList();
+        }
 
     internal static Task<McpServerInformation> GetMcpServerInfo(RunConfiguration configuration, BuildInfo buildInfo)
     {

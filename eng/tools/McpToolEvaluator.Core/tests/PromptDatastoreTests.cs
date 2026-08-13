@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using McpToolEvaluator.Core.Models;
 using Xunit;
 
 namespace McpToolEvaluator.Core.Tests;
@@ -12,8 +13,15 @@ public sealed class PromptDatastoreTests : IDisposable
     public void Dispose() => File.Delete(_tempFile);
 
     [Fact]
-    public void GetPromptsByNamespace_InteractivePrompts_ExcludesInteractivePrompts()
+    public void GetPromptsByNamespace_InteractivePrompts()
     {
+        var expectedPrompts = new List<TestPrompt>
+        {
+            new("advisor", "advisor_recommendation_list", "list recommendations", "advisor", PromptInteraction.None),
+            new("advisor", "advisor_recommendation_apply", "apply recommendations to this template", "advisor", PromptInteraction.ContextRequired),
+            new("advisor", "advisor_recommendation_apply", "apply recommendations", "advisor", PromptInteraction.ClarificationRequired),
+        };
+
         File.WriteAllText(_tempFile, """
             ## advisor
 
@@ -25,8 +33,24 @@ public sealed class PromptDatastoreTests : IDisposable
             """);
 
         var datastore = new PromptDatastore(_tempFile);
+        var matching = datastore.GetPromptsByNamespace("advisor");
 
-        var prompt = Assert.Single(datastore.GetPromptsByNamespace("advisor"));
-        Assert.Equal("list recommendations", prompt.Prompt);
+        Assert.NotNull(matching);
+        Assert.Equal(3, matching.Count);
+        foreach (var expected in expectedPrompts)
+        {
+            var match = matching.FirstOrDefault(p => AreEqual(p, expected));
+
+            Assert.NotNull(match);
+        }
+    }
+
+    private static bool AreEqual(TestPrompt a, TestPrompt b)
+    {
+        return a.Section == b.Section &&
+               a.Tool == b.Tool &&
+               a.Prompt == b.Prompt &&
+               a.Namespace == b.Namespace &&
+               a.Interaction == b.Interaction;
     }
 }
