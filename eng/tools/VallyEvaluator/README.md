@@ -94,4 +94,3 @@ Useful wrapper options include:
 ```
 
 For deterministic agent behavior in automated runs, the workflow copies `src/Resources/eval.instructions.md` to the Vally working directory as `AGENTS.md` before invoking Vally.
-
