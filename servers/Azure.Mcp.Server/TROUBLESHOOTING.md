@@ -942,7 +942,7 @@ The Azure MCP wrapper automatically installs the correct platform-specific packa
 
 5. **Verify Node.js and npm versions:**
    ```bash
-   node --version  # Should be 20.0.0 or later
+   node --version  # Should be an active LTS version
    npm --version
    ```
 
@@ -1050,7 +1050,7 @@ If authentication still fails after switching clouds, check the following:
 
 #### Sovereign cloud in Remote (using Azure Container Apps)
 
-When authenicating in remote, the following environment variables need to be set on the container:
+When authenticating in remote, the following environment variables need to be set on the container:
 
 - AZURE_CLOUD
 - AzureAd__ClientCredentials__0__TokenExchangeUrl

@@ -73,7 +73,7 @@ If you are contributing significant changes, or if the issue is already assigned
 
 1. **VS Code**: Install either [stable](https://code.visualstudio.com/download) or [Insiders](https://code.visualstudio.com/insiders) release
 2. **GitHub Copilot**: Install [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions
-3. **Node.js**: Install [Node.js](https://nodejs.org/en/download) 22 or later (ensure `node` and `npm` are in your PATH)
+3. **Node.js**: Install latest [Node.js](https://nodejs.org/en/download) version (ensure `node` and `npm` are in your PATH)
 4. **PowerShell**: Install [PowerShell](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) 7.0 or later (required for build and test scripts)
 
 ### Central NuGet Feed
@@ -253,6 +253,10 @@ Real product code under unit testing must be passed `Xunit.TestContext.Current.C
 ### End-to-end Tests
 
 End-to-end tests are performed manually. Command authors must thoroughly test each command to ensure correct tool invocation and results. At least one prompt per tool is required and should be added to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`.
+
+### Running evals with vally
+
+vally is the evaluation framework used to test the performance/accuracy of Azure MCP server and its tools. See `/docs/testing-with-vally.md`.
 
 ### Testing Local Build with VS Code
 
@@ -652,7 +656,7 @@ To ensure consistent spelling across the codebase, run the spelling check before
 .\eng\common\spelling\Invoke-Cspell.ps1
 ```
 
-This will check all files for spelling errors using the project's dictionary. Add project-specific technical terms or proper nouns to the `cspell.yaml` in that project folder. Add cross-cutting terms used by multiple projects to the root `cspell.yaml`.
+This will check all files for spelling errors using the project's dictionary. Add project-specific technical terms or proper nouns to the `cspell.yaml` in that project folder. Add cross-cutting terms used by multiple projects to `.vscode/cspell.json`.
 
 #### Requirements
 

@@ -41,7 +41,7 @@ jobs:
       - name: Run spelling check
         run: |
           ./eng/common/scripts/check-spelling-in-changed-files.ps1 `
-              -CSpellConfigPath './cspell.yaml' `
+              -CSpellConfigPath './.vscode/cspell.json' `
               -SourceCommittish HEAD `
               -TargetCommittish HEAD^ `
               -SpellCheckRoot (Resolve-Path .) `
