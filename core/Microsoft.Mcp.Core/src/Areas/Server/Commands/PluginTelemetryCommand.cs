@@ -348,7 +348,7 @@ public sealed class PluginTelemetryCommand(
                 // Allow custom service configuration
                 ConfigureServices(services);
 
-                // Pass a newed up instance of ServerStartOptions as PluginTelemetryCommand doesn't bind any of those options.
+                // Pass a new instance of ServerStartOptions as PluginTelemetryCommand doesn't bind any of those options.
                 services.AddAzureMcpServer(new());
             })
             .Build();

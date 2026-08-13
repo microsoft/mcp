@@ -9,7 +9,7 @@ namespace Microsoft.Mcp.Core.Commands;
 public interface ICommandFactory
 {
     /// <summary>
-    /// The name of the <c>--learn</c> CLI option. Centralised here so callers can detect
+    /// The name of the <c>--learn</c> CLI option. Centralized here so callers can detect
     /// it in raw arg arrays without coupling to the concrete <see cref="CommandFactory"/> class.
     /// </summary>
     const string LearnOptionName = "--learn";

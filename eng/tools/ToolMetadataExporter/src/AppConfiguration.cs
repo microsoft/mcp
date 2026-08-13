@@ -6,7 +6,7 @@ namespace ToolMetadataExporter;
 public class AppConfiguration
 {
     /// <summary>
-    /// URL of the Kusto ingestion endpoint. Endpoint is used for ingressing data to Kusto cluster.
+    /// URL of the Kusto ingestion endpoint. Endpoint is used to ingest data to Kusto cluster.
     /// </summary>
     public string? IngestionEndpoint { get; set; }
 

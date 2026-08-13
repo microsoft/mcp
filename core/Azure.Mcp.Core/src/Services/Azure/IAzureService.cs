@@ -11,7 +11,7 @@ using Microsoft.Mcp.Core.Services.Azure.Authentication;
 namespace Azure.Mcp.Core.Services.Azure;
 
 /// <summary>
-/// Provices operations for basic Azure concepts such as tenants, subscriptions, resource groups, generic resources, and access.
+/// Provides operations for basic Azure concepts such as tenants, subscriptions, resource groups, generic resources, and access.
 /// </summary>
 public interface IAzureService
 {
@@ -165,7 +165,7 @@ public interface IAzureService
     /// </para>
     /// </summary>
     /// <param name="subscription">The subscription string to verify.</param>
-    /// <returns>Whether the subscription string is a GUID, therefore the proper format for an Azure subscription ID (not guaranteeed to be a real subscription).</returns>
+    /// <returns>Whether the subscription string is a GUID, therefore the proper format for an Azure subscription ID (not guaranteed to be a real subscription).</returns>
     bool IsSubscriptionId(string subscription);
 
     /// <summary>
