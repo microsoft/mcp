@@ -15,11 +15,14 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Resources;
 [CommandMetadata(
     Id = "7a13b11a-3809-4d83-9490-2d2dd0a33508",
     Name = "get",
-    Title = "Get or List Resilience Drill Resources",
+    Title = "Get or List Azure Resilience Management Drill Resources and Targets",
     Description = """
-        Gets a specific resilience drill resource (target) by name, including its full details.
-        Omit the resource name to list all resources (targets) of the resilience drill, returning
-        only their id and name.
+        Gets or lists the Azure resources targeted by a specific Azure Resilience Management drill
+        in a service group. These resources are also called drill resources, drill targets, or
+        participating resources. Use this tool when a user asks which resources participate in,
+        belong to, are associated with, or are targeted by a resilience drill. Provide a drill resource
+        name to retrieve that target's complete ARM resource details and properties. Omit the resource
+        name to list every target in the specified drill, returning each drill resource's id and name.
         """,
     Destructive = false,
     Idempotent = true,

@@ -898,8 +898,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:----------|
 | resilience_drill_get | List all resilience drills in service group <service_group> | none |
 | resilience_drill_get | Get the details of resilience drill <drill_name> in service group <service_group> | none |
-| resilience_drill_resource_get | List all resources (targets) of drill <drill_name> in service group <service_group> | none |
-| resilience_drill_resource_get | Get the drill resource <resource_name> for drill <drill_name> in service group <service_group> | none |
+| resilience_drill_resource_get | List every Azure resource targeted by resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_resource_get | Which drill resources participate in Azure Resilience Management drill <drill_name> within service group <service_group>? | none |
+| resilience_drill_resource_get | Show me all targets associated with resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_resource_get | Get the complete ARM resource details and properties for drill target <resource_name> in resilience drill <drill_name> within service group <service_group> | none |
+| resilience_drill_resource_get | Retrieve the drill resource named <resource_name> that belongs to resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_resource_get | Show details for participating resource <resource_name> targeted by resilience drill <drill_name> in service group <service_group> | none |
 | resilience_goal_assignment_get | List all resilience goal assignments in service group <service_group> | none |
 | resilience_goal_assignment_get | Get the details of goal assignment <goal_assignment_name> in service group <service_group> | none |
 | resilience_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> | none |
