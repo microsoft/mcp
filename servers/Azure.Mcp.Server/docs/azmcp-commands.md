@@ -5,7 +5,7 @@
 
 ## Global Options
 
-The following options are available for all commands:
+The following options are available for most commands:
 
 | Option | Required | Default | Description |
 |-----------|----------|---------|-------------|
@@ -17,12 +17,93 @@ The following options are available for all commands:
 | `--retry-max-delay` | No | 10 | Maximum delay between retries (seconds) |
 | `--retry-mode` | No | 'exponential' | Retry strategy ('fixed' or 'exponential') |
 | `--retry-network-timeout` | No | 100 | Network operation timeout (seconds) |
+| `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
+
+### Discovery with `--learn`
+
+The `--learn` flag enables AI agents and users to progressively discover the Azure MCP CLI without starting an MCP server. It works at every level of the command hierarchy:
+
+```bash
+# List all commands available under the 'storage' namespace
+azmcp storage --learn
+
+# List all commands under 'storage account'
+azmcp storage account --learn
+
+# Show the options for a specific command without executing it
+azmcp storage account list --learn
+```
+
+The output is a JSON `CommandResponse` containing a list of `CommandInfo` objects with the command name, description, full CLI path, and all supported options. This is equivalent to the `learn` parameter supported by the Azure MCP server tools in namespace mode.
+
+### CLI Logging
+
+In CLI mode, all `azmcp` commands write only JSON to **stdout**. Informational and diagnostic log messages are written to **stderr**. This means AI agents and tools consuming stdout receive clean JSON without log noise.
+
+To see logs while running a CLI command:
+
+```powershell
+# Show logs in terminal alongside JSON output (PowerShell / bash)
+azmcp storage account list --subscription <sub> 2>&1
+
+# Capture JSON silently, discard logs (PowerShell)
+$json = azmcp storage account list --subscription <sub> 2>$null
+
+# Write logs to a file while JSON goes to stdout
+azmcp storage account list --subscription <sub> 2>azmcp.log
+```
 
 ## Available Commands
 
 ### Server Operations
 
 The Azure MCP Server can be started in several different modes depending on how you want to expose the Azure tools:
+
+#### Using azmcp locally vs in container images
+
+The commands in this document assume you are running the **`azmcp` CLI locally**
+for example as a .NET global tool. In that case the executable is called
+`azmcp` and commands such as:
+
+```bash
+azmcp server start --mode namespace --transport=stdio
+```
+
+are valid.
+
+When you run the **Azure MCP Server container image** `mcr.microsoft.com/azure-sdk/azure-mcp` (for example in Azure Container Apps),
+the image already contains an entrypoint that starts the MCP server process.
+The image does **not** support overriding the container command with `azmcp ...` directly, as the entrypoint is already configured to start the server.
+- Do **not** override the container command / entrypoint with `azmcp ...` when
+  deploying the image. Doing so will cause the container to fail to start.
+- Leave the command / entrypoint blank in Azure Container Apps so the default
+  image entrypoint is used.
+- If you need to customize the startup command or add extra arguments, build
+  your own image based on the Azure MCP Server and set the ENTRYPOINT and/or
+  CMD values in your Dockerfile there. That way you control exactly how the
+  server starts without replacing the upstream image entrypoint at runtime.
+
+> [!NOTE]
+> ENTRYPOINT defines the executable that always runs; CMD provides
+> default arguments to that executable. Overriding the container command in
+> many PaaS providers replaces the image's ENTRYPOINT/CMD behavior, which can
+> break startup. The Azure MCP Server image ENTRYPOINT in the repository is:
+
+```text
+ENTRYPOINT ["./server-binary", "server", "start"]
+```
+
+Because the image sets a fixed entrypoint, passing a container command such
+as `azmcp ...` will replace or conflict with that entrypoint. If you must
+change startup behavior, create a small derived Dockerfile that modifies the
+ENTRYPOINT/CMD as needed and deploy your custom image instead of overriding
+the command in the PaaS UI.
+
+For the exact Dockerfile used to build the image see:
+https://github.com/microsoft/mcp/blob/main/Dockerfile
+
+The remaining sections describe the different server modes that apply to both
+the CLI and the container image entrypoint.
 
 #### Default Mode (Namespace)
 
@@ -174,16 +255,20 @@ The `azmcp server start` command supports the following options:
 
 | Option | Required | Default | Description |
 |--------|----------|---------|-------------|
-| `--transport` | No | `stdio` | Transport mechanism to use (currently only `stdio` is supported) |
+| `--transport` | No | `stdio` | Transport mechanism to use. Valid values: `stdio` (default, supported in all distributions) or `http` (supported only in the Docker image distribution and other builds with HTTP enabled; may not be available in local CLI builds). |
 | `--mode` | No | `namespace` | Server mode: `namespace` (default), `consolidated`, `all`, or `single` |
-| `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all exiting modes to filter tools. |
+| `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all existing modes to filter tools. |
 | `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
 | `--dangerously-disable-http-incoming-auth` | No | false | Dangerously disable HTTP incoming authentication |
-| `--insecure-disable-elicitation` | No | `false` | **⚠️ INSECURE**: Disable user consent prompts for sensitive operations |
+| `--dangerously-disable-elicitation` | No | `false` | **⚠️ DANGEROUS**: Disable user consent prompts for sensitive operations |
+| `--outgoing-auth-strategy` | No | `NotSet` | Outgoing authentication strategy for service requests. Valid values: `NotSet`, `UseHostingEnvironmentIdentity`, `UseOnBehalfOf`. |
+| `--dangerously-write-support-logs-to-dir` | No | - | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs. |
+| `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
+| `--disable-caching` | No | `false` | Disable caching of resource responses, requiring repeated requests to fetch fresh data each time. |
 
-> **⚠️ Security Warning for `--insecure-disable-elicitation`:**
+> **⚠️ Security Warning for `--dangerously-disable-elicitation`:**
 >
 > This option disables user confirmations (elicitations) before running tools that read sensitive data. When enabled:
 > - Tools that handle secrets, credentials, or sensitive data will execute without user confirmation
@@ -194,7 +279,42 @@ The `azmcp server start` command supports the following options:
 > **Example usage (use with caution):**
 > ```bash
 > # For automated scenarios only - bypasses security prompts
-> azmcp server start --insecure-disable-elicitation
+> azmcp server start --dangerously-disable-elicitation
+> ```
+
+> **⚠️ Security Warning for `--dangerously-write-support-logs-to-dir`:**
+>
+> This option enables detailed debug-level logging that may include sensitive information such as request payloads and authentication details. When enabled:
+> - Log files are created in the specified directory with timestamp-based filenames (e.g., `azmcp_20251202_143052.log`)
+> - Logs may contain sensitive data that could be useful for support troubleshooting
+> - Only use this option when specifically requested by support for diagnosing issues
+> - Remove log files after troubleshooting is complete
+>
+> **Example usage:**
+> ```bash
+> # For support troubleshooting only
+> azmcp server start --dangerously-write-support-logs-to-dir /path/to/logs
+> ```
+
+> **Note on `--outgoing-auth-strategy`:**
+>
+> This option controls how the server authenticates when making requests to downstream Azure services:
+> - `NotSet` (default): A safe default is chosen based on other settings
+> - `UseHostingEnvironmentIdentity`: Uses the hosting environment's identity (similar to `DefaultAzureCredential`). All outgoing requests use the same identity regardless of the incoming request's identity
+> - `UseOnBehalfOf`: Exchanges the incoming request's access token for a new token valid for the downstream service. Only valid when the server is running with HTTP transport and incoming HTTP authentication enabled (i.e., `--transport http` without `--dangerously-disable-http-incoming-auth`)
+
+> **Note on `--cloud`:**
+>
+> Use this option to target sovereign cloud environments:
+> - `AzureCloud` (default): Azure public cloud
+> - `AzureChinaCloud`: Azure China (operated by 21Vianet)
+> - `AzureUSGovernment`: Azure US Government
+> - Custom URL: A custom authority host URL starting with `https://`
+>
+> **Example usage:**
+> ```bash
+> # Connect to Azure US Government cloud
+> azmcp server start --cloud AzureUSGovernment
 > ```
 
 #### Server Info
@@ -204,193 +324,38 @@ The `azmcp server start` command supports the following options:
 azmcp server info
 ```
 
-
-### Azure AI Best Practices
+### Azure Advisor Operations
 
 ```bash
-# Get best practices for building AI applications, workflows and agents in Azure
-# Call this before generating code for any AI application, building with Microsoft Foundry models,
-# working with Microsoft Agent Framework, or implementing AI solutions in Azure.
+# List Advisor recommendations in a subscription, with optional server-side filters
+# Only active recommendations (status 'New') are returned; dismissed and postponed ones are excluded
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp azureaibestpractices get
+azmcp advisor recommendation list --subscription <subscription> \
+                                  [--top <top>] \
+                                  [--category <category>] \
+                                  [--impact <impact>] \
+                                  [--resource-type <resource-type>] \
+                                  [--resource <resource>] \
+                                  [--search <search>]
 
-# Includes guidance on:
-#   - Microsoft Agent Framework usage and patterns
-#   - Microsoft Foundry model selection
-#   - Best practices for ai app / agent development in Azure
-```
-
-### Azure AI Search Operations
-
-```bash
-# Get detailed properties of AI Search indexes
+# Summarize Advisor recommendations grouped by a chosen field (recommendation-type, category, impact, or resource-type)
+# --group-by is optional and defaults to 'category' when omitted
+# Only active recommendations (status 'New') are aggregated; dismissed and postponed ones are excluded
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp search index get --service <service> \
-                       [--index <index>]
+azmcp advisor recommendation summary --subscription <subscription> \
+                                     [--group-by <group-by>] \
+                                     [--top <top>] \
+                                     [--category <category>] \
+                                     [--impact <impact>] \
+                                     [--resource-type <resource-type>] \
+                                     [--resource <resource>] \
+                                     [--search <search>]
 
-# Query AI Search index
+# Apply Advisor recommendation to create or modify IaaC files (like ARM, Terraform) for Azure resources
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp search index query --subscription <subscription> \
-                         --service <service> \
-                         --index <index> \
-                         --query <query>
+azmcp advisor recommendation apply --resource <resource>
 
-# Get AI Search knowledge bases (all or a specific one)
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp search knowledge base get --service <service>
-                                [--knowledge-base <knowledge-base>]
-
-# Run retrieval against an AI Search knowledge base
-# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp search knowledge base retrieve --service <service> \
-                                     --knowledge-base <knowledge-base> \
-                                     [--query <query>] \
-                                     [--messages <messages>]
-
-# Get AI Search knowledge sources (all or a specific one)
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp search knowledge source get --service <service>
-                                  [--knowledge-source <knowledge-source>]
-
-# List AI Search accounts in a subscription
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp search service list --subscription <subscription>
-```
-
-### Azure AI Services Speech Operations
-
-```bash
-# Recognize speech from an audio file using Azure AI Services Speech
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp speech stt recognize --endpoint <endpoint> \
-                           --file <file-path> \
-                           [--language <language>] \
-                           [--phrases <phrase-hints>] \
-                           [--format <simple|detailed>] \
-                           [--profanity <masked|removed|raw>]
-```
-
-#### Phrase Hints for Improved Accuracy
-
-The `--phrases` parameter supports multiple ways to specify phrase hints that improve speech recognition accuracy:
-
-**Multiple Arguments:**
-```bash
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
-    --phrases "Azure" --phrases "cognitive services" --phrases "machine learning"
-```
-
-**Comma-Separated Values:**
-```bash
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
-    --phrases "Azure, cognitive services, machine learning"
-```
-
-**Mixed Syntax:**
-```bash
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
-    --phrases "Azure, cognitive services" --phrases "machine learning"
-```
-
-Use phrase hints when you expect specific terminology, technical terms, or domain-specific vocabulary in your audio content. This significantly improves recognition accuracy for specialized content.
-
-```bash
-# Synthesize speech from text and save to an audio file using Azure AI Services Speech
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp speech tts synthesize --endpoint <endpoint> \
-                            --text <text-to-synthesize> \
-                            --outputAudio <output-file-path> \
-                            [--language <language>] \
-                            [--voice <voice-name>] \
-                            [--format <audio-format>] \
-                            [--endpointId <custom-voice-endpoint-id>]
-```
-
-#### Text-to-Speech Parameters
-
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `--endpoint` | Yes | Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/) |
-| `--text` | Yes | The text to convert to speech |
-| `--outputAudio` | Yes | Path where the synthesized audio file will be saved (e.g., output.wav, speech.mp3) |
-| `--language` | No | Speech synthesis language (default: en-US). Examples: es-ES, fr-FR, de-DE |
-| `--voice` | No | Neural voice to use (e.g., en-US-JennyNeural, es-ES-ElviraNeural). If not specified, default voice for the language is used |
-| `--format` | No | Output audio format (default: Riff24Khz16BitMonoPcm). Supported formats: Riff24Khz16BitMonoPcm, Audio16Khz32KBitRateMonoMp3, Audio24Khz96KBitRateMonoMp3, Ogg16Khz16BitMonoOpus, Raw16Khz16BitMonoPcm |
-| `--endpointId` | No | Endpoint ID of a custom voice model for personalized speech synthesis |
-
-#### Supported Audio Formats
-
-The `--format` parameter accepts the following values:
-
-- **WAV formats**: `Riff24Khz16BitMonoPcm` (default), `Riff16Khz16BitMonoPcm`, `Raw16Khz16BitMonoPcm`
-- **MP3 formats**: `Audio16Khz32KBitRateMonoMp3`, `Audio24Khz96KBitRateMonoMp3`, `Audio48Khz192KBitRateMonoMp3`
-- **OGG/Opus formats**: `Ogg16Khz16BitMonoOpus`, `Ogg24Khz16BitMonoOpus`
-
-**Examples:**
-
-```bash
-# Basic text-to-speech synthesis
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
-    --text "Hello, welcome to Azure AI Services Speech" \
-    --outputAudio welcome.wav
-
-# Synthesize with specific language and voice
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
-    --text "Hola, bienvenido a los servicios de voz de Azure" \
-    --outputAudio spanish-greeting.wav \
-    --language es-ES \
-    --voice es-ES-ElviraNeural
-
-# Generate MP3 output with high quality
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
-    --text "This is a high quality audio output" \
-    --outputAudio output.mp3 \
-    --format Audio48Khz192KBitRateMonoMp3
-
-# Use custom voice model
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
-    --text "This uses my custom trained voice" \
-    --outputAudio custom-voice.wav \
-    --voice my-custom-voice-model
-    --endpointId my-custom-voice-endpoint-id
-```
-
-### Azure App Configuration Operations
-
-```bash
-# List App Configuration stores in a subscription
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appconfig account list --subscription <subscription>
-
-# Delete a key-value setting
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appconfig kv delete --subscription <subscription> \
-                          --account <account> \
-                          --key <key> \
-                          [--label <label>]
-
-# Get key-value settings in an App Configuration store
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appconfig kv get --subscription <subscription> \
-                       --account <account> \
-                       [--key <key>] \
-                       [--label <label>] \
-                       [--key-filter <key-filter>] \
-                       [--label-filter <label-filter>]
-
-# Lock (make it read-only) or unlock (remove read-only) a key-value setting
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appconfig kv lock set --subscription <subscription> \
-                            --account <account> \
-                            --key <key> \
-                            [--label <labe# List the global Azure Advisor recommendation metadata catalog (also called recommendation types) from Azure Resource
+# List the global Azure Advisor recommendation metadata catalog (also called recommendation types) from Azure Resource
 # Graph. Use it in greenfield environments with no generated recommendations, or filter by supported resource type
 # during brownfield onboarding. Supports service-retirement filtering by Service Health tracking ID and retirement
 # date expression. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting
@@ -2825,7 +2790,7 @@ azmcp iothub device twin get --subscription <subscription> \
 
 # Run an IoT Hub query and return a single page of results. Provide --query (raw SQL) or --filters
 # (structured predicates compiled internally); a bare 'SELECT *' also returns a discoveredFields catalog.
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp iothub query run --subscription <subscription> \
                        --resource-group <resource-group> \
                        --hub-name <iot-hub-name> \
@@ -4414,3 +4379,500 @@ azmcp storage account create --subscription <subscription> \
 | `--tenant` | No | Azure tenant ID or name. |
 
 ```bash
+# Get detailed properties of Storage accounts
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage account get --subscription <subscription> \
+                          [--account <account>] \
+                          [--resource-group <resource-group>] \
+                          [--tenant <tenant>]
+```
+
+#### Blob Storage
+
+```bash
+# Create a blob container with optional public access
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage blob container create --subscription <subscription> \
+                                    --account <account> \
+                                    --container <container>
+
+# Get detailed properties of Storage containers
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage blob container get --subscription <subscription> \
+                                 --account <account> \
+                                 [--container <container>] \
+                                 [--prefix <prefix>]
+
+# Get detailed properties of Storage blobs
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage blob get --subscription <subscription> \
+                           --account <account> \
+                           --container <container> \
+                           [--blob <blob>] \
+                           [--prefix <prefix>]
+
+# Upload a file to a Storage blob
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp storage blob upload --subscription <subscription> \
+                          --account <account> \
+                          --container <container> \
+                          --blob <blob> \
+                          --local-file-path <path-to-local-file>
+```
+
+#### Table Storage
+
+```bash
+# List tables in an Azure Storage account
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage table list --subscription <subscription> \
+                         --account <account>
+```
+
+### Azure Storage Sync Operations
+
+#### Storage Sync Service
+
+```bash
+# Create a new Storage Sync Service for cloud file share synchronization
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync service create --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --name <service-name> \
+                                 --location <location>
+
+# Delete a Storage Sync Service (idempotent – succeeds even if the service does not exist)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync service delete --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --name <service-name>
+
+# Get a specific Storage Sync Service or list all services. If --name is provided, returns a specific service; otherwise, lists all services.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync service get --subscription <subscription> \
+                              [--resource-group <resource-group>] \
+                              [--name <service-name>]
+
+# Update an existing Storage Sync Service configuration
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync service update --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --name <service-name> \
+                                 [--tags <tag-key=tag-value>]
+```
+
+#### Sync Group
+
+```bash
+# Create a new Sync Group within a Storage Sync Service
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync syncgroup create --subscription <subscription> \
+                                   --resource-group <resource-group> \
+                                   --service <service-name> \
+                                   --name <syncgroup-name>
+
+# Delete a Sync Group (idempotent – succeeds even if the group does not exist)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync syncgroup delete --subscription <subscription> \
+                                   --resource-group <resource-group> \
+                                   --service <service-name> \
+                                   --name <syncgroup-name>
+
+# Get a specific Sync Group or list all sync groups. If --name is provided, returns a specific sync group; otherwise, lists all sync groups in the Storage Sync Service.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync syncgroup get --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --service <service-name> \
+                                [--name <syncgroup-name>]
+```
+
+#### Cloud Endpoint
+
+```bash
+# Create a new Cloud Endpoint within a Sync Group
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync cloudendpoint create --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --service <service-name> \
+                                       --syncgroup <syncgroup-name> \
+                                       --name <endpoint-name> \
+                                       --storage-account <storage-account-name> \
+                                       --share <share-name>
+
+# Delete a Cloud Endpoint (idempotent – succeeds even if the endpoint does not exist)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync cloudendpoint delete --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --service <service-name> \
+                                       --syncgroup <syncgroup-name> \
+                                       --name <endpoint-name>
+
+# Get a specific Cloud Endpoint or list all cloud endpoints. If --name is provided, returns a specific cloud endpoint; otherwise, lists all cloud endpoints in the Sync Group.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync cloudendpoint get --subscription <subscription> \
+                                    --resource-group <resource-group> \
+                                    --service <service-name> \
+                                    --syncgroup <syncgroup-name> \
+                                    [--name <endpoint-name>]
+
+# Trigger change detection on a Cloud Endpoint
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync cloudendpoint changedetection --subscription <subscription> \
+                                                --resource-group <resource-group> \
+                                                --service <service-name> \
+                                                --syncgroup <syncgroup-name> \
+                                                --name <endpoint-name> \
+                                                --directory-path <path> \
+                                                [--change-detection-mode <mode>] \
+                                                [--paths <path1> <path2> ...]
+```
+
+#### Registered Server
+
+```bash
+# Get a specific Registered Server or list all registered servers. If --server is provided, returns a specific registered server; otherwise, lists all registered servers in the Storage Sync Service.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync registeredserver get --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --service <service-name> \
+                                       [--server <server-name>]
+
+# Unregister a server from a Storage Sync Service
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync registeredserver unregister --subscription <subscription> \
+                                              --resource-group <resource-group> \
+                                              --service <service-name> \
+                                              --server <server-name>
+
+# Update a Registered Server configuration
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync registeredserver update --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --service <service-name> \
+                                          --server <server-name> \
+                                          [--certificate <certificate-path>]
+```
+
+#### Server Endpoint
+
+```bash
+# Create a new Server Endpoint within a Sync Group
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync serverendpoint create --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --service <service-name> \
+                                        --syncgroup <syncgroup-name> \
+                                        --server <server-name> \
+                                        --name <endpoint-name> \
+                                        --server-local-path <local-path>
+
+# Delete a Server Endpoint (idempotent – succeeds even if the endpoint does not exist)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync serverendpoint delete --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --service <service-name> \
+                                        --syncgroup <syncgroup-name> \
+                                        --name <endpoint-name>
+
+# Get a specific Server Endpoint or list all server endpoints. If --name is provided, returns a specific server endpoint; otherwise, lists all server endpoints in the Sync Group.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync serverendpoint get --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --service <service-name> \
+                                     --syncgroup <syncgroup-name> \
+                                     [--name <endpoint-name>]
+
+# Update a Server Endpoint configuration
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync serverendpoint update --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --service <service-name> \
+                                        --syncgroup <syncgroup-name> \
+                                        --name <endpoint-name> \
+                                        [--cloud-tiering <Enabled|Disabled>] \
+                                        [--tiering-policy-days <days>] \
+                                        [--tiering-policy-volume-free-percent <percent>]
+```
+
+### Azure Subscription Management
+
+```bash
+# List available Azure subscriptions with default subscription indicator
+# Returns subscriptionId, displayName, state, tenantId, and isDefault for each subscription
+# The isDefault field is true for the default subscription set via 'az account set' or AZURE_SUBSCRIPTION_ID env var
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp subscription list [--tenant-id <tenant-id>]
+```
+
+### Azure Terraform Best Practices
+
+```bash
+# Get secure, production-grade Azure Terraform best practices for effective code generation and command execution.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azureterraformbestpractices get
+```
+
+### Azure Terraform Operations
+
+#### AzureRM Provider Documentation
+
+```bash
+# Retrieve comprehensive AzureRM Terraform provider documentation for a specified resource type
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azureterraform azurerm get --resource-type <resource-type> \
+                                 [--doc-type <doc-type>] \
+                                 [--argument <argument>] \
+                                 [--attribute <attribute>]
+```
+
+#### AzAPI Provider Documentation
+
+```bash
+# Retrieve AzAPI Terraform provider documentation and schema for a specified Azure resource type
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azureterraform azapi get --resource-type <resource-type> \
+                               [--api-version <api-version>]
+```
+
+#### Azure Verified Modules (AVM)
+
+```bash
+# List all available Azure Verified Modules (AVM) for Terraform (both resource and pattern modules)
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azureterraform avm list
+
+# List all available versions of a specified Azure Verified Module
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azureterraform avm versions --module-name <module-name>
+
+# Retrieve the documentation (README.md) for a specific version of an Azure Verified Module
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azureterraform avm get --module-name <module-name> \
+                             --module-version <module-version>
+```
+
+#### Azure Export for Terraform (aztfexport)
+
+```bash
+# Generate an aztfexport command to export a single Azure resource to Terraform configuration
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azureterraform aztfexport resource --resource-id <resource-id> \
+                                         [--output-folder <output-folder>] \
+                                         [--provider <provider>] \
+                                         [--terraform-resource-name <terraform-resource-name>] \
+                                         [--include-role-assignment] \
+                                         [--parallelism <parallelism>] \
+                                         [--continue-on-error]
+
+# Generate an aztfexport command to export an Azure resource group to Terraform configuration
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azureterraform aztfexport resourcegroup --resource-group <resource-group> \
+                                              [--output-folder <output-folder>] \
+                                              [--provider <provider>] \
+                                              [--name-pattern <name-pattern>] \
+                                              [--include-role-assignment] \
+                                              [--parallelism <parallelism>] \
+                                              [--continue-on-error]
+
+# Generate an aztfexport command to export Azure resources matching a Resource Graph query
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azureterraform aztfexport query --query <query> \
+                                      [--output-folder <output-folder>] \
+                                      [--provider <provider>] \
+                                      [--name-pattern <name-pattern>] \
+                                      [--include-role-assignment] \
+                                      [--parallelism <parallelism>] \
+                                      [--continue-on-error]
+```
+
+#### Conftest Policy Validation
+
+```bash
+# Generate a conftest command to validate Terraform .tf files in a workspace against Azure policies
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azureterraform conftest workspace --workspace-folder <workspace-folder> \
+                                        [--policy-set <policy-set>] \
+                                        [--severity-filter <severity-filter>] \
+                                        [--custom-policies <custom-policies>]
+
+# Generate a conftest command to validate a Terraform plan JSON file against Azure policies
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azureterraform conftest plan --plan-folder <plan-folder> \
+                                   [--policy-set <policy-set>] \
+                                   [--severity-filter <severity-filter>] \
+                                   [--custom-policies <custom-policies>]
+```
+
+### Azure Virtual Desktop Operations
+
+```bash
+# List Azure Virtual Desktop host pools in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp virtualdesktop hostpool list --subscription <subscription> \
+                                   [--resource-group <resource-group>]
+
+# List session hosts in a host pool
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp virtualdesktop hostpool host list --subscription <subscription> \
+                                               [--hostpool <hostpool-name> | --hostpool-resource-id <hostpool-resource-id>] \
+                                               [--resource-group <resource-group>]
+
+# List user sessions on a session host
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp virtualdesktop hostpool host user-list --subscription <subscription> \
+                                                           [--hostpool <hostpool-name> | --hostpool-resource-id <hostpool-resource-id>] \
+                                                           --sessionhost <sessionhost-name> \
+                                                           [--resource-group <resource-group>]
+```
+
+#### Resource Group Optimization
+
+The Virtual Desktop commands support an optional `--resource-group` parameter that provides significant performance improvements when specified:
+
+- **Without `--resource-group`**: Commands enumerate through all resources in the subscription
+- **With `--resource-group`**: Commands directly access resources within the specified resource group, avoiding subscription-wide enumeration
+
+**Host Pool List Usage:**
+
+```bash
+# Standard usage - enumerates all host pools in subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp virtualdesktop hostpool list --subscription <subscription>
+
+# Optimized usage - lists host pools in specific resource group only
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp virtualdesktop hostpool list --subscription <subscription> \
+                                   --resource-group <resource-group>
+```
+
+**Session Host Usage patterns:**
+
+```bash
+# Standard usage - enumerates all host pools in subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp virtualdesktop hostpool host list --subscription <subscription> \
+                                                --hostpool <hostpool-name>
+
+# Optimized usage - direct resource group access
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp virtualdesktop hostpool host list --subscription <subscription> \
+                                                --hostpool <hostpool-name> \
+                                                --resource-group <resource-group>
+
+# Alternative with resource ID (no resource group needed)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp virtualdesktop hostpool host list --subscription <subscription> \
+                                                --hostpool-resource-id /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.DesktopVirtualization/hostPools/<pool>
+```
+
+### Azure Well-Architected Framework Operations
+
+```bash
+# Get Azure Well-Architected Framework guidance for a specific Azure service or list all supported services.
+# If --service is provided, returns guidance for that specific service; otherwise, lists all supported services.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp wellarchitectedframework serviceguide get [--service <service-name>]
+```
+
+### Azure Workbooks Operations
+
+```bash
+# Create a new workbook
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp workbooks create --subscription <subscription> \
+                       --resource-group <resource-group> \
+                       --display-name <display-name> \
+                       --serialized-content <json-content> \
+                       [--source-id <source-id>]
+
+# Delete a workbook
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp workbooks delete --workbook-id <workbook-resource-id>
+
+# List Azure Monitor workbooks in a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp workbooks list --subscription <subscription> \
+                     --resource-group <resource-group> \
+                     [--category <category>] \
+                     [--kind <kind>] \
+                     [--source-id <source-id>]
+
+# Show details of a specific workbook by resource ID
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp workbooks show --workbook-id <workbook-resource-id>
+
+# Update an existing workbook
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp workbooks update --workbook-id <workbook-resource-id> \
+                       [--display-name <display-name>] \
+                       [--serialized-content <json-content>]
+```
+
+### Bicep
+
+```bash
+# Get Bicep schema for a specific Azure resource type
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp bicepschema get --resource-type <resource-type> \
+```
+
+### Cloud Architect
+
+> [!NOTE]
+> The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant-id`, `--auth-method`, or any `--retry-*` options.
+
+```bash
+# Design Azure cloud architectures through guided questions
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp cloudarchitect design [--question <question>] \
+                            [--question-number <question-number>] \
+                            [--total-questions <total-questions>] \
+                            [--answer <answer>] \
+                            [--next-question-needed <true/false>] \
+                            [--confidence-score <confidence-score>] \
+                            [--state <state>]
+
+# Example:
+# Start an interactive architecture design session
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp cloudarchitect design --question "What type of application are you building?" \
+                            --question-number 1 \
+                            --total-questions 5 \
+                            --confidence-score 0.1
+```
+
+## Response Format
+
+All responses follow a consistent JSON format:
+
+```json
+{
+  "status": "200|403|500, etc",
+  "message": "",
+  "options": [],
+  "results": [],
+  "duration": 123
+}
+```
+
+### Tool and Namespace Result Objects
+
+When invoking `azmcp tools list` (with or without `--namespace-mode`), each returned object now includes a `count` field:
+
+| Field | Description |
+|-------|-------------|
+| `name` | Command or namespace name |
+| `description` | Human-readable description |
+| `command` | Fully qualified CLI invocation path |
+| `subcommands` | (Namespaces only) Array of leaf command objects |
+| `option` | (Leaf commands only) Array of options supported by the command |
+| `count` | Namespaces: number of subcommands; Leaf commands: always 0 (options not counted) |
+
+This quantitative field enables quick sizing of a namespace without traversing nested arrays. Leaf command complexity should be inferred from its option list, not the `count` field.
+
+## Error Handling
+
+The CLI returns structured JSON responses for errors, including:
+
+- Service availability issues
+- Authentication errors
