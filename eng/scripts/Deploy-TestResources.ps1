@@ -28,7 +28,7 @@ $coreDirectories = Get-ChildItem -Path "$RepoRoot/core" -Directory
 
 $testablePaths = @($toolDirectories + $serverDirectories + $coreDirectories)
 | Where-Object { Test-Path "$_/tests/test-resources.bicep" }
-| ForEach-Object { (Resolve-Path -Path $_ -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./') }
+| ForEach-Object { (Resolve-Path -Path $_ -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./')}
 
 $normalizedPathFilters = $Paths | ForEach-Object { "*$($_.Replace('\', '/'))*" }
 
