@@ -6,4 +6,13 @@
 version: "0.2"
 import:
   - ../../.vscode/cspell.json
-words: []
+words:
+  - davinci
+  - logprobs
+  - mcpdb
+  - myresource
+  - openaiaccount
+  - openaiaccountresourcegroup
+  - openaideploymentname
+  - probs
+  - vigera

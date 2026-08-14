@@ -8,7 +8,10 @@ import:
   - ../../.vscode/cspell.json
 words:
   - acaenvironment
+  - appabcde
+  - appmod
   - aztfmod
+  - azuread
   - azureaisearch
   - azureaiservices
   - azureapplicationinsights
@@ -23,9 +26,22 @@ words:
   - azurewebpubsub
   - backendservice
   - classdef
+  - containerappenv
   - copilotmd
+  - fakeservice
   - frontendservice
   - hostings
   - jsonencode
+  - kubenet
+  - kvabcde
+  - kvname
+  - mycontainerapp
+  - mylog
+  - passwordless
+  - rgabcde
+  - serviceconnector
+  - sqlabcde
   - staticwebapps
+  - svcazurecontainerapps
+  - svcazurekubernetesservice
   - tfvars

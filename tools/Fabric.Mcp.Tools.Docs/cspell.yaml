@@ -10,6 +10,12 @@ ignorePaths:
   - src/Resources/**
 words:
   - dataagent
+  - dbtjob
   - heatmaps
+  - hlscohort
   - myfilesystem
+  - orgapp
+  - orgappaudience
   - setvariable
+  - sparkjob
+  - sparkjobdefinition
