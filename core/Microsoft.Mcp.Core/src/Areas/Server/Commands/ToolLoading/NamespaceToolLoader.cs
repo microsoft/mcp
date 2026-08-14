@@ -439,14 +439,15 @@ public sealed class NamespaceToolLoader(
             {
                 if (!realCommand.TryParseFromDictionary(parameters, out commandOptions, out var parseErrors))
                 {
-                    var content = new TextContentBlock
-                    {
-                        Text = parseErrors!,
-                    };
-
                     return new CallToolResult
                     {
-                        Content = [content],
+                        Content =
+                        [
+                            new TextContentBlock
+                            {
+                                Text = parseErrors!,
+                            }
+                        ],
                         IsError = true,
                         Meta = new([new(McpHelper.ToolIdMetaKey, cmd.Id)])
                     };

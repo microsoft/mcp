@@ -198,14 +198,15 @@ public sealed class CommandFactoryToolLoader(
         {
             if (!realCommand.TryParseFromDictionary(request.Params.Arguments, out commandOptions, out var parseErrors))
             {
-                var content = new TextContentBlock
-                {
-                    Text = parseErrors!,
-                };
-
                 return new CallToolResult
                 {
-                    Content = [content],
+                    Content =
+                    [
+                        new TextContentBlock
+                        {
+                            Text = parseErrors!,
+                        }
+                    ],
                     IsError = true,
                     Meta = new([new(McpHelper.ToolIdMetaKey, command.Id)])
                 };
