@@ -15,16 +15,25 @@ namespace Microsoft.Mcp.Core.Commands;
 public static class CommandExtensions
 {
     /// <summary>
-    /// Parse command options directly from a dictionary of arguments
+    /// Attempts to parse command options directly from a dictionary of arguments.
     /// </summary>
-    /// <param name="command">The command to parse options for</param>
-    /// <param name="arguments">Dictionary of argument name/value pairs</param>
-    /// <returns>ParseResult containing the parsed arguments</returns>
-    public static ParseResult ParseFromDictionary(this Command command, IDictionary<string, JsonElement>? arguments)
+    /// <param name="command">The command parsing options.</param>
+    /// <param name="arguments">Dictionary of argument name/value pairs.</param>
+    /// <param name="parseResult">The resulting ParseResult if parsing was successful.</param>
+    /// <param name="parseError">Error message if parsing failed.</param>
+    /// <returns>Whether parsing was successful.</returns>
+    public static bool TryParseFromDictionary(
+        this Command command,
+        IDictionary<string, JsonElement>? arguments,
+        out ParseResult? parseResult,
+        out string? parseError)
     {
+        parseError = null;
+
         if (arguments == null || arguments.Count == 0)
         {
-            return command.Parse([]);
+            parseResult = command.Parse([]);
+            return true;
         }
 
         var args = new List<string>();
@@ -52,7 +61,7 @@ public static class CommandExtensions
                 continue;
             }
 
-            if (value.ValueKind == JsonValueKind.Null || invalidKeys.Count > 0)
+            if (value.ValueKind == JsonValueKind.Null)
             {
                 continue;
             }
@@ -87,10 +96,13 @@ public static class CommandExtensions
 
         if (invalidKeys.Count > 0)
         {
-            throw new ArgumentException($"Request rejected without unknown arguments: {string.Join(", ", invalidKeys)}");
+            parseResult = null;
+            parseError = $"Request rejected due to unknown arguments: {string.Join(", ", invalidKeys)}";
+            return false;
         }
 
-        return command.Parse([.. args]);
+        parseResult = command.Parse([.. args]);
+        return true;
     }
 
     public static ParseResult ParseFromRawMcpToolInput(this Command command, IDictionary<string, JsonElement>? arguments)

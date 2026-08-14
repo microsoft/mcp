@@ -10,56 +10,56 @@ using Xunit;
 namespace Microsoft.Mcp.Core.Tests.Areas.Server.Commands;
 
 /// <summary>
-/// Tests for <see cref="CommandExtensions.ParseFromDictionary"/>,
+/// Tests for <see cref="CommandExtensions.TryParseFromDictionary"/>,
 /// specifically the lenient parameter matching with hyphen-stripping fallback
 /// for Codex model camelCase compatibility.
 /// </summary>
 public sealed class CommandExtensionsTests
 {
-    private static readonly Option<string> ResourceGroupOption = new("--resource-group") { Description = "The resource group name" };
-    private static readonly Option<int> RetryMaxDelayOption = new("--retry-max-delay") { Description = "Max retry delay in seconds" };
-    private static readonly Option<string> SubscriptionOption = new("--subscription") { Description = "The subscription ID" };
+    private static readonly Option<string> s_resourceGroupOption = new("--resource-group") { Description = "The resource group name" };
+    private static readonly Option<int> s_retryMaxDelayOption = new("--retry-max-delay") { Description = "Max retry delay in seconds" };
+    private static readonly Option<string> s_subscriptionOption = new("--subscription") { Description = "The subscription ID" };
 
     private static Command CreateTestCommand()
     {
         var command = new Command("test-command");
-        command.Options.Add(ResourceGroupOption);
-        command.Options.Add(RetryMaxDelayOption);
-        command.Options.Add(SubscriptionOption);
+        command.Options.Add(s_resourceGroupOption);
+        command.Options.Add(s_retryMaxDelayOption);
+        command.Options.Add(s_subscriptionOption);
         return command;
     }
 
     [Fact]
-    public void ParseFromDictionary_WithNullArguments_ReturnsEmptyParseResult()
+    public void TryParseFromDictionary_WithNullArguments_ReturnsEmptyParseResult()
     {
         // Arrange
-        var command = new Command("test", "Test command");
+        var command = CreateTestCommand();
 
-        // Act
-        var result = command.ParseFromDictionary(null);
-
-        // Assert
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(null, out var result, out var parseError));
+        Assert.Null(parseError);
         Assert.NotNull(result);
+
         Assert.Empty(result.Errors);
     }
 
     [Fact]
-    public void ParseFromDictionary_WithEmptyArguments_ReturnsEmptyParseResult()
+    public void TryParseFromDictionary_WithEmptyArguments_ReturnsEmptyParseResult()
     {
         // Arrange
-        var command = new Command("test", "Test command");
+        var command = CreateTestCommand();
         var arguments = new Dictionary<string, JsonElement>();
 
-        // Act
-        var result = command.ParseFromDictionary(arguments);
-
-        // Assert
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(arguments, out var result, out var parseError));
+        Assert.Null(parseError);
         Assert.NotNull(result);
+
         Assert.Empty(result.Errors);
     }
 
     [Fact]
-    public void ParseFromDictionary_WithStringArgument_ParsesCorrectly()
+    public void TryParseFromDictionary_WithStringArgument_ParsesCorrectly()
     {
         // Arrange
         var command = new Command("test", "Test command");
@@ -71,18 +71,18 @@ public sealed class CommandExtensionsTests
             ["name"] = JsonSerializer.SerializeToElement("test-value")
         };
 
-        // Act
-        var result = command.ParseFromDictionary(arguments);
-
-        // Assert
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(arguments, out var result, out var parseError));
+        Assert.Null(parseError);
         Assert.NotNull(result);
+
         Assert.Empty(result.Errors);
         var value = result.GetValue(option);
         Assert.Equal("test-value", value);
     }
 
     [Fact]
-    public void ParseFromDictionary_WithStringContainingQuotes_ParsesCorrectly()
+    public void TryParseFromDictionary_WithStringContainingQuotes_ParsesCorrectly()
     {
         // Arrange
         var command = new Command("test", "Test command");
@@ -94,18 +94,18 @@ public sealed class CommandExtensionsTests
             ["query"] = JsonSerializer.SerializeToElement("SalesTable | parse ClassName with * 'jsonField': ' value '' *")
         };
 
-        // Act
-        var result = command.ParseFromDictionary(arguments);
-
-        // Assert
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(arguments, out var result, out var parseError));
+        Assert.Null(parseError);
         Assert.NotNull(result);
+
         Assert.Empty(result.Errors);
         var value = result.GetValue(option);
         Assert.Equal("SalesTable | parse ClassName with * 'jsonField': ' value '' *", value);
     }
 
     [Fact]
-    public void ParseFromDictionary_WithBooleanArguments_ParsesCorrectly()
+    public void TryParseFromDictionary_WithBooleanArguments_ParsesCorrectly()
     {
         // Arrange
         var command = new Command("test", "Test command");
@@ -120,18 +120,18 @@ public sealed class CommandExtensionsTests
             ["disabled"] = JsonSerializer.SerializeToElement(false)
         };
 
-        // Act
-        var result = command.ParseFromDictionary(arguments);
-
-        // Assert
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(arguments, out var result, out var parseError));
+        Assert.Null(parseError);
         Assert.NotNull(result);
+
         Assert.Empty(result.Errors);
         Assert.True(result.GetValue(trueOption));
         Assert.False(result.GetValue(falseOption));
     }
 
     [Fact]
-    public void ParseFromDictionary_WithNumericArguments_ParsesCorrectly()
+    public void TryParseFromDictionary_WithNumericArguments_ParsesCorrectly()
     {
         // Arrange
         var command = new Command("test", "Test command");
@@ -152,17 +152,17 @@ public sealed class CommandExtensionsTests
             ["rate"] = JsonSerializer.SerializeToElement(3.14)
         };
 
-        // Act
-        var result = command.ParseFromDictionary(arguments);
-
-        // Assert
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(arguments, out var result, out var parseError));
+        Assert.Null(parseError);
         Assert.NotNull(result);
+
         Assert.Empty(result.Errors);
         Assert.Equal(42, result.GetValue(intOption));
         Assert.Equal(3.14, result.GetValue(doubleOption));
     }
     [Fact]
-    public void ParseFromDictionary_WithArrayArgument_ParsesCorrectly()
+    public void TryParseFromDictionary_WithArrayArgument_ParsesCorrectly()
     {
         // Arrange
         var command = new Command("test", "Test command");
@@ -177,18 +177,18 @@ public sealed class CommandExtensionsTests
             ["items"] = JsonSerializer.SerializeToElement(new[] { "item1", "item2", "item3" })
         };
 
-        // Act
-        var result = command.ParseFromDictionary(arguments);
-
-        // Assert
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(arguments, out var result, out var parseError));
+        Assert.Null(parseError);
         Assert.NotNull(result);
+
         Assert.Empty(result.Errors);
         var value = result.GetValue(option);
         Assert.Equal("item1 item2 item3", value); // Array is joined with spaces for single-value options
     }
 
     [Fact]
-    public void ParseFromDictionary_WithStringArrayArgument_ParsesCorrectly()
+    public void TryParseFromDictionary_WithStringArrayArgument_ParsesCorrectly()
     {
         // Arrange
         var command = new Command("test", "Test command");
@@ -204,13 +204,14 @@ public sealed class CommandExtensionsTests
             ["tags"] = JsonSerializer.SerializeToElement(new[] { "tag1", "tag2", "tag3" })
         };
 
-        // Act
-        var result = command.ParseFromDictionary(arguments);
-
-        // Assert
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(arguments, out var result, out var parseError));
+        Assert.Null(parseError);
         Assert.NotNull(result);
+
         Assert.Empty(result.Errors);
         var values = result.GetValue(option);
+
         Assert.NotNull(values);
         Assert.Equal(3, values.Length);
         Assert.Equal("tag1", values[0]);
@@ -219,7 +220,7 @@ public sealed class CommandExtensionsTests
     }
 
     [Fact]
-    public void ParseFromDictionary_WithNullValue_SkipsOption()
+    public void TryParseFromDictionary_WithNullValue_SkipsOption()
     {
         // Arrange
         var command = new Command("test", "Test command");
@@ -234,17 +235,17 @@ public sealed class CommandExtensionsTests
             ["name"] = JsonSerializer.SerializeToElement<string?>(null)
         };
 
-        // Act
-        var result = command.ParseFromDictionary(arguments);
-
-        // Assert
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(arguments, out var result, out var parseError));
+        Assert.Null(parseError);
         Assert.NotNull(result);
+
         Assert.Empty(result.Errors);
         var value = result.GetValue(option);
         Assert.Null(value);
     }
     [Fact]
-    public void ParseFromDictionary_WithCaseInsensitiveOptionNames_ParsesCorrectly()
+    public void TryParseFromDictionary_WithCaseInsensitiveOptionNames_ParsesCorrectly()
     {
         // Arrange
         var command = new Command("test", "Test command");
@@ -259,18 +260,18 @@ public sealed class CommandExtensionsTests
             ["SUBSCRIPTION"] = JsonSerializer.SerializeToElement("test-sub")
         };
 
-        // Act
-        var result = command.ParseFromDictionary(arguments);
-
-        // Assert
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(arguments, out var result, out var parseError));
+        Assert.Null(parseError);
         Assert.NotNull(result);
+
         Assert.Empty(result.Errors);
         var value = result.GetValue(option);
         Assert.Equal("test-sub", value);
     }
 
     [Fact]
-    public void ParseFromDictionary_WithComplexJsonString_ParsesCorrectly()
+    public void TryParseFromDictionary_WithComplexJsonString_ParsesCorrectly()
     {
         // Arrange
         var command = new Command("test", "Test command");
@@ -283,18 +284,18 @@ public sealed class CommandExtensionsTests
             ["json-data"] = JsonSerializer.SerializeToElement(jsonString)
         };
 
-        // Act
-        var result = command.ParseFromDictionary(arguments);
-
-        // Assert
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(arguments, out var result, out var parseError));
+        Assert.Null(parseError);
         Assert.NotNull(result);
+
         Assert.Empty(result.Errors);
         var value = result.GetValue(option);
         Assert.Equal(jsonString, value);
     }
 
     [Fact]
-    public void ParseFromDictionary_WithSingleQuotesInValues_ParsesCorrectly()
+    public void TryParseFromDictionary_WithSingleQuotesInValues_ParsesCorrectly()
     {
         // Arrange
         var command = new Command("test");
@@ -309,18 +310,18 @@ public sealed class CommandExtensionsTests
             { "name", JsonSerializer.SerializeToElement("O'Connor's Database") }
         };
 
-        // Act
-        var result = command.ParseFromDictionary(arguments);
-
-        // Assert
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(arguments, out var result, out var parseError));
+        Assert.Null(parseError);
         Assert.NotNull(result);
+
         Assert.Empty(result.Errors);
         Assert.Equal("SELECT * FROM table WHERE column = 'value'", result.GetValue(queryOption));
         Assert.Equal("O'Connor's Database", result.GetValue(nameOption));
     }
 
     [Fact]
-    public void ParseFromDictionary_WithDoubleQuotesInValues_ParsesCorrectly()
+    public void TryParseFromDictionary_WithDoubleQuotesInValues_ParsesCorrectly()
     {
         // Arrange
         var command = new Command("test");
@@ -332,17 +333,17 @@ public sealed class CommandExtensionsTests
             { "title", JsonSerializer.SerializeToElement("The \"Best\" Solution") }
         };
 
-        // Act
-        var result = command.ParseFromDictionary(arguments);
-
-        // Assert
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(arguments, out var result, out var parseError));
+        Assert.Null(parseError);
         Assert.NotNull(result);
+
         Assert.Empty(result.Errors);
         Assert.Equal("The \"Best\" Solution", result.GetValue(titleOption));
     }
 
     [Fact]
-    public void ParseFromDictionary_WithMixedQuotesInValues_ParsesCorrectly()
+    public void TryParseFromDictionary_WithMixedQuotesInValues_ParsesCorrectly()
     {
         // Arrange
         var command = new Command("test");
@@ -354,9 +355,11 @@ public sealed class CommandExtensionsTests
             { "script", JsonSerializer.SerializeToElement("echo \"User's home: '$HOME'\" && echo 'Path: \"$PATH\"'") }
         };
 
-        // Act
-        var result = command.ParseFromDictionary(arguments);        // Assert
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(arguments, out var result, out var parseError));
+        Assert.Null(parseError);
         Assert.NotNull(result);
+
         Assert.Empty(result.Errors);
         Assert.Equal("echo \"User's home: '$HOME'\" && echo 'Path: \"$PATH\"'", result.GetValue(scriptOption));
     }
@@ -376,14 +379,16 @@ public sealed class CommandExtensionsTests
         };
 
         // Act
-        var result = command.ParseFromRawMcpToolInput(arguments);        // Assert
+        var result = command.ParseFromRawMcpToolInput(arguments);
+
+        // Assert
         Assert.NotNull(result);
         Assert.Empty(result.Errors);
         Assert.Equal("{\"name\":\"abc\",\"path\":\"123\"}", result.GetValue(scriptOption));
     }
 
     [Fact]
-    public void ParseFromDictionary_ExactHyphenatedMatch_ResolvesCorrectly()
+    public void TryParseFromDictionary_ExactHyphenatedMatch_ResolvesCorrectly()
     {
         // Arrange
         var command = CreateTestCommand();
@@ -392,15 +397,16 @@ public sealed class CommandExtensionsTests
             ["resource-group"] = JsonDocument.Parse("\"myRg\"").RootElement
         };
 
-        // Act
-        var result = command.ParseFromDictionary(args);
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(args, out var result, out var parseError));
+        Assert.Null(parseError);
+        Assert.NotNull(result);
 
-        // Assert
-        Assert.Equal("myRg", result.CommandResult.GetValueOrDefault(ResourceGroupOption));
+        Assert.Equal("myRg", result.CommandResult.GetValueOrDefault(s_resourceGroupOption));
     }
 
     [Fact]
-    public void ParseFromDictionary_CamelCaseVariant_MatchesHyphenatedOption()
+    public void TryParseFromDictionary_CamelCaseVariant_MatchesHyphenatedOption()
     {
         // Arrange
         var command = CreateTestCommand();
@@ -409,15 +415,16 @@ public sealed class CommandExtensionsTests
             ["resourceGroup"] = JsonDocument.Parse("\"myRg\"").RootElement
         };
 
-        // Act
-        var result = command.ParseFromDictionary(args);
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(args, out var result, out var parseError));
+        Assert.Null(parseError);
+        Assert.NotNull(result);
 
-        // Assert
-        Assert.Equal("myRg", result.CommandResult.GetValueOrDefault(ResourceGroupOption));
+        Assert.Equal("myRg", result.CommandResult.GetValueOrDefault(s_resourceGroupOption));
     }
 
     [Fact]
-    public void ParseFromDictionary_CaseInsensitiveMatch_ResolvesCorrectly()
+    public void TryParseFromDictionary_CaseInsensitiveMatch_ResolvesCorrectly()
     {
         // Arrange
         var command = CreateTestCommand();
@@ -426,15 +433,16 @@ public sealed class CommandExtensionsTests
             ["ResourceGroup"] = JsonDocument.Parse("\"myRg\"").RootElement
         };
 
-        // Act
-        var result = command.ParseFromDictionary(args);
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(args, out var result, out var parseError));
+        Assert.Null(parseError);
+        Assert.NotNull(result);
 
-        // Assert
-        Assert.Equal("myRg", result.CommandResult.GetValueOrDefault(ResourceGroupOption));
+        Assert.Equal("myRg", result.CommandResult.GetValueOrDefault(s_resourceGroupOption));
     }
 
     [Fact]
-    public void ParseFromDictionary_MultiHyphenOption_MatchesCamelCase()
+    public void TryParseFromDictionary_MultiHyphenOption_MatchesCamelCase()
     {
         // Arrange
         var command = CreateTestCommand();
@@ -443,42 +451,16 @@ public sealed class CommandExtensionsTests
             ["retryMaxDelay"] = JsonDocument.Parse("42").RootElement
         };
 
-        // Act
-        var result = command.ParseFromDictionary(args);
-
-        // Assert
-        Assert.Equal(42, result.CommandResult.GetValueOrDefault(RetryMaxDelayOption));
-    }
-
-    [Fact]
-    public void ParseFromDictionary_NullArguments_ReturnsParseResult()
-    {
-        // Arrange
-        var command = CreateTestCommand();
-
-        // Act
-        var result = command.ParseFromDictionary(null);
-
-        // Assert
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(args, out var result, out var parseError));
+        Assert.Null(parseError);
         Assert.NotNull(result);
+
+        Assert.Equal(42, result.CommandResult.GetValueOrDefault(s_retryMaxDelayOption));
     }
 
     [Fact]
-    public void ParseFromDictionary_EmptyArguments_ReturnsParseResult()
-    {
-        // Arrange
-        var command = CreateTestCommand();
-        var args = new Dictionary<string, JsonElement>();
-
-        // Act
-        var result = command.ParseFromDictionary(args);
-
-        // Assert
-        Assert.NotNull(result);
-    }
-
-    [Fact]
-    public void ParseFromDictionary_ExactMatchWithPrefix_ResolvesCorrectly()
+    public void TryParseFromDictionary_ExactMatchWithPrefix_ResolvesCorrectly()
     {
         // Arrange
         var command = CreateTestCommand();
@@ -487,15 +469,16 @@ public sealed class CommandExtensionsTests
             ["subscription"] = JsonDocument.Parse("\"sub-abc\"").RootElement
         };
 
-        // Act
-        var result = command.ParseFromDictionary(args);
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(args, out var result, out var parseError));
+        Assert.Null(parseError);
+        Assert.NotNull(result);
 
-        // Assert
-        Assert.Equal("sub-abc", result.CommandResult.GetValueOrDefault(SubscriptionOption));
+        Assert.Equal("sub-abc", result.CommandResult.GetValueOrDefault(s_subscriptionOption));
     }
 
     [Fact]
-    public void ParseFromDictionary_NullJsonValue_IsSkipped()
+    public void TryParseFromDictionary_NullJsonValue_IsSkipped()
     {
         // Arrange
         var command = CreateTestCommand();
@@ -505,15 +488,17 @@ public sealed class CommandExtensionsTests
             ["subscription"] = JsonDocument.Parse("\"sub-123\"").RootElement
         };
 
-        // Act
-        var result = command.ParseFromDictionary(args);
+        // Act & Assert
+        Assert.True(command.TryParseFromDictionary(args, out var result, out var parseError));
+        Assert.Null(parseError);
+        Assert.NotNull(result);
 
-        // Assert — subscription should match, null resource-group should be skipped
-        Assert.Equal("sub-123", result.CommandResult.GetValueOrDefault(SubscriptionOption));
+        // subscription should match, null resource-group should be skipped
+        Assert.Equal("sub-123", result.CommandResult.GetValueOrDefault(s_subscriptionOption));
     }
 
     [Fact]
-    public void ParseFromDictionary_InvalidKeys_ThrowsArgumentException()
+    public void TryParseFromDictionary_InvalidKeys_ThrowsArgumentException()
     {
         // Arrange
         var command = CreateTestCommand();
@@ -524,8 +509,10 @@ public sealed class CommandExtensionsTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => command.ParseFromDictionary(args));
-        Assert.Contains("invalidOption", exception.Message);
-        Assert.Contains("anotherInvalid", exception.Message);
+        Assert.False(command.TryParseFromDictionary(args, out var parseResult, out var parseError));
+        Assert.Null(parseResult);
+        Assert.NotNull(parseError);
+        Assert.Contains("invalidOption", parseError);
+        Assert.Contains("anotherInvalid", parseError);
     }
 }

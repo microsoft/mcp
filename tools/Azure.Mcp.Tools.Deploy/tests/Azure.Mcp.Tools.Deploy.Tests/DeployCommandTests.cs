@@ -28,7 +28,6 @@ public class DeployCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
             "deploy_plan_get",
             new()
             {
-                { "workspace-folder", "C:/" },
                 { "project-name", "django" },
                 { "target-app-service", "ContainerApp" },
                 { "provisioning-tool", "AZD" },
@@ -79,7 +78,6 @@ public class DeployCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
             "deploy_pipeline_guidance_get",
             new()
             {
-                { "subscription", _subscriptionId },
                 { "is-azd-project", true }
             });
 
@@ -95,7 +93,6 @@ public class DeployCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
             "deploy_pipeline_guidance_get",
             new()
             {
-                { "subscription", _subscriptionId },
                 { "is-azd-project", false },
                 { "pipeline-platform", "github-actions" },
                 { "deploy-option", "deploy-only" }
