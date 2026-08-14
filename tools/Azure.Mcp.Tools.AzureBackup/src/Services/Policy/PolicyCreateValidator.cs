@@ -606,7 +606,7 @@ public static class PolicyCreateValidator
 
     private static bool HasAnyScheduleOrRetentionInput(PolicyCreateOptions o) =>
         !string.IsNullOrWhiteSpace(o.ScheduleFrequency) ||
-        !string.IsNullOrWhiteSpace(o.ScheduleTime) ||
+        !string.IsNullOrWhiteSpace(o.ScheduleTimes) ||
         !string.IsNullOrWhiteSpace(o.ScheduleDaysOfWeek) ||
         o.HourlyIntervalHours > 0 ||
         !string.IsNullOrWhiteSpace(o.HourlyWindowStartTime) ||

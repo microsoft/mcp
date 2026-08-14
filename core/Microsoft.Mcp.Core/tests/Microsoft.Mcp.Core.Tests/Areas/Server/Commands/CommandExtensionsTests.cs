@@ -498,7 +498,7 @@ public sealed class CommandExtensionsTests
     }
 
     [Fact]
-    public void TryParseFromDictionary_InvalidKeys_ThrowsArgumentException()
+    public void TryParseFromDictionary_UnknownParameters_ReturnError()
     {
         // Arrange
         var command = CreateTestCommand();
