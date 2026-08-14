@@ -11,9 +11,9 @@ namespace McpToolEvaluator.Core;
 /// <summary>
 /// Contains information about the MCP server, including its name and the tool areas it supports.
 /// </summary>
-public class McpServerInformation
+public class McpServerMetadata
 {
-    public McpServerInformation(string artifactDirectory)
+    public McpServerMetadata(string artifactDirectory)
     {
         ProbeSetupNames(artifactDirectory);
     }

@@ -70,7 +70,7 @@ internal class Program
             buildInfo = new BuildInfo(runConfig.BuildInfo);
         }
 
-        McpServerInformation? mcpServerInformation = null;
+        McpServerMetadata? mcpServerInformation = null;
         if (buildInfo != null)
         {
             mcpServerInformation = await GetMcpServerInfo(runConfig, buildInfo);
@@ -91,7 +91,7 @@ internal class Program
         return 0;
     }
 
-    internal static List<string> GetTestToolNamespaces(BuildInfo buildInfo, PromptDatastore promptDatastore, McpServerInformation? mcpServerInformation)
+    internal static List<string> GetTestToolNamespaces(BuildInfo buildInfo, PromptDatastore promptDatastore, McpServerMetadata? mcpServerInformation)
     {
         var promptNamespaces = promptDatastore.GetNamespaces().ToHashSet(StringComparer.InvariantCultureIgnoreCase);
         var results = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
@@ -133,7 +133,7 @@ internal class Program
         return results.ToList();
     }
 
-    internal static Task<McpServerInformation> GetMcpServerInfo(RunConfiguration configuration, BuildInfo buildInfo)
+    internal static Task<McpServerMetadata> GetMcpServerInfo(RunConfiguration configuration, BuildInfo buildInfo)
     {
         var serverInfo = buildInfo.Data.Servers.FirstOrDefault(x => x.Name.Equals(configuration.ServerName, StringComparison.OrdinalIgnoreCase));
         if (serverInfo == null)
@@ -157,10 +157,10 @@ internal class Program
             throw new InvalidOperationException($"Artifact path does not exist: {artifactPath}");
         }
 
-        return Task.FromResult(new McpServerInformation(artifactPath));
+        return Task.FromResult(new McpServerMetadata(artifactPath));
     }
 
-    private static async Task CreateEvalsAsync(string repoRoot, RunConfiguration configuration, BuildInfo? buildInfo = null, McpServerInformation? mcpServerInformation = null)
+    private static async Task CreateEvalsAsync(string repoRoot, RunConfiguration configuration, BuildInfo? buildInfo = null, McpServerMetadata? mcpServerInformation = null)
     {
         if (mcpServerInformation == null)
         {
