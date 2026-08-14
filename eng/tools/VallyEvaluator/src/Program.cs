@@ -119,9 +119,12 @@ internal class Program
             else if (mcpServerInformation != null)
             {
                 var assemblyName = split[1];
-                if (mcpServerInformation.AssemblyNameToToolsMap.TryGetValue(assemblyName, out var matching))
+                if (mcpServerInformation.AssemblyNameToToolsMap.TryGetValue(assemblyName, out var matchingTools))
                 {
-                    results.Add(matching.ToolNamespace);
+                    foreach (var tool in matchingTools)
+                    {
+                        results.Add(tool.ToolNamespace);
+                    }
                 }
                 else
                 {

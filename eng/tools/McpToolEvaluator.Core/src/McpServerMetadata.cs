@@ -18,7 +18,7 @@ public class McpServerMetadata
         ProbeSetupNames(artifactDirectory);
     }
 
-    public Dictionary<string, ToolMetadata> AssemblyNameToToolsMap { get; } = new Dictionary<string, ToolMetadata>(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, List<ToolMetadata>> AssemblyNameToToolsMap { get; } = new Dictionary<string, List<ToolMetadata>>(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Scans every managed assembly beside the server's binary folder for "*Setup" classes
@@ -46,7 +46,12 @@ public class McpServerMetadata
             {
                 foreach (var toolArea in ProbeAssembly(dll))
                 {
-                    AssemblyNameToToolsMap[toolArea.AssemblyName] = toolArea;
+                    if (!AssemblyNameToToolsMap.TryGetValue(toolArea.AssemblyName, out var list))
+                    {
+                        list = new List<ToolMetadata>();
+                        AssemblyNameToToolsMap[toolArea.AssemblyName] = list;
+                    }
+                    list.Add(toolArea);
                 }
             }
             catch (BadImageFormatException)
