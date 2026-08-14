@@ -18,7 +18,7 @@ public class McpServerInformation
         ProbeSetupNames(artifactDirectory);
     }
 
-    public Dictionary<string, ToolArea> AssemblyNameToToolsMap { get; } = new Dictionary<string, ToolArea>(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, ToolMetadata> AssemblyNameToToolsMap { get; } = new Dictionary<string, ToolMetadata>(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Scans every managed assembly beside the server's binary folder for "*Setup" classes
@@ -61,9 +61,9 @@ public class McpServerInformation
     /// Opens a single assembly's metadata and appends a ToolArea for every "*Setup" type
     /// that has a Name property returning a string literal.
     /// </summary>
-    internal static List<ToolArea> ProbeAssembly(string path)
+    internal static List<ToolMetadata> ProbeAssembly(string path)
     {
-        var results = new List<ToolArea>();
+        var results = new List<ToolMetadata>();
         using var fs = File.OpenRead(path);
         using var pe = new PEReader(fs);
 
@@ -102,7 +102,7 @@ public class McpServerInformation
                 var value = ReadLdstrLiteral(pe, reader, reader.GetMethodDefinition(getter));
                 if (value is not null)
                 {
-                    results.Add(new ToolArea { AssemblyName = assemblyName, ToolNamespace = value });
+                    results.Add(new ToolMetadata { AssemblyName = assemblyName, ToolNamespace = value });
                 }
             }
         }

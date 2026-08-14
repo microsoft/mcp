@@ -3,7 +3,7 @@
 
 namespace McpToolEvaluator.Core.Models;
 
-public record ToolArea
+public record ToolMetadata
 {
     public required string AssemblyName { get; init; }
 
