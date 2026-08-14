@@ -960,7 +960,7 @@ The Azure MCP wrapper automatically installs the correct platform-specific packa
 
 5. **Verify Node.js and npm versions:**
    ```bash
-   node --version  # Should be 20.0.0 or later
+   node --version  # Should be an active LTS version
    npm --version
    ```
 

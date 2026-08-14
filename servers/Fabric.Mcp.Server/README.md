@@ -102,7 +102,7 @@ Use one of the following options to configure your `mcp.json`:
 <!-- remove-section: start npm remove_dotnet_config_sub_section -->
 <!-- remove-section: start nuget remove_dotnet_config_sub_header -->
 #### Option 1: Configure using .NET (build from source)<!-- remove-section: end remove_dotnet_config_sub_header -->
-- You must have [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) or later installed.
+- You must have the latest [.NET 10 SDK LTS](https://dotnet.microsoft.com/download/dotnet) installed.
   To verify the .NET version, run: `dotnet --version`
 - Clone and build the repository:
 
@@ -136,7 +136,7 @@ Use one of the following options to configure your `mcp.json`:
 <!-- remove-section: start nuget remove_node_config_sub_section -->
 <!-- remove-section: start npm remove_node_config_sub_header -->
 #### Option 2: Configure using Node.js (npm/npx)<!-- remove-section: end remove_node_config_sub_header -->
-- To use Fabric MCP server from node one must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
+- To use Fabric MCP server from node one must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend the latest Node.js LTS version. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
 -  Configure the `mcp.json` file with the following:
 
     ```json

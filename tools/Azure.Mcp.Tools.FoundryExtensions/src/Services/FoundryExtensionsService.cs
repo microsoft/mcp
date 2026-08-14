@@ -6,7 +6,6 @@ using System.Security;
 using System.Text.Json.Nodes;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
-using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.ResourceManager;
@@ -116,17 +115,16 @@ public class FoundryExtensionsService(IAzureService azureService)
         ValidateProjectEndpoint(endpoint);
 
         var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
-        var indexesClient = projectClient.GetIndexesClient();
 
         var indexes = new List<KnowledgeIndexInformation>();
-        await foreach (var index in indexesClient.GetIndicesAsync(cancellationToken))
+        await foreach (var index in projectClient.Indexes.GetIndexesAsync(cancellationToken))
         {
             // Determine the type based on the actual type of the index
             string indexType = index switch
             {
                 AzureAISearchIndex => "AzureAISearchIndex",
                 ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
-                CosmosDBIndex => "CosmosDBIndex",
+                AIProjectCosmosDBIndex => "CosmosDBIndex",
                 _ => index.GetType().Name
             };
 
@@ -157,10 +155,9 @@ public class FoundryExtensionsService(IAzureService azureService)
         ValidateProjectEndpoint(endpoint);
 
         var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
-        var indexesClient = projectClient.GetIndexesClient();
 
         // Find the index by name using async enumerable
-        var index = await indexesClient.GetIndicesAsync(cancellationToken: cancellationToken)
+        var index = await projectClient.Indexes.GetIndexesAsync(cancellationToken: cancellationToken)
             .Where(i => string.Equals(i.Name, indexName, StringComparisons.ResourceName))
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
 
@@ -174,7 +171,7 @@ public class FoundryExtensionsService(IAzureService azureService)
         {
             AzureAISearchIndex => "AzureAISearchIndex",
             ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
-            CosmosDBIndex => "CosmosDBIndex",
+            AIProjectCosmosDBIndex => "CosmosDBIndex",
             _ => index.GetType().Name
         };
 
@@ -602,7 +599,7 @@ public class FoundryExtensionsService(IAzureService azureService)
         return new(new(endpoint), credential, clientOptions);
     }
 
-    private HttpClientTransport CreateTransport() => new(AzureService.GetClient());
+    private HttpClientPipelineTransport CreateTransport() => new(AzureService.GetClient());
 
     public async Task<List<AiResourceInformation>> ListAiResourcesAsync(
         string subscription,

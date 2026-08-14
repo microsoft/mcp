@@ -10,6 +10,9 @@ namespace Azure.Mcp.Tools.IoTHub.Commands;
 [JsonSerializable(typeof(IoTHubDescription))]
 [JsonSerializable(typeof(IoTHubGetCommand.IoTHubGetCommandResult))]
 [JsonSerializable(typeof(IoTHubProperties))]
+[JsonSerializable(typeof(DeviceIdentity))]
+[JsonSerializable(typeof(List<DeviceIdentity>))]
+[JsonSerializable(typeof(DeviceListResult))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
