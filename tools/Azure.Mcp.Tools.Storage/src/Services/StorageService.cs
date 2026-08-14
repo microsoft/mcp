@@ -172,7 +172,10 @@ public sealed class StorageService(IAzureService azureService)
         var blobInfos = new List<Storage.Models.BlobInfo>();
         if (string.IsNullOrEmpty(blob))
         {
-            await foreach (var blobItem in containerClient.GetBlobsAsync(prefix: prefix, cancellationToken: cancellationToken))
+            await foreach (var blobItem in containerClient.GetBlobsAsync(new()
+            {
+                Prefix = prefix
+            }, cancellationToken: cancellationToken))
             {
                 blobInfos.Add(new(
                     blobItem.Name,

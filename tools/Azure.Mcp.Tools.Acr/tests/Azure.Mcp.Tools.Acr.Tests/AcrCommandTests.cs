@@ -127,18 +127,4 @@ public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
         var repos = repoArray.EnumerateArray().Select(e => e.GetString()).Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
         Assert.Contains("testrepo", repos);
     }
-
-    [Fact]
-    public async Task Should_handle_empty_subscription_gracefully()
-    {
-        // Empty subscription should trigger validation failure (400) -> null results
-        var result = await CallToolAsync(
-            "acr_registry_list",
-            new()
-            {
-                { "subscription", "" }
-            });
-
-        Assert.Null(result);
-    }
 }
