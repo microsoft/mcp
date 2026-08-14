@@ -92,7 +92,8 @@ public class ServiceStartCommandTests
             "--dangerously-disable-http-incoming-auth",
             "--dangerously-disable-elicitation",
             "--dangerously-disable-retry-limits",
-            "--disable-caching"
+            "--disable-caching",
+            "--disable-proxy-tools"
         };
         var theoryData = new TheoryData<string, bool, bool>();
         foreach (var option in options)
