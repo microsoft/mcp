@@ -8,3 +8,4 @@ import:
   - ../../.vscode/cspell.json
 words:
   - certificateimport
+  - mykeyvault

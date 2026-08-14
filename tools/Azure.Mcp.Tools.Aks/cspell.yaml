@@ -11,6 +11,7 @@ words:
   - kubeletidentity
   - nodesubnet
   - podsubnet
+  - roups
   - scalesetpriority
   - systempool
   - userpool

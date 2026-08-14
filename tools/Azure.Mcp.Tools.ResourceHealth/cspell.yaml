@@ -7,4 +7,9 @@ version: "0.2"
 import:
   - ../../.vscode/cspell.json
 words:
+  - datetimes
+  - fexample
+  - imds
+  - mywebapp
   - rhtest
+  - ttps

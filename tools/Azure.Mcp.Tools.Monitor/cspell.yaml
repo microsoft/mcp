@@ -7,7 +7,79 @@ version: "0.2"
 import:
   - ../../.vscode/cspell.json
 words:
+  - aiohttp
+  - aiokafka
+  - aiopg
+  - aiplatform
+  - asax
+  - asctime
+  - asgi
+  - asgiref
+  - aspnetclassic
+  - asyncio
+  - asyncpg
+  - authenticationsettings
   - azuresdktrainingdatatme
+  - boto
+  - botocore
+  - configurator
+  - ecommerce
+  - enduser
+  - entityframework
+  - eventtypes
+  - existingwebtest
+  - fastapi
+  - genai
+  - gunicorn
+  - healthz
+  - hget
+  - hset
+  - httpx
+  - ikey
+  - ilogger
+  - inspectable
+  - instrumentable
+  - instrumentor
+  - instrumentors
+  - jsonify
+  - langchain
+  - levelname
+  - lpush
+  - metadatavalues
+  - metricnames
+  - metricnamespace
   - multistep
+  - mykey
+  - mysqlclient
+  - netcore
+  - newwebtest
+  - opencensus
   - otel
+  - owin
+  - psutil
+  - psycopg
+  - pydantic
+  - pymemcache
+  - pymongo
+  - pymssql
+  - pymysql
+  - pyproject
+  - rediss
+  - remoulade
+  - roups
+  - runserver
+  - setdefault
+  - sqlalchemy
+  - sqlclient
+  - starlette
+  - tavily
+  - telemetryclient
+  - tortoiseorm
+  - unconfigured
+  - uvicorn
   - versionsuffix
+  - vertexai
+  - webconfig
+  - winexe
+  - workerservice
+  - wsgi

@@ -6,4 +6,24 @@
 version: "0.2"
 import:
   - ../../.vscode/cspell.json
-words: []
+words:
+  - alzimmer
+  - deltalake
+  - ijog
+  - ikhlb
+  - keysha
+  - kqlqueryset
+  - lakehouses
+  - mcpdir
+  - msit
+  - normalisation
+  - normalise
+  - normalised
+  - onedrive
+  - onelake
+  - onelakemcplh
+  - restype
+  - rwxr
+  - tablename
+  - upserts
+  - uxha

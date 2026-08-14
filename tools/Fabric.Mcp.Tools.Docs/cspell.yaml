@@ -9,7 +9,15 @@ import:
 ignorePaths:
   - src/Resources/**
 words:
+  - azuredatabricks
   - dataagent
+  - dbtjob
   - heatmaps
+  - hlscohort
   - myfilesystem
+  - orgapp
+  - orgappaudience
   - setvariable
+  - sparkjob
+  - sparkjobdefinition
+  - unitycatalog

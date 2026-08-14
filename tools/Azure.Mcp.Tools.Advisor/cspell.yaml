@@ -6,5 +6,40 @@
 version: "0.2"
 import:
   - ../../.vscode/cspell.json
-words: []
+words:
+  - advisorresources
+  - applicationgatewaywebapplicationfirewallpolicies
+  - aseries
+  - connectedclusters
+  - containerregistry
+  - containerservice
+  - databaseaccounts
+  - domainservices
+  - dpsv
+  - expressrouteports
+  - famsv
+  - fasv
+  - flexibleservers
+  - frontdoor
+  - frontdoorwebapplicationfirewallpolicies
+  - highavailability
+  - isnotempty
+  - isnotnull
+  - isolatedv
+  - kubernetesconfiguration
+  - lasv
+  - machinelearningservices
+  - managedclusters
+  - managedinstances
+  - rdma
+  - scom
+  - serviceupgradeandretirement
+  - startofday
+  - staticsites
+  - subtag
+  - todatetime
+  - tolower
+  - undercount
+  - urity
+  - virtualmachinescalesets
 

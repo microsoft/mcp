@@ -7,4 +7,14 @@ version: "0.2"
 import:
   - ../../.vscode/cspell.json
 words:
+  - datafactory
+  - dataflows
   - fabricmcp
+  - fpgx
+  - ghsa
+  - jsdiff
+  - lakehouses
+  - onedrive
+  - onelake
+  - upserts
+  - vmmw

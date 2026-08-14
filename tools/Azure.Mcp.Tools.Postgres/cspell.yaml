@@ -7,5 +7,24 @@ version: "0.2"
 import:
   - ../../.vscode/cspell.json
 words:
+  - authid
+  - bytea
+  - chinacloudapi
   - datistemplate
   - datname
+  - dblink
+  - keytab
+  - logdir
+  - parameterizer
+  - pgvector
+  - postgresserverfqdn
+  - postgresservername
+  - rdbms
+  - rolcanlogin
+  - rolname
+  - rolsuper
+  - statusdir
+  - testdatabasename
+  - usename
+  - usgovcloudapi
+  - waldir

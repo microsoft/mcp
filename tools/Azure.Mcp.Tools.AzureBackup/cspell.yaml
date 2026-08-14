@@ -8,24 +8,92 @@ import:
   - ../../.vscode/cspell.json
 words:
   - afsfileshare
+  - azsubscriptionguid
+  - azuredatalakestorage
+  - azuredisk
+  - azureiaasvm
+  - azuresql
+  - azurevm
   - backupconfig
+  - badvalue
+  - behaviour
+  - bper
+  - centralised
+  - centraluseuap
+  - containerservice
+  - copyonexpiry
+  - cosmosdbaccountid
+  - cosmosdbaccountlocation
+  - cosmosdbaccountname
+  - countif
+  - datalakestorage
+  - dataprotection
+  - dcount
+  - ddazureclients
+  - devdeviceid
+  - elasticsan
   - esan
+  - flexbox
   - georedundant
+  - hotspots
   - iaasvm
+  - iaasvmcontainer
+  - icmdataro
+  - inlines
+  - isnotempty
+  - kubernetescluster
   - lifecycles
   - locallyredundant
+  - mabprod
+  - managedclusters
+  - minimises
+  - mykey
+  - myrg
+  - mysan
+  - myshare
+  - myvault
+  - myvg
+  - normalised
+  - oneline
   - pgflex
+  - postgresqlflexible
+  - ppaf
+  - previlige
+  - prometeia
+  - recognised
   - sapasedatabase
   - saphanadatabase
+  - saphanadb
   - saphanadbi
   - saphanadbinstance
+  - saphanainstance
   - saphanasystem
+  - sched
   - segoe
   - slowvm
+  - smarch
+  - someitem
+  - sqlb
+  - sqldb
+  - sqldev
   - sqlinstance
+  - sqlvm
+  - startofweek
+  - storagecontainer
   - sybase
   - systemassigneduserassigned
   - testproxy
+  - testsan
   - testshare
+  - testvg
+  - tierafter
+  - toint
+  - toolarea
+  - toolname
+  - triaging
   - undeletes
+  - undeleting
+  - unknowncontainer
+  - unknownformat
   - vaultconfig
+  - vmappcontainer

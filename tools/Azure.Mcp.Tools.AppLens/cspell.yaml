@@ -6,4 +6,6 @@
 version: "0.2"
 import:
   - ../../.vscode/cspell.json
-words: []
+words:
+  - containerservice
+  - managedclusters
