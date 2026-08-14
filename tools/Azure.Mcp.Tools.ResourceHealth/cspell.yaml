@@ -9,7 +9,6 @@ import:
 words:
   - datetimes
   - fexample
-  - imds
   - mywebapp
   - rhtest
   - ttps

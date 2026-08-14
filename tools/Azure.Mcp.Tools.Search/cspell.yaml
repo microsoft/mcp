@@ -7,13 +7,11 @@ version: "0.2"
 import:
   - ../../.vscode/cspell.json
 words:
-  - alzimmer
   - aservice
   - earch
   - hnsw
   - mysearchservice
   - reranker
-  - roups
   - searchdocs
   - skillset
   - skillsets

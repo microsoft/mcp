@@ -9,11 +9,8 @@ import:
 words:
   - activityid
   - adduser
-  - embeddingdeploymentname
   - executesql
   - missingaccount
   - openaiendpoint
-  - parameterizer
-  - roups
   - sproc
   - storedprocedure

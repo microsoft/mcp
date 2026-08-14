@@ -8,14 +8,9 @@ import:
   - ../../.vscode/cspell.json
 words:
   - azuer
-  - azurechinacloud
-  - localrequired
   - notlocalrequired
   - notreadonly
   - queryordering
-  - roups
   - tooshort
-  - tracestate
-  - usgov
-  - usgovernment
   - xvcj
+  

@@ -16,7 +16,6 @@ words:
   - asgi
   - asgiref
   - aspnetclassic
-  - asyncio
   - asyncpg
   - authenticationsettings
   - azuresdktrainingdatatme
@@ -28,7 +27,6 @@ words:
   - entityframework
   - eventtypes
   - existingwebtest
-  - fastapi
   - genai
   - gunicorn
   - healthz
@@ -49,7 +47,6 @@ words:
   - metricnames
   - metricnamespace
   - multistep
-  - mykey
   - mysqlclient
   - netcore
   - newwebtest
@@ -66,7 +63,6 @@ words:
   - pyproject
   - rediss
   - remoulade
-  - roups
   - runserver
   - setdefault
   - sqlalchemy

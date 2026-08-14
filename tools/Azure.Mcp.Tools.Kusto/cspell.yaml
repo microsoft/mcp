@@ -9,16 +9,11 @@ import:
 words:
   - aimon
   - azuresynapse
-  - chinacloudapi
   - cslschema
   - dogfood
   - enants
-  - imds
   - kust
   - kustodev
   - kustomfa
-  - loganalytics
   - reescapes
-  - roups
   - sovcloud
-  - usgovcloudapi

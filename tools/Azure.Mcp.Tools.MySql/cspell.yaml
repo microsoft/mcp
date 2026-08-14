@@ -8,13 +8,9 @@ import:
   - ../../.vscode/cspell.json
 words:
   - binlog
-  - chinacloudapi
   - conv
   - dumpfile
   - infile
   - outfile
-  - parameterizer
-  - rdbms
   - uncompress
   - unhex
-  - usgovcloudapi
