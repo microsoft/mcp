@@ -8,6 +8,7 @@ import:
   - ../../.vscode/cspell.json
 words:
   - agentic
+  - asyncio
   - appsettings
   - asyncio
   - azureicon
