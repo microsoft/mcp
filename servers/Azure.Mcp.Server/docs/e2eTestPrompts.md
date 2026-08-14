@@ -1239,7 +1239,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | wellarchitectedframework_serviceguide_get | List all services with Well-Architected Framework guidance | none |
-| wellarchitectedframework_serviceguide_get | What services have architectural guidance? | none |
+| wellarchitectedframework_serviceguide_get | Use the Well-Architected Framework service guide tool to list services with architectural guidance | none |
 | wellarchitectedframework_serviceguide_get | Get Well-Architected Framework guidance for App Service | none |
 | wellarchitectedframework_serviceguide_get | What's the waf guidance for a VM? | none |
 | wellarchitectedframework_serviceguide_get | What's the architectural guidance for Azure Cosmos DB | none |
