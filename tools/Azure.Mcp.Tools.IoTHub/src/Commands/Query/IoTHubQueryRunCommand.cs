@@ -21,7 +21,7 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.Query;
     Name = "run",
     Title = "Run IoT Hub Query",
     Description = """
-        Run an IoT Hub query against the device registry and return a single page of results.
+        Run an IoT Hub query against the device registry and return a single page of results. Choose this tool whenever the request is phrased as a query or filter over devices - for example 'query the devices', 'query all devices', 'find devices where <field> <op> <value>', a raw IoT Hub SQL statement, or 'discover which device twin fields are queryable'. For a plain 'list/show the registered devices' request with no query wording, use the iothub device list command instead.
         Provide a raw SQL-like query with --query, OR structured predicates with --filters (each has scope/field/operator/value) that are compiled into the query for you; supply only one of the two.
         When neither is provided, a bare 'SELECT * FROM devices' runs and the response additionally returns a 'discoveredFields' catalog: queryable field paths grouped by device, tags, desired, and reported, with observed types and example values. Forward that catalog to a later --filters call via --discovered-fields so unknown fields are rejected before the query runs.
         Prefer projecting only the specific property fields you need; avoid raw 'SELECT *' unless you want full device twins or the field catalog.
