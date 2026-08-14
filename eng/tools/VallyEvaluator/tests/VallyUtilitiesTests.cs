@@ -51,6 +51,78 @@ public sealed class VallyUtilitiesTests
     }
 
     [Fact]
+    public async Task WritePromptsAsync_WhenFileExistsAndForceIsTrue_OverwritesFile()
+    {
+        var outputFile = GetTemporaryFilePath();
+        await File.WriteAllTextAsync(outputFile, "existing content", TestContext.Current.CancellationToken);
+        var prompts = new List<TestPrompt>
+        {
+            new("Storage", "storage_account_list", "List my storage accounts", "storage")
+        };
+
+        try
+        {
+            await VallyUtilities.WritePromptsAsync(prompts, outputFile, force: true);
+
+            var yaml = await File.ReadAllTextAsync(outputFile, TestContext.Current.CancellationToken);
+            var evaluation = VallyUtilities.Deserializer.Deserialize<Models.Evaluation>(yaml);
+
+            Assert.Equal("Storage evaluations", evaluation.Name);
+            Assert.Single(evaluation.Stimuli);
+            Assert.Equal("List my storage accounts", evaluation.Stimuli[0].Prompt);
+        }
+        finally
+        {
+            File.Delete(outputFile);
+        }
+    }
+
+    [Fact]
+    public async Task WritePromptsAsync_UsesProvidedEnvironment()
+    {
+        var outputFile = GetTemporaryFilePath();
+        const string customEnvironment = "${CUSTOM_ENV}";
+        var prompts = new List<TestPrompt>
+        {
+            new("Storage", "storage_account_list", "List my storage accounts", "storage")
+        };
+
+        try
+        {
+            await VallyUtilities.WritePromptsAsync(prompts, outputFile, environment: customEnvironment);
+
+            var yaml = await File.ReadAllTextAsync(outputFile, TestContext.Current.CancellationToken);
+            var evaluation = VallyUtilities.Deserializer.Deserialize<Models.Evaluation>(yaml);
+
+            var stimulus = Assert.Single(evaluation.Stimuli);
+            Assert.Equal(customEnvironment, stimulus.Environment);
+        }
+        finally
+        {
+            File.Delete(outputFile);
+        }
+    }
+
+    [Fact]
+    public async Task WritePromptsAsync_WhenPromptsAreEmpty_Throws()
+    {
+        var outputFile = GetTemporaryFilePath();
+
+        try
+        {
+            await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+                () => VallyUtilities.WritePromptsAsync([], outputFile));
+        }
+        finally
+        {
+            if (File.Exists(outputFile))
+            {
+                File.Delete(outputFile);
+            }
+        }
+    }
+
+    [Fact]
     public async Task WritePromptsAsync_WhenFileExistsAndForceIsFalse_DoesNotOverwriteFile()
     {
         var outputFile = GetTemporaryFilePath();
