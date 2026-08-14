@@ -395,6 +395,7 @@
     "dbname",
     "deallocate",
     "debugtelemetry",
+    "dedup",
     "deregistering",
     "devbox",
     "devcontainers",

@@ -12,6 +12,7 @@ obj/
 .vscode/
 .idea/
 TestResults/
+session-state/
 *.binlog
 *.user
 
