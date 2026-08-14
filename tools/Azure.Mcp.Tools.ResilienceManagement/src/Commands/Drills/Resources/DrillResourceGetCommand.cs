@@ -16,12 +16,10 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Resources;
     Name = "get",
     Title = "Get or List Resilience Drill Resources and Targets",
     Description = """
-        Gets or lists the drill resources (also called drill targets) that belong to a specific resilience
-        drill within a service group. This is a child of a drill: it returns the resources targeted by an
-        existing drill, not the drill definition itself. Use it to list all drill resources or drill targets
-        for a drill, or to get one drill resource or drill target by name. A named drill resource returns its
-        complete ARM details and properties. Omit the drill resource name to list the id and name of every
-        drill resource for the drill.
+        Lists or gets the drill resources — also called drill targets — for a resilience drill in a service
+        group. List all drill resources or drill targets for a resilience drill, or get the complete details
+        of a single drill resource or drill target by name, including its ARM properties. Requires the parent
+        drill name.
         """,
     Destructive = false,
     Idempotent = true,
