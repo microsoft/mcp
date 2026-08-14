@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.ResourceManager.ApplicationInsights;
 using Azure.ResourceManager.ApplicationInsights.Models;
@@ -15,16 +14,13 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Workbooks.Services;
 
-public class WorkbooksService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ILogger<WorkbooksService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), IWorkbooksService
+public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksService> logger)
+    : BaseAzureResourceService(azureService), IWorkbooksService
 {
     private const int MaxConcurrency = 10;
     private const string WorkbooksResourceType = "microsoft.insights/workbooks";
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ILogger<WorkbooksService> _logger = logger;
+
     // Static semaphore intentionally shared across all requests to enforce API rate limiting.
     // In HTTP mode (remote MCP server), this limits concurrent Azure API calls to MaxConcurrency
     // across all users, preventing throttling from Azure Resource Manager.
@@ -42,7 +38,7 @@ public class WorkbooksService(
         CancellationToken cancellationToken = default)
     {
         // Get accessible tenants
-        var tenants = await TenantService.GetTenants(cancellationToken);
+        var tenants = await AzureService.GetTenants(cancellationToken);
         var currentTenant = tenants.FirstOrDefault()
             ?? throw new InvalidOperationException("No accessible tenants found");
 
@@ -56,7 +52,7 @@ public class WorkbooksService(
             foreach (var sub in subscriptions)
             {
                 // Resolve subscription name to ID if needed
-                var subscriptionResource = await _subscriptionService.GetSubscription(sub, tenant, retryPolicy, cancellationToken);
+                var subscriptionResource = await AzureService.GetSubscription(sub, tenant, retryPolicy, cancellationToken);
                 query.Subscriptions.Add(subscriptionResource.Data.SubscriptionId);
             }
         }
@@ -161,7 +157,7 @@ public class WorkbooksService(
 
         ValidateSerializedData(serializedData);
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
             ?? throw new InvalidOperationException($"Subscription '{subscription}' not found");
 
         var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroupName, cancellationToken);
@@ -347,7 +343,7 @@ public class WorkbooksService(
     {
         try
         {
-            var tenants = await TenantService.GetTenants(cancellationToken);
+            var tenants = await AzureService.GetTenants(cancellationToken);
             var currentTenant = tenants.FirstOrDefault();
             if (currentTenant == null)
             {
@@ -361,7 +357,7 @@ public class WorkbooksService(
             {
                 foreach (var sub in subscriptions)
                 {
-                    var subscriptionResource = await _subscriptionService.GetSubscription(sub, tenant, retryPolicy, cancellationToken);
+                    var subscriptionResource = await AzureService.GetSubscription(sub, tenant, retryPolicy, cancellationToken);
                     query.Subscriptions.Add(subscriptionResource.Data.SubscriptionId);
                 }
             }

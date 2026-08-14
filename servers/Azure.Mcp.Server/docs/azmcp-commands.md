@@ -355,18 +355,32 @@ azmcp advisor recommendation summary --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation apply --resource <resource>
 
-# List the catalog of Advisor recommendation types — every recommendation Advisor can generate, with its category,
-# impact, target resource type, and sub-category. Results sorted by impact (High → Medium → Low). Use for greenfield
-# (empty environments) or brownfield (onboarding a new resource type into an existing subscription) scenarios.
+# List the global Azure Advisor recommendation metadata catalog (also called recommendation types) from Azure Resource
+# Graph. Use it in greenfield environments with no generated recommendations, or filter by supported resource type
+# during brownfield onboarding. Supports service-retirement filtering by Service Health tracking ID and retirement
+# date expression. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting
+# subcategory filters are rejected. Results are ordered High, Medium, Low.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation-type list [--resource-type <resource-type>] \
-                                       [--impact <High|Medium|Low>] \
-                                       [--category <category>]
+azmcp advisor metadata list [--language <language>] \
+                            [--resource-type <resource-type>] \
+                            [--impact <High|Medium|Low>] \
+                            [--category <Cost|HighAvailability|Security|Performance|OperationalExcellence>] \
+                            [--sub-category <sub-category>] \
+                            [--tracking-id <tracking-id>] \
+                            [--retirement-date <eq|lt|le|gt|ge>:<yyyy-MM-dd>]
+
+# Get Azure Advisor metadata for a specific recommendation type id. Explains what an Advisor
+# recommendation type means, including its display name, category, sub-category, impact,
+# supported resource type, description, potential benefits, and remediation actions.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor metadata get --recommendation-type-id <recommendation-type-id> \
+                           [--language <language>]
 ```
 
 ### Azure AI Search Operations
 
 ```bash
+
 # Get detailed properties of AI Search indexes
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp search index get --service <service> \
@@ -558,12 +572,14 @@ azmcp appconfig kv set --subscription <subscription> \
 
 ```bash
 # Diagnose resource using Azure App Lens
+# Only --resource and --question are required; --subscription, --resource-group, and --resource-type are optional and used to narrow down results when multiple resources share the same name; --tenant is optional
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp applens resource diagnose --question <question> \
-                                --resource <resource> \
+azmcp applens resource diagnose --resource <resource> \
+                                --question <question> \
                                 [--subscription <subscription>] \
                                 [--resource-group <resource-group>] \
-                                [--resource-type <resource-type>]
+                                [--resource-type <resource-type>] \
+                                [--tenant <tenant>]
 ```
 
 ### Azure Application Insights Operations
@@ -1057,7 +1073,10 @@ azmcp azurebackup recoverypoint get --subscription <subscription> \
 #### Governance
 
 ```bash
-# Scans the subscription to find Azure resources that are not currently protected by any backup policy.
+# Scans the subscription to find Azure resources that are not currently protected by any backup policy
+# using two-level discovery: ARM resource enumeration plus RSV vault protectable-items enrichment
+# to discover unprotected sub-resources (SQL databases, SAP HANA databases, Azure file shares).
+# Results include a 'discoverySource' field ('arm' or 'vault') indicating how each item was found.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup governance find-unprotected --subscription <subscription> \
                                               [--resource-type-filter <resource-type-filter>] \
@@ -2179,6 +2198,9 @@ azmcp cosmos database container item text-search --subscription <subscription> \
 # support custom dimensions like "text-embedding-3-small" or "text-embedding-3-large". Optionally pass
 # --properties-to-select to project specific fields; when omitted the full document is returned with the vector
 # property stripped so the embedding doesn't bloat the response. Requires a vector index on the vector property.
+# The --openai-endpoint must use HTTPS and point to a trusted Azure first-party domain (e.g. *.openai.azure.com,
+# *.cognitiveservices.azure.com, *.services.ai.azure.com, or their US Government / China sovereign cloud
+# equivalents); any other endpoint is rejected with a 400 Bad Request before the service is called.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cosmos database container item vector-search --subscription <subscription> \
                                                    --account <account> \
@@ -2186,7 +2208,7 @@ azmcp cosmos database container item vector-search --subscription <subscription>
                                                    --container <container> \
                                                    --vector-property <vector-property> \
                                                    --search-text "free-form text" \
-                                                   --openai-endpoint <endpoint> \
+                                                   --openai-endpoint <azure-openai-endpoint> \
                                                    --embedding-deployment <deployment> \
                                                    [--properties-to-select <p1,p2,...>] \
                                                    [--count 10] \
@@ -2362,7 +2384,7 @@ azmcp deploy app logs get --workspace-folder <workspace-folder> \
                           --azd-env-name <azd-env-name> \
                           [--limit <limit>]
 
-# Generate a mermaid architecture diagram for the application topology follow the schema defined in [deploy-app-topology-schema.json](../areas/deploy/src/AzureMcp.Deploy/Schemas/deploy-app-topology-schema.json)
+# Generate a mermaid architecture diagram for the application topology follow the schema defined in [DeployAppTopologySchema.cs](../../../tools/Azure.Mcp.Deploy/src/Schemas/DeployAppTopologySchema.cs)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp deploy architecture diagram generate --raw-mcp-tool-input <app-topology>
 
@@ -2678,12 +2700,12 @@ azmcp foundryextensions openai models-list \
     --resource-group <resource-group> \
     --resource-name <resource-name>
 
-# Get details of Microsoft Foundry (AI) resources in a subscription or resource group
+# List or get Microsoft Foundry resource details (endpoint, SKU, location). --resource-group is required when --resource-name is specified.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundryextensions resource get \
     --subscription <subscription> \
     [--resource-group <resource-group>] \
-    [--resource-name <resource-name>]
+    [--resource-name <resource-name>]   # --resource-group required when --resource-name is provided
 ```
 
 ### Azure Function App Operations
@@ -2713,6 +2735,39 @@ azmcp functions template get --language <language> \
                              [--template <template-name>] \
                              [--runtime-version <runtime-version>]
 ```
+
+### Azure Insights Operations
+
+```bash
+# Get architectural insights for a subscription or tenant based on existing resources (via Azure Resource Graph + MCP sampling)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp insights get [--scope <subscription|tenant>] \
+                   [--subscription <subscription>] \
+                   [--query <user-intent>] \
+                   [--nocache]
+
+# Example:
+# Get subscription-scoped insights with an user intent
+ azmcp insights get --scope subscription \
+                    --subscription <subscription> \
+                    --query "Prioritise cost and reliability patterns" \
+
+# Get tenant-scoped insights with an user intent; force data re-fetch
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp insights get --scope tenant \
+                   --query "Prioritise cost and reliability patterns" \
+                   --nocache
+```
+
+### Azure IoT Hub Operations
+
+```bash
+# Get IoT Hub details by hub name in a specific resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub hub get --subscription <subscription> \
+                     --resource-group <resource-group> \
+                     --hub-name <iot-hub-name>
+```                     
 
 ### Azure Key Vault Operations
 
@@ -2903,6 +2958,20 @@ azmcp loadtesting testrun createorupdate --subscription <subscription> \
 azmcp grafana list --subscription <subscription> \
                   [--resource-group <resource-group>]
 ```
+### Azure IoT Hub Operations
+
+#### Device Registry Operations
+
+```bash
+# List devices in an IoT Hub
+# Returns one page of device identities. --max-count sets the page size (default 100, maximum 100); values less than 1 or greater than 100 are rejected.
+# When the hub has more devices than were returned, the response sets truncated=true with an explanatory message.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub device list --subscription <subscription> \
+                         --resource-group <resource-group> \
+                         --hub-name <iot-hub-name> \
+                         [--max-count <max-count>]
+```
 
 ### Azure Marketplace Operations
 
@@ -3065,12 +3134,16 @@ azmcp monitor workspace log query --subscription <subscription> \
 #### Health Models
 
 ```bash
-# Get the health of an entity
+# List health models in a subscription (optionally scoped to a resource group)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor healthmodels entity get --subscription <subscription> \
-                                      --resource-group <resource-group> \
-                                      --health-model <health-model-name> \
-                                      --entity <entity-id>
+azmcp monitor healthmodels list --subscription <subscription> \
+                                [--resource-group <resource-group>]
+
+# Get (show) a single health model by name
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor healthmodels get --subscription <subscription> \
+                               --resource-group <resource-group> \
+                               --health-model <health-model-name>
 ```
 
 #### Metrics
@@ -3131,62 +3204,38 @@ azmcp monitor metrics query --subscription <subscription> \
 #### Web Tests (Availability Tests)
 
 ```bash
-# Create a new web test in Azure Monitor
-azmcp monitor webtests create --subscription <subscription> \
-                              --resource-group <resource-group> \
-                              --webtest-resource <webtest-resource-name> \
-                              --appinsights-component <component-name> \
-                              --location <location> \
-                              --webtest-locations <locations> \
-                              --request-url <url> \
-                              [--webtest <display-name>] \
-                              [--description <description>] \
-                              [--enabled <true|false>] \
-                              [--expected-status-code <code>] \
-                              [--follow-redirects <true|false>] \
-                              [--frequency <seconds>] \
-                              [--headers <key=value,key2=value2>] \
-                              [--http-verb <get|post|..>] \
-                              [--ignore-status-code <true|false>] \
-                              [--parse-requests <true|false>] \
-                              [--request-body <body>] \
-                              [--retry-enabled <true|false>] \
-                              [--ssl-check <true|false>] \
-                              [--ssl-lifetime-check <days>] \
-                              [--timeout <seconds>]
+# Create or update a web test in Azure Monitor
+# When creating a new web test, --appinsights-component, --location, --webtest-locations, and --request-url are required.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor webtests createorupdate --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --webtest-resource <webtest-resource-name> \
+                                      [--appinsights-component <component-resource-id>] \
+                                      [--location <location>] \
+                                      [--webtest-locations <locations>] \
+                                      [--request-url <url>] \
+                                      [--webtest <display-name>] \
+                                      [--description <description>] \
+                                      [--enabled <true|false>] \
+                                      [--expected-status-code <code>] \
+                                      [--follow-redirects <true|false>] \
+                                      [--frequency <seconds>] \
+                                      [--headers <key=value,key2=value2>] \
+                                      [--http-verb <get|post|..>] \
+                                      [--ignore-status-code <true|false>] \
+                                      [--parse-requests <true|false>] \
+                                      [--request-body <body>] \
+                                      [--retry-enabled <true|false>] \
+                                      [--ssl-check <true|false>] \
+                                      [--ssl-lifetime-check <days>] \
+                                      [--timeout <seconds>]
 
-# Get details for a specific web test
+# Get details for a specific web test, or list web tests when --webtest-resource is omitted
+# When --webtest-resource is provided, --resource-group is required.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests get --subscription <subscription> \
-                          --resource-group <resource-group> \
-                          --webtest-resource <webtest-resource-name>
-
-# List all web tests in a subscription or optionally, within a resource group
-azmcp monitor webtests list --subscription <subscription> [--resource-group <resource-group>]
-
-# Update an existing web test in Azure Monitor
-azmcp monitor webtests update --subscription <subscription> \
-                              --resource-group <resource-group> \
-                              --webtest-resource <webtest-resource-name> \
-                              [--appinsights-component <component-name>] \
-                              [--location <location>] \
-                              [--webtest-locations <locations>] \
-                              [--request-url <url>] \
-                              [--webtest <display-name>] \
-                              [--description <description>] \
-                              [--enabled <true|false>] \
-                              [--expected-status-code <code>] \
-                              [--follow-redirects <true|false>] \
-                              [--frequency <seconds>] \
-                              [--headers <key=value,key2=value2>] \
-                              [--http-verb <get|post|..>] \
-                              [--ignore-status-code <true|false>] \
-                              [--parse-requests <true|false>] \
-                              [--request-body <body>] \
-                              [--retry-enabled <true|false>] \
-                              [--ssl-check <true|false>] \
-                              [--ssl-lifetime-check <days>] \
-                              [--timeout <seconds>]
+                          [--resource-group <resource-group>] \
+                          [--webtest-resource <webtest-resource-name>]
 
 ```
 
@@ -3648,12 +3697,27 @@ azmcp resilience usageplan get --subscription <subscription> \
                                [--resource-group <resource-group>] \
                                [--name <name>]
 
+# Create a resilience usage plan in a resource group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan create --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --usage-plan <usage-plan> \
+                                  --plan-type <plan-type>
+
 # Get a usage plan enrollment, or list all enrollments of a usage plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience usageplan enrollment get --subscription <subscription> \
                                           --resource-group <resource-group> \
                                           --usage-plan <usage-plan> \
                                           [--name <name>]
+
+# Create or update an enrollment under a resilience usage plan, associating it with a service group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan enrollment create --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --usage-plan <usage-plan> \
+                                             --enrollment <enrollment> \
+                                             --service-group <service-group>
 
 # Get a resilience recovery plan, or list all recovery plans in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4261,10 +4325,26 @@ azmcp storage account create --subscription <subscription> \
                              --account <unique-account-name> \
                              --resource-group <resource-group> \
                              --location <location> \
-                             --sku <sku> \
-                             --access-tier <access-tier> \
-                             --enable-hierarchical-namespace false
+                             [--sku <sku>] \
+                             [--access-tier <access-tier>] \
+                             [--enable-hierarchical-namespace <true|false>] \
+                             [--tenant <tenant>]
+```
 
+#### Storage Account Create Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID or display name. |
+| `--account` | Yes | Globally unique storage account name using 3-24 lowercase letters and numbers. |
+| `--resource-group` | Yes | Resource group name. |
+| `--location` | Yes | Azure region, such as `eastus` or `westus2`. |
+| `--sku` | No | Storage account SKU for StorageV2 accounts. Valid values: `Standard_LRS`, `Standard_GRS`, `Standard_RAGRS`, `Standard_ZRS`, `Premium_LRS`, `Premium_ZRS`, `Standard_GZRS`, `Standard_RAGZRS`. Defaults to `Standard_LRS`. |
+| `--access-tier` | No | Default access tier for blob storage. Valid values: `Hot`, `Cool`, `Cold`, `Premium`. Defaults to `Hot`. |
+| `--enable-hierarchical-namespace` | No | Whether to enable the Azure Data Lake Storage Gen2 hierarchical namespace. Defaults to `false`. |
+| `--tenant` | No | Azure tenant ID or name. |
+
+```bash
 # Get detailed properties of Storage accounts
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage account get --subscription <subscription> \

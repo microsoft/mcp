@@ -3,17 +3,17 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Server;
 using Azure.Mcp.Tools.MySql.Services;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.MySql.Tests.Server;
 
-public class ServerConfigGetCommandTests : CommandUnitTestsBase<ServerConfigGetCommand, IMySqlService>
+public class ServerConfigGetCommandTests : SubscriptionCommandUnitTestsBase<ServerConfigGetCommand, IMySqlService>
 {
     [Fact]
     public async Task ExecuteAsync_ReturnsConfiguration_WhenSuccessful()

@@ -2,11 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.ResourceManager.Search;
@@ -16,7 +15,6 @@ using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.KnowledgeBases;
 using Azure.Search.Documents.KnowledgeBases.Models;
 using Azure.Search.Documents.Models;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -24,17 +22,10 @@ using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.Search.Services;
 
-public sealed partial class SearchService(
-    ISubscriptionService subscriptionService,
-    ICacheService cacheService,
-    ITenantService tenantService,
-    ILogger<SearchService> logger)
-    : BaseAzureService(tenantService), ISearchService
+public sealed partial class SearchService(ICacheService cacheService, IAzureService azureService)
+    : BaseAzureService(azureService), ISearchService
 {
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-    private readonly ILogger<SearchService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private const string CacheGroup = "search";
     private const string SearchServicesCacheKey = "services";
     private static readonly TimeSpan s_cacheDurationServices = CacheDurations.ServiceData;
@@ -52,8 +43,8 @@ public sealed partial class SearchService(
         if (!string.IsNullOrEmpty(resourceGroup))
         {
             var rgCacheKey = string.IsNullOrEmpty(tenantId)
-                ? CacheKeyBuilder.Build(SearchServicesCacheKey, subscription, resourceGroup, _tenantService.CloudConfiguration.CloudType.ToString())
-                : CacheKeyBuilder.Build(SearchServicesCacheKey, subscription, resourceGroup, tenantId, _tenantService.CloudConfiguration.CloudType.ToString());
+                ? CacheKeyBuilder.Build(SearchServicesCacheKey, subscription, resourceGroup, AzureService.CloudConfiguration.CloudType.ToString())
+                : CacheKeyBuilder.Build(SearchServicesCacheKey, subscription, resourceGroup, tenantId, AzureService.CloudConfiguration.CloudType.ToString());
 
             var cachedRgServices = await _cacheService.GetAsync<List<string>>(CacheGroup, rgCacheKey, s_cacheDurationServices, cancellationToken);
             if (cachedRgServices != null)
@@ -61,7 +52,7 @@ public sealed partial class SearchService(
                 return cachedRgServices;
             }
 
-            var subForRg = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
+            var subForRg = await AzureService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
             var rgResource = (await subForRg.GetResourceGroupAsync(resourceGroup, cancellationToken)).Value;
             var rgServices = new List<string>();
             await foreach (var service in rgResource.GetSearchServices().GetAllAsync(cancellationToken: cancellationToken))
@@ -77,8 +68,8 @@ public sealed partial class SearchService(
         }
 
         var cacheKey = string.IsNullOrEmpty(tenantId)
-            ? CacheKeyBuilder.Build(SearchServicesCacheKey, subscription, _tenantService.CloudConfiguration.CloudType.ToString())
-            : CacheKeyBuilder.Build(SearchServicesCacheKey, subscription, tenantId, _tenantService.CloudConfiguration.CloudType.ToString());
+            ? CacheKeyBuilder.Build(SearchServicesCacheKey, subscription, AzureService.CloudConfiguration.CloudType.ToString())
+            : CacheKeyBuilder.Build(SearchServicesCacheKey, subscription, tenantId, AzureService.CloudConfiguration.CloudType.ToString());
 
         var cachedServices = await _cacheService.GetAsync<List<string>>(CacheGroup, cacheKey, s_cacheDurationServices, cancellationToken);
         if (cachedServices != null)
@@ -86,7 +77,7 @@ public sealed partial class SearchService(
             return cachedServices;
         }
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
         var services = new List<string>();
         await foreach (var service in subscriptionResource.GetSearchServicesAsync(cancellationToken: cancellationToken))
         {
@@ -245,11 +236,11 @@ public sealed partial class SearchService(
         }
 
         var clientOptions = AddDefaultPolicies(new SearchClientOptions());
-        clientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
+        clientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
         clientOptions.Audience = GetSearchAudience();
         ConfigureRetryPolicy(clientOptions, retryPolicy);
 
-        var knowledgeBaseClient = new KnowledgeBaseRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(cancellationToken: cancellationToken), clientOptions);
+        var knowledgeBaseClient = new KnowledgeBaseRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(null, cancellationToken), clientOptions);
         var useMinimalReasoning = knowledgeBase.Value.RetrievalReasoningEffort is KnowledgeRetrievalMinimalReasoningEffort;
         var request = BuildKnowledgeBaseRetrievalRequest(useMinimalReasoning, query, messages);
 
@@ -348,14 +339,14 @@ public sealed partial class SearchService(
     private async Task<SearchIndexClient> GetSearchIndexClient(string serviceName, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken = default)
     {
         ValidateServiceName(serviceName);
-        var key = CacheKeyBuilder.Build(SearchServicesCacheKey, serviceName, _tenantService.CloudConfiguration.CloudType.ToString());
+        var key = CacheKeyBuilder.Build(SearchServicesCacheKey, serviceName, AzureService.CloudConfiguration.CloudType.ToString());
         var searchClient = await _cacheService.GetAsync<SearchIndexClient>(CacheGroup, key, s_cacheDurationClients, cancellationToken);
         if (searchClient == null)
         {
-            var credential = await GetCredential(cancellationToken);
+            var credential = await GetCredential(null, cancellationToken);
 
             var clientOptions = AddDefaultPolicies(new SearchClientOptions());
-            clientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
+            clientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
             clientOptions.Audience = GetSearchAudience();
             ConfigureRetryPolicy(clientOptions, retryPolicy);
 
@@ -440,7 +431,7 @@ public sealed partial class SearchService(
     private string GetSearchEndpoint(string serviceName)
     {
         ValidateServiceName(serviceName);
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{serviceName}.search.windows.net",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{serviceName}.search.azure.cn",
@@ -451,7 +442,7 @@ public sealed partial class SearchService(
 
     private SearchAudience GetSearchAudience()
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => SearchAudience.AzurePublicCloud,
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => SearchAudience.AzureChina,

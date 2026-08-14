@@ -150,27 +150,45 @@
       "required": ["id", "enabled"],
       "allOf": [
         {
-          "$ref": "../platform/definitions/platform.json#/definitions/ItemSchedule"
+          "$ref": "../common/job_scheduling.json#/definitions/BaseItemSchedule"
         }
-      ]
+      ],
+      "properties": {
+        "executionData": {
+          "description": "The execution data for the refresh materialized lake views.",
+          "$ref": "#/definitions/RefreshMaterializedLakeViewsExecutionData"
+        }
+      }
     },
     "CreateLakehouseRefreshMaterializedLakeViewsScheduleRequest": {
       "description": "Create lakehouse refresh materialized lake views schedule request payload.",
       "type": "object",
       "allOf": [
         {
-          "$ref": "../platform/definitions/platform.json#/definitions/CreateScheduleRequest"
+          "$ref": "../common/job_scheduling.json#/definitions/BaseCreateScheduleRequest"
         }
-      ]
+      ],
+      "properties": {
+        "executionData": {
+          "description": "The execution data for the refresh materialized lake views.",
+          "$ref": "#/definitions/RefreshMaterializedLakeViewsExecutionData"
+        }
+      }
     },
     "UpdateLakehouseRefreshMaterializedLakeViewsScheduleRequest": {
       "description": "Update lakehouse refresh materialized lake views schedule request payload.",
       "type": "object",
       "allOf": [
         {
-          "$ref": "../platform/definitions/platform.json#/definitions/UpdateScheduleRequest"
+          "$ref": "../common/job_scheduling.json#/definitions/BaseUpdateScheduleRequest"
         }
-      ]
+      ],
+      "properties": {
+        "executionData": {
+          "description": "The execution data for the refresh materialized lake views.",
+          "$ref": "#/definitions/RefreshMaterializedLakeViewsExecutionData"
+        }
+      }
     },
     "UpdateLakehouseDefinitionRequest": {
       "description": "Update Lakehouse public definition request payload.",
@@ -507,6 +525,345 @@
           "type": "string",
           "pattern": "^(\\d+:)?\\d{1,2}:\\d{1,2}:\\d{1,2}$",
           "description": "Overrides the default retention period. Unreferenced files or data files associated with delta table versions older than the specified retention period are removed. This value should follow the pattern of `d:hh:mm:ss` where d is the number of days, hh is the number of hours between 00 and 23, mm is the number of minutes between 00 and 59, and ss is the number of seconds between 00 and 59."
+        }
+      }
+    },
+    "MaterializedLakeViewExecutionDefinitions": {
+      "description": "A list of materialized lake view execution definitions.",
+      "required": ["value"],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of materialized lake view execution definitions.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MaterializedLakeViewExecutionDefinition"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "MaterializedLakeViewExecutionDefinition": {
+      "description": "A materialized lake views execution definition object.",
+      "type": "object",
+      "required": ["id", "displayName", "currentLakehouseExecutionContext"],
+      "properties": {
+        "id": {
+          "description": "The materialized lake views execution definition ID.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "displayName": {
+          "description": "The materialized lake views execution definition display name.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "A short description of the materialized lake views execution definition.",
+          "type": "string",
+          "readOnly": false
+        },
+        "settings": {
+          "description": "The materialized lake views execution definition settings.",
+          "$ref": "#/definitions/MaterializedLakeViewExecutionDefinitionSettingsResponse",
+          "readOnly": false
+        },
+        "currentLakehouseExecutionContext": {
+          "description": "The current lakehouse execution context for the materialized lake views execution definition.",
+          "$ref": "#/definitions/CurrentLakehouseExecutionContext",
+          "readOnly": false
+        },
+        "extendedLineageExecutionContext": {
+          "description": "The extended lineage execution context for the materialized lake views execution definition.",
+          "$ref": "#/definitions/ExtendedLineageExecutionContextResponse",
+          "readOnly": false
+        }
+      }
+    },
+    "CreateMaterializedLakeViewExecutionDefinitionRequest": {
+      "description": "Create materialized lake views execution definition request payload.",
+      "type": "object",
+      "required": ["displayName", "currentLakehouseExecutionContext"],
+      "properties": {
+        "displayName": {
+          "description": "The materialized lake views execution definition display name.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "A short description of the materialized lake views execution definition.",
+          "type": "string",
+          "readOnly": false
+        },
+        "settings": {
+          "description": "The materialized lake views execution definition settings.",
+          "$ref": "#/definitions/MaterializedLakeViewExecutionDefinitionSettingsRequest",
+          "readOnly": false
+        },
+        "currentLakehouseExecutionContext": {
+          "description": "The current lakehouse execution context for the materialized lake views execution definition.",
+          "$ref": "#/definitions/CurrentLakehouseExecutionContext",
+          "readOnly": false
+        },
+        "extendedLineageExecutionContext": {
+          "description": "The extended lineage execution context for the materialized lake views execution definition.",
+          "$ref": "#/definitions/ExtendedLineageExecutionContextRequest",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateMaterializedLakeViewExecutionDefinitionRequest": {
+      "description": "Update materialized lake views execution definition request payload. Only the fields provided are updated; omitted fields retain their existing values.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "description": "The materialized lake views execution definition display name.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "A short description of the materialized lake views execution definition.",
+          "type": "string",
+          "readOnly": false
+        },
+        "settings": {
+          "description": "The materialized lake views execution definition settings.",
+          "$ref": "#/definitions/MaterializedLakeViewExecutionDefinitionSettingsRequest",
+          "readOnly": false
+        },
+        "currentLakehouseExecutionContext": {
+          "description": "The current lakehouse execution context for the materialized lake views execution definition.",
+          "$ref": "#/definitions/CurrentLakehouseExecutionContext",
+          "readOnly": false
+        },
+        "extendedLineageExecutionContext": {
+          "description": "The extended lineage execution context for the materialized lake views execution definition.",
+          "$ref": "#/definitions/ExtendedLineageExecutionContextRequest",
+          "readOnly": false
+        }
+      }
+    },
+    "MaterializedLakeViewExecutionDefinitionSettingsRequest": {
+      "description": "The materialized lake views execution definition settings.",
+      "type": "object",
+      "properties": {
+        "environment": {
+          "description": "The Spark environment reference to be used with the materialized lake views execution definition.",
+          "$ref": "../common/definitions.json#/definitions/ItemReferenceById",
+          "readOnly": false
+        },
+        "refreshMode": {
+          "description": "The refresh mode setting to be used with the materialized lake views execution definition. Defaults to `Optimal` if not specified.",
+          "$ref": "#/definitions/RefreshMode",
+          "readOnly": false
+        }
+      }
+    },
+    "MaterializedLakeViewExecutionDefinitionSettingsResponse": {
+      "description": "The materialized lake views execution definition settings (response).",
+      "type": "object",
+      "properties": {
+        "environment": {
+          "description": "The Spark environment reference to be used with the materialized lake views execution definition.",
+          "$ref": "../common/definitions.json#/definitions/ItemReference",
+          "readOnly": false
+        },
+        "refreshMode": {
+          "description": "The refresh mode setting to be used with the materialized lake views execution definition. Defaults to `Optimal` if not specified.",
+          "$ref": "#/definitions/RefreshMode",
+          "readOnly": false
+        }
+      }
+    },
+    "RefreshMode":{
+      "type": "string",
+      "description": "The refresh mode for the execution definition. Additional `RefreshMode` types may be added over time.",
+      "enum": [
+        "Optimal",
+        "Full"
+      ],
+      "x-ms-enum": {
+        "name": "RefreshMode",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Optimal",
+            "description": "This mode chooses the best strategy to maximize performance from among incremental, full, or no recompute while refreshing each materialized lake view."
+          },
+          {
+            "value": "Full",
+            "description": "This mode enforces the full recompute for materialized lake views being refreshed."
+          }
+        ]
+      }
+    },
+    "CurrentLakehouseExecutionContext": {
+      "description": "The current lakehouse execution context for a materialized lake views execution definition.",
+      "type": "object",
+      "required": ["mode"],
+      "discriminator": "mode",
+      "properties": {
+        "mode": {
+          "description": "The execution context mode for the current lakehouse.",
+          "$ref": "#/definitions/ExecutionContextMode",
+          "readOnly": false
+        }
+      }
+    },
+    "CurrentLakehouseExecutionContextAll": {
+      "description": "Current lakehouse execution context where all materialized lake views are included.",
+      "type": "object",
+      "x-ms-discriminator-value": "All",
+      "allOf": [
+        {
+          "$ref": "#/definitions/CurrentLakehouseExecutionContext"
+        }
+      ]
+    },
+    "CurrentLakehouseExecutionContextSelected": {
+      "description": "Current lakehouse execution context where only selected materialized lake views are included.",
+      "type": "object",
+      "x-ms-discriminator-value": "Selected",
+      "allOf": [
+        {
+          "$ref": "#/definitions/CurrentLakehouseExecutionContext"
+        }
+      ],
+      "properties": {
+        "selectedMlvs": {
+          "description": "The list of fully qualified names of materialized lake views from the current lakehouse to be refreshed.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "readOnly": false
+        }
+      },
+      "required": ["selectedMlvs"]
+    },
+    "ExtendedLineageExecutionContextRequest": {
+      "description": "The extended lineage execution context for a materialized lake views execution definition.",
+      "type": "object",
+      "required": ["mode"],
+      "discriminator": "mode",
+      "properties": {
+        "mode": {
+          "description": "The execution context mode for extended lineage.",
+          "$ref": "#/definitions/ExecutionContextMode",
+          "readOnly": false
+        }
+      }
+    },
+    "ExtendedLineageExecutionContextRequestAll": {
+      "description": "Extended lineage execution context where all lakehouses are included.",
+      "type": "object",
+      "x-ms-discriminator-value": "All",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ExtendedLineageExecutionContextRequest"
+        }
+      ]
+    },
+    "ExtendedLineageExecutionContextRequestSelected": {
+      "description": "Extended lineage execution context where only selected lakehouses are included.",
+      "type": "object",
+      "x-ms-discriminator-value": "Selected",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ExtendedLineageExecutionContextRequest"
+        }
+      ],
+      "properties": {
+        "selectedLakehouses": {
+          "description": "The list of lakehouses to be included in refresh.",
+          "type": "array",
+          "items": {
+            "$ref": "../common/definitions.json#/definitions/ItemReferenceById"
+          },
+          "readOnly": false
+        }
+      },
+      "required": ["selectedLakehouses"]
+    },
+    "ExtendedLineageExecutionContextResponse": {
+      "description": "The extended lineage execution context for a materialized lake views execution definition (response).",
+      "type": "object",
+      "required": ["mode"],
+      "discriminator": "mode",
+      "properties": {
+        "mode": {
+          "description": "The execution context mode for extended lineage.",
+          "$ref": "#/definitions/ExecutionContextMode",
+          "readOnly": false
+        }
+      }
+    },
+    "ExtendedLineageExecutionContextResponseAll": {
+      "description": "Extended lineage execution context where all lakehouses are included (response).",
+      "type": "object",
+      "x-ms-discriminator-value": "All",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ExtendedLineageExecutionContextResponse"
+        }
+      ]
+    },
+    "ExtendedLineageExecutionContextResponseSelected": {
+      "description": "Extended lineage execution context where only selected lakehouses are included (response).",
+      "type": "object",
+      "x-ms-discriminator-value": "Selected",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ExtendedLineageExecutionContextResponse"
+        }
+      ],
+      "properties": {
+        "selectedLakehouses": {
+          "description": "The list of lakehouses to be included in refresh.",
+          "type": "array",
+          "items": {
+            "$ref": "../common/definitions.json#/definitions/ItemReference"
+          },
+          "readOnly": false
+        }
+      },
+      "required": ["selectedLakehouses"]
+    },
+    "ExecutionContextMode": {
+      "type": "string",
+      "description": "The execution context mode. Additional `ExecutionContextMode` types may be added over time.",
+      "enum": [
+        "All",
+        "Selected"
+      ],
+      "x-ms-enum": {
+        "name": "ExecutionContextMode",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "All",
+            "description": "All items are included in the execution boundary."
+          },
+          {
+            "value": "Selected",
+            "description": "Only selected items are included in the execution boundary."
+          }
+        ]
+      }
+    },
+    "RefreshMaterializedLakeViewsExecutionData": {
+      "description": "The execution data for the refresh materialized lake views.",
+      "type": "object",
+      "properties": {
+        "mlvExecutionDefinitionId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The MLV Execution Definition Id."
         }
       }
     }

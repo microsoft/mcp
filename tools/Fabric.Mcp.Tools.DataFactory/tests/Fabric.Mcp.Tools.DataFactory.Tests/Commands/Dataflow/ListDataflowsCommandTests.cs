@@ -6,6 +6,7 @@ using Fabric.Mcp.Tools.DataFactory.Commands.Dataflow;
 using global::DataFactory.MCP.Handlers.Dataflow;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.DataFactory.Tests.Commands.Dataflow;
 

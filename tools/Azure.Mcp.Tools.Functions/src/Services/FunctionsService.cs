@@ -57,7 +57,7 @@ public sealed class FunctionsService(
         Merge ProjectFiles carefully with existing project files:
         - **local.settings.json**: Merge "Values" entries, don't overwrite existing connection strings
         - **host.json**: Keep existing extensionBundle settings, merge other sections
-        - **requirements.txt / package.json / pom.xml**: Add new dependencies, avoid duplicates
+        - **requirements.txt / package.json / pom.xml / go.mod / go.sum**: Add new dependencies, avoid duplicates
         If anything conflicts, ask the user before overwriting.
 
         Function files placement by language:
@@ -65,6 +65,7 @@ public sealed class FunctionsService(
         - TypeScript/JavaScript: Place files in `src/functions/`
         - Java: Place files in `src/main/java/com/function/`
         - C#: Place files in the project root alongside the .csproj
+        - Go: Place `.go` files in the project root
         """;
 
     public async Task<LanguageListResult> GetLanguageListAsync(CancellationToken cancellationToken = default)
@@ -96,10 +97,10 @@ public sealed class FunctionsService(
     }
 
     public async Task<ProjectTemplateResult> GetProjectTemplateAsync(
-        string language,
+        SupportedLanguages language,
         CancellationToken cancellationToken = default)
     {
-        var normalizedLanguage = language.ToLowerInvariant();
+        var normalizedLanguage = language.ToString().ToLowerInvariant();
 
         if (!_languageMetadata.IsValidLanguage(normalizedLanguage))
         {
@@ -122,10 +123,10 @@ public sealed class FunctionsService(
     }
 
     public async Task<TemplateListResult> GetTemplateListAsync(
-        string language,
+        SupportedLanguages language,
         CancellationToken cancellationToken = default)
     {
-        var normalizedLanguage = language.ToLowerInvariant();
+        var normalizedLanguage = language.ToString().ToLowerInvariant();
 
         if (!_languageMetadata.IsValidLanguage(normalizedLanguage))
         {
@@ -177,13 +178,13 @@ public sealed class FunctionsService(
     }
 
     public async Task<FunctionTemplateResult> GetFunctionTemplateAsync(
-        string language,
+        SupportedLanguages language,
         string template,
         string? runtimeVersion,
         TemplateOutput output = TemplateOutput.New,
         CancellationToken cancellationToken = default)
     {
-        var normalizedLanguage = language.ToLowerInvariant();
+        var normalizedLanguage = language.ToString().ToLowerInvariant();
 
         if (!_languageMetadata.IsValidLanguage(normalizedLanguage))
         {
@@ -272,10 +273,8 @@ public sealed class FunctionsService(
     /// Builds a raw.githubusercontent.com URL from pre-validated repo path and file path.
     /// Raw URLs have higher rate limits (~5000/hour) compared to API (60/hour unauthenticated).
     /// </summary>
-    internal static string BuildRawGitHubUrl(string repoPath, string filePath)
-    {
-        return $"https://raw.githubusercontent.com/{repoPath}/{DefaultBranch}/{filePath}";
-    }
+    internal static string BuildRawGitHubUrl(string repoPath, string filePath) =>
+        $"https://raw.githubusercontent.com/{repoPath}/{DefaultBranch}/{filePath}";
 
     /// <summary>
     /// Fetches all files from a template directory. Results are cached.

@@ -39,6 +39,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_usageplan_get",
             new()
             {
+                { "tenant", Settings.TenantId },
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "name", usagePlanName }
@@ -59,6 +60,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_usageplan_enrollment_get",
             new()
             {
+                { "tenant", Settings.TenantId },
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "usage-plan", usagePlanName },
@@ -79,7 +81,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_goal_template_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
                 { "name", goalTemplate }
             });
@@ -98,7 +100,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_goal_assignment_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
                 { "name", goalAssignment }
             });
@@ -117,7 +119,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_goal_resource_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
                 { "goal-assignment", goalAssignment }
             });
@@ -135,7 +137,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_recovery_plan_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
                 { "name", recoveryPlan }
             });
@@ -154,7 +156,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_recovery_plan_resource_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
                 { "recovery-plan", recoveryPlan }
             });
@@ -173,7 +175,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_recovery_job_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
                 { "recovery-plan", recoveryPlan },
                 { "name", recoveryJob }
@@ -194,12 +196,57 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             "resilience_recovery_job_resource_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
                 { "recovery-plan", recoveryPlan },
                 { "recovery-job", recoveryJob }
             });
 
         Assert.Equal(JsonValueKind.Array, result.AssertProperty("recoveryJobResources").ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_create_usage_plan()
+    {
+        var resourceGroupName = RegisterOrRetrieveVariable("createResourceGroupName", Settings.ResourceGroupName);
+        const string usagePlanName = "mcp-usage-plan";
+
+        var result = await CallToolAsync(
+            "resilience_usageplan_create",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "usage-plan", usagePlanName },
+                { "plan-type", "Basic" }
+            });
+
+        var usagePlan = result.AssertProperty("usagePlan");
+        Assert.False(string.IsNullOrEmpty(usagePlan.AssertProperty("name").GetString()));
+    }
+
+    [Fact]
+    public async Task Should_create_usage_plan_enrollment()
+    {
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var usagePlanName = RegisterOrRetrieveDeploymentOutputVariable("usagePlanName", "USAGEPLANNAME");
+        var enrollmentName = RegisterOrRetrieveDeploymentOutputVariable("enrollmentName", "ENROLLMENTNAME");
+
+        var result = await CallToolAsync(
+            "resilience_usageplan_enrollment_create",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "usage-plan", usagePlanName },
+                { "enrollment", enrollmentName },
+                { "service-group", serviceGroup }
+            });
+
+        var enrollment = result.AssertProperty("enrollment");
+        Assert.False(string.IsNullOrEmpty(enrollment.AssertProperty("name").GetString()));
     }
 }

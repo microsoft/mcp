@@ -2,28 +2,28 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventGrid.Tests.Subscription;
 
-public class SubscriptionListCommandTests : CommandUnitTestsBase<SubscriptionListCommand, IEventGridService>
+public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<SubscriptionListCommand, IEventGridService>
 {
-    private readonly ISubscriptionService _subscriptionService;
+    private readonly IAzureService _azureService;
 
     public SubscriptionListCommandTests()
     {
-        _subscriptionService = Substitute.For<ISubscriptionService>();
+        _azureService = Substitute.For<IAzureService>();
 
-        Services.AddSingleton(_subscriptionService);
+        Services.AddSingleton(_azureService);
     }
 
     [Fact]
@@ -167,7 +167,7 @@ public class SubscriptionListCommandTests : CommandUnitTestsBase<SubscriptionLis
                 ]);
 
             // Set up subscription service for cross-subscription search scenario
-            _subscriptionService.GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            _azureService.GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
 

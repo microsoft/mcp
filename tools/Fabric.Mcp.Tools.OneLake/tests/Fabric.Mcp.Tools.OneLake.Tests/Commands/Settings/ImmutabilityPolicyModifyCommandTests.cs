@@ -8,6 +8,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Settings;
 
@@ -73,10 +74,7 @@ public class ImmutabilityPolicyModifyCommandTests : CommandUnitTestsBase<Immutab
         var response = await ExecuteCommandAsync(args);
 
         Assert.NotNull(response);
-        if (shouldSucceed)
-            Assert.Equal(HttpStatusCode.OK, response.Status);
-        else
-            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     }
 
     [Fact]

@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -24,9 +23,8 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false)]
-public sealed class BlobListCommand(
-    ILogger<BlobListCommand> logger,
-    IOneLakeService oneLakeService) : AuthenticatedCommand<BlobListOptions, BlobListCommand.BlobListCommandResult>
+public sealed class BlobListCommand(ILogger<BlobListCommand> logger, IOneLakeService oneLakeService)
+    : AuthenticatedCommand<BlobListOptions, BlobListCommand.BlobListCommandResult>
 {
     private readonly ILogger<BlobListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -67,7 +65,7 @@ public sealed class BlobListCommand(
                     options.Recursive,
                     cancellationToken);
 
-                var rawResult = new BlobListCommandResult { RawResponse = rawResponse };
+                var rawResult = new BlobListCommandResult(null, null, rawResponse);
                 context.Response.Results = ResponseResult.Create(rawResult, MinimalJsonContext.Default.BlobListCommandResult);
                 return context.Response;
             }
@@ -93,7 +91,7 @@ public sealed class BlobListCommand(
                     cancellationToken)).ToList();
             }
 
-            var result = new BlobListCommandResult(files, options.Path ?? "");
+            var result = new BlobListCommandResult(files, options.Path ?? "", null);
             context.Response.Results = ResponseResult.Create(result, MinimalJsonContext.Default.BlobListCommandResult);
         }
         catch (Exception ex)
@@ -106,20 +104,8 @@ public sealed class BlobListCommand(
         return context.Response;
     }
 
-    public sealed record BlobListCommandResult
-    {
-        public List<OneLakeFileInfo>? Files { get; init; }
-        public string? BasePath { get; init; }
-        public string? RawResponse { get; init; }
-
-        public BlobListCommandResult(List<OneLakeFileInfo> files, string basePath)
-        {
-            Files = files;
-            BasePath = basePath;
-        }
-
-        public BlobListCommandResult()
-        {
-        }
-    }
+    public sealed record BlobListCommandResult(
+        List<OneLakeFileInfo>? Files,
+        string? BasePath,
+        string? RawResponse);
 }

@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.FileShares.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FileShares.Options.Snapshot;
 using Azure.Mcp.Tools.FileShares.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
@@ -25,65 +25,43 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class SnapshotDeleteCommand(ILogger<SnapshotDeleteCommand> logger, IFileSharesService fileSharesService)
-    : BaseFileSharesCommand<SnapshotDeleteOptions>(logger, fileSharesService)
+public sealed class SnapshotDeleteCommand(ILogger<SnapshotDeleteCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<SnapshotDeleteOptions, SnapshotDeleteCommand.SnapshotDeleteCommandResult>(subscriptionResolver)
 {
-
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SnapshotDeleteOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.Snapshot.FileShareName.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.Snapshot.SnapshotName.AsRequired());
-    }
-
-    protected override SnapshotDeleteOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.FileShareName.Name);
-        options.SnapshotName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.SnapshotName.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        var options = BindOptions(parseResult);
-
         try
         {
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Deleting snapshot {SnapshotName} for file share {FileShareName} in resource group {ResourceGroup}, subscription {Subscription}",
                 options.SnapshotName,
                 options.FileShareName,
                 options.ResourceGroup,
                 options.Subscription);
 
-            await _fileSharesService.DeleteSnapshotAsync(
+            await fileSharesService.DeleteSnapshotAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.FileShareName!,
-                options.SnapshotName!,
+                options.ResourceGroup,
+                options.FileShareName,
+                options.SnapshotName,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new(true, options.SnapshotName!),
+                new(true, options.SnapshotName),
                 FileSharesJsonContext.Default.SnapshotDeleteCommandResult);
 
-            _logger.LogInformation(
-                "Successfully deleted snapshot {SnapshotName}",
-                options.SnapshotName);
+            logger.LogInformation("Successfully deleted snapshot {SnapshotName}", options.SnapshotName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting snapshot. SnapshotName: {SnapshotName}, FileShareName: {FileShareName}, ResourceGroup: {ResourceGroup}.", options.SnapshotName, options.FileShareName, options.ResourceGroup);
+            logger.LogError(ex, "Error deleting snapshot. SnapshotName: {SnapshotName}, FileShareName: {FileShareName}, ResourceGroup: {ResourceGroup}.", options.SnapshotName, options.FileShareName, options.ResourceGroup);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record SnapshotDeleteCommandResult(bool Deleted, string SnapshotName);
+    public sealed record SnapshotDeleteCommandResult(bool Deleted, string SnapshotName);
 }

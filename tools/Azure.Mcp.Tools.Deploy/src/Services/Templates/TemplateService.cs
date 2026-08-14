@@ -70,5 +70,4 @@ public static class TemplateService
 
         return result.ToString();
     }
-
 }

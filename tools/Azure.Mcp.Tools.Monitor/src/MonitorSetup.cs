@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
-using Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
+using Azure.Mcp.Tools.Monitor.Commands.HealthModels;
 using Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
@@ -78,7 +78,8 @@ public class MonitorSetup : IAreaSetup
 
         services.AddSingleton<TableTypeListCommand>();
 
-        services.AddSingleton<EntityGetHealthCommand>();
+        services.AddSingleton<HealthModelListCommand>();
+        services.AddSingleton<HealthModelGetCommand>();
 
         services.AddSingleton<MetricsQueryCommand>();
         services.AddSingleton<MetricsDefinitionsCommand>();
@@ -139,13 +140,11 @@ public class MonitorSetup : IAreaSetup
 
         monitorTableType.AddCommand<TableTypeListCommand>(serviceProvider);
 
-        var health = new CommandGroup("healthmodels", "Azure Monitor Health Models operations - Commands for working with Azure Monitor Health Models.");
+        var health = new CommandGroup("healthmodels", "Azure Monitor Health Models operations - Commands for listing and retrieving Azure Monitor Health Models (Microsoft.CloudHealth/healthmodels).");
         monitor.AddSubGroup(health);
 
-        var entity = new CommandGroup("entity", "Entity operations - Commands for working with entities in Azure Monitor Health Models.");
-        health.AddSubGroup(entity);
-
-        entity.AddCommand<EntityGetHealthCommand>(serviceProvider);
+        health.AddCommand<HealthModelListCommand>(serviceProvider);
+        health.AddCommand<HealthModelGetCommand>(serviceProvider);
 
         // Create Metrics command group and register commands
         var metrics = new CommandGroup("metrics", "Azure Monitor metrics operations - Commands for querying and analyzing Azure Monitor metrics.");

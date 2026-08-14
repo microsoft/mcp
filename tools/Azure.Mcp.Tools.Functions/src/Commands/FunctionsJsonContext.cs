@@ -4,7 +4,6 @@
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Functions.Commands.Template;
 using Azure.Mcp.Tools.Functions.Models;
-using Azure.Mcp.Tools.Functions.Services;
 
 namespace Azure.Mcp.Tools.Functions.Commands;
 
@@ -17,7 +16,7 @@ namespace Azure.Mcp.Tools.Functions.Commands;
 [JsonSerializable(typeof(List<ProjectTemplateResult>))]
 [JsonSerializable(typeof(TemplateManifest))]
 [JsonSerializable(typeof(TemplateManifestEntry))]
-[JsonSerializable(typeof(TemplateGetCommandResult))]
+[JsonSerializable(typeof(TemplateGetCommand.TemplateGetCommandResult))]
 [JsonSerializable(typeof(TemplateListResult))]
 [JsonSerializable(typeof(FunctionTemplateResult))]
 [JsonSerializable(typeof(TemplateSummary))]

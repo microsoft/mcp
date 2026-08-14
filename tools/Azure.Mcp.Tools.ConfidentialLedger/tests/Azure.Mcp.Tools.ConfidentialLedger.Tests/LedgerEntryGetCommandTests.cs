@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
 using Azure.Mcp.Tools.ConfidentialLedger.Models;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
@@ -17,12 +17,10 @@ public sealed class LedgerEntryGetCommandTests : CommandUnitTestsBase<LedgerEntr
     public async Task Execute_WithTransactionId_Success_ReturnsResult()
     {
         Service.GetLedgerEntryAsync("ledger1", "2.199", null, Arg.Any<CancellationToken>())
-            .Returns(new LedgerEntryGetResult
-            {
-                LedgerName = "ledger1",
-                TransactionId = "2.199",
-                Contents = "{\"hello\":\"world\"}"
-            });
+            .Returns(new LedgerEntryGetResult(
+                LedgerName: "ledger1",
+                TransactionId: "2.199",
+                Contents: "{\"hello\":\"world\"}"));
 
         var response = await ExecuteCommandAsync("--ledger", "ledger1", "--transaction-id", "2.199");
 
@@ -41,7 +39,7 @@ public sealed class LedgerEntryGetCommandTests : CommandUnitTestsBase<LedgerEntr
     [InlineData("ledgerName", " ")]
     public async Task GetLedgerEntryAsync_ThrowsArgumentNullException_WhenParametersInvalid(string? ledgerName, string? transactionId)
     {
-        var service = new ConfidentialLedgerService(Substitute.For<ITenantService>());
+        var service = new ConfidentialLedgerService(Substitute.For<IAzureService>());
         await Assert.ThrowsAsync<ArgumentException>(() =>
             service.GetLedgerEntryAsync(ledgerName!, transactionId!, null, TestContext.Current.CancellationToken));
     }
@@ -59,7 +57,7 @@ public sealed class LedgerEntryGetCommandTests : CommandUnitTestsBase<LedgerEntr
     [InlineData("-startswithhyphen")]
     public async Task GetLedgerEntryAsync_RejectsInvalidLedgerNames_PreventingSsrf(string ledgerName)
     {
-        var service = new ConfidentialLedgerService(Substitute.For<ITenantService>());
+        var service = new ConfidentialLedgerService(Substitute.For<IAzureService>());
         await Assert.ThrowsAsync<ArgumentException>(() =>
             service.GetLedgerEntryAsync(ledgerName, "1.0", null, TestContext.Current.CancellationToken));
     }
@@ -71,7 +69,7 @@ public sealed class LedgerEntryGetCommandTests : CommandUnitTestsBase<LedgerEntr
     [InlineData("name#fragment")]
     public async Task AppendEntryAsync_RejectsInvalidLedgerNames_PreventingSsrf(string ledgerName)
     {
-        var service = new ConfidentialLedgerService(Substitute.For<ITenantService>());
+        var service = new ConfidentialLedgerService(Substitute.For<IAzureService>());
         await Assert.ThrowsAsync<ArgumentException>(() =>
             service.AppendEntryAsync(ledgerName, "data", null, TestContext.Current.CancellationToken));
     }
@@ -80,12 +78,10 @@ public sealed class LedgerEntryGetCommandTests : CommandUnitTestsBase<LedgerEntr
     public async Task Execute_WithTransactionId_WithCollectionId_Success_ReturnsResult()
     {
         Service.GetLedgerEntryAsync("ledger1", "2.199", "my-collection", Arg.Any<CancellationToken>())
-            .Returns(new LedgerEntryGetResult
-            {
-                LedgerName = "ledger1",
-                TransactionId = "2.199",
-                Contents = "{\"hello\":\"world\"}"
-            });
+            .Returns(new LedgerEntryGetResult(
+                LedgerName: "ledger1",
+                TransactionId: "2.199",
+                Contents: "{\"hello\":\"world\"}"));
 
         var response = await ExecuteCommandAsync(
             "--ledger", "ledger1",

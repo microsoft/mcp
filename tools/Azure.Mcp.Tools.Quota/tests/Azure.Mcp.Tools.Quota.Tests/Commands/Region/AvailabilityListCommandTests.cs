@@ -2,17 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Quota.Commands;
 using Azure.Mcp.Tools.Quota.Commands.Region;
 using Azure.Mcp.Tools.Quota.Services;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Quota.Tests.Commands.Region;
 
-public sealed class AvailabilityListCommandTests : CommandUnitTestsBase<AvailabilityListCommand, IQuotaService>
+public sealed class AvailabilityListCommandTests : SubscriptionCommandUnitTestsBase<AvailabilityListCommand, IQuotaService>
 {
     [Fact]
     public async Task Should_check_azure_regions_success()
@@ -130,12 +130,13 @@ public sealed class AvailabilityListCommandTests : CommandUnitTestsBase<Availabi
         Assert.Contains("northcentralus", response.AvailableRegions);
     }
 
-    [Fact]
-    public async Task Should_ReturnError_empty_resource_types()
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Should_ReturnError_on_invalid_resource_types(string resourceTypes)
     {
         // Arrange
         var subscriptionId = "test-subscription-id";
-        var resourceTypes = "";
 
         // Act
         var result = await ExecuteCommandAsync(
@@ -145,7 +146,7 @@ public sealed class AvailabilityListCommandTests : CommandUnitTestsBase<Availabi
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
-        Assert.Contains("Missing Required options: --resource-types", result.Message);
+        Assert.Contains("Option '--resource-types' was configured to require non-empty, non-whitespace", result.Message, StringComparison.OrdinalIgnoreCase);
 
         // Verify the service was not called
         await Service.DidNotReceive().GetAvailableRegionsForResourceTypesAsync(
@@ -299,33 +300,6 @@ public sealed class AvailabilityListCommandTests : CommandUnitTestsBase<Availabi
             cognitiveServiceModelName,
             cognitiveServiceModelVersion,
             cognitiveServiceDeploymentSkuName,
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task Should_handle_whitespace_only_resource_types()
-    {
-        // Arrange
-        var subscriptionId = "test-subscription-id";
-        var resourceTypes = "   ";
-
-        // Act
-        var result = await ExecuteCommandAsync(
-            "--subscription", subscriptionId,
-            "--resource-types", resourceTypes);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.BadRequest, result.Status);
-        Assert.Contains("Missing Required options: --resource-types", result.Message);
-
-        // Verify the service was not called
-        await Service.DidNotReceive().GetAvailableRegionsForResourceTypesAsync(
-            Arg.Any<string[]>(),
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 

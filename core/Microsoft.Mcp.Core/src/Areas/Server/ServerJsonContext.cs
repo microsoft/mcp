@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Metadata;
-using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
 namespace Microsoft.Mcp.Core.Areas.Server;
@@ -13,21 +14,19 @@ namespace Microsoft.Mcp.Core.Areas.Server;
 [JsonSerializable(typeof(RegistryRoot))]
 [JsonSerializable(typeof(Dictionary<string, RegistryServerInfo>))]
 [JsonSerializable(typeof(RegistryServerInfo))]
-[JsonSerializable(typeof(ListToolsResult))]
 [JsonSerializable(typeof(Dictionary<string, object?>))]
 [JsonSerializable(typeof(JsonElement))]
+[JsonSerializable(typeof(JsonObject))]
 [JsonSerializable(typeof(Tool))]
 [JsonSerializable(typeof(IEnumerable<Tool>))]
-[JsonSerializable(typeof(ToolInputSchema))]
-[JsonSerializable(typeof(ToolPropertySchema))]
+[JsonSerializable(typeof(ToolCommandInfo))]
+[JsonSerializable(typeof(IEnumerable<ToolCommandInfo>))]
 [JsonSerializable(typeof(ToolMetadata))]
 [JsonSerializable(typeof(MetadataDefinition))]
 [JsonSerializable(typeof(ConsolidatedToolDefinition))]
 [JsonSerializable(typeof(List<ConsolidatedToolDefinition>))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
 )]
-internal sealed partial class ServerJsonContext : JsonSerializerContext
-{
-}
+internal sealed partial class ServerJsonContext : JsonSerializerContext;

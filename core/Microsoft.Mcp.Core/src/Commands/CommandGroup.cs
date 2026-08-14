@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.Mcp.Core.Commands;

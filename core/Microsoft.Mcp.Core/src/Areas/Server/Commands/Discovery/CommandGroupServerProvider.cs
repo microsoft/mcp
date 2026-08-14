@@ -67,7 +67,7 @@ public sealed class CommandGroupServerProvider(CommandGroup commandGroup) : IMcp
 
         if (ReadOnly)
         {
-            arguments.Add($"--{ServiceOptionDefinitions.ReadOnlyName}");
+            arguments.Add($"--read-only");
         }
 
         return [.. arguments];

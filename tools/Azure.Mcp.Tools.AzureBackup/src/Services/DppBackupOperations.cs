@@ -3,7 +3,6 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.ResourceManager;
 using Azure.ResourceManager.DataProtectionBackup;
@@ -13,7 +12,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
-public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzureService(tenantService), IDppBackupOperations
+public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureService(azureService), IDppBackupOperations
 {
     private const string VaultType = VaultTypeResolver.Dpp;
 
@@ -435,8 +434,9 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             // policies and matching by name to work around this SDK limitation.
             var policies = await ListPoliciesAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
             return policies.FirstOrDefault(p => p.Name == policyName)
-                ?? throw new InvalidOperationException(
-                    $"Policy '{policyName}' not found or cannot be parsed by the Azure SDK due to an unsupported retention/duration field.");
+                ?? throw new KeyNotFoundException(
+                    $"Policy '{policyName}' not found in vault '{vaultName}'. " +
+                    $"If the policy exists, it may contain a retention/duration format not yet supported by the Azure SDK.");
         }
     }
 

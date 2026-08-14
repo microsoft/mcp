@@ -7,9 +7,6 @@ using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
@@ -24,17 +21,10 @@ using Microsoft.Mcp.Core.Validation;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    IResourceGroupService resourceGroupService,
-    IResourceResolverService resourceResolverService,
-    IHttpClientFactory httpClientFactory,
-    ILogger<MonitorService> logger) : BaseAzureService(tenantService), IMonitorService
+public class MonitorService(IAzureService azureService, IResourceResolverService resourceResolverService, ILogger<MonitorService> logger)
+    : BaseAzureService(azureService), IMonitorService
 {
     private const string ActivityLogApiVersion = "2017-03-01-preview";
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ILogger<MonitorService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<JsonNode>> QueryResourceLogs(
@@ -58,7 +48,7 @@ public class MonitorService(
         options.Audience = GetLogsQueryAudience();
 
         options.ConfigureRetryOptions(retryPolicy);
-        options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
         var client = new LogsQueryClient(credential, options);
         var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
 
@@ -117,7 +107,7 @@ public class MonitorService(
         options.Audience = GetLogsQueryAudience();
 
         options.ConfigureRetryOptions(retryPolicy);
-        options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
         var client = new LogsQueryClient(credential, options);
 
         var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
@@ -165,7 +155,7 @@ public class MonitorService(
 
         var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
 
-        var resourceGroupResource = await resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
+        var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
             throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
         var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName, cancellationToken)
             .ConfigureAwait(false);
@@ -199,7 +189,7 @@ public class MonitorService(
 
         if (!string.IsNullOrEmpty(resourceGroup))
         {
-            var rgResource = await resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+            var rgResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
                 ?? throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
 
             return await rgResource
@@ -214,7 +204,7 @@ public class MonitorService(
                 .ConfigureAwait(false);
         }
 
-        var subscriptionResource = await subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
         var workspaces = await subscriptionResource
             .GetOperationalInsightsWorkspacesAsync(cancellationToken)
@@ -253,7 +243,7 @@ public class MonitorService(
             options.Audience = GetLogsQueryAudience();
 
             options.ConfigureRetryOptions(retryPolicy);
-            options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
+            options.Transport = new HttpClientTransport(AzureService.GetClient());
             var client = new LogsQueryClient(credential, options);
             var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
 
@@ -333,7 +323,7 @@ public class MonitorService(
 
         var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
 
-        var resourceGroupResource = await resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
         var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName, cancellationToken)
             .ConfigureAwait(false);
@@ -444,7 +434,7 @@ public class MonitorService(
         using HttpRequestMessage httpRequest = new(HttpMethod.Get, url);
         httpRequest.Headers.Authorization = new("Bearer", token);
 
-        var client = _httpClientFactory.CreateClient();
+        var client = AzureService.GetClient();
         using HttpResponseMessage response = await client.SendAsync(httpRequest, cancellationToken);
 
         if (response.IsSuccessStatusCode)
@@ -506,7 +496,7 @@ public class MonitorService(
     private string GetLogActivityEndpointString(string subscriptionId)
     {
         string subscriptionPath = $"subscriptions/{subscriptionId}/providers/Microsoft.Insights/eventtypes/management/values";
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://management.azure.com/{subscriptionPath}",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://management.chinacloudapi.cn/{subscriptionPath}",
@@ -517,7 +507,7 @@ public class MonitorService(
 
     private LogsQueryAudience GetLogsQueryAudience()
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => LogsQueryAudience.AzurePublicCloud,
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => LogsQueryAudience.AzureChina,

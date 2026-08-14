@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
@@ -17,10 +17,9 @@ namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
 /// <summary>
 /// Recognizer for real-time speech transcription using Azure AI Services Speech SDK.
 /// </summary>
-public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogger<RealtimeTranscriptionRecognizer> logger)
-    : BaseAzureService(tenantService), IRealtimeTranscriptionRecognizer
+public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger<RealtimeTranscriptionRecognizer> logger)
+    : BaseAzureService(azureService), IRealtimeTranscriptionRecognizer
 {
-    private readonly ITenantService _tenantService = tenantService;
     private readonly ILogger<RealtimeTranscriptionRecognizer> _logger = logger;
 
     /// <inheritdoc/>
@@ -63,7 +62,7 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
             try
             {
                 // Get Azure AD credential and token
-                var credential = await GetCredential(cancellationToken);
+                var credential = await GetCredential(null, cancellationToken);
 
                 // Get access token for Cognitive Services with proper scope
                 var accessToken = await credential.GetTokenAsync(new([GetCognitiveServicesScope()]), cancellationToken);
@@ -498,7 +497,7 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
 
     private string GetCognitiveServicesScope()
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://cognitiveservices.azure.com/.default",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://cognitiveservices.azure.us/.default",

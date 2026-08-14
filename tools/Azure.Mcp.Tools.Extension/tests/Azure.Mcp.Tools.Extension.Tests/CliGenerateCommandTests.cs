@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Net.Http;
 using Azure.Core;
 using Azure.Mcp.Tools.Extension.Commands;
 using Azure.Mcp.Tools.Extension.Services;
@@ -114,7 +112,8 @@ public sealed class CliGenerateCommandTests : CommandUnitTestsBase<CliGenerateCo
             .Returns(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("az storage account list") });
 
         var httpClient = new HttpClient(mockHttpMessageHandler);
-        var httpClientFactory = new HttpClientFactoryStub(httpClient);
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        httpClientFactory.CreateClient(Arg.Any<string>()).Returns(httpClient);
 
         var tokenCredential = Substitute.For<TokenCredential>();
         tokenCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
@@ -149,15 +148,5 @@ public sealed class CliGenerateCommandTests : CommandUnitTestsBase<CliGenerateCo
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             => SendPublic(request, cancellationToken);
-    }
-
-    /// <summary>
-    /// Stub implementation of IHttpClientFactory that returns a fixed HttpClient.
-    /// </summary>
-    public sealed class HttpClientFactoryStub(HttpClient httpClient) : IHttpClientFactory
-    {
-        public HttpClient CreateClient(string name) => httpClient;
-
-        public HttpClient CreateClient() => httpClient;
     }
 }

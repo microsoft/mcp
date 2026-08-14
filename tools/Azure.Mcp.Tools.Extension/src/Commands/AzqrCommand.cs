@@ -4,13 +4,12 @@
 using System.Net;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Extension.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Time;
 
@@ -20,50 +19,38 @@ namespace Azure.Mcp.Tools.Extension.Commands;
     Id = "e7ef18a3-2730-4300-bad3-dc766f47dd2a",
     Name = "azqr",
     Title = "Azure Quick Review CLI Command",
-    Description = "Runs Azure Quick Review CLI (azqr) commands to generate compliance and security reports for Azure resources, identifying non-compliant configurations or areas for improvement. Requires a subscription id and optionally a resource group name. Returns the generated report file path. Note: azqr is different from Azure CLI (az).",
+    Description = "Runs Azure Quick Review CLI (azqr) to scan an Azure subscription (or resource group) for compliance issues and provide compliance recommendations. Generates a compliance and security assessment report that identifies non-compliant configurations and recommends improvements for your Azure resources. Use this whenever a user wants to scan, check, review, or assess a subscription for compliance issues or compliance recommendations, or wants recommendations to fix compliance and security problems. Requires a subscription (ID or name) and optionally a resource group. Returns the generated report file paths (XLSX and JSON). Note: azqr performs compliance and security scans and is different from Azure CLI (az), from Azure Policy assignments, and from Azure Advisor recommendations for cost, security, reliability, operational excellence, and performance improvements.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class AzqrCommand(ILogger<AzqrCommand> logger, ISubscriptionService subscriptionService, IDateTimeProvider dateTimeProvider, IExternalProcessService processService, int processTimeoutSeconds = 300) : SubscriptionCommand<AzqrOptions>()
+public sealed class AzqrCommand(
+    ILogger<AzqrCommand> logger,
+    IAzureService azureService,
+    IDateTimeProvider dateTimeProvider,
+    IExternalProcessService processService,
+    ISubscriptionResolver subscriptionResolver,
+    int processTimeoutSeconds = 300)
+    : SubscriptionCommand<AzqrOptions, AzqrReportResult>(subscriptionResolver)
 {
     private readonly ILogger<AzqrCommand> _logger = logger;
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
+    private readonly IAzureService _azureService = azureService;
     private readonly IDateTimeProvider _dateTimeProvider = dateTimeProvider;
     private readonly IExternalProcessService _processService = processService;
     private readonly int _processTimeoutSeconds = processTimeoutSeconds;
-    private static string? _cachedAzqrPath;
+    private static string? s_cachedAzqrPath;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AzqrOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-    }
-
-    protected override AzqrOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
         var response = context.Response;
 
         try
         {
             var azqrPath = FindAzqrCliPath() ?? throw new FileNotFoundException("Azure Quick Review CLI (azqr) executable not found in PATH. Please ensure azqr is installed. Go to https://aka.ms/azqr to learn more about how to install Azure Quick Review CLI.");
 
-            var subscription = await _subscriptionService.GetSubscription(options.Subscription!, options.Tenant, cancellationToken: cancellationToken);
+            var subscription = await _azureService.GetSubscription(options.Subscription!, options.Tenant, cancellationToken: cancellationToken);
 
             // Compose azqr command
             var command = $"scan --subscription-id {subscription.Id}";
@@ -117,9 +104,9 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, ISubscriptionServic
     private static string? FindAzqrCliPath()
     {
         // Return cached path if available and still exists
-        if (!string.IsNullOrEmpty(_cachedAzqrPath) && File.Exists(_cachedAzqrPath))
+        if (!string.IsNullOrEmpty(s_cachedAzqrPath) && File.Exists(s_cachedAzqrPath))
         {
-            return _cachedAzqrPath;
+            return s_cachedAzqrPath;
         }
         var exeName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "azqr.exe" : "azqr";
         var pathEnv = Environment.GetEnvironmentVariable("PATH");
@@ -130,7 +117,7 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, ISubscriptionServic
             var fullPath = Path.Combine(dir.Trim(), exeName);
             if (File.Exists(fullPath))
             {
-                _cachedAzqrPath = fullPath;
+                s_cachedAzqrPath = fullPath;
                 return fullPath;
             }
         }

@@ -2,52 +2,25 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Tools.AppConfig.Services;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
-using Microsoft.Mcp.Core.Services.Caching;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
-using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.Tests;
 
-public class AppConfigCommandTests : RecordedCommandTestsBase
+public class AppConfigCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private const string AccountsKey = "accounts";
     private const string SettingsKey = "settings";
-    private readonly AppConfigService _appConfigService;
-    private readonly ILogger<AppConfigService> _logger;
-    private readonly ServiceProvider _httpClientProvider;
 
     /// <summary>
     /// AZSDK3493 = $..name
     /// AZSDK3447 = $..key
     /// </summary>
     public override List<string> DisabledDefaultSanitizers => [.. base.DisabledDefaultSanitizers, "AZSDK3493", "AZSDK3447"];
-
-    public AppConfigCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : base(output, fixture, liveServerFixture)
-    {
-        _logger = NullLogger<AppConfigService>.Instance;
-        var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
-        var cacheService = new SingleUserCliCacheService(memoryCache);
-        var tokenProvider = new PlaybackAwareTokenCredentialProvider(() => TestMode, NullLoggerFactory.Instance);
-        _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
-        var httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
-        var cloudConfiguration = new AzureCloudConfiguration(new ConfigurationBuilder().Build());
-        var tenantService = new TenantService(tokenProvider, cacheService, httpClientFactory, cloudConfiguration, NullLogger<TenantService>.Instance);
-        var subscriptionService = new SubscriptionService(cacheService, tenantService, NullLogger<SubscriptionService>.Instance);
-        _appConfigService = new AppConfigService(subscriptionService, tenantService, _logger, httpClientFactory);
-    }
 
     public override List<BodyRegexSanitizer> BodyRegexSanitizers =>
     [
@@ -57,12 +30,6 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
           Value = "\"contoso.com\""
         })
     ];
-
-    public override async ValueTask DisposeAsync()
-    {
-        await base.DisposeAsync();
-        _httpClientProvider.Dispose();
-    }
 
     [Fact]
     public async Task Should_list_appconfig_accounts()
@@ -91,27 +58,11 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         const string key1 = "bar";
         const string value1 = "bar-value";
 
-        await _appConfigService.SetKeyValue(
-            Settings.ResourceBaseName,
-            key0,
-            value0,
-            Settings.SubscriptionId,
-            cancellationToken: TestContext.Current.CancellationToken);
-        await _appConfigService.SetKeyValue(
-            Settings.ResourceBaseName,
-            key1,
-            value1,
-            Settings.SubscriptionId,
-            cancellationToken: TestContext.Current.CancellationToken);
+        await SetKey(key0, value0);
+        await SetKey(key1, value1);
 
         // act
-        var result = await CallToolAsync(
-            "appconfig_kv_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "account", Settings.ResourceBaseName }
-            });
+        var result = await GetKey();
 
         // assert
         var kvsArray = result.AssertProperty(SettingsKey);
@@ -133,24 +84,11 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         const string key = "foo1";
         const string value = "foo-value";
         const string label = "foobar";
-        await _appConfigService.SetKeyValue(
-            Settings.ResourceBaseName,
-            key,
-            value,
-            Settings.SubscriptionId,
-            label: label,
-            cancellationToken: TestContext.Current.CancellationToken);
+
+        await SetKey(key, value, label: label);
 
         // act
-        var result = await CallToolAsync(
-            "appconfig_kv_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "account", Settings.ResourceBaseName },
-                { "key-filter", key },
-                { "label-filter", label }
-            });
+        var result = await GetKey(keyFilter: key, labelFilter: label);
 
         // assert
         var kvsArray = result.AssertProperty(SettingsKey);
@@ -170,49 +108,30 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         const string value = "foo-value";
         const string label = "staging";
         const string newValue = "new-value";
-        try
-        {
-            // if it exists, unlock it
-            await _appConfigService.SetKeyValueLockState(
-                Settings.ResourceBaseName,
-                key,
-                false,
-                Settings.SubscriptionId,
-                label: label,
-                cancellationToken: TestContext.Current.CancellationToken);
-        }
-        catch
-        {
-        }
+
+        // if it exists, unlock it
+        await SetLock(key, false, label: label);
+
         // make sure it exists
-        await _appConfigService.SetKeyValue(
-            Settings.ResourceBaseName,
-            key,
-            value,
-            Settings.SubscriptionId,
-            label: label,
-            cancellationToken: TestContext.Current.CancellationToken);
+        await SetKey(key, value, label: label);
 
         // act
-        var result = await CallToolAsync(
-            "appconfig_kv_lock_set",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "account", Settings.ResourceBaseName },
-                { "key", key },
-                { "label", label },
-                { "lock", true }
-            });
+        await SetLock(key, true, label: label);
+        await SetKey(key, newValue, label: label);
 
         // assert
-        await Assert.ThrowsAnyAsync<Exception>(() => _appConfigService.SetKeyValue(
-            Settings.ResourceBaseName,
-            key,
-            newValue,
-            Settings.SubscriptionId,
-            label: label,
-            cancellationToken: TestContext.Current.CancellationToken));
+        var getResult = await GetKey(key: key, label: label);
+
+        var settings = getResult.AssertProperty("settings");
+        Assert.Equal(JsonValueKind.Array, settings.ValueKind);
+        Assert.Single(settings.EnumerateArray());
+
+        var setting = settings.EnumerateArray().First();
+        Assert.Equal(JsonValueKind.Object, setting.ValueKind);
+
+        var valueRead = setting.AssertProperty("value");
+        Assert.Equal(JsonValueKind.String, valueRead.ValueKind);
+        Assert.Equal(value, valueRead.GetString());
     }
 
     [Fact]
@@ -222,30 +141,30 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         const string key = "foo3";
         const string value = "foo-value";
         const string newValue = "new-value";
-        try
-        {
-            // if it exists, unlock it
-            await _appConfigService.SetKeyValueLockState(Settings.ResourceBaseName, key, false, Settings.SubscriptionId, cancellationToken: TestContext.Current.CancellationToken);
-        }
-        catch
-        {
-        }
+
+        // if it exists, unlock it
+        await SetLock(key, false);
+
         // make sure it exists
-        await _appConfigService.SetKeyValue(Settings.ResourceBaseName, key, value, Settings.SubscriptionId, cancellationToken: TestContext.Current.CancellationToken);
+        await SetKey(key, value);
 
         // act
-        var result = await CallToolAsync(
-            "appconfig_kv_lock_set",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "account", Settings.ResourceBaseName },
-                { "key", key },
-                { "lock", true }
-            });
+        await SetLock(key, true);
+        await SetKey(key, newValue);
 
         // assert
-        await Assert.ThrowsAnyAsync<Exception>(() => _appConfigService.SetKeyValue(Settings.ResourceBaseName, key, newValue, Settings.SubscriptionId, cancellationToken: TestContext.Current.CancellationToken));
+        var getResult = await GetKey(key: key);
+
+        var settings = getResult.AssertProperty("settings");
+        Assert.Equal(JsonValueKind.Array, settings.ValueKind);
+        Assert.Single(settings.EnumerateArray());
+
+        var setting = settings.EnumerateArray().First();
+        Assert.Equal(JsonValueKind.Object, setting.ValueKind);
+
+        var valueRead = setting.AssertProperty("value");
+        Assert.Equal(JsonValueKind.String, valueRead.ValueKind);
+        Assert.Equal(value, valueRead.GetString());
     }
 
     [Fact]
@@ -256,39 +175,31 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         const string value = "foo-value";
         const string label = "staging";
         const string newValue = "new-value";
-        try
-        {
-            // if it exists, unlock it
-            await _appConfigService.SetKeyValueLockState(Settings.ResourceBaseName, key, false, Settings.SubscriptionId, label: label, cancellationToken: TestContext.Current.CancellationToken);
-        }
-        catch
-        {
-        }
+
+        // if it exists, unlock it
+        await SetLock(key, false, label: label);
+
         // make sure it exists
-        await _appConfigService.SetKeyValue(Settings.ResourceBaseName, key, value, Settings.SubscriptionId, label: label, cancellationToken: TestContext.Current.CancellationToken);
-        await _appConfigService.SetKeyValueLockState(Settings.ResourceBaseName, key, true, Settings.SubscriptionId, label: label, cancellationToken: TestContext.Current.CancellationToken);
+        await SetKey(key, value, label: label);
+        await SetLock(key, true, label: label);
 
         // act
-        _ = await CallToolAsync(
-            "appconfig_kv_lock_set",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "account", Settings.ResourceBaseName },
-                { "key", key },
-                { "label", "staging" },
-                { "lock", false }
-            });
+        await SetLock(key, false, label: label);
+        await SetKey(key, newValue, label: label);
 
         // assert
-        try
-        {
-            await _appConfigService.SetKeyValue(Settings.ResourceBaseName, key, newValue, Settings.SubscriptionId, label: label, cancellationToken: TestContext.Current.CancellationToken);
-        }
-        catch (Exception ex)
-        {
-            Assert.Fail($"Failed to set value after unlock: {ex.Message}");
-        }
+        var getResult = await GetKey(key: key, label: label);
+
+        var settings = getResult.AssertProperty("settings");
+        Assert.Equal(JsonValueKind.Array, settings.ValueKind);
+        Assert.Single(settings.EnumerateArray());
+
+        var setting = settings.EnumerateArray().First();
+        Assert.Equal(JsonValueKind.Object, setting.ValueKind);
+
+        var valueRead = setting.AssertProperty("value");
+        Assert.Equal(JsonValueKind.String, valueRead.ValueKind);
+        Assert.Equal(newValue, valueRead.GetString());
     }
 
     [Fact]
@@ -298,38 +209,31 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         const string key = "foo5";
         const string value = "foo-value";
         const string newValue = "new-value";
-        try
-        {
-            // if it exists, unlock it
-            await _appConfigService.SetKeyValueLockState(Settings.ResourceBaseName, key, false, Settings.SubscriptionId, cancellationToken: TestContext.Current.CancellationToken);
-        }
-        catch
-        {
-        }
+
+        // if it exists, unlock it
+        await SetLock(key, false);
+
         // make sure it exists
-        await _appConfigService.SetKeyValue(Settings.ResourceBaseName, key, value, Settings.SubscriptionId, cancellationToken: TestContext.Current.CancellationToken);
-        await _appConfigService.SetKeyValueLockState(Settings.ResourceBaseName, key, true, Settings.SubscriptionId, cancellationToken: TestContext.Current.CancellationToken);
+        await SetKey(key, value);
+        await SetLock(key, true);
 
         // act
-        _ = await CallToolAsync(
-            "appconfig_kv_lock_set",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "account", Settings.ResourceBaseName },
-                { "key", key },
-                { "lock", false }
-            });
+        await SetLock(key, false);
+        await SetKey(key, newValue);
 
         // assert
-        try
-        {
-            await _appConfigService.SetKeyValue(Settings.ResourceBaseName, key, newValue, Settings.SubscriptionId, cancellationToken: TestContext.Current.CancellationToken);
-        }
-        catch (Exception ex)
-        {
-            Assert.Fail($"Failed to set value after unlock: {ex.Message}");
-        }
+        var getResult = await GetKey(key: key);
+
+        var settings = getResult.AssertProperty("settings");
+        Assert.Equal(JsonValueKind.Array, settings.ValueKind);
+        Assert.Single(settings.EnumerateArray());
+
+        var setting = settings.EnumerateArray().First();
+        Assert.Equal(JsonValueKind.Object, setting.ValueKind);
+
+        var valueRead = setting.AssertProperty("value");
+        Assert.Equal(JsonValueKind.String, valueRead.ValueKind);
+        Assert.Equal(newValue, valueRead.GetString());
     }
 
     [Fact]
@@ -339,18 +243,10 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         const string key = "foo6";
         const string value = "foo-value";
         const string label = "staging";
-        await _appConfigService.SetKeyValue(Settings.ResourceBaseName, key, value, Settings.SubscriptionId, label: label, cancellationToken: TestContext.Current.CancellationToken);
+        await SetKey(key, value, label: label);
 
         // act
-        var result = await CallToolAsync(
-            "appconfig_kv_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "account", Settings.ResourceBaseName },
-                { "key", key },
-                { "label", label }
-            });
+        var result = await GetKey(key: key, label: label);
 
         // assert
         var settings = result.AssertProperty("settings");
@@ -373,15 +269,7 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         const string value = "funkyfoo";
 
         // act and assert
-        var result = await CallToolAsync(
-            "appconfig_kv_set",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "account", Settings.ResourceBaseName },
-                { "key", key },
-                { "value", value }
-            });
+        var result = await SetKey(key, value);
 
         var valueRead = result.AssertProperty("value");
         Assert.Equal(value, valueRead.GetString());
@@ -408,16 +296,7 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         const string contentType = "application/json";
 
         // act - set key-value with content type
-        var setResult = await CallToolAsync(
-            "appconfig_kv_set",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "account", Settings.ResourceBaseName },
-                { "key", key },
-                { "value", value },
-                { "content-type", contentType }
-            });
+        var setResult = await SetKey(key, value, contentType: contentType);
 
         // assert - verify the set result
         var valueRead = setResult.AssertProperty("value");
@@ -428,14 +307,7 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         Assert.Equal(contentType, contentTypeRead.GetString());
 
         // act - get the key-value to verify content type was stored
-        var getResult = await CallToolAsync(
-            "appconfig_kv_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "account", Settings.ResourceBaseName },
-                { "key", key }
-            });
+        var getResult = await GetKey(key: key);
 
         // assert - verify the get result
         var settings = getResult.AssertProperty("settings");
@@ -463,27 +335,26 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         const string contentType = "application/json; charset=utf-8";
 
         // act - set key-value with content type
-        await _appConfigService.SetKeyValue(
-           Settings.ResourceBaseName,
-           key,
-           value,
-           Settings.SubscriptionId,
-           contentType: contentType,
-           cancellationToken: TestContext.Current.CancellationToken);
+        await SetKey(key, value, contentType: contentType);
 
         // act - get key-value to verify content type was preserved
-        var settings = await _appConfigService.GetKeyValues(
-            Settings.ResourceBaseName,
-            Settings.SubscriptionId,
-            key,
-            cancellationToken: TestContext.Current.CancellationToken);
+        var getResult = await GetKey(key: key);
 
         // assert - verify content type was properly set and retrieved
-        Assert.Single(settings);
-        Assert.Equal(key, settings[0].Key);
-        Assert.Equal(value, settings[0].Value);
-        Assert.Equal(contentType, settings[0].ContentType);
+        var settings = getResult.AssertProperty("settings");
+        Assert.Equal(JsonValueKind.Array, settings.ValueKind);
+        Assert.Single(settings.EnumerateArray());
 
+        var setting = settings.EnumerateArray().First();
+        Assert.Equal(JsonValueKind.Object, setting.ValueKind);
+
+        var valueRead = setting.AssertProperty("value");
+        Assert.Equal(JsonValueKind.String, valueRead.ValueKind);
+        Assert.Equal(value, valueRead.GetString());
+
+        var contentTypeRead = setting.AssertProperty("contentType");
+        Assert.Equal(JsonValueKind.String, contentTypeRead.ValueKind);
+        Assert.Equal(contentType, contentTypeRead.GetString());
     }
 
     [Fact]
@@ -496,16 +367,7 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         const string tagValue = "production";
 
         // act - set key-value with a single tag
-        var setResult = await CallToolAsync(
-            "appconfig_kv_set",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "account", Settings.ResourceBaseName },
-                { "key", key },
-                { "value", value },
-                { "tags", $"{tagKey}={tagValue}" }
-            });
+        var setResult = await SetKey(key, value, tags: $"{tagKey}={tagValue}");
 
         // assert - verify the set result
         var valueRead = setResult.AssertProperty("value");
@@ -526,16 +388,7 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         var tags = new string[] { "environment=staging", "version=1.0.0", "region=westus2" };
 
         // act - set key-value with multiple tags
-        var setResult = await CallToolAsync(
-            "appconfig_kv_set",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "account", Settings.ResourceBaseName },
-                { "key", key },
-                { "value", value },
-                { "tags", tags }
-            });
+        var setResult = await SetKey(key, value, tags: tags);
 
         // assert - verify the set result
         var valueRead = setResult.AssertProperty("value");
@@ -567,16 +420,7 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         };
 
         // act - set key-value with tags containing spaces
-        var setResult = await CallToolAsync(
-            "appconfig_kv_set",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "account", Settings.ResourceBaseName },
-                { "key", key },
-                { "value", value },
-                { "tags", tags }
-            });
+        var setResult = await SetKey(key, value, tags: tags);
 
         // assert - verify the set result
         var valueRead = setResult.AssertProperty("value");
@@ -593,5 +437,57 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
             Assert.Contains(tagArray, t => t.GetString() == tag);
         }
     }
-}
 
+    private async Task<JsonElement?> SetKey(string key, string value, string? label = null, string? contentType = null, object? tags = null)
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            { "subscription", Settings.SubscriptionId },
+            { "account", Settings.ResourceBaseName },
+            { "key", key },
+            { "value", value }
+        };
+        AddParameterIfNotNull(parameters, "label", label);
+        AddParameterIfNotNull(parameters, "content-type", contentType);
+        AddParameterIfNotNull(parameters, "tags", tags);
+
+        return await CallToolAsync("appconfig_kv_set", parameters);
+    }
+
+    private async Task<JsonElement?> GetKey(string? key = null, string? label = null, string? keyFilter = null, string? labelFilter = null)
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            { "subscription", Settings.SubscriptionId },
+            { "account", Settings.ResourceBaseName }
+        };
+        AddParameterIfNotNull(parameters, "key", key);
+        AddParameterIfNotNull(parameters, "label", label);
+        AddParameterIfNotNull(parameters, "key-filter", keyFilter);
+        AddParameterIfNotNull(parameters, "label-filter", labelFilter);
+
+        return await CallToolAsync("appconfig_kv_get", parameters);
+    }
+
+    private async Task<JsonElement?> SetLock(string key, bool locked, string? label = null)
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            { "subscription", Settings.SubscriptionId },
+            { "account", Settings.ResourceBaseName },
+            { "key", key },
+            { "lock", locked }
+        };
+        AddParameterIfNotNull(parameters, "label", label);
+
+        return await CallToolAsync("appconfig_kv_lock_set", parameters);
+    }
+
+    private static void AddParameterIfNotNull(Dictionary<string, object?> parameters, string key, object? value)
+    {
+        if (value is not null)
+        {
+            parameters.Add(key, value);
+        }
+    }
+}

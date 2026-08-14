@@ -3,11 +3,13 @@
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using ModelContextProtocol.Protocol;
 
@@ -22,14 +24,14 @@ internal class TelemetryService : ITelemetryService
     private readonly bool _isEnabled;
     private readonly ILogger<TelemetryService> _logger;
     private readonly List<KeyValuePair<string, object?>> _tagsList;
-    private readonly SemaphoreSlim _initalizeLock = new(1);
+    private readonly SemaphoreSlim _initializeLock = new(1);
 
     /// <summary>
     /// Task created on the first invocation of <see cref="InitializeAsync"/>.
     /// This is saved so that repeated invocations will see the same exception
     /// as the first invocation.
     /// </summary>
-    private Task? _initalizationTask = null;
+    private Task? _initializationTask = null;
 
     private bool _initializationSuccessful;
     private bool _isInitialized;
@@ -38,7 +40,7 @@ internal class TelemetryService : ITelemetryService
 
     public TelemetryService(IMachineInformationProvider informationProvider,
         IOptions<McpServerConfiguration> options,
-        IOptions<ServiceStartOptions> serverOptions,
+        IOptions<ServerStartOptions> serverOptions,
         ILogger<TelemetryService> logger,
         IAzureCloudConfiguration? cloudConfiguration = null)
     {
@@ -80,12 +82,12 @@ internal class TelemetryService : ITelemetryService
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public Activity? StartActivity(string activityName) => StartActivity(activityName, null);
+    public Activity? StartActivity(string activityName) => StartActivity(activityName, null, null);
 
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public Activity? StartActivity(string activityName, Implementation? clientInfo)
+    public Activity? StartActivity(string activityName, Implementation? clientInfo, RequestParams? requestParams)
     {
         if (!_isEnabled)
         {
@@ -101,17 +103,44 @@ internal class TelemetryService : ITelemetryService
             return activity;
         }
 
-        if (clientInfo != null)
-        {
-            activity.AddTag(TagName.ClientName, clientInfo.Name)
-                .AddTag(TagName.ClientVersion, clientInfo.Version);
-        }
+        SetClientNameAndVersion(activity, clientInfo, requestParams);
 
         activity.AddTag(TagName.EventId, Guid.NewGuid().ToString());
 
         _tagsList.ForEach(kvp => activity.AddTag(kvp.Key, kvp.Value));
 
         return activity;
+    }
+
+    // In 2025-11-25, clientInfo comes from the initialize handshake (set once per session).
+    // In 2026-07-28 stateless mode there is no handshake, so clientInfo is null; instead each
+    // request embeds client identity in _meta["io.modelcontextprotocol/clientInfo"]. We check
+    // requestParams._meta first (per-request wins) then fall back to the session-level clientInfo.
+    internal static void SetClientNameAndVersion(Activity activity, Implementation? clientInfo, RequestParams? requestParams)
+    {
+        if (clientInfo != null)
+        {
+            activity.SetTag(TagName.ClientName, clientInfo.Name)
+                .SetTag(TagName.ClientVersion, clientInfo.Version);
+        }
+
+        if (requestParams?.Meta != null &&
+            requestParams.Meta.TryGetPropertyValue(McpHelper.ClientInfoMetaKey, out var node) &&
+            node is JsonObject requestClientInfo)
+        {
+            if (requestClientInfo.TryGetPropertyValue(McpHelper.ClientInfoNameKey, out var nameNode) &&
+                nameNode is JsonValue nameValue &&
+                nameValue.TryGetValue<string>(out var nameString))
+            {
+                activity.SetTag(TagName.ClientName, nameString);
+            }
+            if (requestClientInfo.TryGetPropertyValue(McpHelper.ClientInfoVersionKey, out var versionNode) &&
+                versionNode is JsonValue versionValue &&
+                versionValue.TryGetValue<string>(out var versionString))
+            {
+                activity.SetTag(TagName.ClientVersion, versionString);
+            }
+        }
     }
 
     public void Dispose()
@@ -130,30 +159,30 @@ internal class TelemetryService : ITelemetryService
 
         // Quick check if initialization already happened. Avoids
         // trying to get the lock.
-        if (_initalizationTask == null)
+        if (_initializationTask == null)
         {
             // Get async lock for starting initialization
-            await _initalizeLock.WaitAsync();
+            await _initializeLock.WaitAsync();
 
             try
             {
                 // Check after acquiring lock to ensure we honor work
                 // started while we were waiting.
-                if (_initalizationTask == null)
+                if (_initializationTask == null)
                 {
-                    _initalizationTask = InnerInitializeAsync();
+                    _initializationTask = InnerInitializeAsync();
                 }
             }
             finally
             {
-                _initalizeLock.Release();
+                _initializeLock.Release();
             }
         }
 
         // Await the response of the initialization work regardless of if
         // we or another invocation created the Task representing it. All
         // awaiting on this will give the same result to ensure idempotency.
-        await _initalizationTask;
+        await _initializationTask;
 
         async Task InnerInitializeAsync()
         {

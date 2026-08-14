@@ -68,6 +68,11 @@
               "$ref": "../common/definitions.json#/definitions/WorkspaceAppliedTag"
             },
             "readOnly": true
+          },
+          "encryption": {
+            "description": "The encryption details of the workspace.",
+            "$ref": "../platform/definitions/workspaceCmk.json#/definitions/Encryption",
+            "readOnly": true
           }
         }
       },
@@ -1029,11 +1034,11 @@
       }
     },
     "NetworkCommunicationPolicies": {
-      "description": "Network communication policy settings for list of workspaces enabled with either Inbound or Outbound Access Protection.",
+      "description": "A list of network communication policy settings for workspaces in the tenant.",
       "properties": {
         "value": {
           "type": "array",
-          "description": "Network communication policy settings for list of workspaces enabled with either Inbound or Outbound Access Protection.",
+          "description": "A list of network communication policy settings for workspaces in the tenant.",
           "items": {
             "$ref": "#/definitions/NetworkCommunicationPolicyDetails"
           }
@@ -1047,7 +1052,7 @@
     },
     "NetworkCommunicationPolicyDetails": {
       "type": "object",
-      "description": "Represents the details of Network communication policy settings for each workspace.",
+      "description": "Represents the details of network communication policy settings for each workspace.",
       "required": [
         "workspaceId",
         "inbound",
@@ -1057,34 +1062,49 @@
         "workspaceId": {
           "type": "string",
           "description": "The workspace ID.",
-          "format": "uuid"
+          "format": "uuid",
+          "readOnly": true
+        },
+        "workspaceName": {
+          "type": "string",
+          "description": "The display name of the workspace.",
+          "readOnly": true
+        },
+        "workspaceType": {
+          "description": "The workspace type.",
+          "$ref": "../common/definitions.json#/definitions/WorkspaceType",
+          "readOnly": true
         },
         "inbound": {
-          "description": "Defines the Inbound access protection settings.",
+          "description": "Defines the inbound access protection settings.",
           "$ref": "#/definitions/NetworkCommunicationPolicyInboundDetails"
         },
         "outbound": {
-          "description": "Defines the Outbound access protection settings.",
+          "description": "Defines the outbound access protection settings.",
           "$ref": "#/definitions/NetworkCommunicationPolicyOutboundDetails"
         }
       }
     },
     "NetworkCommunicationPolicyInboundDetails": {
       "type": "object",
-      "description": "Represents the details of Network communication policy settings for each workspace.",
+      "description": "Represents the inbound network communication policy settings for a workspace.",
       "required": [
         "publicAccessRules"
       ],
       "properties": {
         "publicAccessRules": {
-          "description": "The policy for all inbound communications to a workspace",
+          "description": "The policy for all inbound communications to a workspace.",
           "$ref": "../platform/definitions/workspaceNetworkingPolicy.json#/definitions/NetworkRules"
+        },
+        "firewall": {
+          "description": "The IP firewall rules configured for the workspace's inbound access protection.",
+          "$ref": "#/definitions/FirewallRules"
         }
       }
     },
     "NetworkCommunicationPolicyOutboundDetails": {
       "type": "object",
-      "description": "Represents the details of Network communication policy settings for each workspace.",
+      "description": "Represents the outbound network communication policy settings for a workspace.",
       "required": [
         "publicAccessRules",
         "connections",
@@ -1092,20 +1112,62 @@
       ],
       "properties": {
         "publicAccessRules": {
-          "description": "The policy for all outbound communications to a workspace",
+          "description": "The policy for all outbound communications from a workspace.",
           "$ref": "../platform/definitions/workspaceNetworkingPolicy.json#/definitions/NetworkRules"
         },
         "connections": {
-          "description": "Represents the complete set of outbound access protection cloud connection rules configured for a workspace as part of its networking communication policy. \nThis object defines the connection rules that govern which external endpoints and workspaces are permitted or denied for outbound communication",
+          "description": "Represents the complete set of outbound access protection cloud connection rules configured for a workspace as part of its networking communication policy. This object defines the connection rules that govern which external endpoints and workspaces are permitted or denied for outbound communication.",
           "$ref": "../platform/definitions/workspaceNetworkingPolicy.json#/definitions/WorkspaceOutboundConnections"
         },
         "gateways": {
-          "description": "Represents the complete set of gateway outbound access protection rules configured for a workspace as part of its networking communication policy. \nThis object defines the gateway rules that govern outbound communication",
+          "description": "Represents the complete set of gateway outbound access protection rules configured for a workspace as part of its networking communication policy. This object defines the gateway rules that govern outbound communication.",
           "$ref": "../platform/definitions/workspaceNetworkingPolicy.json#/definitions/WorkspaceOutboundGateways"
         },
         "git": {
-          "description": "Represents the Git Outbound policy for the specified as part of its networking communication policy.",
+          "description": "Represents the Git outbound policy for the workspace as part of its networking communication policy.",
           "$ref": "../platform/definitions/workspaceNetworkingPolicy.json#/definitions/NetworkRules"
+        },
+        "managedPrivateEndpoints": {
+          "description": "The managed private endpoints configured for the workspace's outbound access protection.",
+          "type": "array",
+          "items": {
+            "$ref": "../platform/definitions/managedPrivateEndpoint.json#/definitions/ManagedPrivateEndpoint"
+          },
+          "readOnly": true
+        }
+      }
+    },
+    "FirewallRules": {
+      "type": "object",
+      "description": "Represents the IP firewall rules configured for a workspace's inbound access protection.",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "description": "A list of IP firewall rules configured for the workspace.",
+          "items": {
+            "$ref": "#/definitions/FirewallRule"
+          },
+          "readOnly": true
+        }
+      }
+    },
+    "FirewallRule": {
+      "type": "object",
+      "description": "Represents a single IP firewall rule.",
+      "required": [
+        "displayName",
+        "value"
+      ],
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "description": "The display name of the firewall rule.",
+          "readOnly": true
+        },
+        "value": {
+          "type": "string",
+          "description": "The IP range in start-end format (for example, `0.0.0.0-255.255.255.255`) or CIDR notation.",
+          "readOnly": true
         }
       }
     },

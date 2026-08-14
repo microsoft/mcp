@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Functions.Commands.Project;
@@ -22,58 +22,23 @@ namespace Azure.Mcp.Tools.Functions.Commands.Project;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger, IFunctionsService functionsService) : BaseCommand<ProjectGetOptions>
+public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger, IFunctionsService functionsService)
+    : BaseCommand<ProjectGetOptions, List<ProjectTemplateResult>>
 {
     private readonly ILogger<ProjectGetCommand> _logger = logger;
     private readonly IFunctionsService _functionsService = functionsService;
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(FunctionsOptionDefinitions.Language);
-
-        command.Validators.Add(commandResult =>
-        {
-            var language = commandResult.GetValueWithoutDefault(FunctionsOptionDefinitions.Language);
-            if (string.IsNullOrWhiteSpace(language))
-            {
-                commandResult.AddError("The --language parameter is required.");
-            }
-            else if (!FunctionsOptionDefinitions.SupportedLanguages.Contains(language))
-            {
-                commandResult.AddError($"Invalid language '{language}'. Supported languages: {string.Join(", ", FunctionsOptionDefinitions.SupportedLanguages)}.");
-            }
-        });
-    }
-
-    protected override ProjectGetOptions BindOptions(ParseResult parseResult)
-    {
-        return new ProjectGetOptions
-        {
-            Language = parseResult.GetValueOrDefault<string>(FunctionsOptionDefinitions.Language.Name)
-        };
-    }
-
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        ProjectGetOptions options,
         CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var result = await _functionsService.GetProjectTemplateAsync(options.Language!, cancellationToken);
+            var result = await _functionsService.GetProjectTemplateAsync(options.Language, cancellationToken);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(
-                [result],
-                FunctionsJsonContext.Default.ListProjectTemplateResult);
+            context.Response.Results = ResponseResult.Create([result], FunctionsJsonContext.Default.ListProjectTemplateResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)

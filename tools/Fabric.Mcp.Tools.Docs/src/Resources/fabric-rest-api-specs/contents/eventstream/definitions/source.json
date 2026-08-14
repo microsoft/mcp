@@ -20,20 +20,24 @@
                 "AzureEventHub",
                 "AzureEventHubExtended",
                 "AzureIoTHub",
+                "AzureIoTHubExtended",
                 "AzureSQLDBCDC",
                 "AzureSQLMIDBCDC",
                 "AzureServiceBus",
                 "ConfluentCloud",
                 "CustomEndpoint",
+                "FabricAnomalyDetectionEvents",
                 "FabricCapacityOverviewEvents",
                 "FabricJobEvents",
                 "FabricOneLakeEvents",
                 "FabricWorkspaceItemEvents",
                 "GooglePubSub",
                 "Http",
+                "MirroredDatabaseChangeFeed",
                 "MongoDBCDC",
                 "Mqtt",
                 "MySQLCDC",
+                "OracleDBCDC",
                 "PostgreSQLCDC",
                 "RealTimeWeather",
                 "SQLServerOnVMDBCDC",
@@ -85,6 +89,10 @@
                         "description": "The Azure IoT Hub source type."
                     },
                     {
+                        "value": "AzureIoTHubExtended",
+                        "description": "The Azure IoT Hub Extended source type."
+                    },
+                    {
                         "value": "AzureSQLDBCDC",
                         "description": "The Azure SQL DB CDC source type."
                     },
@@ -103,6 +111,10 @@
                     {
                         "value": "CustomEndpoint",
                         "description": "The Custom Endpoint source type."
+                    },
+                    {
+                        "value": "FabricAnomalyDetectionEvents",
+                        "description": "The Fabric Anomaly Detection Events source type."
                     },
                     {
                         "value": "FabricCapacityOverviewEvents",
@@ -129,6 +141,10 @@
                         "description": "The HTTP source type."
                     },
                     {
+                        "value": "MirroredDatabaseChangeFeed",
+                        "description": "The Mirrored Database Change Feed source type."
+                    },
+                    {
                         "value": "MongoDBCDC",
                         "description": "The MongoDB CDC source type."
                     },
@@ -139,6 +155,10 @@
                     {
                         "value": "MySQLCDC",
                         "description": "The MySQL CDC source type."
+                    },
+                    {
+                        "value": "OracleDBCDC",
+                        "description": "The Oracle DB CDC source type."
                     },
                     {
                         "value": "PostgreSQLCDC",
@@ -212,7 +232,7 @@
         },
         "SourceConnectionResponse": {
             "type": "object",
-            "description": "Represents the connection information for a source custom endpoint.",
+            "description": "Represents the connection information for an eventstream source.",
             "allOf": [
                 {
                     "$ref": "common.json#/definitions/BaseCustomEndpointConnection"
@@ -295,6 +315,25 @@
             ],
             "x-ms-discriminator-value": "AzureIoTHub"
         },
+        "AzureIoTHubExtendedSourceResponse": {
+            "type": "object",
+            "description": "Represents an Azure IoT Hub Extended source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Azure IoT Hub Extended source.",
+                    "$ref": "#/definitions/AzureIoTHubExtendedSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "AzureIoTHubExtended"
+        },
         "AzureBlobStorageEventsSourceResponse": {
             "type": "object",
             "description": "Azure Blob Storage events source response.",
@@ -351,6 +390,25 @@
                 }
             ],
             "x-ms-discriminator-value": "CustomEndpoint"
+        },
+        "FabricAnomalyDetectionEventsSourceResponse": {
+            "type": "object",
+            "description": "Fabric Anomaly Detection Events source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Fabric Anomaly Detection Events source.",
+                    "$ref": "#/definitions/FabricAnomalyDetectionEventsSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "FabricAnomalyDetectionEvents"
         },
         "FabricCapacityOverviewEventsSourceResponse": {
             "type": "object",
@@ -530,7 +588,8 @@
             ],
             "properties": {
                 "properties": {
-                    "$ref": "#/definitions/BaseSQLCDCSourceProperties"
+                    "description": "The properties of the Azure SQL DB CDC source.",
+                    "$ref": "#/definitions/BaseSQLServerCDCSourceProperties"
                 }
             },
             "allOf": [
@@ -548,7 +607,8 @@
             ],
             "properties": {
                 "properties": {
-                    "$ref": "#/definitions/BaseSQLCDCSourceProperties"
+                    "description": "The properties of the Azure SQL MI DB CDC source.",
+                    "$ref": "#/definitions/BaseSQLServerCDCSourceProperties"
                 }
             },
             "allOf": [
@@ -566,7 +626,8 @@
             ],
             "properties": {
                 "properties": {
-                    "$ref": "#/definitions/BaseSQLCDCSourceProperties"
+                    "description": "The properties of the SQL Server on VM DB CDC source.",
+                    "$ref": "#/definitions/BaseSQLServerCDCSourceProperties"
                 }
             },
             "allOf": [
@@ -671,6 +732,25 @@
             ],
             "x-ms-discriminator-value": "Http"
         },
+        "MirroredDatabaseChangeFeedSourceResponse": {
+            "type": "object",
+            "description": "Represents a Mirrored Database Change Feed source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Mirrored Database Change Feed source.",
+                    "$ref": "#/definitions/MirroredDatabaseChangeFeedSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "MirroredDatabaseChangeFeed"
+        },
         "MongoDBCDCSourceResponse": {
             "type": "object",
             "description": "MongoDB CDC source response.",
@@ -708,6 +788,25 @@
                 }
             ],
             "x-ms-discriminator-value": "Mqtt"
+        },
+        "OracleDBCDCSourceResponse": {
+            "type": "object",
+            "description": "Represents an Oracle DB CDC source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Oracle DB CDC source.",
+                    "$ref": "#/definitions/OracleDBCDCSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "OracleDBCDC"
         },
         "FabricJobEventsSourceResponse": {
             "type": "object",
@@ -872,6 +971,48 @@
                 }
             }
         },
+        "AzureIoTHubExtendedSourceProperties": {
+            "type": "object",
+            "description": "Azure IoT Hub Extended source properties.",
+            "required": [
+                "dataConnectionId",
+                "consumerGroupName",
+                "startPosition"
+            ],
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "description": "The Azure IoT Hub data connection identifier.",
+                    "format": "uuid"
+                },
+                "consumerGroupName": {
+                    "type": "string",
+                    "description": "The consumer group name."
+                },
+                "startPosition": {
+                    "type": "string",
+                    "description": "The start position in the Azure IoT Hub stream.",
+                    "enum": [
+                        "Earliest",
+                        "Latest"
+                    ],
+                    "x-ms-enum": {
+                        "name": "StartPosition",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Earliest",
+                                "description": "Start from the earliest event."
+                            },
+                            {
+                                "value": "Latest",
+                                "description": "Start from the latest event."
+                            }
+                        ]
+                    }
+                }
+            }
+        },
         "AzureBlobStorageEventsSourceProperties": {
             "type": "object",
             "description": "Azure Blob Storage events source properties.",
@@ -1014,6 +1155,41 @@
             "type": "object",
             "description": "Custom endpoint events source properties.",
             "properties": {}
+        },
+        "FabricAnomalyDetectionEventsSourceProperties": {
+            "type": "object",
+            "description": "Fabric Anomaly Detection Events source properties.",
+            "properties": {
+                "workspaceId": {
+                    "type": "string",
+                    "description": "The workspace identifier.",
+                    "format": "uuid"
+                },
+                "itemId": {
+                    "type": "string",
+                    "description": "The item identifier.",
+                    "format": "uuid"
+                },
+                "configurationId": {
+                    "type": "string",
+                    "description": "The anomaly detection configuration identifier.",
+                    "format": "uuid"
+                },
+                "includedEventTypes": {
+                    "type": "array",
+                    "description": "The list of event types to include. Supported values: Microsoft.Fabric.AnomalyDetection.AnomalyDetected. Additional event types may be added over time.",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "filters": {
+                    "type": "array",
+                    "description": "The Azure Event Grid advanced filters to apply. Each entry is an advanced filter object as defined by Azure Event Grid. For details, see https://learn.microsoft.com/azure/event-grid/event-filtering#advanced-filtering.",
+                    "items": {
+                        "type": "object"
+                    }
+                }
+            }
         },
         "FabricCapacityOverviewEventsSourceProperties": {
             "type": "object",
@@ -1491,6 +1667,10 @@
                         ]
                     },
                     "default": "None"
+                },
+                "tlsSettings": {
+                    "description": "The TLS settings for the Kafka connection.",
+                    "$ref": "#/definitions/TLSSettings"
                 }
             }
         },
@@ -1756,6 +1936,95 @@
                             }
                         ]
                     }
+                },
+                "snapshotMode": {
+                    "type": "string",
+                    "description": "Specifies how the initial snapshot of data is taken (for example, initial load, initial only, or no data).",
+                    "enum": [
+                        "Initial",
+                        "InitialOnly",
+                        "NoData"
+                    ],
+                    "x-ms-enum": {
+                        "name": "SnapshotMode",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Initial",
+                                "description": "The snapshot mode is Initial."
+                            },
+                            {
+                                "value": "InitialOnly",
+                                "description": "The snapshot mode is InitialOnly."
+                            },
+                            {
+                                "value": "NoData",
+                                "description": "The snapshot mode is NoData."
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "BaseSQLServerCDCSourceProperties": {
+            "type": "object",
+            "description": "Base SQL Server CDC source properties. Extends BaseSQLCDCSourceProperties with SQL Server-specific settings.",
+            "properties": {
+                "excludedColumns": {
+                    "type": "string",
+                    "description": "The comma-separated list of columns to exclude from capture."
+                },
+                "databaseApplicationIntent": {
+                    "type": "string",
+                    "description": "Specifies the application intent for the database connection.",
+                    "enum": [
+                        "ReadWrite",
+                        "ReadOnly"
+                    ],
+                    "x-ms-enum": {
+                        "name": "DatabaseApplicationIntent",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "ReadWrite",
+                                "description": "The database application intent is ReadWrite."
+                            },
+                            {
+                                "value": "ReadOnly",
+                                "description": "The database application intent is ReadOnly."
+                            }
+                        ]
+                    }
+                },
+                "snapshotSelectStatementOverrides": {
+                    "type": "array",
+                    "description": "The snapshot select statement overrides. Each entry specifies a table and a custom SELECT statement to use for the initial snapshot.",
+                    "items": {
+                        "$ref": "#/definitions/SnapshotSelectStatementOverrideItem"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/BaseSQLCDCSourceProperties"
+                }
+            ]
+        },
+        "SnapshotSelectStatementOverrideItem": {
+            "type": "object",
+            "description": "Represents a snapshot select statement override for a specific table.",
+            "required": [
+                "tableName",
+                "selectStatement"
+            ],
+            "properties": {
+                "tableName": {
+                    "type": "string",
+                    "description": "The table name."
+                },
+                "selectStatement": {
+                    "type": "string",
+                    "description": "The custom SELECT statement to use for the initial snapshot."
                 }
             }
         },
@@ -1780,7 +2049,8 @@
                     "description": "Specifies the locking strategy used when taking the initial snapshot (for example, minimal locks vs extended locking for stronger consistency).",
                     "enum": [
                         "Minimal",
-                        "Extended"
+                        "Extended",
+                        "None"
                     ],
                     "x-ms-enum": {
                         "name": "SnapshotLockingMode",
@@ -1793,6 +2063,10 @@
                             {
                                 "value": "Extended",
                                 "description": "The snapshot locking mode is Extended."
+                            },
+                            {
+                                "value": "None",
+                                "description": "The snapshot locking mode is None."
                             }
                         ]
                     }
@@ -1849,6 +2123,17 @@
                                 "description": "The publication auto-create mode is Disabled."
                             }
                         ]
+                    }
+                },
+                "heartbeatActionQuery": {
+                    "type": "string",
+                    "description": "The heartbeat action query. A SQL statement executed periodically to keep the replication slot active."
+                },
+                "snapshotSelectStatementOverrides": {
+                    "type": "array",
+                    "description": "The snapshot select statement overrides. Each entry specifies a table and a custom SELECT statement to use for the initial snapshot.",
+                    "items": {
+                        "$ref": "#/definitions/SnapshotSelectStatementOverrideItem"
                     }
                 }
             },
@@ -1958,6 +2243,124 @@
                 "retriableHttpStatusCodes": {
                     "type": "string",
                     "description": "The retriable HTTP status codes as a comma-separated string."
+                },
+                "responseDataJsonPointer": {
+                    "type": "string",
+                    "description": "The JSON Pointer expression to extract data from the HTTP response body."
+                },
+                "pagination": {
+                    "$ref": "#/definitions/HttpPagination"
+                }
+            }
+        },
+        "HttpPagination": {
+            "type": "object",
+            "description": "The base HTTP pagination configuration. The concrete pagination strategy is determined by the type field; see PagePagination and CursorPagination.",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The pagination type. Additional pagination types may be added over time.",
+                    "enum": [
+                        "Cursor",
+                        "Page"
+                    ],
+                    "x-ms-enum": {
+                        "name": "PaginationMethod",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Cursor",
+                                "description": "Cursor-based pagination."
+                            },
+                            {
+                                "value": "Page",
+                                "description": "Page-based pagination."
+                            }
+                        ]
+                    }
+                }
+            },
+            "discriminator": "type"
+        },
+        "CursorPagination": {
+            "type": "object",
+            "description": "The cursor-based HTTP pagination configuration.",
+            "required": [
+                "cursorJsonPointer"
+            ],
+            "properties": {
+                "initialCursor": {
+                    "type": "string",
+                    "description": "The initial cursor value."
+                },
+                "cursorJsonPointer": {
+                    "type": "string",
+                    "description": "The JSON Pointer expression to extract the cursor value from the HTTP response body."
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/HttpPagination"
+                }
+            ],
+            "x-ms-discriminator-value": "Cursor"
+        },
+        "PagePagination": {
+            "type": "object",
+            "description": "The page-based HTTP pagination configuration.",
+            "required": [
+                "initialPage",
+                "pageIncrement"
+            ],
+            "properties": {
+                "initialPage": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "The initial page number. The value must be greater than or equal to 0.",
+                    "minimum": 0
+                },
+                "pageIncrement": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "The number to increment per page. The value must be greater than or equal to 1.",
+                    "minimum": 1
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/HttpPagination"
+                }
+            ],
+            "x-ms-discriminator-value": "Page"
+        },
+        "MirroredDatabaseChangeFeedSourceProperties": {
+            "type": "object",
+            "description": "Mirrored Database Change Feed source properties.",
+            "required": [
+                "workspaceId",
+                "itemId",
+                "tableNames"
+            ],
+            "properties": {
+                "workspaceId": {
+                    "type": "string",
+                    "description": "The workspace identifier.",
+                    "format": "uuid"
+                },
+                "itemId": {
+                    "type": "string",
+                    "description": "The item identifier.",
+                    "format": "uuid"
+                },
+                "tableNames": {
+                    "type": "array",
+                    "description": "The list of table names. Currently, only `[\"*\"]` (all tables) is supported. Specific table selection will be supported in a future release.",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -2051,6 +2454,107 @@
                 "topic": {
                     "type": "string",
                     "description": "The MQTT topic."
+                },
+                "tlsSettings": {
+                    "description": "The TLS settings for the MQTT connection.",
+                    "$ref": "#/definitions/TLSSettings"
+                }
+            }
+        },
+        "OracleDBCDCSourceProperties": {
+            "type": "object",
+            "description": "Oracle DB CDC source properties.",
+            "required": [
+                "dataConnectionId"
+            ],
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "description": "The Oracle DB CDC data connection identifier.",
+                    "format": "uuid"
+                },
+                "tableNames": {
+                    "type": "array",
+                    "description": "The list of fully qualified table names to capture changes from. When not specified, all tables in the database are captured.",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "decimalHandlingMode": {
+                    "type": "string",
+                    "description": "Specifies how decimal values are represented by the connector (precise decimal, double, or string).",
+                    "enum": [
+                        "Precise",
+                        "Double",
+                        "String"
+                    ],
+                    "x-ms-enum": {
+                        "name": "DecimalHandlingMode",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Precise",
+                                "description": "The decimal handling mode is Precise."
+                            },
+                            {
+                                "value": "Double",
+                                "description": "The decimal handling mode is Double."
+                            },
+                            {
+                                "value": "String",
+                                "description": "The decimal handling mode is String."
+                            }
+                        ]
+                    }
+                },
+                "snapshotMode": {
+                    "type": "string",
+                    "description": "Specifies the criteria for performing a snapshot when the connector starts.",
+                    "enum": [
+                        "Initial",
+                        "InitialOnly",
+                        "NoData"
+                    ],
+                    "x-ms-enum": {
+                        "name": "SnapshotMode",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Initial",
+                                "description": "The snapshot mode is Initial."
+                            },
+                            {
+                                "value": "InitialOnly",
+                                "description": "The snapshot mode is InitialOnly."
+                            },
+                            {
+                                "value": "NoData",
+                                "description": "The snapshot mode is NoData."
+                            }
+                        ]
+                    }
+                },
+                "snapshotLockingMode": {
+                    "type": "string",
+                    "description": "Specifies the locking strategy used when taking the initial snapshot of Oracle tables.",
+                    "enum": [
+                        "Shared",
+                        "None"
+                    ],
+                    "x-ms-enum": {
+                        "name": "SnapshotLockingModeForOracle",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Shared",
+                                "description": "The snapshot locking mode is Shared."
+                            },
+                            {
+                                "value": "None",
+                                "description": "The snapshot locking mode is None."
+                            }
+                        ]
+                    }
                 }
             }
         },
@@ -2233,6 +2737,141 @@
                     "description": "The advanced filters defined in https://learn.microsoft.com/en-us/azure/event-grid/event-filtering#advanced-filtering."
                 }
             }
+        },
+        "TLSSettings": {
+            "type": "object",
+            "description": "Represents the TLS settings for a source connection.",
+            "properties": {
+                "trustCACertificate": {
+                    "description": "The trust CA certificate settings.",
+                    "$ref": "#/definitions/TrustCACertificate"
+                },
+                "clientCertificate": {
+                    "description": "The client certificate settings.",
+                    "$ref": "#/definitions/ClientCertificate"
+                }
+            }
+        },
+        "TrustCACertificate": {
+            "type": "object",
+            "description": "Represents the trust CA certificate settings.",
+            "required": [
+                "verifyHostname"
+            ],
+            "properties": {
+                "certificate": {
+                    "description": "The certificate resource.",
+                    "$ref": "#/definitions/CertificateResource"
+                },
+                "verifyHostname": {
+                    "type": "boolean",
+                    "description": "Determines whether the client verifies the broker's certificate hostname during the TLS handshake. When false, the client can connect even if the broker's certificate does not match its hostname."
+                },
+                "cipherSuites": {
+                    "type": "string",
+                    "description": "The cipher suites to use for the TLS connection."
+                }
+            }
+        },
+        "ClientCertificate": {
+            "type": "object",
+            "description": "Represents the client certificate settings.",
+            "properties": {
+                "certificate": {
+                    "description": "The certificate resource.",
+                    "$ref": "#/definitions/CertificateResource"
+                },
+                "revocationMode": {
+                    "type": "string",
+                    "description": "The TLS certificate revocation mode. Additional modes may be added over time.",
+                    "enum": [
+                        "Off",
+                        "CRL",
+                        "OCSP",
+                        "CRLAndOCSP"
+                    ],
+                    "x-ms-enum": {
+                        "name": "TLSRevocationMode",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Off",
+                                "description": "Revocation checking is disabled."
+                            },
+                            {
+                                "value": "CRL",
+                                "description": "Revocation checking uses CRL (Certificate Revocation List)."
+                            },
+                            {
+                                "value": "OCSP",
+                                "description": "Revocation checking uses OCSP (Online Certificate Status Protocol)."
+                            },
+                            {
+                                "value": "CRLAndOCSP",
+                                "description": "Revocation checking uses both CRL and OCSP."
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "CertificateResource": {
+            "type": "object",
+            "description": "Base type for certificate resources. Additional types may be added over time.",
+            "discriminator": "type",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "description": "The certificate resource type.",
+                    "$ref": "#/definitions/CertificateResourceType"
+                }
+            }
+        },
+        "CertificateResourceType": {
+            "type": "string",
+            "description": "The certificate resource type. Additional types may be added over time.",
+            "enum": [
+                "KeyVault"
+            ],
+            "x-ms-enum": {
+                "name": "CertificateResourceType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "KeyVault",
+                        "description": "The certificate is stored in Azure Key Vault."
+                    }
+                ]
+            }
+        },
+        "KeyVaultCertificateResource": {
+            "type": "object",
+            "description": "A certificate stored in Azure Key Vault.",
+            "x-ms-discriminator-value": "KeyVault",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/CertificateResource"
+                },
+                {
+                    "type": "object",
+                    "required": [
+                        "azureKeyVaultResourceId",
+                        "certificateName"
+                    ],
+                    "properties": {
+                        "azureKeyVaultResourceId": {
+                            "type": "string",
+                            "description": "The Azure Key Vault resource ID (Azure Resource Manager (ARM) resource ID, not a UUID)."
+                        },
+                        "certificateName": {
+                            "type": "string",
+                            "description": "The certificate name in the Key Vault."
+                        }
+                    }
+                }
+            ]
         }
     }
 }

@@ -2,12 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
-public class SQLUsageChecker(TokenCredential credential, string subscriptionId, ILogger<SQLUsageChecker> logger, IHttpClientFactory httpClientFactory, ITenantService tenantService) : AzureUsageChecker(credential, subscriptionId, logger, tenantService, httpClientFactory)
+public class SQLUsageChecker(TokenCredential credential, string subscriptionId, ILogger<SQLUsageChecker> logger, IAzureService azureService)
+    : AzureUsageChecker(credential, subscriptionId, logger, azureService)
 {
     private const string ServerQuotaMagicString = "ServerQuota";
     private const string SqlUsagesApiVersion = "2023-08-01";

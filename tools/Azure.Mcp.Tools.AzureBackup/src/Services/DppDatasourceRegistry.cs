@@ -151,7 +151,7 @@ public static class DppDatasourceRegistry
     /// Useful for user-facing validation messages.
     /// </summary>
     public static IReadOnlyList<string> KnownTypeNames { get; } = AllProfiles
-        .SelectMany(p => new[] { p.FriendlyName }.Concat(p.Aliases))
+        .SelectMany(p => new[] { p.FriendlyName }.Concat(p.Aliases).Concat(new[] { p.ArmResourceType }))
         .ToArray();
 
     /// <summary>
@@ -161,23 +161,23 @@ public static class DppDatasourceRegistry
     /// </summary>
     public static DppDatasourceProfile Resolve(string workloadTypeOrArmType)
     {
-        var normalised = workloadTypeOrArmType.ToLowerInvariant();
+        var normalized = workloadTypeOrArmType.ToLowerInvariant();
 
         foreach (var profile in AllProfiles)
         {
-            if (normalised.Equals(profile.FriendlyName, StringComparison.OrdinalIgnoreCase))
+            if (normalized.Equals(profile.FriendlyName, StringComparison.OrdinalIgnoreCase))
             {
                 return profile;
             }
 
-            if (normalised.Equals(profile.ArmResourceType, StringComparison.OrdinalIgnoreCase))
+            if (normalized.Equals(profile.ArmResourceType, StringComparison.OrdinalIgnoreCase))
             {
                 return profile;
             }
 
             foreach (var alias in profile.Aliases)
             {
-                if (normalised.Equals(alias, StringComparison.OrdinalIgnoreCase))
+                if (normalized.Equals(alias, StringComparison.OrdinalIgnoreCase))
                 {
                     return profile;
                 }
@@ -197,12 +197,12 @@ public static class DppDatasourceRegistry
     /// </summary>
     public static DppDatasourceProfile? TryAutoDetect(string armResourceType)
     {
-        var normalised = armResourceType.ToLowerInvariant();
+        var normalized = armResourceType.ToLowerInvariant();
 
         foreach (var profile in AllProfiles)
         {
             if (profile.AutoDetectFromBaseResourceType != null &&
-                normalised.Equals(profile.AutoDetectFromBaseResourceType, StringComparison.OrdinalIgnoreCase))
+                normalized.Equals(profile.AutoDetectFromBaseResourceType, StringComparison.OrdinalIgnoreCase))
             {
                 return profile;
             }

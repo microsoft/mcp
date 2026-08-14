@@ -1,5 +1,161 @@
 # Release History
 
+
+
+
+
+
+## 3.0.35 (2026-08-13) (pre-release)
+
+### Changed
+
+- Improved `foundry` and `foundryexensions` namespace-level tool descriptions.
+
+## 3.0.34 (2026-08-11) (pre-release)
+
+### Added
+
+- Added the 'azmcp resilience usageplan create' command to create or update a resilience usage plan in a resource group, including its plan type. [[#3166](https://github.com/microsoft/mcp/pull/3166)]
+- Added the 'azmcp resilience usageplan enrollment create' command to create or update an enrollment under a resilience usage plan, associating it with a service group. [[#3166](https://github.com/microsoft/mcp/pull/3166)]
+
+### Fixed
+
+- Improved the Azure Quick Review (azqr) tool, extension namespace, and consolidated tool descriptions so that prompts asking to scan a subscription for compliance issues or compliance recommendations reliably select the `extension_azqr` tool in All and Namespace modes. [[#3134](https://github.com/microsoft/mcp/pull/3134)]
+
+## 3.0.33 (2026-08-06) (pre-release)
+
+### Added
+
+- Added `azmcp advisor metadata get` to retrieve the global Azure Advisor recommendation-type metadata catalog entry (by recommendation type id) from Azure Resource Graph. [[#3178](https://github.com/microsoft/mcp/pull/3178)]
+
+### Changed
+
+- **Breaking:** Renamed advisor_recommendation-type_list to advisor_metadata_list and moved recommendation-type discovery from the Advisor ARM API to the global Azure Resource Graph metadata catalog with richer localized details and filters for subcategory, Service Health tracking ID, and service-retirement date. Service-retirement filters (tracking ID or retirement date) apply to the ServiceUpgradeAndRetirement subcategory, and conflicting subcategory filters are rejected. [[#3197](https://github.com/microsoft/mcp/pull/3197)]
+- Added new telemetry collection for 'IsLearn' (indicates if the tool call attempted learning), 'ToolSource' (indication on where the invoked tool is from), 'ToolParameters' (the names of the tool parameters), and 'ToolAnnotations' (the annotations of the tool). [[#3156](https://github.com/microsoft/mcp/pull/3156)]
+
+## 3.0.32 (2026-08-04) (pre-release)
+
+### Fixed
+
+- Display a warning when VS Code MCP access is disabled and provide a shortcut to the MCP access setting.
+- Fixed a bug in EventHubs where creating a new event hub or consumer group could throw an `InvalidOperationException` instead of succeeding, because the `NullableResponse<T>.Value` accessor was dereferenced without checking `HasValue` first. [[#3187](https://github.com/microsoft/mcp/pull/3187)]
+
+## 3.0.31 (2026-07-31) (pre-release)
+
+### Changed
+
+- Removed `IServiceProvider` from `CommandContext` and downstream locations where no longer used. [[#3185](https://github.com/microsoft/mcp/pull/3185)]
+
+## 3.0.30 (2026-07-28) (pre-release)
+
+### Changed
+
+- **Breaking:** Removed unused parameters from Core tools. [[#3137](https://github.com/microsoft/mcp/pull/3137)]
+- **Breaking:** Removed legacy tool design creation. [[#3137](https://github.com/microsoft/mcp/pull/3137)]
+
+#### Dependency Updates
+- Updated `ModelContextProtocol` packages to `2.0.0-preview.3`. [[#3145](https://github.com/microsoft/mcp/pull/3145)]
+
+### Fixed
+
+- `sql database create` and `sql database update` now return a validation error for unrecognized `--read-scale` values instead of silently ignoring them. [[#3129](https://github.com/microsoft/mcp/pull/3129)]
+
+## 3.0.29 (2026-07-23) (pre-release)
+
+### Added
+
+- Added Azure IoT Hub integration updates including command docs, e2e prompts, README service coverage, consolidated tool mapping, and CODEOWNERS ownership. [[#3005](https://github.com/microsoft/mcp/pull/3005)]
+
+### Changed
+
+- **Breaking:** Removed unused parameters from Quota tools. [[#3066](https://github.com/microsoft/mcp/pull/3066)]
+- **Breaking:** Removed unused parameters from Confidential Ledger tools. [[#3092](https://github.com/microsoft/mcp/pull/3092)]
+- **Breaking:** Removed unused parameters from Compute tools. [[#3096](https://github.com/microsoft/mcp/pull/3096)]
+- **Breaking:** Removed unused parameters from Communication tools. [[#3099](https://github.com/microsoft/mcp/pull/3099)]
+- **Breaking:** Removed unused parameters from Azure Migrate tools. [[#3102](https://github.com/microsoft/mcp/pull/3102)]
+- **Breaking:** Removed unused parameters from Azure ISV tools. [[#3103](https://github.com/microsoft/mcp/pull/3103)]
+- **Breaking:** Removed unused parameters from Advisor tools. [[#3111](https://github.com/microsoft/mcp/pull/3111)]
+- Migrated Azure Terraform tools to new tool pattern. [[#3101](https://github.com/microsoft/mcp/pull/3101)]
+- Migrated Cloud Architect tools to new tool design. [[#3130](https://github.com/microsoft/mcp/pull/3130)]
+- Migrated Azure MCP Server to the MCP 2026-07-28 stateless protocol (SDK 2.0.0-preview.1). HTTP clients using the new protocol must now include `Mcp-Method` and `Mcp-Name` routing headers on every POST request. Clients on the previous 2025-11-25 protocol are unaffected — the server auto-negotiates backward compatibility. [[#3016](https://github.com/microsoft/mcp/pull/3016)]
+- Added a server usage rule instructing agents to consult the troubleshooting guide (https://aka.ms/azmcp/troubleshooting) when an Azure MCP tool call fails, including retrying with the correct `tenant` and/or `subscription` parameter for authentication, authorization, tenant, or subscription context errors. [[#3054](https://github.com/microsoft/mcp/pull/3054)]
+
+### Fixed
+
+- Properly pass `tenant` and `retry options` in Azure Migrate tools. [[#3102](https://github.com/microsoft/mcp/pull/3102)]
+- Authenticated commands now return a clear, actionable error message when Azure credentials are unavailable (CredentialUnavailableException), guiding users to run `az login` instead of surfacing a generic authentication failure. [[#3056](https://github.com/microsoft/mcp/pull/3056)]
+
+## 3.0.28 (2026-07-21) (pre-release)
+
+### Changed
+
+- **Breaking:** Removed unused parameters from Speech tools. [[#3060](https://github.com/microsoft/mcp/pull/3060)]
+- **Breaking:** Removed unused parameters from Workbooks tools. [[#3050](https://github.com/microsoft/mcp/pull/3050)]
+- **Breaking:** Removed unused parameters from Well Architected Framework tools. [[#3047](https://github.com/microsoft/mcp/pull/3047)]
+- **Breaking:** Removed unused parameters from Resilience Management tools. [[#3064](https://github.com/microsoft/mcp/pull/3064)]
+- **Breaking:** Removed unused parameters from Redis tools. [[#3065](https://github.com/microsoft/mcp/pull/3065)]
+- **Breaking:** Removed unused parameters from Pricing tools. [[#3067](https://github.com/microsoft/mcp/pull/3067)]
+- **Breaking:** Removed unused parameters from Policy tools. [[#3068](https://github.com/microsoft/mcp/pull/3068)]
+- **Breaking:** Removed unused parameters from MySql tools. [[#3069](https://github.com/microsoft/mcp/pull/3069)]
+- **Breaking:** Removed unused parameters from Marketplace tools. [[#3070](https://github.com/microsoft/mcp/pull/3070)]
+- **Breaking:** Removed unused parameters from Managed Lustre tools. [[#3078](https://github.com/microsoft/mcp/pull/3078)]
+- **Breaking:** Removed unused parameters from Load Testing tools. [[#3079](https://github.com/microsoft/mcp/pull/3079)]
+- **Breaking:** Removed unused parameters from Key Vault tools. [[#3080](https://github.com/microsoft/mcp/pull/3080)]
+- **Breaking:** Removed unused parameters from Grafana tools. [[#3081](https://github.com/microsoft/mcp/pull/3081)]
+- **Breaking:** Removed unused parameters from Function App tools. [[#3083](https://github.com/microsoft/mcp/pull/3083)]
+- **Breaking:** Removed unused parameters from Extension tools. [[#3085](https://github.com/microsoft/mcp/pull/3085)]
+- **Breaking:** Removed unused parameters from Event Hubs tools. [[#3086](https://github.com/microsoft/mcp/pull/3086)]
+- **Breaking:** Removed unused parameters from Event Grid tools. [[#3087](https://github.com/microsoft/mcp/pull/3087)]
+- **Breaking:** Removed unused parameters from Device Registry tools. [[#3088](https://github.com/microsoft/mcp/pull/3088)]
+- **Breaking:** Removed unused parameters from Deploy tools. [[#3090](https://github.com/microsoft/mcp/pull/3090)]
+- **Breaking:** Removed unused parameters from Container Apps tools. [[#3091](https://github.com/microsoft/mcp/pull/3091)]
+- **Breaking:** Removed unused parameters from Bicep Schema tools. [[#3100](https://github.com/microsoft/mcp/pull/3100)]
+- Migrated Function tools to new design. [[#3082](https://github.com/microsoft/mcp/pull/3082)]
+- Modernized MCP tool `inputSchema` generation to use `System.Text.Json.Schema.JsonSchemaExporter` instead of the previous reflection-based mapper. Emitted input schemas are now richer and more spec-accurate: object roots always include `additionalProperties: false`, `Guid` options use `format: "uuid"`, nullable value types are typed as `["<type>", "null"]`, and nested object/array options produce full nested schemas. [[#2995](https://github.com/microsoft/mcp/pull/2995)]
+
+### Fixed
+
+- Updated option binding to use more appropriate arity choices based on multi-value parameters (arrays), single-value parameters (anything but boolean flags), and flags (boolean flags). [[#3047](https://github.com/microsoft/mcp/pull/3047)]
+
+## 3.0.27 (2026-07-16) (pre-release)
+
+### Changed
+
+- **Breaking:** Removed unused parameters from Search tools. [[#2954](https://github.com/microsoft/mcp/pull/2954)]
+- **Breaking:** Removed unused parameters from Sql tools. [[#2956](https://github.com/microsoft/mcp/pull/2956)]
+- **Breaking:** Removed unused parameters from SignalR tools. [[#3061](https://github.com/microsoft/mcp/pull/3061)]
+- **Breaking:** Removed unused parameters from Service Fabric tools. [[#3062](https://github.com/microsoft/mcp/pull/3062)]
+- **Breaking:** Removed unused parameters from Service Bus tools. [[#3063](https://github.com/microsoft/mcp/pull/3063)]
+
+## 3.0.26 (2026-07-14) (pre-release)
+
+### Added
+
+- Added `azmcp insights get` command to derive infrastructure insights from Azure Resource Graph aggregation combined with MCP sampling. [[#2711](https://github.com/microsoft/mcp/pull/2711)]
+
+### Changed
+
+#### Dependency Updates
+- Updated `@microsoft/vscode-azext-utils` from ~2 to ~4 (4.1.1) and `@vscode/vsce` from 3.7.1 to 3.9.2 in the VS Code extension. [[#3001](https://github.com/microsoft/mcp/pull/3001)]
+
+### Fixed
+
+- Unrecognized `AZURE_TOKEN_CREDENTIALS` values (e.g. typos) now log a warning listing valid values instead of silently falling back to the default credential chain. [[#3001](https://github.com/microsoft/mcp/pull/3001)]
+- Fixed a thread-safety issue in CustomChainedCredential where concurrent calls to GetToken/GetTokenAsync before initialization could construct duplicate credential chains. The credential is now initialized via `Lazy<T> (ExecutionAndPublication)` to guarantee single initialization under concurrent access. [[#3001](https://github.com/microsoft/mcp/pull/3001)]
+
+## 3.0.25 (2026-07-10) (pre-release)
+
+### Changed
+
+- **Breaking:** Replaced the broken `monitor healthmodels entity get` command with `monitor healthmodels list` and `monitor healthmodels get`. [[#2979](https://github.com/microsoft/mcp/pull/2979)]
+- Added Claude Code installation instructions to the Azure MCP Server README, covering installation of the Azure plugin from Anthropic's official plugin marketplace. [[#3003](https://github.com/microsoft/mcp/pull/3003)]
+
+## 3.0.24 (2026-07-08) (pre-release)
+
+### Fixed
+
+- Fixed an issue where the on-behalf-of token tenant comparison was case-sensitive, causing valid requests to be rejected when the configured tenant ID casing differed from the JWT 'tid' claim. [[#2907](https://github.com/microsoft/mcp/pull/2907)]
+
 ## 3.0.23 (2026-07-02) (pre-release)
 
 ### Added
@@ -711,7 +867,7 @@ For a complete history of changes included in this release, see entries for vers
   - `orchestrator-next`
   - `send-brownfield-analysis`
 - **Breaking:** Narrowed the `subscription list` command response model to include only (`subscriptionId`, `displayName`, `state`, `tenantId`, `isDefault`) instead of the full Azure SDK `SubscriptionData` type. [[#1974](https://github.com/microsoft/mcp/pull/1974)]
-- Improved tool descriptions to enahnce LLM selection accuracy for the following tools: [[#2131](https://github.com/microsoft/mcp/pull/2131)]
+- Improved tool descriptions to enhance LLM selection accuracy for the following tools: [[#2131](https://github.com/microsoft/mcp/pull/2131)]
   - `extension_azqr`
   - `extension_cli_generate`
   - `extension_cli_install`

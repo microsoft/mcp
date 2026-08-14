@@ -2,12 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Text;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Search.Services;
 using Azure.ResourceManager;
 using Azure.Search.Documents.KnowledgeBases.Models;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
@@ -18,28 +16,22 @@ namespace Azure.Mcp.Tools.Search.Tests.Service;
 
 public class SearchServiceCacheTests
 {
-    private readonly ISubscriptionService _subscriptionService;
     private readonly ICacheService _cacheService;
-    private readonly ITenantService _tenantService;
+    private readonly IAzureService _azureService;
     private readonly SearchService _service;
 
     public SearchServiceCacheTests()
     {
-        _subscriptionService = Substitute.For<ISubscriptionService>();
         _cacheService = Substitute.For<ICacheService>();
-        _tenantService = Substitute.For<ITenantService>();
+        _azureService = Substitute.For<IAzureService>();
 
         var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
         cloudConfig.CloudType.Returns(AzureCloudConfiguration.AzureCloud.AzurePublicCloud);
         cloudConfig.AuthorityHost.Returns(new Uri("https://login.microsoftonline.com"));
         cloudConfig.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
-        _tenantService.CloudConfiguration.Returns(cloudConfig);
+        _azureService.CloudConfiguration.Returns(cloudConfig);
 
-        _service = new SearchService(
-            _subscriptionService,
-            _cacheService,
-            _tenantService,
-            Substitute.For<ILogger<SearchService>>());
+        _service = new SearchService(_cacheService, _azureService);
     }
 
     [Fact]
@@ -56,7 +48,7 @@ public class SearchServiceCacheTests
 
         // Assert: result comes from cache and no ARM call is made
         Assert.Equal(cached, result);
-        await _subscriptionService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await _azureService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

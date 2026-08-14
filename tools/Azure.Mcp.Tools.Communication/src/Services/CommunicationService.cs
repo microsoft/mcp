@@ -5,7 +5,6 @@ using Azure.Communication.Email;
 using Azure.Communication.Sms;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Communication.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
@@ -13,8 +12,8 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Communication.Services;
 
-public class CommunicationService(ITenantService tenantService, ILogger<CommunicationService> logger)
-    : BaseAzureService(tenantService), ICommunicationService
+public class CommunicationService(IAzureService azureService, ILogger<CommunicationService> logger)
+    : BaseAzureService(azureService), ICommunicationService
 {
     private readonly ILogger<CommunicationService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -35,7 +34,7 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             (nameof(from), from),
             (nameof(message), message));
 
-        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication", TenantService.CloudConfiguration.ArmEnvironment);
+        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication", AzureService.CloudConfiguration.ArmEnvironment);
 
         // Validate to array separately since it has special requirements
         if (to == null || to.Length == 0)
@@ -50,7 +49,7 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             var credential = await GetCredential(tenantId, cancellationToken);
 
             var smsClientOptions = ConfigureRetryPolicy(AddDefaultPolicies(new SmsClientOptions()), retryPolicy);
-            smsClientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
+            smsClientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
 
             var smsClient = new SmsClient(new Uri(endpoint), credential, smsClientOptions);
 
@@ -71,14 +70,12 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             var results = new List<SmsResult>();
             foreach (var result in response.Value)
             {
-                results.Add(new()
-                {
-                    MessageId = result.MessageId,
-                    To = result.To,
-                    Successful = result.Successful,
-                    HttpStatusCode = result.HttpStatusCode,
-                    ErrorMessage = result.ErrorMessage
-                });
+                results.Add(new(
+                    MessageId: result.MessageId,
+                    To: result.To,
+                    Successful: result.Successful,
+                    HttpStatusCode: result.HttpStatusCode,
+                    ErrorMessage: result.ErrorMessage));
 
                 _logger.LogInformation("SMS to {To}: Success={Success}, MessageId={MessageId}, Status={Status}",
                     result.To, result.Successful, result.MessageId, result.HttpStatusCode);
@@ -116,7 +113,7 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             (nameof(subject), subject),
             (nameof(message), message));
 
-        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication", TenantService.CloudConfiguration.ArmEnvironment);
+        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication", AzureService.CloudConfiguration.ArmEnvironment);
 
         // Validate to array separately since it has special requirements
         if (to == null || to.Length == 0)
@@ -136,7 +133,7 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             var credential = await GetCredential(tenantId, cancellationToken);
 
             var emailClientOptions = ConfigureRetryPolicy(AddDefaultPolicies(new EmailClientOptions()), retryPolicy);
-            emailClientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
+            emailClientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
 
             var emailClient = new EmailClient(new(endpoint), credential, emailClientOptions);
 

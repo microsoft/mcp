@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
-using Microsoft.Mcp.Tests.Attributes;
+using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
@@ -21,7 +21,11 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     protected ITestOutputHelper Output { get; } = output;
 
-    public ValueTask InitializeAsync() => ValueTask.CompletedTask;
+    public ValueTask InitializeAsync()
+    {
+        Assert.SkipWhen(!TestExtensions.IsLiveTestMode(), "Skipping test in non-live mode");
+        return ValueTask.CompletedTask;
+    }
 
     public ValueTask DisposeAsync()
     {
@@ -47,8 +51,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
     {
         string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
 
-        LiveTestSettings? settings = null;
-        LiveTestSettings.TryLoadTestSettings(out settings);
+        LiveTestSettings.TryLoadTestSettings(out var settings);
         Dictionary<string, string?> envVars = settings?.EnvironmentVariables.ToDictionary(k => k.Key, v => (string?)v.Value) ?? [];
 
         var (client, serverUrl) = await McpTestUtilities.CreateMcpClientAsync(
@@ -65,7 +68,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     #region Default Mode Tests
 
-    [LiveTestOnly]
     [Fact]
     public async Task DefaultMode_LoadsNamespaceTools()
     {
@@ -87,6 +89,16 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         // Should include the documentation tool (displayed by its title)
         Assert.Contains("documentation", toolNames, StringComparer.OrdinalIgnoreCase);
 
+        // Should include subscription and group utility commands
+        Assert.Contains(toolNames, name => name.Contains("subscription", StringComparison.OrdinalIgnoreCase) && name.Contains("list", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(toolNames, name => name.Contains("group", StringComparison.OrdinalIgnoreCase) && name.Contains("list", StringComparison.OrdinalIgnoreCase));
+
+        var uniqueNames = toolNames.Distinct().ToList();
+
+        Assert.Equal(toolNames.Count, uniqueNames.Count);
+
+        Output.WriteLine($"Verified {toolNames.Count} unique tool names in default (namespace) mode");
+
         // Log for debugging
         Output.WriteLine($"Default mode (namespace) loaded {toolNames.Count} tools");
         foreach (var name in toolNames)
@@ -95,34 +107,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         }
     }
 
-    [LiveTestOnly]
-    [Fact]
-    public async Task DefaultMode_IncludesUtilityCommands()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotEmpty(listResult);
-
-        var toolNames = listResult.Select(t => t.Name).ToList();
-
-        // Should include subscription and group utility commands
-        Assert.Contains(toolNames, name => name.Contains("subscription", StringComparison.OrdinalIgnoreCase) && name.Contains("list", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(toolNames, name => name.Contains("group", StringComparison.OrdinalIgnoreCase) && name.Contains("list", StringComparison.OrdinalIgnoreCase));
-
-        // Log for debugging
-        Output.WriteLine($"Default mode loaded utility commands:");
-        foreach (var name in toolNames.Where(n => n.Contains("subscription", StringComparison.OrdinalIgnoreCase) || n.Contains("group", StringComparison.OrdinalIgnoreCase)))
-        {
-            Output.WriteLine($"  - {name}");
-        }
-    }
-
-    [LiveTestOnly]
     [Fact]
     public async Task DefaultMode_CanCallSubscriptionList()
     {
@@ -146,7 +130,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         Output.WriteLine($"Subscription list result: {firstContent}");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task DefaultMode_CanCallGroupList()
     {
@@ -174,7 +157,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     #region All Mode Tests
 
-    [LiveTestOnly]
     [Fact]
     public async Task AllMode_LoadsAllIndividualTools()
     {
@@ -196,6 +178,12 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         // Should include the microsoft_docs_search tool
         Assert.Contains("microsoft_docs_search", toolNames, StringComparer.OrdinalIgnoreCase);
 
+        // All tool names should be unique.
+        var uniqueNames = toolNames.Distinct().ToList();
+        Assert.Equal(toolNames.Count, uniqueNames.Count);
+
+        Output.WriteLine($"Verified {toolNames.Count} unique tool names in all mode");
+
         // Log for debugging
         Output.WriteLine($"All mode loaded {toolNames.Count} tools");
         foreach (var name in toolNames)
@@ -208,7 +196,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     #region Single Tool Proxy Mode Tests
 
-    [LiveTestOnly]
     [Fact]
     public async Task SingleProxyMode_LoadsSingleAzureTool()
     {
@@ -229,7 +216,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         Output.WriteLine($"Description: {tool.Description}");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task SingleProxyMode_WithNamespaceFilter_StillLoadsSingleAzureTool()
     {
@@ -247,7 +233,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         Output.WriteLine("Single proxy mode with namespace filter still loaded 1 tool");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task SingleProxyMode_WithReadOnlyFlag_LoadsSingleAzureTool()
     {
@@ -280,7 +265,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     #region Namespace Proxy Mode Tests
 
-    [LiveTestOnly]
     [Fact]
     public async Task NamespaceProxyMode_LoadsNamespaceTools()
     {
@@ -308,12 +292,16 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         }
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task NamespaceProxyMode_WithSpecificNamespaces_LoadsNamespaceSpecificTools()
     {
         // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "namespace", "--namespace", "storage", "--namespace", "keyvault");
+        await using var client = await CreateClientAsync(
+            "server", "start",
+            "--mode", "namespace",
+            "--namespace", "storage",
+            "--namespace", "keyvault",
+            "--namespace", "documentation");
 
         // Act
         var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
@@ -325,56 +313,30 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
         // Should include namespace-specific tools
         var hasRelevantTools = toolNames.Any(name =>
+            name.Contains("documentation", StringComparison.OrdinalIgnoreCase) ||
             name.Contains("storage", StringComparison.OrdinalIgnoreCase) ||
             name.Contains("keyvault", StringComparison.OrdinalIgnoreCase));
 
         Assert.True(hasRelevantTools, "Should have tools related to specified namespaces");
 
-        // Should not include documentation tool when explicit namespaces are specified
-        Assert.DoesNotContain("documentation", toolNames, StringComparer.OrdinalIgnoreCase);
-
-        // Should contain exactly 5 tools: 2 specified namespaces + 3 utility tools (group_list, group_resource_list, subscription_list)
-        Assert.Equal(5, toolNames.Count);
+        // Should contain exactly 6 tools: 3 specified namespaces + 3 utility tools (group_list, group_resource_list, subscription_list)
+        Assert.Equal(6, toolNames.Count);
 
         // Verify tools are from storage, keyvault namespaces, or utility tools
         Assert.All(toolNames, toolName =>
         {
-            var isStorageOrKeyVault = toolName.Contains("storage", StringComparison.OrdinalIgnoreCase) ||
-                                    toolName.Contains("keyvault", StringComparison.OrdinalIgnoreCase);
-            var isUtilityTool = toolName.Contains("group", StringComparison.OrdinalIgnoreCase) ||
-                              toolName.Contains("subscription", StringComparison.OrdinalIgnoreCase);
-            Assert.True(isStorageOrKeyVault || isUtilityTool, $"Tool '{toolName}' should be related to storage, keyvault namespaces, or be a utility tool");
+            var isStorageOrKeyVault = toolName.Contains("documentation", StringComparison.OrdinalIgnoreCase) ||
+                toolName.Contains("storage", StringComparison.OrdinalIgnoreCase) ||
+                toolName.Contains("keyvault", StringComparison.OrdinalIgnoreCase);
+            var isUtilityTool = toolName.Contains("group_list", StringComparison.OrdinalIgnoreCase) ||
+                toolName.Contains("group_resource_list", StringComparison.OrdinalIgnoreCase) ||
+                toolName.Contains("subscription_list", StringComparison.OrdinalIgnoreCase);
+            Assert.True(isStorageOrKeyVault || isUtilityTool, $"Tool '{toolName}' should be related to documentation, keyvault, storage namespaces, or be a utility tool");
         });
 
-        Output.WriteLine($"Namespace proxy mode with [storage, keyvault] loaded {toolNames.Count} tools");
+        Output.WriteLine($"Namespace proxy mode with [documentation, keyvault, storage] loaded {toolNames.Count} tools");
     }
 
-    [LiveTestOnly]
-    [Fact]
-    public async Task NamespaceProxyMode_WithDocumentationNamespace_LoadsOnlyDocumentationTool()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "namespace", "--namespace", "documentation");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotEmpty(listResult);
-
-        var toolNames = listResult.Select(t => t.Name).ToList();
-
-        // Should contain the documentation tool (displayed by its title) plus utility tools
-        Assert.Equal(4, listResult.Count());
-        Assert.Contains("documentation", toolNames, StringComparer.OrdinalIgnoreCase);
-        Assert.Contains(toolNames, name => name.Contains("group", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(toolNames, name => name.Contains("subscription", StringComparison.OrdinalIgnoreCase));
-
-        Output.WriteLine($"Namespace proxy mode with [documentation] loaded {toolNames.Count} tools");
-        Output.WriteLine($"Tool: {toolNames.First()}");
-    }
-
-    [LiveTestOnly]
     [Fact]
     public async Task NamespaceProxyMode_StorageToolLearnMode_ReturnsStorageCommands()
     {
@@ -418,7 +380,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     #region Default Mode with Filters Tests
 
-    [LiveTestOnly]
     [Fact]
     public async Task DefaultMode_WithNamespaceFilter_LoadsFilteredTools()
     {
@@ -448,7 +409,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         }
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task AllMode_WithNamespaceFilter_LoadsFilteredIndividualTools()
     {
@@ -476,7 +436,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         Output.WriteLine($"All mode with namespaces [storage, keyvault] loaded {toolNames.Count} tools");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task AllMode_WithReadOnlyFlag_LoadsOnlyReadOnlyTools()
     {
@@ -532,18 +491,20 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     #region Negative Tests - Invalid Modes and Namespaces
 
-    [LiveTestOnly]
     [Fact]
     public async Task InvalidMode_FailsToStartServer()
     {
         // Act & Assert
-        await Assert.ThrowsAsync<IOException>(async () =>
+        // The 2.0 SDK surfaces an early transport failure (the server process exits before the
+        // connection completes) as ClientTransportClosedException. The wrapped InnerException is
+        // platform-dependent (an IOException on Windows, null on Linux), so only the outer type
+        // is asserted.
+        await Assert.ThrowsAsync<ClientTransportClosedException>(async () =>
         {
             await using var client = await CreateClientAsync("server", "start", "--mode", "invalid-mode");
         });
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task InvalidNamespace_LoadsGracefully()
     {
@@ -568,51 +529,8 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     #endregion
 
-    #region Comparison Tests
-
-    [LiveTestOnly]
-    [Fact]
-    public async Task VerifyUniqueToolNames_InAllMode()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "all");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        var toolNames = listResult.Select(t => t.Name).ToList();
-        var uniqueNames = toolNames.Distinct().ToList();
-
-        Assert.Equal(toolNames.Count, uniqueNames.Count);
-
-        Output.WriteLine($"Verified {toolNames.Count} unique tool names in all mode");
-    }
-
-    [LiveTestOnly]
-    [Fact]
-    public async Task VerifyUniqueToolNames_InDefaultMode()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        var toolNames = listResult.Select(t => t.Name).ToList();
-        var uniqueNames = toolNames.Distinct().ToList();
-
-        Assert.Equal(toolNames.Count, uniqueNames.Count);
-
-        Output.WriteLine($"Verified {toolNames.Count} unique tool names in default (namespace) mode");
-    }
-
-    #endregion
-
     #region Consolidated Proxy Mode Tests
 
-    [LiveTestOnly]
     [Fact]
     public async Task ConsolidatedProxyMode_LoadsConsolidatedTools()
     {
@@ -642,7 +560,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         }
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task ConsolidatedProxyMode_ToolLearnMode_ReturnsConsolidatedCommands()
     {
@@ -683,7 +600,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         Output.WriteLine($"✓ Learn mode returned {responseText.Length} characters of consolidated command information");
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task ConsolidatedProxyMode_WithNamespaceFilter_LoadsFilteredConsolidatedTools()
     {
@@ -714,7 +630,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         }
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task ConsolidatedProxyMode_WithReadOnlyFlag_LoadsOnlyReadOnlyConsolidatedTools()
     {
@@ -757,7 +672,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         }
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task ConsolidatedProxyMode_CanCallConsolidatedTool()
     {
@@ -786,7 +700,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
     #region Tool Mode Tests
 
-    [LiveTestOnly]
     [Fact]
     public async Task ToolMode_AutomaticallyChangesToAllMode()
     {
@@ -807,7 +720,6 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         Assert.Contains("subscription_list", toolNames);
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task ToolMode_OverridesExplicitNamespaceMode()
     {

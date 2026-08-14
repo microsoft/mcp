@@ -2,16 +2,16 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Deploy.Commands.App;
 using Azure.Mcp.Tools.Deploy.Services;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Deploy.Tests.Commands.App;
 
-public class LogsGetCommandTests : CommandUnitTestsBase<LogsGetCommand, IDeployService>
+public class LogsGetCommandTests : SubscriptionCommandUnitTestsBase<LogsGetCommand, IDeployService>
 {
     [Fact]
     public async Task Should_get_azd_app_logs()
@@ -155,6 +155,4 @@ public class LogsGetCommandTests : CommandUnitTestsBase<LogsGetCommand, IDeployS
         Assert.NotNull(result);
         Assert.NotEqual(HttpStatusCode.OK, result.Status); // Should fail validation
     }
-
-
 }

@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Tools.FileShares.Options;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.Informational;
 using Azure.Mcp.Tools.FileShares.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Informational;
 
@@ -23,47 +23,28 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Informational;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class FileShareGetProvisioningRecommendationCommand(ILogger<FileShareGetProvisioningRecommendationCommand> logger, IFileSharesService service)
-    : SubscriptionCommand<FileShareGetProvisioningRecommendationOptions>()
+public sealed class FileShareGetProvisioningRecommendationCommand(ILogger<FileShareGetProvisioningRecommendationCommand> logger, IFileSharesService service, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<FileShareGetProvisioningRecommendationOptions, FileShareProvisioningRecommendationResult>(subscriptionResolver)
 {
     private readonly ILogger<FileShareGetProvisioningRecommendationCommand> _logger = logger;
     private readonly IFileSharesService _service = service;
 
     /// <inheritdoc />
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(FileSharesOptionDefinitions.Location.AsRequired());
-        command.Options.Add(FileSharesOptionDefinitions.ProvisionedStorageGiB.AsRequired());
-    }
-
-    /// <inheritdoc />
-    protected override FileShareGetProvisioningRecommendationOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Location = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Location.Name);
-        options.ProvisionedStorageGiB = parseResult.GetValueOrDefault<int?>(FileSharesOptionDefinitions.ProvisionedStorageGiB.Name);
-        return options;
-    }
-
-    /// <inheritdoc />
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        FileShareGetProvisioningRecommendationOptions options,
         CancellationToken cancellationToken)
     {
-        var options = BindOptions(parseResult);
-
         try
         {
             _logger.LogInformation("Getting provisioning recommendation for subscription {Subscription} in location {Location} with storage {StorageGiB} GiB",
-                options.Subscription, options.Location, options.ProvisionedStorageGiB);
+                options.Subscription, options.Location, options.ProvisionedStorageInGiB);
 
             var result = await _service.GetProvisioningRecommendationAsync(
                 options.Subscription!,
-                options.Location!,
-                options.ProvisionedStorageGiB!.Value,
-                options.Tenant!,
+                options.Location,
+                options.ProvisionedStorageInGiB,
+                options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 

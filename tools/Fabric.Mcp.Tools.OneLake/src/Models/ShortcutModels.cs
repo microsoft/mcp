@@ -8,7 +8,7 @@ namespace Fabric.Mcp.Tools.OneLake.Models;
 /// <summary>
 /// Represents a OneLake shortcut.
 /// </summary>
-public class OneLakeShortcut
+public sealed class OneLakeShortcut
 {
     [JsonPropertyName("path")]
     public string? Path { get; set; }
@@ -23,7 +23,7 @@ public class OneLakeShortcut
 /// <summary>
 /// Target configuration for a shortcut.
 /// </summary>
-public class ShortcutTarget
+public sealed class ShortcutTarget
 {
     /// <summary>
     /// Discriminator returned by GET responses. Must NOT be sent on create/update requests.
@@ -63,7 +63,7 @@ public class ShortcutTarget
 /// <summary>
 /// OneLake shortcut target pointing to another OneLake location.
 /// </summary>
-public class OneLakeShortcutTarget
+public sealed class OneLakeShortcutTarget
 {
     [JsonPropertyName("workspaceId")]
     public string? WorkspaceId { get; set; }
@@ -82,7 +82,7 @@ public class OneLakeShortcutTarget
 /// <summary>
 /// ADLS Gen2 shortcut target.
 /// </summary>
-public class AdlsGen2ShortcutTarget
+public sealed class AdlsGen2ShortcutTarget
 {
     [JsonPropertyName("location")]
     public string? Location { get; set; }
@@ -97,7 +97,7 @@ public class AdlsGen2ShortcutTarget
 /// <summary>
 /// Amazon S3 shortcut target.
 /// </summary>
-public class AmazonS3ShortcutTarget
+public sealed class AmazonS3ShortcutTarget
 {
     [JsonPropertyName("location")]
     public string? Location { get; set; }
@@ -112,7 +112,7 @@ public class AmazonS3ShortcutTarget
 /// <summary>
 /// Google Cloud Storage shortcut target.
 /// </summary>
-public class GoogleCloudStorageShortcutTarget
+public sealed class GoogleCloudStorageShortcutTarget
 {
     [JsonPropertyName("location")]
     public string? Location { get; set; }
@@ -127,7 +127,7 @@ public class GoogleCloudStorageShortcutTarget
 /// <summary>
 /// Dataverse shortcut target.
 /// </summary>
-public class DataverseShortcutTarget
+public sealed class DataverseShortcutTarget
 {
     [JsonPropertyName("environmentDomain")]
     public string? EnvironmentDomain { get; set; }
@@ -142,7 +142,7 @@ public class DataverseShortcutTarget
 /// <summary>
 /// S3-compatible shortcut target.
 /// </summary>
-public class S3CompatibleShortcutTarget
+public sealed class S3CompatibleShortcutTarget
 {
     [JsonPropertyName("location")]
     public string? Location { get; set; }
@@ -160,7 +160,7 @@ public class S3CompatibleShortcutTarget
 /// <summary>
 /// External data share shortcut target.
 /// </summary>
-public class ExternalDataShareShortcutTarget
+public sealed class ExternalDataShareShortcutTarget
 {
     [JsonPropertyName("connectionId")]
     public string? ConnectionId { get; set; }
@@ -169,7 +169,7 @@ public class ExternalDataShareShortcutTarget
 /// <summary>
 /// Azure Blob Storage shortcut target.
 /// </summary>
-public class AzureBlobStorageShortcutTarget
+public sealed class AzureBlobStorageShortcutTarget
 {
     [JsonPropertyName("location")]
     public string? Location { get; set; }
@@ -184,7 +184,7 @@ public class AzureBlobStorageShortcutTarget
 /// <summary>
 /// OneDrive / SharePoint Online shortcut target.
 /// </summary>
-public class OneDriveSharePointShortcutTarget
+public sealed class OneDriveSharePointShortcutTarget
 {
     [JsonPropertyName("location")]
     public string? Location { get; set; }
@@ -202,7 +202,7 @@ public class OneDriveSharePointShortcutTarget
 /// <summary>
 /// Response from the List Shortcuts API.
 /// </summary>
-public class ShortcutListResponse
+public sealed class ShortcutListResponse
 {
     [JsonPropertyName("value")]
     public List<OneLakeShortcut>? Value { get; set; }
@@ -217,7 +217,7 @@ public class ShortcutListResponse
 /// <summary>
 /// Request body for the bulk create shortcuts API (POST /shortcuts/bulkCreate).
 /// </summary>
-public class BulkCreateShortcutsRequest
+public sealed class BulkCreateShortcutsRequest
 {
     [JsonPropertyName("createShortcutRequests")]
     public List<CreateShortcutWithTransformRequest>? CreateShortcutRequests { get; set; }
@@ -226,7 +226,7 @@ public class BulkCreateShortcutsRequest
 /// <summary>
 /// A single shortcut creation request (with optional transform).
 /// </summary>
-public class CreateShortcutWithTransformRequest
+public sealed class CreateShortcutWithTransformRequest
 {
     [JsonPropertyName("path")]
     public string? Path { get; set; }
@@ -244,7 +244,7 @@ public class CreateShortcutWithTransformRequest
 /// <summary>
 /// CSV-to-Delta transform definition.
 /// </summary>
-public class CsvToDeltaTransform
+public sealed class CsvToDeltaTransform
 {
     [JsonPropertyName("type")]
     public string? Type { get; set; }
@@ -259,7 +259,7 @@ public class CsvToDeltaTransform
 /// <summary>
 /// Properties for the CSV-to-Delta transform.
 /// </summary>
-public class CsvToDeltaTransformProperties
+public sealed class CsvToDeltaTransformProperties
 {
     [JsonPropertyName("delimiter")]
     public string? Delimiter { get; set; }
@@ -274,7 +274,7 @@ public class CsvToDeltaTransformProperties
 /// <summary>
 /// Response from POST /shortcuts/bulkCreate.
 /// </summary>
-public class BulkCreateShortcutResponse
+public sealed class BulkCreateShortcutResponse
 {
     [JsonPropertyName("value")]
     public List<CreateShortcutResponse>? Value { get; set; }
@@ -283,7 +283,7 @@ public class BulkCreateShortcutResponse
 /// <summary>
 /// Per-shortcut result in a bulk create response.
 /// </summary>
-public class CreateShortcutResponse
+public sealed class CreateShortcutResponse
 {
     [JsonPropertyName("request")]
     public ShortcutRequestInfo? Request { get; set; }
@@ -301,7 +301,7 @@ public class CreateShortcutResponse
 /// <summary>
 /// Original name/path echoed back in a bulk create response item.
 /// </summary>
-public class ShortcutRequestInfo
+public sealed class ShortcutRequestInfo
 {
     [JsonPropertyName("name")]
     public string? Name { get; set; }
@@ -313,7 +313,7 @@ public class ShortcutRequestInfo
 /// <summary>
 /// Error details for a failed shortcut in a bulk create response.
 /// </summary>
-public class ShortcutCreateError
+public sealed class ShortcutCreateError
 {
     [JsonPropertyName("errorCode")]
     public string? ErrorCode { get; set; }

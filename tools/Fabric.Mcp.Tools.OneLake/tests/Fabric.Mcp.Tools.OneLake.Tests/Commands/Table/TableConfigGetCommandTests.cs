@@ -9,6 +9,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Core.TestUtilities;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Table;
 
@@ -70,7 +71,6 @@ public class TableConfigGetCommandTests : CommandUnitTestsBase<TableConfigGetCom
     [Fact]
     public void Constructor_ThrowsForNullDependencies()
     {
-
         Assert.Throws<ArgumentNullException>(() => new TableConfigGetCommand(null!, Service));
         Assert.Throws<ArgumentNullException>(() => new TableConfigGetCommand(Logger, null!));
     }

@@ -2,26 +2,18 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Security.KeyVault.Administration;
 using Azure.Security.KeyVault.Certificates;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Secrets;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.KeyVault.Services;
 
-public sealed class KeyVaultService(
-    ITenantService tenantService,
-    IHttpClientFactory httpClientFactory,
-    ILogger<KeyVaultService> logger) : BaseAzureService(tenantService), IKeyVaultService
+public sealed class KeyVaultService(IAzureService azureService)
+    : BaseAzureService(azureService), IKeyVaultService
 {
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-    private readonly ILogger<KeyVaultService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
     public async Task<List<string>> ListKeys(
         string vaultName,
         bool includeManagedKeys,
@@ -243,7 +235,7 @@ public sealed class KeyVaultService(
     {
         ValidateVaultName(vaultName);
 
-        switch (_tenantService.CloudConfiguration.CloudType)
+        switch (AzureService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
                 return $"https://{vaultName}.vault.azure.net";
@@ -261,7 +253,7 @@ public sealed class KeyVaultService(
     {
         ValidateVaultName(vaultName);
 
-        switch (_tenantService.CloudConfiguration.CloudType)
+        switch (AzureService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
                 return $"https://{vaultName}.managedhsm.azure.net";
@@ -305,7 +297,7 @@ public sealed class KeyVaultService(
     private KeyClient CreateKeyClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
         var vaultUri = new Uri(BuildVaultUri(vaultName));
-        var httpClient = _httpClientFactory.CreateClient();
+        var httpClient = AzureService.GetClient();
         httpClient.BaseAddress = vaultUri;
         var options = new KeyClientOptions();
         options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
@@ -316,7 +308,7 @@ public sealed class KeyVaultService(
     private SecretClient CreateSecretClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
         var vaultUri = new Uri(BuildVaultUri(vaultName));
-        var httpClient = _httpClientFactory.CreateClient();
+        var httpClient = AzureService.GetClient();
         httpClient.BaseAddress = vaultUri;
         var options = new SecretClientOptions();
         options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
@@ -327,7 +319,7 @@ public sealed class KeyVaultService(
     private CertificateClient CreateCertificateClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
         var vaultUri = new Uri(BuildVaultUri(vaultName));
-        var httpClient = _httpClientFactory.CreateClient();
+        var httpClient = AzureService.GetClient();
         httpClient.BaseAddress = vaultUri;
         var options = new CertificateClientOptions();
         options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
@@ -353,7 +345,7 @@ public sealed class KeyVaultService(
 
     private KeyVaultSettingsClient CreateSettingsClient(Uri hsmUri, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
-        var httpClient = _httpClientFactory.CreateClient();
+        var httpClient = AzureService.GetClient();
         httpClient.BaseAddress = hsmUri;
         var options = new KeyVaultAdministrationClientOptions();
         options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);

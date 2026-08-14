@@ -1,0 +1,21 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-28571e947920",
+    "planId": "3546052c-ae64-4526-b1a8-52af7761426f",
+    "updatePlanRequest": {
+      "displayName": "Plan 1 - updated",
+      "description": "An updated plan description."
+    }
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "id": "3546052c-ae64-4526-b1a8-52af7761426f",
+        "type": "Plan",
+        "displayName": "Plan 1 - updated",
+        "description": "An updated plan description.",
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-28571e947920"
+      }
+    }
+  }
+}

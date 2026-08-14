@@ -4,9 +4,9 @@
 using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Models.FastTranscription;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
@@ -17,15 +17,10 @@ namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
 /// <summary>
 /// Recognizer for Fast Transcription using Azure AI Services Speech REST API.
 /// </summary>
-public class FastTranscriptionRecognizer(
-    ITenantService tenantService,
-    IHttpClientFactory httpClientFactory,
-    ILogger<FastTranscriptionRecognizer> logger)
-    : BaseAzureService(tenantService), IFastTranscriptionRecognizer
+public class FastTranscriptionRecognizer(IAzureService azureService, ILogger<FastTranscriptionRecognizer> logger)
+    : BaseAzureService(azureService), IFastTranscriptionRecognizer
 {
     private readonly ILogger<FastTranscriptionRecognizer> _logger = logger;
-    private readonly ITenantService _tenantService = tenantService;
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     /// <inheritdoc/>
     public async Task<FastTranscriptionResult> RecognizeAsync(
@@ -67,7 +62,7 @@ public class FastTranscriptionRecognizer(
             try
             {
                 // Get Azure AD credential and token
-                var credential = await GetCredential(cancellationToken);
+                var credential = await GetCredential(null, cancellationToken);
 
                 // Get access token for Cognitive Services with proper scope
                 var accessToken = await credential.GetTokenAsync(new([GetCognitiveServicesScope()]), cancellationToken);
@@ -128,7 +123,7 @@ public class FastTranscriptionRecognizer(
                 };
 
                 // Make the request using HttpClient from factory
-                var client = _httpClientFactory.CreateClient();
+                var client = AzureService.GetClient();
                 var response = await client.SendAsync(requestMessage, cancellationToken);
                 var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
@@ -252,7 +247,7 @@ public class FastTranscriptionRecognizer(
 
     private string GetCognitiveServicesScope()
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://cognitiveservices.azure.com/.default",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://cognitiveservices.azure.us/.default",

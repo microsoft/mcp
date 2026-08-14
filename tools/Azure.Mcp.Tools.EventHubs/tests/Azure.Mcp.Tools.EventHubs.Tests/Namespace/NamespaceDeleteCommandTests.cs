@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
+using Azure.Mcp.Tests.Commands;
+using Azure.Mcp.Tools.EventHubs.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
-using Azure.Mcp.Tools.EventHubs.Options.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.Tests.Namespace;
 
-public class NamespaceDeleteCommandTests : CommandUnitTestsBase<NamespaceDeleteCommand, IEventHubsService>
+public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<NamespaceDeleteCommand, IEventHubsService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -314,9 +313,7 @@ public class NamespaceDeleteCommandTests : CommandUnitTestsBase<NamespaceDeleteC
         ]);
 
         // Act
-        var options = Command.GetType()
-            .GetMethod("BindOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.Invoke(Command, [parseResult]) as NamespaceDeleteOptions;
+        var options = Command.BindOptions(parseResult);
 
         // Assert
         Assert.NotNull(options);
@@ -414,14 +411,9 @@ public class NamespaceDeleteCommandTests : CommandUnitTestsBase<NamespaceDeleteC
             "--namespace", nonExistentNamespace);
 
         // Assert — still HTTP 200 (idempotent), but result indicates not-found
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, EventHubsJsonContext.Default.NamespaceDeleteCommandResult);
 
-        var result = JsonDocument.Parse(JsonSerializer.Serialize(response.Results)).RootElement;
-        var success = result.GetProperty("success").GetBoolean();
-        var message = result.GetProperty("message").GetString();
-
-        Assert.False(success);
-        Assert.Equal($"Namespace '{nonExistentNamespace}' was not found. Nothing was deleted.", message);
+        Assert.False(result.Success);
+        Assert.Equal($"Namespace '{nonExistentNamespace}' was not found. Nothing was deleted.", result.Message);
     }
 }

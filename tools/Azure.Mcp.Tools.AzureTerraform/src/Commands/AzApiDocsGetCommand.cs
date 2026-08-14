@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.IO;
 using System.Net;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Options;
@@ -34,27 +33,11 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 public sealed class AzApiDocsGetCommand(
     ILogger<AzApiDocsGetCommand> logger,
     IAzApiDocsService docsService,
-    IAzApiExamplesService examplesService) : BaseCommand<AzApiDocsOptions>
+    IAzApiExamplesService examplesService) : BaseCommand<AzApiDocsOptions, AzApiDocsResult>
 {
     private readonly ILogger<AzApiDocsGetCommand> _logger = logger;
     private readonly IAzApiDocsService _docsService = docsService;
     private readonly IAzApiExamplesService _examplesService = examplesService;
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureTerraformOptionDefinitions.AzApiResourceType.AsRequired());
-        command.Options.Add(AzureTerraformOptionDefinitions.ApiVersion.AsOptional());
-    }
-
-    protected override AzApiDocsOptions BindOptions(ParseResult parseResult)
-    {
-        return new AzApiDocsOptions
-        {
-            ResourceType = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.AzApiResourceType.Name),
-            ApiVersion = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.ApiVersion.Name)
-        };
-    }
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
@@ -64,22 +47,15 @@ public sealed class AzApiDocsGetCommand(
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        AzApiDocsOptions options,
         CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var result = _docsService.GetDocumentation(options.ResourceType!, options.ApiVersion);
+            var result = _docsService.GetDocumentation(options.ResourceType, options.ApiVersion);
 
             var examples = await _examplesService.GetExamplesAsync(
-                options.ResourceType!,
+                options.ResourceType,
                 cancellationToken).ConfigureAwait(false);
 
             if (examples.Count > 0)
@@ -87,9 +63,7 @@ public sealed class AzApiDocsGetCommand(
                 result.Examples = examples;
             }
 
-            context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AzApiDocsResult);
-            context.Response.Message = string.Empty;
 
             context.Activity
                 ?.AddTag(AzureTerraformTelemetryTags.ToolArea, "azapi")

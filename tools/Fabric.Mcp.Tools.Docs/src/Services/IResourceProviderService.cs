@@ -1,15 +1,17 @@
-namespace Fabric.Mcp.Tools.Docs.Services
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace Fabric.Mcp.Tools.Docs.Services;
+
+public enum ResourceType
 {
-    public enum ResourceType
-    {
-        File,
-        Directory
-    }
+    File,
+    Directory
+}
 
-    public interface IResourceProviderService
-    {
-        Task<string> GetResource(string resourceName, CancellationToken cancellationToken);
+public interface IResourceProviderService
+{
+    Task<string> GetResource(string resourceName, CancellationToken cancellationToken);
 
-        Task<string[]> ListResourcesInPath(string path, ResourceType? filterResources = null, CancellationToken cancellationToken = default);
-    }
+    Task<string[]> ListResourcesInPath(string path, ResourceType? filterResources = null, CancellationToken cancellationToken = default);
 }

@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tools.Compute.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Compute.Options.Vm;
 using Azure.Mcp.Tools.Compute.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
@@ -36,8 +36,8 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, IComputeService computeService)
-    : BaseComputeCommand<VmPowerStateOptions>(true)
+public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, IComputeService computeService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<VmPowerStateOptions, VmPowerStateCommand.VmPowerStateCommandResult>(subscriptionResolver)
 {
     private static readonly HashSet<string> s_validActions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -46,59 +46,32 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, ICo
     private readonly ILogger<VmPowerStateCommand> _logger = logger;
     private readonly IComputeService _computeService = computeService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(VmPowerStateOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
+        base.ValidateOptions(options, validationResult);
 
-        command.Options.Add(ComputeOptionDefinitions.VmName.AsRequired());
-        command.Options.Add(ComputeOptionDefinitions.PowerAction.AsRequired());
-        command.Options.Add(ComputeOptionDefinitions.NoWait);
-        command.Options.Add(ComputeOptionDefinitions.SkipShutdown);
-
-        command.Validators.Add(commandResult =>
+        if (!string.IsNullOrEmpty(options.PowerAction) && !s_validActions.Contains(options.PowerAction))
         {
-            var powerAction = commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.PowerAction.Name);
-            if (!string.IsNullOrEmpty(powerAction) && !s_validActions.Contains(powerAction))
-            {
-                commandResult.AddError($"Invalid --power-action value '{powerAction}'. Accepted values: start, stop, deallocate, restart.");
-            }
-
-            var skipShutdown = commandResult.GetValueOrDefault<bool>(ComputeOptionDefinitions.SkipShutdown.Name);
-            if (skipShutdown && !string.Equals(powerAction, "stop", StringComparison.OrdinalIgnoreCase))
-            {
-                commandResult.AddError("--skip-shutdown is only compatible with --power-action stop.");
-            }
-        });
-    }
-
-    protected override VmPowerStateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.VmName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name);
-        options.PowerAction = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.PowerAction.Name);
-        options.NoWait = parseResult.GetValueOrDefault<bool>(ComputeOptionDefinitions.NoWait.Name);
-        options.SkipShutdown = parseResult.GetValueOrDefault<bool>(ComputeOptionDefinitions.SkipShutdown.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add($"Invalid --power-action value '{options.PowerAction}'. Accepted values: start, stop, deallocate, restart.");
         }
 
-        var options = BindOptions(parseResult);
+        if (options.SkipShutdown && !string.Equals(options.PowerAction, "stop", StringComparison.OrdinalIgnoreCase))
+        {
+            validationResult.Errors.Add("--skip-shutdown is only compatible with --power-action stop.");
+        }
+    }
 
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VmPowerStateOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
             var result = await _computeService.ChangeVmPowerStateAsync(
-                options.VmName!,
-                options.ResourceGroup!,
+                options.VmName,
+                options.ResourceGroup,
                 options.Subscription!,
-                options.PowerAction!,
+                options.PowerAction,
                 options.NoWait,
                 options.SkipShutdown,
                 options.Tenant,
@@ -133,5 +106,5 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, ICo
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmPowerStateCommandResult(Models.VmPowerStateResult PowerState);
+    public sealed record VmPowerStateCommandResult(Models.VmPowerStateResult PowerState);
 }

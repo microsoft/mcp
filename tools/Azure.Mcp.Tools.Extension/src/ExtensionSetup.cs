@@ -34,7 +34,7 @@ public sealed class ExtensionSetup : IAreaSetup
         bool exposeExternalProcessCommands = ShouldExposeExternalProcessCommands(serviceProvider);
 
         string description = exposeExternalProcessCommands
-            ? "Extension commands for CLI tooling related to Azure. Includes running Azure Quick Review (azqr) for compliance reports, generating Azure CLI commands from user intent, and providing installation instructions for Azure CLI (az), Azure Developer CLI (azd), and Azure Functions Core Tools (func)."
+            ? "Extension commands for CLI tooling related to Azure. Includes running Azure Quick Review (azqr) to scan a subscription for compliance issues and generate compliance and security reports with compliance recommendations, generating Azure CLI commands from user intent, and providing installation instructions for Azure CLI (az), Azure Developer CLI (azd), and Azure Functions Core Tools (func)."
             : "Extension commands for CLI tooling related to Azure. Includes generating Azure CLI commands from user intent and providing installation instructions for Azure CLI (az), Azure Developer CLI (azd), and Azure Functions Core Tools (func).";
 
         var extension = new CommandGroup(Name, description, Title);
@@ -62,7 +62,7 @@ public sealed class ExtensionSetup : IAreaSetup
     /// <returns>True if external process commands should be exposed; false otherwise.</returns>
     private static bool ShouldExposeExternalProcessCommands(IServiceProvider serviceProvider)
     {
-        if (serviceProvider.GetService<ServiceStartOptions>() is ServiceStartOptions startOptions)
+        if (serviceProvider.GetService<ServerStartOptions>() is ServerStartOptions startOptions)
         {
             return !startOptions.IsHttpMode;
         }

@@ -26,9 +26,8 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false)]
-public sealed class OneLakeItemListDfsCommand(
-    ILogger<OneLakeItemListDfsCommand> logger,
-    IOneLakeService oneLakeService) : AuthenticatedCommand<OneLakeItemListDfsOptions, OneLakeItemListDfsCommand.OneLakeItemListDfsCommandResult>
+public sealed class OneLakeItemListDfsCommand(ILogger<OneLakeItemListDfsCommand> logger, IOneLakeService oneLakeService)
+    : AuthenticatedCommand<OneLakeItemListDfsOptions, OneLakeItemListDfsCommand.OneLakeItemListDfsCommandResult>
 {
     private readonly ILogger<OneLakeItemListDfsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -56,8 +55,7 @@ public sealed class OneLakeItemListDfsCommand(
                 continuationToken: options.ContinuationToken,
                 cancellationToken);
 
-            var result = new OneLakeItemListDfsCommandResult { JsonResponse = jsonResponse };
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeItemListDfsCommandResult);
+            context.Response.Results = ResponseResult.Create(new(jsonResponse), OneLakeJsonContext.Default.OneLakeItemListDfsCommandResult);
         }
         catch (Exception ex)
         {
@@ -68,41 +66,26 @@ public sealed class OneLakeItemListDfsCommand(
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        ArgumentException argEx => $"Invalid argument: {argEx.Message}",
-        InvalidOperationException opEx => $"Operation failed: {opEx.Message}",
-        HttpRequestException httpEx => $"HTTP request failed: {httpEx.Message}",
-        _ => base.GetErrorMessage(ex)
-    };
+    protected override string GetErrorMessage(Exception ex) =>
+        OneLakeCommandValidators.GetErrorMessage(ex, base.GetErrorMessage);
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        InvalidOperationException => HttpStatusCode.InternalServerError,
-        HttpRequestException httpEx when httpEx.Message.Contains("404") => HttpStatusCode.NotFound,
-        HttpRequestException httpEx when httpEx.Message.Contains("403") => HttpStatusCode.Forbidden,
-        HttpRequestException httpEx when httpEx.Message.Contains("401") => HttpStatusCode.Unauthorized,
-        _ => base.GetStatusCode(ex)
-    };
+    protected override HttpStatusCode GetStatusCode(Exception ex) =>
+        OneLakeCommandValidators.GetStatusCode(ex, base.GetStatusCode);
 
-    public sealed record OneLakeItemListDfsCommandResult
-    {
-        public string? JsonResponse { get; init; }
-    }
+    public sealed record OneLakeItemListDfsCommandResult(string? JsonResponse);
 }
 
 public sealed class OneLakeItemListDfsOptions
 {
-    [Option(Description = "The ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.WorkspaceId)]
     public string? WorkspaceId { get; set; }
 
-    [Option(Description = "The name or ID of the Microsoft Fabric workspace.")]
+    [Option(Description = OneLakeOptionDescriptions.Workspace)]
     public string? Workspace { get; set; }
 
-    [Option(Description = "Whether to perform the operation recursively.")]
+    [Option(Description = OneLakeOptionDescriptions.Recursive)]
     public bool Recursive { get; set; }
 
-    [Option(Description = "Token for retrieving the next page of results.")]
+    [Option(Description = OneLakeOptionDescriptions.ContinuationToken)]
     public string? ContinuationToken { get; set; }
 }

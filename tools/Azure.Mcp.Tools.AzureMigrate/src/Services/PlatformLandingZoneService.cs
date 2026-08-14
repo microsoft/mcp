@@ -4,8 +4,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureMigrate.Commands;
 using Azure.Mcp.Tools.AzureMigrate.Constants;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
@@ -17,15 +15,10 @@ namespace Azure.Mcp.Tools.AzureMigrate.Services;
 /// <summary>
 /// Service for platform landing zone operations.
 /// </summary>
-public sealed class PlatformLandingZoneService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    AzureHttpHelper httpHelper,
-    ILogger<PlatformLandingZoneService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), IPlatformLandingZoneService
+public sealed class PlatformLandingZoneService(IAzureService azureService, AzureHttpHelper httpHelper, ILogger<PlatformLandingZoneService> logger)
+    : BaseAzureResourceService(azureService), IPlatformLandingZoneService
 {
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private static readonly ConcurrentDictionary<string, PlatformLandingZoneParameters> ParameterCache = new();
+    private static readonly ConcurrentDictionary<string, PlatformLandingZoneParameters> s_parameterCache = new();
 
     /// <inheritdoc/>
     public Task<PlatformLandingZoneParameters> UpdateParametersAsync(
@@ -59,7 +52,7 @@ public sealed class PlatformLandingZoneService(
             CachedAt = DateTime.UtcNow
         };
 
-        ParameterCache[key] = parameters;
+        s_parameterCache[key] = parameters;
         return Task.FromResult(parameters);
     }
 
@@ -97,7 +90,7 @@ public sealed class PlatformLandingZoneService(
     public async Task<string?> GenerateAsync(PlatformLandingZoneContext context, CancellationToken cancellationToken = default)
     {
         var key = GetCacheKey(context);
-        if (!ParameterCache.TryGetValue(key, out var parameters))
+        if (!s_parameterCache.TryGetValue(key, out var parameters))
             throw new InvalidOperationException("No parameters cached. Use 'update' action first.");
 
         var url = BuildUrl(context, "GeneratePlatformLandingZone");
@@ -147,7 +140,7 @@ public sealed class PlatformLandingZoneService(
     public string GetParameterStatus(PlatformLandingZoneContext context)
     {
         var key = GetCacheKey(context);
-        if (!ParameterCache.TryGetValue(key, out var p))
+        if (!s_parameterCache.TryGetValue(key, out var p))
             return "No parameters cached. Use 'update' action to set parameters.";
 
         return $"""
@@ -170,7 +163,7 @@ public sealed class PlatformLandingZoneService(
     public List<string> GetMissingParameters(PlatformLandingZoneContext context) => [];
 
     private string BuildUrl(PlatformLandingZoneContext ctx, string action) =>
-        $"{_tenantService.CloudConfiguration.ArmEnvironment.Endpoint}subscriptions/{ctx.SubscriptionId}/resourceGroups/{ctx.ResourceGroupName}/providers/Microsoft.Migrate/MigrateProjects/{ctx.MigrateProjectName}/{action}?api-version={PlatformLandingZoneConstants.ApiVersion}";
+        $"{AzureService.CloudConfiguration.ArmEnvironment.Endpoint}subscriptions/{ctx.SubscriptionId}/resourceGroups/{ctx.ResourceGroupName}/providers/Microsoft.Migrate/MigrateProjects/{ctx.MigrateProjectName}/{action}?api-version={PlatformLandingZoneConstants.ApiVersion}";
 
     private static string GetCacheKey(PlatformLandingZoneContext ctx) =>
         $"{ctx.SubscriptionId}:{ctx.ResourceGroupName}:{ctx.MigrateProjectName}";
