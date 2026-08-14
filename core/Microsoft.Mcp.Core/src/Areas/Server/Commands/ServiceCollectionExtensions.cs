@@ -220,7 +220,7 @@ public static partial class ServiceCollectionExtensions
                 {
                     toolLoaders.Add(sp.GetRequiredService<RegistryToolLoader>());
                 }
-                    
+
                 toolLoaders.Add(sp.GetRequiredService<CommandFactoryToolLoader>());
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
