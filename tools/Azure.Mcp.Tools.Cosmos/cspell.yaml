@@ -6,4 +6,11 @@
 version: "0.2"
 import:
   - ../../.vscode/cspell.json
-words: []
+words:
+  - activityid
+  - adduser
+  - executesql
+  - missingaccount
+  - openaiendpoint
+  - sproc
+  - storedprocedure

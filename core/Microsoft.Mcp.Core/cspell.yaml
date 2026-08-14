@@ -1,0 +1,48 @@
+# Spell-check overrides for this toolset/server.
+# Inherits the global config at the repo root.
+#
+# Add words that only appear in this folder here, in alphabetical order.
+# Cross-cutting terms should go in the root cspell.yaml instead.
+version: "0.2"
+import:
+  - ../../.vscode/cspell.json
+words:
+  - apipa
+  - asyncresources
+  - azconfig
+  - azurechina
+  - azurecloud
+  - azurepublic
+  - azurepubliccloud
+  - azureusgovernment
+  - azureusgovernmentcloud
+  - bmwg
+  - bmwgi
+  - bracketless
+  - cgnat
+  - classfixture
+  - cloudapi
+  - dbug
+  - devicecodecredential
+  - errr
+  - fffe
+  - interactivebrowsercredential
+  - isatap
+  - libsecret
+  - localho
+  - localtest
+  - myconfig
+  - nevercalled
+  - newed
+  - ntesttable
+  - openworld
+  - optout
+  - parameterizes
+  - rgname
+  - siit
+  - sslip
+  - testingplatform
+  - testtable
+  - timestamptz
+  - timetz
+  - trce

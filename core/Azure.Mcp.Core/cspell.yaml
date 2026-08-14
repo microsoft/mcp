@@ -7,20 +7,9 @@ version: "0.2"
 import:
   - ../../.vscode/cspell.json
 words:
-  - authid
-  - bytea
-  - datistemplate
-  - datname
-  - dblink
-  - keytab
-  - logdir
-  - pgvector
-  - postgresserverfqdn
-  - postgresservername
-  - rolcanlogin
-  - rolname
-  - rolsuper
-  - statusdir
-  - testdatabasename
-  - usename
-  - waldir
+  - azuer
+  - notlocalrequired
+  - notreadonly
+  - queryordering
+  - tooshort
+  - xvcj
