@@ -24,7 +24,7 @@ public sealed class PolicyCreateOptions : BaseAzureBackupOptions
     public string? ScheduleFrequency { get; set; }
 
     [Option(Description = "Comma-separated list of backup times in 24h HH:mm format (e.g., '02:00' or '02:00,14:00'). Interpreted in --time-zone. Defaults to 02:00 UTC if not specified. Only the first time is used as the schedule start time.")]
-    public string? ScheduleTimes { get; set; }
+    public string? ScheduleTime { get; set; }
 
     [Option(Description = "Comma-separated days of the week the backup should run (e.g., 'Monday,Wednesday,Friday'). Required for Weekly schedules.")]
     public string? ScheduleDaysOfWeek { get; set; }

@@ -51,7 +51,7 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
                 DailyRetentionDays = options.DailyRetentionDays,
                 TimeZone = options.TimeZone,
                 ScheduleFrequency = options.ScheduleFrequency,
-                ScheduleTimes = options.ScheduleTimes,
+                ScheduleTimes = options.ScheduleTime,
                 ScheduleDaysOfWeek = options.ScheduleDaysOfWeek,
                 HourlyIntervalHours = options.HourlyIntervalHours,
                 HourlyWindowStartTime = options.HourlyWindowStartTime,

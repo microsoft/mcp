@@ -122,7 +122,7 @@ public class PolicyCreateCommandTests : SubscriptionCommandUnitTestsBase<PolicyC
         // Common schedule flags added by the policy create overhaul.
         Assert.Contains(options, o => o.Name == "--time-zone");
         Assert.Contains(options, o => o.Name == "--schedule-frequency");
-        Assert.Contains(options, o => o.Name == "--schedule-times");
+        Assert.Contains(options, o => o.Name == "--schedule-time");
         Assert.Contains(options, o => o.Name == "--schedule-days-of-week");
         Assert.Contains(options, o => o.Name == "--hourly-interval-hours");
         Assert.Contains(options, o => o.Name == "--hourly-window-start-time");
@@ -169,7 +169,7 @@ public class PolicyCreateCommandTests : SubscriptionCommandUnitTestsBase<PolicyC
         var expected = new[]
         {
             // common schedule
-            "--time-zone", "--schedule-frequency", "--schedule-times", "--schedule-days-of-week",
+            "--time-zone", "--schedule-frequency", "--schedule-time", "--schedule-days-of-week",
             "--hourly-interval-hours", "--hourly-window-start-time", "--hourly-window-duration-hours",
             // retention
             "--weekly-retention-weeks", "--weekly-retention-days-of-week",

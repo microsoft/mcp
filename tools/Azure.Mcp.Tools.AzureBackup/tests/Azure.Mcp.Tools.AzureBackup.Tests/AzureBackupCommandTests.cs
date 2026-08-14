@@ -469,7 +469,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "policy-sub-type", "Enhanced" },
                 { "schedule-frequency", "Weekly" },
                 { "schedule-days-of-week", "Monday" },
-                { "schedule-times", "03:00" },
+                { "schedule-time", "03:00" },
                 { "weekly-retention-weeks", "8" },
                 { "weekly-retention-days-of-week", "Monday" },
                 { "monthly-retention-months", "12" },
@@ -533,7 +533,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "workload-type", "SQL" },
                 { "full-schedule-frequency", "Weekly" },
                 { "full-schedule-days-of-week", "Sunday,Monday,Tuesday,Thursday,Friday,Saturday" },
-                { "schedule-times", "02:00" },
+                { "schedule-time", "02:00" },
                 { "weekly-retention-weeks", "4" },
                 { "weekly-retention-days-of-week", "Sunday,Monday,Tuesday,Thursday,Friday,Saturday" },
                 { "differential-schedule-days-of-week", "Wednesday" },
@@ -862,7 +862,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "policy", policyName },
                 { "workload-type", "AKS" },
                 { "schedule-frequency", "PT4H" },
-                { "schedule-times", "02:00" },
+                { "schedule-time", "02:00" },
                 { "daily-retention-days", "30" }
             });
 
@@ -932,7 +932,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName },
                 { "policy", policyName },
                 { "workload-type", "AzureDisk" },
-                { "schedule-times", "02:00" },
+                { "schedule-time", "02:00" },
                 { "daily-retention-days", "7" },
                 { "enable-vault-tier-copy", "true" },
                 { "vault-tier-copy-after-days", "7" },
@@ -1010,7 +1010,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "policy", policyName },
                 { "workload-type", "AzureIaasVM" },
                 { "schedule-frequency", "Daily" },
-                { "schedule-times", "02:00" },
+                { "schedule-time", "02:00" },
                 { "daily-retention-days", "180" },
                 { "smart-tier", "true" }
             });
@@ -1035,7 +1035,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "policy", policyName },
                 { "workload-type", "SAPHANA" },
                 { "schedule-frequency", "Daily" },
-                { "schedule-times", "02:00" },
+                { "schedule-time", "02:00" },
                 { "daily-retention-days", "30" },
                 { "log-frequency-minutes", "60" },
                 { "enable-snapshot-backup", "true" },
@@ -1065,7 +1065,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "workload-type", "SQL" },
                 { "full-schedule-frequency", "Weekly" },
                 { "full-schedule-days-of-week", "Sunday" },
-                { "schedule-times", "02:00" },
+                { "schedule-time", "02:00" },
                 { "weekly-retention-weeks", "4" },
                 { "weekly-retention-days-of-week", "Sunday" },
                 { "monthly-retention-months", "12" },
@@ -1099,7 +1099,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "policy", policyName },
                 { "workload-type", "AzureFileShare" },
                 { "schedule-frequency", "Daily" },
-                { "schedule-times", "02:00" },
+                { "schedule-time", "02:00" },
                 { "daily-retention-days", "30" },
                 { "weekly-retention-weeks", "12" },
                 { "weekly-retention-days-of-week", "Sunday" },
@@ -1130,7 +1130,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "policy", policyName },
                 { "workload-type", "AzureIaasVM" },
                 { "schedule-frequency", "Daily" },
-                { "schedule-times", "02:00" },
+                { "schedule-time", "02:00" },
                 { "daily-retention-days", "30" },
                 { "policy-tags", "env=test,team=mcp" }
             });
@@ -1154,7 +1154,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName },
                 { "policy", policyName },
                 { "workload-type", "AzureDisk" },
-                { "schedule-times", "02:00" },
+                { "schedule-time", "02:00" },
                 { "daily-retention-days", "7" },
                 { "enable-vault-tier-copy", "true" },
                 { "vault-tier-copy-after-days", "7" }
@@ -1181,7 +1181,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "workload-type", "AzureBlob" },
                 { "backup-mode", "Vaulted" },
                 { "schedule-frequency", "P1D" },
-                { "schedule-times", "02:00" },
+                { "schedule-time", "02:00" },
                 { "daily-retention-days", "30" }
             });
 
@@ -1228,7 +1228,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "workload-type", "AzureDataLakeStorage" },
                 { "backup-mode", "Vaulted" },
                 { "schedule-frequency", "P1D" },
-                { "schedule-times", "02:00" },
+                { "schedule-time", "02:00" },
                 { "daily-retention-days", "30" }
             });
 
