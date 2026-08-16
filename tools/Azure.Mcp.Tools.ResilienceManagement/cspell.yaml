@@ -12,6 +12,6 @@ words:
   - goaltemplatename
   - recoveryjobname
   - recoveryplanname
+  - resiliencemanagement
   - servicegroupname
-  - usageplan
   - usageplanname
