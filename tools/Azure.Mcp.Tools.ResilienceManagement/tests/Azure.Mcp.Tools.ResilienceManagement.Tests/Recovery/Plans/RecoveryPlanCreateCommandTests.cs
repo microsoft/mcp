@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
@@ -239,7 +238,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
     }
 
     [Fact]
-    public async Task ExecuteAsync_RejectsRegionalPlanType()
+    public async Task ExecuteAsync_RejectsUnsupportedRegionalPlanTypeDuringBinding()
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
@@ -250,7 +249,8 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "--default-group-description", "default");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Only Zonal recovery plans are currently supported", response.Message);
+        Assert.Contains("Invalid --plan-type 'Regional'", response.Message);
+        Assert.Contains("Zonal", response.Message);
         await Service.DidNotReceive().CreateRecoveryPlanAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -283,7 +283,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
         var response = await ExecuteCommandAsync(ValidArgs);
 
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.RecoveryPlanCreateCommandResult);
-        Assert.Equal("plan1", result.RecoveryPlan.GetProperty("name").GetString());
+        Assert.Equal("plan1", result.RecoveryPlan.Name);
         await Service.Received(1).CreateRecoveryPlanAsync(
             "sg1",
             "plan1",
@@ -517,8 +517,16 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
         Assert.StartsWith("Test error", response.Message);
     }
 
-    private static JsonElement Element(string name)
-        => JsonDocument.Parse($"{{\"id\":\"id1\",\"name\":\"{name}\"}}").RootElement.Clone();
+    private static RecoveryPlanInfo Element(string name) => new(
+        "id1",
+        name,
+        "Zonal",
+        "description",
+        null,
+        null,
+        new RecoveryPlanIdentityInfo("UserAssigned", [UserAssignedIdentityResourceId]),
+        new RecoveryPlanGroupInfo("12345678-9012-3456-7890-123456789012", 0, "default"),
+        []);
 
     private void ConfigureRequestFailure(HttpStatusCode status, string message)
     {

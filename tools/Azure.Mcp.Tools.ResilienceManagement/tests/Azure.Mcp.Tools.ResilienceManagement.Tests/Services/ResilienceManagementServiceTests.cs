@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ClientModel.Primitives;
 using Azure.Core;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
+using Azure.ResourceManager.ResilienceManagement;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.ResilienceManagement.Models;
 using Xunit;
@@ -68,6 +70,342 @@ public sealed class ResilienceManagementServiceTests
             () => ResilienceManagementService.ResolveRecoveryPlanDescription(null, null));
 
         Assert.Contains("--plan-description is required", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void CreateRecoveryPlanUpdateResourcesResult_MapsFailedResourceDetails()
+    {
+        RecoveryMembersData failedResource = ModelReaderWriter.Read<RecoveryMembersData>(BinaryData.FromObjectAsJson(new
+        {
+            id = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/12345678-9012-3456-7890-123456789012",
+            name = "12345678-9012-3456-7890-123456789012",
+            type = "Microsoft.AzureResilienceManagement/recoveryPlans/recoveryResources",
+            properties = new
+            {
+                recoveryResourceUniqueId = "12345678-9012-3456-7890-123456789012",
+                resourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm",
+                errorDetails = new
+                {
+                    code = "InvalidConfiguration",
+                    message = "The recovery resource configuration is invalid."
+                }
+            }
+        }))!;
+
+        RecoveryPlanUpdateResourcesResult result = ResilienceManagementService.CreateRecoveryPlanUpdateResourcesResult([failedResource]);
+
+        RecoveryPlanUpdateResourcesFailedResource failedResult = Assert.Single(result.FailedResources);
+        Assert.Equal(failedResource.Id.ToString(), failedResult.RecoveryResourceId);
+        Assert.Equal("12345678-9012-3456-7890-123456789012", failedResult.RecoveryResourceUniqueId);
+        Assert.Equal(failedResource.Properties.ResourceId.ToString(), failedResult.AzureResourceId);
+        Assert.Equal("InvalidConfiguration", failedResult.Error?.Code);
+        Assert.Equal("The recovery resource configuration is invalid.", failedResult.Error?.Message);
+    }
+
+    [Fact]
+    public void CreateRecoveryPlanInfo_MapsSupportedPlanFields()
+    {
+        RecoveryPlanData recoveryPlan = ModelReaderWriter.Read<RecoveryPlanData>(BinaryData.FromObjectAsJson(new
+        {
+            id = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1",
+            name = "plan1",
+            type = "Microsoft.AzureResilienceManagement/recoveryPlans",
+            identity = new
+            {
+                type = "UserAssigned",
+                userAssignedIdentities = new Dictionary<string, object>
+                {
+                    [UserAssignedIdentityResourceId] = new { }
+                }
+            },
+            properties = new
+            {
+                provisioningState = "Succeeded",
+                planType = "Zonal",
+                planState = "UnderEdit",
+                planDescription = "description",
+                recoveryGroupsSetting = new
+                {
+                    defaultGroup = new
+                    {
+                        properties = new
+                        {
+                            groupUniqueId = "12345678-9012-3456-7890-123456789012",
+                            orderId = 0,
+                            description = "default"
+                        }
+                    },
+                    additionalGroups = new[]
+                    {
+                        new
+                        {
+                            properties = new
+                            {
+                                groupUniqueId = "12345678-9012-3456-7890-123456789013",
+                                orderId = 1,
+                                description = "additional"
+                            }
+                        }
+                    }
+                }
+            }
+        }))!;
+
+        RecoveryPlanInfo result = ResilienceManagementService.CreateRecoveryPlanInfo(recoveryPlan);
+
+        Assert.Equal(recoveryPlan.Id.ToString(), result.Id);
+        Assert.Equal("plan1", result.Name);
+        Assert.Equal("Zonal", result.PlanType);
+        Assert.Equal("description", result.PlanDescription);
+        Assert.Equal("Succeeded", result.ProvisioningState);
+        Assert.Equal("UnderEdit", result.PlanState);
+        Assert.Equal("UserAssigned", result.Identity?.Type);
+        Assert.Equal([UserAssignedIdentityResourceId], result.Identity?.UserAssignedIdentityResourceIds);
+        Assert.Equal("12345678-9012-3456-7890-123456789012", result.DefaultGroup?.GroupUniqueId);
+        RecoveryPlanGroupInfo additionalGroup = Assert.Single(result.AdditionalGroups);
+        Assert.Equal("12345678-9012-3456-7890-123456789013", additionalGroup.GroupUniqueId);
+        Assert.Equal(1, additionalGroup.OrderId);
+        Assert.Equal("additional", additionalGroup.Description);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_FirstInclusionRequiresProtectionConfiguration()
+    {
+        RecoveryMembersData requested = CreateRecoveryResource(ResourceInclusionState.Included);
+        RecoveryMembersData existing = CreateRecoveryResource();
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("selectedProtectionSolutionType", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("selectedProtectionSolutionSetting", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_ReinclusionRequiresProtectionConfigurationClearedByExclusion()
+    {
+        RecoveryMembersData requested = CreateRecoveryResource(ResourceInclusionState.Included);
+        RecoveryMembersData existing = CreateRecoveryResource(ResourceInclusionState.Excluded);
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("selectedProtectionSolutionType", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_NonePreservesExistingProtectionConfiguration()
+    {
+        RecoveryMembersData requested = CreateRecoveryResource(solutionType: ResourceProtectionSolutionType.None);
+        RecoveryMembersData existing = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.CustomRunbook,
+            CreateCustomRunbookSetting());
+
+        ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_CustomRunbookRequiresMandatoryActions()
+    {
+        RecoveryMembersData requested = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.CustomRunbook,
+            new ResourceCustomProtectionSetting());
+        RecoveryMembersData existing = CreateRecoveryResource();
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("failoverAction.resourceId", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("reprotectAction.resourceId", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_DoesNotRequireRecoveryGroupOrIdentity()
+    {
+        RecoveryMembersData requested = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.CustomRunbook,
+            CreateCustomRunbookSetting());
+        RecoveryMembersData existing = CreateRecoveryResource();
+
+        ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_ExcludedResourceDoesNotRequireProtectionConfiguration()
+    {
+        RecoveryMembersData requested = CreateRecoveryResource(ResourceInclusionState.Excluded);
+        RecoveryMembersData existing = CreateRecoveryResource();
+
+        ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_DelegatesExcludedResourcePropertyValidationToService()
+    {
+        RecoveryMembersData requested = CreateRecoveryResource(
+            ResourceInclusionState.Excluded,
+            ResourceProtectionSolutionType.CustomRunbook,
+            CreateCustomRunbookSetting());
+        requested.Properties!.RecoveryGroupId = "7f35c9f5-bec2-455d-8161-c904b2532e5d";
+        requested.Properties.AssociatedIdentity = new ResilienceManagementAssociatedIdentity(ManagedServiceIdentityType.UserAssigned)
+        {
+            UserAssignedIdentity = new ResourceIdentifier(UserAssignedIdentityResourceId)
+        };
+        RecoveryMembersData existing = CreateRecoveryResource(ResourceInclusionState.Excluded);
+
+        ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_CustomRunbookRequiresRunbookResourceIds()
+    {
+        ResourceCustomProtectionSetting setting = CreateCustomRunbookSetting();
+        setting.FailoverActionResourceId = new ResourceIdentifier(
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/account");
+        RecoveryMembersData requested = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.CustomRunbook,
+            setting);
+        RecoveryMembersData existing = CreateRecoveryResource();
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("Microsoft.Automation/automationAccounts/runbooks", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_RejectsAzureNativeForIncludedResource()
+    {
+        RecoveryMembersData requested = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.AzureNative,
+            new ResourceNativeProtectionSolutionSetting());
+        RecoveryMembersData existing = CreateRecoveryResource();
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("cannot use AzureNative", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_RejectsMismatchedProtectionSetting()
+    {
+        RecoveryMembersData requested = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.CustomRunbook,
+            new ResourceSiteRecoveryProtectionSetting());
+        RecoveryMembersData existing = CreateRecoveryResource();
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("matches selectedProtectionSolutionType", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_RejectsAzureSiteRecoveryForNonVirtualMachine()
+    {
+        RecoveryMembersData requested = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.AzureSiteRecovery,
+            CreateSiteRecoverySetting());
+        RecoveryMembersData existing = CreateRecoveryResource(
+            azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/account");
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("only for a Microsoft.Compute/virtualMachines resource", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_AzureSiteRecoveryRequiresDiskReprotectDetails()
+    {
+        RecoveryMembersData requested = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.AzureSiteRecovery,
+            new ResourceSiteRecoveryProtectionSetting());
+        RecoveryMembersData existing = CreateRecoveryResource(
+            azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm");
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("diskReprotectInputDetails", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_AzureSiteRecoveryRequiresTypedDiskAndStorageIds()
+    {
+        ResourceSiteRecoveryProtectionSetting setting = CreateSiteRecoverySetting();
+        setting.DiskReprotectInputDetails[0].DiskResourceId = new ResourceIdentifier(
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/account");
+        RecoveryMembersData requested = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.AzureSiteRecovery,
+            setting);
+        RecoveryMembersData existing = CreateRecoveryResource(
+            azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm");
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("Microsoft.Compute/disks", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_AzureSiteRecoveryRequiresVirtualNetworkId()
+    {
+        ResourceSiteRecoveryProtectionSetting setting = CreateSiteRecoverySetting();
+        setting.TestFailoverParamsNetworkResourceId = null;
+        RecoveryMembersData requested = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.AzureSiteRecovery,
+            setting);
+        RecoveryMembersData existing = CreateRecoveryResource(
+            azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm");
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("testFailoverParams.networkResourceId", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_AzureSiteRecoveryRequiresTypedVirtualNetworkId()
+    {
+        ResourceSiteRecoveryProtectionSetting setting = CreateSiteRecoverySetting();
+        setting.TestFailoverParamsNetworkResourceId = new ResourceIdentifier(
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/account");
+        RecoveryMembersData requested = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.AzureSiteRecovery,
+            setting);
+        RecoveryMembersData existing = CreateRecoveryResource(
+            azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm");
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("Microsoft.Network/virtualNetworks", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_AllowsValidAzureSiteRecoveryConfiguration()
+    {
+        RecoveryMembersData requested = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.AzureSiteRecovery,
+            CreateSiteRecoverySetting());
+        RecoveryMembersData existing = CreateRecoveryResource(
+            azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm");
+
+        ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing);
     }
 
     [Fact]
@@ -142,4 +480,48 @@ public sealed class ResilienceManagementServiceTests
         {
             Properties = new RecoveryGroupProperties(groupId, sequenceNumber, description)
         };
+
+    private static RecoveryMembersData CreateRecoveryResource(
+        ResourceInclusionState? inclusionState = null,
+        ResourceProtectionSolutionType? solutionType = null,
+        ResourceBaseProtectionSolutionSetting? solutionSetting = null,
+        string? azureResourceId = null)
+    {
+        RecoveryMembersData resource = azureResourceId is null
+            ? new RecoveryMembersData()
+            : ModelReaderWriter.Read<RecoveryMembersData>(BinaryData.FromObjectAsJson(new
+            {
+                properties = new
+                {
+                    recoveryResourceUniqueId = "12345678-9012-3456-7890-123456789012",
+                    resourceId = azureResourceId
+                }
+            }))!;
+        resource.Properties ??= new RecoveryResourceProperties("12345678-9012-3456-7890-123456789012");
+        resource.Properties.InclusionState = inclusionState;
+        resource.Properties.SelectedProtectionSolutionType = solutionType;
+        resource.Properties.SelectedProtectionSolutionSetting = solutionSetting;
+        return resource;
+    }
+
+    private static ResourceCustomProtectionSetting CreateCustomRunbookSetting()
+        => new()
+        {
+            FailoverActionResourceId = new ResourceIdentifier("/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Automation/automationAccounts/account/runbooks/failover"),
+            ReprotectActionResourceId = new ResourceIdentifier("/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Automation/automationAccounts/account/runbooks/reprotect")
+        };
+
+    private static ResourceSiteRecoveryProtectionSetting CreateSiteRecoverySetting()
+    {
+        var setting = new ResourceSiteRecoveryProtectionSetting
+        {
+            TestFailoverParamsNetworkResourceId = new ResourceIdentifier("/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/network")
+        };
+        setting.DiskReprotectInputDetails.Add(new DiskReprotectInputDetails
+        {
+            DiskResourceId = new ResourceIdentifier("/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/disks/disk"),
+            StagingStorageAccountResourceId = new ResourceIdentifier("/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/staging")
+        });
+        return setting;
+    }
 }

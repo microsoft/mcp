@@ -49,6 +49,24 @@ public sealed class RecoveryPlanDeleteCommandTests : CommandUnitTestsBase<Recove
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_RejectsInvalidRecoveryPlanName()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recovery-plan", "invalid_plan");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("5 to 24 characters", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("ASCII letters, numbers, or hyphens", response.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.DidNotReceive().DeleteRecoveryPlanAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

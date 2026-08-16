@@ -45,10 +45,7 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
             validationResult.Errors.Add("Only Zonal recovery plans are currently supported.");
         }
 
-        if (options.RecoveryPlan.Length is < 5 or > 24 || !options.RecoveryPlan.All(IsValidRecoveryPlanNameCharacter))
-        {
-            validationResult.Errors.Add("The recovery plan name must be 5 to 24 characters and contain only ASCII letters, numbers, or hyphens.");
-        }
+        RecoveryPlanValidation.ValidateName(options.RecoveryPlan, validationResult);
 
         if (options.PlanDescription is not null && options.PlanDescription.Length is < 5 or > 50)
         {
@@ -112,9 +109,6 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
         return context.Response;
     }
 
-    private static bool IsValidRecoveryPlanNameCharacter(char character) =>
-        character is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9' or '-';
-
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ArgumentException => HttpStatusCode.BadRequest,
@@ -135,5 +129,5 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
         _ => base.GetErrorMessage(ex)
     };
 
-    public record RecoveryPlanCreateCommandResult(System.Text.Json.JsonElement RecoveryPlan);
+    public record RecoveryPlanCreateCommandResult(Models.RecoveryPlanInfo RecoveryPlan);
 }

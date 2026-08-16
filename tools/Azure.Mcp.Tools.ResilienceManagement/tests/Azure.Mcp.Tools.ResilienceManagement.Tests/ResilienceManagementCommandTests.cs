@@ -29,7 +29,8 @@ public class ResilienceManagementCommandTests(
     private readonly ResilienceManagementTestCleanupFixture _cleanupFixture = cleanupFixture;
 
     // Prepend the base sanitizers (e.g. WWW-Authenticate) then add tool-specific ones.
-    // Sanitize x-ms-operation-identifier response header which contains the real tenant ID and object ID.
+    // Sanitize the required per-invocation operation-id request GUID for playback matching and the
+    // x-ms-operation-identifier response header, which contains the real tenant ID and object ID.
     public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
     [
         .. base.HeaderRegexSanitizers,

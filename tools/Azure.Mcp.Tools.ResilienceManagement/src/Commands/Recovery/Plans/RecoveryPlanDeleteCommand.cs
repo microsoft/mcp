@@ -28,6 +28,12 @@ public sealed class RecoveryPlanDeleteCommand(ILogger<RecoveryPlanDeleteCommand>
     private readonly ILogger<RecoveryPlanDeleteCommand> _logger = logger;
     private readonly IResilienceManagementService _resilienceManagementService = resilienceManagementService;
 
+    public override void ValidateOptions(RecoveryPlanDeleteOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+        RecoveryPlanValidation.ValidateName(options.RecoveryPlan, validationResult);
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecoveryPlanDeleteOptions options, CancellationToken cancellationToken)
     {
         try

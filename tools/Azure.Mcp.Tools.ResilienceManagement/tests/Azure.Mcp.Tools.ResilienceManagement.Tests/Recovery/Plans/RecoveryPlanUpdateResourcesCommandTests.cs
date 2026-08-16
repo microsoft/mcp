@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
+using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Azure.ResourceManager.ResilienceManagement.Models;
 using Microsoft.Mcp.Core.Options;
@@ -33,9 +33,12 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
         Assert.Equal("update-resources", command.Name);
         Assert.NotNull(command.Description);
         Assert.Contains("includes a recovery resource", command.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("excludes a recovery resource from a recovery plan", command.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("removes a recovery resource from a recovery plan", command.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("protection solution type and settings", command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("excludes a recovery resource", command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("removes a recovery resource", command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CustomRunbook", command.Description, StringComparison.Ordinal);
+        Assert.Contains("AzureSiteRecovery", command.Description, StringComparison.Ordinal);
+        Assert.Contains("Validates the protection", command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("solution type and settings", command.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -47,6 +50,19 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("at least one", response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsInvalidRecoveryPlanName()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recovery-plan", "invalid_plan",
+            "--resources-to-update", ResourcesToUpdateWithoutId);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("5 to 24 characters", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("ASCII letters, numbers, or hyphens", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -65,7 +81,7 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
             null,
             null,
             Arg.Any<CancellationToken>())
-            .Returns(Element("Succeeded"));
+            .Returns(UpdateResult());
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
@@ -73,7 +89,7 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
             "--resources-to-update", ResourcesToUpdate);
 
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.RecoveryPlanUpdateResourcesCommandResult);
-        Assert.Equal("Succeeded", result.Result.GetProperty("status").GetString());
+        Assert.Empty(result.Result.FailedResources);
         await Service.Received(1).UpdateRecoveryPlanResourcesAsync(
             "sg1",
             "plan1",
@@ -96,7 +112,7 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
             null,
             null,
             Arg.Any<CancellationToken>())
-            .Returns(Element("Succeeded"));
+            .Returns(UpdateResult());
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
@@ -131,7 +147,7 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Element("Succeeded"));
+            .Returns(UpdateResult());
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
@@ -153,7 +169,7 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Element("Succeeded"));
+            .Returns(UpdateResult());
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
@@ -241,9 +257,5 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
         Assert.DoesNotContain("provider details", response.Message);
     }
 
-    private static JsonElement Element(string status)
-    {
-        using JsonDocument document = JsonDocument.Parse($$"""{"status":"{{status}}"}""");
-        return document.RootElement.Clone();
-    }
+    private static RecoveryPlanUpdateResourcesResult UpdateResult() => new([]);
 }

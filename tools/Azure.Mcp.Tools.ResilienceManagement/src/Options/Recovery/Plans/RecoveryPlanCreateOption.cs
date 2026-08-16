@@ -7,9 +7,9 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Options.Recovery.Plans;
 
-public class RecoveryPlanCreateOptions
+public sealed class RecoveryPlanCreateOptions
 {
-    [Option(Description = "The name of the Azure service group that owns the recovery plan.")]
+    [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
 
     [Option(Description = "The name of the recovery plan to create or fully update.")]

@@ -5,6 +5,7 @@ using System.ClientModel.Primitives;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Azure.ResourceManager.ResilienceManagement.Models;
@@ -18,7 +19,14 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Id = "ace3cbba-d572-47dc-a452-ab2cb349e17b",
     Name = "update-resources",
     Title = "Update Resilience Recovery Plan Resources",
-    Description = "Includes a recovery resource in a recovery plan in an Azure service group, excludes a recovery resource from a recovery plan in an Azure service group, or removes a recovery resource from a recovery plan in an Azure service group. Updates individual recovery plan resources with a protection solution type and settings, recovery groups, and managed identities.",
+    Description = """
+        Includes a recovery resource in a recovery plan in an Azure service group, excludes a recovery resource from a recovery
+        plan in an Azure service group, or removes a recovery resource from a recovery plan in an Azure service group. For
+        CustomRunbook inclusion, configure failover and reprotect runbooks. For AzureSiteRecovery inclusion, configure disk
+        reprotection, staging storage, and a test failover virtual network. Removing an individual recovery resource updates the
+        plan's resource membership while retaining the recovery plan and its other recovery resources. Validates the protection
+        solution type and settings before first inclusion and preserves existing settings on sparse updates.
+        """,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -36,10 +44,7 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
     {
         base.ValidateOptions(options, validationResult);
 
-        if (options.RecoveryPlan.Length is < 5 or > 24 || !options.RecoveryPlan.All(IsValidRecoveryPlanNameCharacter))
-        {
-            validationResult.Errors.Add("The recovery plan name must be 5 to 24 characters and contain only ASCII letters, numbers, or hyphens.");
-        }
+        RecoveryPlanValidation.ValidateName(options.RecoveryPlan, validationResult);
 
         try
         {
@@ -203,9 +208,6 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
         }
     }
 
-    private static bool IsValidRecoveryPlanNameCharacter(char character) =>
-        character is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9' or '-';
-
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ArgumentException => HttpStatusCode.BadRequest,
@@ -226,5 +228,5 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
         _ => base.GetErrorMessage(ex)
     };
 
-    public sealed record RecoveryPlanUpdateResourcesCommandResult(JsonElement Result);
+    public sealed record RecoveryPlanUpdateResourcesCommandResult(RecoveryPlanUpdateResourcesResult Result);
 }
