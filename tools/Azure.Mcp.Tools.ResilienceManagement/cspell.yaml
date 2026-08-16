@@ -12,6 +12,9 @@ words:
   - goaltemplatename
   - recoveryjobname
   - recoveryplanname
+  - reinclusion
+  - reprotect
+  - reprotection
   - resiliencemanagement
   - servicegroupname
   - usageplanname

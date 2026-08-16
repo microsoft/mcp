@@ -68,6 +68,8 @@ words:
   - precheck
   - prereq
   - registeredserver
+  - reprotect
+  - reprotection
   - scheduledtasks
   - serviceaccount
   - servicefabric
@@ -80,6 +82,7 @@ words:
   - syncgroup
   - targetdir
   - tcount
+  - testcontainer
   - toolsets
   - toplist
   - webjobs
