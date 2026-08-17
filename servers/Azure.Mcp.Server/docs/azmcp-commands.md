@@ -3746,6 +3746,19 @@ azmcp resilience recovery job resource get --subscription <subscription> \
                                            --recovery-plan <recovery-plan> \
                                            --recovery-job <recovery-job> \
                                            [--name <name>]
+
+# Get a resilience drill, or list all drills in a service group (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill get --subscription <subscription> \
+                           --service-group <service-group> \
+                           [--name <name>]
+
+# Get a resource (target) of a drill, or list all resources of the drill (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill resource get --subscription <subscription> \
+                                    --service-group <service-group> \
+                                    --drill <drill> \
+                                    [--name <name>]
 ```
 
 ### Azure Resource Group Operations
