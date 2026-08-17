@@ -13,7 +13,7 @@ public sealed class ResourcePluginSkillNameAllowlistProviderTests
     {
         var json = """
         {
-            "skill": {
+            "skills": {
                 "azure-skills": ["azure-storage", "azure-ai"],
                 "foundry": ["microsoft-foundry"]
             }

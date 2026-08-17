@@ -96,7 +96,7 @@ public sealed class ResourcePluginSkillNameAllowlistProvider : IPluginSkillNameA
         using var jsonDocument = JsonDocument.Parse(json);
         var skillNames = new List<string>();
 
-        foreach (var property in jsonDocument.RootElement.GetProperty("skill").EnumerateObject())
+        foreach (var property in jsonDocument.RootElement.GetProperty("skills").EnumerateObject())
         {
             foreach (var element in property.Value.EnumerateArray())
             {
