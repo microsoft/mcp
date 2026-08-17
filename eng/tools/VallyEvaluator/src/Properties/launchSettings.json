@@ -5,11 +5,11 @@
     },
     "All": {
       "commandName": "Project",
-      "commandLineArgs": "--output=\"./\""
+      "commandLineArgs": "--serverName=Azure.Mcp.Server"
     },
     "Demo": {
       "commandName": "Project",
-      "commandLineArgs": "--output=\"./\" --namespaces=\"storage,appconfig\""
+      "commandLineArgs": "--serverName=Azure.Mcp.Server --namespaces=\"storage,appconfig\""
     }
   }
 }
