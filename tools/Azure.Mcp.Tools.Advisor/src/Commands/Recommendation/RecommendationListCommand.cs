@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
+using Azure.Mcp.Tools.Advisor.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -22,7 +23,11 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "or 'which impact has the most' — for those, call the 'summary' tool instead (it aggregates server-side over the " +
         "entire population, while 'list' is capped at 100 items and will silently undercount). " +
         "Only active recommendations (status 'New') are returned; dismissed and postponed ones are excluded. " +
-        "Supports optional filters: --category, --impact, --resource-type, --resource, --search. " +
+        "Returned records are joined with the Advisor recommendation metadata catalog so subcategory, potential benefits, " +
+        "learn-more link, and service-retirement details are current rather than stale. " +
+        "Supports optional filters: --category, --impact, --resource-type, --resource, --search, --sub-category, --tracking-ids, --retirement-date. " +
+        "--tracking-ids accepts multiple Service Health tracking IDs and returns recommendations matching any of them. " +
+        "--tracking-ids and --retirement-date apply only to the ServiceUpgradeAndRetirement subcategory. " +
         "--top caps the number of returned items (default 50, max 100).",
     Destructive = false,
     Idempotent = true,
@@ -40,18 +45,39 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
     private readonly IAdvisorService _advisorService = advisorService;
     private readonly ILogger<RecommendationListCommand> _logger = logger;
 
+    public override void ValidateOptions(RecommendationListOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+
+        ServiceRetirementFilterValidator.Validate(
+            validationResult,
+            options.SubCategory,
+            options.TrackingIds,
+            options.RetirementDate);
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecommendationListOptions options, CancellationToken cancellationToken)
     {
         var top = Math.Clamp(options.Top ?? DefaultTop, MinTop, MaxTop);
 
         try
         {
+            _ = ServiceRetirementFilterValidator.TryParseRetirementDate(
+                options.RetirementDate,
+                out var retirementDateOperator,
+                out var retirementDate,
+                out _);
+
             var filters = new Models.RecommendationFilters(
                 Category: options.Category,
                 Impact: options.Impact,
                 ResourceType: options.ResourceType,
                 Resource: options.Resource,
-                Search: options.Search);
+                Search: options.Search,
+                SubCategory: options.SubCategory,
+                TrackingIds: options.TrackingIds,
+                RetirementDateOperator: retirementDateOperator,
+                RetirementDate: retirementDate);
 
             var recommendations = await _advisorService.ListRecommendationsAsync(
                 options.Subscription!,
@@ -69,13 +95,17 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         {
             _logger.LogError(ex,
                 "Error listing Advisor recommendations. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, " +
-                "Category: {Category}, Impact: {Impact}, ResourceType: {ResourceType}, Resource: {Resource}, Top: {Top}, HasSearch: {HasSearch}.",
+                "Category: {Category}, Impact: {Impact}, ResourceType: {ResourceType}, Resource: {Resource}, " +
+                "SubCategory: {SubCategory}, TrackingIdCount: {TrackingIdCount}, RetirementDate: {RetirementDate}, Top: {Top}, HasSearch: {HasSearch}.",
                 options.Subscription,
                 options.ResourceGroup,
                 options.Category,
                 options.Impact,
                 options.ResourceType,
                 options.Resource,
+                options.SubCategory,
+                options.TrackingIds?.Length ?? 0,
+                options.RetirementDate,
                 top,
                 !string.IsNullOrEmpty(options.Search));
             HandleException(context, ex);

@@ -133,4 +133,58 @@ public class AdvisorServiceFilterBuilderTests
         Assert.NotNull(result);
         Assert.Contains("'it''s broken'", result);
     }
+
+    [Fact]
+    public void BuildAdditionalFilter_MetadataOnlyFilters_ProduceNoInstanceClauses()
+    {
+        // SubCategory, TrackingIds and RetirementDate do not exist on recommendation instances;
+        // they are resolved to recommendation type IDs before the query is built.
+        var filters = new RecommendationFilters(
+            SubCategory: "ServiceUpgradeAndRetirement",
+            TrackingIds: ["QNY1-HB8", "9G0V-_G8"],
+            RetirementDateOperator: "ge",
+            RetirementDate: new DateOnly(2026, 3, 31));
+
+        Assert.Equal(StatusClause, AdvisorService.BuildAdditionalFilter(filters));
+    }
+
+    [Fact]
+    public void BuildAdditionalFilter_RecommendationTypeIds_AddsInClause()
+    {
+        var result = AdvisorService.BuildAdditionalFilter(null, ["Type-A", "Type-B"]);
+
+        Assert.Equal(
+            $"{StatusClause} and tostring(properties.recommendationTypeId) in~ ('Type-A', 'Type-B')",
+            result);
+    }
+
+    [Fact]
+    public void BuildAdditionalFilter_EmptyRecommendationTypeIds_AddsNoInClause()
+    {
+        Assert.Equal(StatusClause, AdvisorService.BuildAdditionalFilter(null, []));
+    }
+
+    [Fact]
+    public void BuildAdditionalFilter_RecommendationTypeIds_AreSanitized()
+    {
+        var result = AdvisorService.BuildAdditionalFilter(null, ["Type|A", "it's"]);
+
+        Assert.NotNull(result);
+        Assert.DoesNotContain('|', result!);
+        Assert.Contains("'TypeA', 'it''s'", result);
+    }
+
+    [Fact]
+    public void BuildAdditionalFilter_RecommendationTypeIdsWithOtherFilters_AppendsAfterInstanceClauses()
+    {
+        var result = AdvisorService.BuildAdditionalFilter(
+            new RecommendationFilters(Category: "Security"),
+            ["Type-A"]);
+
+        Assert.Equal(
+            $"{StatusClause} and "
+            + "tostring(properties.category) =~ 'Security' and "
+            + "tostring(properties.recommendationTypeId) in~ ('Type-A')",
+            result);
+    }
 }

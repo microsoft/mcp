@@ -51,6 +51,7 @@ public class AdvisorServiceConversionTests
                 "properties": {
                     "category": "Security",
                     "impact": "High",
+                    "recommendationTypeId": "Type-A",
                     "shortDescription": { "problem": "Enable encryption at rest" },
                     "resourceMetadata": {
                         "resourceId": "/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/mystorage"
@@ -69,6 +70,7 @@ public class AdvisorServiceConversionTests
         Assert.Equal("Security", result.Category);
         Assert.Equal("High", result.Impact);
         Assert.Equal("Microsoft.Storage/storageAccounts", result.ImpactedResourceType);
+        Assert.Equal("Type-A", result.RecommendationTypeId);
     }
 
     [Fact]

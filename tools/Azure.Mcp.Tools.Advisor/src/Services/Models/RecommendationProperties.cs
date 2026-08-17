@@ -10,6 +10,9 @@ internal sealed class RecommendationProperties
     /// <summary> The category of the recommendation. </summary>
     public string? Category { get; set; }
 
+    /// <summary> The catalog recommendation type ID used to join with recommendation metadata. </summary>
+    public string? RecommendationTypeId { get; set; }
+
     /// <summary> The business impact of the recommendation (e.g., High, Medium, Low). </summary>
     public string? Impact { get; set; }
 

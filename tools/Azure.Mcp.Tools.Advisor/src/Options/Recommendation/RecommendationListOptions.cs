@@ -26,6 +26,19 @@ public class RecommendationListOptions : ISubscriptionOption
         "Extract the salient noun(s) from the phrase (e.g., 'Foundry', 'encrypt', 'right-size', 'Key Vault') and pass them here.")]
     public string? Search { get; set; }
 
+    [Option(Description = "Filter recommendations by recommendation subcategory, matched case-insensitively against the Advisor metadata catalog. " +
+        "Known catalog values include ComputeOptimization, DataPerformance, DataProtectionAndRecovery, EfficiencyOptimization, FailureMitigation, GovernanceAndCompliance, MonitoringAndAlerting, NetworkOptimization, Other, Personalized, RegionalResiliency, Reservations, SafeAndSecureDeployment, SavingsPlan, Scalability, ServiceUpgradeAndRetirement, StorageOptimization, UsageOptimization, and ZoneResiliency. " +
+        "The catalog can add values over time, so other subcategories are accepted.")]
+    public string? SubCategory { get; set; }
+
+    [Option(Description = "Filter recommendations by one or more Service Health tracking IDs, such as QNY1-HB8. " +
+        "Repeat the option to pass several IDs, for example --tracking-ids QNY1-HB8 --tracking-ids 9G0V-_G8; recommendations matching any of them are returned. " +
+        "Matched case-insensitively within ServiceUpgradeAndRetirement metadata. --sub-category may be omitted but cannot specify a different value.")]
+    public string[]? TrackingIds { get; set; }
+
+    [Option(Description = "Filter recommendations by service-retirement date in '<operator>:<yyyy-MM-dd>' format, for example 'ge:2026-03-31'. Supported operators are eq, lt, le, gt, and ge. Applies only to the ServiceUpgradeAndRetirement subcategory; --sub-category may be omitted but cannot specify a different value.")]
+    public string? RetirementDate { get; set; }
+
     [Option(Description = "Maximum number of items to return. " +
         "For 'list': defaults to 50, clamped to 1-100 (server-side limit). " +
         "For 'summary': optional display cap on the number of buckets returned (defaults to all). " +

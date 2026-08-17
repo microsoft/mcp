@@ -264,4 +264,196 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal(expectedTop, capturedTop);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsMetadataFiltersToService()
+    {
+        // Arrange
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--sub-category", "ServiceUpgradeAndRetirement",
+            "--tracking-ids", "QNY1-HB8",
+            "--retirement-date", "ge:2026-03-31");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal("ServiceUpgradeAndRetirement", captured!.SubCategory);
+        Assert.Equal(["QNY1-HB8"], captured.TrackingIds);
+        Assert.Equal("ge", captured.RetirementDateOperator);
+        Assert.Equal(new DateOnly(2026, 3, 31), captured.RetirementDate);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsMultipleTrackingIdsToService()
+    {
+        // Arrange
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--tracking-ids", "QNY1-HB8",
+            "--tracking-ids", "9G0V-_G8",
+            "--tracking-ids", "ABC1-D23");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal(["QNY1-HB8", "9G0V-_G8", "ABC1-D23"], captured!.TrackingIds);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OmittedMetadataFiltersAreNull()
+    {
+        // Arrange
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Null(captured!.SubCategory);
+        Assert.Null(captured.TrackingIds);
+        Assert.Null(captured.RetirementDateOperator);
+        Assert.Null(captured.RetirementDate);
+    }
+
+    [Theory]
+    [InlineData("2026-03-31")]          // Missing operator
+    [InlineData("between:2026-03-31")]  // Unsupported operator
+    [InlineData("ge:31-03-2026")]       // Wrong date format
+    [InlineData("ge:not-a-date")]
+    public async Task ExecuteAsync_InvalidRetirementDate_ReturnsBadRequest(string retirementDate)
+    {
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--retirement-date", retirementDate);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--retirement-date", response.Message);
+    }
+
+    [Theory]
+    [InlineData("--tracking-ids", "QNY1-HB8")]
+    [InlineData("--retirement-date", "ge:2026-03-31")]
+    public async Task ExecuteAsync_ConflictingSubCategory_ReturnsBadRequest(string option, string value)
+    {
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--sub-category", "ZoneResiliency",
+            option, value);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("ServiceUpgradeAndRetirement", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_MatchingSubCategory_IsAccepted()
+    {
+        // Arrange
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--sub-category", "serviceupgradeandretirement",
+            "--tracking-ids", "QNY1-HB8");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsMetadataEnrichedFields()
+    {
+        // Arrange
+        var retirement = new Models.RecommendationServiceRetirement(
+            RetirementDate: "2026-03-31",
+            RetirementFeatureName: "Legacy feature",
+            TrackingIds: ["QNY1-HB8"],
+            AshUrls: ["https://aka.ms/ash"]);
+        var recommendations = new List<Models.Recommendation>
+        {
+            new(
+                ResourceId: "resId1",
+                RecommendationText: "Migrate off the retiring feature",
+                Category: "HighAvailability",
+                Impact: "High",
+                ImpactedResourceType: "Microsoft.Storage/storageAccounts",
+                RecommendationTypeId: "Type-A",
+                SubCategory: "ServiceUpgradeAndRetirement",
+                PotentialBenefits: "Avoid service disruption",
+                LearnMoreLink: "https://aka.ms/advisor",
+                ServiceRetirement: retirement)
+        };
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>(recommendations, false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
+
+        var recommendation = Assert.Single(result.Recommendations);
+        Assert.Equal("Type-A", recommendation.RecommendationTypeId);
+        Assert.Equal("ServiceUpgradeAndRetirement", recommendation.SubCategory);
+        Assert.Equal("Avoid service disruption", recommendation.PotentialBenefits);
+        Assert.Equal("https://aka.ms/advisor", recommendation.LearnMoreLink);
+        Assert.NotNull(recommendation.ServiceRetirement);
+        Assert.Equal("2026-03-31", recommendation.ServiceRetirement!.RetirementDate);
+        Assert.Equal(["QNY1-HB8"], recommendation.ServiceRetirement.TrackingIds);
+    }
 }

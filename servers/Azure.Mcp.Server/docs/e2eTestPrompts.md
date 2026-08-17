@@ -36,6 +36,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List Cost recommendations for storage accounts in subscription <subscription> | none |
 | advisor_recommendation_list | Find Advisor recommendations mentioning "right-size" in subscription <subscription> | none |
 | advisor_recommendation_list | Show me the top 10 Advisor recommendations in subscription <subscription> | none |
+| advisor_recommendation_list | List Advisor recommendations in the ServiceUpgradeAndRetirement subcategory in subscription <subscription> | none |
+| advisor_recommendation_list | Show Advisor ZoneResiliency recommendations in subscription <subscription> | none |
+| advisor_recommendation_list | Which resources in subscription <subscription> are affected by Service Health tracking ID QNY1-HB8? | none |
+| advisor_recommendation_list | Show Advisor recommendations in subscription <subscription> for Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 | none |
+| advisor_recommendation_list | List Advisor recommendations in subscription <subscription> for services retiring on or before March 31, 2026 | none |
+| advisor_recommendation_list | Show Advisor recommendations in subscription <subscription> for services retiring after 2026-03-31, including their retirement dates | none |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations in subscription <subscription> | none |
 | advisor_recommendation_summary | Summarize Advisor recommendations in subscription <subscription> by category | none |
 | advisor_recommendation_summary | Show the top 10 most common Advisor recommendations in subscription <subscription> | none |

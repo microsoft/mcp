@@ -329,6 +329,10 @@ azmcp server info
 ```bash
 # List Advisor recommendations in a subscription, with optional server-side filters
 # Only active recommendations (status 'New') are returned; dismissed and postponed ones are excluded
+# Results are joined with the recommendation metadata catalog so subcategory, potential benefits, learn-more link,
+# and service-retirement details are current instead of stale
+# --tracking-ids and --retirement-date apply only to the ServiceUpgradeAndRetirement subcategory
+# --tracking-ids is repeatable; recommendations matching any of the supplied tracking IDs are returned
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation list --subscription <subscription> \
                                   [--top <top>] \
@@ -336,7 +340,10 @@ azmcp advisor recommendation list --subscription <subscription> \
                                   [--impact <impact>] \
                                   [--resource-type <resource-type>] \
                                   [--resource <resource>] \
-                                  [--search <search>]
+                                  [--search <search>] \
+                                  [--sub-category <sub-category>] \
+                                  [--tracking-ids <tracking-id1> --tracking-ids <tracking-id2> ...] \
+                                  [--retirement-date <eq|lt|le|gt|ge>:<yyyy-MM-dd>]
 
 # Summarize Advisor recommendations grouped by a chosen field (recommendation-type, category, impact, or resource-type)
 # --group-by is optional and defaults to 'category' when omitted
