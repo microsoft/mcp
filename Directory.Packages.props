@@ -40,7 +40,6 @@
     <PackageVersion Include="Azure.ResourceManager.EventHubs" Version="1.3.0" />
     <PackageVersion Include="Azure.ResourceManager.FileShares" Version="1.0.0" />
     <PackageVersion Include="Azure.ResourceManager.HDInsight" Version="1.2.0-beta.5" />
-    <PackageVersion Include="Azure.ResourceManager.IotHub" Version="1.2.0-beta.2" />
     <PackageVersion Include="Azure.ResourceManager.LoadTesting" Version="1.1.2" />
     <PackageVersion Include="Azure.ResourceManager.MachineLearning" Version="1.2.4" />
     <PackageVersion Include="Azure.ResourceManager.Monitor" Version="1.4.0-beta.4" />
