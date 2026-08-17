@@ -615,6 +615,13 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         }
 
         ValidateResourceType(siteRecoverySetting.TestFailoverParamsNetworkResourceId, "Microsoft.Network/virtualNetworks", resourceId, "testFailoverParams.networkResourceId");
+
+        if (!existing.ResourceProtectionSolutions.Any(solution =>
+            solution.ProtectionSolutionType == ResourceProtectionSolutionType.AzureSiteRecovery &&
+            solution.ProtectionStatus == ResourceProtectionStatus.Protected))
+        {
+            throw new ArgumentException($"Recovery resource '{resourceId}' cannot use AzureSiteRecovery because healthy Azure Site Recovery protection was not detected. Enable Azure Site Recovery protection, wait until its status is Protected, and refresh the recovery plan.");
+        }
     }
 
     private static bool IsNullOrNone(ResourceProtectionSolutionType? solutionType)
@@ -655,6 +662,11 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         }
 
         ResourceIdentifier identityResourceId = ParseUserAssignedIdentityResourceId(userAssignedIdentity!);
+        if (existingIdentity?.UserAssignedIdentities.Keys.Any(existingIdentityResourceId => existingIdentityResourceId != identityResourceId) == true)
+        {
+            throw new ArgumentException("Changing the user-assigned managed identity of an existing recovery plan is not supported.", nameof(userAssignedIdentity));
+        }
+
         ManagedServiceIdentityType managedServiceIdentityType = identityType == RecoveryPlanIdentityKind.SystemAndUserAssigned
             ? ManagedServiceIdentityType.SystemAssignedUserAssigned
             : ManagedServiceIdentityType.UserAssigned;
@@ -663,7 +675,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         {
             if (existingIdentityResourceId != identityResourceId)
             {
-                throw new ArgumentException("Replacing an existing user-assigned managed identity with a different identity is not currently supported.", nameof(userAssignedIdentity));
+                identity.UserAssignedIdentities.Add(existingIdentityResourceId, null!);
             }
         }
 

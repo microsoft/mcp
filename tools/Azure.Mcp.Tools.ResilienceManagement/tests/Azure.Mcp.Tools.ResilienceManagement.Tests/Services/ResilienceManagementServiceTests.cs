@@ -402,10 +402,25 @@ public sealed class ResilienceManagementServiceTests
             ResourceInclusionState.Included,
             ResourceProtectionSolutionType.AzureSiteRecovery,
             CreateSiteRecoverySetting());
+        RecoveryMembersData existing = CreateProtectedSiteRecoveryResource();
+
+        ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_RejectsAzureSiteRecoveryWhenProtectionIsNotDetected()
+    {
+        RecoveryMembersData requested = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.AzureSiteRecovery,
+            CreateSiteRecoverySetting());
         RecoveryMembersData existing = CreateRecoveryResource(
             azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm");
 
-        ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing);
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("healthy Azure Site Recovery protection was not detected", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -431,7 +446,7 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
-    public void CreateRecoveryPlanIdentity_RejectsReplacingExistingUserAssignedIdentity()
+    public void CreateRecoveryPlanIdentity_RejectsChangingExistingUserAssignedIdentity()
     {
         var existingIdentityResourceId = new ResourceIdentifier("/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/oldIdentity");
         var existingIdentity = new ManagedServiceIdentity(ManagedServiceIdentityType.UserAssigned);
@@ -440,7 +455,7 @@ public sealed class ResilienceManagementServiceTests
         ArgumentException exception = Assert.Throws<ArgumentException>(
             () => ResilienceManagementService.CreateRecoveryPlanIdentity(RecoveryPlanIdentityKind.UserAssigned, UserAssignedIdentityResourceId, existingIdentity));
 
-        Assert.Contains("not currently supported", exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("not supported", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -503,6 +518,26 @@ public sealed class ResilienceManagementServiceTests
         resource.Properties.SelectedProtectionSolutionSetting = solutionSetting;
         return resource;
     }
+
+    private static RecoveryMembersData CreateProtectedSiteRecoveryResource()
+        => ModelReaderWriter.Read<RecoveryMembersData>(BinaryData.FromObjectAsJson(new
+        {
+            properties = new
+            {
+                recoveryResourceUniqueId = "12345678-9012-3456-7890-123456789012",
+                resourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm",
+                protectionStatus = "Protected",
+                resourceProtectionSolutions = new[]
+                {
+                    new
+                    {
+                        protectionSolutionType = "AzureSiteRecovery",
+                        protectionStatus = "Protected",
+                        resourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm"
+                    }
+                }
+            }
+        }))!;
 
     private static ResourceCustomProtectionSetting CreateCustomRunbookSetting()
         => new()

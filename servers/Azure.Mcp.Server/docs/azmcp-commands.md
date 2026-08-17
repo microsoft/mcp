@@ -3725,7 +3725,7 @@ azmcp resilience recovery plan get --subscription <subscription> \
                                    --service-group <service-group> \
                                    [--name <name>]
 
-# Create or fully update a Zonal resilience recovery plan. An identity is required, and updates can use system-assigned, user-assigned, or both identity types. The plan description is required on create and preserved when omitted on update.
+# Create or fully update a Zonal resilience recovery plan. An identity is required, and identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description is required on create and preserved when omitted on update.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recovery plan create --service-group <service-group> \
                                       --recovery-plan <recovery-plan> \

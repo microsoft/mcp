@@ -17,12 +17,11 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Title = "Create or Update Resilience Recovery Plan",
     Description = """
         Create or fully update a Zonal resilience recovery plan in my service group with a required system-assigned,
-        user-assigned, or combined managed identity. Updates can switch between identity types and preserve the default recovery
-        group ID, additional recovery groups, and omitted plan or default group descriptions. The plan description is required
-        when creating a plan. A user-assigned identity update
-        must include the full identity resource ID. If it is not provided, ask the user for it instead of assuming the
-        recovery plan's existing user-assigned identity. Directly replacing one user-assigned identity with another is
-        not currently supported.
+        user-assigned, or combined managed identity. Updates can switch between identity types, but cannot replace an existing
+        user-assigned identity with a different user-assigned identity. Updates preserve the default recovery group ID,
+        additional recovery groups, and omitted plan or default group descriptions. The plan description is required when
+        creating a plan. A user-assigned identity update must include the existing identity's full resource ID. If it is not
+        provided, ask the user for it instead of assuming the recovery plan's existing user-assigned identity.
         """,
     Destructive = true,
     Idempotent = true,
