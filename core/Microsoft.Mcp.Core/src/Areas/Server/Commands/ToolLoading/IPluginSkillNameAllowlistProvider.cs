@@ -32,7 +32,7 @@ public class NullPluginSkillNameAllowlistProvider : IPluginSkillNameAllowlistPro
 
 /// <summary>
 /// Provides skill name validation using an embedded JSON resource allowlist.
-/// The resource should contain a JSON array of skill names.
+/// The schema of the JSON resource can be found in https://github.com/microsoft/GitHub-Copilot-for-Azure/blob/main/scripts/src/generate-mcp-allowlists.ts
 /// </summary>
 public sealed class ResourcePluginSkillNameAllowlistProvider : IPluginSkillNameAllowlistProvider
 {
@@ -75,16 +75,7 @@ public sealed class ResourcePluginSkillNameAllowlistProvider : IPluginSkillNameA
         {
             var resourceName = EmbeddedResourceHelper.FindEmbeddedResource(_sourceAssembly, _resourcePattern);
             var json = EmbeddedResourceHelper.ReadEmbeddedResource(_sourceAssembly, resourceName);
-            using var jsonDocument = JsonDocument.Parse(json);
-            var skillNames = new List<string>();
-
-            foreach (var element in jsonDocument.RootElement.EnumerateArray())
-            {
-                if (element.GetString() is string skillName)
-                {
-                    skillNames.Add(skillName);
-                }
-            }
+            var skillNames = ParseAllowedSkillNames(json);
 
             _logger.LogInformation("Loaded {Count} allowed skill names from {ResourceName}", skillNames.Count, resourceName);
             return new HashSet<string>(skillNames, StringComparer.Ordinal);
@@ -98,5 +89,24 @@ public sealed class ResourcePluginSkillNameAllowlistProvider : IPluginSkillNameA
             _logger.LogError(ex, errorMessage);
             return new HashSet<string>(StringComparer.Ordinal);
         }
+    }
+
+    internal static List<string> ParseAllowedSkillNames(string json)
+    {
+        using var jsonDocument = JsonDocument.Parse(json);
+        var skillNames = new List<string>();
+
+        foreach (var property in jsonDocument.RootElement.GetProperty("skill").EnumerateObject())
+        {
+            foreach (var element in property.Value.EnumerateArray())
+            {
+                if (element.GetString() is string skillName)
+                {
+                    skillNames.Add(skillName);
+                }
+            }
+        }
+
+        return skillNames;
     }
 }
