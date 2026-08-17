@@ -885,7 +885,8 @@ azmcp azurebackup vault create --subscription <subscription> \
 azmcp azurebackup vault get --subscription <subscription> \
                             [--resource-group <resource-group>] \
                             [--vault <vault>] \
-                            [--vault-type <vault-type>]
+                            [--vault-type <vault-type>] \
+                            [--expand <expand>]
 
 # Updates vault-level settings including soft delete, immutability, and managed identity.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired

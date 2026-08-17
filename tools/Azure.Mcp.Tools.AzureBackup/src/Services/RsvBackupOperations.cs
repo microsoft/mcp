@@ -57,7 +57,8 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
 
     public async Task<BackupVaultInfo> GetVaultAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -69,12 +70,17 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
 
-        return MapToVaultInfo(vault.Value.Data, resourceGroup);
+        var mua = (expand & VaultExpand.Mua) != 0
+            ? await GetMuaProxyAsync(armClient, subscription, resourceGroup, vaultName, cancellationToken)
+            : default;
+
+        return MapToVaultInfo(vault.Value.Data, resourceGroup, expand, mua.state, mua.resourceGuardId);
     }
 
     public async Task<List<BackupVaultInfo>> ListVaultsAsync(
         string subscription, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
@@ -86,10 +92,31 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
         await foreach (var vault in subResource.GetRecoveryServicesVaultsAsync(cancellationToken))
         {
             var rg = vault.Id?.ResourceGroupName;
-            vaults.Add(MapToVaultInfo(vault.Data, rg));
+            var mua = (expand & VaultExpand.Mua) != 0 && rg is not null
+                ? await GetMuaProxyAsync(armClient, subscription, rg, vault.Data.Name, cancellationToken)
+                : default;
+            vaults.Add(MapToVaultInfo(vault.Data, rg, expand, mua.state, mua.resourceGuardId));
         }
 
         return vaults;
+    }
+
+    private static async Task<(string? state, string? resourceGuardId)> GetMuaProxyAsync(
+        ArmClient armClient, string subscription, string resourceGroup, string vaultName,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+            var rgResource = armClient.GetResourceGroupResource(rgId);
+            var proxyResponse = await rgResource.GetResourceGuardProxyAsync(vaultName, "VaultProxy", cancellationToken);
+            var proxyId = proxyResponse.Value.Data.Properties?.ResourceGuardResourceId?.ToString();
+            return ("Enabled", proxyId);
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            return ("Disabled", null);
+        }
     }
 
     public async Task<ProtectResult> ProtectItemAsync(
@@ -1094,11 +1121,44 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
         };
 
     private static BackupVaultInfo MapToVaultInfo(RecoveryServicesVaultData data, string? resourceGroup)
+        => MapToVaultInfo(data, resourceGroup, VaultExpand.None, muaState: null, muaResourceGuardId: null);
+
+    private static BackupVaultInfo MapToVaultInfo(
+        RecoveryServicesVaultData data,
+        string? resourceGroup,
+        VaultExpand expand,
+        string? muaState,
+        string? muaResourceGuardId)
     {
-        var securitySettings = data.Properties?.SecuritySettings;
+        var properties = data.Properties;
+        var securitySettings = properties?.SecuritySettings;
         var softDeleteSettings = securitySettings?.SoftDeleteSettings;
         var immutabilityState = securitySettings?.ImmutabilityState?.ToString();
         var identityType = data.Identity?.ManagedServiceIdentityType.ToString();
+
+        string? crossRegionRestoreState = null;
+        string? publicNetworkAccess = null;
+        string? encryptionState = null;
+        string? encryptionKeyUri = null;
+
+        if ((expand & VaultExpand.Security) != 0)
+        {
+            var keyUri = properties?.Encryption?.KeyUri?.ToString();
+            encryptionKeyUri = keyUri;
+            encryptionState = keyUri is null ? null : "Enabled";
+        }
+
+        if ((expand & VaultExpand.Network) != 0)
+        {
+            publicNetworkAccess = properties?.PublicNetworkAccess?.ToString();
+            // CrossRegionRestore is included in the Security expansion below when relevant.
+        }
+
+        if ((expand & VaultExpand.Security) != 0)
+        {
+            // Prefer the newer RedundancySettings.CrossRegionRestore property.
+            crossRegionRestoreState = properties?.RedundancySettings?.CrossRegionRestore?.ToString();
+        }
 
         return new BackupVaultInfo(
             data.Id?.ToString(),
@@ -1106,15 +1166,21 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
             VaultType,
             data.Location.Name,
             resourceGroup,
-            data.Properties?.ProvisioningState,
+            properties?.ProvisioningState,
             data.Sku?.Name.ToString(),
             null,
-            data.Properties?.RedundancySettings?.StandardTierStorageRedundancy?.ToString(),
+            properties?.RedundancySettings?.StandardTierStorageRedundancy?.ToString(),
             softDeleteSettings?.SoftDeleteState?.ToString(),
             softDeleteSettings?.SoftDeleteRetentionPeriodInDays,
             immutabilityState,
             identityType,
-            data.Tags?.ToDictionary(t => t.Key, t => t.Value));
+            data.Tags?.ToDictionary(t => t.Key, t => t.Value),
+            MuaState: muaState,
+            MuaResourceGuardId: muaResourceGuardId,
+            CrossRegionRestoreState: crossRegionRestoreState,
+            PublicNetworkAccess: publicNetworkAccess,
+            EncryptionState: encryptionState,
+            EncryptionKeyUri: encryptionKeyUri);
     }
 
     private static ProtectedItemInfo MapToProtectedItemInfo(BackupProtectedItemData data)

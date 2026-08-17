@@ -6,6 +6,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- `azurebackup vault get` now accepts an optional `--expand` parameter (comma-separated: `security`, `network`, `monitoring`, `mua`, `all`) to include extended vault posture fields (soft-delete/immutability/encryption state, public network access, cross-region/subscription restore, MUA resource guard). Default output shape is unchanged. Applies to both Recovery Services vaults (RSV) and Backup vaults (DPP).
+
 ### Breaking Changes
 
 ### Bugs Fixed
