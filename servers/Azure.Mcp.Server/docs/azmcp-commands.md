@@ -2958,6 +2958,20 @@ azmcp loadtesting testrun createorupdate --subscription <subscription> \
 azmcp grafana list --subscription <subscription> \
                   [--resource-group <resource-group>]
 ```
+### Azure IoT Hub Operations
+
+#### Device Registry Operations
+
+```bash
+# List devices in an IoT Hub
+# Returns one page of device identities. --max-count sets the page size (default 100, maximum 100); values less than 1 or greater than 100 are rejected.
+# When the hub has more devices than were returned, the response sets truncated=true with an explanatory message.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub device list --subscription <subscription> \
+                         --resource-group <resource-group> \
+                         --hub-name <iot-hub-name> \
+                         [--max-count <max-count>]
+```
 
 ### Azure Marketplace Operations
 

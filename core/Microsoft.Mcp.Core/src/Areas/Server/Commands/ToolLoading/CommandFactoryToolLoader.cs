@@ -139,11 +139,12 @@ public sealed class CommandFactoryToolLoader(
                 Text = $"Tool '{toolName}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
             };
 
-            return McpHelper.InjectToolIdMetadata(new CallToolResult
+            return new CallToolResult
             {
                 Content = [content],
                 IsError = true,
-            }, command.Id);
+                Meta = new([new(McpHelper.ToolIdMetaKey, command.Id)])
+            };
         }
 
         // Enforce HTTP mode restrictions at execution time
@@ -154,11 +155,12 @@ public sealed class CommandFactoryToolLoader(
                 Text = $"Tool '{toolName}' is not available. This server is running in HTTP mode and this tool requires local execution.",
             };
 
-            return McpHelper.InjectToolIdMetadata(new CallToolResult
+            return new CallToolResult
             {
                 Content = [content],
                 IsError = true,
-            }, command.Id);
+                Meta = new([new(McpHelper.ToolIdMetaKey, command.Id)])
+            };
         }
 
         var commandContext = new CommandContext(activity)
@@ -194,7 +196,21 @@ public sealed class CommandFactoryToolLoader(
         }
         else
         {
-            commandOptions = realCommand.ParseFromDictionary(request.Params.Arguments);
+            if (!realCommand.TryParseFromDictionary(request.Params.Arguments, out commandOptions, out var parseErrors))
+            {
+                return new CallToolResult
+                {
+                    Content =
+                    [
+                        new TextContentBlock
+                        {
+                            Text = parseErrors!,
+                        }
+                    ],
+                    IsError = true,
+                    Meta = new([new(McpHelper.ToolIdMetaKey, command.Id)])
+                };
+            }
         }
 
         _logger.LogTrace("Invoking '{Tool}'.", realCommand.Name);
@@ -208,19 +224,21 @@ public sealed class CommandFactoryToolLoader(
         try
         {
             activity?.SetTag(TagName.IsServerCommandInvoked, true);
-            var commandResponse = await command.ExecuteAsync(commandContext, commandOptions, cancellationToken);
+            var commandResponse = await command.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
-            return McpHelper.InjectToolIdMetadata(new CallToolResult
+            return new CallToolResult
             {
                 Content = [
-                    new TextContentBlock {
+                    new TextContentBlock
+                    {
                         Text = jsonResponse
                     }
                 ],
-                IsError = isError
-            }, command.Id);
+                IsError = isError,
+                Meta = new([new(McpHelper.ToolIdMetaKey, command.Id)])
+            };
         }
         catch (Exception ex)
         {

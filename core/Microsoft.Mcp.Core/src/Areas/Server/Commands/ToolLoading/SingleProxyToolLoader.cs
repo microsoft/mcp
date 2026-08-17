@@ -357,8 +357,8 @@ public sealed class SingleProxyToolLoader(
 
             if (resolvedTool != null)
             {
-                var tooldId = McpHelper.GetToolIdFromMeta(resolvedTool.ProtocolTool.Meta);
-                Activity.Current?.SetTag(TagName.ToolId, tooldId)
+                var toolId = McpHelper.GetToolIdFromMeta(resolvedTool.ProtocolTool.Meta);
+                Activity.Current?.SetTag(TagName.ToolId, toolId)
                     .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(resolvedTool.ProtocolTool));
 
                 if (_options.Value.ReadOnly && resolvedTool.ProtocolTool.Annotations?.ReadOnlyHint != true)
@@ -373,7 +373,7 @@ public sealed class SingleProxyToolLoader(
                             }
                         ],
                         IsError = true,
-                    }, tooldId);
+                    }, toolId);
                 }
 
                 if (_options.Value.IsHttpMode && McpHelper.HasHint(resolvedTool.ProtocolTool, McpHelper.LocalRequiredHintMetaKey))
@@ -388,7 +388,7 @@ public sealed class SingleProxyToolLoader(
                             }
                         ],
                         IsError = true,
-                    }, tooldId);
+                    }, toolId);
                 }
             }
         }

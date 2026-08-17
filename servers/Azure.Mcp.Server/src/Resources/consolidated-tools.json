@@ -2227,6 +2227,39 @@
       ]
     },
     {
+      "name": "list_azure_iot_hub_devices",
+      "description": "List devices registered in an Azure IoT Hub's device registry, returning device identity metadata without authentication keys.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only retrieves device information from an Azure IoT Hub without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_device_list"
+      ]
+    },
+    {
       "name": "edit_azure_data_analytics_resources",
       "description": "Update and delete Azure Event Hubs resources including namespaces, event hubs, and consumer groups.",
       "toolMetadata": {

@@ -8,48 +8,79 @@ import:
   - ../../.vscode/cspell.json
 words:
   - agentic
+  - aigateway
+  - airunway
+  - appconfiguration
   - appsettings
+  - azclis
   - azureicon
-  - azuremigrate
   - azuremanagedlustre
+  - azuremigrate
+  - bcount
+  - byok
   - changedetection
-  - codeowners
   - cloudendpoint
+  - cloudrun
+  - codeowners
   - commonprompts
+  - configmap
   - consumergroup
+  - contentsafety
   - createorupdate
   - deviceregistry
   - discoverability
+  - donet
   - elicitations
   - enumerables
   - eventhub
   - eventhubs
+  - eventprocessorhost
   - fileshares
+  - finetuning
+  - foundryexensions
   - foundryextensions
+  - getattr
   - getguidance
   - groq
+  - hasattr
+  - headlessly
   - hotmail
-  - iothub
+  - httproute
+  - hyperparameters
+  - imageanalysis
+  - inspektor
   - managedcluster
   - mypass
   - mysvc
   - myuser
   - nettrace
   - newname
+  - noauth
   - nodetype
+  - notanarea
   - nslookup
   - ollama
+  - opaquevalue
+  - outerloop
   - peconnection
+  - pipx
   - platformlandingzone
+  - precheck
+  - prereq
   - registeredserver
   - scheduledtasks
+  - serviceaccount
   - servicefabric
   - serviceguide
   - sreagent
+  - statelessly
+  - storagee
   - storagesync
   - structs
   - syncgroup
   - targetdir
+  - tcount
   - toolsets
-  - usageplan
+  - toplist
+  - webjobs
   - wellarchitectedframework

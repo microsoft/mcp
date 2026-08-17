@@ -31,6 +31,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [Visual Studio 2022](#visual-studio-2022)
         - [IntelliJ IDEA](#intellij-idea)
         - [Eclipse IDE](#eclipse-ide)
+        - [Google Antigravity](#google-antigravity)
         - [Claude Code](#claude-code)
         - [Manual Setup](#manual-setup)
         - [GitHub Copilot CLI Configuration](#github-copilot-cli-configuration)
@@ -158,6 +159,25 @@ From within Visual Studio 2022 install [GitHub Copilot for Azure (VS 2022)](http
 1. Install the [GitHub Copilot](https://marketplace.eclipse.org/content/github-copilot) plugin.
 1. Install the [Azure Toolkit for Eclipse](https://marketplace.eclipse.org/content/azure-toolkit-eclipse) plugin.
 
+### Google Antigravity
+
+1. Install and open [Google Antigravity](https://antigravity.google/).
+1. In the editor's agent side panel, select **...** > **MCP Servers** > **Manage MCP Servers** > **View raw config**.
+1. Add Azure MCP Server to the `mcpServers` object in `mcp_config.json`:
+
+     ```json
+     {
+         "mcpServers": {
+             "azure-mcp-server": {
+                 "command": "npx",
+                 "args": ["-y", "@azure/mcp@latest", "server", "start"]
+             }
+         }
+     }
+     ```
+
+Antigravity stores global configuration at `~/.gemini/config/mcp_config.json`. For workspace-only configuration, use `.agents/mcp_config.json`. For more information, see the [Google Antigravity MCP documentation](https://antigravity.google/docs/mcp).
+
 ### Claude Code
 
 The Azure plugin packages the Azure MCP Server along with Azure-related agents and skills, bringing Azure integration to Claude Code in one installation.
@@ -181,7 +201,7 @@ Use one of the following options to configure your `mcp.json`:
 <!-- remove-section: start npm;pypi remove_dotnet_config_sub_section -->
 <!-- remove-section: start nuget remove_dotnet_config_sub_header -->
 #### Option 1: Configure using .NET tool (dnx)<!-- remove-section: end remove_dotnet_config_sub_header -->
-- To use Azure MCP server from .NET, you must have [.NET 10 Preview 6 or later](https://dotnet.microsoft.com/download/dotnet/10.0) installed. This version of .NET adds a command, dnx, which is used to download, install, and run the MCP server from [nuget.org](https://www.nuget.org).
+- To use Azure MCP server from .NET, you must have the latest [.NET 10 SDK LTS](https://dotnet.microsoft.com/download/dotnet) installed. .NET 10 and later adds a command, dnx, which is used to download, install, and run the MCP server from [nuget.org](https://www.nuget.org).
 To verify the .NET version, run the following command in the terminal: `dotnet --info`
 -  Configure the `mcp.json` file with the following:
 
@@ -209,7 +229,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
 <!-- remove-section: start nuget;pypi remove_node_config_sub_section -->
 <!-- remove-section: start npm remove_node_config_sub_header -->
 #### Option 2: Configure using Node.js (npm/npx)<!-- remove-section: end remove_node_config_sub_header -->
-- To use Azure MCP server from node one must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
+- To use Azure MCP server from node one must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend the latest Node.js LTS version. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
 -  Configure the `mcp.json` file with the following:
 
     ```json
@@ -263,6 +283,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
 | **Claude Code** | `~/.claude.json` or `.mcp.json` (project) | [Claude Code MCP Configuration](https://code.claude.com/docs/en/mcp-quickstart#add-a-local-server) |
 | **Eclipse IDE** | GitHub Copilot Chat -> Configure Tools -> MCP Servers  | [Eclipse MCP Documentation](https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/extend-copilot-chat-with-mcp#configuring-mcp-servers-in-eclipse) |
 | **IntelliJ IDEA** | Built-in MCP server (2025.2+)<br>Settings > Tools > MCP Server | [IntelliJ MCP Documentation](https://www.jetbrains.com/help/ai-assistant/mcp.html) |
+| **Google Antigravity** | `~/.gemini/config/mcp_config.json` (global)<br>`.agents/mcp_config.json` (workspace) | [Google Antigravity MCP Documentation](https://antigravity.google/docs/mcp) |
 | **Cursor** | `~/.cursor/mcp.json` or `.cursor/mcp.json` | [Cursor MCP Documentation](https://docs.cursor.com/context/model-context-protocol) |
 | **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | [Windsurf Cascade MCP Integration](https://docs.windsurf.com/windsurf/cascade/mcp) |
 | **Amazon Q Developer** | `~/.aws/amazonq/mcp.json` (global)<br>`.amazonq/mcp.json` (workspace) | [AWS Q Developer MCP Guide](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/qdev-mcp.html) |
@@ -1130,6 +1151,7 @@ Example prompts that generate Azure CLI commands:
 
 * "Show me IoT Hub 'my-iot-hub' in resource group 'my-resource-group' of my subscription 'my-subscription'"
 * "Get details for IoT Hub 'my-iot-hub' in resource group 'my-resource-group' of my subscription 'my-subscription'"
+* "List devices in IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
 
 ### 🔑 Azure Key Vault
 

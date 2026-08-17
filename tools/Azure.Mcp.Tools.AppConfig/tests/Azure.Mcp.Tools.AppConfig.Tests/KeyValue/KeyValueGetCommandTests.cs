@@ -245,7 +245,7 @@ public class KeyValueGetCommandTests : SubscriptionCommandUnitTestsBase<KeyValue
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "key1",
-            "--key-filter", "keyfilter");
+            "--key-filter", "keyFilter");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

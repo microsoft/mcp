@@ -617,11 +617,14 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 ## Azure IoT Hub
 
-| Tool Name | Test Prompt | Interaction |
-|:----------|:------------|:------------|
-| iothub_hub_get | Get details for IoT Hub <hub_name> in resource group <resource_group_name> | none |
-| iothub_hub_get | Show IoT Hub <hub_name> in resource group <resource_group_name> for subscription <subscription_id> | none |
-| iothub_hub_get | Retrieve IoT Hub <hub_name> metadata from resource group <resource_group_name> | none |
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| iothub_device_list | List devices in IoT Hub <hub_name> in resource group <resource_group_name> |
+| iothub_device_list | Show all devices registered to IoT Hub <hub_name> |
+| iothub_device_list | Get the device registry for IoT Hub <hub_name> in subscription <subscription_id> |
+| iothub_hub_get | Get details for IoT Hub <hub_name> in resource group <resource_group_name> |
+| iothub_hub_get | Show IoT Hub <hub_name> in resource group <resource_group_name> for subscription <subscription_id> |
+| iothub_hub_get | Retrieve IoT Hub <hub_name> metadata from resource group <resource_group_name> |
 
 ## Azure Key Vault
 

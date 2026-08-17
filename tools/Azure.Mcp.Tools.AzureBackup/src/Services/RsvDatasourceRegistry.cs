@@ -138,18 +138,18 @@ public static class RsvDatasourceRegistry
             return null;
         }
 
-        var normalised = datasourceType.ToLowerInvariant();
+        var normalized = datasourceType.ToLowerInvariant();
 
         foreach (var profile in AllProfiles)
         {
-            if (normalised.Equals(profile.FriendlyName, StringComparison.OrdinalIgnoreCase))
+            if (normalized.Equals(profile.FriendlyName, StringComparison.OrdinalIgnoreCase))
             {
                 return profile;
             }
 
             foreach (var alias in profile.Aliases)
             {
-                if (normalised.Equals(alias, StringComparison.OrdinalIgnoreCase))
+                if (normalized.Equals(alias, StringComparison.OrdinalIgnoreCase))
                 {
                     return profile;
                 }

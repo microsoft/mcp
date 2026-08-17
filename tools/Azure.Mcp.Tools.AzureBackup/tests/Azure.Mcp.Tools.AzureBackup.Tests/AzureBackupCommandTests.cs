@@ -624,7 +624,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName },
                 { "policy", policyName },
                 { "workload-type", "AzureVM" },
-                { "schedule-time", "02:00" }
+                { "schedule-times", "02:00" }
             });
 
         // Update schedule time to 04:00

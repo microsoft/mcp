@@ -8,4 +8,9 @@ import:
   - ../../.vscode/cspell.json
 words:
   - apphost
+  - checkpointing
   - codegen
+  - deepseek
+  - magentic
+  - nosniff
+  - quickstarts
