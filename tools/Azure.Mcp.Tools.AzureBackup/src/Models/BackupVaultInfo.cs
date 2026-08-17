@@ -23,10 +23,5 @@ public sealed record BackupVaultInfo(
     string? MuaState = null,
     string? MuaResourceGuardId = null,
     string? CrossRegionRestoreState = null,
-    string? PublicNetworkAccess = null,
-    string? CrossSubscriptionRestoreState = null,
-    string? EnhancedSecurityState = null,
     string? EncryptionState = null,
-    string? EncryptionKeyUri = null,
-    string? MonitoringAlertState = null,
-    IReadOnlyList<PrivateEndpointConnectionInfo>? PrivateEndpointConnections = null);
+    string? EncryptionKeyUri = null);

@@ -19,8 +19,6 @@ public class VaultExpandParserTests
 
     [Theory]
     [InlineData("security", VaultExpand.Security)]
-    [InlineData("network", VaultExpand.Network)]
-    [InlineData("monitoring", VaultExpand.Monitoring)]
     [InlineData("mua", VaultExpand.Mua)]
     [InlineData("all", VaultExpand.All)]
     public void Parse_SingleToken_ReturnsExpectedFlag(string input, VaultExpand expected)
@@ -40,22 +38,25 @@ public class VaultExpandParserTests
     [Fact]
     public void Parse_MultipleTokens_CombinesFlags()
     {
-        var result = VaultExpandParser.Parse("security,network,mua");
-        Assert.Equal(VaultExpand.Security | VaultExpand.Network | VaultExpand.Mua, result);
+        var result = VaultExpandParser.Parse("security,mua");
+        Assert.Equal(VaultExpand.Security | VaultExpand.Mua, result);
     }
 
     [Fact]
     public void Parse_All_IsEquivalentToCombinedFlags()
     {
         Assert.Equal(
-            VaultExpand.Security | VaultExpand.Network | VaultExpand.Monitoring | VaultExpand.Mua,
+            VaultExpand.Security | VaultExpand.Mua,
             VaultExpandParser.Parse("all"));
     }
 
     [Theory]
     [InlineData("bogus")]
     [InlineData("security,foobar")]
-    [InlineData("mua,invalid,network")]
+    [InlineData("mua,invalid,security")]
+    [InlineData("network")]
+    [InlineData("monitoring")]
+    [InlineData("security,network")]
     public void Parse_UnknownToken_Throws(string input)
     {
         var ex = Assert.Throws<ArgumentException>(() => VaultExpandParser.Parse(input));

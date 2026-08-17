@@ -5,19 +5,17 @@ namespace Azure.Mcp.Tools.AzureBackup.Models;
 
 /// <summary>
 /// Optional 'vault get' expansion flags. Selects extra vault posture fields
-/// (security settings, network state, monitoring alerts, MUA state) that are
-/// off by default to preserve the legacy response shape and avoid extra API
-/// calls for callers that don't need them.
+/// (encryption / cross-region-restore state, MUA state) that are off by
+/// default to preserve the legacy response shape and avoid extra Resource
+/// Guard API calls for callers that don't need them.
 /// </summary>
 [Flags]
 public enum VaultExpand
 {
     None = 0,
     Security = 1 << 0,
-    Network = 1 << 1,
-    Monitoring = 1 << 2,
-    Mua = 1 << 3,
-    All = Security | Network | Monitoring | Mua,
+    Mua = 1 << 1,
+    All = Security | Mua,
 }
 
 public static class VaultExpandParser
@@ -40,12 +38,10 @@ public static class VaultExpandParser
             result |= raw.ToLowerInvariant() switch
             {
                 "security" => VaultExpand.Security,
-                "network" => VaultExpand.Network,
-                "monitoring" => VaultExpand.Monitoring,
                 "mua" => VaultExpand.Mua,
                 "all" => VaultExpand.All,
                 _ => throw new ArgumentException(
-                    $"Invalid --expand value '{raw}'. Supported values: 'security', 'network', 'monitoring', 'mua', 'all' (comma-separated).")
+                    $"Invalid --expand value '{raw}'. Supported values: 'security', 'mua', 'all' (comma-separated).")
             };
         }
 

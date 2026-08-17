@@ -241,6 +241,8 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
     [InlineData("bogus")]
     [InlineData("security,foobar")]
     [InlineData("mua,invalid")]
+    [InlineData("network")]
+    [InlineData("monitoring")]
     public async Task ExecuteAsync_RejectsInvalidExpandValue(string expand)
     {
         var response = await ExecuteCommandAsync(
@@ -252,11 +254,9 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
 
     [Theory]
     [InlineData("security")]
-    [InlineData("network")]
-    [InlineData("monitoring")]
     [InlineData("mua")]
     [InlineData("all")]
-    [InlineData("security,network")]
+    [InlineData("security,mua")]
     [InlineData(" SECURITY , Mua ")]
     public async Task ExecuteAsync_AcceptsValidExpandValues_AndForwardsToService(string expand)
     {

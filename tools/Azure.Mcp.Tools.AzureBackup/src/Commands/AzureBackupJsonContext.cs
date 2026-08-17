@@ -37,7 +37,6 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands;
 [JsonSerializable(typeof(SecurityConfigureMuaCommand.SecurityConfigureMuaCommandResult))]
 [JsonSerializable(typeof(SecurityConfigureEncryptionCommand.SecurityConfigureEncryptionCommandResult))]
 [JsonSerializable(typeof(BackupVaultInfo))]
-[JsonSerializable(typeof(PrivateEndpointConnectionInfo))]
 [JsonSerializable(typeof(ProtectedItemInfo))]
 [JsonSerializable(typeof(BackupPolicyInfo))]
 [JsonSerializable(typeof(BackupJobInfo))]

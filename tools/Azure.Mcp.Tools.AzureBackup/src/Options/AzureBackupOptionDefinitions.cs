@@ -7,7 +7,7 @@ public static class AzureBackupOptionDefinitions
 {
     internal const string Vault = "The name of the backup vault (Recovery Services vault or Backup vault).";
     internal const string VaultType = "The type of backup vault: 'rsv' (Recovery Services vault) or 'dpp' (Backup vault / Data Protection). Auto-detected if omitted for existing vaults.";
-    internal const string VaultExpand = "Comma-separated list of extra vault posture fields to include in 'vault get' output. Supported values: 'security' (MUA, encryption, immutability, enhanced security, cross-subscription restore state), 'network' (public network access + private endpoint connections), 'monitoring' (Azure Monitor alert state), 'mua' (only the MUA / Resource Guard link — cheaper than 'security'), 'all'. Omit to preserve the default (unexpanded) response shape and avoid extra Resource Guard API calls.";
+    internal const string VaultExpand = "Comma-separated list of extra vault posture fields to include in 'vault get' output. Supported values: 'security' (encryption state, cross-region restore state), 'mua' (MUA / Resource Guard link), 'all'. Omit to preserve the default (unexpanded) response shape and avoid extra Resource Guard API calls.";
     internal const string ProtectedItem = "The name of the protected item or backup instance.";
     internal const string Container = "The RSV protection container name. Only applicable for Recovery Services vaults.";
     internal const string Policy = "The name of the backup policy.";

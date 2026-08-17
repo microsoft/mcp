@@ -25,6 +25,12 @@ public class VaultGetExpandCommandTests(ITestOutputHelper output, TestProxyFixtu
         CompareBodies = false
     };
 
+    // Base disables AZSDK3430; also disable AZSDK3493 ($..name) and AZSDK3436
+    // ($..resourceGroup) so vault/resource-group values in response bodies are
+    // preserved for the assertions below (and for later requests that depend
+    // on them via URL path segments during playback).
+    public override List<string> DisabledDefaultSanitizers { get; } = ["AZSDK3430", "AZSDK3493", "AZSDK3436"];
+
     public override List<BodyRegexSanitizer> BodyRegexSanitizers =>
     [
         new BodyRegexSanitizer(new BodyRegexSanitizerBody()
@@ -80,10 +86,8 @@ public class VaultGetExpandCommandTests(ITestOutputHelper output, TestProxyFixtu
 
         foreach (var postureField in new[] {
             "muaState", "muaResourceGuardId",
-            "crossRegionRestoreState", "publicNetworkAccess",
-            "crossSubscriptionRestoreState", "enhancedSecurityState",
-            "encryptionState", "encryptionKeyUri",
-            "monitoringAlertState", "privateEndpointConnections" })
+            "crossRegionRestoreState",
+            "encryptionState", "encryptionKeyUri" })
         {
             Assert.False(
                 vault.TryGetProperty(postureField, out _),
@@ -109,20 +113,19 @@ public class VaultGetExpandCommandTests(ITestOutputHelper output, TestProxyFixtu
         var vault = result.AssertProperty("vaults").EnumerateArray().First();
         Assert.Equal("rsv", vault.AssertProperty("vaultType").GetString());
 
-        // Network-scope: always populated on a live RSV vault.
-        vault.AssertProperty("publicNetworkAccess");
-        // Cross-region restore state (from RedundancySettings).
+        // Cross-region restore state (from RedundancySettings) is populated by
+        // the Security expansion for RSV vaults.
         vault.AssertProperty("crossRegionRestoreState");
         // MUA state must be "Enabled" (proxy present) or "Disabled" (no proxy).
         var muaState = vault.AssertProperty("muaState").GetString();
         Assert.True(muaState is "Enabled" or "Disabled",
             $"muaState must be 'Enabled' or 'Disabled', got '{muaState}'.");
 
-        // enhancedSecurityState is only emitted when Security.EnhancedSecurityState
-        // is configured on the vault. Assert that if present it is a non-empty string.
-        if (vault.TryGetProperty("enhancedSecurityState", out var enhancedSecurity))
+        // encryptionState is only emitted when the vault has CMK encryption
+        // configured (KeyUri present). If present it must be a non-empty string.
+        if (vault.TryGetProperty("encryptionState", out var encryptionState))
         {
-            Assert.False(string.IsNullOrEmpty(enhancedSecurity.GetString()));
+            Assert.False(string.IsNullOrEmpty(encryptionState.GetString()));
         }
     }
 

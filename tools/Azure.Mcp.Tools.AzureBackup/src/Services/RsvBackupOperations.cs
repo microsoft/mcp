@@ -1137,7 +1137,6 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
         var identityType = data.Identity?.ManagedServiceIdentityType.ToString();
 
         string? crossRegionRestoreState = null;
-        string? publicNetworkAccess = null;
         string? encryptionState = null;
         string? encryptionKeyUri = null;
 
@@ -1146,17 +1145,8 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
             var keyUri = properties?.Encryption?.KeyUri?.ToString();
             encryptionKeyUri = keyUri;
             encryptionState = keyUri is null ? null : "Enabled";
-        }
 
-        if ((expand & VaultExpand.Network) != 0)
-        {
-            publicNetworkAccess = properties?.PublicNetworkAccess?.ToString();
-            // CrossRegionRestore is included in the Security expansion below when relevant.
-        }
-
-        if ((expand & VaultExpand.Security) != 0)
-        {
-            // Prefer the newer RedundancySettings.CrossRegionRestore property.
+            // CrossRegionRestore comes from RedundancySettings and is part of the security posture.
             crossRegionRestoreState = properties?.RedundancySettings?.CrossRegionRestore?.ToString();
         }
 
@@ -1178,7 +1168,6 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
             MuaState: muaState,
             MuaResourceGuardId: muaResourceGuardId,
             CrossRegionRestoreState: crossRegionRestoreState,
-            PublicNetworkAccess: publicNetworkAccess,
             EncryptionState: encryptionState,
             EncryptionKeyUri: encryptionKeyUri);
     }
