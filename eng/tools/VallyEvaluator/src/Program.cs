@@ -19,10 +19,18 @@ internal class Program
         var runConfig = new RunConfiguration();
         configuration.Bind(runConfig);
 
+        runConfig.RepositoryRoot = Utilities.FindRepoRoot(AppContext.BaseDirectory);
+
         if (string.IsNullOrEmpty(runConfig.ServerName))
         {
-            Console.WriteLine("No MCP server specified. Using default: Azure.Mcp.Server");
-            runConfig.ServerName = "Azure.Mcp.Server";
+            Console.Error.WriteLine("No MCP server specified. Please specify using --serverName={{NameOfServer}}.");
+            return -1;
+        }
+
+        if (!Path.Exists(runConfig.PromptFilePath))
+        {
+            Console.Error.WriteLine($"Could not find: '{runConfig.PromptFilePath}' to create prompts from.");
+            return -1;
         }
 
         if (!string.IsNullOrEmpty(runConfig.NamespacesValue))
@@ -35,10 +43,9 @@ internal class Program
             Console.WriteLine("No namespaces specified. Writing evals for all namespaces");
         }
 
-        var repoRoot = Utilities.FindRepoRoot(AppContext.BaseDirectory);
         if (string.IsNullOrEmpty(runConfig.WorkingDirectory))
         {
-            var workDir = Path.Join(repoRoot, ".work");
+            var workDir = Path.Join(runConfig.RepositoryRoot, ".work");
             runConfig.WorkingDirectory = workDir;
             Console.WriteLine("No working directory specified. Using default: " + workDir);
         }
@@ -46,16 +53,6 @@ internal class Program
         if (!Directory.Exists(runConfig.WorkingDirectory))
         {
             Directory.CreateDirectory(runConfig.WorkingDirectory);
-        }
-
-        if (string.IsNullOrEmpty(runConfig.PromptFilePath))
-        {
-            Console.WriteLine("No prompts file specified. Using prompts from Azure.Mcp.Server");
-            runConfig.PromptFilePath = Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "docs", "e2eTestPrompts.md");
-        }
-        else
-        {
-            runConfig.PromptFilePath = Path.GetFullPath(runConfig.PromptFilePath);
         }
 
         BuildInfo? buildInfo = null;
@@ -79,7 +76,7 @@ internal class Program
         try
         {
             Console.WriteLine($"Creating evals for MCP server: {runConfig.ServerName}");
-            await CreateEvalsAsync(repoRoot, runConfig, buildInfo, mcpServerInformation);
+            await CreateEvalsAsync(runConfig.RepositoryRoot, runConfig, buildInfo, mcpServerInformation);
         }
         catch (Exception ex)
         {
@@ -91,7 +88,7 @@ internal class Program
         return 0;
     }
 
-    internal static List<string> GetTestToolNamespaces(BuildInfo buildInfo, PromptDatastore promptDatastore, McpServerMetadata? mcpServerInformation)
+    internal static List<string> GetToolNamespacesFromBuildInfo(BuildInfo buildInfo, PromptDatastore promptDatastore, McpServerMetadata? mcpServerInformation)
     {
         var promptNamespaces = promptDatastore.GetNamespaces().ToHashSet(StringComparer.InvariantCultureIgnoreCase);
         var results = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
@@ -182,7 +179,7 @@ internal class Program
 
         if (buildInfo != null)
         {
-            var testToolNamespaces = GetTestToolNamespaces(buildInfo, promptDatastore, mcpServerInformation);
+            var testToolNamespaces = GetToolNamespacesFromBuildInfo(buildInfo, promptDatastore, mcpServerInformation);
             if (testToolNamespaces.Count == 0)
             {
                 Console.WriteLine("No valid namespaces found in build info. Exiting.");
