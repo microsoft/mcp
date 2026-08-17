@@ -7,9 +7,12 @@ version: "0.2"
 import:
   - ../../.vscode/cspell.json
 words:
+  - enabeld
+  - existingdb
   - hyperscale
   - missingdb
   - newdb
   - olddb
+  - rulename
   - testpool
   - testserver
