@@ -6,6 +6,7 @@ vally is the evaluation framework used to test the performance/accuracy of Azure
 
 * [vally](https://microsoft.github.io/vally/get-started/install/)
 * [Copilot SDK](https://docs.github.com/en/copilot/how-tos/copilot-sdk/setup/local-cli)
+* **Execute `copilot login` before running vally**
 
 ## Authoring an eval spec
 
@@ -36,14 +37,22 @@ stimuli:
 
 ## Running vally locally
 
-In a terminal window:
+In a terminal window, navigate to the repository root:
 
-1. Execute: `copilot login`
-2. Navigate to the repository root
-3. Execute: `./eng/scripts/Build-Local.ps1 -ServerName <<Server Name>>` where `<<Server Name>>` is a server in [servers/](https://github.com/microsoft/mcp/tree/main/servers)
-4. Execute one of the following commands depending on machine's operating system:
+1. Run `./eng/scripts/Build-Local.ps1 -ServerName <<ServerName>>` where `<<ServerName>>` is a server in [servers/](https://github.com/microsoft/mcp/tree/main/servers)
+2. Run one of the following commands depending on machine's operating system:
     * Windows: `vally eval --eval-spec ./tools/Azure.Mcp.Tools.AppConfig/tests/eval.yaml --param ENVIRONMENT=windows`
     * Linux: `vally eval --eval-spec ./tools/Azure.Mcp.Tools.AppConfig/tests/eval.yaml --param ENVIRONMENT=linux`
+
+## Running vally with e2eTestPrompts.md
+
+In a terminal window, navigate to repository root:
+
+1. Choose a value for `<<ServerName>>` that is a server in [servers/](https://github.com/microsoft/mcp/tree/main/servers)
+2. Run `./eng/scripts/Build-Local.ps1 -ServerName <<ServerName>>` 
+3. Run `dotnet run --project ./eng/tools/VallyEvaluator/src/VallyEvaluator.csproj -- --serverName <<ServerName>>`
+  * Generates evals from `./servers/<<ServerName>>/docs/e2eTestPrompts.md` into `./.work/vally`
+4. Run `./eng/scripts/Invoke-VallyEvalTests.ps1`
 
 ## Automated runs with GitHub workflow
 
