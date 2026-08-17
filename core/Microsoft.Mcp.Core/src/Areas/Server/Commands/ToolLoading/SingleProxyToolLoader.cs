@@ -116,7 +116,8 @@ public sealed class SingleProxyToolLoader(
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
-            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request));
+            // At this point the tool parameters is the single tool schema
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params?.Arguments));
 
         var args = request.Params?.Arguments;
         string? intent = null;
@@ -327,6 +328,8 @@ public sealed class SingleProxyToolLoader(
 
     private async Task<CallToolResult> CommandModeAsync(RequestContext<CallToolRequestParams> request, string intent, string tool, string command, Dictionary<string, object?> parameters, CancellationToken cancellationToken)
     {
+        // Here the parameters are now those for the tool call, instead of being the single parameters.
+        Activity.Current?.SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(parameters));
         McpClient? client;
 
         try

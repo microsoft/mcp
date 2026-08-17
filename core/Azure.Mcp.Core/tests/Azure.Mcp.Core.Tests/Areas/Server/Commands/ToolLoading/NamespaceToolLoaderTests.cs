@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,8 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -23,6 +26,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     private readonly ICommandFactory _commandFactory;
     private readonly IOptions<ServerStartOptions> _options;
     private readonly ILogger<NamespaceToolLoader> _logger;
+    private readonly Activity _activity;
 
     public NamespaceToolLoaderTests()
     {
@@ -31,6 +35,8 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         _commandFactory = CommandFactoryHelpers.CreateCommandFactory(_serviceProvider);
         _options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
         _logger = NullLogger<NamespaceToolLoader>.Instance;
+        _activity = new Activity("test-activity");
+        _activity.Start();
     }
 
     [Fact]
@@ -841,6 +847,96 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         });
     }
 
+    // Telemetry tests
+
+    [Fact]
+    public async Task NamespaceToolLoader_HasNamespaceToolParameters_WhenToolDoesNotGetCalled()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
+        var toolName = GetFirstAvailableNamespace();
+
+        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        {
+            ["intent"] = "do something",
+            ["command"] = "nonexistent-command",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        // Should fallback to learn mode or return error
+        var textContent = result.Content[0] as TextContentBlock;
+        Assert.NotNull(textContent);
+
+        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolParameters);
+        Assert.NotNull(toolParameters);
+        var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
+        Assert.NotNull(parametersList);
+        Assert.Equal(3, parametersList.Count);
+        Assert.Contains("intent", parametersList);
+        Assert.Contains("command", parametersList);
+        Assert.Contains("parameters", parametersList);
+    }
+
+    [Fact]
+    public async Task NamespaceToolLoader_HasNoToolParameters_WhenToolCallHasNoParameters()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
+
+        var arguments = new Dictionary<string, object?>
+        {
+            ["intent"] = "get storage accounts",
+            ["command"] = "storage_account_get",
+            ["parameters"] = new Dictionary<string, object?>(),
+            ["learn"] = false
+        };
+
+        var request = CreateCallToolRequest("storage", arguments);
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+
+        TestTelemetryHelpers.AssertTagDoesNotExist(_activity, TagName.ToolParameters);
+    }
+
+    [Fact]
+    public async Task NamespaceToolLoader_CollectsToolParameters_WhenToolCallHasParameters()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
+
+        var arguments = new Dictionary<string, object?>
+        {
+            ["intent"] = "get storage accounts",
+            ["command"] = "storage_account_get",
+            ["parameters"] = new Dictionary<string, object?> { ["subscription"] = "test-sub" },
+            ["learn"] = false
+        };
+
+        var request = CreateCallToolRequest("storage", arguments);
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+
+        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolParameters);
+        Assert.NotNull(toolParameters);
+        var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
+        Assert.NotNull(parametersList);
+        Assert.Single(parametersList);
+        Assert.Contains("subscription", parametersList);
+    }
+
     // Helper methods
 
     private string GetFirstAvailableNamespace()
@@ -907,6 +1003,8 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        _activity.Stop();
+        _activity.Dispose();
         if (_serviceProvider != null)
         {
             await _serviceProvider.DisposeAsync();

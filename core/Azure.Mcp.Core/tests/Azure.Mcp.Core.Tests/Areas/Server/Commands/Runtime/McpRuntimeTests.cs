@@ -13,6 +13,7 @@ using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Services.Telemetry;
+using Microsoft.Mcp.Tests.Helpers;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using NSubstitute;
@@ -48,16 +49,6 @@ public class McpRuntimeTests
                 Name = toolName,
                 Arguments = arguments ?? new Dictionary<string, JsonElement>()
             });
-
-    private static object GetAndAssertTagKeyValue(Activity activity, string tagName)
-    {
-        var matching = activity.TagObjects.SingleOrDefault(x => string.Equals(x.Key, tagName, StringComparison.OrdinalIgnoreCase));
-
-        Assert.False(matching.Equals(default(KeyValuePair<string, object?>)), $"Tag '{tagName}' was not found in activity tags.");
-        Assert.NotNull(matching.Value);
-
-        return matching.Value;
-    }
 
     [Fact]
     public void Constructor_WithValidParameters_InitializesCorrectly()
@@ -242,7 +233,7 @@ public class McpRuntimeTests
         mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>(), Arg.Any<RequestParams?>());
         Assert.Equal(ActivityStatusCode.Ok, activity.Status);
 
-        var actualToolName = GetAndAssertTagKeyValue(activity, TagName.ToolName);
+        var actualToolName = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolName);
         Assert.Equal(toolName, actualToolName);
 
         // The runtime may or may not surface telemetry tags on the Activity depending on the
@@ -336,7 +327,7 @@ public class McpRuntimeTests
         mockTelemetry.Received(1).StartActivity(ActivityName.ListToolsHandler, Arg.Any<Implementation?>(), Arg.Any<RequestParams?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
 
-        GetAndAssertTagKeyValue(activity, TagName.ExceptionType);
+        TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ExceptionType);
     }
 
     [Fact]
@@ -372,10 +363,10 @@ public class McpRuntimeTests
         mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>(), Arg.Any<RequestParams?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
 
-        var actualToolName = GetAndAssertTagKeyValue(activity, TagName.ToolName);
+        var actualToolName = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolName);
         Assert.Equal(toolName, actualToolName);
 
-        GetAndAssertTagKeyValue(activity, TagName.ExceptionType);
+        TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ExceptionType);
 
         Assert.DoesNotContain(activity.TagObjects,
             x => string.Equals(x.Key, AzureTagName.SubscriptionGuid, StringComparison.OrdinalIgnoreCase));
@@ -499,7 +490,7 @@ public class McpRuntimeTests
 
         mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>(), Arg.Any<RequestParams?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
-        GetAndAssertTagKeyValue(activity, TagName.ExceptionType);
+        TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ExceptionType);
     }
 
     [Fact]
@@ -800,7 +791,7 @@ public class McpRuntimeTests
 
         mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>(), Arg.Any<RequestParams?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
-        GetAndAssertTagKeyValue(activity, TagName.ExceptionType);
+        TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ExceptionType);
 
         // Error details are present in the CallToolResult content; assert that instead of relying
         // on telemetry tag propagation which is dependent on the telemetry implementation.

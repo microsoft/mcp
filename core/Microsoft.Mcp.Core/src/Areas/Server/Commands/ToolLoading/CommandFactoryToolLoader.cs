@@ -89,7 +89,7 @@ public sealed class CommandFactoryToolLoader(
         }
 
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
-            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request));
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params.Arguments));
 
         var toolName = request.Params.Name;
 

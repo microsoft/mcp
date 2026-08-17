@@ -3,6 +3,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Tests.Areas.Server.Helpers;
@@ -11,7 +12,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -20,8 +24,22 @@ using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
-public class ServerToolLoaderTests
+public class ServerToolLoaderTests : IDisposable
 {
+    private readonly Activity _activity;
+
+    public ServerToolLoaderTests()
+    {
+        _activity = new Activity("test-activity");
+        _activity.Start();
+    }
+
+    public void Dispose()
+    {
+        _activity.Stop();
+        _activity.Dispose();
+    }
+
     private static (ServerToolLoader toolLoader, IMcpDiscoveryStrategy mockDiscoveryStrategy) CreateToolLoader(ToolLoaderOptions? options = null)
     {
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
@@ -68,11 +86,7 @@ public class ServerToolLoaderTests
             {
                 { "intent", JsonDocument.Parse("\"search for information about implementing MCP servers\"").RootElement },
                 { "command", JsonDocument.Parse("\"microsoft_docs_search\"").RootElement },
-                { "parameters", JsonDocument.Parse("""
-                    {
-                        "question": "how to implement mcp server in azure"
-                    }
-                    """).RootElement }
+                { "parameters", JsonDocument.Parse("""{"question": "how to implement mcp server in azure"}""").RootElement }
             });
 
         // Act - Call CallToolHandler WITHOUT calling ListToolsHandler first
@@ -200,11 +214,7 @@ public class ServerToolLoaderTests
             {
                 { "intent", JsonDocument.Parse("\"search docs\"").RootElement },
                 { "command", JsonDocument.Parse("\"microsoft_docs_search\"").RootElement },
-                { "parameters", JsonDocument.Parse("""
-                    {
-                        "question": "how to deploy azure mcp server"
-                    }
-                    """).RootElement }
+                { "parameters", JsonDocument.Parse("""{"question": "how to deploy azure mcp server"}""").RootElement }
             });
 
         // Act
@@ -640,6 +650,106 @@ public class ServerToolLoaderTests
         Assert.NotNull(textContent);
         // Should not contain the write tool's response
         Assert.DoesNotContain("Created account", textContent.Text);
+    }
+
+    #endregion
+
+    #region Telemetry tests
+
+    [Fact]
+    public async Task ServerToolLoader_HasServerToolParameters_WhenToolDoesNotGetCalled()
+    {
+        // Arrange
+        var clientBuilder = new MockMcpClientBuilder();
+
+        var (toolLoader, _) = CreateToolLoaderWithMockClient(
+            new ToolLoaderOptions(ReadOnly: false), clientBuilder, "storage");
+
+        var request = CreateCallToolRequestWithCommand("storage", "account_create");
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should allow execution when read-only mode is not enabled
+        Assert.NotNull(result);
+
+        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolParameters);
+        Assert.NotNull(toolParameters);
+        var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
+        Assert.NotNull(parametersList);
+        Assert.Equal(2, parametersList.Count);
+        Assert.Contains("intent", parametersList);
+        Assert.Contains("command", parametersList);
+    }
+
+    [Fact]
+    public async Task ServerToolLoader_HasNoToolParameters_WhenToolCallHasNoParameters()
+    {
+        // Arrange
+        var writeTool = new Tool
+        {
+            Name = "account_create",
+            Description = "Create storage account",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = false }
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(writeTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Created account" }], IsError = false });
+
+        var (toolLoader, _) = CreateToolLoaderWithMockClient(
+            new ToolLoaderOptions(ReadOnly: false), clientBuilder, "storage");
+
+        var request = CreateCallToolRequestWithCommand("storage", "account_create");
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should allow execution when read-only mode is not enabled
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+        var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+        Assert.NotNull(textContent);
+        Assert.Equal("Created account", textContent.Text);
+
+        TestTelemetryHelpers.AssertTagDoesNotExist(_activity, TagName.ToolParameters);
+    }
+
+    [Fact]
+    public async Task ServerToolLoader_CollectsToolParameters_WhenToolCallHasParameters()
+    {
+        // Arrange
+        var writeTool = new Tool
+        {
+            Name = "account_create",
+            Description = "Create storage account",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {"subscription": {"type": "string", "description": "The subscription"}}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = false }
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(writeTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Created account" }], IsError = false });
+
+        var (toolLoader, _) = CreateToolLoaderWithMockClient(
+            new ToolLoaderOptions(ReadOnly: false), clientBuilder, "storage");
+
+        var request = CreateCallToolRequestWithCommand("storage", "account_create", new()
+        {
+            { "parameters", JsonDocument.Parse("""{"subscription": "test-sub"}""").RootElement }
+        });
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should allow execution when read-only mode is not enabled
+        Assert.NotNull(result);
+
+        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolParameters);
+        Assert.NotNull(toolParameters);
+        var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
+        Assert.NotNull(parametersList);
+        Assert.Single(parametersList);
+        Assert.Contains("subscription", parametersList);
     }
 
     #endregion

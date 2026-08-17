@@ -74,16 +74,31 @@ public static class McpHelper
     /// <summary>
     /// Creates a telemetry-friendly string array representation of the tool's parameter names.
     /// </summary>
-    /// <param name="request">The tool call request parameters.</param>
+    /// <param name="parameters">The tool call parameters.</param>
     /// <returns>A string array representing the parameter names, or null if there wasn't parameters.</returns>
-    public static string? CreateToolParametersTelemetry(RequestContext<CallToolRequestParams> request)
+    public static string? CreateToolParametersTelemetry(IDictionary<string, JsonElement>? parameters)
     {
-        if (request?.Params?.Arguments == null || request.Params.Arguments.Count == 0)
+        if (parameters == null || parameters.Count == 0)
         {
             return null;
         }
 
-        return JsonSerializer.Serialize(request.Params.Arguments.Keys.ToList(), ModelsJsonContext.Default.ListString);
+        return JsonSerializer.Serialize(parameters.Keys.ToList(), ModelsJsonContext.Default.ListString);
+    }
+
+    /// <summary>
+    /// Creates a telemetry-friendly string array representation of the tool's parameter names.
+    /// </summary>
+    /// <param name="parameters">The tool call parameters.</param>
+    /// <returns>A string array representing the parameter names, or null if there wasn't parameters.</returns>
+    public static string? CreateToolParametersTelemetry(IDictionary<string, object?>? parameters)
+    {
+        if (parameters == null || parameters.Count == 0)
+        {
+            return null;
+        }
+
+        return JsonSerializer.Serialize(parameters.Keys.ToList(), ModelsJsonContext.Default.ListString);
     }
 
     /// <summary>
