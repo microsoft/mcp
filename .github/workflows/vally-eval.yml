@@ -103,7 +103,7 @@ jobs:
           ./eng/scripts/Invoke-VallyEvalTests.ps1 -BuildInfoPath $buildInfo -WorkDirectory $workingDirectory -EvalsDirectory $evalsDirectory -OutputPath $outputPath -NumberOfRuns $numberOfRuns -IsDebug:$isDebug
         shell: pwsh
         env:
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN || github.token }}
 
       - name: Upload vally results
         if: ${{ always() }}
