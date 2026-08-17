@@ -338,6 +338,17 @@ azmcp advisor recommendation list --subscription <subscription> \
                                   [--resource <resource>] \
                                   [--search <search>]
 
+# Update the customer-provided state of an Advisor recommendation identified by its stable ID, also called
+# recommendation ID. Set the state to New, Postponed, Dismissed, or Completed. Postponed requires a future
+# UTC date and time; Dismissed requires a dismissal reason; New reactivates a postponed or dismissed recommendation.
+# Returns the updated recommendation.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor recommendation patch --subscription <subscription> \
+                                   --recommendation-id <recommendation-id> \
+                                   --recommendation-status <New|Postponed|Dismissed|Completed> \
+                                   [--postponed-until-date-time <utc-date-time>] \
+                                   [--recommendation-dismiss-reason <ExcessiveCostInvestmentRequired|ImplementationStepsAreUnclear|IncompatibleWithTheCurrentConfiguration|RiskIsAcceptable|TooComplexOrImpracticalToImplement|AnAlternativeSolutionIsAlreadyInPlace|Other>]
+
 # Summarize Advisor recommendations grouped by a chosen field (recommendation-type, category, impact, or resource-type)
 # --group-by is optional and defaults to 'category' when omitted
 # Only active recommendations (status 'New') are aggregated; dismissed and postponed ones are excluded

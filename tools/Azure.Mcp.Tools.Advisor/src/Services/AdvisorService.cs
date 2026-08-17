@@ -1,9 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
+using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Models;
+using Azure.Mcp.Tools.Advisor.Services.Models;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
@@ -14,6 +19,12 @@ namespace Azure.Mcp.Tools.Advisor.Services;
 public class AdvisorService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IAdvisorService
 {
+    private const string RecommendationPatchApiVersion = "2026-03-01-preview";
+    private const int DefaultMaxRetries = 3;
+    private const int MaxAllowedRetries = 10;
+    private const double DefaultRetryDelaySeconds = 0.8;
+    private const double MinRetryDelaySeconds = 0.1;
+    private const double MaxRetryDelaySeconds = 60;
     private const string RetirementDateProperty =
         "properties.sourceProperties.serviceRetirement.retirementDate";
     private const string TrackingIdsProperty =
@@ -62,6 +73,219 @@ public class AdvisorService(IAzureService azureService)
             tenant: tenant,
             cancellationToken: cancellationToken);
     }
+
+    public async Task<Recommendation> PatchRecommendationAsync(
+        string subscription,
+        string recommendationId,
+        RecommendationStatus recommendationStatus,
+        DateTimeOffset? postponedUntilDateTime = null,
+        RecommendationDismissReason? recommendationDismissReason = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(recommendationId), recommendationId));
+        ValidateRecommendationStatePatch(
+            recommendationStatus,
+            postponedUntilDateTime,
+            recommendationDismissReason);
+
+        var subscriptionResource = await AzureService.GetSubscription(
+            subscription,
+            tenant,
+            retryPolicy,
+            cancellationToken);
+        var subscriptionId = subscriptionResource.Id.SubscriptionId
+            ?? throw new InvalidOperationException("The resolved Azure subscription does not have a subscription ID.");
+        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint;
+        var accessToken = await GetArmAccessTokenAsync(tenant, cancellationToken);
+
+        var relativePath =
+            $"/subscriptions/{Uri.EscapeDataString(subscriptionId)}/providers/Microsoft.Advisor/recommendations/" +
+            $"{Uri.EscapeDataString(recommendationId.Trim())}?api-version={RecommendationPatchApiVersion}";
+        var requestUri = new Uri(managementEndpoint, relativePath);
+        var properties = new RecommendationStatePatchProperties(
+            recommendationStatus,
+            recommendationStatus == RecommendationStatus.Postponed ? postponedUntilDateTime : null,
+            recommendationStatus == RecommendationStatus.Dismissed ? recommendationDismissReason : null);
+
+        using var client = AzureService.GetClient();
+        using var response = await SendRecommendationPatchAsync(
+            client,
+            requestUri,
+            accessToken.Token,
+            properties,
+            retryPolicy,
+            cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw await CreateRecommendationPatchExceptionAsync(response, cancellationToken);
+        }
+
+        using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        using var document = await JsonDocument.ParseAsync(
+            responseStream,
+            cancellationToken: cancellationToken);
+
+        return ConvertToAdvisorRecommendationModel(document.RootElement);
+    }
+
+    private static async Task<HttpResponseMessage> SendRecommendationPatchAsync(
+        HttpClient client,
+        Uri requestUri,
+        string accessToken,
+        RecommendationStatePatchProperties properties,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        var maxRetries = retryPolicy is null
+            ? 0
+            : Math.Clamp(retryPolicy.MaxRetries ?? DefaultMaxRetries, 0, MaxAllowedRetries);
+        var retryDelay = TimeSpan.FromSeconds(Math.Clamp(
+            retryPolicy?.DelaySeconds ?? DefaultRetryDelaySeconds,
+            MinRetryDelaySeconds,
+            MaxRetryDelaySeconds));
+        var maxRetryDelay = TimeSpan.FromSeconds(Math.Clamp(
+            retryPolicy?.MaxDelaySeconds ?? MaxRetryDelaySeconds,
+            MinRetryDelaySeconds,
+            MaxRetryDelaySeconds));
+
+        for (var attempt = 0; ; attempt++)
+        {
+            using var request = CreateRecommendationPatchRequest(
+                requestUri,
+                accessToken,
+                properties);
+            using var timeoutSource = CreateNetworkTimeoutSource(
+                retryPolicy?.NetworkTimeoutSeconds,
+                cancellationToken);
+            var requestCancellationToken = timeoutSource?.Token ?? cancellationToken;
+
+            HttpResponseMessage response;
+            try
+            {
+                response = await client.SendAsync(
+                    request,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    requestCancellationToken);
+            }
+            catch (HttpRequestException) when (attempt < maxRetries)
+            {
+                await Task.Delay(
+                    CalculateRetryDelay(retryPolicy?.Mode, retryDelay, maxRetryDelay, attempt),
+                    cancellationToken);
+                continue;
+            }
+            catch (OperationCanceledException) when (
+                !cancellationToken.IsCancellationRequested &&
+                attempt < maxRetries)
+            {
+                await Task.Delay(
+                    CalculateRetryDelay(retryPolicy?.Mode, retryDelay, maxRetryDelay, attempt),
+                    cancellationToken);
+                continue;
+            }
+
+            if (attempt >= maxRetries || !IsRetryableStatusCode(response.StatusCode))
+            {
+                return response;
+            }
+
+            var responseDelay = GetRetryAfterDelay(response, maxRetryDelay);
+            response.Dispose();
+            await Task.Delay(
+                responseDelay ?? CalculateRetryDelay(
+                    retryPolicy?.Mode,
+                    retryDelay,
+                    maxRetryDelay,
+                    attempt),
+                cancellationToken);
+        }
+    }
+
+    private static HttpRequestMessage CreateRecommendationPatchRequest(
+        Uri requestUri,
+        string accessToken,
+        RecommendationStatePatchProperties properties)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Patch, requestUri)
+        {
+            Content = JsonContent.Create(
+                new RecommendationStatePatchRequest(properties),
+                AdvisorJsonContext.Default.RecommendationStatePatchRequest)
+        };
+        request.Headers.Authorization = new("Bearer", accessToken);
+        request.Headers.Accept.Add(new("application/json"));
+        return request;
+    }
+
+    private static CancellationTokenSource? CreateNetworkTimeoutSource(
+        double? networkTimeoutSeconds,
+        CancellationToken cancellationToken)
+    {
+        if (networkTimeoutSeconds is null)
+        {
+            return null;
+        }
+
+        var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutSource.CancelAfter(TimeSpan.FromSeconds(Math.Clamp(
+            networkTimeoutSeconds.Value,
+            MinRetryDelaySeconds,
+            300)));
+        return timeoutSource;
+    }
+
+    private static TimeSpan CalculateRetryDelay(
+        RetryMode? mode,
+        TimeSpan retryDelay,
+        TimeSpan maxRetryDelay,
+        int attempt)
+    {
+        if (mode != RetryMode.Exponential)
+        {
+            return retryDelay;
+        }
+
+        return TimeSpan.FromMilliseconds(Math.Min(
+            retryDelay.TotalMilliseconds * Math.Pow(2, attempt),
+            maxRetryDelay.TotalMilliseconds));
+    }
+
+    private static TimeSpan? GetRetryAfterDelay(
+        HttpResponseMessage response,
+        TimeSpan maxRetryDelay)
+    {
+        var retryAfter = response.Headers.RetryAfter;
+        if (retryAfter?.Delta is { } delta)
+        {
+            return delta > maxRetryDelay ? maxRetryDelay : delta;
+        }
+
+        if (retryAfter?.Date is not { } date)
+        {
+            return null;
+        }
+
+        var dateDelay = date - DateTimeOffset.UtcNow;
+        if (dateDelay <= TimeSpan.Zero)
+        {
+            return TimeSpan.Zero;
+        }
+
+        return dateDelay > maxRetryDelay ? maxRetryDelay : dateDelay;
+    }
+
+    private static bool IsRetryableStatusCode(HttpStatusCode statusCode) =>
+        statusCode is HttpStatusCode.RequestTimeout
+            or HttpStatusCode.TooManyRequests
+            or HttpStatusCode.InternalServerError
+            or HttpStatusCode.BadGateway
+            or HttpStatusCode.ServiceUnavailable
+            or HttpStatusCode.GatewayTimeout;
 
     public async Task<ResourceQueryResults<RecommendationMetadata>> ListRecommendationMetadataAsync(
         string language,
@@ -463,14 +687,101 @@ public class AdvisorService(IAzureService azureService)
         var advisorRecommendation = Models.RecommendationData.FromJson(item)
             ?? throw new InvalidOperationException("Failed to parse Advisor recommendation data");
 
-        var resourceId = advisorRecommendation.Properties?.ResourceMetadata?.ResourceId ?? "Unknown";
+        var properties = advisorRecommendation.Properties;
+        var resourceId = properties?.ResourceMetadata?.ResourceId ?? "Unknown";
 
         return new(
             ResourceId: resourceId,
-            RecommendationText: advisorRecommendation.Properties?.ShortDescription?.Problem ?? "Unknown",
-            Category: advisorRecommendation.Properties?.Category ?? "Unknown",
-            Impact: advisorRecommendation.Properties?.Impact,
-            ImpactedResourceType: ParseImpactedResourceType(resourceId));
+            RecommendationText: properties?.ShortDescription?.Problem ?? "Unknown",
+            Category: properties?.Category ?? "Unknown",
+            Impact: properties?.Impact,
+            ImpactedResourceType: properties?.ImpactedField ?? ParseImpactedResourceType(resourceId),
+            RecommendationId: advisorRecommendation.ResourceId,
+            StableId: advisorRecommendation.ResourceName,
+            Type: advisorRecommendation.ResourceType,
+            Solution: properties?.ShortDescription?.Solution,
+            SubCategory: properties?.Control,
+            ImpactedResource: properties?.ImpactedValue,
+            RecommendationStatus: properties?.RecommendationStatus,
+            RecommendationDismissReason: properties?.RecommendationDismissReason,
+            PostponedUntilDateTime: properties?.PostponedUntilDateTime,
+            LastRefreshed: properties?.LastRefreshed,
+            LastUpdated: properties?.LastUpdated,
+            CreatedTime: properties?.CreatedTime,
+            RecommendationTypeId: properties?.RecommendationTypeId,
+            CompletionType: properties?.CompletionType,
+            Risk: properties?.Risk,
+            Description: properties?.Description,
+            Label: properties?.Label,
+            LearnMoreLink: properties?.LearnMoreLink,
+            PotentialBenefits: properties?.PotentialBenefits,
+            SourceSystem: properties?.SourceSystem,
+            SuppressionId: properties?.SuppressionId);
+    }
+
+    private static void ValidateRecommendationStatePatch(
+        RecommendationStatus recommendationStatus,
+        DateTimeOffset? postponedUntilDateTime,
+        RecommendationDismissReason? recommendationDismissReason)
+    {
+        if (recommendationStatus == RecommendationStatus.Postponed)
+        {
+            if (postponedUntilDateTime is null)
+            {
+                throw new ArgumentException(
+                    "PostponedUntilDateTime is required for Postponed state.",
+                    nameof(postponedUntilDateTime));
+            }
+
+            if (postponedUntilDateTime <= DateTimeOffset.UtcNow)
+            {
+                throw new ArgumentException(
+                    "PostponedUntilDateTime must be in the future.",
+                    nameof(postponedUntilDateTime));
+            }
+        }
+
+        if (recommendationStatus == RecommendationStatus.Dismissed &&
+            recommendationDismissReason is null)
+        {
+            throw new ArgumentException(
+                "RecommendationDismissReason is required for Dismissed state.",
+                nameof(recommendationDismissReason));
+        }
+    }
+
+    private static async Task<RequestFailedException> CreateRecommendationPatchExceptionAsync(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken)
+    {
+        string? errorCode = null;
+
+        try
+        {
+            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            using var document = await JsonDocument.ParseAsync(
+                stream,
+                cancellationToken: cancellationToken);
+            if (document.RootElement.TryGetProperty("error", out var error) &&
+                error.TryGetProperty("code", out var code))
+            {
+                errorCode = code.GetString();
+            }
+        }
+        catch (JsonException)
+        {
+            // The status code remains authoritative when the service returns a non-JSON error body.
+        }
+
+        var message = errorCode is null
+            ? $"Advisor recommendation update failed with status code {(int)response.StatusCode}."
+            : $"Advisor recommendation update failed with error code '{errorCode}'.";
+
+        return new RequestFailedException(
+            (int)response.StatusCode,
+            message,
+            errorCode,
+            null);
     }
 
     internal static string? ParseImpactedResourceType(string? resourceId)
