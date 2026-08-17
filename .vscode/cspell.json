@@ -500,6 +500,7 @@
     "timechart",
     "timespan",
     "toolsets",
+    "traceparent",
     "tracestate",
     "triggerchangedetection",
     "typespec",
