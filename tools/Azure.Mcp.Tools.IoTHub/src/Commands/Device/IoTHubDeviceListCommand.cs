@@ -19,7 +19,8 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
     Title = "List IoT Hub Devices",
     Description = """
         List the devices registered in an IoT Hub device registry (the full device roster). Returns device identity metadata without authentication keys.
-        Choose this tool for a plain 'list/show the registered devices' or 'the device registry' request. If the request is instead phrased as a query or filters devices by a condition (the word 'query', 'find devices where ...', a raw SQL statement, or discovering which twin fields are queryable), use the iothub query run command instead.
+        Choose this tool for a plain 'list devices', 'show all registered devices', or 'get/retrieve the device registry' request for a hub in a subscription (optionally scoped to a resource group). This returns the actual device entries - not the hub resource itself (use iothub hub get) and not aggregate device counts (use iothub device stats).
+        If the request is instead phrased as a query or filters devices by a condition (the word 'query', 'find devices where ...', a raw SQL statement, or discovering which twin fields are queryable), use the iothub query run command instead.
         Use --max-count to limit results (default 100, maximum 100). Values greater than 100 are rejected with an error; if more devices exist, truncated=true is set.
         Hub names/IDs are case-sensitive and must match exactly.
         """,
