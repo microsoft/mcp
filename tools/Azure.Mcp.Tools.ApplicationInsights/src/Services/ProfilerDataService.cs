@@ -149,10 +149,11 @@ public class ProfilerDataService(ILogger<ProfilerDataService> logger, IAzureServ
     /// </summary>
     /// <param name="path">The path</param>
     /// <param name="queries">Optional queries to append to the path.</param>
+    /// <param name="apiVersion">The API version to use.</param>
     /// <param name="clientRequestId">Optional client request ID.</param>
     /// <param name="httpContent">The content of the incoming request.</param>
     /// <param name="additionalHeaders">Additional headers to be added to the request</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     internal async ValueTask<HttpResponseMessage> PostAsync(string path, IDictionary<string, string>? queries, string apiVersion, string? clientRequestId, HttpContent? httpContent, IDictionary<string, IEnumerable<string>>? additionalHeaders, CancellationToken cancellationToken)
     {
         using HttpRequestMessage request = await CreateRequestAsync(HttpMethod.Post, path, queries, apiVersion, clientRequestId, httpContent, additionalHeaders, cancellationToken);

@@ -52,6 +52,7 @@ using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using Microsoft.Mcp.Core.Services.Time;
 using NSubstitute;
+using ExtensionsOptions = Microsoft.Extensions.Options;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server;
 
@@ -105,7 +106,7 @@ internal class CommandFactoryHelpers
 
         var services = serviceProvider ?? CreateDefaultServiceProvider();
         var logger = services.GetRequiredService<ILogger<CommandFactory>>();
-        var configurationOptions = Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
+        var configurationOptions = ExtensionsOptions.Options.Create(new McpServerConfiguration
         {
             Name = "Test Server",
             ShortName = "test",

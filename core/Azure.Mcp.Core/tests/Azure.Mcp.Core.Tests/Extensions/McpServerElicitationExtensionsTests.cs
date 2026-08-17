@@ -72,7 +72,7 @@ public class McpServerElicitationExtensionsTests
         JsonObject metadata = [new(McpHelper.SecretHintMetaKey, secretValue)];
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", metadata);
+        var result = server.ShouldTriggerElicitation(metadata);
 
         // Assert
         Assert.Equal(expected, result);
@@ -85,7 +85,7 @@ public class McpServerElicitationExtensionsTests
         var server = CreateMockServer();
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", null);
+        var result = server.ShouldTriggerElicitation(null);
 
         // Assert
         Assert.False(result);
@@ -102,7 +102,7 @@ public class McpServerElicitationExtensionsTests
         var metadata = new Dictionary<string, object> { { "SecretHint", true } };
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", metadata);
+        var result = server.ShouldTriggerElicitation(metadata);
 
         // Assert
         Assert.False(result);
@@ -118,7 +118,7 @@ public class McpServerElicitationExtensionsTests
         JsonObject metadata = [new(McpHelper.SecretHintMetaKey, true)];
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", metadata);
+        var result = server.ShouldTriggerElicitation(metadata);
 
         // Assert
         Assert.False(result);
@@ -138,7 +138,7 @@ public class McpServerElicitationExtensionsTests
         };
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", metadata);
+        var result = server.ShouldTriggerElicitation(metadata);
 
         // Assert
         Assert.False(result);
@@ -155,7 +155,7 @@ public class McpServerElicitationExtensionsTests
         JsonObject metadata = [new(McpHelper.SecretHintMetaKey, "not_a_boolean")];
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", metadata);
+        var result = server.ShouldTriggerElicitation(metadata);
 
         // Assert
         Assert.False(result);
@@ -337,7 +337,7 @@ public class McpServerElicitationExtensionsTests
         };
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", metadata);
+        var result = server.ShouldTriggerElicitation(metadata);
 
         // Assert
         Assert.Equal(expected, result);
@@ -357,7 +357,7 @@ public class McpServerElicitationExtensionsTests
         };
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", metadata);
+        var result = server.ShouldTriggerElicitation(metadata);
 
         // Assert
         Assert.False(result);
@@ -377,7 +377,7 @@ public class McpServerElicitationExtensionsTests
         };
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", metadata);
+        var result = server.ShouldTriggerElicitation(metadata);
 
         // Assert
         Assert.False(result);
@@ -398,7 +398,7 @@ public class McpServerElicitationExtensionsTests
         ];
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", metadata);
+        var result = server.ShouldTriggerElicitation(metadata);
 
         // Assert
         Assert.True(result);
@@ -419,7 +419,7 @@ public class McpServerElicitationExtensionsTests
         ];
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", metadata);
+        var result = server.ShouldTriggerElicitation(metadata);
 
         // Assert
         Assert.True(result);
@@ -440,7 +440,7 @@ public class McpServerElicitationExtensionsTests
         ];
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", metadata);
+        var result = server.ShouldTriggerElicitation(metadata);
 
         // Assert
         Assert.False(result);
@@ -459,7 +459,7 @@ public class McpServerElicitationExtensionsTests
         };
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", metadata);
+        var result = server.ShouldTriggerElicitation(metadata);
 
         // Assert
         Assert.False(result);
@@ -509,7 +509,7 @@ public class McpServerElicitationExtensionsTests
         JsonObject metadata = [new(McpHelper.SecretHintMetaKey, secretValue)];
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", metadata);
+        var result = server.ShouldTriggerElicitation(metadata);
 
         // Assert
         Assert.Equal(expected, result);
@@ -535,7 +535,7 @@ public class McpServerElicitationExtensionsTests
         };
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", metadata);
+        var result = server.ShouldTriggerElicitation(metadata);
 
         // Assert
         Assert.False(result);
@@ -583,7 +583,7 @@ public class McpServerElicitationExtensionsTests
         JsonObject metadata = [new(McpHelper.SecretHintMetaKey, true)];
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", metadata);
+        var result = server.ShouldTriggerElicitation(metadata);
 
         // Assert
         Assert.True(result);
@@ -606,7 +606,7 @@ public class McpServerElicitationExtensionsTests
         JsonObject metadata = [new(McpHelper.SecretHintMetaKey, false)];
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", metadata);
+        var result = server.ShouldTriggerElicitation(metadata);
 
         // Assert
         Assert.False(result);
@@ -632,7 +632,7 @@ public class McpServerElicitationExtensionsTests
         };
 
         // Act
-        var result = server.ShouldTriggerElicitation("tool1", metadata);
+        var result = server.ShouldTriggerElicitation(metadata);
 
         // Assert
         Assert.False(result);

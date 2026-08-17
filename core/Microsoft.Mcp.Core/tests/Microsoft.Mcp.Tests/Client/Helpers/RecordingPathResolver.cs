@@ -50,7 +50,7 @@ public sealed class RecordingPathResolver : IRecordingPathResolver
     }
 
     /// <summary>
-    /// Builds the session directory path: <relative path to test project>/SessionRecords/<TestClassName or variant>
+    /// Builds the session directory path: &lt;relative path to test project&gt;/SessionRecords/&lt;TestClassName or variant&gt;
     /// Example: tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.Tests/SessionRecords/RecordedKeyVaultCommandTests
     /// </summary>
     public string GetSessionDirectory(Type testType, string? variantSuffix = null)

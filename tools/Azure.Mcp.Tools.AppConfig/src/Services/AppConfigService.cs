@@ -13,8 +13,6 @@ using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.AppConfig.Services;
 
-using ETag = Microsoft.Mcp.Core.Models.ETag;
-
 public sealed class AppConfigService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IAppConfigService
 {

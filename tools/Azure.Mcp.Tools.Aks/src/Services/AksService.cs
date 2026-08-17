@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Aks.Commands;
 using Azure.Mcp.Tools.Aks.Models;
 using Azure.ResourceManager.ContainerService;
-using Azure.ResourceManager.ContainerService.Models;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Caching;
 
@@ -381,53 +380,6 @@ public sealed class AksService(IAzureService azureService, ICacheService cacheSe
             },
             PodSubnetId = data.PodSubnetId,
             VnetSubnetId = data.VnetSubnetId
-        };
-    }
-
-    private static NodePool ConvertToNodePoolModel(ManagedClusterAgentPoolProfile profile)
-    {
-        return new()
-        {
-            Name = profile.Name,
-            Count = profile.Count,
-            VmSize = profile.VmSize?.ToString(),
-            OsDiskSizeGB = profile.OSDiskSizeInGB,
-            OsDiskType = profile.OSDiskType?.ToString(),
-            KubeletDiskType = profile.KubeletDiskType?.ToString(),
-            MaxPods = profile.MaxPods,
-            Type = profile.AgentPoolType?.ToString(),
-            MaxCount = profile.MaxCount,
-            MinCount = profile.MinCount,
-            EnableAutoScaling = profile.EnableAutoScaling,
-            ScaleDownMode = profile.ScaleDownMode?.ToString(),
-            ProvisioningState = profile.ProvisioningState?.ToString(),
-            PowerState = profile.PowerStateCode.HasValue ? new() { Code = profile.PowerStateCode.Value.ToString() } : null,
-            Mode = profile.Mode?.ToString(),
-            OrchestratorVersion = profile.OrchestratorVersion,
-            CurrentOrchestratorVersion = profile.CurrentOrchestratorVersion,
-            EnableNodePublicIP = profile.EnableNodePublicIP,
-            ScaleSetPriority = profile.ScaleSetPriority?.ToString(),
-            ScaleSetEvictionPolicy = profile.ScaleSetEvictionPolicy?.ToString(),
-            NodeLabels = profile.NodeLabels?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-            NodeTaints = profile.NodeTaints?.ToList(),
-            OsType = profile.OSType?.ToString(),
-            OsSKU = profile.OSSku?.ToString(),
-            NodeImageVersion = profile.NodeImageVersion,
-            Tags = profile.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-            SpotMaxPrice = profile.SpotMaxPrice,
-            WorkloadRuntime = profile.WorkloadRuntime?.ToString(),
-            EnableEncryptionAtHost = profile.EnableEncryptionAtHost,
-            EnableUltraSSD = profile.EnableUltraSsd,
-            EnableFIPS = profile.EnableFips,
-            // Profiles don't expose GPU/Security sub-objects in this API shape
-            NetworkProfile = profile.NetworkProfile is null ? null : new()
-            {
-                AllowedHostPorts = profile.NetworkProfile.AllowedHostPorts?.Select(p => new PortRange { StartPort = p.PortStart, EndPort = p.PortEnd }).ToList(),
-                ApplicationSecurityGroups = profile.NetworkProfile.ApplicationSecurityGroups?.Select(rid => rid.ToString()).ToList(),
-                NodePublicIPTags = profile.NetworkProfile.NodePublicIPTags?.Select(t => new IPTag { IpTagType = t.IPTagType, Tag = t.Tag }).ToList()
-            },
-            PodSubnetId = profile.PodSubnetId?.ToString(),
-            VnetSubnetId = profile.VnetSubnetId?.ToString()
         };
     }
 }

@@ -424,7 +424,6 @@ public sealed class StorageService(IAzureService azureService)
 
     private async Task<TableServiceClient> CreateTableServiceClient(
         string account,
-        string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -449,7 +448,6 @@ public sealed class StorageService(IAzureService azureService)
         // First attempt with requested auth method
         var tableServiceClient = await CreateTableServiceClient(
             account,
-            subscription,
             tenant,
             retryPolicy,
             cancellationToken);
@@ -488,6 +486,7 @@ public sealed class StorageService(IAzureService azureService)
     {
         account = account.ToLowerInvariant();
         ValidateStorageAccountName(account);
+
         return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.blob.core.windows.net",
@@ -501,6 +500,7 @@ public sealed class StorageService(IAzureService azureService)
     {
         account = account.ToLowerInvariant();
         ValidateStorageAccountName(account);
+
         return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.table.core.windows.net",

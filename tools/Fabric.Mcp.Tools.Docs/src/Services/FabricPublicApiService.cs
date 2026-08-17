@@ -21,7 +21,6 @@ public class FabricPublicApiService(
     private const string APISpecDefinitionsDirName = "definitions/";
     private const string APISpecExamplesDirName = "examples/";
 
-    private const string FormattedItemDefinitionPath = "item-definitions/{0}-definition.md";
     private const string BaseResourcePath = PublicAPISpecRepo + "/contents/";
     private const string FormattedSpecPath = BaseResourcePath + "{0}/" + APISpecFileName;
 

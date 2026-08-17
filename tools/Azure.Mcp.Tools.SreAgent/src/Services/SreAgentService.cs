@@ -108,7 +108,7 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
     /// <param name="method">HTTP method.</param>
     /// <param name="jsonBody">Optional JSON body to send.</param>
     /// <param name="tenant">Optional tenant to use when acquiring the credential.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The response body as a string (caller deserializes into the appropriate model).</returns>
     internal async Task<string> CallDataPlaneAsync(
         string endpoint,
@@ -181,7 +181,7 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
     /// <param name="method">HTTP method.</param>
     /// <param name="jsonBody">Optional JSON request body.</param>
     /// <param name="tenant">Optional tenant to use when acquiring the credential.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>Response body as a string. Empty string for 204 No Content responses.</returns>
     internal async Task<string> CallArmAsync(
         string path,

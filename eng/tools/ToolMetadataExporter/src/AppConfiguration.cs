@@ -6,7 +6,7 @@ namespace ToolMetadataExporter;
 public class AppConfiguration
 {
     /// <summary>
-    /// URL of the Kusto ingestion endpoint. Endpoint is used for ingressing data to Kusto cluster.
+    /// URL of the Kusto ingestion endpoint. Endpoint is used to ingest data to Kusto cluster.
     /// </summary>
     public string? IngestionEndpoint { get; set; }
 
@@ -27,7 +27,7 @@ public class AppConfiguration
 
     /// <summary>
     /// Folder path where Kusto query files are stored. By default, it is "Resources/queries".
-    /// Used to load file named <see cref="ToolMetadataExporter.Services.AzureMcpKustoDatastore.ExistingToolsKqlFileName"/>
+    /// Used to load file named <see cref="Services.AzureMcpKustoDatastore.ExistingToolsKqlFileName"/>
     /// which fetches current MCP tools.
     /// </summary>
     public string? QueriesFolder { get; set; } = "Resources/queries";
@@ -39,7 +39,7 @@ public class AppConfiguration
 
     /// <summary>
     /// true if the application should run in dry-run mode. In dry-run mode, no events are published to Kusto
-    /// Changes are written locally to <see cref="AppConfiguration.WorkDirectory"/>.
+    /// Changes are written locally to <see cref="WorkDirectory"/>.
     /// false to publish events to Kusto.
     /// </summary>
     public bool IsDryRun { get; set; }

@@ -15,7 +15,7 @@ public interface IPolicyService
     /// <param name="scope">Optional scope to filter policy assignments. If not provided, lists all assignments in the subscription.</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations.</param>
     /// <param name="retryPolicy">Optional retry policy for the operation.</param>
-    /// <param name="cancellationToken">Optional cancellation token for the operation.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A list of policy assignments.</returns>
     Task<List<PolicyAssignment>> ListPolicyAssignmentsAsync(
         string subscription,
@@ -30,7 +30,7 @@ public interface IPolicyService
     /// <param name="policyDefinitionId">The resource ID of the policy definition.</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations.</param>
     /// <param name="retryPolicy">Optional retry policy for the operation.</param>
-    /// <param name="cancellationToken">Optional cancellation token for the operation.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The policy definition or null if not found.</returns>
     Task<PolicyDefinition?> GetPolicyDefinitionAsync(
         string policyDefinitionId,

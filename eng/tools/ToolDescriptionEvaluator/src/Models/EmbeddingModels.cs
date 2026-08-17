@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace ToolSelection.Models;
+namespace ToolDescriptionEvaluator.Models;
 
 // Azure OpenAI Embedding API models
 public class EmbeddingRequest

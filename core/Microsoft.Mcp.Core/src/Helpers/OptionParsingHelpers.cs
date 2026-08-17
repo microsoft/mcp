@@ -10,6 +10,8 @@ public static class OptionParsingHelpers
     /// If duplicate keys are found, the last value wins.
     /// </summary>
     /// <param name="value">Value string containing key-value pairs</param>
+    /// <param name="keyValueSeparator">The character that separates keys from values in the input string.</param>
+    /// <param name="pairSeparator">The character that separates key-value pairs in the input string.</param>
     /// <returns>Key Value pairs as dictionary</returns>
     public static Dictionary<string, string> ParseKeyValuePairStringToDictionary(string value, char keyValueSeparator = '=', char pairSeparator = ',')
     {
@@ -20,7 +22,12 @@ public static class OptionParsingHelpers
     /// Parses key value pair string options to a dictionary, assuming a format of "Key=Value,Key=Value" (default separators '=' and ',')
     /// If duplicate keys are found, the last value wins.
     /// </summary>
-    /// <param name="header">Value string containing key-value pairs</param>
+    /// <param name="value">Value string containing key-value pairs</param>
+    /// <param name="keyComparer">The string comparer to use for comparing keys in the resulting dictionary.</param>
+    /// <param name="keyValueSeparator">The character that separates keys from values in the input string.</param>
+    /// <param name="pairSeparator">The character that separates key-value pairs in the input string.</param>
+    /// <exception cref="ArgumentException">Thrown when the input value string is null, empty, or consists only of whitespace.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when the keyComparer is null.</exception>
     /// <returns>Key Value pairs as dictionary</returns>
     public static Dictionary<string, string> ParseKeyValuePairStringToDictionary(string value, StringComparer keyComparer, char keyValueSeparator = '=', char pairSeparator = ',')
     {

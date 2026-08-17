@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace ToolSelection.Models;
+namespace ToolDescriptionEvaluator.Models;
 
 [JsonSourceGenerationOptions(WriteIndented = true, PropertyNameCaseInsensitive = true)]
 [JsonSerializable(typeof(ListToolsResult))]

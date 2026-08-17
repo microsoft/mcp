@@ -47,6 +47,7 @@ public class CommandContext
     /// <summary>
     /// Creates a new command context
     /// </summary>
+    /// <param name="activity">Optional telemetry activity for the command execution</param>
     public CommandContext(Activity? activity = default)
     {
         Activity = activity;

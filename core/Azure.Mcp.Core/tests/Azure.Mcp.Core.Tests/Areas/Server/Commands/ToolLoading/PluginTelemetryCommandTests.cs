@@ -15,6 +15,7 @@ using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
+using ExtensionsOptions = Microsoft.Extensions.Options;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
@@ -42,7 +43,7 @@ public class PluginTelemetryCommandTests
         // Build a real CommandFactory with ServerSetup to get actual registered commands
         var services = new ServiceCollection();
         services.AddSingleton<IAreaSetup>(new ServerSetup());
-        services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
+        services.AddSingleton(ExtensionsOptions.Options.Create(new McpServerConfiguration
         {
             RootCommandGroupName = "azmcp",
             Name = "Azure.Mcp.Server.Test",

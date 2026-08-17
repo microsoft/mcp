@@ -13,6 +13,7 @@ namespace Azure.Mcp.Core.Tests.RecordingFramework;
 /// </summary>
 /// <param name="output"></param>
 /// <param name="fixture"></param>
+/// <param name="liveServerFixture"></param>
 internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {

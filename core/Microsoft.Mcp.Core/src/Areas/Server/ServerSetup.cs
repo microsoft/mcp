@@ -32,8 +32,8 @@ public sealed class ServerSetup : IAreaSetup
     /// <summary>
     /// Registers command groups and commands related to MCP Server operations.
     /// </summary>
-    /// <param name="rootGroup">The root command group to add server commands to.</param>
-    /// <param name="loggerFactory">The logger factory for creating loggers.</param>
+    /// <param name="serviceProvider">The service provider used to resolve command instances.</param>
+    /// <returns>A CommandGroup containing all registered commands for the Server area.</returns>
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create MCP Server command group

@@ -22,7 +22,7 @@ public interface IRealtimeTranscriptionRecognizer
     /// <param name="format">Output format (simple or detailed)</param>
     /// <param name="profanity">Profanity filtering option (masked, removed, or raw)</param>
     /// <param name="retryPolicy">Optional retry policy for resilience</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>Continuous recognition result containing full text and individual segments</returns>
     Task<RealtimeRecognitionContinuousResult> RecognizeAsync(
         string endpoint,

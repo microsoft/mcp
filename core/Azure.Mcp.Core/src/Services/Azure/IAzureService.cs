@@ -98,7 +98,7 @@ public interface IAzureService
     /// Thrown when a tenant with the specified name is not found.
     /// </exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the tenant has a <see langword="null"> TenantId.
+    /// Thrown when the tenant has a <see langword="null"/> TenantId.
     /// </exception>
     Task<string> GetTenantId(string tenantIdOrName, CancellationToken cancellationToken);
 
@@ -115,7 +115,7 @@ public interface IAzureService
     /// Thrown when a tenant with the specified name is not found.
     /// </exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the tenant has a <see langword="null"> TenantId.
+    /// Thrown when the tenant has a <see langword="null"/> TenantId.
     /// </exception>
     Task<string> GetTenantIdByName(string tenantName, CancellationToken cancellationToken);
 

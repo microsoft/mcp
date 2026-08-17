@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.VectorData;
 
-namespace ToolSelection.VectorDb;
+namespace ToolDescriptionEvaluator.VectorDb;
 
 /// <summary>
 /// An in-memory <see cref="VectorStoreCollection{TKey, TRecord}"/> that keeps records sorted by key
@@ -174,7 +174,9 @@ public sealed class InMemoryVectorStoreCollection : VectorStoreCollection<string
     public override IAsyncEnumerable<Entry> GetAsync(Expression<Func<Entry, bool>> filter, int top, FilteredRecordRetrievalOptions<Entry>? options = null, CancellationToken cancellationToken = default)
         => throw new NotSupportedException("Filtered record retrieval is not supported by the in-memory vector store.");
 
+#pragma warning disable IDE0391 // Make method synchronous
     public override async IAsyncEnumerable<VectorSearchResult<Entry>> SearchAsync<TInput>(TInput searchValue, int top, VectorSearchOptions<Entry>? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+#pragma warning restore IDE0391 // Make method synchronous
     {
         ArgumentNullException.ThrowIfNull(searchValue);
 

@@ -130,7 +130,9 @@ public class OrchestratorTool(WorkspaceAnalyzer analyzer)
         });
     }
 
+#pragma warning disable IDE0060 // Remove unused parameter
     public string Next(string sessionId, string completionNote)
+#pragma warning restore IDE0060 // Remove unused parameter
     {
         CleanupExpiredSessions();
 

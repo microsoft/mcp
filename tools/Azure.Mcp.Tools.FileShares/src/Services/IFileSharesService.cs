@@ -159,6 +159,7 @@ public interface IFileSharesService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
     /// Get file share limits for a subscription and location.
     /// </summary>
     Task<FileShareLimitsResult> GetLimitsAsync(

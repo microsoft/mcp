@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -15,12 +14,13 @@ using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using ModelContextProtocol.Server;
 using NSubstitute;
 using Xunit;
+using ExtensionsOptions = Microsoft.Extensions.Options;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands;
 
 public class ServiceCollectionExtensionsTests
 {
-    private IServiceCollection SetupBaseServices()
+    private static IServiceCollection SetupBaseServices()
     {
         var services = CommandFactoryHelpers.SetupCommonServices();
         services.AddSingleton(sp => CommandFactoryHelpers.CreateCommandFactory(sp));
@@ -37,7 +37,7 @@ public class ServiceCollectionExtensionsTests
             Description = "Test description"
         };
         services.AddSingleton(serverConfiguration);
-        services.AddSingleton(Microsoft.Extensions.Options.Options.Create(serverConfiguration));
+        services.AddSingleton(ExtensionsOptions.Options.Create(serverConfiguration));
 
         return services;
     }
@@ -191,7 +191,7 @@ public class ServiceCollectionExtensionsTests
 
         // Assert
         var provider = services.BuildServiceProvider();
-        var mcpServerOptions = provider.GetService<IOptions<McpServerOptions>>()?.Value;
+        var mcpServerOptions = provider.GetService<ExtensionsOptions.IOptions<McpServerOptions>>()?.Value;
 
         // Verify server options are configured
         Assert.NotNull(mcpServerOptions);
@@ -219,7 +219,7 @@ public class ServiceCollectionExtensionsTests
         // Assert
         var provider = services.BuildServiceProvider();
         var registeredOptions = provider.GetService<ServerStartOptions>();
-        var wrappedOptions = provider.GetService<IOptions<ServerStartOptions>>()?.Value;
+        var wrappedOptions = provider.GetService<ExtensionsOptions.IOptions<ServerStartOptions>>()?.Value;
 
         // Verify both registrations point to the same instance
         Assert.NotNull(registeredOptions);
@@ -251,7 +251,7 @@ public class ServiceCollectionExtensionsTests
         Assert.True(registeredOptions.ReadOnly);
 
         // Verify the option is also available as IOptions<ServiceStartOptions>
-        var optionsMonitor = provider.GetService<IOptions<ServerStartOptions>>();
+        var optionsMonitor = provider.GetService<ExtensionsOptions.IOptions<ServerStartOptions>>();
         Assert.NotNull(optionsMonitor);
         Assert.True(optionsMonitor.Value.ReadOnly);
     }
@@ -399,7 +399,7 @@ public class ServiceCollectionExtensionsTests
 
         // Assert
         var provider = services.BuildServiceProvider();
-        var mcpServerOptions = provider.GetService<IOptions<McpServerOptions>>()?.Value;
+        var mcpServerOptions = provider.GetService<ExtensionsOptions.IOptions<McpServerOptions>>()?.Value;
 
         // Verify server instructions are configured
         Assert.NotNull(mcpServerOptions);
@@ -426,7 +426,7 @@ public class ServiceCollectionExtensionsTests
 
         // Assert
         var provider = services.BuildServiceProvider();
-        var mcpServerOptions = provider.GetService<IOptions<McpServerOptions>>()?.Value;
+        var mcpServerOptions = provider.GetService<ExtensionsOptions.IOptions<McpServerOptions>>()?.Value;
 
         // Verify server instructions are configured
         Assert.NotNull(mcpServerOptions);

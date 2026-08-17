@@ -17,7 +17,7 @@ public interface ISqlService
     /// <param name="resourceGroup">The resource group name</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy options</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The SQL database information</returns>
     /// <exception cref="KeyNotFoundException">Thrown when the database is not found</exception>
     Task<SqlDatabase> GetDatabaseAsync(
@@ -44,7 +44,7 @@ public interface ISqlService
     /// <param name="zoneRedundant">Optional zone redundancy setting</param>
     /// <param name="readScale">Optional read scale setting</param>
     /// <param name="retryPolicy">Optional retry policy options</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The created SQL database information</returns>
     Task<SqlDatabase> CreateDatabaseAsync(
         string serverName,
@@ -78,7 +78,7 @@ public interface ISqlService
     /// <param name="zoneRedundant">Optional zone redundancy setting</param>
     /// <param name="readScale">Optional read scale setting</param>
     /// <param name="retryPolicy">Optional retry policy options</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The updated SQL database information</returns>
     Task<SqlDatabase> UpdateDatabaseAsync(
         string serverName,
@@ -105,7 +105,7 @@ public interface ISqlService
     /// <param name="resourceGroup">The resource group name</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy options</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The renamed SQL database information</returns>
     Task<SqlDatabase> RenameDatabaseAsync(
         string serverName,
@@ -123,7 +123,7 @@ public interface ISqlService
     /// <param name="resourceGroup">The name of the resource group</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy options</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A list of SQL databases</returns>
     Task<List<SqlDatabase>> ListDatabasesAsync(
         string serverName,
@@ -139,7 +139,7 @@ public interface ISqlService
     /// <param name="resourceGroup">The name of the resource group</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy options</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A list of SQL server Entra administrators</returns>
     Task<List<SqlServerEntraAdministrator>> GetEntraAdministratorsAsync(
         string serverName,
@@ -155,7 +155,7 @@ public interface ISqlService
     /// <param name="resourceGroup">The name of the resource group</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy options</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A list of SQL elastic pools</returns>
     Task<List<SqlElasticPool>> GetElasticPoolsAsync(
         string serverName,
@@ -171,7 +171,7 @@ public interface ISqlService
     /// <param name="resourceGroup">The name of the resource group</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy options</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A list of SQL server firewall rules</returns>
     Task<List<SqlServerFirewallRule>> ListFirewallRulesAsync(
         string serverName,
@@ -190,7 +190,7 @@ public interface ISqlService
     /// <param name="startIpAddress">The start IP address of the firewall rule range</param>
     /// <param name="endIpAddress">The end IP address of the firewall rule range</param>
     /// <param name="retryPolicy">Optional retry policy options</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The created SQL server firewall rule</returns>
     Task<SqlServerFirewallRule> CreateFirewallRuleAsync(
         string serverName,
@@ -210,7 +210,7 @@ public interface ISqlService
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="firewallRuleName">The name of the firewall rule to delete</param>
     /// <param name="retryPolicy">Optional retry policy options</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>True if the firewall rule was successfully deleted</returns>
     Task<bool> DeleteFirewallRuleAsync(
         string serverName,
@@ -228,7 +228,7 @@ public interface ISqlService
     /// <param name="resourceGroup">The resource group name</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy options</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>True if the database was successfully deleted</returns>
     Task<bool> DeleteDatabaseAsync(
         string serverName,
@@ -250,7 +250,7 @@ public interface ISqlService
     /// <param name="version">The version of SQL Server to create (optional, defaults to latest)</param>
     /// <param name="publicNetworkAccess">Whether public network access is enabled (optional)</param>
     /// <param name="retryPolicy">Optional retry policy options</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The created SQL server information</returns>
     Task<SqlServer> CreateServerAsync(
         string serverName,
@@ -271,7 +271,7 @@ public interface ISqlService
     /// <param name="resourceGroup">The name of the resource group</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy options</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The SQL server information</returns>
     /// <exception cref="KeyNotFoundException">Thrown when the server is not found</exception>
     Task<SqlServer> GetServerAsync(
@@ -287,7 +287,7 @@ public interface ISqlService
     /// <param name="resourceGroup">The name of the resource group</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy options</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>A list of SQL servers</returns>
     Task<List<SqlServer>> ListServersAsync(
         string resourceGroup,
@@ -302,7 +302,7 @@ public interface ISqlService
     /// <param name="resourceGroup">The name of the resource group</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy options</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>True if the server was successfully deleted</returns>
     Task<bool> DeleteServerAsync(
         string serverName,

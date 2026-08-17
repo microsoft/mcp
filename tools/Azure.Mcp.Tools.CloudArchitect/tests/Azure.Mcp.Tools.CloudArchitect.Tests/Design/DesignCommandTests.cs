@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Reflection;
 using Azure.Mcp.Tools.CloudArchitect.Commands.Design;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Tests.Client;

@@ -19,7 +19,7 @@ public interface IKeyVaultService
     /// <param name="subscriptionId">The subscription ID or name</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
     /// <param name="retryPolicy">Optional retry policy for the operation</param>
-    /// <param name="cancellationToken">A cancellation token</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The created certificate</returns>
     Task<KeyVaultCertificateWithPolicy> CreateCertificate(
         string vaultName,
@@ -38,6 +38,7 @@ public interface IKeyVaultService
     /// <param name="subscriptionId">The subscription ID or name</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
     /// <param name="retryPolicy">Optional retry policy for the operation</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The created key</returns>
     Task<KeyVaultKey> CreateKey(
         string vaultName,
@@ -57,6 +58,7 @@ public interface IKeyVaultService
     /// <param name="subscriptionId">The subscription ID or name</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
     /// <param name="retryPolicy">Optional retry policy for the operation</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The created secret</returns>
     Task<KeyVaultSecret> CreateSecret(
         string vaultName,
@@ -75,6 +77,7 @@ public interface IKeyVaultService
     /// <param name="subscriptionId">The subscription ID or name</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
     /// <param name="retryPolicy">Optional retry policy for the operation</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The certificate</returns>
     Task<KeyVaultCertificateWithPolicy> GetCertificate(
         string vaultName,
@@ -92,6 +95,7 @@ public interface IKeyVaultService
     /// <param name="subscriptionId">The subscription ID or name</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
     /// <param name="retryPolicy">Optional retry policy for the operation</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The key</returns>
     Task<KeyVaultKey> GetKey(
         string vaultName,
@@ -109,6 +113,7 @@ public interface IKeyVaultService
     /// <param name="subscriptionId">The subscription ID or name</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
     /// <param name="retryPolicy">Optional retry policy for the operation</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The secret value</returns>
     Task<KeyVaultSecret> GetSecret(
         string vaultName,
@@ -125,6 +130,7 @@ public interface IKeyVaultService
     /// <param name="subscriptionId">Subscription ID containing the Key Vault.</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations.</param>
     /// <param name="retryPolicy">Optional retry policy for the operation.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>List of certificate names in the vault.</returns>
     Task<List<string>> ListCertificates(
         string vaultName,
@@ -137,9 +143,11 @@ public interface IKeyVaultService
     /// List all keys in a Key Vault.
     /// </summary>
     /// <param name="vaultName">Name of the Key Vault.</param>
+    /// <param name="includeManagedKeys">Whether to include managed keys in the results.</param>
     /// <param name="subscriptionId">Subscription ID containing the Key Vault.</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations.</param>
     /// <param name="retryPolicy">Optional retry policy for the operation.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>List of key names in the vault.</returns>
     Task<List<string>> ListKeys(
         string vaultName,
@@ -156,6 +164,7 @@ public interface IKeyVaultService
     /// <param name="subscriptionId">Subscription ID containing the Key Vault.</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations.</param>
     /// <param name="retryPolicy">Optional retry policy for the operation.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>List of secret names in the vault.</returns>
     Task<List<string>> ListSecrets(
         string vaultName,
@@ -174,6 +183,7 @@ public interface IKeyVaultService
     /// <param name="subscriptionId">The subscription ID or name.</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations.</param>
     /// <param name="retryPolicy">Optional retry policy for the operation.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The imported certificate.</returns>
     Task<KeyVaultCertificateWithPolicy> ImportCertificate(
         string vaultName,
@@ -192,6 +202,7 @@ public interface IKeyVaultService
     /// <param name="subscription">The subscription ID or name.</param>
     /// <param name="tenant">Optional tenant ID for cross-tenant operations.</param>
     /// <param name="retryPolicy">Optional retry policy for the operation.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>Structured vault settings.</returns>
     Task<GetSettingsResult> GetVaultSettings(
         string vaultName,

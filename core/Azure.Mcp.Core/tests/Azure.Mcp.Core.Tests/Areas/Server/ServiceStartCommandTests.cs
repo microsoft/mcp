@@ -4,6 +4,7 @@
 using System.Diagnostics;
 using System.Net;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,6 +15,7 @@ using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
+using ExtensionsOptions = Microsoft.Extensions.Options;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server;
 
@@ -799,11 +801,11 @@ public class ServiceStartCommandTests
 
             // Assert
             var serviceProvider = services.BuildServiceProvider();
-            var corsService = serviceProvider.GetService<Microsoft.AspNetCore.Cors.Infrastructure.ICorsService>();
+            var corsService = serviceProvider.GetService<ICorsService>();
             Assert.NotNull(corsService);
 
             // Verify policy was registered
-            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var corsOptions = serviceProvider.GetRequiredService<ExtensionsOptions.IOptions<CorsOptions>>();
             Assert.NotNull(corsOptions.Value);
         }
         finally
@@ -845,7 +847,7 @@ public class ServiceStartCommandTests
             ServerStartCommand.ConfigureCors(services, environment, serverOptions);
 
             var serviceProvider = services.BuildServiceProvider();
-            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var corsOptions = serviceProvider.GetRequiredService<ExtensionsOptions.IOptions<CorsOptions>>();
             var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
 
             Assert.NotNull(policy);
@@ -892,7 +894,7 @@ public class ServiceStartCommandTests
             ServerStartCommand.ConfigureCors(services, environment, serverOptions);
 
             var serviceProvider = services.BuildServiceProvider();
-            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var corsOptions = serviceProvider.GetRequiredService<ExtensionsOptions.IOptions<CorsOptions>>();
             var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
 
             Assert.NotNull(policy);
@@ -932,7 +934,7 @@ public class ServiceStartCommandTests
             ServerStartCommand.ConfigureCors(services, environment, serverOptions);
 
             var serviceProvider = services.BuildServiceProvider();
-            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var corsOptions = serviceProvider.GetRequiredService<ExtensionsOptions.IOptions<CorsOptions>>();
             var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
 
             Assert.NotNull(policy);
@@ -972,7 +974,7 @@ public class ServiceStartCommandTests
             ServerStartCommand.ConfigureCors(services, environment, serverOptions);
 
             var serviceProvider = services.BuildServiceProvider();
-            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var corsOptions = serviceProvider.GetRequiredService<ExtensionsOptions.IOptions<CorsOptions>>();
             var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
 
             Assert.NotNull(policy);
@@ -1012,7 +1014,7 @@ public class ServiceStartCommandTests
             ServerStartCommand.ConfigureCors(services, environment, serverOptions);
 
             var serviceProvider = services.BuildServiceProvider();
-            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var corsOptions = serviceProvider.GetRequiredService<ExtensionsOptions.IOptions<CorsOptions>>();
             var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
 
             Assert.NotNull(policy);
@@ -1051,7 +1053,7 @@ public class ServiceStartCommandTests
             ServerStartCommand.ConfigureCors(services, environment, serverOptions);
 
             var serviceProvider = services.BuildServiceProvider();
-            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var corsOptions = serviceProvider.GetRequiredService<ExtensionsOptions.IOptions<CorsOptions>>();
             var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
 
             Assert.NotNull(policy);

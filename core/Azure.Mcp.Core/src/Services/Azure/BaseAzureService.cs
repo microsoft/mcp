@@ -4,7 +4,6 @@
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Helpers;
 using Azure.ResourceManager;
-using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Services.Azure;
@@ -16,7 +15,8 @@ public abstract class BaseAzureService(IAzureService azureService)
     static BaseAzureService()
     {
 #if DEBUG
-        if (EnvironmentHelpers.IsPlaybackTesting())
+        // Use fully qualified namespace within preprocessor directives to avoid unused using directive warnings in release builds.
+        if (Microsoft.Mcp.Core.Helpers.EnvironmentHelpers.IsPlaybackTesting())
         {
             s_defaultPollInterval = TimeSpan.Zero;
         }
@@ -88,8 +88,8 @@ public abstract class BaseAzureService(IAzureService azureService)
     /// Gets an ARM access token for the given tenant using the ARM default scope.
     /// </summary>
     /// <param name="tenant">Optional tenant ID or name to authenticate against.</param>
-    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
-    /// <returns>An <see cref="AccessToken"/> representing the ARM access token.</returns>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
+    /// <returns>An <see cref="AccessToken"/> for the ARM default scope.</returns>
     protected async Task<AccessToken> GetArmAccessTokenAsync(string? tenant, CancellationToken cancellationToken)
     {
         var credential = await GetCredential(tenant, cancellationToken);
@@ -117,6 +117,8 @@ public abstract class BaseAzureService(IAzureService azureService)
     /// <param name="tenantIdOrName">Optional Azure tenant ID or name.</param>
     /// <param name="retryPolicy">Optional retry policy configuration.</param>
     /// <param name="armClientOptions">Optional ARM client options.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
+    /// <returns>An initialized <see cref="ArmClient"/> instance.</returns>
     protected async Task<ArmClient> CreateArmClientAsync(
         string? tenantIdOrName = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -137,7 +139,7 @@ public abstract class BaseAzureService(IAzureService azureService)
     /// </summary>
     /// <typeparam name="T">The return type.</typeparam>
     /// <param name="operation">The long-running operation.</param>
-    /// <param name="cancellationToken">The cancellation token that can cancel the request.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The response once the long-running operation completes.</returns>
     protected static async Task WaitForLroCompletionAsync<T>(Operation<T> operation, CancellationToken cancellationToken = default) where T : notnull
     {
@@ -157,7 +159,7 @@ public abstract class BaseAzureService(IAzureService azureService)
     /// Waits for the completion of a long-running operation, periodically polling the operation status until it completes.
     /// </summary>
     /// <param name="operation">The long-running operation.</param>
-    /// <param name="cancellationToken">The cancellation token that can cancel the request.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The response once the long-running operation completes.</returns>
     protected static async Task WaitForLroCompletionAsync(Operation operation, CancellationToken cancellationToken = default)
     {

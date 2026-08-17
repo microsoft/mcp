@@ -302,7 +302,7 @@ public class AppLensService(IAzureService azureService)
     /// </summary>
     /// <param name="question">The question or query to pose to AppLens.</param>
     /// <param name="session">The <see cref="AppLensSession"/> representing the overall conversation.</param>
-    /// <param name="cancellationToken">A cancellation token to cancel the request.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     public async IAsyncEnumerable<ChatMessageResponseBody> AskAppLensAsync(
         AppLensSession session,
         string question,
@@ -431,6 +431,7 @@ public class AppLensService(IAzureService azureService)
     /// </summary>
     /// <param name="session">The AppLens session.</param>
     /// <param name="question">The diagnostic question.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A task containing diagnostic insights and solutions.</returns>
     private async Task<DiagnosticResult> CollectInsightsAsync(AppLensSession session, string question, CancellationToken cancellationToken)
     {

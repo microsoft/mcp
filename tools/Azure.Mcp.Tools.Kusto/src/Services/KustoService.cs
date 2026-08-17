@@ -13,7 +13,6 @@ using Microsoft.Mcp.Core.Validation;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
 
-
 public sealed class KustoService(IAzureService azureService, ICacheService cacheService)
     : BaseAzureResourceService(azureService), IKustoService
 {

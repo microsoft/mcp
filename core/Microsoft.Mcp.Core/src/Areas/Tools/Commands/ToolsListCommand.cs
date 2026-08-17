@@ -35,7 +35,7 @@ public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<T
     private static readonly HashSet<string> s_ignored = new(StringComparer.OrdinalIgnoreCase) { "server", "tools" };
     private static readonly HashSet<string> s_surfaced = new(StringComparer.OrdinalIgnoreCase) { "extension" };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ToolsListOptions options, CancellationToken cancellationToken)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ToolsListOptions options, CancellationToken cancellationToken)
     {
         try
         {
@@ -79,15 +79,12 @@ public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<T
                 }
 
                 // If --name-only is also specified, return only the names
-                if (options.NameOnly)
-                {
-                    var namespaceNames = namespaceCommands.Select(nc => nc.Command).ToList();
-                    context.Response.Results = ResponseResult.Create(new(null, namespaceNames), ModelsJsonContext.Default.ToolsListResult);
-                    return context.Response;
-                }
+                var result = options.NameOnly
+                    ? new ToolsListResult(Commands: null, Names: namespaceCommands.Select(nc => nc.Command).ToList())
+                    : new ToolsListResult(Commands: namespaceCommands, Names: null);
 
-                context.Response.Results = ResponseResult.Create(new(namespaceCommands, null), ModelsJsonContext.Default.ToolsListResult);
-                return context.Response;
+                context.Response.Results = ResponseResult.Create(result, ModelsJsonContext.Default.ToolsListResult);
+                return Task.FromResult(context.Response);
             }
 
             // If the --name-only flag is set (without namespace mode), return only tool names
@@ -104,7 +101,7 @@ public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<T
                 var toolNames = allToolNames.OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToList();
 
                 context.Response.Results = ResponseResult.Create(new(null, toolNames), ModelsJsonContext.Default.ToolsListResult);
-                return context.Response;
+                return Task.FromResult(context.Response);
             }
 
             // Get all tools with full details
@@ -119,14 +116,14 @@ public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<T
             var tools = allTools.ToList();
 
             context.Response.Results = ResponseResult.Create(new(tools, null), ModelsJsonContext.Default.ToolsListResult);
-            return context.Response;
+            return Task.FromResult(context.Response);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "An exception occurred while processing tool listing.");
             HandleException(context, ex);
 
-            return context.Response;
+            return Task.FromResult(context.Response);
         }
     }
 

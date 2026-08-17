@@ -6,7 +6,6 @@ namespace Microsoft.Mcp.Core.Services.Caching;
 /// <summary>
 /// An implementation of <see cref="ICacheService"/> for multi-user web API scenarios.
 /// </summary>
-/// <param name="memoryCache">A memory cache.</param>
 /// <remarks>
 /// <para>
 /// Do not instantiate directly. Use <see cref="CachingServiceCollectionExtensions.AddHttpServiceCacheService"/>.

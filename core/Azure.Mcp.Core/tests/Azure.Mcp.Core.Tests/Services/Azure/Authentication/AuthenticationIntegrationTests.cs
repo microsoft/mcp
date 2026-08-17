@@ -44,11 +44,12 @@ public class AuthenticationIntegrationTests : IAsyncLifetime
         _azureService = _serviceProvider.GetRequiredService<IAzureService>();
     }
 
-    public async ValueTask InitializeAsync()
+    public ValueTask InitializeAsync()
     {
         Assert.SkipWhen(!TestExtensions.IsLiveTestMode(), "Skipping test in non-live mode");
         Assert.SkipWhen(TestExtensions.IsRunningInNonInteractiveEnvironment(), TestExtensions.RunningInNonInteractiveEnvironment);
         Assert.SkipWhen(RuntimeInformation.IsOSPlatform(OSPlatform.OSX), "Identity broker is not supported on MacOS");
+        return ValueTask.CompletedTask;
     }
 
     public async ValueTask DisposeAsync() => await _serviceProvider.DisposeAsync();

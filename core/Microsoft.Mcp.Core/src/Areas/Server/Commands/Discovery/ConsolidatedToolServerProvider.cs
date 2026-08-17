@@ -62,7 +62,7 @@ public sealed class ConsolidatedToolServerProvider(CommandGroup commandGroup) : 
 
     /// <summary>
     /// Builds the command-line arguments for the MCP server process.
-    /// Pattern: server start --mode all (--tool <qualifiedCommand>)+ [--read-only]
+    /// Pattern: server start --mode all (--tool &lt;qualifiedCommand&gt;)+ [--read-only]
     /// </summary>
     internal string[] BuildArguments()
     {
