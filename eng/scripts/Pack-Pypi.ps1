@@ -112,6 +112,25 @@ function Get-KeywordsString($keywords) {
     return ($keywords | ForEach-Object { "`"$_`"" }) -join ', '
 }
 
+function ConvertTo-PythonPackageVersion {
+    param ([string] $Version)
+
+    $parsedVersion = [AzureEngSemanticVersion]::ParseVersionString($Version)
+    if (!$parsedVersion) {
+        return $null
+    }
+
+    $parsedVersion.SetupPythonConventions()
+    if ($parsedVersion.PrereleaseLabel -eq 'beta') {
+        $parsedVersion.PrereleaseLabel = 'b'
+    }
+    elseif ($parsedVersion.PrereleaseLabel -eq 'alpha') {
+        $parsedVersion.PrereleaseLabel = 'a'
+    }
+
+    return $parsedVersion.ToString()
+}
+
 function Get-PythonCommand {
     # Try python3 first (common on Linux/macOS), but verify it works
     # On Windows, "python3" may be a Store alias that doesn't work
@@ -163,7 +182,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         return
     }
 
-    $pythonVersion = [AzureEngSemanticVersion]::ParsePythonVersionString($server.version)
+    $pythonVersion = ConvertTo-PythonPackageVersion $server.version
     if (!$pythonVersion) {
         Write-Error "Server version '$($server.version)' is not a valid semantic version for PyPI packaging."
         return
