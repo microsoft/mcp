@@ -45,7 +45,7 @@ public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger, ICliG
             var cliType = options.CliType?.ToLowerInvariant();
 
             // Only log the cli type when we know for sure it doesn't have private data.
-            context.Activity?.AddTag("cliType", cliType);
+            context.AddTelemetryTag("cliType", cliType);
 
             if (cliType == Constants.AzureCliType)
             {

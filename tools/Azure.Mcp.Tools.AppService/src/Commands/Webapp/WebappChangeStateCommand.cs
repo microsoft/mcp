@@ -86,7 +86,7 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
     {
         try
         {
-            context.Activity?.AddTag("subscription", options.Subscription);
+            context.AddTelemetryTag("subscription", options.Subscription);
 
             var stateChange = await appServiceService.ChangeWebAppStateAsync(
                 options.Subscription!,

@@ -49,7 +49,7 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger, IAppServi
     {
         try
         {
-            context.Activity?.AddTag("subscription", options.Subscription);
+            context.AddTelemetryTag("subscription", options.Subscription);
 
             var webapps = await _appServiceService.GetWebAppsAsync(
                 options.Subscription!,

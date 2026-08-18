@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureBackup.Models;
 
@@ -22,17 +22,17 @@ public static class AzureBackupTelemetryTags
     public const string SubscriptionGuid = "AzSubscriptionGuid";
 
     /// <summary>
-    /// Adds the AzSubscriptionGuid tag to the activity. Matches McpRuntime.CallToolHandler
+    /// Adds the AzSubscriptionGuid tag to the context. Matches McpRuntime.CallToolHandler
     /// behavior by emitting any non-null subscription value (including empty string).
     /// </summary>
-    public static void AddSubscriptionTag(Activity? activity, string? subscription)
+    public static void AddSubscriptionTag(CommandContext context, string? subscription)
     {
-        if (activity is null || subscription is null)
+        if (subscription is null)
         {
             return;
         }
 
-        activity.SetTag(SubscriptionGuid, subscription);
+        context.SetTelemetryTag(SubscriptionGuid, subscription);
     }
 
     /// <summary>
@@ -50,19 +50,19 @@ public static class AzureBackupTelemetryTags
         string.IsNullOrWhiteSpace(workloadType) ? "unspecified" : workloadType.ToLowerInvariant();
 
     /// <summary>
-    /// Adds a normalized vault type tag to the activity.
+    /// Adds a normalized vault type tag to the context.
     /// </summary>
-    public static void AddVaultTags(Activity? activity, string? vaultType)
+    public static void AddVaultTags(CommandContext context, string? vaultType)
     {
-        activity?.AddTag(VaultType, NormalizeVaultType(vaultType));
+        context.AddTelemetryTag(VaultType, NormalizeVaultType(vaultType));
     }
 
     /// <summary>
-    /// Adds normalized vault type and workload type tags to the activity.
+    /// Adds normalized vault type and workload type tags to the context.
     /// </summary>
-    public static void AddVaultAndWorkloadTags(Activity? activity, string? vaultType, string? workloadType)
+    public static void AddVaultAndWorkloadTags(CommandContext context, string? vaultType, string? workloadType)
     {
-        activity?.AddTag(VaultType, NormalizeVaultType(vaultType));
-        activity?.AddTag(WorkloadType, NormalizeWorkloadType(workloadType));
+        context.AddTelemetryTag(VaultType, NormalizeVaultType(vaultType))
+            .AddTelemetryTag(WorkloadType, NormalizeWorkloadType(workloadType));
     }
 }

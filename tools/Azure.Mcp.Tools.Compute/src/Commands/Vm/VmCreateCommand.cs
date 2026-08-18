@@ -77,7 +77,7 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger, IComputeSer
     {
         try
         {
-            context.Activity?.AddTag("subscription", options.Subscription);
+            context.AddTelemetryTag("subscription", options.Subscription);
 
             var result = await _computeService.CreateVmAsync(
                 options.VmName,

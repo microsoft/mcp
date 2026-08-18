@@ -65,7 +65,7 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, ICo
     {
         try
         {
-            context.Activity?.AddTag("subscription", options.Subscription);
+            context.AddTelemetryTag("subscription", options.Subscription);
 
             var result = await _computeService.ChangeVmPowerStateAsync(
                 options.VmName,

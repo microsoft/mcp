@@ -53,7 +53,7 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
 
             context.Response.Results = ResponseResult.Create([recommendationApplyRules], AdvisorJsonContext.Default.ListString);
 
-            context.Activity?.AddTag("RecommendationRules_Resource", options.Resource);
+            context.AddTelemetryTag("RecommendationRules_Resource", options.Resource);
         }
         catch (Exception ex)
         {

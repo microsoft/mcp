@@ -43,9 +43,8 @@ public sealed class CheckCommand(ILogger<CheckCommand> logger, IQuotaService quo
     {
         try
         {
-            context.Activity?
-                .AddTag(QuotaTelemetryTags.Region, options.Region)
-                .AddTag(QuotaTelemetryTags.ResourceTypes, options.ResourceTypes);
+            context.AddTelemetryTag(QuotaTelemetryTags.Region, options.Region)
+                .AddTelemetryTag(QuotaTelemetryTags.ResourceTypes, options.ResourceTypes);
 
             var resourceTypes = options.ResourceTypes.Split(',')
                 .Select(rt => rt.Trim())

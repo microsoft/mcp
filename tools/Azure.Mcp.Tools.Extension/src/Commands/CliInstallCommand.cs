@@ -45,7 +45,7 @@ public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger, ICliIns
             var cliType = options.CliType.ToLowerInvariant();
 
             // Only log the cli type when we know for sure it doesn't have private data.
-            context.Activity?.AddTag("cliType", cliType);
+            context.AddTelemetryTag("cliType", cliType);
 
             using HttpResponseMessage responseMessage = await _cliInstallService.GetCliInstallInstructions(cliType, cancellationToken);
             responseMessage.EnsureSuccessStatusCode();

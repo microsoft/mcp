@@ -32,13 +32,12 @@ public sealed class GetCommand(ILogger<GetCommand> logger) : BaseCommand<GetOpti
         try
         {
             var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(options.ProjectName));
-            context.Activity?.AddTag(DeployTelemetryTags.ProjectName, Convert.ToHexStringLower(bytes));
-            context.Activity?
-                    .AddTag(DeployTelemetryTags.ComputeHostResources, options.TargetAppService)
-                    .AddTag(DeployTelemetryTags.DeploymentTool, options.ProvisioningTool)
-                    .AddTag(DeployTelemetryTags.IacType, options.IacOptions ?? string.Empty)
-                    .AddTag(DeployTelemetryTags.DeployOption, options.DeployOption ?? string.Empty)
-                    .AddTag(DeployTelemetryTags.SourceType, options.SourceType ?? string.Empty);
+            context.AddTelemetryTag(DeployTelemetryTags.ProjectName, Convert.ToHexStringLower(bytes))
+                .AddTelemetryTag(DeployTelemetryTags.ComputeHostResources, options.TargetAppService)
+                .AddTelemetryTag(DeployTelemetryTags.DeploymentTool, options.ProvisioningTool)
+                .AddTelemetryTag(DeployTelemetryTags.IacType, options.IacOptions ?? string.Empty)
+                .AddTelemetryTag(DeployTelemetryTags.DeployOption, options.DeployOption ?? string.Empty)
+                .AddTelemetryTag(DeployTelemetryTags.SourceType, options.SourceType ?? string.Empty);
 
             var planTemplate = DeploymentPlanTemplateUtil.GetPlanTemplate(
                 options.ProjectName,

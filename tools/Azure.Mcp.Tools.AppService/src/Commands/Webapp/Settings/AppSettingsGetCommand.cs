@@ -35,7 +35,7 @@ public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger,
     {
         try
         {
-            context.Activity?.AddTag("subscription", options.Subscription);
+            context.AddTelemetryTag("subscription", options.Subscription);
 
             var appSettings = await _appServiceService.GetAppSettingsAsync(
                 options.Subscription!,

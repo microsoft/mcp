@@ -40,7 +40,7 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger, IComput
     {
         try
         {
-            context.Activity?.AddTag("subscription", options.Subscription);
+            context.AddTelemetryTag("subscription", options.Subscription);
 
             var deleted = await _computeService.DeleteVmssAsync(
                 options.VmssName,

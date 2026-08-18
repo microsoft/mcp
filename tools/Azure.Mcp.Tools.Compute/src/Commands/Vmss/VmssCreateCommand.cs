@@ -79,7 +79,7 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger, IComput
     {
         try
         {
-            context.Activity?.AddTag("subscription", options.Subscription);
+            context.AddTelemetryTag("subscription", options.Subscription);
 
             var result = await _computeService.CreateVmssAsync(
                 options.VmssName,

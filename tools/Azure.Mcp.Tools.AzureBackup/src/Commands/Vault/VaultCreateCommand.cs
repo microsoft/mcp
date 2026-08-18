@@ -58,8 +58,8 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VaultCreateOptions options, CancellationToken cancellationToken)
     {
-        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
-        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+        AzureBackupTelemetryTags.AddSubscriptionTag(context, options.Subscription);
+        AzureBackupTelemetryTags.AddVaultTags(context, options.VaultType);
 
         try
         {
