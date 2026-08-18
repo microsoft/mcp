@@ -59,7 +59,8 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
             cliArgs.Add(Path.Combine(logDir, "copilot-logs"));
         }
 
-        var client = new CopilotClient(new() {
+        var client = new CopilotClient(new()
+        {
             WorkingDirectory = workspace,
             Connection = RuntimeConnection.ForStdio(args: cliArgs)
         });
