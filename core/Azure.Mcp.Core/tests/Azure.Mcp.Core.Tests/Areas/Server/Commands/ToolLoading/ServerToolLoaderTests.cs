@@ -24,22 +24,8 @@ using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
-public class ServerToolLoaderTests : IDisposable
+public class ServerToolLoaderTests
 {
-    private readonly Activity _activity;
-
-    public ServerToolLoaderTests()
-    {
-        _activity = new Activity("test-activity");
-        _activity.Start();
-    }
-
-    public void Dispose()
-    {
-        _activity.Stop();
-        _activity.Dispose();
-    }
-
     private static (ServerToolLoader toolLoader, IMcpDiscoveryStrategy mockDiscoveryStrategy) CreateToolLoader(ToolLoaderOptions? options = null)
     {
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
@@ -662,6 +648,9 @@ public class ServerToolLoaderTests : IDisposable
         // Arrange
         var clientBuilder = new MockMcpClientBuilder();
 
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
         var (toolLoader, _) = CreateToolLoaderWithMockClient(
             new ToolLoaderOptions(ReadOnly: false), clientBuilder, "storage");
 
@@ -673,7 +662,7 @@ public class ServerToolLoaderTests : IDisposable
         // Assert - Should allow execution when read-only mode is not enabled
         Assert.NotNull(result);
 
-        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolParameters);
+        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolParameters);
         Assert.NotNull(toolParameters);
         var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
         Assert.NotNull(parametersList);
@@ -697,6 +686,9 @@ public class ServerToolLoaderTests : IDisposable
         var clientBuilder = new MockMcpClientBuilder()
             .AddTool(writeTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Created account" }], IsError = false });
 
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
         var (toolLoader, _) = CreateToolLoaderWithMockClient(
             new ToolLoaderOptions(ReadOnly: false), clientBuilder, "storage");
 
@@ -712,7 +704,7 @@ public class ServerToolLoaderTests : IDisposable
         Assert.NotNull(textContent);
         Assert.Equal("Created account", textContent.Text);
 
-        TestTelemetryHelpers.AssertTagDoesNotExist(_activity, TagName.ToolParameters);
+        TestTelemetryHelpers.AssertTagDoesNotExist(activity, TagName.ToolParameters);
     }
 
     [Fact]
@@ -730,6 +722,9 @@ public class ServerToolLoaderTests : IDisposable
         var clientBuilder = new MockMcpClientBuilder()
             .AddTool(writeTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Created account" }], IsError = false });
 
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
         var (toolLoader, _) = CreateToolLoaderWithMockClient(
             new ToolLoaderOptions(ReadOnly: false), clientBuilder, "storage");
 
@@ -744,7 +739,7 @@ public class ServerToolLoaderTests : IDisposable
         // Assert - Should allow execution when read-only mode is not enabled
         Assert.NotNull(result);
 
-        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolParameters);
+        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolParameters);
         Assert.NotNull(toolParameters);
         var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
         Assert.NotNull(parametersList);

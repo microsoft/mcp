@@ -26,7 +26,6 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     private readonly ICommandFactory _commandFactory;
     private readonly IOptions<ServerStartOptions> _options;
     private readonly ILogger<NamespaceToolLoader> _logger;
-    private readonly Activity _activity;
 
     public NamespaceToolLoaderTests()
     {
@@ -35,8 +34,6 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         _commandFactory = CommandFactoryHelpers.CreateCommandFactory(_serviceProvider);
         _options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
         _logger = NullLogger<NamespaceToolLoader>.Instance;
-        _activity = new Activity("test-activity");
-        _activity.Start();
     }
 
     [Fact]
@@ -896,6 +893,9 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
         var toolName = GetFirstAvailableNamespace();
 
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
         var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
         {
             ["intent"] = "do something",
@@ -912,7 +912,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var textContent = result.Content[0] as TextContentBlock;
         Assert.NotNull(textContent);
 
-        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolParameters);
+        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolParameters);
         Assert.NotNull(toolParameters);
         var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
         Assert.NotNull(parametersList);
@@ -936,6 +936,9 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             ["learn"] = false
         };
 
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
         var request = CreateCallToolRequest("storage", arguments);
 
         // Act
@@ -944,7 +947,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         // Assert
         Assert.NotNull(result);
 
-        TestTelemetryHelpers.AssertTagDoesNotExist(_activity, TagName.ToolParameters);
+        TestTelemetryHelpers.AssertTagDoesNotExist(activity, TagName.ToolParameters);
     }
 
     [Fact]
@@ -961,6 +964,9 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             ["learn"] = false
         };
 
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
         var request = CreateCallToolRequest("storage", arguments);
 
         // Act
@@ -969,7 +975,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         // Assert
         Assert.NotNull(result);
 
-        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolParameters);
+        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolParameters);
         Assert.NotNull(toolParameters);
         var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
         Assert.NotNull(parametersList);
@@ -1043,8 +1049,6 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        _activity.Stop();
-        _activity.Dispose();
         if (_serviceProvider != null)
         {
             await _serviceProvider.DisposeAsync();

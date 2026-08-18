@@ -26,22 +26,8 @@ using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
-public class CommandFactoryToolLoaderTests : IDisposable
+public class CommandFactoryToolLoaderTests
 {
-    private readonly Activity _activity;
-
-    public CommandFactoryToolLoaderTests()
-    {
-        _activity = new Activity("test-activity");
-        _activity.Start();
-    }
-
-    public void Dispose()
-    {
-        _activity.Stop();
-        _activity.Dispose();
-    }
-
     private static (CommandFactoryToolLoader toolLoader, ICommandFactory commandFactory) CreateToolLoader(ToolLoaderOptions? options = null)
     {
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
@@ -1348,16 +1334,19 @@ public class CommandFactoryToolLoaderTests : IDisposable
         var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions(Tool: ["nevercalled"]));
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
-        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger));
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
+        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger), activity);
         var request = CreateToolCallRequest(mcpServer, toolName);
 
         await mcpRuntime.CallToolHandler(request, TestContext.Current.CancellationToken);
 
-        Assert.Equal(ActivityStatusCode.Error, _activity.Status);
-        Assert.Equal(false, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.IsServerCommandInvoked));
-        Assert.Equal(toolName, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolName));
-        TestTelemetryHelpers.AssertTagDoesNotExist(_activity, TagName.ToolArea);
-        TestTelemetryHelpers.AssertTagDoesNotExist(_activity, TagName.ToolId);
+        Assert.Equal(ActivityStatusCode.Error, activity.Status);
+        Assert.Equal(false, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.IsServerCommandInvoked));
+        Assert.Equal(toolName, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolName));
+        TestTelemetryHelpers.AssertTagDoesNotExist(activity, TagName.ToolArea);
+        TestTelemetryHelpers.AssertTagDoesNotExist(activity, TagName.ToolId);
     }
 
     [Fact]
@@ -1373,16 +1362,20 @@ public class CommandFactoryToolLoaderTests : IDisposable
         var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
-        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger));
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
+
+        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger), activity);
         var request = CreateToolCallRequest(mcpServer, toolName);
 
         await mcpRuntime.CallToolHandler(request, TestContext.Current.CancellationToken);
 
-        Assert.Equal(ActivityStatusCode.Error, _activity.Status);
-        Assert.Equal(false, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.IsServerCommandInvoked));
-        Assert.Equal(toolName, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolName));
-        TestTelemetryHelpers.AssertTagDoesNotExist(_activity, TagName.ToolArea);
-        TestTelemetryHelpers.AssertTagDoesNotExist(_activity, TagName.ToolId);
+        Assert.Equal(ActivityStatusCode.Error, activity.Status);
+        Assert.Equal(false, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.IsServerCommandInvoked));
+        Assert.Equal(toolName, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolName));
+        TestTelemetryHelpers.AssertTagDoesNotExist(activity, TagName.ToolArea);
+        TestTelemetryHelpers.AssertTagDoesNotExist(activity, TagName.ToolId);
     }
 
     [Fact]
@@ -1404,16 +1397,19 @@ public class CommandFactoryToolLoaderTests : IDisposable
         var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
-        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger));
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
+        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger), activity);
         var request = CreateToolCallRequest(mcpServer, toolName);
 
         await mcpRuntime.CallToolHandler(request, TestContext.Current.CancellationToken);
 
-        Assert.Equal(ActivityStatusCode.Error, _activity.Status);
-        Assert.Equal(false, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.IsServerCommandInvoked));
-        Assert.Equal(toolName, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolName));
-        Assert.Equal(toolId, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolId));
-        TestTelemetryHelpers.AssertTagDoesNotExist(_activity, TagName.ToolArea);
+        Assert.Equal(ActivityStatusCode.Error, activity.Status);
+        Assert.Equal(false, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.IsServerCommandInvoked));
+        Assert.Equal(toolName, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolName));
+        Assert.Equal(toolId, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolId));
+        TestTelemetryHelpers.AssertTagDoesNotExist(activity, TagName.ToolArea);
     }
 
     [Fact]
@@ -1438,16 +1434,19 @@ public class CommandFactoryToolLoaderTests : IDisposable
         var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
-        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger));
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
+        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger), activity);
         var request = CreateToolCallRequest(mcpServer, toolName);
 
         await Assert.ThrowsAsync<Exception>(() => mcpRuntime.CallToolHandler(request, TestContext.Current.CancellationToken).AsTask());
 
-        Assert.Equal(ActivityStatusCode.Error, _activity.Status);
-        Assert.Equal(true, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.IsServerCommandInvoked));
-        Assert.Equal(toolName, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolName));
-        Assert.Equal(toolId, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolId));
-        Assert.Equal(toolArea, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolArea));
+        Assert.Equal(ActivityStatusCode.Error, activity.Status);
+        Assert.Equal(true, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.IsServerCommandInvoked));
+        Assert.Equal(toolName, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolName));
+        Assert.Equal(toolId, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolId));
+        Assert.Equal(toolArea, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolArea));
     }
 
     [Fact]
@@ -1473,16 +1472,19 @@ public class CommandFactoryToolLoaderTests : IDisposable
         var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
-        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger));
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
+        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger), activity);
         var request = CreateToolCallRequest(mcpServer, toolName);
 
         await mcpRuntime.CallToolHandler(request, TestContext.Current.CancellationToken);
 
-        Assert.Equal(ActivityStatusCode.Ok, _activity.Status);
-        Assert.Equal(true, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.IsServerCommandInvoked));
-        Assert.Equal(toolName, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolName));
-        Assert.Equal(toolArea, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolArea));
-        Assert.Equal(toolId, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolId));
+        Assert.Equal(ActivityStatusCode.Ok, activity.Status);
+        Assert.Equal(true, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.IsServerCommandInvoked));
+        Assert.Equal(toolName, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolName));
+        Assert.Equal(toolArea, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolArea));
+        Assert.Equal(toolId, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolId));
     }
 
     [Fact]
@@ -1494,17 +1496,20 @@ public class CommandFactoryToolLoaderTests : IDisposable
         var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions(Tool: ["nevercalled"]));
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
-        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger));
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
+        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger), activity);
         var request = CreateToolCallRequest(mcpServer, toolName);
 
         await mcpRuntime.CallToolHandler(request, TestContext.Current.CancellationToken);
 
-        Assert.Equal(ActivityStatusCode.Error, _activity.Status);
-        Assert.Equal(false, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.IsServerCommandInvoked));
-        Assert.Equal(toolName, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolName));
-        TestTelemetryHelpers.AssertTagDoesNotExist(_activity, TagName.ToolArea);
-        TestTelemetryHelpers.AssertTagDoesNotExist(_activity, TagName.ToolId);
-        TestTelemetryHelpers.AssertTagDoesNotExist(_activity, TagName.ToolParameters);
+        Assert.Equal(ActivityStatusCode.Error, activity.Status);
+        Assert.Equal(false, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.IsServerCommandInvoked));
+        Assert.Equal(toolName, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolName));
+        TestTelemetryHelpers.AssertTagDoesNotExist(activity, TagName.ToolArea);
+        TestTelemetryHelpers.AssertTagDoesNotExist(activity, TagName.ToolId);
+        TestTelemetryHelpers.AssertTagDoesNotExist(activity, TagName.ToolParameters);
     }
 
     [Fact]
@@ -1516,7 +1521,10 @@ public class CommandFactoryToolLoaderTests : IDisposable
         var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions(Tool: ["nevercalled"]));
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
-        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger));
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
+        var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger), activity);
         var request = CreateToolCallRequest(mcpServer, toolName);
         request.Params.Arguments = new Dictionary<string, JsonElement>()
         {
@@ -1526,12 +1534,12 @@ public class CommandFactoryToolLoaderTests : IDisposable
 
         await mcpRuntime.CallToolHandler(request, TestContext.Current.CancellationToken);
 
-        Assert.Equal(ActivityStatusCode.Error, _activity.Status);
-        Assert.Equal(false, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.IsServerCommandInvoked));
-        Assert.Equal(toolName, TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolName));
-        TestTelemetryHelpers.AssertTagDoesNotExist(_activity, TagName.ToolArea);
-        TestTelemetryHelpers.AssertTagDoesNotExist(_activity, TagName.ToolId);
-        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolParameters);
+        Assert.Equal(ActivityStatusCode.Error, activity.Status);
+        Assert.Equal(false, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.IsServerCommandInvoked));
+        Assert.Equal(toolName, TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolName));
+        TestTelemetryHelpers.AssertTagDoesNotExist(activity, TagName.ToolArea);
+        TestTelemetryHelpers.AssertTagDoesNotExist(activity, TagName.ToolId);
+        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolParameters);
         Assert.NotNull(toolParameters);
         var parameterList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
         Assert.NotNull(parameterList);
@@ -1540,11 +1548,11 @@ public class CommandFactoryToolLoaderTests : IDisposable
         Assert.Contains("param2", parameterList);
     }
 
-    private IMcpRuntime CreateRuntime(IToolLoader toolLoader)
+    private static IMcpRuntime CreateRuntime(IToolLoader toolLoader, Activity activity)
     {
         var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
         var telemetry = Substitute.For<ITelemetryService>();
-        telemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>()).Returns(_activity);
+        telemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>()).Returns(activity);
         var logger = Substitute.For<ILogger<McpRuntime>>();
 
         var runtime = new McpRuntime(toolLoader, options, telemetry, logger);

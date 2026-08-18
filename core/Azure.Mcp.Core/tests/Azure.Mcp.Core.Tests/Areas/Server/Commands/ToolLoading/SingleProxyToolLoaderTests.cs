@@ -24,22 +24,8 @@ using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
-public class SingleProxyToolLoaderTests : IDisposable
+public class SingleProxyToolLoaderTests
 {
-    private readonly Activity _activity;
-
-    public SingleProxyToolLoaderTests()
-    {
-        _activity = new Activity("test-activity");
-        _activity.Start();
-    }
-
-    public void Dispose()
-    {
-        _activity.Stop();
-        _activity.Dispose();
-    }
-
     private static Microsoft.Extensions.Options.IOptions<McpServerConfiguration> CreateServerConfigurationOptions()
     {
         return Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
@@ -673,6 +659,9 @@ public class SingleProxyToolLoaderTests : IDisposable
         // Arrange
         var clientBuilder = new MockMcpClientBuilder();
 
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
         var toolLoader = CreateToolLoaderWithMockClient(
             new ToolLoaderOptions(ReadOnly: true), clientBuilder);
 
@@ -682,7 +671,7 @@ public class SingleProxyToolLoaderTests : IDisposable
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
-        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolParameters);
+        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolParameters);
         Assert.NotNull(toolParameters);
         var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
         Assert.NotNull(parametersList);
@@ -708,6 +697,9 @@ public class SingleProxyToolLoaderTests : IDisposable
         var clientBuilder = new MockMcpClientBuilder()
             .AddTool(readOnlyTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Listed accounts" }] });
 
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
         var toolLoader = CreateToolLoaderWithMockClient(
             new ToolLoaderOptions(ReadOnly: true), clientBuilder);
 
@@ -716,7 +708,7 @@ public class SingleProxyToolLoaderTests : IDisposable
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
-        TestTelemetryHelpers.AssertTagDoesNotExist(_activity, TagName.ToolParameters);
+        TestTelemetryHelpers.AssertTagDoesNotExist(activity, TagName.ToolParameters);
     }
 
     [Fact]
@@ -734,6 +726,9 @@ public class SingleProxyToolLoaderTests : IDisposable
         var clientBuilder = new MockMcpClientBuilder()
             .AddTool(readOnlyTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Listed accounts" }] });
 
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
         var toolLoader = CreateToolLoaderWithMockClient(
             new ToolLoaderOptions(ReadOnly: true), clientBuilder);
 
@@ -743,7 +738,7 @@ public class SingleProxyToolLoaderTests : IDisposable
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
-        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(_activity, TagName.ToolParameters);
+        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolParameters);
         Assert.NotNull(toolParameters);
         var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
         Assert.NotNull(parametersList);
