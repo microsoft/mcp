@@ -128,7 +128,7 @@ Write-Host "Getting eval paths from VallyEvaluator"
 $(Get-ChildItem "$EvalsDirectory/**/eval.yaml") | ForEach-Object { $commandArg += "--eval-spec '$($_.FullName)' " }
 
 if ([string]::IsNullOrEmpty($commandArg)) {
-    Write-Host "No eval.yamls found to execute vally from."
+    Write-Host "No eval.yaml files found to execute vally from."
     exit 0
 }
 
