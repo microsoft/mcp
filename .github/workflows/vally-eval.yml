@@ -29,6 +29,11 @@ concurrency:
 jobs:
   eval-job:
     runs-on: ubuntu-latest
+    # Secrets (e.g. COPILOT_GITHUB_TOKEN) are never exposed to `pull_request` runs
+    # triggered from a forked repository, so this job cannot authenticate in that
+    # context. Skip it there instead of failing every eval on a missing token;
+    # it still runs normally for same-repo pull requests and workflow_dispatch.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
 
     steps:
       - name: Checkout repository
