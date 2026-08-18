@@ -20,7 +20,6 @@ words:
   - authorizationcode
   - availabilitystatuses
   - azureasyncoperationuri
-  - behaviour
   - blobservices
   - buildversion
   - certificateblob
@@ -41,7 +40,6 @@ words:
   - datashareuri
   - defaultresourcegroup
   - deploymenterrors
-  - deploymentid
   - destinationstampname
   - discoveryurl
   - displaystatus

@@ -897,8 +897,16 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 ## Azure Resilience Management
 
-| Tool Name | Test Prompt | Interaction |
-|:----------|:------------|:------------|
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| resilience_drill_get | List all resilience drills in service group <service_group> | none |
+| resilience_drill_get | Get the details of resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_resource_get | List all drill resources for resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_resource_get | List all drill targets for resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_resource_get | Show the resources targeted by resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_resource_get | Get the complete details of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_resource_get | Get drill target <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_resource_get | Retrieve the ARM properties of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
 | resilience_goal_assignment_get | List all resilience goal assignments in service group <service_group> | none |
 | resilience_goal_assignment_get | Get the details of goal assignment <goal_assignment_name> in service group <service_group> | none |
 | resilience_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> | none |
