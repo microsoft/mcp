@@ -30,6 +30,12 @@ jobs:
   eval-job:
     runs-on: ubuntu-latest
 
+    env:
+      # Secrets, including COPILOT_GITHUB_TOKEN, are not available to workflows triggered by
+      # pull requests from forks. Without the token, every evaluation fails with
+      # "Session was not created with authentication info or custom provider".
+      IS_FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7.0.0
@@ -39,7 +45,13 @@ jobs:
       - name: Install .NET SDK
         uses: actions/setup-dotnet@v5.4.0
 
-      - run: npm install -g @microsoft/vally-cli@0.13.0
+      - name: Report skipped evaluations
+        if: ${{ env.IS_FORK_PR == 'true' }}
+        run: echo "::notice::Vally evaluations are skipped for pull requests from forks because the COPILOT_GITHUB_TOKEN secret is not available. A maintainer must run them from a branch in this repository."
+
+      - name: Install vally CLI
+        if: ${{ env.IS_FORK_PR != 'true' }}
+        run: npm install -g @microsoft/vally-cli@0.13.0
 
       - name: Set BUILD_REASON environment variable
         if: ${{ github.event_name == 'pull_request' }}
@@ -51,6 +63,7 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Create build_info.json
+        if: ${{ env.IS_FORK_PR != 'true' }}
         shell: pwsh
         run: |
           if ($env:BUILD_REASON -eq 'PullRequest') {
@@ -63,6 +76,7 @@ jobs:
           ./eng/scripts/New-BuildInfo.ps1 -ServerName Azure.Mcp.Server
 
       - name: Build server code
+        if: ${{ env.IS_FORK_PR != 'true' }}
         shell: pwsh
         run: |
           $rid = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier
@@ -84,9 +98,11 @@ jobs:
           ./eng/scripts/Build-Code.ps1 -BuildInfoPath "${{ github.workspace }}/.work/build_info.json" -PlatformName $platformName
 
       - name: Create vally evaluations
+        if: ${{ env.IS_FORK_PR != 'true' }}
         run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/src/VallyEvaluator.csproj' -- --buildInfo '${{ github.workspace }}/.work/build_info.json'
 
       - name: Run vally
+        if: ${{ env.IS_FORK_PR != 'true' }}
         run: |
           $isDebug = '${{ github.event.inputs.logLevel }}' -eq 'true'
           $numberOfRuns = [int]'${{ inputs.numberOfRuns || 1 }}'
@@ -106,7 +122,7 @@ jobs:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
 
       - name: Upload vally results
-        if: ${{ always() }}
+        if: ${{ always() && env.IS_FORK_PR != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: vally-results
