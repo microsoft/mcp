@@ -84,7 +84,7 @@ jobs:
           ./eng/scripts/Build-Code.ps1 -BuildInfoPath "${{ github.workspace }}/.work/build_info.json" -PlatformName $platformName
 
       - name: Create vally evaluations
-        run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/src/VallyEvaluator.csproj' -- --buildInfo '${{ github.workspace }}/.work/build_info.json'
+        run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/src/VallyEvaluator.csproj' -- --buildInfo '${{ github.workspace }}/.work/build_info.json' --serverName Azure.Mcp.Server
 
       - name: Run vally
         run: |
@@ -97,8 +97,6 @@ jobs:
           $outputPath = "$baseVallyDirectory/vally-results"
 
           $workingDirectory = "${{ github.workspace }}"
-          
-          Copy-Item ./eng/tools/VallyEvaluator/src/Resources/eval.instructions.md "$workingDirectory/AGENTS.md" -Force
 
           ./eng/scripts/Invoke-VallyEvalTests.ps1 -BuildInfoPath $buildInfo -WorkDirectory $workingDirectory -EvalsDirectory $evalsDirectory -OutputPath $outputPath -NumberOfRuns $numberOfRuns -IsDebug:$isDebug
         shell: pwsh

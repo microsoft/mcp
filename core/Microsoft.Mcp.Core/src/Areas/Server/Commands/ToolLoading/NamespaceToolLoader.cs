@@ -430,7 +430,7 @@ public sealed class NamespaceToolLoader(
             };
             var realCommand = cmd.GetCommand();
 
-            ParseResult commandOptions;
+            ParseResult? commandOptions;
             var effectiveOptions = realCommand.Options
                 .Where(o => !CommandFactory.IsLearnOption(o))
                 .ToList();
@@ -441,7 +441,21 @@ public sealed class NamespaceToolLoader(
             }
             else
             {
-                commandOptions = realCommand.ParseFromDictionary(parameters);
+                if (!realCommand.TryParseFromDictionary(parameters, out commandOptions, out var parseErrors))
+                {
+                    return new CallToolResult
+                    {
+                        Content =
+                        [
+                            new TextContentBlock
+                            {
+                                Text = parseErrors!,
+                            }
+                        ],
+                        IsError = true,
+                        Meta = new([new(McpHelper.ToolIdMetaKey, cmd.Id)])
+                    };
+                }
             }
 
             _logger.LogTrace("Executing namespace command '{Namespace} {Command}'", namespaceName, command);
@@ -454,7 +468,7 @@ public sealed class NamespaceToolLoader(
                 .SetTag(TagName.ToolSource, "internal")
                 .SetTag(TagName.IsServerCommandInvoked, true);
 
-            var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions, cancellationToken);
+            var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 

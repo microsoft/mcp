@@ -724,6 +724,46 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     }
 
     [Fact]
+    public async Task CallToolHandler_UnknownParameters_RejectsToolCall()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+
+        var readCmd = Substitute.For<IBaseCommand>();
+        readCmd.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
+        readCmd.GetCommand().Returns(new System.CommandLine.Command("read-cmd", "A read command"));
+        storageGroup.AddCommand("read-cmd", readCmd);
+
+        rootGroup.SubGroup.Add(storageGroup);
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["read-cmd"] = readCmd });
+
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { ReadOnly = true });
+
+        var loader = new NamespaceToolLoader(commandFactory, options, _logger);
+        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        {
+            ["command"] = "read-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+            {
+                { "unknown-param", "some-value" }
+            }
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should reject the tool call due to unknown parameter
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        var errorText = ((TextContentBlock)result.Content.First()).Text;
+        Assert.Contains("unknown-param", errorText);
+    }
+
+    [Fact]
     public async Task CallToolHandler_HttpMode_RejectsLocalRequiredCommand()
     {
         // Arrange

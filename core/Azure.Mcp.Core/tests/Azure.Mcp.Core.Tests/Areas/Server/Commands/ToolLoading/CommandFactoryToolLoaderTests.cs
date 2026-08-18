@@ -1295,6 +1295,46 @@ public class CommandFactoryToolLoaderTests : IDisposable
         Assert.False(result.IsError);
     }
 
+    [Fact]
+    public async Task CallToolHandler_UnknownParameters_RejectsToolCall()
+    {
+        // Arrange - create a tool loader with read-only mode enabled
+        var (toolLoader, commandFactory) = CreateToolLoader();
+
+        // Add a fake non-read-only command
+        var fakeCommand = Substitute.For<IBaseCommand>();
+        var fakeSystemCommand = new Command("fake-tool", "A fake write tool for testing");
+        fakeCommand.GetCommand().Returns(fakeSystemCommand);
+        fakeCommand.Title.Returns("Fake Write Tool");
+        fakeCommand.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
+
+        var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
+        commandMap["fake-write-tool"] = fakeCommand;
+
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = "fake-write-tool",
+                Arguments = new Dictionary<string, JsonElement>()
+                {
+                    { "unknown-param", JsonDocument.Parse("\"some-value\"").RootElement }
+                }
+            }
+        };
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should reject the tool call due to unknown parameter
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        var errorText = ((TextContentBlock)result.Content.First()).Text;
+        Assert.Contains("unknown-param", errorText);
+    }
+
     #endregion
 
     #region Telemetry Tests

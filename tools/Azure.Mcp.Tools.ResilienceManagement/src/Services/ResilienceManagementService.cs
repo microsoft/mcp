@@ -485,6 +485,112 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return document.RootElement.Clone();
     }
 
+    public async Task<IEnumerable<ResourceSummary>> ListDrillsAsync(string serviceGroup, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var serviceGroupId = CreateServiceGroupResourceIdentifier(serviceGroup);
+        ResilienceManagementDrillCollection drills = armClient.GetResilienceManagementDrills(serviceGroupId);
+
+        var result = new List<ResourceSummary>();
+        await foreach (var drill in drills.GetAllAsync(cancellationToken: cancellationToken))
+        {
+            result.Add(new ResourceSummary(
+                Id: drill.Data.Id?.ToString() ?? string.Empty,
+                Name: drill.Data.Name ?? string.Empty));
+        }
+
+        return result;
+    }
+
+    public async Task<DrillInfo> GetDrillAsync(string serviceGroup, string drill, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var serviceGroupId = CreateServiceGroupResourceIdentifier(serviceGroup);
+        ResilienceManagementDrillCollection drills = armClient.GetResilienceManagementDrills(serviceGroupId);
+        Response<ResilienceManagementDrillResource> response = await drills.GetAsync(drill, cancellationToken);
+
+        using JsonDocument document = JsonDocument.Parse(response.GetRawResponse().Content.ToMemory());
+        JsonElement root = document.RootElement;
+
+        return new DrillInfo(
+            Id: root.TryGetProperty("id", out JsonElement idElement) ? idElement.GetString() ?? string.Empty : string.Empty,
+            Name: root.TryGetProperty("name", out JsonElement nameElement) ? nameElement.GetString() ?? string.Empty : string.Empty,
+            ResourceType: root.TryGetProperty("type", out JsonElement typeElement) ? typeElement.GetString() : null,
+            Location: root.TryGetProperty("location", out JsonElement locationElement) ? locationElement.GetString() : null,
+            Tags: GetTagsOrNull(root),
+            Properties: root.TryGetProperty("properties", out JsonElement propertiesElement) ? propertiesElement.Clone() : default,
+            SystemData: root.TryGetProperty("systemData", out JsonElement systemDataElement) ? systemDataElement.Clone() : default);
+    }
+
+    public async Task<IEnumerable<ResourceSummary>> ListDrillResourcesAsync(string serviceGroup, string drill, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var drillId = ResilienceManagementDrillResource.CreateResourceIdentifier(serviceGroup, drill);
+        ResilienceManagementDrillResource drillResource = armClient.GetResilienceManagementDrillResource(drillId);
+        DrillTargetCollection drillTargets = drillResource.GetDrillTargets();
+
+        var result = new List<ResourceSummary>();
+        await foreach (var drillTarget in drillTargets.GetAllAsync(cancellationToken: cancellationToken))
+        {
+            result.Add(new ResourceSummary(
+                Id: drillTarget.Data.Id?.ToString() ?? string.Empty,
+                Name: drillTarget.Data.Name ?? string.Empty));
+        }
+
+        return result;
+    }
+
+    public async Task<DrillResourceInfo> GetDrillResourceAsync(string serviceGroup, string drill, string drillResource, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var drillId = ResilienceManagementDrillResource.CreateResourceIdentifier(serviceGroup, drill);
+        ResilienceManagementDrillResource drillInstanceResource = armClient.GetResilienceManagementDrillResource(drillId);
+        DrillTargetCollection drillTargets = drillInstanceResource.GetDrillTargets();
+        Response<DrillTargetResource> response = await drillTargets.GetAsync(drillResource, cancellationToken);
+
+        using JsonDocument document = JsonDocument.Parse(response.GetRawResponse().Content.ToMemory());
+        JsonElement root = document.RootElement;
+
+        return new DrillResourceInfo(
+            Id: root.TryGetProperty("id", out JsonElement idElement) ? idElement.GetString() ?? string.Empty : string.Empty,
+            Name: root.TryGetProperty("name", out JsonElement nameElement) ? nameElement.GetString() ?? string.Empty : string.Empty,
+            ResourceType: root.TryGetProperty("type", out JsonElement typeElement) ? typeElement.GetString() : null,
+            Location: root.TryGetProperty("location", out JsonElement locationElement) ? locationElement.GetString() : null,
+            Tags: GetTagsOrNull(root),
+            Properties: root.TryGetProperty("properties", out JsonElement propertiesElement) ? propertiesElement.Clone() : default,
+            SystemData: root.TryGetProperty("systemData", out JsonElement systemDataElement) ? systemDataElement.Clone() : default);
+    }
+
+    private static ResourceIdentifier CreateServiceGroupResourceIdentifier(string serviceGroup)
+    {
+        // Validate the caller-supplied segment before interpolating it into a raw ARM resource path.
+        if (string.IsNullOrWhiteSpace(serviceGroup) || serviceGroup.Contains('/'))
+        {
+            throw new ArgumentException("Service group name must be a single non-empty path segment.", nameof(serviceGroup));
+        }
+
+        return new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
+    }
+
+    private static Dictionary<string, string>? GetTagsOrNull(JsonElement root)
+    {
+        if (!root.TryGetProperty("tags", out JsonElement tagsElement) || tagsElement.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        var tags = new Dictionary<string, string>();
+        foreach (JsonProperty tagProperty in tagsElement.EnumerateObject())
+        {
+            tags[tagProperty.Name] = tagProperty.Value.GetString() ?? string.Empty;
+        }
+
+        return tags;
+    }
     public async Task<UsagePlanInfo> CreateUsagePlanAsync(string resourceGroup, string usagePlan, UsagePlanKind planType, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         var subscriptionId = AzureService.IsSubscriptionId(subscription)
@@ -510,7 +616,8 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             }
         };
 
-        ArmOperation<UsagePlanResource> operation = await usagePlans.CreateOrUpdateAsync(WaitUntil.Completed, usagePlan, usagePlanData, cancellationToken);
+        ArmOperation<UsagePlanResource> operation = await usagePlans.CreateOrUpdateAsync(WaitUntil.Started, usagePlan, usagePlanData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return MapUsagePlan(operation.Value.Data);
     }
@@ -532,7 +639,8 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             Properties = new EnrollmentProperties(serviceGroupId)
         };
 
-        ArmOperation<UsagePlanEnrollmentResource> operation = await enrollments.CreateOrUpdateAsync(WaitUntil.Completed, enrollment, enrollmentData, cancellationToken);
+        ArmOperation<UsagePlanEnrollmentResource> operation = await enrollments.CreateOrUpdateAsync(WaitUntil.Started, enrollment, enrollmentData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return MapUsagePlanEnrollment(operation.Value.Data);
     }
