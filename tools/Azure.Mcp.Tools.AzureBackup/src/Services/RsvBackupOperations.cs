@@ -1137,14 +1137,18 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
         var identityType = data.Identity?.ManagedServiceIdentityType.ToString();
 
         string? crossRegionRestoreState = null;
+        // NOTE: RSV encryption state is intentionally left null. The RSV vault GET API
+        // (VaultPropertiesEncryption) does not return a first-class encryption state field —
+        // only the CMK URI (when configured) and infrastructure encryption flag. We surface
+        // encryptionKeyUri as returned by the service and skip the state field rather than
+        // inferring a synthetic value. DPP vaults populate encryptionState authoritatively
+        // from SecuritySettings.EncryptionSettings.State in DppBackupOperations.
         string? encryptionState = null;
         string? encryptionKeyUri = null;
 
         if ((expand & VaultExpand.Security) != 0)
         {
-            var keyUri = properties?.Encryption?.KeyUri?.ToString();
-            encryptionKeyUri = keyUri;
-            encryptionState = keyUri is null ? null : "Enabled";
+            encryptionKeyUri = properties?.Encryption?.KeyUri?.ToString();
 
             // CrossRegionRestore comes from RedundancySettings and is part of the security posture.
             crossRegionRestoreState = properties?.RedundancySettings?.CrossRegionRestore?.ToString();
