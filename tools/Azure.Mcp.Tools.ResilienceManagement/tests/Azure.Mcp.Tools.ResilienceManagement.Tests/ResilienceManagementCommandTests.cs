@@ -169,7 +169,20 @@ public class ResilienceManagementCommandTests(
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
-        var drillResourceName = RegisterOrRetrieveDeploymentOutputVariable("drillResourceName", "DRILLRESOURCENAME");
+
+        var listResult = await CallToolAsync(
+            "resilience_drill_resource_get",
+            new()
+            {
+                { "service-group", serviceGroup },
+                { "drill", drillName }
+            });
+
+        var drillResources = listResult.AssertProperty("drillResources");
+        Assert.NotEqual(0, drillResources.GetArrayLength());
+        var drillResourceName = RegisterOrRetrieveVariable(
+            "drillResourceName",
+            drillResources.EnumerateArray().First().AssertProperty("name").GetString()!);
 
         var result = await CallToolAsync(
             "resilience_drill_resource_get",
@@ -457,7 +470,21 @@ public class ResilienceManagementCommandTests(
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
-        var recoveryJob = RegisterOrRetrieveDeploymentOutputVariable("recoveryJobName", "RECOVERYJOBNAME");
+
+        var listResult = await CallToolAsync(
+            "resilience_recovery_job_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan }
+            });
+
+        var recoveryJobs = listResult.AssertProperty("recoveryJobs");
+        Assert.NotEqual(0, recoveryJobs.GetArrayLength());
+        var recoveryJob = RegisterOrRetrieveVariable(
+            "recoveryJobName",
+            recoveryJobs.EnumerateArray().First().AssertProperty("name").GetString()!);
 
         var result = await CallToolAsync(
             "resilience_recovery_job_get",
@@ -478,7 +505,21 @@ public class ResilienceManagementCommandTests(
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
-        var recoveryJob = RegisterOrRetrieveDeploymentOutputVariable("recoveryJobName", "RECOVERYJOBNAME");
+
+        var listResult = await CallToolAsync(
+            "resilience_recovery_job_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan }
+            });
+
+        var recoveryJobs = listResult.AssertProperty("recoveryJobs");
+        Assert.NotEqual(0, recoveryJobs.GetArrayLength());
+        var recoveryJob = RegisterOrRetrieveVariable(
+            "recoveryJobName",
+            recoveryJobs.EnumerateArray().First().AssertProperty("name").GetString()!);
 
         var result = await CallToolAsync(
             "resilience_recovery_job_resource_get",
