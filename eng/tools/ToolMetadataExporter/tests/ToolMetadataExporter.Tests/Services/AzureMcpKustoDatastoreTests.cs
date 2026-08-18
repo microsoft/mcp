@@ -11,7 +11,7 @@ using ToolMetadataExporter.Models.Kusto;
 using ToolMetadataExporter.Services;
 using Xunit;
 
-namespace ToolMetadataExporter.UnitTests.Services;
+namespace ToolMetadataExporter.Tests.Services;
 
 public class AzureMcpKustoDatastoreTests : IDisposable
 {

@@ -18,7 +18,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Insights.UnitTests;
+namespace Azure.Mcp.Tools.Insights.Tests;
 
 public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, IInsightsService>
 {
@@ -354,7 +354,9 @@ public class InsightsGetCommandTests : CommandUnitTestsBase<InsightsGetCommand, 
     private Task<CommandResponse> ExecuteWithSamplingAsync(params string[] args)
     {
         var server = Substitute.For<McpServer>();
+#pragma warning disable MCP9005 // Type or member is obsolete
         server.ClientCapabilities.Returns(new ClientCapabilities { Sampling = new SamplingCapability() });
+#pragma warning restore MCP9005 // Type or member is obsolete
         var context = new CommandContext() { McpServer = server };
         return ((IBaseCommand)Command).ExecuteAsync(context, CommandDefinition.Parse(args), TestContext.Current.CancellationToken);
     }

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
@@ -11,7 +10,7 @@ using ToolMetadataExporter.Services;
 using ToolSelection.Models;
 using Xunit;
 
-namespace ToolMetadataExporter.UnitTests;
+namespace ToolMetadataExporter.Tests;
 
 public class ToolAnalyzerTests : IDisposable
 {
