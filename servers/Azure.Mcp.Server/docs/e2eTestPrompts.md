@@ -14,15 +14,15 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | advisor_metadata_get | Get the Advisor metadata for recommendation type id <recommendation-type-id> | none |
 | advisor_metadata_get | What does Advisor recommendation type <recommendation-type-id> mean? | none |
-| advisor_metadata_get | Show me the metadata details for Advisor recommendation type <recommendation-type-id> | none |
+| advisor_metadata_get | Show me the catalog details for Advisor recommendation type <recommendation-type-id> | none |
 | advisor_metadata_get | Get the German (de) metadata for Advisor recommendation type <recommendation-type-id> | none |
 | advisor_metadata_get | What is the impact and category of Advisor recommendation type <recommendation-type-id>? | none |
 | advisor_metadata_get | Show the remediation actions for Advisor recommendation type <recommendation-type-id> | none |
 | advisor_metadata_get | When does Advisor recommendation type <recommendation-type-id> retire? | none |
-| advisor_metadata_list | List the Advisor recommendation metadata | none |
+| advisor_metadata_list | List the Advisor recommendation metadata catalog | none |
 | advisor_metadata_list | Before I deploy any virtual machines, what kinds of recommendations could Advisor produce for them? | none |
 | advisor_metadata_list | List high-impact Advisor metadata for microsoft.sql/servers/databases | none |
-| advisor_metadata_list | Show the German metadata for Advisor recommendations | none |
+| advisor_metadata_list | Show the German metadata catalog for Advisor recommendations | none |
 | advisor_metadata_list | Which Advisor recommendation types include service-retirement details? | none |
 | advisor_metadata_list | List Advisor metadata in the ServiceUpgradeAndRetirement subcategory | none |
 | advisor_metadata_list | Find the Advisor service-retirement metadata with tracking ID QNY1-HB8 | none |

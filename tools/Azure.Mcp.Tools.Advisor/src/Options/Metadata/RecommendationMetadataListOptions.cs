@@ -9,8 +9,8 @@ public sealed class RecommendationMetadataListOptions
 {
     [Option(
         Description = "Language for localized recommendation metadata. Defaults to English ('en'). " +
-            "Supported languages are en, cs, de, es, fr, hu, id, it, ja, ko, nl, pl, pt-BR, pt-PT, ru, sv, tr, zh-Hans, and zh-Hant. " +
-            "Regional variants map to a supported base language when available, such as en-US to en and fr-CA to fr; locale-specific languages remain distinct.",
+            "Supported catalog languages are en, cs, de, es, fr, hu, id, it, ja, ko, nl, pl, pt-BR, pt-PT, ru, sv, tr, zh-Hans, and zh-Hant. " +
+            "Regional variants map to a supported base language when available, such as en-US to en and fr-CA to fr; locale-specific catalog languages remain distinct.",
         DefaultValue = "en")]
     public string Language { get; set; } = "en";
 
@@ -24,8 +24,8 @@ public sealed class RecommendationMetadataListOptions
     public string? Category { get; set; }
 
     [Option(Description = "Optional exact recommendation subcategory filter, matched case-insensitively. " +
-        "Known values include ComputeOptimization, DataPerformance, DataProtectionAndRecovery, EfficiencyOptimization, FailureMitigation, GovernanceAndCompliance, MonitoringAndAlerting, NetworkOptimization, Other, RegionalResiliency, Reservations, SafeAndSecureDeployment, SavingsPlan, Scalability, ServiceUpgradeAndRetirement, StorageOptimization, UsageOptimization, and ZoneResiliency. " +
-        "Advisor can add values over time, so other subcategories are accepted.")]
+        "Known catalog values include ComputeOptimization, DataPerformance, DataProtectionAndRecovery, EfficiencyOptimization, FailureMitigation, GovernanceAndCompliance, MonitoringAndAlerting, NetworkOptimization, Other, Personalized, RegionalResiliency, Reservations, SafeAndSecureDeployment, SavingsPlan, Scalability, ServiceUpgradeAndRetirement, StorageOptimization, UsageOptimization, and ZoneResiliency. " +
+        "The catalog can add values over time, so other subcategories are accepted.")]
     public string? SubCategory { get; set; }
 
     [Option(Description = "Optional exact Service Health tracking ID filter, such as QNY1-HB8. Matched case-insensitively within ServiceUpgradeAndRetirement metadata. --sub-category may be omitted but cannot specify a different value.")]
