@@ -49,6 +49,7 @@ words:
   - hyperparameters
   - imageanalysis
   - inspektor
+  - irql
   - managedcluster
   - mypass
   - mysvc
@@ -84,4 +85,3 @@ words:
   - toplist
   - webjobs
   - wellarchitectedframework
-  - irql
