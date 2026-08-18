@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using CopilotCliTester.Models;
-using GitHub.Copilot.SDK;
+using GitHub.Copilot;
 
 namespace CopilotCliTester;
 
@@ -15,8 +14,8 @@ namespace CopilotCliTester;
 /// </summary>
 internal sealed partial class AgentRunner(CopilotClient client, string serverExecutablePath, string? outputDir = null, string? workspacePath = null) : IAsyncDisposable
 {
-    private static readonly string TimeStamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss");
-    private readonly Lock eventLock = new();
+    private static readonly string s_timeStamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss");
+    private readonly Lock _eventLock = new();
     private readonly string _outputDirectory = outputDir ?? Path.Combine(AppContext.BaseDirectory, "reports");
 
     [GeneratedRegex(@"eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}")]
@@ -60,10 +59,10 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
             cliArgs.Add(Path.Combine(logDir, "copilot-logs"));
         }
 
-        var client = new CopilotClient(new CopilotClientOptions
+        var client = new CopilotClient(new()
         {
-            CliArgs = [.. cliArgs],
-            Cwd = workspace,
+            WorkingDirectory = workspace,
+            Connection = RuntimeConnection.ForStdio(args: cliArgs)
         });
 
         return (client, workspace);
@@ -94,6 +93,9 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
             {
                 Model = config.Model ?? CopilotTestConstants.ModelName,
                 Streaming = true,
+                // Permit every tool (including MCP tools) without an allowlist.
+                GitHubMcpToolConfig = new() { EnableAllTools = true },
+                // Auto-approve all tool executions without confirmation dialogs.
                 OnPermissionRequest = PermissionHandler.ApproveAll,
                 McpServers = BuildMcpServersConfig(serverExecutablePath),
                 SystemMessage = systemMessage
@@ -106,9 +108,9 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
 
                 var idleTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                session.On(ev =>
+                session.On<SessionEvent>(ev =>
                 {
-                    lock (eventLock)
+                    lock (_eventLock)
                     {
                         if (isComplete)
                             return;
@@ -160,7 +162,7 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
-                    lock (eventLock)
+                    lock (_eventLock)
                     {
                         isComplete = true;
                     }
@@ -230,15 +232,15 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
 
     private static string GenerateMarkdownReport(AgentRunConfig config, AgentMetadata metadata)
     {
-        var lines = new List<string>();
-
-        lines.Add("# User Prompt");
-        lines.Add("");
-        lines.Add(config.Prompt);
-        lines.Add("");
-
-        lines.Add("# Assistant");
-        lines.Add("");
+        var lines = new List<string>
+        {
+            "# User Prompt",
+            "",
+            config.Prompt,
+            "",
+            "# Assistant",
+            ""
+        };
 
         // Store tool results keyed by toolCallId
         var toolResults = new Dictionary<string, (bool success, string? content, string? error)>();
@@ -335,7 +337,7 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
 
     private string BuildReportFilePath(AgentRunConfig config)
     {
-        var runDir = $"test-run-{TimeStamp}";
+        var runDir = $"test-run-{s_timeStamp}";
         var ns = config.Namespace ?? "unknown";
         var tool = config.ToolName ?? $"test-{DateTime.UtcNow:yyyyMMdd-HHmmss}";
         var file = $"{tool}-{DateTimeOffset.UtcNow:HHmmssfff}.md";
@@ -369,7 +371,7 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
         };
     }
 
-    private static bool TryMapEvent(object ev, out AgentSessionEvent mapped)
+    private static bool TryMapEvent(SessionEvent ev, out AgentSessionEvent mapped)
     {
         // Session idle
         if (ev is SessionIdleEvent)
@@ -492,5 +494,4 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
     }
 
     private static string Truncate(string s, int max) => s.Length <= max ? s : s[..max] + "... (truncated)";
-
 }

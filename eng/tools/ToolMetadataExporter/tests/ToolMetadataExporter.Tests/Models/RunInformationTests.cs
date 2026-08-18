@@ -8,7 +8,7 @@ using ToolMetadataExporter.Models;
 using ToolMetadataExporter.Services;
 using Xunit;
 
-namespace ToolMetadataExporter.UnitTests.Models;
+namespace ToolMetadataExporter.Tests.Models;
 
 public class RunInformationTests
 {

@@ -9,7 +9,7 @@ using ToolMetadataExporter.Models;
 using ToolMetadataExporter.Services;
 using Xunit;
 
-namespace ToolMetadataExporter.UnitTests.Services;
+namespace ToolMetadataExporter.Tests.Services;
 
 public class AzmcpProgramTests
 {

@@ -8,6 +8,7 @@ public static class PromptInteractionExtensions
     public const string None = "none";
     public const string ClarificationRequired = "clarification-required";
     public const string ContextRequired = "context-required";
+    public const string InvestigationRequired = "investigation-required";
 
     public static PromptInteraction Parse(string value)
     {
@@ -16,6 +17,7 @@ public static class PromptInteractionExtensions
             None => PromptInteraction.None,
             ClarificationRequired => PromptInteraction.ClarificationRequired,
             ContextRequired => PromptInteraction.ContextRequired,
+            InvestigationRequired => PromptInteraction.InvestigationRequired,
             _ => throw new ArgumentOutOfRangeException(nameof(value), value, "Unknown prompt interaction.")
         };
     }
@@ -27,6 +29,7 @@ public static class PromptInteractionExtensions
             PromptInteraction.None => None,
             PromptInteraction.ClarificationRequired => ClarificationRequired,
             PromptInteraction.ContextRequired => ContextRequired,
+            PromptInteraction.InvestigationRequired => InvestigationRequired,
             _ => throw new ArgumentOutOfRangeException(nameof(interaction), interaction, "Unknown prompt interaction.")
         };
     }

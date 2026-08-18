@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Runtime.InteropServices;
 using McpToolEvaluator.Core;
+using McpToolEvaluator.Core.Models;
 using Microsoft.Extensions.Configuration;
 
 namespace VallyEvaluator;
@@ -23,15 +25,35 @@ internal class Program
         var runConfig = new RunConfiguration();
         configuration.Bind(runConfig);
 
-        if (!string.IsNullOrEmpty(runConfig.NamespacesValue))
+        runConfig.RepositoryRoot = Utilities.FindRepoRoot(AppContext.BaseDirectory);
+
+        if (string.IsNullOrEmpty(runConfig.ServerName))
         {
-            runConfig.Namespaces = [.. runConfig.NamespacesValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
+            Console.Error.WriteLine("No MCP server specified. Please specify using --serverName={{NameOfServer}}.");
+            return -1;
         }
 
-        var repoRoot = Utilities.FindRepoRoot(AppContext.BaseDirectory);
+        if (!Path.Exists(runConfig.PromptFilePath))
+        {
+            Console.Error.WriteLine($"Could not find: '{runConfig.PromptFilePath}' to create prompts from.");
+            return -1;
+        }
+
+        if (!string.IsNullOrEmpty(runConfig.NamespacesValue))
+        {
+            Console.WriteLine("Using namespaces from command line: " + runConfig.NamespacesValue);
+            runConfig.Namespaces = [.. runConfig.NamespacesValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
+        }
+        else
+        {
+            Console.WriteLine("No namespaces specified. Writing evals for all namespaces");
+        }
+
         if (string.IsNullOrEmpty(runConfig.WorkingDirectory))
         {
-            runConfig.WorkingDirectory = Path.Join(repoRoot, ".work");
+            var workDir = Path.Join(runConfig.RepositoryRoot, ".work");
+            runConfig.WorkingDirectory = workDir;
+            Console.WriteLine("No working directory specified. Using default: " + workDir);
         }
 
         if (!Directory.Exists(runConfig.WorkingDirectory))
@@ -40,7 +62,6 @@ internal class Program
         }
 
         BuildInfo? buildInfo = null;
-
         if (!string.IsNullOrEmpty(runConfig.BuildInfo))
         {
             if (!File.Exists(runConfig.BuildInfo))
@@ -52,9 +73,16 @@ internal class Program
             buildInfo = new BuildInfo(runConfig.BuildInfo);
         }
 
+        McpServerMetadata? mcpServerInformation = null;
+        if (buildInfo != null)
+        {
+            mcpServerInformation = await GetMcpServerInfo(runConfig, buildInfo);
+        }
+
         try
         {
-            await CreateEvalsAsync(repoRoot, runConfig, buildInfo);
+            Console.WriteLine($"Creating evals for MCP server: {runConfig.ServerName}");
+            await CreateEvalsAsync(runConfig.RepositoryRoot, runConfig, buildInfo, mcpServerInformation);
         }
         catch (Exception ex)
         {
@@ -66,7 +94,7 @@ internal class Program
         return 0;
     }
 
-    internal static List<string> GetTestToolNamespaces(BuildInfo buildInfo, PromptDatastore promptDatastore)
+    internal static List<string> GetToolNamespacesFromBuildInfo(BuildInfo buildInfo, PromptDatastore promptDatastore, McpServerMetadata? mcpServerInformation)
     {
         var promptNamespaces = promptDatastore.GetNamespaces().ToHashSet(StringComparer.InvariantCultureIgnoreCase);
         var results = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
@@ -92,9 +120,20 @@ internal class Program
             {
                 results.Add(promptNamespace);
             }
-            else
+            else if (mcpServerInformation != null)
             {
-                Console.Error.WriteLine($"Namespace not found in prompt datastore: {possibleNamespace}. Original: {split[1]}");
+                var assemblyName = split[1];
+                if (mcpServerInformation.AssemblyNameToToolsMap.TryGetValue(assemblyName, out var matchingTools))
+                {
+                    foreach (var tool in matchingTools)
+                    {
+                        results.Add(tool.ToolNamespace);
+                    }
+                }
+                else
+                {
+                    Console.Error.WriteLine($"Namespace not found in MCP server referenced assemblies: {possibleNamespace}. Original: {assemblyName}");
+                }
             }
         }
 
@@ -113,19 +152,44 @@ internal class Program
             : null;
     }
 
-    private static async Task CreateEvalsAsync(string repoRoot, RunConfiguration configuration, BuildInfo? buildInfo = null)
+    internal static Task<McpServerMetadata> GetMcpServerInfo(RunConfiguration configuration, BuildInfo buildInfo)
     {
-        string promptsPath = string.Empty;
-        if (string.IsNullOrEmpty(configuration.PromptFilePath))
+        var serverInfo = buildInfo.Data.Servers.FirstOrDefault(x => x.Name.Equals(configuration.ServerName, StringComparison.OrdinalIgnoreCase));
+        if (serverInfo == null)
         {
-            promptsPath = Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "docs", "e2eTestPrompts.md");
-        }
-        else
-        {
-            promptsPath = Path.GetFullPath(configuration.PromptFilePath);
+            throw new InvalidOperationException($"Server information not found for server: {configuration.ServerName}");
         }
 
-        var promptDatastore = new PromptDatastore(promptsPath);
+        var platformInfo = serverInfo.Platforms.FirstOrDefault(p =>
+        {
+            var pIdentifier = $"{p.DotnetOs}-{p.Architecture}";
+            return RuntimeInformation.RuntimeIdentifier.Equals(pIdentifier);
+        });
+        if (platformInfo == null)
+        {
+            throw new InvalidOperationException($"Platform information not found for server: {configuration.ServerName}");
+        }
+
+        var artifactPath = Path.Combine(configuration.BuildDirectory, platformInfo.ArtifactPath);
+        if (!Directory.Exists(artifactPath))
+        {
+            throw new InvalidOperationException($"Artifact path does not exist: {artifactPath}");
+        }
+
+        return Task.FromResult(new McpServerMetadata(artifactPath));
+    }
+
+    private static async Task CreateEvalsAsync(string repoRoot, RunConfiguration configuration, BuildInfo? buildInfo = null, McpServerMetadata? mcpServerInformation = null)
+    {
+        if (mcpServerInformation == null)
+        {
+            // Assuming that Azure.Mcp.Tools.Acr will also have E2E prompts that are `acr_`
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("WARNING: MCP server information is null. Assuming the assembly name and tool area match.");
+            Console.ResetColor();
+        }
+
+        var promptDatastore = new PromptDatastore(configuration.PromptFilePath);
         var vallyEvalDirectory = Path.Combine(configuration.VallyBaseDirectory, "evals");
 
         Directory.CreateDirectory(vallyEvalDirectory);
@@ -134,7 +198,7 @@ internal class Program
 
         if (buildInfo != null)
         {
-            var testToolNamespaces = GetTestToolNamespaces(buildInfo, promptDatastore);
+            var testToolNamespaces = GetToolNamespacesFromBuildInfo(buildInfo, promptDatastore, mcpServerInformation);
             if (testToolNamespaces.Count == 0)
             {
                 Console.WriteLine("No valid namespaces found in build info. Exiting.");
@@ -166,12 +230,19 @@ internal class Program
 
                     return p;
                 })
-                .OrderBy(p => p.Prompt)
-                .ToList();
+                .OrderBy(p => p.Prompt);
 
-            if (prompts.Count == 0)
+            if (!prompts.Any())
             {
                 Console.WriteLine($"- No prompts found for namespace: {ns}");
+                continue;
+            }
+
+            var noInteractionPrompts = prompts.Where(p => p.Interaction == PromptInteraction.None).ToList();
+
+            if (!noInteractionPrompts.Any())
+            {
+                Console.WriteLine($"- All prompts require interaction for namespace: {ns}");
                 continue;
             }
 
@@ -179,7 +250,7 @@ internal class Program
             Directory.CreateDirectory(outputDirectory);
             var outputFile = Path.Combine(outputDirectory, "eval.yaml");
 
-            await VallyUtilities.WritePromptsAsync(prompts, outputFile, force: true);
+            await VallyUtilities.WritePromptsAsync(noInteractionPrompts, outputFile, force: true);
         }
     }
 }

@@ -6,6 +6,7 @@
     <RootNamespace>CopilotCliTester</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <CopilotNpmRegistryUrl>https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/</CopilotNpmRegistryUrl>
   </PropertyGroup>
 
   <ItemGroup>

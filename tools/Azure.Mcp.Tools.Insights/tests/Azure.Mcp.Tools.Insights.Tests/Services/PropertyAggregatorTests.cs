@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 using Azure.Mcp.Tools.Insights.Services;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Insights.UnitTests.Services;
+namespace Azure.Mcp.Tools.Insights.Tests.Services;
 
 public class PropertyAggregatorTests
 {
