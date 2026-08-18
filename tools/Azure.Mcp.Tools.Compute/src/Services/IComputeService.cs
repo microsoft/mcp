@@ -41,6 +41,7 @@ public interface IComputeService
         CancellationToken cancellationToken = default);
 
     Task<VmCreateResult> CreateVmAsync(
+        bool runningInRemoteMode,
         string vmName,
         string resourceGroup,
         string subscription,
@@ -98,6 +99,7 @@ public interface IComputeService
         CancellationToken cancellationToken = default);
 
     Task<VmssCreateResult> CreateVmssAsync(
+        bool runningInRemoteMode,
         string vmssName,
         string resourceGroup,
         string subscription,

@@ -422,7 +422,8 @@ public sealed class NamespaceToolLoader(
             var commandContext = new CommandContext(currentActivity)
             {
                 McpServer = request.Server,
-                ProgressToken = request.Params?.ProgressToken
+                ProgressToken = request.Params?.ProgressToken,
+                RunningInRemoteMode = _options.Value.IsHttpMode
             };
             var realCommand = cmd.GetCommand();
 

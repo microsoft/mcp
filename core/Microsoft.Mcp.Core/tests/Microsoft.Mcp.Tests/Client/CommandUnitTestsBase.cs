@@ -29,7 +29,7 @@ public abstract class CommandUnitTestsBase<TCommand, TService> : IDisposable
     protected IServiceCollection Services { get; init; }
 
     protected ServiceProvider ServiceProvider { get => field ??= Services.BuildServiceProvider(); }
-    protected CommandContext Context { get => field ??= new(); }
+    protected CommandContext Context { get => field ??= new(); set; }
     protected TCommand Command { get => field ??= ServiceProvider.GetRequiredService<TCommand>(); }
     protected Command CommandDefinition { get => field ??= Command.GetCommand(); }
 

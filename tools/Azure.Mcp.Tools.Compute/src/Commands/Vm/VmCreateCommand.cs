@@ -46,25 +46,22 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger, IComputeSer
         base.ValidateOptions(options, validationResult);
 
         // Determine OS type from image
-        var effectiveOsType = ComputeUtilities.DetermineOsType(options.OsType, options.Image);
+        var isWindows = "windows".Equals(ComputeUtilities.DetermineOsType(options.OsType, options.Image), StringComparison.OrdinalIgnoreCase);
 
         // Custom validation: For Windows VMs, password is required
-        if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase) &&
-            string.IsNullOrEmpty(options.AdminPassword))
+        if (isWindows && string.IsNullOrEmpty(options.AdminPassword))
         {
             validationResult.Errors.Add("The --admin-password option is required for Windows VMs.");
         }
 
         // Custom validation: For Windows VMs, computer name cannot exceed 15 characters
-        if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase) && options.VmName?.Length > 15)
+        if (isWindows && options.VmName?.Length > 15)
         {
             validationResult.Errors.Add(VmRequirements.WindowsComputerName);
         }
 
         // Custom validation: For Linux VMs, either SSH key or password must be provided
-        if (effectiveOsType.Equals("linux", StringComparison.OrdinalIgnoreCase) &&
-            string.IsNullOrEmpty(options.SshPublicKey) &&
-            string.IsNullOrEmpty(options.AdminPassword))
+        if (!isWindows && string.IsNullOrEmpty(options.SshPublicKey) && string.IsNullOrEmpty(options.AdminPassword))
         {
             validationResult.Errors.Add(
                 "Linux VMs require authentication. Please provide either --ssh-public-key or --admin-password. " +
@@ -80,6 +77,7 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger, IComputeSer
             context.Activity?.AddTag("subscription", options.Subscription);
 
             var result = await _computeService.CreateVmAsync(
+                context.RunningInRemoteMode,
                 options.VmName,
                 options.ResourceGroup,
                 options.Subscription!,

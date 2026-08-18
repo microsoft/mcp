@@ -13,7 +13,7 @@ public class RegistryDiscoveryStrategyHelper
 {
     public static RegistryDiscoveryStrategy CreateStrategy(ServerStartOptions? options = null, ILogger<RegistryDiscoveryStrategy>? logger = null)
     {
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServerStartOptions());
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(options ?? new());
         logger ??= Substitute.For<ILogger<RegistryDiscoveryStrategy>>();
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
         var registryRoot = RegistryServerHelper.GetRegistryRoot(typeof(Server.Program).Assembly, "Azure.Mcp.Server.Resources.registry.json");

@@ -103,9 +103,9 @@ public sealed class ExtensionSetupTests
     }
 
     [Fact]
-    public void RegisterCommands_NoServiceStartOptions_IncludesAzqrCommand()
+    public void RegisterCommands_NoServerStartOptions_IncludesAzqrCommand()
     {
-        // Arrange – ServiceStartOptions not registered (first DI container (CLI routing) scenario) where all commands
+        // Arrange – ServerStartOptions not registered (first DI container (CLI routing) scenario) where all commands
         // are exposed. See: ConfigureServices method in https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/src/Program.cs
         var provider = BuildServiceProvider(startOptions: null);
         var setup = new ExtensionSetup();
