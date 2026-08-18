@@ -20,8 +20,10 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
         user-assigned, or combined managed identity. Updates can switch between identity types, but cannot replace an existing
         user-assigned identity with a different user-assigned identity. Updates preserve the default recovery group ID,
         additional recovery groups, and omitted plan or default group descriptions. The plan description is required when
-        creating a plan. A user-assigned identity update must include the existing identity's full resource ID. If it is not
-        provided, ask the user for it instead of assuming the recovery plan's existing user-assigned identity.
+        creating a plan and must be 5 to 50 characters. Do not assume SystemAssigned or any other identity type. If the user
+        does not specify an identity type, ask them to choose SystemAssigned, UserAssigned, or SystemAndUserAssigned. A
+        user-assigned identity update must include the existing identity's full resource ID. If it is not provided, ask the
+        user for it instead of assuming the recovery plan's existing user-assigned identity.
         """,
     Destructive = true,
     Idempotent = true,

@@ -21,7 +21,7 @@ public sealed class RecoveryPlanCreateOptions
     [Option(Description = "The recovery plan description, from 5 to 50 characters. Required when creating a plan; on update, the existing description is preserved when omitted.")]
     public string? PlanDescription { get; set; }
 
-    [Option(Description = "The managed identity type for the recovery plan. Supported values: SystemAssigned, UserAssigned, and SystemAndUserAssigned. Specify this on every create or update; updates can switch identity types, but cannot replace an existing user-assigned identity with a different user-assigned identity.")]
+    [Option(Description = "The customer-selected managed identity type for the recovery plan. Supported values: SystemAssigned, UserAssigned, and SystemAndUserAssigned. Do not assume a default; ask the customer when they have not specified an identity type. Specify this on every create or update; updates can switch identity types, but cannot replace an existing user-assigned identity with a different user-assigned identity.")]
     public required RecoveryPlanIdentityKind IdentityType { get; set; }
 
     [Option(Description = "The full resource ID of the user-assigned managed identity. Required when --identity-type is UserAssigned or SystemAndUserAssigned and not allowed when it is SystemAssigned. On update, specify the existing user-assigned identity because changing it to a different user-assigned identity is not supported.")]
