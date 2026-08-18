@@ -19,7 +19,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Metadata;
     Description = "List Azure Advisor recommendation metadata, also known as recommendation types. " +
                   "Use this tool before deploying resources such as virtual machines to discover what recommendations Advisor could produce, even when there are no active recommendations. " +
                   "Show Advisor service retirements on, before, or after a specified retirement date, or find service-retirement metadata by Service Health tracking ID. " +
-                  "The global Azure Resource Graph metadata supports greenfield discovery and resource-type filtering for brownfield onboarding. " +
+                  "The global Azure Resource Graph catalog supports greenfield discovery and resource-type filtering for brownfield onboarding. " +
                   "Optional filters include language, resource type, impact, category, subcategory, tracking ID, and retirement date. " +
                   "Returns localized type IDs, names, categories, subcategories, impact, priority, descriptions, benefits, actions, scope, source query, and service-retirement details, " +
                   "ordered by impact from High to Medium to Low and then by display name.",

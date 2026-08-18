@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.Advisor.Models;
 /// (from <c>properties.sourceProperties.serviceRetirement</c>). <see cref="TrackingIds"/>
 /// are the authoritative Service Health tracking IDs; <see cref="AshUrls"/> are the parallel
 /// ready-made Service Health deep links.
-/// <summary>
+/// </summary>
 public sealed record RecommendationServiceRetirement(
     string? RetirementDate,
     string? RetirementFeatureName,

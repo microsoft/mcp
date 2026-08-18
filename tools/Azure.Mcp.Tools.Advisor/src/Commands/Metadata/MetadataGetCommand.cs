@@ -30,7 +30,7 @@ public sealed class MetadataGetCommand(ILogger<MetadataGetCommand> logger, IAdvi
     private readonly IAdvisorService _advisorService = advisorService;
     private readonly ILogger<MetadataGetCommand> _logger = logger;
 
-    // The set of locales present in the Advisor recommendation metadata (properties.language).
+    // The set of locales present in the Advisor recommendation-metadata catalog (properties.language).
     private static readonly HashSet<string> SupportedLanguages = new(StringComparer.OrdinalIgnoreCase)
     {
         "en", "cs", "de", "es", "fr", "hu", "id", "it", "ja", "ko",
@@ -90,7 +90,7 @@ public sealed class MetadataGetCommand(ILogger<MetadataGetCommand> logger, IAdvi
         _ => base.GetErrorMessage(ex)
     };
 
-    // Normalizes a user-supplied locale to a value present in the metadata. Matches are case-insensitive.
+    // Normalizes a user-supplied locale to a value present in the catalog. Matches are case-insensitive.
     // Region-qualified tags (e.g. 'en-US') fall back to their primary subtag ('en') when that base language
     // is supported; full script/region tags such as 'pt-br' and 'zh-hans' are matched exactly.
     private static bool TryNormalizeLanguage(string? language, out string normalized)
