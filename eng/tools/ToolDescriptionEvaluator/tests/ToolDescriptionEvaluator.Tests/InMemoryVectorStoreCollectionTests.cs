@@ -1,15 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.VectorData;
 using ToolSelection.VectorDb;
 using Xunit;
 
-namespace ToolDescriptionEvaluator.UnitTests;
+namespace ToolDescriptionEvaluator.Tests;
 
 public class InMemoryVectorStoreCollectionTests
 {

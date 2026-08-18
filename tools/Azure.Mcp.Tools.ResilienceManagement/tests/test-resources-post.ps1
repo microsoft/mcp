@@ -41,6 +41,7 @@ $enrollmentName = $DeploymentOutputs['ENROLLMENTNAME']
 $goalTemplateName = $DeploymentOutputs['GOALTEMPLATENAME']
 $goalAssignmentName = $DeploymentOutputs['GOALASSIGNMENTNAME']
 $recoveryPlanName = $DeploymentOutputs['RECOVERYPLANNAME']
+$drillName = $DeploymentOutputs['DRILLNAME']
 
 $serviceGroupApiVersion = '2024-02-01-preview'
 $membershipApiVersion = '2023-09-01-preview'
@@ -198,6 +199,55 @@ $checkReadinessPath = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanNa
 Invoke-ResilienceRestPost -Path $checkReadinessPath | Out-Null
 Wait-ResilienceProvisioning -Path $recoveryPlanPath
 
+# 8) Create a drill on the service group.
+$drillPath = "$serviceGroupResilienceBase/drills/$drillName`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPut -Path $drillPath -Body @{
+    identity   = @{
+        type = 'SystemAssigned'
+    }
+    properties = @{
+        drillType               = 'Zonal'
+        rbacSetupMode           = 'AutomatedBuiltinRoles'
+        drillAssetProperties    = @{
+            subscription  = $subscriptionId
+            region        = 'westus2'
+            resourceGroup = $ResourceGroupName
+        }
+        chaosResourceProperties = @{
+            identity                       = @{ type = 'SystemAssigned' }
+            chaosResourceIdentityForFaults = @{ type = 'SystemAssigned' }
+        }
+        recoveryPlanProperties  = @{
+            recoveryPlanId = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName"
+            identity       = @{ type = 'SystemAssigned' }
+        }
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $drillPath
+
+# Capture the drill resource created by the drill provisioning so the
+# drill/resource live tests can read them from deployment outputs. The drill resources appear
+# asynchronously, so poll the list until one shows up.
+$drillResourcesPath = "$serviceGroupResilienceBase/drills/$drillName/drillResources`?api-version=$resilienceApiVersion"
+$drillResourceName = $null
+$deadline = (Get-Date).AddSeconds(300)
+while (-not $drillResourceName -and (Get-Date) -lt $deadline) {
+    $drillResources = (Invoke-AzRestMethod -Method GET -Path $drillResourcesPath).Content | ConvertFrom-Json
+    $drillResourceName = $drillResources.value | Select-Object -First 1 -ExpandProperty name
+    if (-not $drillResourceName) {
+        Write-Host "  waiting for drill resources to appear..."
+        Start-Sleep -Seconds 15
+    }
+}
+
+if ($drillResourceName) {
+    $DeploymentOutputs['DRILLRESOURCENAME'] = $drillResourceName
+    New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot | Out-Null
+}
+else {
+    Write-Warning "No drill resources appeared after provisioning; DRILLRESOURCENAME was not set."
+}
+
 # Capture the recovery job created by the readiness check (and its first resource, if any) so the
 # recovery job/resource live tests can read them from deployment outputs. The job appears
 # asynchronously, so poll the list until one shows up.
@@ -230,4 +280,4 @@ else {
     Write-Warning "No recovery job appeared after the readiness check; RECOVERYJOBNAME was not set."
 }
 
-Write-Host "Resilience test resources are ready (service group: $serviceGroupName, usage plan: $usagePlanName, enrollment: $enrollmentName, goal template: $goalTemplateName, goal assignment: $goalAssignmentName, recovery plan: $recoveryPlanName)."
+Write-Host "Resilience test resources are ready (service group: $serviceGroupName, usage plan: $usagePlanName, enrollment: $enrollmentName, goal template: $goalTemplateName, goal assignment: $goalAssignmentName, recovery plan: $recoveryPlanName, drill: $drillName)."

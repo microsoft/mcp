@@ -144,14 +144,16 @@ public sealed class PromptParserTests : IDisposable
             | advisor_recommendation_list | list recommendations | none |
             | advisor_recommendation_apply | apply recommendations to this template | context-required |
             | advisor_recommendation_apply | apply recommendations | clarification-required |
+            | advisor_recommendation_list | investigate recommendation routing | investigation-required |
             """);
 
         var result = PromptParser.ParseFile(_tempFile);
 
-        Assert.Equal(3, result.Count);
+        Assert.Equal(4, result.Count);
         Assert.Equal(PromptInteraction.None, result[0].Interaction);
         Assert.Equal(PromptInteraction.ContextRequired, result[1].Interaction);
         Assert.Equal(PromptInteraction.ClarificationRequired, result[2].Interaction);
+        Assert.Equal(PromptInteraction.InvestigationRequired, result[3].Interaction);
         Assert.Equal("apply recommendations to this template", result[1].Prompt);
     }
 
