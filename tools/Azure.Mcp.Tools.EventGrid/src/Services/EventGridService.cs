@@ -367,8 +367,24 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
             // Direct lookup in the specific resource group instead of enumerating every topic
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-            return await GetIfExists(
-                () => resourceGroupResource.Value.GetEventGridTopics().GetIfExistsAsync(topicName, cancellationToken));
+            var topics = resourceGroupResource.Value.GetEventGridTopics();
+            var directMatch = await GetIfExists(() => topics.GetIfExistsAsync(topicName, cancellationToken));
+
+            if (directMatch != null)
+            {
+                return directMatch;
+            }
+
+            // Fall back to enumeration so casing differences still resolve the topic
+            await foreach (var topic in topics.GetAllAsync(cancellationToken: cancellationToken))
+            {
+                if (topic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
+                {
+                    return topic;
+                }
+            }
+
+            return null;
         }
 
         // Search in all resource groups
@@ -394,8 +410,24 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
             // Direct lookup in the specific resource group instead of enumerating every system topic
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-            return await GetIfExists(
-                () => resourceGroupResource.Value.GetSystemTopics().GetIfExistsAsync(topicName, cancellationToken));
+            var systemTopics = resourceGroupResource.Value.GetSystemTopics();
+            var directMatch = await GetIfExists(() => systemTopics.GetIfExistsAsync(topicName, cancellationToken));
+
+            if (directMatch != null)
+            {
+                return directMatch;
+            }
+
+            // Fall back to enumeration so casing differences still resolve the system topic
+            await foreach (var systemTopic in systemTopics.GetAllAsync(cancellationToken: cancellationToken))
+            {
+                if (systemTopic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
+                {
+                    return systemTopic;
+                }
+            }
+
+            return null;
         }
 
         // Search in all resource groups
