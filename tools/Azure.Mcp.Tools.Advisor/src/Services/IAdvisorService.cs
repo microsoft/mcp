@@ -27,7 +27,7 @@ public interface IAdvisorService
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
-    Task<Recommendation> PatchRecommendationAsync(
+    Task<Recommendation> UpdateRecommendationAsync(
         string subscription,
         string recommendationId,
         RecommendationStatus recommendationStatus,

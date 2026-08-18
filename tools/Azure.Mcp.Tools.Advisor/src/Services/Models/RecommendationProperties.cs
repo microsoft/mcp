@@ -23,29 +23,11 @@ internal sealed class RecommendationProperties
 
     public DateTimeOffset? PostponedUntilDateTime { get; set; }
 
-    public DateTimeOffset? LastRefreshed { get; set; }
-
     public DateTimeOffset? LastUpdated { get; set; }
-
-    public DateTimeOffset? CreatedTime { get; set; }
 
     public string? RecommendationTypeId { get; set; }
 
     public string? CompletionType { get; set; }
-
-    public string? Risk { get; set; }
-
-    public string? Description { get; set; }
-
-    public string? Label { get; set; }
-
-    public string? LearnMoreLink { get; set; }
-
-    public string? PotentialBenefits { get; set; }
-
-    public string? SourceSystem { get; set; }
-
-    public string? SuppressionId { get; set; }
 
     /// <summary> Short description of the recommendation. </summary>
     public RecommendationDescription? ShortDescription { get; set; }

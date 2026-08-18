@@ -820,7 +820,7 @@
     },
     {
       "name": "update_azure_advisor_recommendation_state",
-      "description": "Update the status of one Azure Advisor recommendation in a subscription. Mark an Advisor recommendation as completed. Dismiss an Advisor recommendation because the risk is acceptable by using the RiskIsAcceptable dismissal reason, or choose another dismissal reason. Postpone an Advisor recommendation until the requested future calendar date, such as December 31, 2026. Reactivate a postponed or dismissed Advisor recommendation by setting it to New. Requires the recommendation stable ID, also called recommendation ID, and returns the updated recommendation.",
+      "description": "Update the customer-provided status of one Azure Advisor recommendation in a subscription. Mark an Advisor recommendation as Completed. Dismiss it because the risk is acceptable by using RiskIsAcceptable, or select another explicit reason. Postpone it until a future date and time, or reactivate it by setting it to New. Requires subscription context from a subscription ID, subscription name, or configured default, plus the recommendation stable ID, also called recommendation ID. If a dismissal reason was not provided, ask the user to choose one rather than assuming Other. State changes are rejected for Security category, Undefined-state, and platform-resolved recommendations. Returns a concise shared recommendation object with the updated lifecycle and identifying details.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -848,7 +848,7 @@
         }
       },
       "mappedToolList": [
-        "advisor_recommendation_patch"
+        "advisor_recommendation_update"
       ]
     },
     {

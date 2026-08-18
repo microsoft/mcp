@@ -19,7 +19,7 @@ public class AdvisorSetup : IAreaSetup
     {
         services.AddSingleton<IAdvisorService, AdvisorService>();
         services.AddSingleton<RecommendationListCommand>();
-        services.AddSingleton<RecommendationPatchCommand>();
+        services.AddSingleton<RecommendationUpdateCommand>();
         services.AddSingleton<RecommendationSummaryCommand>();
         services.AddSingleton<RecommendationApplyCommand>();
         services.AddSingleton<RecommendationMetadataListCommand>();
@@ -44,7 +44,7 @@ public class AdvisorSetup : IAreaSetup
 
         // Register Advisor commands
         recommendation.AddCommand<RecommendationListCommand>(serviceProvider);
-        recommendation.AddCommand<RecommendationPatchCommand>(serviceProvider);
+        recommendation.AddCommand<RecommendationUpdateCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationSummaryCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationApplyCommand>(serviceProvider);
         metadata.AddCommand<RecommendationMetadataListCommand>(serviceProvider);

@@ -17,13 +17,13 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Advisor.Tests.Services;
 
-public class AdvisorRecommendationPatchServiceTests
+public class AdvisorRecommendationUpdateServiceTests
 {
     private const string SubscriptionId = "12345678-1234-1234-1234-123456789012";
     private readonly IAzureService _azureService = Substitute.For<IAzureService>();
 
     [Fact]
-    public async Task PatchRecommendationAsync_SendsCloudAwareAuthenticatedPatch()
+    public async Task UpdateRecommendationAsync_SendsCloudAwareAuthenticatedPatch()
     {
         var handler = ConfigureService(
             ArmEnvironment.AzureChina,
@@ -48,7 +48,7 @@ public class AdvisorRecommendationPatchServiceTests
             """);
         var service = new AdvisorService(_azureService);
 
-        var result = await service.PatchRecommendationAsync(
+        var result = await service.UpdateRecommendationAsync(
             "subscription-name",
             "rec/1",
             RecommendationStatus.Completed,
@@ -70,16 +70,16 @@ public class AdvisorRecommendationPatchServiceTests
         Assert.False(properties.TryGetProperty("postponedUntilDateTime", out _));
         Assert.False(properties.TryGetProperty("recommendationDismissReason", out _));
 
-        Assert.Equal("rec-1", result.StableId);
+        Assert.Equal("rec-1", result.RecommendationId);
         Assert.Equal("Completed", result.RecommendationStatus);
         Assert.Equal("Deploy across zones", result.Solution);
         Assert.Equal("Microsoft.Compute/virtualMachines", result.ImpactedResourceType);
     }
 
     [Fact]
-    public async Task PatchRecommendationAsync_Postponed_IncludesPostponementDate()
+    public async Task UpdateRecommendationAsync_Postponed_IncludesPostponementDate()
     {
-        var postponedUntil = DateTimeOffset.UtcNow.AddDays(30);
+        var postponedUntil = new DateTimeOffset(2099, 1, 1, 12, 30, 0, TimeSpan.FromHours(5.5));
         var handler = ConfigureService(
             ArmEnvironment.AzurePublicCloud,
             """
@@ -95,7 +95,7 @@ public class AdvisorRecommendationPatchServiceTests
             """);
         var service = new AdvisorService(_azureService);
 
-        await service.PatchRecommendationAsync(
+        await service.UpdateRecommendationAsync(
             SubscriptionId,
             "rec-1",
             RecommendationStatus.Postponed,
@@ -112,7 +112,7 @@ public class AdvisorRecommendationPatchServiceTests
     }
 
     [Fact]
-    public async Task PatchRecommendationAsync_Dismissed_IncludesDismissReason()
+    public async Task UpdateRecommendationAsync_Dismissed_IncludesDismissReason()
     {
         var handler = ConfigureService(
             ArmEnvironment.AzurePublicCloud,
@@ -129,7 +129,7 @@ public class AdvisorRecommendationPatchServiceTests
             """);
         var service = new AdvisorService(_azureService);
 
-        await service.PatchRecommendationAsync(
+        await service.UpdateRecommendationAsync(
             SubscriptionId,
             "rec-1",
             RecommendationStatus.Dismissed,
@@ -145,9 +145,9 @@ public class AdvisorRecommendationPatchServiceTests
     }
 
     [Theory]
-    [InlineData(RecommendationStatus.Postponed, null, null, "PostponedUntilDateTime is required")]
-    [InlineData(RecommendationStatus.Dismissed, null, null, "RecommendationDismissReason is required")]
-    public async Task PatchRecommendationAsync_MissingStateRequirement_ThrowsArgumentException(
+    [InlineData(RecommendationStatus.Postponed, null, null, "--postponed-until-date-time is required")]
+    [InlineData(RecommendationStatus.Dismissed, null, null, "--recommendation-dismiss-reason is required")]
+    public async Task UpdateRecommendationAsync_MissingStateRequirement_ThrowsArgumentException(
         RecommendationStatus status,
         DateTimeOffset? postponedUntil,
         RecommendationDismissReason? dismissReason,
@@ -156,7 +156,7 @@ public class AdvisorRecommendationPatchServiceTests
         var service = new AdvisorService(_azureService);
 
         var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-            service.PatchRecommendationAsync(
+            service.UpdateRecommendationAsync(
                 SubscriptionId,
                 "rec-1",
                 status,
@@ -169,7 +169,7 @@ public class AdvisorRecommendationPatchServiceTests
     }
 
     [Fact]
-    public async Task PatchRecommendationAsync_BackendJsonError_UsesErrorCodeWithoutRawBody()
+    public async Task UpdateRecommendationAsync_BackendJsonError_UsesErrorCodeAndMessage()
     {
         const string rawBody = """
             {
@@ -186,19 +186,71 @@ public class AdvisorRecommendationPatchServiceTests
         var service = new AdvisorService(_azureService);
 
         var exception = await Assert.ThrowsAsync<RequestFailedException>(() =>
-            service.PatchRecommendationAsync(
+            service.UpdateRecommendationAsync(
+                SubscriptionId,
+                "rec-1",
+                RecommendationStatus.Completed,
+                retryPolicy: new RetryPolicyOptions { MaxRetries = 0 },
+                cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal((int)HttpStatusCode.BadRequest, exception.Status);
+        Assert.Contains("RecommendationStateNotAllowed", exception.Message);
+        Assert.Contains("internal backend details", exception.Message);
+    }
+
+    [Theory]
+    [InlineData(
+        HttpStatusCode.BadRequest,
+        "SecurityRecommendationStateChangeBlocked",
+        "State changes are not allowed for Security category recommendations")]
+    [InlineData(
+        HttpStatusCode.BadRequest,
+        "UndefinedRecommendationStateChangeBlocked",
+        "State changes are not allowed for recommendations with an Undefined state.")]
+    [InlineData(
+        HttpStatusCode.BadRequest,
+        "ResolvedRecommendationStateChangeBlocked",
+        "State changes are not allowed for recommendations that have already been resolved from platform side.")]
+    [InlineData(
+        HttpStatusCode.NotFound,
+        "RecommendationNotFound",
+        "Recommendation was not found. It may have been deleted.")]
+    [InlineData(
+        HttpStatusCode.Conflict,
+        "ConcurrentModification",
+        "The recommendation was modified by another operation. Please retrieve the latest version and retry.")]
+    public async Task UpdateRecommendationAsync_KnownLifecycleError_PreservesCodeAndPublicMessage(
+        HttpStatusCode statusCode,
+        string errorCode,
+        string errorMessage)
+    {
+        var responseBody = $$"""
+            {
+              "error": {
+                "code": "{{errorCode}}",
+                "message": "{{errorMessage}}"
+              }
+            }
+            """;
+        ConfigureService(
+            ArmEnvironment.AzurePublicCloud,
+            responseBody,
+            statusCode);
+        var service = new AdvisorService(_azureService);
+
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() =>
+            service.UpdateRecommendationAsync(
                 SubscriptionId,
                 "rec-1",
                 RecommendationStatus.Completed,
                 cancellationToken: TestContext.Current.CancellationToken));
 
-        Assert.Equal((int)HttpStatusCode.BadRequest, exception.Status);
-        Assert.Contains("RecommendationStateNotAllowed", exception.Message);
-        Assert.DoesNotContain("internal backend details", exception.Message);
+        Assert.Equal(errorCode, exception.ErrorCode);
+        Assert.Contains(errorMessage, exception.Message);
     }
 
     [Fact]
-    public async Task PatchRecommendationAsync_BackendNonJsonError_UsesStatusCode()
+    public async Task UpdateRecommendationAsync_BackendNonJsonError_UsesStatusCode()
     {
         ConfigureService(
             ArmEnvironment.AzurePublicCloud,
@@ -208,7 +260,7 @@ public class AdvisorRecommendationPatchServiceTests
         var service = new AdvisorService(_azureService);
 
         var exception = await Assert.ThrowsAsync<RequestFailedException>(() =>
-            service.PatchRecommendationAsync(
+            service.UpdateRecommendationAsync(
                 SubscriptionId,
                 "rec-1",
                 RecommendationStatus.Completed,
@@ -220,7 +272,7 @@ public class AdvisorRecommendationPatchServiceTests
     }
 
     [Fact]
-    public async Task PatchRecommendationAsync_RetryableFailure_RetriesPatch()
+    public async Task UpdateRecommendationAsync_RetryableFailure_RetriesRequest()
     {
         var attempts = 0;
         var handler = ConfigureService(
@@ -255,7 +307,7 @@ public class AdvisorRecommendationPatchServiceTests
             });
         var service = new AdvisorService(_azureService);
 
-        var result = await service.PatchRecommendationAsync(
+        var result = await service.UpdateRecommendationAsync(
             SubscriptionId,
             "rec-1",
             RecommendationStatus.Completed,
@@ -264,6 +316,55 @@ public class AdvisorRecommendationPatchServiceTests
 
         Assert.Equal(2, handler.CallCount);
         Assert.Equal("Completed", result.RecommendationStatus);
+    }
+
+    [Fact]
+    public async Task UpdateRecommendationAsync_MaxRetriesAboveThree_IsCappedAtThree()
+    {
+        var handler = ConfigureService(
+            ArmEnvironment.AzurePublicCloud,
+            string.Empty,
+            responseFactory: () =>
+            {
+                var response = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+                response.Headers.RetryAfter = new(TimeSpan.Zero);
+                return response;
+            });
+        var service = new AdvisorService(_azureService);
+
+        await Assert.ThrowsAsync<RequestFailedException>(() =>
+            service.UpdateRecommendationAsync(
+                SubscriptionId,
+                "rec-1",
+                RecommendationStatus.Completed,
+                retryPolicy: new RetryPolicyOptions { MaxRetries = 10 },
+                cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal(4, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task UpdateRecommendationAsync_NoRetryOptions_DefaultsToThreeRetries()
+    {
+        var handler = ConfigureService(
+            ArmEnvironment.AzurePublicCloud,
+            string.Empty,
+            responseFactory: () =>
+            {
+                var response = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+                response.Headers.RetryAfter = new(TimeSpan.Zero);
+                return response;
+            });
+        var service = new AdvisorService(_azureService);
+
+        await Assert.ThrowsAsync<RequestFailedException>(() =>
+            service.UpdateRecommendationAsync(
+                SubscriptionId,
+                "rec-1",
+                RecommendationStatus.Completed,
+                cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal(4, handler.CallCount);
     }
 
     private CapturingHttpMessageHandler ConfigureService(

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Services;
 using Xunit;
 
@@ -121,7 +120,7 @@ public class AdvisorServiceConversionTests
     }
 
     [Fact]
-    public void ConvertToAdvisorRecommendationModel_PopulatesLifecycleAndSharedResponseFields()
+    public void ConvertToAdvisorRecommendationModel_PopulatesConciseSharedResponseFields()
     {
         const string json = """
             {
@@ -163,27 +162,16 @@ public class AdvisorServiceConversionTests
         using var doc = JsonDocument.Parse(json);
         var result = AdvisorService.ConvertToAdvisorRecommendationModel(doc.RootElement);
 
-        Assert.Equal("/subscriptions/abc/providers/Microsoft.Advisor/recommendations/rec4", result.RecommendationId);
-        Assert.Equal("rec4", result.StableId);
-        Assert.Equal("Microsoft.Advisor/recommendations", result.Type);
+        Assert.Equal("rec4", result.RecommendationId);
         Assert.Equal("Deploy across zones.", result.Solution);
         Assert.Equal("ZoneResiliency", result.SubCategory);
         Assert.Equal("vm1", result.ImpactedResource);
         Assert.Equal("Dismissed", result.RecommendationStatus);
         Assert.Equal("RiskIsAcceptable", result.RecommendationDismissReason);
         Assert.Equal(DateTimeOffset.Parse("2027-01-02T03:04:05Z"), result.PostponedUntilDateTime);
-        Assert.Equal(DateTimeOffset.Parse("2026-01-02T03:04:05Z"), result.LastRefreshed);
         Assert.Equal(DateTimeOffset.Parse("2026-02-03T04:05:06Z"), result.LastUpdated);
-        Assert.Equal(DateTimeOffset.Parse("2025-03-04T05:06:07Z"), result.CreatedTime);
         Assert.Equal("type-1", result.RecommendationTypeId);
         Assert.Equal("ManuallyCompleted", result.CompletionType);
-        Assert.Equal("Service disruption", result.Risk);
-        Assert.Equal("Use availability zones.", result.Description);
-        Assert.Equal("Improve resiliency", result.Label);
-        Assert.Equal("https://learn.microsoft.com/azure/reliability/", result.LearnMoreLink);
-        Assert.Equal("Higher availability", result.PotentialBenefits);
-        Assert.Equal("Advisor", result.SourceSystem);
-        Assert.Equal("suppression-1", result.SuppressionId);
     }
 
     [Fact]

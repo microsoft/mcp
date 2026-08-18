@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the advisor recommendation update tool to set an Azure Advisor recommendation state to New, Postponed, Dismissed, or Completed."

@@ -14,16 +14,15 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Advisor.Tests.Recommendation;
 
-public class RecommendationPatchCommandTests
-    : SubscriptionCommandUnitTestsBase<RecommendationPatchCommand, IAdvisorService>
+public class RecommendationUpdateCommandTests
+    : SubscriptionCommandUnitTestsBase<RecommendationUpdateCommand, IAdvisorService>
 {
-    private static readonly Models.Recommendation PatchedRecommendation = new(
+    private static readonly Models.Recommendation UpdatedRecommendation = new(
         ResourceId: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm",
         RecommendationText: "Enable availability zones",
         Category: "HighAvailability",
         Impact: "High",
-        RecommendationId: "/subscriptions/sub/providers/Microsoft.Advisor/recommendations/rec-1",
-        StableId: "rec-1",
+        RecommendationId: "rec-1",
         RecommendationStatus: nameof(RecommendationStatus.Completed));
 
     [Fact]
@@ -31,9 +30,10 @@ public class RecommendationPatchCommandTests
     {
         var command = Command.GetCommand();
 
-        Assert.Equal("patch", command.Name);
+        Assert.Equal("update", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
+        Assert.Contains("--subscription", command.Description);
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public class RecommendationPatchCommandTests
     {
         if (shouldSucceed)
         {
-            ConfigureSuccessfulPatch();
+            ConfigureSuccessfulUpdate();
         }
 
         var response = await ExecuteCommandAsync(args);
@@ -72,7 +72,7 @@ public class RecommendationPatchCommandTests
     public async Task ExecuteAsync_PostponedWithFutureDate_ForwardsAllArguments()
     {
         var postponedUntil = DateTimeOffset.UtcNow.AddDays(30);
-        ConfigureSuccessfulPatch();
+        ConfigureSuccessfulUpdate();
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub1",
@@ -82,7 +82,7 @@ public class RecommendationPatchCommandTests
             "--tenant", "tenant1");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await Service.Received(1).PatchRecommendationAsync(
+        await Service.Received(1).UpdateRecommendationAsync(
             "sub1",
             "rec-1",
             RecommendationStatus.Postponed,
@@ -109,7 +109,7 @@ public class RecommendationPatchCommandTests
     [Fact]
     public async Task ExecuteAsync_Dismissed_ForwardsDismissReason()
     {
-        ConfigureSuccessfulPatch();
+        ConfigureSuccessfulUpdate();
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub1",
@@ -118,7 +118,7 @@ public class RecommendationPatchCommandTests
             "--recommendation-dismiss-reason", "RiskIsAcceptable");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await Service.Received(1).PatchRecommendationAsync(
+        await Service.Received(1).UpdateRecommendationAsync(
             "sub1",
             "rec-1",
             RecommendationStatus.Dismissed,
@@ -130,9 +130,9 @@ public class RecommendationPatchCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsPatchedRecommendation()
+    public async Task ExecuteAsync_ReturnsUpdatedRecommendation()
     {
-        ConfigureSuccessfulPatch();
+        ConfigureSuccessfulUpdate();
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub1",
@@ -141,9 +141,9 @@ public class RecommendationPatchCommandTests
 
         var result = ValidateAndDeserializeResponse(
             response,
-            AdvisorJsonContext.Default.RecommendationPatchResult);
+            AdvisorJsonContext.Default.RecommendationUpdateResult);
 
-        Assert.Equal(PatchedRecommendation, result.Recommendation);
+        Assert.Equal(UpdatedRecommendation, result.Recommendation);
     }
 
     [Theory]
@@ -155,7 +155,7 @@ public class RecommendationPatchCommandTests
         HttpStatusCode statusCode,
         string expectedMessage)
     {
-        Service.PatchRecommendationAsync(
+        Service.UpdateRecommendationAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationStatus>(),
@@ -175,9 +175,17 @@ public class RecommendationPatchCommandTests
         Assert.Contains(expectedMessage, response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    private void ConfigureSuccessfulPatch()
+    [Theory]
+    [InlineData("SecurityRecommendationStateChangeBlocked", "Security category")]
+    [InlineData("UndefinedRecommendationStateChangeBlocked", "Undefined")]
+    [InlineData("ResolvedRecommendationStateChangeBlocked", "resolved by the Advisor platform")]
+    [InlineData("RecommendationNotFound", "not found")]
+    [InlineData("ConcurrentModification", "modified concurrently")]
+    public async Task ExecuteAsync_KnownLifecycleFailure_ReturnsActionableMessage(
+        string errorCode,
+        string expectedMessage)
     {
-        Service.PatchRecommendationAsync(
+        Service.UpdateRecommendationAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationStatus>(),
@@ -186,6 +194,45 @@ public class RecommendationPatchCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(PatchedRecommendation);
+            .ThrowsAsync(new RequestFailedException(
+                errorCode == "RecommendationNotFound" ? 404 :
+                errorCode == "ConcurrentModification" ? 409 : 400,
+                "Backend explanation",
+                errorCode,
+                null));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--recommendation-id", "rec-1",
+            "--recommendation-status", "Completed");
+
+        Assert.Contains(expectedMessage, response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DismissedWithoutReason_ListsSupportedReasons()
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--recommendation-id", "rec-1",
+            "--recommendation-status", "Dismissed");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("RiskIsAcceptable", response.Message);
+        Assert.Contains("Other", response.Message);
+    }
+
+    private void ConfigureSuccessfulUpdate()
+    {
+        Service.UpdateRecommendationAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RecommendationStatus>(),
+            Arg.Any<DateTimeOffset?>(),
+            Arg.Any<RecommendationDismissReason?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(UpdatedRecommendation);
     }
 }
