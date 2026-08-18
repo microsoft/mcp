@@ -6,6 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
 
+/// <summary> Options for filtering and limiting Advisor recommendation list results. </summary>
 public class RecommendationListOptions : ISubscriptionOption
 {
     [Option(Description = "Filter recommendations by category (e.g., 'Security', 'Cost', 'Performance', 'HighAvailability', 'OperationalExcellence'). Case-insensitive exact match.")]
@@ -26,9 +27,9 @@ public class RecommendationListOptions : ISubscriptionOption
         "Extract the salient noun(s) from the phrase (e.g., 'Foundry', 'encrypt', 'right-size', 'Key Vault') and pass them here.")]
     public string? Search { get; set; }
 
-    [Option(Description = "Filter recommendations by recommendation subcategory, matched case-insensitively against the Advisor metadata catalog. " +
-        "Known catalog values include ComputeOptimization, DataPerformance, DataProtectionAndRecovery, EfficiencyOptimization, FailureMitigation, GovernanceAndCompliance, MonitoringAndAlerting, NetworkOptimization, Other, Personalized, RegionalResiliency, Reservations, SafeAndSecureDeployment, SavingsPlan, Scalability, ServiceUpgradeAndRetirement, StorageOptimization, UsageOptimization, and ZoneResiliency. " +
-        "The catalog can add values over time, so other subcategories are accepted.")]
+    [Option(Description = "Filter recommendations by recommendation subcategory, matched case-insensitively against the Advisor recommendation metadata. " +
+        "Known values include ComputeOptimization, DataPerformance, DataProtectionAndRecovery, EfficiencyOptimization, FailureMitigation, GovernanceAndCompliance, MonitoringAndAlerting, NetworkOptimization, Other, RegionalResiliency, Reservations, SafeAndSecureDeployment, SavingsPlan, Scalability, ServiceUpgradeAndRetirement, StorageOptimization, UsageOptimization, and ZoneResiliency. " +
+        "Advisor can add values over time, so other subcategories are accepted.")]
     public string? SubCategory { get; set; }
 
     [Option(Description = "Filter recommendations by one or more Service Health tracking IDs, such as QNY1-HB8. " +

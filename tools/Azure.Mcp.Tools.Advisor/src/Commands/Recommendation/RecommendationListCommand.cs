@@ -23,8 +23,10 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "or 'which impact has the most' — for those, call the 'summary' tool instead (it aggregates server-side over the " +
         "entire population, while 'list' is capped at 100 items and will silently undercount). " +
         "Only active recommendations (status 'New') are returned; dismissed and postponed ones are excluded. " +
-        "Returned records are joined with the Advisor recommendation metadata catalog so subcategory, potential benefits, " +
-        "learn-more link, and service-retirement details are current rather than stale. " +
+        "The category, impact and subcategory are always enriched from the matching Advisor recommendation " +
+        "metadata record using recommendationTypeId. " +
+        "Each record also returns recommendationStatus, createdTime, and a metadata-sourced shortDescription " +
+        "using the recommendation type display name. " +
         "Supports optional filters: --category, --impact, --resource-type, --resource, --search, --sub-category, --tracking-ids, --retirement-date. " +
         "--tracking-ids accepts multiple Service Health tracking IDs and returns recommendations matching any of them. " +
         "--tracking-ids and --retirement-date apply only to the ServiceUpgradeAndRetirement subcategory. " +
@@ -35,6 +37,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
+/// <summary> Lists active Azure Advisor recommendations and enriches type-level fields from metadata. </summary>
 public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IAdvisorService advisorService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<RecommendationListOptions, RecommendationListCommand.RecommendationListResult>(subscriptionResolver)
 {
@@ -124,5 +127,6 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         _ => base.GetErrorMessage(ex)
     };
 
+    /// <summary> Response containing Advisor recommendations and the truncation indicator. </summary>
     public sealed record RecommendationListResult(List<Models.Recommendation> Recommendations, bool AreResultsTruncated);
 }

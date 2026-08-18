@@ -19,8 +19,8 @@ public class AdvisorService(IAzureService azureService)
     private const string TrackingIdsProperty =
         "properties.sourceProperties.serviceRetirement.serviceHealth.trackingIds";
 
-    // Recommendation instances are not localized per request, so the catalog join always uses the
-    // invariant English catalog to keep the enriched fields deterministic.
+    // Recommendation instances are not localized per request, so the metadata join always uses the
+    // invariant English metadata to keep the enriched fields deterministic.
     internal const string MetadataJoinLanguage = "en";
 
     private static readonly Dictionary<string, int> ImpactRank = new(StringComparer.OrdinalIgnoreCase)
@@ -79,8 +79,8 @@ public class AdvisorService(IAzureService azureService)
             return recommendations;
         }
 
-        // Recommendation instances carry a point-in-time copy of catalog fields, so re-read them from
-        // the metadata catalog instead of returning a potentially stale snapshot.
+        // Always join the matching metadata record by recommendationTypeId before returning results so
+        // type-level response fields come from the metadata source.
         metadataByTypeId ??= BuildMetadataLookup(
             await GetRecommendationMetadataByTypeIdsAsync(
                 recommendations.Results.Select(r => r.RecommendationTypeId),
@@ -98,15 +98,27 @@ public class AdvisorService(IAzureService azureService)
         filters?.RetirementDate is not null ||
         !string.IsNullOrWhiteSpace(filters?.RetirementDateOperator);
 
+    private static bool HasAnyFilters(RecommendationFilters? filters) =>
+        !string.IsNullOrWhiteSpace(filters?.Category) ||
+        !string.IsNullOrWhiteSpace(filters?.Impact) ||
+        !string.IsNullOrWhiteSpace(filters?.ResourceType) ||
+        !string.IsNullOrWhiteSpace(filters?.Resource) ||
+        !string.IsNullOrWhiteSpace(filters?.Search) ||
+        !string.IsNullOrWhiteSpace(filters?.SubCategory) ||
+        filters?.TrackingIds?.Any(id => !string.IsNullOrWhiteSpace(id)) == true ||
+        filters?.RetirementDate is not null ||
+        !string.IsNullOrWhiteSpace(filters?.RetirementDateOperator);
+
     /// <summary>
-    /// Resolves the metadata-only filters (subcategory, tracking ID, retirement date) into the catalog
-    /// entries they match. Returns <c>null</c> when no metadata-only filter was supplied.
+    /// Resolves the recommendation filters against metadata first and returns the matching recommendation
+    /// type IDs. Recommendation-specific filters are still applied to the recommendation query.
+    /// Returns <c>null</c> when no filter was supplied.
     /// </summary>
     private async Task<Dictionary<string, RecommendationMetadata>?> ResolveMetadataFilterMatchesAsync(
         RecommendationFilters? filters,
         CancellationToken cancellationToken)
     {
-        if (!HasMetadataOnlyFilters(filters))
+        if (!HasAnyFilters(filters))
         {
             return null;
         }
@@ -114,6 +126,9 @@ public class AdvisorService(IAzureService azureService)
         var matchingMetadata = await ListRecommendationMetadataAsync(
             MetadataJoinLanguage,
             new RecommendationMetadataFilters(
+                ResourceType: filters!.ResourceType,
+                Impact: filters.Impact,
+                Category: filters.Category,
                 SubCategory: filters!.SubCategory,
                 TrackingIds: filters.TrackingIds,
                 RetirementDateOperator: filters.RetirementDateOperator,
@@ -155,28 +170,15 @@ public class AdvisorService(IAzureService azureService)
 
             joined.Add(recommendation with
             {
-                RecommendationText = IsUnknownOrEmpty(recommendation.RecommendationText) &&
-                    !string.IsNullOrWhiteSpace(metadata.DisplayName)
-                        ? metadata.DisplayName
-                        : recommendation.RecommendationText,
-                Category = string.IsNullOrWhiteSpace(metadata.Category)
-                    ? recommendation.Category
-                    : metadata.Category,
-                Impact = string.IsNullOrWhiteSpace(metadata.Impact)
-                    ? recommendation.Impact
-                    : metadata.Impact,
+                Category = metadata.Category,
+                Impact = metadata.Impact,
                 SubCategory = metadata.SubCategory,
-                PotentialBenefits = metadata.PotentialBenefits,
-                LearnMoreLink = metadata.LearnMoreLink,
-                ServiceRetirement = metadata.ServiceRetirement,
+                ShortDescription = new RecommendationShortDescription(metadata.DisplayName, null),
             });
         }
 
         return joined;
     }
-
-    private static bool IsUnknownOrEmpty(string? value) =>
-        string.IsNullOrWhiteSpace(value) || value.Equals("Unknown", StringComparison.OrdinalIgnoreCase);
 
     private async Task<List<RecommendationMetadata>> GetRecommendationMetadataByTypeIdsAsync(
         IEnumerable<string?> recommendationTypeIds,
@@ -610,12 +612,15 @@ public class AdvisorService(IAzureService azureService)
 
         if (filters is not null)
         {
-            if (!string.IsNullOrWhiteSpace(filters.Category))
+            var resolvedTypeIds = recommendationTypeIds?.ToList();
+            var metadataWasResolved = resolvedTypeIds is not null;
+
+            if (!metadataWasResolved && !string.IsNullOrWhiteSpace(filters.Category))
             {
                 clauses.Add($"tostring(properties.category) =~ '{SanitizeForKql(filters.Category)}'");
             }
 
-            if (!string.IsNullOrWhiteSpace(filters.Impact))
+            if (!metadataWasResolved && !string.IsNullOrWhiteSpace(filters.Impact))
             {
                 clauses.Add($"tostring(properties.impact) =~ '{SanitizeForKql(filters.Impact)}'");
             }
@@ -636,8 +641,8 @@ public class AdvisorService(IAzureService azureService)
             }
         }
 
-        // SubCategory, TrackingId and RetirementDate only exist on catalog metadata, so they arrive here
-        // already resolved to the set of matching recommendation type IDs.
+        // Metadata-backed filters arrive here as recommendation type IDs. Resource and search filters remain
+        // predicates on recommendation-instance properties.
         var typeIds = recommendationTypeIds?.ToList();
         if (typeIds is { Count: > 0 })
         {
@@ -658,15 +663,47 @@ public class AdvisorService(IAzureService azureService)
             ?? throw new InvalidOperationException("Failed to parse Advisor recommendation data");
 
         var resourceId = advisorRecommendation.Properties?.ResourceMetadata?.ResourceId ?? "Unknown";
+        var extendedProperties = advisorRecommendation.Properties?.ExtendedProperties;
+        var subCategory = GetExtendedPropertyString(extendedProperties, "recommendationSubCategory");
 
         return new(
-            ResourceId: resourceId,
-            RecommendationText: advisorRecommendation.Properties?.ShortDescription?.Problem ?? "Unknown",
-            Category: advisorRecommendation.Properties?.Category ?? "Unknown",
+            Category: advisorRecommendation.Properties?.Category,
+            Control: advisorRecommendation.Properties?.Control,
             Impact: advisorRecommendation.Properties?.Impact,
+            ImpactedField: advisorRecommendation.Properties?.ImpactedField,
+            ImpactedValue: advisorRecommendation.Properties?.ImpactedValue,
+            RecommendationStatus: advisorRecommendation.Properties?.RecommendationStatus,
+            LastRefreshed: advisorRecommendation.Properties?.LastRefreshed,
+            LastUpdated: advisorRecommendation.Properties?.LastUpdated,
+            CreatedTime: advisorRecommendation.Properties?.CreatedTime,
+            RecommendationTypeId: advisorRecommendation.Properties?.RecommendationTypeId,
+            ShortDescription: null,
+            ExtendedProperties: BuildExtendedProperties(extendedProperties),
+            SubCategory: subCategory,
+            ResourceId: resourceId,
             ImpactedResourceType: ParseImpactedResourceType(resourceId),
-            RecommendationTypeId: advisorRecommendation.Properties?.RecommendationTypeId);
+            Id: advisorRecommendation.ResourceId,
+            Type: advisorRecommendation.ResourceType,
+            Name: advisorRecommendation.ResourceName,
+            SubscriptionId: advisorRecommendation.SubscriptionId,
+            ResourceGroup: advisorRecommendation.ResourceGroup,
+            TenantId: advisorRecommendation.TenantId);
     }
+
+    private static IReadOnlyDictionary<string, JsonElement>? BuildExtendedProperties(
+        Models.RecommendationExtendedProperties? extendedProperties)
+    {
+        return extendedProperties?.Properties;
+    }
+
+    private static string? GetExtendedPropertyString(
+        Models.RecommendationExtendedProperties? extendedProperties,
+        string propertyName) =>
+        extendedProperties?.Properties is { } properties &&
+        properties.TryGetValue(propertyName, out var value) &&
+        value.ValueKind == JsonValueKind.String
+            ? value.GetString()
+            : null;
 
     internal static string? ParseImpactedResourceType(string? resourceId)
     {

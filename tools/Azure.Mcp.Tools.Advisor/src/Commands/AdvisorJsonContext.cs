@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Advisor.Commands.Metadata;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
@@ -10,7 +11,9 @@ namespace Azure.Mcp.Tools.Advisor.Commands;
 [JsonSerializable(typeof(RecommendationListCommand.RecommendationListResult))]
 [JsonSerializable(typeof(RecommendationSummaryCommand.RecommendationSummaryResult))]
 [JsonSerializable(typeof(List<string>))]
+[JsonSerializable(typeof(Dictionary<string, JsonElement>))]
 [JsonSerializable(typeof(RecommendationData))]
+[JsonSerializable(typeof(RecommendationExtendedProperties))]
 [JsonSerializable(typeof(RecommendationMetadataData))]
 [JsonSerializable(typeof(RecommendationMetadataDataProperties))]
 [JsonSerializable(typeof(RecommendationMetadataActionData))]
@@ -19,6 +22,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands;
 [JsonSerializable(typeof(RecommendationMetadataServiceRetirementData))]
 [JsonSerializable(typeof(RecommendationMetadataSourceProperties))]
 [JsonSerializable(typeof(Models.Recommendation))]
+[JsonSerializable(typeof(Models.RecommendationShortDescription))]
 [JsonSerializable(typeof(Models.RecommendationMetadata))]
 [JsonSerializable(typeof(Models.RecommendationGroup))]
 [JsonSerializable(typeof(Models.RecommendationSummary))]

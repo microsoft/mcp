@@ -67,9 +67,9 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         // Arrange
         var expectedRecommendations = new List<Models.Recommendation>
         {
-            new(ResourceId: "recId1", RecommendationText: "Recommendation 1", Category: "HighAvailability"),
-            new(ResourceId: "recId2", RecommendationText: "Recommendation 2", Category: "Cost"),
-            new(ResourceId: "recId3", RecommendationText: "Recommendation 3", Category: "Performance")
+            new(ResourceId: "recId1", Category: "HighAvailability"),
+            new(ResourceId: "recId2", Category: "Cost"),
+            new(ResourceId: "recId3", Category: "Performance")
         };
         Service.ListRecommendationsAsync(
             Arg.Any<string>(),
@@ -89,7 +89,6 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
 
         Assert.Equal(expectedRecommendations.Count, result.Recommendations.Count);
         Assert.Equal(expectedRecommendations[0].ResourceId, result.Recommendations[0].ResourceId);
-        Assert.Equal(expectedRecommendations[0].RecommendationText, result.Recommendations[0].RecommendationText);
         Assert.Equal(expectedRecommendations[0].Category, result.Recommendations[0].Category);
 
         // Verify the mock was called
@@ -412,24 +411,20 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     public async Task ExecuteAsync_ReturnsMetadataEnrichedFields()
     {
         // Arrange
-        var retirement = new Models.RecommendationServiceRetirement(
-            RetirementDate: "2026-03-31",
-            RetirementFeatureName: "Legacy feature",
-            TrackingIds: ["QNY1-HB8"],
-            AshUrls: ["https://aka.ms/ash"]);
         var recommendations = new List<Models.Recommendation>
         {
             new(
                 ResourceId: "resId1",
-                RecommendationText: "Migrate off the retiring feature",
                 Category: "HighAvailability",
                 Impact: "High",
+                SubCategory: "ServiceUpgradeAndRetirement",
                 ImpactedResourceType: "Microsoft.Storage/storageAccounts",
                 RecommendationTypeId: "Type-A",
-                SubCategory: "ServiceUpgradeAndRetirement",
-                PotentialBenefits: "Avoid service disruption",
-                LearnMoreLink: "https://aka.ms/advisor",
-                ServiceRetirement: retirement)
+                RecommendationStatus: "New",
+                CreatedTime: new DateTimeOffset(2026, 5, 13, 3, 19, 48, TimeSpan.Zero),
+                ShortDescription: new Models.RecommendationShortDescription(
+                    "Migrate off the retiring feature",
+                    "Move to the replacement SKU"))
         };
         Service.ListRecommendationsAsync(
             Arg.Any<string>(),
@@ -449,11 +444,14 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
 
         var recommendation = Assert.Single(result.Recommendations);
         Assert.Equal("Type-A", recommendation.RecommendationTypeId);
+        Assert.Equal("HighAvailability", recommendation.Category);
+        Assert.Equal("High", recommendation.Impact);
         Assert.Equal("ServiceUpgradeAndRetirement", recommendation.SubCategory);
-        Assert.Equal("Avoid service disruption", recommendation.PotentialBenefits);
-        Assert.Equal("https://aka.ms/advisor", recommendation.LearnMoreLink);
-        Assert.NotNull(recommendation.ServiceRetirement);
-        Assert.Equal("2026-03-31", recommendation.ServiceRetirement!.RetirementDate);
-        Assert.Equal(["QNY1-HB8"], recommendation.ServiceRetirement.TrackingIds);
+        Assert.Equal("New", recommendation.RecommendationStatus);
+        Assert.Equal(new DateTimeOffset(2026, 5, 13, 3, 19, 48, TimeSpan.Zero), recommendation.CreatedTime);
+        Assert.Equal("Microsoft.Storage/storageAccounts", recommendation.ImpactedResourceType);
+        Assert.NotNull(recommendation.ShortDescription);
+        Assert.Equal("Migrate off the retiring feature", recommendation.ShortDescription!.Problem);
+        Assert.Equal("Move to the replacement SKU", recommendation.ShortDescription.Solution);
     }
 }

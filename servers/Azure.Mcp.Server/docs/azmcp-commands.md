@@ -327,10 +327,12 @@ azmcp server info
 ### Azure Advisor Operations
 
 ```bash
-# List Advisor recommendations in a subscription, with optional server-side filters
+# List active Advisor recommendations; metadata-backed filters are resolved before recommendation filtering
 # Only active recommendations (status 'New') are returned; dismissed and postponed ones are excluded
-# Results are joined with the recommendation metadata catalog so subcategory, potential benefits, learn-more link,
-# and service-retirement details are current instead of stale
+# The category, impact and subcategory are always read from matching recommendation metadata by
+# recommendationTypeId
+# Each record also returns recommendationStatus, createdTime, and a shortDescription from metadata
+# displayName; metadata does not provide a solution value
 # --tracking-ids and --retirement-date apply only to the ServiceUpgradeAndRetirement subcategory
 # --tracking-ids is repeatable; recommendations matching any of the supplied tracking IDs are returned
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -362,7 +364,7 @@ azmcp advisor recommendation summary --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation apply --resource <resource>
 
-# List the global Azure Advisor recommendation metadata catalog (also called recommendation types) from Azure Resource
+# List the global Azure Advisor recommendation metadata (also called recommendation types) from Azure Resource
 # Graph. Use it in greenfield environments with no generated recommendations, or filter by supported resource type
 # during brownfield onboarding. Supports service-retirement filtering by Service Health tracking ID and retirement
 # date expression. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting

@@ -11,7 +11,7 @@ public class AdvisorServiceMetadataJoinTests
 {
     private static RecommendationMetadata CreateMetadata(
         string recommendationTypeId,
-        string? displayName = "Catalog display name",
+        string? displayName = "Metadata display name",
         string? category = "Security",
         string? subCategory = "ZoneResiliency",
         string? impact = "High",
@@ -21,22 +21,22 @@ public class AdvisorServiceMetadataJoinTests
         new(
             RecommendationTypeId: recommendationTypeId,
             DisplayName: displayName,
-            Label: null,
+            Label: "Reliability",
             Category: category,
             SubCategory: subCategory,
             Impact: impact,
-            PriorityScore: null,
+            PriorityScore: 42.5,
             PotentialBenefits: potentialBenefits,
-            DetailedDescription: null,
+            DetailedDescription: "Detailed description",
             LearnMoreLink: learnMoreLink,
-            SupportedResourceType: null,
-            Scope: null,
-            DataSourceQuery: null,
-            ResourceSingularName: null,
-            ResourcePluralName: null,
-            Actions: null,
+            SupportedResourceType: "microsoft.storage/storageaccounts",
+            Scope: "Resource",
+            DataSourceQuery: "resources | take 1",
+            ResourceSingularName: "storage account",
+            ResourcePluralName: "storage accounts",
+            Actions: [new RecommendationMetadataAction("Fix", "Enable it", "https://aka.ms/doc", "BladeName")],
             Language: "en",
-            LastRefreshed: null,
+            LastRefreshed: "2026-08-01",
             ServiceRetirement: serviceRetirement);
 
     [Fact]
@@ -139,72 +139,68 @@ public class AdvisorServiceMetadataJoinTests
     }
 
     [Fact]
-    public void JoinWithMetadata_RefreshesStaleCatalogFields()
+    public void JoinWithMetadata_OverridesCategoryImpactAndSubCategory()
     {
-        var retirement = new RecommendationServiceRetirement(
-            RetirementDate: "2026-03-31",
-            RetirementFeatureName: "Legacy feature",
-            TrackingIds: ["QNY1-HB8"],
-            AshUrls: ["https://aka.ms/ash"]);
-
         var recommendation = new Models.Recommendation(
             ResourceId: "/subscriptions/abc/providers/Microsoft.Storage/storageAccounts/mystorage",
-            RecommendationText: "Instance problem text",
             Category: "StaleCategory",
             Impact: "Low",
+            SubCategory: "StaleSubCategory",
             ImpactedResourceType: "Microsoft.Storage/storageAccounts",
-            RecommendationTypeId: "Type-A");
+            RecommendationTypeId: "Type-A",
+            RecommendationStatus: "New",
+            ShortDescription: new Models.RecommendationShortDescription("Instance problem", "Instance solution"));
 
         var joined = AdvisorService.JoinWithMetadata(
             [recommendation],
             AdvisorService.BuildMetadataLookup([
-                CreateMetadata(
-                    "type-a",
-                    subCategory: "ServiceUpgradeAndRetirement",
-                    serviceRetirement: retirement)
+                CreateMetadata("type-a", subCategory: "ServiceUpgradeAndRetirement")
             ]));
 
         var result = Assert.Single(joined);
-        // Instance-owned text is preserved; catalog-owned fields are refreshed.
-        Assert.Equal("Instance problem text", result.RecommendationText);
+
+        // Instance-owned fields survive the join.
+        Assert.Equal(
+            "/subscriptions/abc/providers/Microsoft.Storage/storageAccounts/mystorage",
+            result.ResourceId);
+        Assert.Equal("Microsoft.Storage/storageAccounts", result.ImpactedResourceType);
+        Assert.Equal("Type-A", result.RecommendationTypeId);
+        Assert.Equal("New", result.RecommendationStatus);
+        Assert.Equal("Metadata display name", result.ShortDescription!.Problem);
+        Assert.Null(result.ShortDescription.Solution);
+
+        // Metadata-owned fields are overridden.
         Assert.Equal("Security", result.Category);
         Assert.Equal("High", result.Impact);
         Assert.Equal("ServiceUpgradeAndRetirement", result.SubCategory);
-        Assert.Equal("Improved resiliency", result.PotentialBenefits);
-        Assert.Equal("https://aka.ms/advisor", result.LearnMoreLink);
-        Assert.Same(retirement, result.ServiceRetirement);
-        Assert.Equal("Microsoft.Storage/storageAccounts", result.ImpactedResourceType);
-    }
-
-    [Theory]
-    [InlineData("Unknown")]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void JoinWithMetadata_MissingProblemText_FallsBackToDisplayName(string recommendationText)
-    {
-        var joined = AdvisorService.JoinWithMetadata(
-            [new Models.Recommendation("resId", recommendationText, "Unknown", RecommendationTypeId: "Type-A")],
-            AdvisorService.BuildMetadataLookup([CreateMetadata("Type-A")]));
-
-        Assert.Equal("Catalog display name", Assert.Single(joined).RecommendationText);
     }
 
     [Fact]
-    public void JoinWithMetadata_MetadataWithoutCategoryOrImpact_KeepsInstanceValues()
+    public void JoinWithMetadata_BlankMetadataImpactAndSubCategory_AreNotBackfilledFromInstance()
     {
         var joined = AdvisorService.JoinWithMetadata(
-            [new Models.Recommendation("resId", "problem", "Cost", Impact: "Medium", RecommendationTypeId: "Type-A")],
-            AdvisorService.BuildMetadataLookup([CreateMetadata("Type-A", category: null, impact: "  ")]));
+            [new Models.Recommendation(ResourceId: "resId", Category: "Cost", Impact: "Medium", SubCategory: "Scalability", RecommendationTypeId: "Type-A")],
+            AdvisorService.BuildMetadataLookup([CreateMetadata("Type-A", impact: null, subCategory: null)]));
 
         var result = Assert.Single(joined);
-        Assert.Equal("Cost", result.Category);
-        Assert.Equal("Medium", result.Impact);
+        Assert.Null(result.Impact);
+        Assert.Null(result.SubCategory);
+    }
+
+    [Fact]
+    public void JoinWithMetadata_BlankMetadataCategory_ReturnsMetadataValue()
+    {
+        var joined = AdvisorService.JoinWithMetadata(
+            [new Models.Recommendation(ResourceId: "resId", Category: "Cost", RecommendationTypeId: "Type-A")],
+            AdvisorService.BuildMetadataLookup([CreateMetadata("Type-A", category: null)]));
+
+        Assert.Null(Assert.Single(joined).Category);
     }
 
     [Fact]
     public void JoinWithMetadata_NoMatchingMetadata_ReturnsRecommendationUnchanged()
     {
-        var recommendation = new Models.Recommendation("resId", "problem", "Cost", RecommendationTypeId: "Type-Z");
+        var recommendation = new Models.Recommendation(ResourceId: "resId", Category: "Cost", RecommendationTypeId: "Type-Z");
 
         var joined = AdvisorService.JoinWithMetadata(
             [recommendation],
@@ -216,7 +212,7 @@ public class AdvisorServiceMetadataJoinTests
     [Fact]
     public void JoinWithMetadata_MissingRecommendationTypeId_ReturnsRecommendationUnchanged()
     {
-        var recommendation = new Models.Recommendation("resId", "problem", "Cost");
+        var recommendation = new Models.Recommendation(ResourceId: "resId", Category: "Cost");
 
         var joined = AdvisorService.JoinWithMetadata(
             [recommendation],

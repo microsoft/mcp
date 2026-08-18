@@ -175,16 +175,14 @@ public class AdvisorServiceFilterBuilderTests
     }
 
     [Fact]
-    public void BuildAdditionalFilter_RecommendationTypeIdsWithOtherFilters_AppendsAfterInstanceClauses()
+    public void BuildAdditionalFilter_RecommendationTypeIds_SkipsMetadataInstanceClauses()
     {
         var result = AdvisorService.BuildAdditionalFilter(
             new RecommendationFilters(Category: "Security"),
             ["Type-A"]);
 
         Assert.Equal(
-            $"{StatusClause} and "
-            + "tostring(properties.category) =~ 'Security' and "
-            + "tostring(properties.recommendationTypeId) in~ ('Type-A')",
+            $"{StatusClause} and tostring(properties.recommendationTypeId) in~ ('Type-A')",
             result);
     }
 }

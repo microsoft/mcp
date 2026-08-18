@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Globalization;
 using System.Text.Json;
 using Azure.Mcp.Tools.Advisor.Services;
 using Xunit;
@@ -48,11 +49,28 @@ public class AdvisorServiceConversionTests
                 "id": "/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Advisor/recommendations/rec1",
                 "type": "Microsoft.Advisor/recommendations",
                 "name": "rec1",
+                "subscriptionId": "abc",
+                "resourceGroup": "rg1",
+                "tenantId": "tenant1",
                 "properties": {
                     "category": "Security",
                     "impact": "High",
                     "recommendationTypeId": "Type-A",
-                    "shortDescription": { "problem": "Enable encryption at rest" },
+                    "impactedField": "Microsoft.Compute/virtualMachines",
+                    "impactedValue": "vm1",
+                    "recommendationStatus": "New",
+                    "createdTime": "2026-05-13T03:19:48.0318731Z",
+                    "lastUpdated": "2026-05-14T03:19:48.0318731Z",
+                    "lastRefreshed": "2026-05-15T03:19:48.0318731Z",
+                    "shortDescription": {
+                        "problem": "Enable encryption at rest",
+                        "solution": "Turn on encryption"
+                    },
+                    "extendedProperties": {
+                        "recommendationSubCategory": "Scalability",
+                        "maturityLevel": "Preview",
+                        "recommendationOfferingId": "offering1"
+                    },
                     "resourceMetadata": {
                         "resourceId": "/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/mystorage"
                     }
@@ -66,11 +84,52 @@ public class AdvisorServiceConversionTests
         Assert.Equal(
             "/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/mystorage",
             result.ResourceId);
-        Assert.Equal("Enable encryption at rest", result.RecommendationText);
+        Assert.Equal("/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Advisor/recommendations/rec1", result.Id);
+        Assert.Equal("rec1", result.Name);
+        Assert.Equal("Microsoft.Advisor/recommendations", result.Type);
+        Assert.Equal("abc", result.SubscriptionId);
+        Assert.Equal("rg1", result.ResourceGroup);
+        Assert.Equal("tenant1", result.TenantId);
         Assert.Equal("Security", result.Category);
         Assert.Equal("High", result.Impact);
+        Assert.Equal("Scalability", result.SubCategory);
         Assert.Equal("Microsoft.Storage/storageAccounts", result.ImpactedResourceType);
+        Assert.Equal("Microsoft.Compute/virtualMachines", result.ImpactedField);
+        Assert.Equal("vm1", result.ImpactedValue);
         Assert.Equal("Type-A", result.RecommendationTypeId);
+        Assert.Equal("New", result.RecommendationStatus);
+        Assert.Equal(
+            DateTimeOffset.Parse("2026-05-13T03:19:48.0318731Z", CultureInfo.InvariantCulture),
+            result.CreatedTime);
+        Assert.Equal(
+            DateTimeOffset.Parse("2026-05-14T03:19:48.0318731Z", CultureInfo.InvariantCulture),
+            result.LastUpdated);
+        Assert.Equal(
+            DateTimeOffset.Parse("2026-05-15T03:19:48.0318731Z", CultureInfo.InvariantCulture),
+            result.LastRefreshed);
+        Assert.Equal(JsonValueKind.String, result.ExtendedProperties!["maturityLevel"].ValueKind);
+        Assert.Equal("Preview", result.ExtendedProperties["maturityLevel"].GetString());
+        Assert.Equal("offering1", result.ExtendedProperties["recommendationOfferingId"].GetString());
+        Assert.Null(result.ShortDescription);
+    }
+
+    [Fact]
+    public void ConvertToAdvisorRecommendationModel_MissingShortDescription_LeavesItNull()
+    {
+        const string json = """
+            {
+                "id": "/subscriptions/abc/providers/Microsoft.Advisor/recommendations/rec3",
+                "properties": { "category": "Cost" }
+            }
+            """;
+
+        using var doc = JsonDocument.Parse(json);
+        var result = AdvisorService.ConvertToAdvisorRecommendationModel(doc.RootElement);
+
+        Assert.Null(result.ShortDescription);
+        Assert.Null(result.RecommendationStatus);
+        Assert.Null(result.CreatedTime);
+        Assert.Null(result.SubCategory);
     }
 
     [Fact]
@@ -91,7 +150,7 @@ public class AdvisorServiceConversionTests
         var result = AdvisorService.ConvertToAdvisorRecommendationModel(doc.RootElement);
 
         Assert.Equal("Unknown", result.ResourceId);
-        Assert.Equal("Right-size your VMs", result.RecommendationText);
+        Assert.Null(result.ShortDescription);
         Assert.Equal("Cost", result.Category);
         Assert.Null(result.Impact);
         Assert.Null(result.ImpactedResourceType);

@@ -2,22 +2,33 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace Azure.Mcp.Tools.Advisor.Models;
 
 /// <summary>
-/// A subscription-scoped Advisor recommendation instance. Fields after
-/// <see cref="ImpactedResourceType"/> are refreshed from the Advisor recommendation metadata
-/// catalog so that catalog-owned values are never served from a stale recommendation snapshot.
+/// Represents an Azure Advisor recommendation and its impacted resource. Type-level fields are
+/// populated from the matching recommendation metadata record.
 /// </summary>
 public sealed record Recommendation(
-    [property: JsonPropertyName("resourceId")] string ResourceId,
-    [property: JsonPropertyName("recommendationText")] string RecommendationText,
-    [property: JsonPropertyName("category")] string Category,
+    [property: JsonPropertyName("category")] string? Category,
+    [property: JsonPropertyName("control")] string? Control = null,
     [property: JsonPropertyName("impact")] string? Impact = null,
-    [property: JsonPropertyName("impactedResourceType")] string? ImpactedResourceType = null,
+    [property: JsonPropertyName("impactedField")] string? ImpactedField = null,
+    [property: JsonPropertyName("impactedValue")] string? ImpactedValue = null,
+    [property: JsonPropertyName("recommendationStatus")] string? RecommendationStatus = null,
+    [property: JsonPropertyName("lastRefreshed")] DateTimeOffset? LastRefreshed = null,
+    [property: JsonPropertyName("lastUpdated")] DateTimeOffset? LastUpdated = null,
+    [property: JsonPropertyName("createdTime")] DateTimeOffset? CreatedTime = null,
     [property: JsonPropertyName("recommendationTypeId")] string? RecommendationTypeId = null,
+    [property: JsonPropertyName("shortDescription")] RecommendationShortDescription? ShortDescription = null,
+    [property: JsonPropertyName("extendedProperties")] IReadOnlyDictionary<string, JsonElement>? ExtendedProperties = null,
     [property: JsonPropertyName("subCategory")] string? SubCategory = null,
-    [property: JsonPropertyName("potentialBenefits")] string? PotentialBenefits = null,
-    [property: JsonPropertyName("learnMoreLink")] string? LearnMoreLink = null,
-    [property: JsonPropertyName("serviceRetirement")] RecommendationServiceRetirement? ServiceRetirement = null);
+    [property: JsonPropertyName("resourceId")] string ResourceId = "Unknown",
+    [property: JsonPropertyName("impactedResourceType")] string? ImpactedResourceType = null,
+    [property: JsonPropertyName("id")] string? Id = null,
+    [property: JsonPropertyName("type")] string? Type = null,
+    [property: JsonPropertyName("name")] string? Name = null,
+    [property: JsonPropertyName("subscriptionId")] string? SubscriptionId = null,
+    [property: JsonPropertyName("resourceGroup")] string? ResourceGroup = null,
+    [property: JsonPropertyName("tenantId")] string? TenantId = null);

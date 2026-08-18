@@ -3,6 +3,7 @@
 
 namespace Azure.Mcp.Tools.Advisor.Models;
 
+/// <summary>Filter values for Advisor recommendation metadata queries.</summary>
 public sealed record RecommendationMetadataFilters(
     string? ResourceType = null,
     string? Impact = null,
