@@ -74,7 +74,7 @@ public static class McpHelper
     /// <summary>
     /// Creates a telemetry-friendly string array representation of the tool's parameter names.
     /// </summary>
-    /// <param name="parameterNamess">The tool call parameter names.</param>
+    /// <param name="parameterNames">The tool call parameter names.</param>
     /// <returns>A JSON string array representing the parameter names, or null if there wasn't parameters.</returns>
     public static string? CreateToolParametersTelemetry(IEnumerable<string>? parameterNames)
     {
