@@ -3,7 +3,6 @@
 
 namespace Azure.Mcp.Tools.Advisor.Services.Models;
 
-/// <summary> Properties returned for an Advisor recommendation metadata row. </summary>
 internal sealed record RecommendationMetadataDataProperties(
     string? RecommendationTypeId,
     string? DisplayName,

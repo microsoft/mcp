@@ -67,9 +67,9 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         // Arrange
         var expectedRecommendations = new List<Models.Recommendation>
         {
-            new(ResourceId: "recId1", Category: "HighAvailability"),
-            new(ResourceId: "recId2", Category: "Cost"),
-            new(ResourceId: "recId3", Category: "Performance")
+            new(new Models.RecommendationProperties(Category: "HighAvailability"), Id: "recId1"),
+            new(new Models.RecommendationProperties(Category: "Cost"), Id: "recId2"),
+            new(new Models.RecommendationProperties(Category: "Performance"), Id: "recId3")
         };
         Service.ListRecommendationsAsync(
             Arg.Any<string>(),
@@ -88,8 +88,8 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
 
         Assert.Equal(expectedRecommendations.Count, result.Recommendations.Count);
-        Assert.Equal(expectedRecommendations[0].ResourceId, result.Recommendations[0].ResourceId);
-        Assert.Equal(expectedRecommendations[0].Category, result.Recommendations[0].Category);
+        Assert.Equal(expectedRecommendations[0].Id, result.Recommendations[0].Id);
+        Assert.Equal(expectedRecommendations[0].Properties.Category, result.Recommendations[0].Properties.Category);
 
         // Verify the mock was called
         await Service.Received(1).ListRecommendationsAsync(
@@ -383,6 +383,87 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Assert.Contains("ServiceUpgradeAndRetirement", response.Message);
     }
 
+    [Theory]
+    [InlineData("--sub-category", "ZoneResiliency")]
+    [InlineData("--tracking-ids", "QNY1-HB8")]
+    [InlineData("--retirement-date", "ge:2026-03-31")]
+    public async Task ExecuteAsync_SecurityMetadataFilters_ReturnBadRequest(
+        string option,
+        string value)
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--category", "Security",
+            option,
+            value);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("not applicable to Security", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ServiceRetirementFiltersWithoutExplicitSubCategory_AreAccepted()
+    {
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--tracking-ids", "QNY1-HB8");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RetirementDateWithoutExplicitSubCategory_IsAccepted()
+    {
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--retirement-date", "ge:2026-03-31");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_SecurityCategoryWithValidNonMetadataFilters_IsAccepted()
+    {
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--category", "Security",
+            "--impact", "High",
+            "--resource-type", "Microsoft.Storage/storageAccounts",
+            "--search", "encryption");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
     [Fact]
     public async Task ExecuteAsync_MatchingSubCategory_IsAccepted()
     {
@@ -414,17 +495,16 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         var recommendations = new List<Models.Recommendation>
         {
             new(
-                ResourceId: "resId1",
-                Category: "HighAvailability",
-                Impact: "High",
-                SubCategory: "ServiceUpgradeAndRetirement",
-                ImpactedResourceType: "Microsoft.Storage/storageAccounts",
-                RecommendationTypeId: "Type-A",
-                RecommendationStatus: "New",
-                CreatedTime: new DateTimeOffset(2026, 5, 13, 3, 19, 48, TimeSpan.Zero),
-                ShortDescription: new Models.RecommendationShortDescription(
-                    "Migrate off the retiring feature",
-                    "Move to the replacement SKU"))
+                new Models.RecommendationProperties(
+                    Category: "HighAvailability",
+                    Impact: "High",
+                    RecommendationTypeId: "Type-A",
+                    RecommendationStatus: "New",
+                    CreatedTime: new DateTimeOffset(2026, 5, 13, 3, 19, 48, TimeSpan.Zero),
+                    ShortDescription: new Models.RecommendationShortDescription(
+                        "Migrate off the retiring feature",
+                        "Move to the replacement SKU")),
+                Id: "resId1")
         };
         Service.ListRecommendationsAsync(
             Arg.Any<string>(),
@@ -443,15 +523,13 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
 
         var recommendation = Assert.Single(result.Recommendations);
-        Assert.Equal("Type-A", recommendation.RecommendationTypeId);
-        Assert.Equal("HighAvailability", recommendation.Category);
-        Assert.Equal("High", recommendation.Impact);
-        Assert.Equal("ServiceUpgradeAndRetirement", recommendation.SubCategory);
-        Assert.Equal("New", recommendation.RecommendationStatus);
-        Assert.Equal(new DateTimeOffset(2026, 5, 13, 3, 19, 48, TimeSpan.Zero), recommendation.CreatedTime);
-        Assert.Equal("Microsoft.Storage/storageAccounts", recommendation.ImpactedResourceType);
-        Assert.NotNull(recommendation.ShortDescription);
-        Assert.Equal("Migrate off the retiring feature", recommendation.ShortDescription!.Problem);
-        Assert.Equal("Move to the replacement SKU", recommendation.ShortDescription.Solution);
+        Assert.Equal("Type-A", recommendation.Properties.RecommendationTypeId);
+        Assert.Equal("HighAvailability", recommendation.Properties.Category);
+        Assert.Equal("High", recommendation.Properties.Impact);
+        Assert.Equal("New", recommendation.Properties.RecommendationStatus);
+        Assert.Equal(new DateTimeOffset(2026, 5, 13, 3, 19, 48, TimeSpan.Zero), recommendation.Properties.CreatedTime);
+        Assert.NotNull(recommendation.Properties.ShortDescription);
+        Assert.Equal("Migrate off the retiring feature", recommendation.Properties.ShortDescription!.Problem);
+        Assert.Equal("Move to the replacement SKU", recommendation.Properties.ShortDescription.Solution);
     }
 }

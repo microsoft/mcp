@@ -35,13 +35,23 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | Show me high-impact Security recommendations in subscription <subscription> | none |
 | advisor_recommendation_list | List Cost recommendations for storage accounts in subscription <subscription> | none |
 | advisor_recommendation_list | Find Advisor recommendations mentioning "right-size" in subscription <subscription> | none |
+| advisor_recommendation_list | List Security recommendations directly in subscription <subscription> | none |
 | advisor_recommendation_list | Show me the top 10 Advisor recommendations in subscription <subscription> | none |
 | advisor_recommendation_list | List Advisor recommendations in the ServiceUpgradeAndRetirement subcategory in subscription <subscription> | none |
 | advisor_recommendation_list | Show Advisor ZoneResiliency recommendations in subscription <subscription> | none |
 | advisor_recommendation_list | Which resources in subscription <subscription> are affected by Service Health tracking ID QNY1-HB8? | none |
 | advisor_recommendation_list | Show Advisor recommendations in subscription <subscription> for Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 | none |
+| advisor_recommendation_list | List Advisor recommendations in subscription <subscription> for Service Health tracking ID QNY1-HB8 without setting a subcategory | none |
 | advisor_recommendation_list | List Advisor recommendations in subscription <subscription> for services retiring on or before March 31, 2026 | none |
 | advisor_recommendation_list | Show Advisor recommendations in subscription <subscription> for services retiring after 2026-03-31 | none |
+| advisor_recommendation_list | List Advisor recommendations in subscription <subscription> where the retirement date is ge:2026-03-31 | none |
+| advisor_recommendation_list | Find Advisor recommendations for resource <resource-id> without metadata filters | none |
+| advisor_recommendation_list | Search Advisor recommendations mentioning "encryption" in subscription <subscription> | none |
+| advisor_recommendation_list | Show me high-impact Security recommendations for storage accounts in subscription <subscription> | none |
+| advisor_recommendation_list | List Cost recommendations for storage accounts with search "encryption" and top 5 in subscription <subscription> | none |
+| advisor_recommendation_list | Find high-impact Security recommendations mentioning "encryption" in subscription <subscription> | none |
+| advisor_recommendation_list | Find recommendations matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 for resource <resource-id> | none |
+| advisor_recommendation_list | List Cost recommendations with resource type Microsoft.Storage/storageAccounts, resource <resource-id>, search encryption, subcategory ZoneResiliency, and top 5 in subscription <subscription> | none |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations in subscription <subscription> | none |
 | advisor_recommendation_summary | Summarize Advisor recommendations in subscription <subscription> by category | none |
 | advisor_recommendation_summary | Show the top 10 most common Advisor recommendations in subscription <subscription> | none |

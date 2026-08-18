@@ -4,7 +4,13 @@
 namespace Azure.Mcp.Tools.Advisor.Models;
 
 /// <summary>
-/// Metadata describing an Azure Advisor recommendation type.
+/// Global Advisor recommendation-type catalog entry sourced from the Azure Resource Graph
+/// `advisorresources` table (type `microsoft.advisor/metadata`). Describes a single
+/// recommendation <em>type</em> (not a subscription-scoped recommendation instance),
+/// keyed by <see cref="RecommendationTypeId"/> and filtered to a single locale.
+///
+/// Property names and null-handling are governed by JsonSourceGenerationOptions on
+/// AdvisorJsonContext (camelCase naming + WhenWritingNull default).
 /// </summary>
 public sealed record RecommendationMetadata(
     string RecommendationTypeId,

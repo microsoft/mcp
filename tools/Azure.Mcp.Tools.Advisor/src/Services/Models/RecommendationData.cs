@@ -25,14 +25,8 @@ internal sealed class RecommendationData
     [JsonPropertyName("name")]
     public string? ResourceName { get; set; }
 
-    /// <summary> The subscription containing the impacted resource. </summary>
-    public string? SubscriptionId { get; set; }
-
     /// <summary> The resource group containing the impacted resource. </summary>
     public string? ResourceGroup { get; set; }
-
-    /// <summary> The tenant containing the impacted resource. </summary>
-    public string? TenantId { get; set; }
 
     /// <summary> The location associated with the recommendation. </summary>
     public string? Location { get; set; }
@@ -42,6 +36,9 @@ internal sealed class RecommendationData
 
     /// <summary> Recommendation properties returned by Advisor. </summary>
     public RecommendationProperties? Properties { get; set; }
+
+    /// <summary> Hardware details for the assessed resource. </summary>
+    public JsonElement? HardwareDetails { get; set; }
 
     /// <summary>
     /// Deserializes a Resource Graph recommendation row.

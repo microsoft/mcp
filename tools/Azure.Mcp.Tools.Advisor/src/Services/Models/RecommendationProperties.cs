@@ -1,11 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.Advisor.Services.Models;
 
-/// <summary> Properties returned for an Advisor recommendation. </summary>
 internal sealed class RecommendationProperties
 {
     /// <summary> The recommendation category. </summary>
@@ -29,6 +29,8 @@ internal sealed class RecommendationProperties
     /// <summary> The lifecycle state of the recommendation (e.g., New, Dismissed, Postponed). </summary>
     public string? RecommendationStatus { get; set; }
 
+    public string? CompletionType { get; set; }
+
     /// <summary> The time the recommendation was first generated. </summary>
     public DateTimeOffset? CreatedTime { get; set; }
 
@@ -39,12 +41,28 @@ internal sealed class RecommendationProperties
     /// <summary> The time Advisor last refreshed the recommendation evaluation. </summary>
     public DateTimeOffset? LastRefreshed { get; set; }
 
-    /// <summary> The recommendation problem and solution text. </summary>
+    /// <summary> Short description of the recommendation. </summary>
     public RecommendationDescription? ShortDescription { get; set; }
 
+    public Dictionary<string, JsonElement>? Metadata { get; set; }
+
     /// <summary> Additional type-specific recommendation properties. </summary>
-    public RecommendationExtendedProperties? ExtendedProperties { get; set; }
+    public Dictionary<string, JsonElement>? ExtendedProperties { get; set; }
 
     /// <summary> Metadata pertaining to the affected resource. </summary>
     public RecommendationResourceMetadata? ResourceMetadata { get; set; }
+
+    public string? Risk { get; set; }
+    public string? Description { get; set; }
+    public string? Label { get; set; }
+    public string? LearnMoreLink { get; set; }
+    public string? PotentialBenefits { get; set; }
+    public JsonElement? Actions { get; set; }
+    public JsonElement? Remediation { get; set; }
+    public Dictionary<string, JsonElement>? ExposedMetadataProperties { get; set; }
+    public JsonElement? TrackedProperties { get; set; }
+    public JsonElement? Review { get; set; }
+    public JsonElement? ResourceWorkload { get; set; }
+    public string? SourceSystem { get; set; }
+    public string? Notes { get; set; }
 }

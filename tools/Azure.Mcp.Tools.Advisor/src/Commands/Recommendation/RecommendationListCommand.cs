@@ -23,10 +23,11 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "or 'which impact has the most' — for those, call the 'summary' tool instead (it aggregates server-side over the " +
         "entire population, while 'list' is capped at 100 items and will silently undercount). " +
         "Only active recommendations (status 'New') are returned; dismissed and postponed ones are excluded. " +
-        "The category, impact and subcategory are always enriched from the matching Advisor recommendation " +
-        "metadata record using recommendationTypeId. " +
+        "The category, impact and subcategory are enriched from the matching Advisor recommendation metadata " +
+        "record using recommendationTypeId when metadata filters are used. Security-category queries use " +
+        "the recommendation records directly. " +
         "Each record also returns recommendationStatus, createdTime, and a metadata-sourced shortDescription " +
-        "using the recommendation type display name. " +
+        "using the recommendation type detailed description. " +
         "Supports optional filters: --category, --impact, --resource-type, --resource, --search, --sub-category, --tracking-ids, --retirement-date. " +
         "--tracking-ids accepts multiple Service Health tracking IDs and returns recommendations matching any of them. " +
         "--tracking-ids and --retirement-date apply only to the ServiceUpgradeAndRetirement subcategory. " +
@@ -37,7 +38,6 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-/// <summary> Lists active Azure Advisor recommendations and enriches type-level fields from metadata. </summary>
 public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IAdvisorService advisorService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<RecommendationListOptions, RecommendationListCommand.RecommendationListResult>(subscriptionResolver)
 {
@@ -57,6 +57,15 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
             options.SubCategory,
             options.TrackingIds,
             options.RetirementDate);
+
+        if (string.Equals(options.Category?.Trim(), "Security", StringComparison.OrdinalIgnoreCase) &&
+                        (!string.IsNullOrWhiteSpace(options.SubCategory) ||
+                         options.TrackingIds?.Any(id => !string.IsNullOrWhiteSpace(id)) == true ||
+                         !string.IsNullOrWhiteSpace(options.RetirementDate)))
+        {
+            validationResult.Errors.Add(
+                "Subcategory, tracking ID, and retirement-date filters are not applicable to Security recommendations.");
+        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecommendationListOptions options, CancellationToken cancellationToken)

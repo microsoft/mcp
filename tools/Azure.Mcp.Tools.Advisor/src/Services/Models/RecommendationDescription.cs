@@ -3,12 +3,11 @@
 
 namespace Azure.Mcp.Tools.Advisor.Services.Models;
 
-/// <summary> Problem and solution text returned for an Advisor recommendation. </summary>
 internal sealed class RecommendationDescription
 {
     /// <summary> The recommendation problem text. </summary>
     public string? Problem { get; set; }
 
-    /// <summary> The recommendation solution text. </summary>
+    /// <summary> The recommended solution text. </summary>
     public string? Solution { get; set; }
 }

@@ -74,7 +74,7 @@ public class AdvisorService(IAzureService azureService)
             tenant: tenant,
             cancellationToken: cancellationToken);
 
-        if (recommendations.Results.Count == 0)
+        if (recommendations.Results.Count == 0 || IsDirectSecurityQuery(filters))
         {
             return recommendations;
         }
@@ -83,7 +83,7 @@ public class AdvisorService(IAzureService azureService)
         // type-level response fields come from the metadata source.
         metadataByTypeId ??= BuildMetadataLookup(
             await GetRecommendationMetadataByTypeIdsAsync(
-                recommendations.Results.Select(r => r.RecommendationTypeId),
+                recommendations.Results.Select(r => r.Properties.RecommendationTypeId),
                 MetadataJoinLanguage,
                 cancellationToken));
 
@@ -98,27 +98,28 @@ public class AdvisorService(IAzureService azureService)
         filters?.RetirementDate is not null ||
         !string.IsNullOrWhiteSpace(filters?.RetirementDateOperator);
 
-    private static bool HasAnyFilters(RecommendationFilters? filters) =>
-        !string.IsNullOrWhiteSpace(filters?.Category) ||
+    internal static bool HasMetadataFilters(RecommendationFilters? filters) =>
+        !IsSecurityCategory(filters?.Category) &&
+        (HasMetadataOnlyFilters(filters) ||
+            (!string.IsNullOrWhiteSpace(filters?.Category) ||
         !string.IsNullOrWhiteSpace(filters?.Impact) ||
-        !string.IsNullOrWhiteSpace(filters?.ResourceType) ||
-        !string.IsNullOrWhiteSpace(filters?.Resource) ||
-        !string.IsNullOrWhiteSpace(filters?.Search) ||
-        !string.IsNullOrWhiteSpace(filters?.SubCategory) ||
-        filters?.TrackingIds?.Any(id => !string.IsNullOrWhiteSpace(id)) == true ||
-        filters?.RetirementDate is not null ||
-        !string.IsNullOrWhiteSpace(filters?.RetirementDateOperator);
+            !string.IsNullOrWhiteSpace(filters?.ResourceType)));
+
+    internal static bool IsDirectSecurityQuery(RecommendationFilters? filters) =>
+        IsSecurityCategory(filters?.Category);
+
+    private static bool IsSecurityCategory(string? category) =>
+        string.Equals(category?.Trim(), "Security", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Resolves the recommendation filters against metadata first and returns the matching recommendation
-    /// type IDs. Recommendation-specific filters are still applied to the recommendation query.
-    /// Returns <c>null</c> when no filter was supplied.
+    /// Resolves metadata-backed filters against metadata first and returns matching recommendation type IDs.
+    /// Resource and search filters remain predicates on recommendation instances.
     /// </summary>
     private async Task<Dictionary<string, RecommendationMetadata>?> ResolveMetadataFilterMatchesAsync(
         RecommendationFilters? filters,
         CancellationToken cancellationToken)
     {
-        if (!HasAnyFilters(filters))
+        if (!HasMetadataFilters(filters))
         {
             return null;
         }
@@ -135,7 +136,20 @@ public class AdvisorService(IAzureService azureService)
                 RetirementDate: filters.RetirementDate),
             cancellationToken);
 
+        EnsureMetadataResultsComplete(matchingMetadata);
+
         return BuildMetadataLookup(matchingMetadata.Results);
+    }
+
+    internal static void EnsureMetadataResultsComplete(
+        ResourceQueryResults<RecommendationMetadata> metadataResults)
+    {
+        if (metadataResults.AreResultsTruncated)
+        {
+            throw new InvalidOperationException(
+                "Advisor metadata results were truncated while resolving recommendation filters. " +
+                "Narrow the metadata filters and try again.");
+        }
     }
 
     internal static Dictionary<string, RecommendationMetadata> BuildMetadataLookup(
@@ -161,8 +175,8 @@ public class AdvisorService(IAzureService azureService)
 
         foreach (var recommendation in recommendations)
         {
-            if (string.IsNullOrWhiteSpace(recommendation.RecommendationTypeId) ||
-                !metadataByTypeId.TryGetValue(recommendation.RecommendationTypeId, out var metadata))
+            if (string.IsNullOrWhiteSpace(recommendation.Properties.RecommendationTypeId) ||
+                !metadataByTypeId.TryGetValue(recommendation.Properties.RecommendationTypeId, out var metadata))
             {
                 joined.Add(recommendation);
                 continue;
@@ -170,10 +184,24 @@ public class AdvisorService(IAzureService azureService)
 
             joined.Add(recommendation with
             {
-                Category = metadata.Category,
-                Impact = metadata.Impact,
-                SubCategory = metadata.SubCategory,
-                ShortDescription = new RecommendationShortDescription(metadata.DisplayName, null),
+                Properties = recommendation.Properties with
+                {
+                    Category = metadata.Category,
+                    Impact = metadata.Impact,
+                    ShortDescription = new RecommendationShortDescription(
+                        metadata.DisplayName ?? recommendation.Properties.ShortDescription?.Problem,
+                        metadata.DisplayName ?? recommendation.Properties.ShortDescription?.Solution),
+                    Description = metadata.DetailedDescription ?? recommendation.Properties.Description,
+                    Label = metadata.Label ?? recommendation.Properties.Label,
+                    LearnMoreLink = metadata.LearnMoreLink ?? recommendation.Properties.LearnMoreLink,
+                    PotentialBenefits = metadata.PotentialBenefits ?? recommendation.Properties.PotentialBenefits,
+                    ExtendedProperties = AddMetadataSubCategory(
+                        AddMetadataRetirementProperties(
+                            recommendation.Properties.ExtendedProperties,
+                            metadata.ServiceRetirement),
+                        metadata.SubCategory),
+                    ResourceMetadata = recommendation.Properties.ResourceMetadata,
+                },
             });
         }
 
@@ -662,45 +690,100 @@ public class AdvisorService(IAzureService azureService)
         var advisorRecommendation = Models.RecommendationData.FromJson(item)
             ?? throw new InvalidOperationException("Failed to parse Advisor recommendation data");
 
-        var resourceId = advisorRecommendation.Properties?.ResourceMetadata?.ResourceId ?? "Unknown";
-        var extendedProperties = advisorRecommendation.Properties?.ExtendedProperties;
-        var subCategory = GetExtendedPropertyString(extendedProperties, "recommendationSubCategory");
-
         return new(
-            Category: advisorRecommendation.Properties?.Category,
-            Control: advisorRecommendation.Properties?.Control,
-            Impact: advisorRecommendation.Properties?.Impact,
-            ImpactedField: advisorRecommendation.Properties?.ImpactedField,
-            ImpactedValue: advisorRecommendation.Properties?.ImpactedValue,
-            RecommendationStatus: advisorRecommendation.Properties?.RecommendationStatus,
-            LastRefreshed: advisorRecommendation.Properties?.LastRefreshed,
-            LastUpdated: advisorRecommendation.Properties?.LastUpdated,
-            CreatedTime: advisorRecommendation.Properties?.CreatedTime,
-            RecommendationTypeId: advisorRecommendation.Properties?.RecommendationTypeId,
-            ShortDescription: null,
-            ExtendedProperties: BuildExtendedProperties(extendedProperties),
-            SubCategory: subCategory,
-            ResourceId: resourceId,
-            ImpactedResourceType: ParseImpactedResourceType(resourceId),
+            Properties: new RecommendationProperties(
+                Category: advisorRecommendation.Properties?.Category,
+                Control: advisorRecommendation.Properties?.Control,
+                Impact: advisorRecommendation.Properties?.Impact,
+                ImpactedField: advisorRecommendation.Properties?.ImpactedField,
+                ImpactedValue: advisorRecommendation.Properties?.ImpactedValue,
+                RecommendationStatus: advisorRecommendation.Properties?.RecommendationStatus,
+                CompletionType: advisorRecommendation.Properties?.CompletionType,
+                LastRefreshed: advisorRecommendation.Properties?.LastRefreshed,
+                LastUpdated: advisorRecommendation.Properties?.LastUpdated,
+                CreatedTime: advisorRecommendation.Properties?.CreatedTime,
+                RecommendationTypeId: advisorRecommendation.Properties?.RecommendationTypeId,
+                ShortDescription: advisorRecommendation.Properties?.ShortDescription is { } shortDescription
+                    ? new RecommendationShortDescription(shortDescription.Problem, shortDescription.Solution)
+                    : null,
+                Metadata: advisorRecommendation.Properties?.Metadata,
+                ExtendedProperties: advisorRecommendation.Properties?.ExtendedProperties,
+                ResourceMetadata: advisorRecommendation.Properties?.ResourceMetadata is { } resourceMetadata
+                    ? new RecommendationResourceMetadata(resourceMetadata.ResourceId)
+                    : null,
+                Risk: advisorRecommendation.Properties?.Risk,
+                Description: advisorRecommendation.Properties?.Description,
+                Label: advisorRecommendation.Properties?.Label,
+                LearnMoreLink: advisorRecommendation.Properties?.LearnMoreLink,
+                PotentialBenefits: advisorRecommendation.Properties?.PotentialBenefits,
+                Actions: advisorRecommendation.Properties?.Actions,
+                Remediation: advisorRecommendation.Properties?.Remediation,
+                ExposedMetadataProperties: advisorRecommendation.Properties?.ExposedMetadataProperties,
+                TrackedProperties: advisorRecommendation.Properties?.TrackedProperties,
+                Review: advisorRecommendation.Properties?.Review,
+                ResourceWorkload: advisorRecommendation.Properties?.ResourceWorkload,
+                SourceSystem: advisorRecommendation.Properties?.SourceSystem,
+                Notes: advisorRecommendation.Properties?.Notes),
             Id: advisorRecommendation.ResourceId,
             Type: advisorRecommendation.ResourceType,
             Name: advisorRecommendation.ResourceName,
-            SubscriptionId: advisorRecommendation.SubscriptionId,
-            ResourceGroup: advisorRecommendation.ResourceGroup,
-            TenantId: advisorRecommendation.TenantId);
+            HardwareDetails: advisorRecommendation.HardwareDetails);
     }
 
-    private static IReadOnlyDictionary<string, JsonElement>? BuildExtendedProperties(
-        Models.RecommendationExtendedProperties? extendedProperties)
+    private static IReadOnlyDictionary<string, JsonElement>? AddMetadataSubCategory(
+        IReadOnlyDictionary<string, JsonElement>? properties,
+        string? subCategory)
     {
-        return extendedProperties?.Properties;
+        if (string.IsNullOrWhiteSpace(subCategory))
+        {
+            return properties;
+        }
+
+        var result = properties is null
+            ? new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase)
+            : new Dictionary<string, JsonElement>(properties, StringComparer.OrdinalIgnoreCase);
+        result["recommendationSubCategory"] = JsonSerializer.SerializeToElement(
+            subCategory,
+            Commands.AdvisorJsonContext.Default.String);
+        return result;
+    }
+
+    private static IReadOnlyDictionary<string, JsonElement>? AddMetadataRetirementProperties(
+        IReadOnlyDictionary<string, JsonElement>? properties,
+        RecommendationServiceRetirement? serviceRetirement)
+    {
+        if (serviceRetirement is null)
+        {
+            return properties;
+        }
+
+        var result = properties is null
+            ? new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase)
+            : new Dictionary<string, JsonElement>(properties, StringComparer.OrdinalIgnoreCase);
+
+        AddStringProperty(result, "retirementDate", serviceRetirement.RetirementDate);
+        AddStringProperty(result, "retirementFeatureName", serviceRetirement.RetirementFeatureName);
+        return result;
+    }
+
+    private static void AddStringProperty(
+        IDictionary<string, JsonElement> properties,
+        string name,
+        string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            properties[name] = JsonSerializer.SerializeToElement(
+                value,
+                Commands.AdvisorJsonContext.Default.String);
+        }
     }
 
     private static string? GetExtendedPropertyString(
-        Models.RecommendationExtendedProperties? extendedProperties,
+        IReadOnlyDictionary<string, JsonElement>? extendedProperties,
         string propertyName) =>
-        extendedProperties?.Properties is { } properties &&
-        properties.TryGetValue(propertyName, out var value) &&
+        extendedProperties is not null &&
+        extendedProperties.TryGetValue(propertyName, out var value) &&
         value.ValueKind == JsonValueKind.String
             ? value.GetString()
             : null;

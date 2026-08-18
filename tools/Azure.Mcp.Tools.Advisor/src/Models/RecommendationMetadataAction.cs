@@ -4,7 +4,8 @@
 namespace Azure.Mcp.Tools.Advisor.Models;
 
 /// <summary>
-/// An action associated with an Advisor recommendation type.
+/// A remediation action attached to an Advisor recommendation type
+/// (from <c>properties.actions[]</c>).
 /// </summary>
 public sealed record RecommendationMetadataAction(
     string? ActionType,

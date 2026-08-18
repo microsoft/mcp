@@ -3,9 +3,6 @@
 
 namespace Azure.Mcp.Tools.Advisor.Models;
 
-/// <summary>
-/// Filter values for Advisor recommendation list and summary operations.
-/// </summary>
 public sealed record RecommendationFilters(
     string? Category = null,
     string? Impact = null,
