@@ -17,7 +17,7 @@ using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server;
 
-public class ServerStartCom2mandTests
+public class ServerStartCommandTests
 {
     private readonly ServerStartCommand _command = new();
     private static readonly Lock s_currentDirectoryLock = new();
