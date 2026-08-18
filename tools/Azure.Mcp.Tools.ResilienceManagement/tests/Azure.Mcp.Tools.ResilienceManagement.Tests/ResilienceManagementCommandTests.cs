@@ -305,11 +305,7 @@ public class ResilienceManagementCommandTests(
             var createdPlan = createResult.AssertProperty("recoveryPlan");
             Assert.EndsWith($"/recoveryPlans/{recoveryPlan}", createdPlan.AssertProperty("id").GetString());
             Assert.Equal("SystemAssigned", createdPlan.AssertProperty("identity").AssertProperty("type").GetString());
-            var createdDefaultGroup = createdPlan
-                .AssertProperty("properties")
-                .AssertProperty("recoveryGroupsSetting")
-                .AssertProperty("defaultGroup")
-                .AssertProperty("properties");
+            var createdDefaultGroup = createdPlan.AssertProperty("defaultGroup");
             var defaultGroupId = createdDefaultGroup.AssertProperty("groupUniqueId").GetString();
             Assert.False(string.IsNullOrEmpty(defaultGroupId));
             Assert.Equal("Lifecycle default group", createdDefaultGroup.AssertProperty("description").GetString());
@@ -340,12 +336,8 @@ public class ResilienceManagementCommandTests(
             var updatedPlan = updateResult.AssertProperty("recoveryPlan");
             Assert.Equal(
                 "Updated recovery plan lifecycle test.",
-                updatedPlan.AssertProperty("properties").AssertProperty("planDescription").GetString());
-            var updatedDefaultGroup = updatedPlan
-                .AssertProperty("properties")
-                .AssertProperty("recoveryGroupsSetting")
-                .AssertProperty("defaultGroup")
-                .AssertProperty("properties");
+                updatedPlan.AssertProperty("planDescription").GetString());
+            var updatedDefaultGroup = updatedPlan.AssertProperty("defaultGroup");
             Assert.Equal(defaultGroupId, updatedDefaultGroup.AssertProperty("groupUniqueId").GetString());
             Assert.Equal("Lifecycle default group", updatedDefaultGroup.AssertProperty("description").GetString());
 
