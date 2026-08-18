@@ -22,8 +22,9 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Description = """
         Includes a recovery resource in a recovery plan in an Azure service group, excludes a recovery resource from a recovery
         plan in an Azure service group, or removes a recovery resource from a recovery plan in an Azure service group. For
-        CustomRunbook inclusion, configure failover and reprotect runbooks. For AzureSiteRecovery inclusion, configure disk
-        reprotection, staging storage, and a test failover virtual network. Removing an individual recovery resource updates the
+        CustomRunbook inclusion, configure failover and reprotect runbooks. AzureSiteRecovery inclusion is supported only for
+        Microsoft.Compute/virtualMachines resources and requires disk reprotection, staging storage, and a test failover virtual
+        network. Removing an individual recovery resource updates the
         plan's resource membership while retaining the recovery plan and its other recovery resources. Validates the protection
         solution type and settings before first inclusion and preserves existing settings on sparse updates.
         """,
