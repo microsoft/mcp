@@ -195,7 +195,7 @@ public sealed class NamespaceToolLoader(
         // In namespace mode, the name of the tool is also its IAreaSetup name.
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
             // At this point the tool parameters is the namespace tool schema
-            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params.Arguments))
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params.Arguments?.Keys))
             .SetTag(TagName.ToolArea, tool);
 
         if (args != null)
@@ -362,7 +362,7 @@ public sealed class NamespaceToolLoader(
             }
 
             // Here the parameters are now those for the tool call, instead of being the namespace parameters.
-            Activity.Current?.SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(parameters));
+            Activity.Current?.SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(parameters.Keys));
 
             await NotifyProgressAsync(request, $"Calling {namespaceName} {command}...", cancellationToken);
 

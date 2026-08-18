@@ -101,7 +101,7 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
         }
 
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
-            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params.Arguments));
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params.Arguments?.Keys));
 
         // Ensure tool loader map is populated before attempting tool lookup
         try
