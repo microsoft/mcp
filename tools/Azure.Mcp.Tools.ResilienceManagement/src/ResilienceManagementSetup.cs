@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Templates;
@@ -41,6 +43,8 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<RecoveryResourceGetCommand>();
         services.AddSingleton<RecoveryJobGetCommand>();
         services.AddSingleton<RecoveryJobResourceGetCommand>();
+        services.AddSingleton<DrillGetCommand>();
+        services.AddSingleton<DrillResourceGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -118,6 +122,18 @@ public class ResilienceManagementSetup : IAreaSetup
         recoveryJobs.AddSubGroup(recoveryJobResources);
 
         recoveryJobResources.AddCommand<RecoveryJobResourceGetCommand>(serviceProvider);
+
+        // Create drill subgroup
+        var drills = new CommandGroup("drill", "Resilience drill operations - Commands for listing and getting resilience drills for an Azure service group.");
+        resilienceManagement.AddSubGroup(drills);
+
+        drills.AddCommand<DrillGetCommand>(serviceProvider);
+
+        // Create resource subgroup under drill
+        var drillResources = new CommandGroup("resource", "Resilience drill resource operations - Commands for listing and getting the resources (targets) of a resilience drill.");
+        drills.AddSubGroup(drillResources);
+
+        drillResources.AddCommand<DrillResourceGetCommand>(serviceProvider);
 
         return resilienceManagement;
     }

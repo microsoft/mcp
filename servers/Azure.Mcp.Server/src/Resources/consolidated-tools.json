@@ -2,7 +2,7 @@
   "consolidated_tools": [
     {
       "name": "get_azure_resilience_management_details",
-      "description": "Get details about Azure Resilience Management resources, including resilience goals (templates, assignments, and their resources), usage plans and enrollments, and recovery plans (plans, resources, and jobs) for Azure service groups.",
+      "description": "Get details about Azure Resilience Management resources, including resilience goals (templates, assignments, and their resources), usage plans and enrollments, recovery plans (plans, resources, and jobs), and drills for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -38,7 +38,9 @@
         "resilience_recovery_plan_get",
         "resilience_recovery_plan_resource_get",
         "resilience_recovery_job_get",
-        "resilience_recovery_job_resource_get"
+        "resilience_recovery_job_resource_get",
+        "resilience_drill_get",
+        "resilience_drill_resource_get"
       ]
     },
     {
@@ -4406,7 +4408,7 @@
     },
     {
       "name": "ingest_azure_sre_agent_events_and_memories",
-      "description": "Append memory entries, trigger memory reindexing, and create incidents or response plans on an Azure SRE Agent resource. Each call is non-idempotent and may produce a new record.",
+      "description": "Append memory entries, trigger memory re-indexing, and create incidents or response plans on an Azure SRE Agent resource. Each call is non-idempotent and may produce a new record.",
       "toolMetadata": {
         "destructive": {
           "value": false,

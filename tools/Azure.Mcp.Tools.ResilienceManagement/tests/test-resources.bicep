@@ -11,6 +11,7 @@ var lifecycleServiceGroupName = take('sgl${uniqueSuffix}', 24)
 var goalTemplateName = take('gt${uniqueSuffix}', 24)
 var goalAssignmentName = take('ga${uniqueSuffix}', 24)
 var recoveryPlanName = take('rp${uniqueSuffix}', 24)
+var drillName = take('dr${uniqueSuffix}', 24)
 var storageAccountName = toLower(take('st${uniqueSuffix}', 24))
 
 // The test identity is automatically granted access to this resource group by the
@@ -59,4 +60,5 @@ output lifecycleServiceGroupName string = lifecycleServiceGroupName
 output goalTemplateName string = goalTemplateName
 output goalAssignmentName string = goalAssignmentName
 output recoveryPlanName string = recoveryPlanName
+output drillName string = drillName
 output storageAccountName string = storageAccountName
