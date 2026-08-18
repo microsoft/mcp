@@ -5,8 +5,8 @@ using System.ClientModel.Primitives;
 using Azure.Core;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Azure.ResourceManager.ResilienceManagement;
 using Azure.ResourceManager.Models;
+using Azure.ResourceManager.ResilienceManagement;
 using Azure.ResourceManager.ResilienceManagement.Models;
 using Xunit;
 
