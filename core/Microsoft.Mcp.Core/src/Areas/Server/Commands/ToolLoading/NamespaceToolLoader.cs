@@ -129,15 +129,25 @@ public sealed class NamespaceToolLoader(
                 continue;
             }
 
-            var tool = new Tool
-            {
-                Name = namespaceName,
-                Description = group.Description + """
+            var toolRouterDescription = _options.Value.ThreeStepToolDiscovery
+                ? """
+                    This tool is a hierarchical MCP command router.
+                    Sub commands are routed to MCP servers that require specific fields inside the "parameters" object.
+                    To invoke a command, set "command" to the exact command name (e.g. "appconfig_account_list") and wrap its args in "parameters".
+                    Do not guess a "command" name from natural language. First call this tool with "learn=true" and no "command" to get the exact list of command names and descriptions.
+                    Then call again with "learn=true" and the matching "command" from that list to get its full input schema before invoking it.
+                    """
+                : """
                     This tool is a hierarchical MCP command router.
                     Sub commands are routed to MCP servers that require specific fields inside the "parameters" object.
                     To invoke a command, set "command" and wrap its args in "parameters".
                     Set "learn=true" to discover available sub commands.
-                    """,
+                    """;
+
+            var tool = new Tool
+            {
+                Name = namespaceName,
+                Description = group.Description + toolRouterDescription,
                 InputSchema = s_toolSchema,
                 Annotations = new ToolAnnotations()
                 {
@@ -224,6 +234,11 @@ public sealed class NamespaceToolLoader(
 
             if (learn)
             {
+                if (_options.Value.ThreeStepToolDiscovery && !string.IsNullOrWhiteSpace(command))
+                {
+                    return await InvokeCommandLearn(request, tool, command, cancellationToken);
+                }
+
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }
             else if (!string.IsNullOrEmpty(tool) && !string.IsNullOrEmpty(command))
@@ -544,10 +559,48 @@ public sealed class NamespaceToolLoader(
     {
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
             .SetTag(TagName.IsLearn, true);
-        var learnTools = GetChildToolList(request, namespaceName).Select(t => new ToolCommandInfo(t));
-        var learnToolsJson = JsonSerializer.Serialize(learnTools, ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
-        var learnResponse = new CallToolResult
+        if (_options.Value.ThreeStepToolDiscovery)
+        {
+            var availableTools = GetChildToolList(request, namespaceName);
+            var learnTools = availableTools.Select(t => new ToolCommandInfo(t, includeSchema: false));
+            var learnToolsJson = JsonSerializer.Serialize(learnTools, ServerJsonContext.Default.IEnumerableToolCommandInfo);
+
+            var learnResponse = new CallToolResult
+            {
+                Content =
+                [
+                    new TextContentBlock
+                    {
+                        Text = $"""
+                            Here are the available commands for '{namespaceName}' tool.
+                            The "tool" field of each entry below is the exact "command" value to use -- do not guess or invent a
+                            different name. Pick the entry matching your task, then run again with "learn=true" and "command" set
+                            to that exact "tool" value to get its full input schema.
+
+                            {learnToolsJson}
+                            """
+                    }
+                ],
+                IsError = false
+            };
+
+            if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
+            {
+                (string? commandName, _) = await GetCommandAndParametersFromIntentAsync(request, intent, namespaceName, availableTools, cancellationToken);
+                if (!string.IsNullOrWhiteSpace(commandName))
+                {
+                    return await InvokeCommandLearn(request, namespaceName, commandName, cancellationToken);
+                }
+            }
+
+            return learnResponse;
+        }
+
+        var defaultLearnTools = GetChildToolList(request, namespaceName).Select(t => new ToolCommandInfo(t));
+        var defaultLearnToolsJson = JsonSerializer.Serialize(defaultLearnTools, ServerJsonContext.Default.IEnumerableToolCommandInfo);
+
+        var defaultLearnResponse = new CallToolResult
         {
             Content =
             [
@@ -558,13 +611,13 @@ public sealed class NamespaceToolLoader(
                         If you do not find a suitable "command", run again with the "learn=true" to get a list of available commands and their parameters.
                         Next, identify the command you want to execute and run again with the "command" and "parameters" arguments, respecting "required" parameters if present.
 
-                        {learnToolsJson}
+                        {defaultLearnToolsJson}
                         """
                 }
             ],
             IsError = false
         };
-        var response = learnResponse;
+        var response = defaultLearnResponse;
         if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
         {
             var availableTools = GetChildToolList(request, namespaceName);
@@ -575,6 +628,56 @@ public sealed class NamespaceToolLoader(
             }
         }
         return response;
+    }
+
+    private Task<CallToolResult> InvokeCommandLearn(RequestContext<CallToolRequestParams> request, string namespaceName, string commandName, CancellationToken cancellationToken)
+    {
+        // We intentionally do not invoke the command here; learn mode should return details for the selected command.
+        var availableTools = GetChildToolList(request, namespaceName);
+        var matchedTool = availableTools.FirstOrDefault(tool => string.Equals(tool.Name, commandName, StringComparison.OrdinalIgnoreCase));
+        if (matchedTool is null)
+        {
+            var knownCommandNames = availableTools.Select(t => t.Name);
+            var knownCommandNamesJson = JsonSerializer.Serialize(knownCommandNames, ServerJsonContext.Default.IEnumerableString);
+
+            return Task.FromResult(new CallToolResult
+            {
+                Content =
+                [
+                    new TextContentBlock
+                    {
+                        Text = $"""
+                            Command '{commandName}' was not found in namespace '{namespaceName}'. "command" must be one of the exact
+                            names below, not a guessed or natural-language name. Call again with "learn=true" and one of these
+                            "command" values:
+
+                            {knownCommandNamesJson}
+                            """
+                    }
+                ],
+                IsError = true
+            });
+        }
+
+        var commandInfo = new ToolCommandInfo(matchedTool);
+        var commandInfoJson = JsonSerializer.Serialize(commandInfo, ServerJsonContext.Default.ToolCommandInfo);
+
+        return Task.FromResult(new CallToolResult
+        {
+            Content =
+            [
+                new TextContentBlock
+                {
+                    Text = $"""
+                        Here is the full command definition for '{namespaceName}/{commandName}'.
+                        This includes its input schema and required parameters.
+
+                        {commandInfoJson}
+                        """
+                }
+            ],
+            IsError = false
+        });
     }
 
     /// <summary>

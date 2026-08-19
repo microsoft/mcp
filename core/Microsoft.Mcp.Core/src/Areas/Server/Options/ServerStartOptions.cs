@@ -40,6 +40,14 @@ public sealed class ServerStartOptions
     public string[]? Tool { get; set; } = null;
 
     /// <summary>
+    /// Gets or sets whether three-step tool discovery is enabled.
+    /// In this mode, top-level learn requests expose only each tool's description and metadata,
+    /// while a learn request for a specific command includes the full input schema.
+    /// </summary>
+    [Option(Description = "Use three-step tool discovery. Top-level learn results return only tool descriptions and metadata, while a learn request for a specific command includes the full input schema.", DefaultValue = false)]
+    public bool ThreeStepToolDiscovery { get; set; } = false;
+
+    /// <summary>
     /// Gets or sets whether the server should operate in read-only mode.
     /// When true, only tools marked as read-only will be available.
     /// </summary>

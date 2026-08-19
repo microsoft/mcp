@@ -13,12 +13,30 @@ environments:
         timeout: "2m"
         env:
           AZURE_MCP_COLLECT_TELEMETRY: 'false'
+  linux-three-step:
+    mcpServers:
+      azmcp:
+        type: stdio
+        command: ".work/build/Azure.Mcp.Server/linux-x64/azmcp"
+        args: ["server", "start", "--three-step-tool-discovery"]
+        timeout: "2m"
+        env:
+          AZURE_MCP_COLLECT_TELEMETRY: 'false'
   windows:
     mcpServers:
       azmcp:
         type: stdio
         command: ".work/build/Azure.Mcp.Server/windows-x64/azmcp"
         args: ["server", "start"]
+        timeout: "2m"
+        env:
+          AZURE_MCP_COLLECT_TELEMETRY: 'false'
+  windows-three-step:
+    mcpServers:
+      azmcp:
+        type: stdio
+        command: ".work/build/Azure.Mcp.Server/windows-x64/azmcp"
+        args: ["server", "start", "--three-step-tool-discovery"]
         timeout: "2m"
         env:
           AZURE_MCP_COLLECT_TELEMETRY: 'false'
