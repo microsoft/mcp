@@ -6,7 +6,7 @@ using Azure.Mcp.Tools.Insights.Services;
 using Azure.Mcp.Tools.Insights.Services.Models;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Insights.UnitTests.Services;
+namespace Azure.Mcp.Tools.Insights.Tests.Services;
 
 public class AggregationFilterTests
 {

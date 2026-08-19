@@ -252,11 +252,11 @@ Real product code under unit testing must be passed `Xunit.TestContext.Current.C
 
 ### End-to-end Tests
 
-End-to-end tests are performed manually. Command authors must thoroughly test each command to ensure correct tool invocation and results. At least one prompt per tool is required and should be added to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`.
+End-to-end tests are performed manually. Command authors must thoroughly test each command to ensure correct tool invocation and results. At least one prompt per tool is required and should be added to the server's `/server/<servername>/docs/e2eTestPrompts.md` file.
 
 ### Running evals with vally
 
-vally is the evaluation framework used to test the performance/accuracy of Azure MCP server and its tools. See `/docs/testing-with-vally.md`.
+vally is the evaluation framework used to test the performance/accuracy of Azure MCP server and its tools. See [`/docs/testing-with-vally.md`](https://github.com/microsoft/mcp/blob/main/docs/testing-with-vally.md).
 
 ### Testing Local Build with VS Code
 

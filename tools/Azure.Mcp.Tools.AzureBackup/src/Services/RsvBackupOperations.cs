@@ -45,7 +45,8 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
             }
         };
 
-        var result = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vaultName, vaultData, cancellationToken);
+        var result = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, vaultData, cancellationToken);
+        await WaitForLroCompletionAsync(result, cancellationToken);
 
         return new VaultCreateResult(
             result.Value.Id?.ToString(),
@@ -562,7 +563,8 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
             }
         }
 
-        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         // RSV storage redundancy is managed via the BackupResourceStorageConfig API,
         // not the vault patch endpoint.
@@ -600,7 +602,8 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var collection = rgResource.GetBackupResourceConfigs();
-        await collection.CreateOrUpdateAsync(WaitUntil.Completed, vaultName, data, cancellationToken);
+        var operation = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, data, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
     }
 
     public async Task<OperationResult> CreatePolicyAsync(
@@ -640,7 +643,8 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
         // --policy-tags maps to ARM resource tags on the policy (RSV only).
         ApplyPolicyTags(policyData.Tags, request.PolicyTags);
 
-        await policyCollection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
+        var operation = await policyCollection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' created in vault '{vaultName}'.");
     }
@@ -718,7 +722,8 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
 
         UpdatePolicyScheduleAndRetention(policyProperties, newScheduleTime, newRetentionDays);
 
-        await policyCollection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
+        var operation = await policyCollection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' updated in vault '{vaultName}'.");
     }
@@ -863,7 +868,8 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
                 }
             }
         };
-        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Immutability set to '{immutabilityState}' for vault '{vaultName}'");
     }
@@ -913,7 +919,8 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
             }
         };
 
-        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'");
     }
@@ -959,7 +966,8 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
             var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
             var rgResource = armClient.GetResourceGroupResource(rgId);
             var collection = rgResource.GetBackupResourceConfigs();
-            await collection.CreateOrUpdateAsync(WaitUntil.Completed, vaultName, data, cancellationToken);
+            var operation = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, data, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
         }
         catch (RequestFailedException ex) when (ex.ErrorCode == "BMSUserErrorRedundancySettingsUseVaultApi")
         {
@@ -975,7 +983,8 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
                 }
             };
 
-            await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+            var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
         }
 
         return new OperationResult("Succeeded", null, $"Cross-Region Restore enabled for vault '{vaultName}'.");
@@ -1006,11 +1015,12 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
             }
         };
 
-        await proxyCollection.CreateOrUpdateAsync(
-            WaitUntil.Completed,
+        var operation = await proxyCollection.CreateOrUpdateAsync(
+            WaitUntil.Started,
             "VaultProxy",
             proxyData,
             cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Multi-User Authorization enabled on vault '{vaultName}' with Resource Guard '{resourceGuardId}'.");
     }
@@ -1031,7 +1041,8 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
         var rgResource = armClient.GetResourceGroupResource(rgId);
 
         var proxyResponse = await rgResource.GetResourceGuardProxyAsync(vaultName, "VaultProxy", cancellationToken);
-        await proxyResponse.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        var operation = await proxyResponse.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Multi-User Authorization disabled on vault '{vaultName}'.");
     }
@@ -1102,7 +1113,8 @@ public sealed class RsvBackupOperations(IAzureService azureService) : BaseAzureS
             }
         };
 
-        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null,
             $"Customer-Managed Key encryption configured on vault '{vaultName}' using key '{keyName}' from '{kvUri}'.");

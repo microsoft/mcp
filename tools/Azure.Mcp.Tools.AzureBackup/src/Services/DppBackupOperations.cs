@@ -74,7 +74,8 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
                 Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned)
         };
 
-        var result = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vaultName, vaultData, cancellationToken);
+        var result = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, vaultData, cancellationToken);
+        await WaitForLroCompletionAsync(result, cancellationToken);
 
         return new VaultCreateResult(
             result.Value.Id?.ToString(),
@@ -312,7 +313,8 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         try
         {
             operation = await collection.CreateOrUpdateAsync(
-                WaitUntil.Completed, instanceName, instanceData, cancellationToken);
+                WaitUntil.Started, instanceName, instanceData, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
         }
         catch (RequestFailedException ex)
         {
@@ -778,7 +780,8 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             }
         }
 
-        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Vault '{vaultName}' updated successfully.");
     }
@@ -811,7 +814,8 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
         try
         {
-            await collection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
+            var operation = await collection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
         }
         catch (RequestFailedException ex) when (ex.Status == 400 && ex.ErrorCode == "UserErrorBMSUpdatePolicyNotSupported")
         {
@@ -855,7 +859,8 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
                 }
             }
         };
-        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Cross-Region Restore enabled for vault '{vaultName}'.");
     }
@@ -896,7 +901,8 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
                 }
             }
         };
-        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Immutability set to '{immutabilityState}' for vault '{vaultName}'.");
     }
@@ -936,7 +942,8 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
                 }
             }
         };
-        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'.");
     }
@@ -965,11 +972,12 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             }
         };
 
-        await proxyCollection.CreateOrUpdateAsync(
-            WaitUntil.Completed,
+        var operation = await proxyCollection.CreateOrUpdateAsync(
+            WaitUntil.Started,
             "DppResourceGuardProxy",
             proxyData,
             cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Multi-User Authorization enabled on vault '{vaultName}' with Resource Guard '{resourceGuardId}'.");
     }
@@ -989,7 +997,8 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
 
         var proxyResponse = await vaultResource.GetResourceGuardProxyBaseResourceAsync("DppResourceGuardProxy", cancellationToken);
-        await proxyResponse.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        var operation = await proxyResponse.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Multi-User Authorization disabled on vault '{vaultName}'.");
     }
@@ -1058,7 +1067,8 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             }
         };
 
-        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null,
             $"Customer-Managed Key encryption configured on vault '{vaultName}' using key '{keyName}' from '{kvUri}'.");
