@@ -58,3 +58,5 @@ output goalAssignmentName string = goalAssignmentName
 output recoveryPlanName string = recoveryPlanName
 output drillName string = drillName
 output storageAccountName string = storageAccountName
+output storageAccountId string = storageAccount.id
+output location string = resourceGroup().location

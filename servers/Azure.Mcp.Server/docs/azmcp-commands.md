@@ -3759,6 +3759,21 @@ azmcp resilience drill resource get --subscription <subscription> \
                                     --service-group <service-group> \
                                     --drill <drill> \
                                     [--name <name>]
+
+# Get a run of a drill, or list all runs of the drill (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run get --subscription <subscription> \
+                               --service-group <service-group> \
+                               --drill <drill> \
+                               [--name <name>]
+
+# Get a resource (target) of a drill run, or list all resources of the run (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run resource get --subscription <subscription> \
+                                        --service-group <service-group> \
+                                        --drill <drill> \
+                                        --drill-run <drill-run> \
+                                        [--name <name>]
 ```
 
 ### Azure Resource Group Operations

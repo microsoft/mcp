@@ -42,6 +42,8 @@ $goalTemplateName = $DeploymentOutputs['GOALTEMPLATENAME']
 $goalAssignmentName = $DeploymentOutputs['GOALASSIGNMENTNAME']
 $recoveryPlanName = $DeploymentOutputs['RECOVERYPLANNAME']
 $drillName = $DeploymentOutputs['DRILLNAME']
+$storageAccountId = $DeploymentOutputs['STORAGEACCOUNTID']
+$location = $DeploymentOutputs['LOCATION']
 
 $serviceGroupApiVersion = '2024-02-01-preview'
 $membershipApiVersion = '2023-09-01-preview'
@@ -67,11 +69,19 @@ function Invoke-ResilienceRestPut {
 
 function Invoke-ResilienceRestPost {
     param(
-        [string] $Path
+        [string] $Path,
+        [hashtable] $Body
     )
 
     Write-Host "POST $Path"
-    $response = Invoke-AzRestMethod -Method POST -Path $Path
+    if ($Body) {
+        $payload = $Body | ConvertTo-Json -Depth 20 -Compress
+        $response = Invoke-AzRestMethod -Method POST -Path $Path -Payload $payload
+    }
+    else {
+        $response = Invoke-AzRestMethod -Method POST -Path $Path
+    }
+
     if ($response.StatusCode -ge 400) {
         throw "POST $Path failed with status $($response.StatusCode): $($response.Content)"
     }
@@ -199,55 +209,6 @@ $checkReadinessPath = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanNa
 Invoke-ResilienceRestPost -Path $checkReadinessPath | Out-Null
 Wait-ResilienceProvisioning -Path $recoveryPlanPath
 
-# 8) Create a drill on the service group.
-$drillPath = "$serviceGroupResilienceBase/drills/$drillName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPut -Path $drillPath -Body @{
-    identity   = @{
-        type = 'SystemAssigned'
-    }
-    properties = @{
-        drillType               = 'Zonal'
-        rbacSetupMode           = 'AutomatedBuiltinRoles'
-        drillAssetProperties    = @{
-            subscription  = $subscriptionId
-            region        = 'westus2'
-            resourceGroup = $ResourceGroupName
-        }
-        chaosResourceProperties = @{
-            identity                       = @{ type = 'SystemAssigned' }
-            chaosResourceIdentityForFaults = @{ type = 'SystemAssigned' }
-        }
-        recoveryPlanProperties  = @{
-            recoveryPlanId = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName"
-            identity       = @{ type = 'SystemAssigned' }
-        }
-    }
-} | Out-Null
-Wait-ResilienceProvisioning -Path $drillPath
-
-# Capture the drill resource created by the drill provisioning so the
-# drill/resource live tests can read them from deployment outputs. The drill resources appear
-# asynchronously, so poll the list until one shows up.
-$drillResourcesPath = "$serviceGroupResilienceBase/drills/$drillName/drillResources`?api-version=$resilienceApiVersion"
-$drillResourceName = $null
-$deadline = (Get-Date).AddSeconds(300)
-while (-not $drillResourceName -and (Get-Date) -lt $deadline) {
-    $drillResources = (Invoke-AzRestMethod -Method GET -Path $drillResourcesPath).Content | ConvertFrom-Json
-    $drillResourceName = $drillResources.value | Select-Object -First 1 -ExpandProperty name
-    if (-not $drillResourceName) {
-        Write-Host "  waiting for drill resources to appear..."
-        Start-Sleep -Seconds 15
-    }
-}
-
-if ($drillResourceName) {
-    $DeploymentOutputs['DRILLRESOURCENAME'] = $drillResourceName
-    New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot | Out-Null
-}
-else {
-    Write-Warning "No drill resources appeared after provisioning; DRILLRESOURCENAME was not set."
-}
-
 # Capture the recovery job created by the readiness check (and its first resource, if any) so the
 # recovery job/resource live tests can read them from deployment outputs. The job appears
 # asynchronously, so poll the list until one shows up.
@@ -280,4 +241,160 @@ else {
     Write-Warning "No recovery job appeared after the readiness check; RECOVERYJOBNAME was not set."
 }
 
-Write-Host "Resilience test resources are ready (service group: $serviceGroupName, usage plan: $usagePlanName, enrollment: $enrollmentName, goal template: $goalTemplateName, goal assignment: $goalAssignmentName, recovery plan: $recoveryPlanName, drill: $drillName)."
+# 8) Create a drill. The service creates its drillResources from the service-group membership.
+$drillPath = "$serviceGroupResilienceBase/drills/$drillName`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPut -Path $drillPath -Body @{
+    identity   = @{
+        type = 'SystemAssigned'
+    }
+    properties = @{
+        drillType             = 'Zonal'
+        rbacSetupMode         = 'AutomatedCustomRole'
+        metricsProperties     = @{
+            identity       = @{ type = 'SystemAssigned' }
+            metricsToTrack = @()
+        }
+        recoveryPlanProperties = @{
+            identity = @{ type = 'SystemAssigned' }
+        }
+        drillAssetProperties = @{
+            subscription = $subscriptionId
+            region       = $location
+        }
+        chaosResourceProperties = @{
+            identity                       = @{ type = 'SystemAssigned' }
+            chaosResourceIdentityForFaults = @{ type = 'SystemAssigned' }
+        }
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $drillPath
+
+# Wait for the drill resource created from the storage-account service-group member.
+$drillResourcesPath = "$serviceGroupResilienceBase/drills/$drillName/drillResources`?api-version=$resilienceApiVersion"
+$drillResource = $null
+$deadline = (Get-Date).AddSeconds(600)
+while (-not $drillResource -and (Get-Date) -lt $deadline) {
+    $response = Invoke-AzRestMethod -Method GET -Path $drillResourcesPath
+    if ($response.StatusCode -ge 400) {
+        throw "GET $drillResourcesPath failed with status $($response.StatusCode): $($response.Content)"
+    }
+
+    $drillResources = ($response.Content | ConvertFrom-Json).value
+    $drillResource = $drillResources | Where-Object {
+        $_.properties.targetResourceId -eq $storageAccountId
+    } | Select-Object -First 1
+
+    if (-not $drillResource) {
+        Write-Host "  waiting for the storage account drill resource to appear..."
+        Start-Sleep -Seconds 15
+    }
+}
+
+if (-not $drillResource) {
+    throw "No drill resource was created for storage account $storageAccountId."
+}
+
+$DeploymentOutputs['DRILLRESOURCENAME'] = $drillResource.name
+
+# 9) Include the storage account in the drill, preserving the faults discovered by the service.
+$includeResource = @{
+    id = $drillResource.id
+}
+if ($drillResource.properties.faultProperties) {
+    $includeResource['faultProperties'] = $drillResource.properties.faultProperties
+}
+
+$addResourcesPath = "$serviceGroupResilienceBase/drills/$drillName/addOrUpdateResources`?api-version=$resilienceApiVersion&operationId=$((New-Guid).Guid)"
+Invoke-ResilienceRestPost -Path $addResourcesPath -Body @{
+    faultDurationInMin = 1
+    forceInclusionAndUpdate = 'Enable'
+    resourceLists = @{
+        includeResources = @($includeResource)
+        excludeResources = @()
+        updateResources  = @()
+    }
+} | Out-Null
+
+$drillResourcePath = "$($drillResource.id)`?api-version=$resilienceApiVersion"
+$deadline = (Get-Date).AddSeconds(900)
+do {
+    $response = Invoke-AzRestMethod -Method GET -Path $drillResourcePath
+    if ($response.StatusCode -ge 400) {
+        throw "GET $drillResourcePath failed with status $($response.StatusCode): $($response.Content)"
+    }
+
+    $includedResource = $response.Content | ConvertFrom-Json
+    if ($includedResource.properties.inclusionState -eq 'Included') {
+        break
+    }
+
+    Write-Host "  drill resource inclusionState = $($includedResource.properties.inclusionState)"
+    Start-Sleep -Seconds 15
+} while ((Get-Date) -lt $deadline)
+
+if ($includedResource.properties.inclusionState -ne 'Included') {
+    throw "Drill resource $($drillResource.name) was not included before the timeout."
+}
+
+# 10) Start the drill and discover the server-generated drill run.
+$drillRunsPath = "$serviceGroupResilienceBase/drills/$drillName/drillRuns`?api-version=$resilienceApiVersion"
+$existingRunIds = @()
+$existingRunsResponse = Invoke-AzRestMethod -Method GET -Path $drillRunsPath
+if ($existingRunsResponse.StatusCode -lt 400) {
+    $existingRunIds = @((($existingRunsResponse.Content | ConvertFrom-Json).value).id)
+}
+
+$startPath = "$serviceGroupResilienceBase/drills/$drillName/start`?api-version=$resilienceApiVersion&operationId=$((New-Guid).Guid)"
+Invoke-ResilienceRestPost -Path $startPath -Body @{
+    mode = 'Failover'
+} | Out-Null
+
+$drillRun = $null
+$deadline = (Get-Date).AddSeconds(900)
+while (-not $drillRun -and (Get-Date) -lt $deadline) {
+    $response = Invoke-AzRestMethod -Method GET -Path $drillRunsPath
+    if ($response.StatusCode -ge 400) {
+        throw "GET $drillRunsPath failed with status $($response.StatusCode): $($response.Content)"
+    }
+
+    $runs = ($response.Content | ConvertFrom-Json).value
+    $drillRun = $runs | Where-Object { $_.id -notin $existingRunIds } | Select-Object -First 1
+    if (-not $drillRun) {
+        Write-Host "  waiting for the drill run to appear..."
+        Start-Sleep -Seconds 15
+    }
+}
+
+if (-not $drillRun) {
+    throw "No drill run appeared after starting drill $drillName."
+}
+
+$DeploymentOutputs['DRILLRUNNAME'] = $drillRun.name
+
+# Capture a run target for the drill run resource live tests.
+$drillRunResourcesPath = "$serviceGroupResilienceBase/drills/$drillName/drillRuns/$($drillRun.name)/drillRunTargets`?api-version=$resilienceApiVersion"
+$drillRunResource = $null
+$deadline = (Get-Date).AddSeconds(900)
+while (-not $drillRunResource -and (Get-Date) -lt $deadline) {
+    $response = Invoke-AzRestMethod -Method GET -Path $drillRunResourcesPath
+    if ($response.StatusCode -ge 400) {
+        throw "GET $drillRunResourcesPath failed with status $($response.StatusCode): $($response.Content)"
+    }
+
+    $drillRunResources = ($response.Content | ConvertFrom-Json).value
+    $drillRunResource = $drillRunResources | Select-Object -First 1
+    if (-not $drillRunResource) {
+        Write-Host "  waiting for the drill run target to appear..."
+        Start-Sleep -Seconds 15
+    }
+}
+
+if (-not $drillRunResource) {
+    throw "No drill run target appeared for drill run $($drillRun.name)."
+}
+
+$DeploymentOutputs['DRILLRUNRESOURCENAME'] = $drillRunResource.name
+
+New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot | Out-Null
+
+Write-Host "Resilience test resources are ready (service group: $serviceGroupName, usage plan: $usagePlanName, enrollment: $enrollmentName, goal template: $goalTemplateName, goal assignment: $goalAssignmentName, recovery plan: $recoveryPlanName, drill: $drillName, drill run: $($drillRun.name))."
