@@ -114,6 +114,24 @@ public class ResourceGuardCreateCommandTests : SubscriptionCommandUnitTestsBase<
         Assert.Contains("--tags", response.Message);
     }
 
+    [Theory]
+    [InlineData(" =value")]
+    [InlineData("key= ")]
+    [InlineData("=value")]
+    [InlineData("key=")]
+    public async Task ExecuteAsync_TagsWithEmptyKeyOrValue_ReturnsBadRequest(string tag)
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--resource-guard", "guard1",
+            "--location", "eastus2",
+            "--tags", tag);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--tags", response.Message);
+    }
+
     [Fact]
     public async Task ExecuteAsync_RejectsMandatoryExclusions()
     {

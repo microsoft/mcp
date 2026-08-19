@@ -1157,7 +1157,7 @@ azmcp azurebackup security configure-encryption --subscription <subscription> \
 # Creates a Resource Guard for Multi-User Authorization (MUA). Once a vault is linked to this
 # Resource Guard, protected operations (disable soft delete, remove immutability, stop protection,
 # disable MUA) will require approval from a security admin with Backup MUA Admin role on the guard.
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup resourceguard create --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --resource-guard <resource-guard> \

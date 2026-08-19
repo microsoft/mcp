@@ -14,7 +14,7 @@ public sealed class ResourceGuardCreateOptions : ISubscriptionOption
     [Option(Description = "Azure region where the Resource Guard is created. Must match the region of vaults that will link to it (e.g., 'eastus2', 'westeurope').")]
     public required string Location { get; set; }
 
-    [Option(Description = "Comma-separated list of critical operations to EXCLUDE from Resource Guard protection. Valid RSV values: deleteProtection, getSecurityPIN, updatePolicy, updateProtection. Cannot include mandatory operations (disableSoftDelete, disableMultiUserAuthorization, removeMUAProtection). Omit to protect all default critical operations.")]
+    [Option(Description = "Comma-separated list of critical operations to EXCLUDE from Resource Guard protection. Valid RSV values: deleteProtection, getSecurityPIN, updatePolicy, updateProtection. Cannot include mandatory operations (disableSoftDelete, disableMultiUserAuthorization, removeMUAProtection, disableSecurityFeatures). Omit to protect all default critical operations.")]
     public string? ExcludedOperations { get; set; }
 
     [Option(Description = "Tags to apply to the Resource Guard, in 'key1=value1,key2=value2' format.")]

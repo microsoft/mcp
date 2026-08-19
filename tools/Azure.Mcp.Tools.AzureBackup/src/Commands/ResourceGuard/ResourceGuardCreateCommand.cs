@@ -95,11 +95,17 @@ public sealed class ResourceGuardCreateCommand(ILogger<ResourceGuardCreateComman
         foreach (var pair in tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
             var idx = pair.IndexOf('=');
-            if (idx <= 0 || idx == pair.Length - 1)
+            if (idx < 0)
             {
                 throw new ArgumentException($"Invalid --tags value '{pair}'. Expected format: 'key1=value1,key2=value2'.");
             }
-            dict[pair[..idx].Trim()] = pair[(idx + 1)..].Trim();
+            var key = pair[..idx].Trim();
+            var value = pair[(idx + 1)..].Trim();
+            if (key.Length == 0 || value.Length == 0)
+            {
+                throw new ArgumentException($"Invalid --tags value '{pair}'. Tag key and value must be non-empty.");
+            }
+            dict[key] = value;
         }
         return dict;
     }

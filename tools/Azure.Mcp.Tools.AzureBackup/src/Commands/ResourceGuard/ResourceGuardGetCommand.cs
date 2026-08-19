@@ -48,8 +48,8 @@ public sealed class ResourceGuardGetCommand(ILogger<ResourceGuardGetCommand> log
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ResourceGuardGetOptions options, CancellationToken cancellationToken)
     {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
-        var scope = !string.IsNullOrEmpty(options.ResourceGuard) ? "single" : "list";
-        AzureBackupTelemetryTags.AddResourceGuardOperationTag(context.Activity, scope);
+        var operation = !string.IsNullOrEmpty(options.ResourceGuard) ? "get" : "list";
+        AzureBackupTelemetryTags.AddResourceGuardOperationTag(context.Activity, operation);
 
         try
         {
