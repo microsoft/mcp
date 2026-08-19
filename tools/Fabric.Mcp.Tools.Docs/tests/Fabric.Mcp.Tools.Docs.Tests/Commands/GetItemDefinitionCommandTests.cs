@@ -11,7 +11,7 @@ using Xunit;
 
 namespace Fabric.Mcp.Tools.Docs.Tests.Commands;
 
-public class GetWorkloadDefinitionCommandTests : CommandUnitTestsBase<GetWorkloadDefinitionCommand, IFabricPublicApiService>
+public class GetItemDefinitionCommandTests : CommandUnitTestsBase<GetItemDefinitionCommand, IFabricPublicApiService>
 {
     [Fact]
     public void GetItemDefinitionCommand_HasCorrectProperties()
@@ -30,56 +30,56 @@ public class GetWorkloadDefinitionCommandTests : CommandUnitTestsBase<GetWorkloa
     }
 
     [Fact]
-    public async Task GetItemDefinitionCommand_ExecuteAsync_WithValidWorkloadType_ReturnsDefinition()
+    public async Task GetItemDefinitionCommand_ExecuteAsync_WithValidItemType_ReturnsDefinition()
     {
         // Arrange
         var expectedDefinition = "{ \"schema\": \"definition\" }";
 
-        Service.GetWorkloadItemDefinition("notebook").Returns(expectedDefinition);
+        Service.GetItemDefinition("notebook").Returns(expectedDefinition);
 
         // Act
-        var result = await ExecuteCommandAsync("--workload-type", "notebook");
+        var result = await ExecuteCommandAsync("--item-type", "notebook");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
-        Service.Received(1).GetWorkloadItemDefinition("notebook");
+        Service.Received(1).GetItemDefinition("notebook");
     }
 
     [Fact]
-    public async Task GetItemDefinitionCommand_ExecuteAsync_WithEmptyWorkloadType_ReturnsBadRequest()
+    public async Task GetItemDefinitionCommand_ExecuteAsync_WithEmptyItemType_ReturnsBadRequest()
     {
         // Arrange & Act
         var result = await ExecuteCommandAsync([]);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
-        Assert.Contains("Missing Required options: --workload-type", result.Message);
-        Service.DidNotReceive().GetWorkloadItemDefinition(Arg.Any<string>());
+        Assert.Contains("Missing Required options: --item-type", result.Message);
+        Service.DidNotReceive().GetItemDefinition(Arg.Any<string>());
     }
 
     [Fact]
-    public async Task GetItemDefinitionCommand_ExecuteAsync_WithInvalidWorkloadType_ReturnsNotFound()
+    public async Task GetItemDefinitionCommand_ExecuteAsync_WithInvalidItemType_ReturnsNotFound()
     {
         // Arrange
-        Service.GetWorkloadItemDefinition("invalid-workload").Throws(new ArgumentException("Workload not found"));
+        Service.GetItemDefinition("invalid-item-type").Throws(new ArgumentException("Item type not found"));
 
         // Act
-        var result = await ExecuteCommandAsync("--workload-type", "invalid-workload");
+        var result = await ExecuteCommandAsync("--item-type", "invalid-item-type");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, result.Status);
-        Assert.Contains("No item definition found for workload invalid-workload", result.Message);
+        Assert.Contains("No item definition found for item type invalid-item-type", result.Message);
     }
 
     [Fact]
     public async Task GetItemDefinitionCommand_ExecuteAsync_WithServiceException_ReturnsInternalServerError()
     {
         // Arrange
-        Service.GetWorkloadItemDefinition("notebook").Throws(new InvalidOperationException("Service error"));
+        Service.GetItemDefinition("notebook").Throws(new InvalidOperationException("Service error"));
 
         // Act
-        var result = await ExecuteCommandAsync("--workload-type", "notebook");
+        var result = await ExecuteCommandAsync("--item-type", "notebook");
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, result.Status);

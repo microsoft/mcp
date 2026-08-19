@@ -40,13 +40,13 @@ public class FabricPublicApiServiceTests
 
     #endregion
 
-    #region GetFabricWorkloadPublicApis Tests
+    #region GetFabricPublicApis Tests
 
     [Fact]
-    public async Task GetFabricWorkloadPublicApis_WithValidWorkload_ReturnsApi()
+    public async Task GetFabricPublicApis_WithValidItemType_ReturnsApi()
     {
         // Arrange
-        var workload = "notebook";
+        var itemType = "notebook";
         var expectedSpec = "{ \"swagger\": \"2.0\" }";
         var expectedDefinitions = new Dictionary<string, string> { { "definitions.json", "{ \"definitions\": {} }" } };
 
@@ -58,7 +58,7 @@ public class FabricPublicApiServiceTests
             .Returns(expectedDefinitions["definitions.json"]);
 
         // Act
-        var result = await _service.GetWorkloadPublicApis(workload, TestContext.Current.CancellationToken);
+        var result = await _service.GetPublicApis(itemType, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -68,10 +68,10 @@ public class FabricPublicApiServiceTests
     }
 
     [Fact]
-    public async Task GetFabricWorkloadPublicApis_WithDefinitionsDirectory_ReturnsApiWithDefinitions()
+    public async Task GetFabricPublicApis_WithDefinitionsDirectory_ReturnsApiWithDefinitions()
     {
         // Arrange
-        var workload = "platform";
+        var itemType = "platform";
         var expectedSpec = "{ \"swagger\": \"2.0\" }";
 
         _resourceProvider.GetResource("fabric-rest-api-specs/contents/platform/swagger.json", Arg.Any<CancellationToken>())
@@ -86,7 +86,7 @@ public class FabricPublicApiServiceTests
             .Returns("{ \"model2\": {} }");
 
         // Act
-        var result = await _service.GetWorkloadPublicApis(workload, TestContext.Current.CancellationToken);
+        var result = await _service.GetPublicApis(itemType, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -97,10 +97,10 @@ public class FabricPublicApiServiceTests
     }
 
     [Fact]
-    public async Task GetFabricWorkloadPublicApis_WithNullSpec_ReturnsEmptySpec()
+    public async Task GetFabricPublicApis_WithNullSpec_ReturnsEmptySpec()
     {
         // Arrange
-        var workload = "notebook";
+        var itemType = "notebook";
 
         _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/swagger.json", Arg.Any<CancellationToken>())
             .Returns(string.Empty);
@@ -108,7 +108,7 @@ public class FabricPublicApiServiceTests
             .Returns(Array.Empty<string>());
 
         // Act
-        var result = await _service.GetWorkloadPublicApis(workload, TestContext.Current.CancellationToken);
+        var result = await _service.GetPublicApis(itemType, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -117,46 +117,46 @@ public class FabricPublicApiServiceTests
     }
 
     [Fact]
-    public async Task GetFabricWorkloadPublicApis_WithException_PropagatesException()
+    public async Task GetFabricPublicApis_WithException_PropagatesException()
     {
         // Arrange
-        var workload = "notebook";
+        var itemType = "notebook";
         _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/swagger.json", Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Resource not found"));
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.GetWorkloadPublicApis(workload, TestContext.Current.CancellationToken));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.GetPublicApis(itemType, TestContext.Current.CancellationToken));
     }
 
     #endregion
 
-    #region ListFabricWorkloadsAsync Tests
+    #region ListFabricItemTypesAsync Tests
 
     [Fact]
-    public async Task ListFabricWorkloadsAsync_ReturnsWorkloads()
+    public async Task ListFabricItemTypesAsync_ReturnsItemTypes()
     {
         // Arrange
-        var expectedWorkloads = new[] { "notebook", "report", "platform" };
+        var expectedItemTypes = new[] { "notebook", "report", "platform" };
         _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/", ResourceType.Directory, TestContext.Current.CancellationToken)
-            .Returns(expectedWorkloads);
+            .Returns(expectedItemTypes);
 
         // Act
-        var result = await _service.ListWorkloadsAsync(TestContext.Current.CancellationToken);
+        var result = await _service.ListItemTypesAsync(TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.Equal(expectedWorkloads, result);
+        Assert.Equal(expectedItemTypes, result);
         await _resourceProvider.Received(1).ListResourcesInPath("fabric-rest-api-specs/contents/", ResourceType.Directory, TestContext.Current.CancellationToken);
     }
 
     [Fact]
-    public async Task ListFabricWorkloadsAsync_WithException_PropagatesException()
+    public async Task ListFabricItemTypesAsync_WithException_PropagatesException()
     {
         // Arrange
         _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/", ResourceType.Directory, TestContext.Current.CancellationToken)
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.ListWorkloadsAsync(TestContext.Current.CancellationToken));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.ListItemTypesAsync(TestContext.Current.CancellationToken));
     }
 
     #endregion
@@ -164,10 +164,10 @@ public class FabricPublicApiServiceTests
     #region GetExamplesAsync Tests
 
     [Fact]
-    public async Task GetExamplesAsync_WithValidWorkload_ReturnsExamples()
+    public async Task GetExamplesAsync_WithValidItemType_ReturnsExamples()
     {
         // Arrange
-        var workloadType = "notebook";
+        var itemType = "notebook";
         var expectedFiles = new[] { "example1.json", "example2.json" };
 
         _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/", ResourceType.File, TestContext.Current.CancellationToken)
@@ -180,7 +180,7 @@ public class FabricPublicApiServiceTests
             .Returns("{ \"example2\": \"content\" }");
 
         // Act
-        var result = await _service.GetWorkloadExamplesAsync(workloadType, TestContext.Current.CancellationToken);
+        var result = await _service.GetExamplesAsync(itemType, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(2, result.Count);
@@ -194,7 +194,7 @@ public class FabricPublicApiServiceTests
     public async Task GetExamplesAsync_WithSubDirectories_ReturnsAllExamples()
     {
         // Arrange
-        var workloadType = "notebook";
+        var itemType = "notebook";
 
         _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/", ResourceType.File, TestContext.Current.CancellationToken)
             .Returns(["root.json"]);
@@ -211,7 +211,7 @@ public class FabricPublicApiServiceTests
             .Returns("{ \"sub1\": \"content\" }");
 
         // Act
-        var result = await _service.GetWorkloadExamplesAsync(workloadType, TestContext.Current.CancellationToken);
+        var result = await _service.GetExamplesAsync(itemType, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(2, result.Count);
@@ -223,7 +223,7 @@ public class FabricPublicApiServiceTests
     public async Task GetExamplesAsync_WithNoFiles_ReturnsEmptyDictionary()
     {
         // Arrange
-        var workloadType = "notebook";
+        var itemType = "notebook";
 
         _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/", ResourceType.File, TestContext.Current.CancellationToken)
             .Returns(Array.Empty<string>());
@@ -231,7 +231,7 @@ public class FabricPublicApiServiceTests
             .Returns(Array.Empty<string>());
 
         // Act
-        var result = await _service.GetWorkloadExamplesAsync(workloadType, TestContext.Current.CancellationToken);
+        var result = await _service.GetExamplesAsync(itemType, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Empty(result);
@@ -239,16 +239,16 @@ public class FabricPublicApiServiceTests
 
     #endregion
 
-    #region GetFabricWorkloadItemDefinition Tests
+    #region GetFabricItemTypeItemDefinition Tests
 
     [Fact]
-    public void GetFabricWorkloadItemDefinition_WithValidWorkload_ReturnsDefinition()
+    public void GetFabricItemTypeItemDefinition_WithValidItemType_ReturnsDefinition()
     {
         // Arrange
-        var workloadType = "notebook";
+        var itemType = "notebook";
 
         // Act
-        var result = _service.GetWorkloadItemDefinition(workloadType);
+        var result = _service.GetItemDefinition(itemType);
 
         // Assert
         // Since this calls a static method, we can only test that it doesn't throw
@@ -264,10 +264,10 @@ public class FabricPublicApiServiceTests
     [InlineData("sparkjobdefinition")]
     [InlineData("mirroredCatalog")]
     [InlineData("mirroredAzureDatabricksCatalog")]
-    public void GetFabricWorkloadItemDefinition_WithCamelCaseWorkload_ReturnsDefinition(string workloadType)
+    public void GetFabricItemTypeItemDefinition_WithCamelCaseItemType_ReturnsDefinition(string itemType)
     {
         // Act
-        var result = _service.GetWorkloadItemDefinition(workloadType);
+        var result = _service.GetItemDefinition(itemType);
 
         // Assert
         Assert.NotNull(result);
@@ -280,10 +280,10 @@ public class FabricPublicApiServiceTests
     [InlineData("graphQLApi", "item-definitions/g-?r-?a-?p-?h[-a-z]*?q[-a-z]*?l[-a-z]*?a-?p-?i-definition\\.md")]
     [InlineData("sparkjobdefinition", "item-definitions/s-?p-?a-?r-?k-?j-?o-?b-definition\\.md")]
     [InlineData("mirroredAzureDatabricksCatalog", "item-definitions/m-?i-?r-?r-?o-?r-?e-?d[-a-z]*?a-?z-?u-?r-?e[-a-z]*?d-?a-?t-?a-?b-?r-?i-?c-?k-?s[-a-z]*?c-?a-?t-?a-?l-?o-?g-definition\\.md")]
-    public void BuildItemDefinitionPattern_ConvertsCorrectly(string workloadType, string expectedPattern)
+    public void BuildItemDefinitionPattern_ConvertsCorrectly(string itemType, string expectedPattern)
     {
         // Act
-        var result = FabricPublicApiService.BuildItemDefinitionPattern(workloadType);
+        var result = FabricPublicApiService.BuildItemDefinitionPattern(itemType);
 
         // Assert
         Assert.Equal(expectedPattern, result);
