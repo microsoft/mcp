@@ -45,7 +45,7 @@ function FilterTestProjects {
     $testProjects = Get-ChildItem -Path "$RepoRoot" -Recurse -Filter "*Tests.csproj" -File
     | Where-Object {
         $testProjectDetails = & "$($PSScriptRoot)/Get-ProjectProperties.ps1" -Path $_.FullName
-        # Need to compare against $true as $testProjectDetails is based on JSON values, therefor HasLiveTests and HasUnitTests will not be a PowerShell boolean
+        # Need to compare against $true as $testProjectDetails is based on JSON values, therefore HasLiveTests and HasUnitTests will not be a PowerShell boolean
         return (($testProjectDetails.HasLiveTests -eq $true) -and $TestType -in @('Live', 'Recorded', 'All')) -or
                 (($testProjectDetails.HasUnitTests -eq $true) -and $TestType -in @('Unit', 'All'))
     }
