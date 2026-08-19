@@ -12,7 +12,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 
 [CommandMetadata(
     Id = "a1b2c3d4-2001-4000-8000-000000000005",
-    Name = "reset_shortcut_cache",
+    Name = "reset-shortcut-cache",
     Title = "Reset OneLake Shortcut Cache",
     Description = """
         Drop cached shortcut reads for a workspace, forcing the next read to
