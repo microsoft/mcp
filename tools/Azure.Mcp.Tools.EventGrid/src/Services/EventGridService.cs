@@ -364,26 +364,35 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
     {
         if (!string.IsNullOrEmpty(resourceGroup))
         {
-            // Search in specific resource group
+            // Direct lookup in the specific resource group instead of enumerating every topic
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-            await foreach (var topic in resourceGroupResource.Value.GetEventGridTopics().GetAllAsync(cancellationToken: cancellationToken))
+            var topics = resourceGroupResource.Value.GetEventGridTopics();
+            var directMatch = await GetIfExists(() => topics.GetIfExistsAsync(topicName, cancellationToken));
+
+            if (directMatch != null)
+            {
+                return directMatch;
+            }
+
+            // Fall back to enumeration so casing differences still resolve the topic
+            await foreach (var topic in topics.GetAllAsync(cancellationToken: cancellationToken))
             {
                 if (topic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
                 {
                     return topic;
                 }
             }
+
+            return null;
         }
-        else
+
+        // Search in all resource groups
+        await foreach (var topic in subscriptionResource.GetEventGridTopicsAsync(cancellationToken: cancellationToken))
         {
-            // Search in all resource groups
-            await foreach (var topic in subscriptionResource.GetEventGridTopicsAsync(cancellationToken: cancellationToken))
+            if (topic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
             {
-                if (topic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
-                {
-                    return topic;
-                }
+                return topic;
             }
         }
 
@@ -398,30 +407,50 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
     {
         if (!string.IsNullOrEmpty(resourceGroup))
         {
-            // Search in specific resource group
+            // Direct lookup in the specific resource group instead of enumerating every system topic
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-            await foreach (var systemTopic in resourceGroupResource.Value.GetSystemTopics().GetAllAsync(cancellationToken: cancellationToken))
+            var systemTopics = resourceGroupResource.Value.GetSystemTopics();
+            var directMatch = await GetIfExists(() => systemTopics.GetIfExistsAsync(topicName, cancellationToken));
+
+            if (directMatch != null)
+            {
+                return directMatch;
+            }
+
+            // Fall back to enumeration so casing differences still resolve the system topic
+            await foreach (var systemTopic in systemTopics.GetAllAsync(cancellationToken: cancellationToken))
             {
                 if (systemTopic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
                 {
                     return systemTopic;
                 }
             }
+
+            return null;
         }
-        else
+
+        // Search in all resource groups
+        await foreach (var systemTopic in subscriptionResource.GetSystemTopicsAsync(cancellationToken: cancellationToken))
         {
-            // Search in all resource groups
-            await foreach (var systemTopic in subscriptionResource.GetSystemTopicsAsync(cancellationToken: cancellationToken))
+            if (systemTopic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
             {
-                if (systemTopic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
-                {
-                    return systemTopic;
-                }
+                return systemTopic;
             }
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Invokes a <c>GetIfExistsAsync</c> lookup and normalizes "not found" results to <see langword="null"/>.
+    /// The returned <see cref="NullableResponse{T}"/> throws from its <c>Value</c> getter when the resource
+    /// does not exist, so <c>HasValue</c> is checked first.
+    /// </summary>
+    private static async Task<T?> GetIfExists<T>(Func<Task<NullableResponse<T>>> getIfExistsAsync) where T : class
+    {
+        var response = await getIfExistsAsync();
+        return response.HasValue ? response.Value : null;
     }
 
     private static EventGridTopicInfo CreateTopicInfo(EventGridTopicData topicData) => new(
