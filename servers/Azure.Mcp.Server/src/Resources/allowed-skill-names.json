@@ -1,5 +1,10 @@
 {
   "skills": {
+    "azure-kusto-graph-skills": [
+      "azure-kusto-graph",
+      "azure-kusto-irql",
+      "azure-kusto-irql-graph"
+    ],
     "azure-skills": [
       "airunway-aks-setup",
       "appinsights-instrumentation",
@@ -29,11 +34,6 @@
       "entra-app-registration",
       "microsoft-foundry",
       "python-appservice-deploy"
-    ],
-    "azure-kusto-graph-skills": [
-      "azure-kusto-graph",
-      "azure-kusto-irql",
-      "azure-kusto-irql-graph"
     ]
   }
 }
