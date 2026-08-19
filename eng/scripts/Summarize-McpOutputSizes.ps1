@@ -163,14 +163,14 @@ function Save-InnerCommands($entries) {
             continue
         }
 
-        $textLines = (Get-Content -LiteralPath $entry.learnResponseTextFile -Raw) -split "`r?`n"
-        $jsonLine = $textLines | Where-Object { $_.TrimStart().StartsWith('[') } | Select-Object -First 1
-        if (!$jsonLine) {
+        $text = Get-Content -LiteralPath $entry.learnResponseTextFile -Raw
+        $start = $text.IndexOf('[')
+        if ($start -lt 0) {
             continue
         }
 
         try {
-            $commands = @($jsonLine | ConvertFrom-Json)
+            $commands = @($text.Substring($start) | ConvertFrom-Json)
         } catch {
             Write-Warning "Could not parse inner commands for '$($entry.tool)': $_"
             continue
