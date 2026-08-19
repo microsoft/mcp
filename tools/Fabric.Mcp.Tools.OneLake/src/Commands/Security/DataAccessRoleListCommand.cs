@@ -12,7 +12,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
 
 [CommandMetadata(
     Id = "a1b2c3d4-1001-4000-8000-000000000001",
-    Name = "list_data_access_roles",
+    Name = "list-data-access-roles",
     Title = "List OneLake Data Access Roles",
     Description = """
         List all data access roles defined on a single item (Lakehouse / Warehouse) —
