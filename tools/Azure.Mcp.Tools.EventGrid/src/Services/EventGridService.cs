@@ -95,73 +95,58 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         _logger.LogInformation("Starting event publication. OperationId: {OperationId}, Topic: {TopicName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
             operationId, topicName, resourceGroup, subscription);
 
-        try
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+
+        // Find the topic to get its endpoint and access key
+        var topic = await FindTopic(subscriptionResource, resourceGroup, topicName, cancellationToken);
+        if (topic == null)
         {
-            var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-
-            // Find the topic to get its endpoint and access key
-            var topic = await FindTopic(subscriptionResource, resourceGroup, topicName, cancellationToken);
-            if (topic == null)
-            {
-                var errorMessage = $"Event Grid topic '{topicName}' not found in resource group '{resourceGroup}'. Make sure the topic exists and you have access to it.";
-                _logger.LogError(errorMessage);
-                throw new InvalidOperationException("Publishing failed with the following error message: " + errorMessage);
-            }
-
-            if (topic.Data.Endpoint == null)
-            {
-                var errorMessage = $"Event Grid topic '{topicName}' does not have a valid endpoint.";
-                _logger.LogError(errorMessage);
-                throw new InvalidOperationException("Publishing failed with the following error message: " + errorMessage);
-            }
-
-            // Get credential using standardized method from base class for Azure AD authentication
-            var credential = await GetCredential(tenant, cancellationToken);
-
-            // Parse and validate event data directly to EventGridEventSchema
-            var eventGridEventSchemas = ParseAndValidateEventData(eventData, eventSchema ?? "EventGridEvent");
-
-            // Create publisher client with HTTP client factory for test proxy support
-            var httpClient = AzureService.GetClient(nameof(EventGridPublisherClient));
-            var clientOptions = new EventGridPublisherClientOptions
-            {
-                Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient)
-            };
-            var publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential, clientOptions);
-
-            // Serialize each event individually to JSON using source-generated context
-            var eventsData = eventGridEventSchemas
-                .Select(eventSchema => BinaryData.FromObjectAsJson(eventSchema, EventGridJsonContext.Default.EventGridEventSchema))
-                .ToArray();
-
-            var eventCount = eventsData.Length;
-            _logger.LogInformation("Publishing {EventCount} events to topic '{TopicName}' with operation ID: {OperationId}",
-                eventCount, topicName, operationId);
-
-            await publisherClient.SendEventsAsync(eventsData, cancellationToken);
-
-            _logger.LogInformation("Successfully published {EventCount} events to topic '{TopicName}'",
-                eventCount, topicName);
-
-            return new(
-                Status: "Success",
-                Message: $"Successfully published {eventCount} event(s) to topic '{topicName}'.",
-                PublishedEventCount: eventCount,
-                OperationId: operationId,
-                PublishedAt: DateTime.UtcNow);
+            var errorMessage = $"Event Grid topic '{topicName}' not found in resource group '{resourceGroup}'. Make sure the topic exists and you have access to it.";
+            _logger.LogError(errorMessage);
+            throw new InvalidOperationException("Publishing failed with the following error message: " + errorMessage);
         }
-        catch (Exception ex)
+
+        if (topic.Data.Endpoint == null)
         {
-            _logger.LogError(ex, "Failed to publish events to topic '{TopicName}' in resource group '{ResourceGroup}'",
-                topicName, resourceGroup);
-
-            return new(
-                Status: "Failed",
-                Message: $"Failed to publish events: {ex.Message}",
-                PublishedEventCount: 0,
-                OperationId: operationId,
-                PublishedAt: DateTime.UtcNow);
+            var errorMessage = $"Event Grid topic '{topicName}' does not have a valid endpoint.";
+            _logger.LogError(errorMessage);
+            throw new InvalidOperationException("Publishing failed with the following error message: " + errorMessage);
         }
+
+        // Get credential using standardized method from base class for Azure AD authentication
+        var credential = await GetCredential(tenant, cancellationToken);
+
+        // Parse and validate event data directly to EventGridEventSchema
+        var eventGridEventSchemas = ParseAndValidateEventData(eventData, eventSchema ?? "EventGridEvent");
+
+        // Create publisher client with HTTP client factory for test proxy support
+        var httpClient = AzureService.GetClient(nameof(EventGridPublisherClient));
+        var clientOptions = new EventGridPublisherClientOptions
+        {
+            Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient)
+        };
+        var publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential, clientOptions);
+
+        // Serialize each event individually to JSON using source-generated context
+        var eventsData = eventGridEventSchemas
+            .Select(eventSchema => BinaryData.FromObjectAsJson(eventSchema, EventGridJsonContext.Default.EventGridEventSchema))
+            .ToArray();
+
+        var eventCount = eventsData.Length;
+        _logger.LogInformation("Publishing {EventCount} events to topic '{TopicName}' with operation ID: {OperationId}",
+            eventCount, topicName, operationId);
+
+        await publisherClient.SendEventsAsync(eventsData, cancellationToken);
+
+        _logger.LogInformation("Successfully published {EventCount} events to topic '{TopicName}'",
+            eventCount, topicName);
+
+        return new(
+            Status: "Success",
+            Message: $"Successfully published {eventCount} event(s) to topic '{topicName}'.",
+            PublishedEventCount: eventCount,
+            OperationId: operationId,
+            PublishedAt: DateTime.UtcNow);
     }
 
     private static IEnumerable<EventGridEventSchema> ParseAndValidateEventData(string eventData, string eventSchema)
