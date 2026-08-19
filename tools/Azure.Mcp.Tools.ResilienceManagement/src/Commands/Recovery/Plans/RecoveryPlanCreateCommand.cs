@@ -128,5 +128,5 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
         _ => base.GetErrorMessage(ex)
     };
 
-    public record RecoveryPlanCreateCommandResult(Models.RecoveryPlanInfo RecoveryPlan);
+    public sealed record RecoveryPlanCreateCommandResult(Models.RecoveryPlanInfo RecoveryPlan);
 }

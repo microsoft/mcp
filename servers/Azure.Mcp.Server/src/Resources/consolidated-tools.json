@@ -81,6 +81,39 @@
       ]
     },
     {
+      "name": "check_azure_resilience_management_readiness",
+      "description": "Check whether an Azure Resilience Management recovery plan and its protected resources are ready for recovery operations in an Azure service group.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not delete or modify the recovery plan or its protected resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each invocation creates a new readiness job with a unique operation identifier."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool creates a readiness job while leaving the recovery plan and its protected resources unchanged."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_recovery_plan_check-readiness"
+      ]
+    },
+    {
       "name": "get_azure_subscriptions_and_resource_groups",
       "description": "Get information about Azure subscriptions, resource groups, and resources within resource groups that the user has access to.",
       "toolMetadata": {
