@@ -40,8 +40,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | Show me the top 10 Advisor recommendations in subscription <subscription> | none |
 | advisor_recommendation_list | List Advisor recommendations in the ServiceUpgradeAndRetirement subcategory in subscription <subscription> | none |
 | advisor_recommendation_list | Show Advisor ZoneResiliency recommendations in subscription <subscription> | none |
+| advisor_recommendation_list | Show Advisor recommendations in the Reservations subcategory in subscription <subscription> | none |
 | advisor_recommendation_list | Which resources in subscription <subscription> are affected by Service Health tracking ID QNY1-HB8? | none |
 | advisor_recommendation_list | Show Advisor recommendations in subscription <subscription> for Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 | none |
+| advisor_recommendation_list | Show Advisor recommendations in subscription <subscription> for Service Health tracking IDs XTKT-BW8, VN1S-1V8, and XV1P-9X8 with retirement date on or after September 19, 2026 | none |
 | advisor_recommendation_list | List Advisor recommendations in subscription <subscription> for Service Health tracking ID QNY1-HB8 without setting a subcategory | none |
 | advisor_recommendation_list | List Advisor recommendations in subscription <subscription> for services retiring on or before March 31, 2027 | none |
 | advisor_recommendation_list | Show Advisor recommendations in subscription <subscription> for services retiring after 2027-03-31 | none |

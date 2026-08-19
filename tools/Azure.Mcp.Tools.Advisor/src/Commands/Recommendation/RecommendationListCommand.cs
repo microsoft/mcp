@@ -22,12 +22,11 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "Do NOT use this to answer aggregate questions like 'how many', 'top N resource types', 'breakdown by category', " +
         "or 'which impact has the most' — for those, call the 'summary' tool instead (it aggregates server-side over the " +
         "entire population, while 'list' returns at most 100 records and reports when results are truncated). " +
-        "Only active recommendations (status 'New') are returned; dismissed and postponed ones are excluded. " +
-        "Queries explicitly filtered to Security use recommendation-instance values directly. Other queries " +
-        "enrich records from matching Advisor recommendation metadata when available. " +
+        "Only active recommendations (status 'New') are returned; completed, dismissed, and postponed ones are excluded. " +
         "Supports optional filters: --category, --impact, --resource-type, --resource, --search, --sub-category, --tracking-ids, --retirement-date. " +
         "--tracking-ids accepts multiple Service Health tracking IDs and returns recommendations matching any of them. " +
-        "--tracking-ids and --retirement-date apply only to the ServiceUpgradeAndRetirement subcategory. " +
+        "--tracking-ids and --retirement-date can be used independently or together. With either filter, --sub-category " +
+        "is optional; when specified, it must be ServiceUpgradeAndRetirement. " +
         "--top caps the number of returned items (default 50, max 100).",
     Destructive = false,
     Idempotent = true,

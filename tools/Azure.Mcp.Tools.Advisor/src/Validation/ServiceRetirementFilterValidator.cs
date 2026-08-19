@@ -11,7 +11,8 @@ namespace Azure.Mcp.Tools.Advisor.Validation;
 /// Validates the service-retirement filter options shared by the Advisor metadata and
 /// recommendation list commands: <c>--sub-category</c>, tracking IDs and
 /// <c>--retirement-date</c>. Tracking IDs and retirement date are only meaningful for the
-/// <c>ServiceUpgradeAndRetirement</c> subcategory, so a conflicting subcategory is rejected.
+/// <c>ServiceUpgradeAndRetirement</c> subcategory. The subcategory may be omitted and is inferred by the
+/// query builder; a conflicting subcategory is rejected.
 /// </summary>
 internal static class ServiceRetirementFilterValidator
 {
@@ -39,7 +40,7 @@ internal static class ServiceRetirementFilterValidator
                 StringComparison.OrdinalIgnoreCase))
         {
             validationResult.Errors.Add(
-                "Service-retirement filters are only valid with --sub-category " +
+                "When --sub-category is specified with service-retirement filters, it must be " +
                 $"{RecommendationMetadataFilters.ServiceRetirementSubCategory}.");
         }
 

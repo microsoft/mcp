@@ -313,9 +313,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         // Act
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
-            "--tracking-ids", "QNY1-HB8",
-            "--tracking-ids", "9G0V-_G8",
-            "--tracking-ids", "ABC1-D23");
+            "--tracking-ids", "QNY1-HB8", "9G0V-_G8", "ABC1-D23");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

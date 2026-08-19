@@ -33,11 +33,14 @@ public class RecommendationListOptions : ISubscriptionOption
     public string? SubCategory { get; set; }
 
     [Option(Description = "Filter recommendations by one or more Service Health tracking IDs, such as QNY1-HB8. " +
-        "Repeat the option to pass several IDs, for example --tracking-ids QNY1-HB8 --tracking-ids 9G0V-_G8; recommendations matching any of them are returned. " +
-        "Matched case-insensitively within ServiceUpgradeAndRetirement metadata. --sub-category may be omitted but cannot specify a different value.")]
+        "Pass several IDs as space-separated values after one option, for example --tracking-ids QNY1-HB8 9G0V-_G8; recommendations matching any of them are returned. " +
+        "Matched case-insensitively within ServiceUpgradeAndRetirement metadata. Can be combined with --retirement-date. " +
+        "--sub-category may be omitted; when specified, it must be ServiceUpgradeAndRetirement.")]
     public string[]? TrackingIds { get; set; }
 
-    [Option(Description = "Filter recommendations by service-retirement date in '<operator>:<yyyy-MM-dd>' format, for example 'ge:2026-03-31'. Supported operators are eq, lt, le, gt, and ge. Applies only to the ServiceUpgradeAndRetirement subcategory; --sub-category may be omitted but cannot specify a different value.")]
+    [Option(Description = "Filter recommendations by service-retirement date in '<operator>:<yyyy-MM-dd>' format, for example 'ge:2026-03-31'. " +
+        "Supported operators are eq, lt, le, gt, and ge. Can be combined with --tracking-ids. --sub-category may be omitted; " +
+        "when specified, it must be ServiceUpgradeAndRetirement.")]
     public string? RetirementDate { get; set; }
 
     [Option(Description = "Maximum number of items to return. " +

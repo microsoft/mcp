@@ -397,8 +397,8 @@ public class AdvisorService(IAzureService azureService)
         if (hasServiceRetirementFilter && subCategory is not null && !isServiceUpgradeAndRetirement)
         {
             throw new ArgumentException(
-                "TrackingId and retirement-date filters are only valid for the " +
-                $"{RecommendationMetadataFilters.ServiceRetirementSubCategory} subcategory.",
+                "When a subcategory is specified with tracking ID or retirement-date filters, it must be " +
+                $"{RecommendationMetadataFilters.ServiceRetirementSubCategory}.",
                 nameof(subCategory));
         }
 

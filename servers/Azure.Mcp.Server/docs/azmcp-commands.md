@@ -327,12 +327,10 @@ azmcp server info
 ### Azure Advisor Operations
 
 ```bash
-# List active Advisor recommendations with optional filters
-# Only recommendations with status 'New' are returned
-# Security-filtered queries use recommendation-instance values directly
-# Other queries enrich records from matching metadata when available
-# --tracking-ids is repeatable. Service-retirement filters apply to the ServiceUpgradeAndRetirement
-# subcategory; conflicting subcategory filters are rejected
+# List Advisor recommendations in a subscription, with optional filters
+# Only active recommendations (status 'New') are returned; completed, dismissed, and postponed ones are excluded
+# --tracking-ids and --retirement-date can be used independently or together
+# --sub-category is optional with these filters; when specified, it must be ServiceUpgradeAndRetirement
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation list --subscription <subscription> \
                                   [--top <top>] \
@@ -342,7 +340,7 @@ azmcp advisor recommendation list --subscription <subscription> \
                                   [--resource <resource>] \
                                   [--search <search>] \
                                   [--sub-category <sub-category>] \
-                                  [--tracking-ids <tracking-id1> --tracking-ids <tracking-id2> ...] \
+                                  [--tracking-ids <tracking-id1> <tracking-id2> ...] \
                                   [--retirement-date <eq|lt|le|gt|ge>:<yyyy-MM-dd>]
 
 # Summarize Advisor recommendations grouped by a chosen field (recommendation-type, category, impact, or resource-type)
