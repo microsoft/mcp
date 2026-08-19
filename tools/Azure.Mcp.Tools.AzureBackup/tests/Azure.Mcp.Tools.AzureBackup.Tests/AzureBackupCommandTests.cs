@@ -2271,7 +2271,6 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
-    [LiveTestOnly] // Requires re-recording after security disable-mua split from configure-mua
     public async Task SecurityDisableMua_RsvVault_Successfully()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
@@ -2360,7 +2359,6 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
-    [LiveTestOnly] // Requires re-recording after security disable-mua split from configure-mua
     public async Task SecurityDisableMua_DppVault_Successfully()
     {
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
