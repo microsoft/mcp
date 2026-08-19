@@ -129,6 +129,33 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
     }
 
     [Fact]
+    public async Task Should_create_drill()
+    {
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+
+        var result = await CallToolAsync(
+            "resilience_drill_create",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drillName },
+                { "subscription", Settings.SubscriptionId },
+                { "region", "westus2" },
+                { "resource-group", resourceGroupName },
+                { "drill-type", "Zonal" },
+                { "rbac-setup-mode", "AutomatedBuiltinRoles" },
+                { "recovery-plan", recoveryPlan }
+            });
+
+        var drill = result.AssertProperty("drill");
+        Assert.EndsWith(drillName, drill.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Should_list_drill_resources()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");

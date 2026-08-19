@@ -44,6 +44,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands;
 [JsonSerializable(typeof(UsagePlanEnrollmentInfoSystemData))]
 [JsonSerializable(typeof(DrillInfo))]
 [JsonSerializable(typeof(DrillResourceInfo))]
+[JsonSerializable(typeof(DrillCreateCommand.DrillCreateCommandResult))]
 [JsonSerializable(typeof(DrillGetCommand.DrillGetCommandResult))]
 [JsonSerializable(typeof(DrillResourceGetCommand.DrillResourceGetCommandResult))]
 [JsonSerializable(typeof(RecoveryPlanGetCommand.RecoveryPlanGetCommandResult))]
