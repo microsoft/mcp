@@ -111,6 +111,7 @@ $enrollmentName = Get-OutputValue -Name 'enrollmentName'
 $lifecycleEnrollmentName = Get-OutputValue -Name 'lifecycleEnrollmentName'
 $goalAssignmentName = Get-OutputValue -Name 'goalAssignmentName'
 $goalTemplateName = Get-OutputValue -Name 'goalTemplateName'
+$drillName = Get-OutputValue -Name 'drillName'
 
 $requiredOutputs = @{
     serviceGroupName = $serviceGroupName
@@ -120,6 +121,7 @@ $requiredOutputs = @{
     lifecycleEnrollmentName = $lifecycleEnrollmentName
     goalAssignmentName = $goalAssignmentName
     goalTemplateName = $goalTemplateName
+    drillName = $drillName
 }
 
 foreach ($requiredOutput in $requiredOutputs.GetEnumerator()) {
@@ -133,6 +135,7 @@ $lifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$lifec
 $resilienceBase = "$serviceGroupId/providers/Microsoft.AzureResilienceManagement"
 $usagePlanId = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName"
 
+Remove-Resource -ResourceId "$resilienceBase/drills/$drillName" -ApiVersion $resilienceApiVersion
 Remove-RecoveryPlans -ServiceGroupId $serviceGroupId
 Remove-RecoveryPlans -ServiceGroupId $lifecycleServiceGroupId
 Remove-Resource -ResourceId "$resilienceBase/goalAssignments/$goalAssignmentName" -ApiVersion $resilienceApiVersion
