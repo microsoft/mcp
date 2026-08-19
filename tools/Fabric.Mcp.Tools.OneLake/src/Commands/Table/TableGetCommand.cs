@@ -13,7 +13,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
 
 [CommandMetadata(
     Id = "19bb5a6a-2a09-410c-bfa0-312986c6acc6",
-    Name = "get_table",
+    Name = "get-table",
     Title = "Get OneLake Table",
     Description = "Retrieves table definition from OneLake. Use this when the user needs table schema or metadata.",
     Destructive = false,

@@ -68,7 +68,7 @@ public sealed class MarketplaceCommandTests(ITestOutputHelper output, TestProxyF
                 { "subscription", Settings.SubscriptionId },
                 { "product-id", ProductId },
                 { "language", Language },
-                { "include-hidden-plans", true },
+                { "include-stop-sold-plans", true },
                 { "include-service-instruction-templates", true }
             });
 

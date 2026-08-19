@@ -13,7 +13,7 @@ public class ShortcutListCommandTests : CommandUnitTestsBase<ShortcutListCommand
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("list_shortcuts", Command.Name);
+        Assert.Equal("list-shortcuts", Command.Name);
         Assert.Equal("List OneLake Shortcuts", Command.Title);
         Assert.Contains("List shortcuts defined within an item", Command.Description);
         Assert.True(Command.Metadata.ReadOnly);
@@ -24,7 +24,7 @@ public class ShortcutListCommandTests : CommandUnitTestsBase<ShortcutListCommand
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("list_shortcuts", CommandDefinition.Name);
+        Assert.Equal("list-shortcuts", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);
     }

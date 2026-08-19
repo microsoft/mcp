@@ -30,7 +30,7 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IOneLake
     [Fact]
     public void Constructor_InitializesMetadata()
     {
-        Assert.Equal("download_file", Command.Name);
+        Assert.Equal("download-file", Command.Name);
         Assert.True(Command.Metadata.ReadOnly);
         Assert.True(Command.Metadata.Idempotent);
         Assert.False(Command.Metadata.Destructive);

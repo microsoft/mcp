@@ -7,7 +7,7 @@ using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Xunit;
 
-namespace Azure.Mcp.Tools.IoTHub.LiveTests;
+namespace Azure.Mcp.Tools.IoTHub.Tests;
 
 public class IoTHubCommandTests(
     ITestOutputHelper output,

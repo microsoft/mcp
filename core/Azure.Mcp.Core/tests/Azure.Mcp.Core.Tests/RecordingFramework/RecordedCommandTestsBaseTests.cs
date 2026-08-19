@@ -44,7 +44,7 @@ internal sealed class TemporaryAssetsPathResolver : IRecordingPathResolver, IDis
     }
 
     /// <summary>
-    /// Recursively delete a git directory. Calling Directory.Delete(path, true), to recursiverly delete a directory
+    /// Recursively delete a git directory. Calling Directory.Delete(path, true), to recursively delete a directory
     /// that was populated from sparse-checkout, will fail. This is because the git files under .git\objects\pack
     /// have file attributes on them that will cause an UnauthorizedAccessException when trying to delete them. In order
     /// to delete it, the file attributes need to be set to Normal.
@@ -199,7 +199,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
     [Fact]
     public void CustomMatcherAttributeClearsAfterExecution()
     {
-        var attribute = new CustomMatcherAttribute(compareBody: true, ignoreQueryordering: true);
+        var attribute = new CustomMatcherAttribute(compareBody: true, ignoreQueryOrdering: true);
         var xunitTest = Substitute.For<IXunitTest>();
         var methodInfo = typeof(RecordedCommandTestsBaseTest).GetMethod(nameof(CustomMatcherAttributeClearsAfterExecution))
             ?? throw new InvalidOperationException("Unable to locate test method for CustomMatcherAttribute verification.");

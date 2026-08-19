@@ -6,7 +6,7 @@ using ModelContextProtocol.Server;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Insights.UnitTests.Services;
+namespace Azure.Mcp.Tools.Insights.Tests.Services;
 
 public class SamplingServiceTests
 {

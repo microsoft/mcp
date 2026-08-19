@@ -46,7 +46,7 @@ public sealed class AcrService(IAzureService azureService)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(registry), registry));
 
-        var registrie = await ExecuteSingleResourceQueryAsync(
+        var registries = await ExecuteSingleResourceQueryAsync(
             "Microsoft.ContainerRegistry/registries",
             resourceGroup: resourceGroup,
             subscription: subscription,
@@ -56,11 +56,11 @@ public sealed class AcrService(IAzureService azureService)
             tenant: tenant,
             cancellationToken: cancellationToken);
 
-        if (registrie == null)
+        if (registries == null)
         {
             throw new KeyNotFoundException($"Container registry '{registry}' not found for subscription '{subscription}'.");
         }
-        return registrie;
+        return registries;
     }
 
     private async Task<List<string>> AddRepositoriesForRegistryAsync(AcrRegistryInfo reg, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)

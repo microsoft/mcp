@@ -160,15 +160,15 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         // Arrange
         var commandFactory = Substitute.For<ICommandFactory>();
         var rootGroup = new CommandGroup("root", "Root command group");
-        var stroageGroup = new CommandGroup("storage", "Storage commands");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
         var storageCommand = Substitute.For<IBaseCommand>();
         storageCommand.Metadata.Returns(new ToolMetadata() { LocalRequired = true });
-        stroageGroup.AddCommand("localrequired", storageCommand);
+        storageGroup.AddCommand("localrequired", storageCommand);
         var keyvaultGroup = new CommandGroup("keyvault", "Key Vault commands");
         var keyvaultCommand = Substitute.For<IBaseCommand>();
         keyvaultCommand.Metadata.Returns(new ToolMetadata() { LocalRequired = false });
         keyvaultGroup.AddCommand("notlocalrequired", keyvaultCommand);
-        rootGroup.SubGroup.AddRange([stroageGroup, keyvaultGroup]);
+        rootGroup.SubGroup.AddRange([storageGroup, keyvaultGroup]);
         commandFactory.RootGroup.Returns(rootGroup);
 
         var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
@@ -715,6 +715,46 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
         // Assert - read-only command should have been executed
         Assert.True(executed, "Read-only command should be executed in read-only mode");
+    }
+
+    [Fact]
+    public async Task CallToolHandler_UnknownParameters_RejectsToolCall()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+
+        var readCmd = Substitute.For<IBaseCommand>();
+        readCmd.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
+        readCmd.GetCommand().Returns(new System.CommandLine.Command("read-cmd", "A read command"));
+        storageGroup.AddCommand("read-cmd", readCmd);
+
+        rootGroup.SubGroup.Add(storageGroup);
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["read-cmd"] = readCmd });
+
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { ReadOnly = true });
+
+        var loader = new NamespaceToolLoader(commandFactory, options, _logger);
+        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        {
+            ["command"] = "read-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+            {
+                { "unknown-param", "some-value" }
+            }
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should reject the tool call due to unknown parameter
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        var errorText = ((TextContentBlock)result.Content.First()).Text;
+        Assert.Contains("unknown-param", errorText);
     }
 
     [Fact]

@@ -31,10 +31,13 @@ words:
   - norwayeast
   - norwaywest
   - polandcentral
+  - regionalvcorequotaforsqldbanddw
+  - serverquota
   - southafricanorth
   - southcentralus
   - southindia
   - spaincentral
+  - subscriptionfreedatabasecount
   - swedensouth
   - switzerlandnorth
   - switzerlandwest
