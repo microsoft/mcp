@@ -30,7 +30,7 @@ public class ServerModeCoverageTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = AzmcpPath,
-            Arguments = "server start --mode single",
+            Arguments = ServerTestOptions.GetServerStartArguments("server start --mode single"),
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
@@ -75,7 +75,7 @@ public class ServerModeCoverageTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = AzmcpPath,
-            Arguments = "server start --mode namespace",
+            Arguments = ServerTestOptions.GetServerStartArguments("server start --mode namespace"),
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
@@ -121,7 +121,7 @@ public class ServerModeCoverageTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = AzmcpPath,
-            Arguments = "server start --mode all",
+            Arguments = ServerTestOptions.GetServerStartArguments("server start --mode all"),
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
