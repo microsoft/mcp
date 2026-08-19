@@ -117,7 +117,7 @@ public sealed class McpOutputSizeTests(ITestOutputHelper output)
                     });
                 var response = await SendRequestAsync(process, request);
                 discoveryTexts.Add(response);
-                var document = JsonDocument.Parse(response);
+                using var document = JsonDocument.Parse(response);
                 var result = document.RootElement.GetProperty("result");
                 foreach (var tool in result.GetProperty("tools").EnumerateArray())
                 {
@@ -183,7 +183,7 @@ public sealed class McpOutputSizeTests(ITestOutputHelper output)
                     }
                 });
                 var response = await SendRequestAsync(process, request);
-                var document = JsonDocument.Parse(response);
+                using var document = JsonDocument.Parse(response);
                 Assert.True(
                     document.RootElement.TryGetProperty("result", out _),
                     $"The learn response for '{tool}' did not contain a result.");
