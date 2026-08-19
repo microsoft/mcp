@@ -17,6 +17,59 @@ public sealed class ResilienceManagementServiceTests
     private const string UserAssignedIdentityResourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/testIdentity";
 
     [Fact]
+    public async Task WaitForCompletionAsync_RetriesUntilCompletion()
+    {
+        var states = new Queue<string?>([null, "InProgress", "Completed"]);
+        int attempts = 0;
+
+        string result = await ResilienceManagementService.WaitForCompletionAsync(
+            _ =>
+            {
+                attempts++;
+                return Task.FromResult(states.Dequeue());
+            },
+            state => state == "Completed",
+            "test operation",
+            TimeSpan.FromMilliseconds(1),
+            TimeSpan.FromSeconds(1),
+            CancellationToken.None);
+
+        Assert.Equal("Completed", result);
+        Assert.Equal(3, attempts);
+    }
+
+    [Fact]
+    public async Task WaitForCompletionAsync_TimesOut()
+    {
+        TimeoutException exception = await Assert.ThrowsAsync<TimeoutException>(() =>
+            ResilienceManagementService.WaitForCompletionAsync<string>(
+                _ => Task.FromResult<string?>(null),
+                _ => false,
+                "test operation",
+                TimeSpan.FromMilliseconds(1),
+                TimeSpan.FromMilliseconds(20),
+                CancellationToken.None));
+
+        Assert.Contains("test operation", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task WaitForCompletionAsync_PreservesCallerCancellation()
+    {
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            ResilienceManagementService.WaitForCompletionAsync<string>(
+                _ => Task.FromResult<string?>(null),
+                _ => false,
+                "test operation",
+                TimeSpan.FromMilliseconds(1),
+                TimeSpan.FromSeconds(1),
+                cancellation.Token));
+    }
+
+    [Fact]
     public void CreateRecoveryGroupsSetting_ForNewPlan_GeneratesDefaultGroupId()
     {
         RecoveryGroupsSetting result = ResilienceManagementService.CreateRecoveryGroupsSetting(null, null);
