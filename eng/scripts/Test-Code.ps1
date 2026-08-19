@@ -46,8 +46,8 @@ function FilterTestProjects {
     | Where-Object {
         $testProjectDetails = & "$($PSScriptRoot)/Get-ProjectProperties.ps1" -Path $_.FullName
         # Need to parse $testProjectDetails.HasLiveTests and HasUnitTests as it's based on JSON values, therefore HasLiveTests will not be a PowerShell boolean
-        return ([bool]::Parse($testProjectDetails.HasLiveTests) -and $TestType -in @('Live', 'Recorded', 'All')) -or
-                ([bool]::Parse($testProjectDetails.HasUnitTests) -and $TestType -in @('Unit', 'All'))
+        return ([bool]::TryParse($testProjectDetails.HasLiveTests, [ref]$result) -and $result -and $TestType -in @('Live', 'Recorded', 'All')) -or
+                ([bool]::TryParse($testProjectDetails.HasUnitTests, [ref]$result) -and $result -and $TestType -in @('Unit', 'All'))
     }
     | ForEach-Object { @{
         FullName = $_.FullName
