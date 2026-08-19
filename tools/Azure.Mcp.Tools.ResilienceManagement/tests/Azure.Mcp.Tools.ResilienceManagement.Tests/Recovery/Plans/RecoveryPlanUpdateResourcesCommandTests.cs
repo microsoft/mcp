@@ -5,6 +5,7 @@ using System.Net;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
+using Azure.Mcp.Tools.ResilienceManagement.Options.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Azure.ResourceManager.ResilienceManagement.Models;
 using Microsoft.Mcp.Core.Options;
@@ -50,6 +51,21 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("at least one", response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void CreateContent_RejectsUtf8PayloadOverOneMegabyte()
+    {
+        var options = new RecoveryPlanUpdateResourcesOptions
+        {
+            ServiceGroup = "sg1",
+            RecoveryPlan = "plan1",
+            ResourcesToUpdate = $"[\"{new string('é', 524_288)}\"]"
+        };
+
+        var exception = Assert.Throws<ArgumentException>(() => _ = RecoveryPlanUpdateResourcesCommand.CreateContent(options));
+
+        Assert.Contains("must not exceed 1 MB", exception.Message);
     }
 
     [Fact]
