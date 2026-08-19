@@ -154,18 +154,6 @@ Processing MCPB packaging:
         LogInfo "Copying trimmed binaries from $platformDirectory..."
         Copy-Item -Path "$platformDirectory/*" -Destination "$stagingDir/server" -Recurse
 
-        # Preserve the executable permission in Unix MCPB bundles.
-        if ($platform.operatingSystem -ne 'windows') {
-            $stagedExecutablePath = "$stagingDir/server/$($server.cliName)$($platform.extension)"
-            LogInfo "Setting executable permission on $stagedExecutablePath..."
-            & chmod +x $stagedExecutablePath
-            if ($LASTEXITCODE -ne 0) {
-                LogError "Failed to set executable permission on $stagedExecutablePath"
-                $exitCode = 1
-                continue
-            }
-        }
-
         # Copy and update manifest.json for this platform
         # The source manifest uses platform-agnostic paths (no extension), so we need to add
         # the correct extension for this platform's executable
