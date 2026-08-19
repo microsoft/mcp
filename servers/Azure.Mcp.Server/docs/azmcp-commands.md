@@ -327,14 +327,12 @@ azmcp server info
 ### Azure Advisor Operations
 
 ```bash
-# List active Advisor recommendations; metadata-backed filters are resolved before recommendation filtering
-# Only active recommendations (status 'New') are returned; dismissed and postponed ones are excluded
-# The category, impact and subcategory are always read from matching recommendation metadata by
-# recommendationTypeId
-# Each record also returns recommendationStatus, createdTime, and a shortDescription from metadata
-# displayName; metadata does not provide a solution value
-# --tracking-ids and --retirement-date apply only to the ServiceUpgradeAndRetirement subcategory
-# --tracking-ids is repeatable; recommendations matching any of the supplied tracking IDs are returned
+# List active Advisor recommendations with optional filters
+# Only recommendations with status 'New' are returned
+# Security-filtered queries use recommendation-instance values directly
+# Other queries enrich records from matching metadata when available
+# --tracking-ids is repeatable. Service-retirement filters apply to the ServiceUpgradeAndRetirement
+# subcategory; conflicting subcategory filters are rejected
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation list --subscription <subscription> \
                                   [--top <top>] \

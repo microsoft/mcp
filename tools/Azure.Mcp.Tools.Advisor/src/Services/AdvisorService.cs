@@ -79,8 +79,7 @@ public class AdvisorService(IAzureService azureService)
             return recommendations;
         }
 
-        // Always join the matching metadata record by recommendationTypeId before returning results so
-        // type-level response fields come from the metadata source.
+        // Enrich non-Security recommendations with matching type-level metadata before returning them.
         metadataByTypeId ??= BuildMetadataLookup(
             await GetRecommendationMetadataByTypeIdsAsync(
                 recommendations.Results.Select(r => r.Properties.RecommendationTypeId),
@@ -102,7 +101,7 @@ public class AdvisorService(IAzureService azureService)
         !IsSecurityCategory(filters?.Category) &&
         (HasMetadataOnlyFilters(filters) ||
             (!string.IsNullOrWhiteSpace(filters?.Category) ||
-        !string.IsNullOrWhiteSpace(filters?.Impact) ||
+            !string.IsNullOrWhiteSpace(filters?.Impact) ||
             !string.IsNullOrWhiteSpace(filters?.ResourceType)));
 
     internal static bool IsDirectSecurityQuery(RecommendationFilters? filters) =>

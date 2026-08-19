@@ -42,9 +42,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | Which resources in subscription <subscription> are affected by Service Health tracking ID QNY1-HB8? | none |
 | advisor_recommendation_list | Show Advisor recommendations in subscription <subscription> for Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 | none |
 | advisor_recommendation_list | List Advisor recommendations in subscription <subscription> for Service Health tracking ID QNY1-HB8 without setting a subcategory | none |
-| advisor_recommendation_list | List Advisor recommendations in subscription <subscription> for services retiring on or before March 31, 2026 | none |
-| advisor_recommendation_list | Show Advisor recommendations in subscription <subscription> for services retiring after 2026-03-31 | none |
-| advisor_recommendation_list | List Advisor recommendations in subscription <subscription> where the retirement date is ge:2026-03-31 | none |
+| advisor_recommendation_list | List Advisor recommendations in subscription <subscription> for services retiring on or before March 31, 2027 | none |
+| advisor_recommendation_list | Show Advisor recommendations in subscription <subscription> for services retiring after 2027-03-31 | none |
+| advisor_recommendation_list | List Advisor recommendations in subscription <subscription> where the retirement date is ge:2027-03-31 | none |
 | advisor_recommendation_list | Find Advisor recommendations for resource <resource-id> without metadata filters | none |
 | advisor_recommendation_list | Search Advisor recommendations mentioning "encryption" in subscription <subscription> | none |
 | advisor_recommendation_list | Show me high-impact Security recommendations for storage accounts in subscription <subscription> | none |
