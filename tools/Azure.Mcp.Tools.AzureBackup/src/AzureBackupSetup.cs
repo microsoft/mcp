@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 using Azure.Mcp.Tools.AzureBackup.Commands.ProtectableItem;
 using Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 using Azure.Mcp.Tools.AzureBackup.Commands.RecoveryPoint;
+using Azure.Mcp.Tools.AzureBackup.Commands.ResourceGuard;
 using Azure.Mcp.Tools.AzureBackup.Commands.Security;
 using Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 using Azure.Mcp.Tools.AzureBackup.Services;
@@ -57,7 +58,12 @@ public sealed class AzureBackupSetup : IAreaSetup
         services.AddSingleton<DisasterRecoveryEnableCrrCommand>();
 
         services.AddSingleton<SecurityConfigureMuaCommand>();
+        services.AddSingleton<SecurityDisableMuaCommand>();
         services.AddSingleton<SecurityConfigureEncryptionCommand>();
+
+        services.AddSingleton<ResourceGuardCreateCommand>();
+        services.AddSingleton<ResourceGuardGetCommand>();
+        services.AddSingleton<ResourceGuardDeleteCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -118,7 +124,14 @@ public sealed class AzureBackupSetup : IAreaSetup
         var security = new CommandGroup("security", "Security operations - Configure Multi-User Authorization (MUA) and Customer-Managed Key (CMK) encryption for backup vaults.");
         azureBackup.AddSubGroup(security);
         security.AddCommand<SecurityConfigureMuaCommand>(serviceProvider);
+        security.AddCommand<SecurityDisableMuaCommand>(serviceProvider);
         security.AddCommand<SecurityConfigureEncryptionCommand>(serviceProvider);
+
+        var resourceGuard = new CommandGroup("resourceguard", "Resource Guard operations - Create, get, list, and delete Microsoft.DataProtection Resource Guards used to protect vaults via Multi-User Authorization (MUA).");
+        azureBackup.AddSubGroup(resourceGuard);
+        resourceGuard.AddCommand<ResourceGuardCreateCommand>(serviceProvider);
+        resourceGuard.AddCommand<ResourceGuardGetCommand>(serviceProvider);
+        resourceGuard.AddCommand<ResourceGuardDeleteCommand>(serviceProvider);
 
         return azureBackup;
     }

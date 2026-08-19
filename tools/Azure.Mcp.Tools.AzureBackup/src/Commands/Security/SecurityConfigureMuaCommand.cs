@@ -17,13 +17,12 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Security;
     Name = "configure-mua",
     Title = "Configure Multi-User Authorization",
     Description = """
-        Configures Multi-User Authorization (MUA) on a vault by linking or unlinking a Resource Guard.
-        Provide --resource-guard-id to enable MUA, protecting critical operations (disable soft delete,
-        remove immutability, stop protection) so they require approval from a security admin with
-        permissions on the Resource Guard. Omit --resource-guard-id to disable MUA (this itself is a
-        protected operation requiring Backup MUA Operator role on the Resource Guard).
+        Enables Multi-User Authorization (MUA) on a vault by linking a Resource Guard. --resource-guard-id
+        is required. Once enabled, critical operations (disable soft delete, remove immutability, stop
+        protection) require approval from a security admin with permissions on the Resource Guard.
+        To disable MUA, use the 'security disable-mua' command (requires --force).
         """,
-    Destructive = true,
+    Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = false,
@@ -39,8 +38,13 @@ public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaComm
     {
         base.ValidateOptions(options, validationResult);
 
-        if (!string.IsNullOrEmpty(options.ResourceGuardId) &&
-            !options.ResourceGuardId.StartsWith("/subscriptions/", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(options.ResourceGuardId))
+        {
+            validationResult.Errors.Add("--resource-guard-id is required to enable Multi-User Authorization. To disable MUA on a vault, use the 'security disable-mua' command (which requires --force).");
+            return;
+        }
+
+        if (!options.ResourceGuardId.StartsWith("/subscriptions/", StringComparison.OrdinalIgnoreCase))
         {
             validationResult.Errors.Add("--resource-guard-id must be a valid ARM resource ID starting with '/subscriptions/'.");
         }
@@ -50,34 +54,19 @@ public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaComm
     {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+        AzureBackupTelemetryTags.AddMuaActionTag(context.Activity, "enable");
 
         try
         {
-            OperationResult result;
-
-            if (!string.IsNullOrEmpty(options.ResourceGuardId))
-            {
-                result = await _azureBackupService.ConfigureMultiUserAuthorizationAsync(
-                    options.Vault,
-                    options.ResourceGroup,
-                    options.Subscription!,
-                    options.ResourceGuardId,
-                    options.VaultType,
-                    options.Tenant,
-                    options.RetryPolicy,
-                    cancellationToken);
-            }
-            else
-            {
-                result = await _azureBackupService.DisableMultiUserAuthorizationAsync(
-                    options.Vault,
-                    options.ResourceGroup,
-                    options.Subscription!,
-                    options.VaultType,
-                    options.Tenant,
-                    options.RetryPolicy,
-                    cancellationToken);
-            }
+            var result = await _azureBackupService.ConfigureMultiUserAuthorizationAsync(
+                options.Vault,
+                options.ResourceGroup,
+                options.Subscription!,
+                options.ResourceGuardId!,
+                options.VaultType,
+                options.Tenant,
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new(result),
@@ -85,7 +74,7 @@ public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaComm
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error configuring MUA. Vault: {Vault}, ResourceGuardId: {ResourceGuardId}",
+            _logger.LogError(ex, "Error enabling MUA. Vault: {Vault}, ResourceGuardId: {ResourceGuardId}",
                 options.Vault, options.ResourceGuardId);
             HandleException(context, ex);
         }
@@ -98,13 +87,13 @@ public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaComm
         ArgumentException argEx => argEx.Message,
         UnauthorizedAccessException => "Authorization failed. Verify your RBAC permissions on the vault, or specify --vault-type to skip auto-detection.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Vault or Resource Guard not found, or MUA is not enabled for this vault. Verify the vault name, resource group, and Resource Guard ID. If you are disabling MUA, ensure MUA is currently configured.",
+            "Vault or Resource Guard not found. Verify the vault name, resource group, and Resource Guard ID.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
             $"Bad request configuring MUA. Ensure the Resource Guard is in the same region as the vault. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Authorization failed. To enable MUA, you need Reader role on the Resource Guard. To disable MUA, you need Backup MUA Operator role on the Resource Guard. Details: {reqEx.Message}",
+            $"Authorization failed. Enabling MUA requires Reader role on the Resource Guard and Backup Contributor role on the vault. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
-            "MUA configuration conflict. The vault may already have a Resource Guard linked, or the operation is blocked by the current MUA configuration.",
+            "MUA configuration conflict. The vault may already have a different Resource Guard linked. Disable the existing link with 'security disable-mua --force' before configuring a new one.",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };

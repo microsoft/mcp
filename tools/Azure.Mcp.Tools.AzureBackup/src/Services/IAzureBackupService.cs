@@ -51,4 +51,9 @@ public interface IAzureBackupService
     Task<OperationResult> DisableMultiUserAuthorizationAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> ConfigureEncryptionAsync(string vaultName, string resourceGroup, string subscription, string keyVaultUri, string keyName, string identityType, string? keyVersion = null, string? userAssignedIdentityId = null, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
+    // Resource Guard (Microsoft.DataProtection/resourceGuards) — protects RSV and DPP vaults via MUA.
+    Task<ResourceGuardInfo> CreateResourceGuardAsync(string resourceGuardName, string resourceGroup, string subscription, string location, IReadOnlyList<string>? excludedOperations = null, IReadOnlyDictionary<string, string>? tags = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<ResourceGuardInfo> GetResourceGuardAsync(string resourceGuardName, string resourceGroup, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<List<ResourceGuardInfo>> ListResourceGuardsAsync(string subscription, string? resourceGroup = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<OperationResult> DeleteResourceGuardAsync(string resourceGuardName, string resourceGroup, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 }

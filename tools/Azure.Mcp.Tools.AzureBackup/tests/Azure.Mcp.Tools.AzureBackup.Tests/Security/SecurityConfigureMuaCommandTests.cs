@@ -30,66 +30,71 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
     [Fact]
     public async Task ExecuteAsync_EnablesMua_WithResourceGuardId()
     {
-        // Arrange
         var expected = new OperationResult("Succeeded", null, "MUA enabled");
-
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        // Act
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
             "--resource-guard-id", TestResourceGuardId);
 
-        // Assert
         var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.SecurityConfigureMuaCommandResult);
-
         Assert.Equal("Succeeded", result.Result.Status);
     }
 
     [Fact]
-    public async Task ExecuteAsync_DisablesMua_WithoutResourceGuardId()
+    public async Task ExecuteAsync_MissingResourceGuardId_ReturnsBadRequest()
     {
-        // Arrange
-        var expected = new OperationResult("Succeeded", null, "MUA disabled");
-
-        Service.DisableMultiUserAuthorizationAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(expected);
-
-        // Act
+        // Regression test: prior to the safety fix, omitting --resource-guard-id would silently
+        // call DisableMultiUserAuthorizationAsync. It must now fail validation instead.
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg");
 
-        // Assert
-        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.SecurityConfigureMuaCommandResult);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--resource-guard-id", response.Message);
+        Assert.Contains("disable-mua", response.Message);
 
-        Assert.Equal("Succeeded", result.Result.Status);
+        await Service.DidNotReceive().DisableMultiUserAuthorizationAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().ConfigureMultiUserAuthorizationAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_MalformedResourceGuardId_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--resource-guard-id", "not-a-valid-arm-id");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--resource-guard-id", response.Message);
     }
 
     [Fact]
     public async Task ExecuteAsync_HandlesException()
     {
-        // Arrange
-        Service.DisableMultiUserAuthorizationAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+        Service.ConfigureMultiUserAuthorizationAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        // Act
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--vault", "v",
-            "--resource-group", "rg");
+            "--resource-group", "rg",
+            "--resource-guard-id", TestResourceGuardId);
 
-        // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
     }
@@ -97,20 +102,17 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
     [Fact]
     public async Task ExecuteAsync_HandlesNotFoundError()
     {
-        // Arrange
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
 
-        // Act
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
             "--resource-guard-id", TestResourceGuardId);
 
-        // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("not found", response.Message);
     }
@@ -118,20 +120,17 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
     [Fact]
     public async Task ExecuteAsync_HandlesForbiddenError()
     {
-        // Arrange
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
-        // Act
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
             "--resource-guard-id", TestResourceGuardId);
 
-        // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
     }
@@ -139,20 +138,17 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
     [Fact]
     public async Task ExecuteAsync_HandlesBadRequestError()
     {
-        // Arrange
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(400, "Region mismatch"));
 
-        // Act
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
             "--resource-guard-id", TestResourceGuardId);
 
-        // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("same region", response.Message);
     }
@@ -160,20 +156,17 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
     [Fact]
     public async Task ExecuteAsync_HandlesConflictError()
     {
-        // Arrange
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "Already configured"));
 
-        // Act
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
             "--resource-guard-id", TestResourceGuardId);
 
-        // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
         Assert.Contains("conflict", response.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -189,6 +182,7 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
+            "--resource-guard-id", TestResourceGuardId,
             "--vault-type", vaultType);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -202,37 +196,36 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
     [InlineData("DPP")]
     public async Task ExecuteAsync_AcceptsValidVaultType(string vaultType)
     {
-        Service.DisableMultiUserAuthorizationAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(vaultType),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ConfigureMultiUserAuthorizationAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
+            Arg.Is(vaultType), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new OperationResult("Succeeded", null, null)));
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
+            "--resource-guard-id", TestResourceGuardId,
             "--vault-type", vaultType);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Theory]
-    [InlineData("--subscription sub --vault v --resource-group rg", true)]
+    [InlineData("--subscription sub --vault v --resource-group rg --resource-guard-id /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-security/providers/Microsoft.DataProtection/resourceGuards/test-guard", true)]
     [InlineData("--subscription sub", false)] // Missing vault and resource-group
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
         {
-            Service.DisableMultiUserAuthorizationAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Service.ConfigureMultiUserAuthorizationAsync(
+                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
                 Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
                 .Returns(new OperationResult("Succeeded", null, null));
         }
 
-        // Act
         var response = await ExecuteCommandAsync(args);
 
-        // Assert
         if (shouldSucceed)
         {
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -246,11 +239,9 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
     [Fact]
     public void BindOptions_BindsOptionsCorrectly()
     {
-        // Arrange & Act
         var command = Command.GetCommand();
         var options = command.Options;
 
-        // Assert
         Assert.Contains(options, o => o.Name == "--subscription");
         Assert.Contains(options, o => o.Name == "--resource-group");
         Assert.Contains(options, o => o.Name == "--vault");
@@ -261,76 +252,43 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {
-        // Arrange
         var expected = new OperationResult("Succeeded", null, "MUA enabled with guard");
-
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        // Act
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
             "--resource-guard-id", TestResourceGuardId);
 
-        // Assert
         var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.SecurityConfigureMuaCommandResult);
-
         Assert.Equal("Succeeded", result.Result.Status);
         Assert.Equal("MUA enabled with guard", result.Result.Message);
     }
 
     [Fact]
-    public async Task ExecuteAsync_EnableMua_CallsCorrectServiceMethod()
+    public async Task ExecuteAsync_EnableMua_NeverCallsDisable()
     {
-        // Arrange
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, null));
 
-        // Act
         await ExecuteCommandAsync(
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
             "--resource-guard-id", TestResourceGuardId);
 
-        // Assert - Enable was called, not Disable
         await Service.Received(1).ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
 
         await Service.DidNotReceive().DisableMultiUserAuthorizationAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_DisableMua_CallsCorrectServiceMethod()
-    {
-        // Arrange
-        Service.DisableMultiUserAuthorizationAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(new OperationResult("Succeeded", null, null));
-
-        // Act
-        await ExecuteCommandAsync(
-            "--subscription", "sub",
-            "--vault", "v",
-            "--resource-group", "rg");
-
-        // Assert - Disable was called, not Enable
-        await Service.Received(1).DisableMultiUserAuthorizationAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
-
-        await Service.DidNotReceive().ConfigureMultiUserAuthorizationAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 }

@@ -2271,22 +2271,24 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
-    public async Task SecurityConfigureMua_RsvVault_DisableMua_Successfully()
+    [LiveTestOnly] // Requires re-recording after security disable-mua split from configure-mua
+    public async Task SecurityDisableMua_RsvVault_Successfully()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
 
-        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureMua_RSV_Disable");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityDisableMua_RSV");
 
         var result = await CallToolAsync(
-            "azurebackup_security_configure-mua",
+            "azurebackup_security_disable-mua",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "vault", vaultName }
+                { "vault", vaultName },
+                { "force", true }
             });
 
-        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityConfigureMua_RSV_Disable");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityDisableMua_RSV");
 
         if (result.HasValue && result.Value.TryGetProperty("result", out var opResult))
         {
@@ -2296,6 +2298,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         {
             var msg = message.GetString() ?? "";
             bool isEnvironmentSpecific = msg.Contains("not found", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("not configured", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("Authorization", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("NotFound", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("Forbidden", StringComparison.OrdinalIgnoreCase)
@@ -2306,7 +2309,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         }
         else
         {
-            Assert.Fail("Unexpected response from SecurityConfigureMua (RSV Disable)");
+            Assert.Fail("Unexpected response from SecurityDisableMua (RSV)");
         }
     }
 
@@ -2357,23 +2360,25 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
-    public async Task SecurityConfigureMua_DppVault_DisableMua_Successfully()
+    [LiveTestOnly] // Requires re-recording after security disable-mua split from configure-mua
+    public async Task SecurityDisableMua_DppVault_Successfully()
     {
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
 
-        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureMua_DPP_Disable");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityDisableMua_DPP");
 
         var result = await CallToolAsync(
-            "azurebackup_security_configure-mua",
+            "azurebackup_security_disable-mua",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
-                { "vault-type", "dpp" }
+                { "vault-type", "dpp" },
+                { "force", true }
             });
 
-        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityConfigureMua_DPP_Disable");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityDisableMua_DPP");
 
         if (result.HasValue && result.Value.TryGetProperty("result", out var opResult))
         {
@@ -2383,6 +2388,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         {
             var msg = message.GetString() ?? "";
             bool isEnvironmentSpecific = msg.Contains("not found", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("not configured", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("Authorization", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("NotFound", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("Forbidden", StringComparison.OrdinalIgnoreCase)
@@ -2393,7 +2399,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         }
         else
         {
-            Assert.Fail("Unexpected response from SecurityConfigureMua (DPP Disable)");
+            Assert.Fail("Unexpected response from SecurityDisableMua (DPP)");
         }
     }
 
