@@ -6,7 +6,6 @@ using System.Text.Json.Nodes;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models;
 using ModelContextProtocol.Protocol;
-using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Helpers;
 

@@ -137,7 +137,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var keyvaultGroup = new CommandGroup("keyvault", "Key Vault commands");
         var keyvaultCommand = Substitute.For<IBaseCommand>();
         keyvaultCommand.Metadata.Returns(new ToolMetadata() { ReadOnly = false });
-        keyvaultGroup.AddCommand("notreadonly", keyvaultCommand);
+        keyvaultGroup.AddCommand("not-readonly", keyvaultCommand);
         rootGroup.SubGroup.AddRange([storageGroup, keyvaultGroup]);
         commandFactory.RootGroup.Returns(rootGroup);
 
@@ -170,7 +170,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var keyvaultGroup = new CommandGroup("keyvault", "Key Vault commands");
         var keyvaultCommand = Substitute.For<IBaseCommand>();
         keyvaultCommand.Metadata.Returns(new ToolMetadata() { LocalRequired = false });
-        keyvaultGroup.AddCommand("notlocalrequired", keyvaultCommand);
+        keyvaultGroup.AddCommand("not-localrequired", keyvaultCommand);
         rootGroup.SubGroup.AddRange([storageGroup, keyvaultGroup]);
         commandFactory.RootGroup.Returns(rootGroup);
 

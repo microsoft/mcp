@@ -13,17 +13,16 @@ public static class TestTelemetryHelpers
 {
     public static object GetAndAssertTagKeyValue(Activity activity, string tagName)
     {
-        var matching = activity.TagObjects.SingleOrDefault(x => string.Equals(x.Key, tagName, StringComparison.OrdinalIgnoreCase));
+        var matching = activity.TagObjects.Where(x => string.Equals(x.Key, tagName));
 
-        Assert.False(matching.Equals(default(KeyValuePair<string, object?>)), $"Tag '{tagName}' was not found in activity tags.");
-        Assert.NotNull(matching.Value);
-
-        return matching.Value;
+        Assert.Single(matching);
+        Assert.NotNull(matching.First().Value);
+        return matching.First().Value!;
     }
 
     public static void AssertTagDoesNotExist(Activity activity, string tagName)
     {
-        var matching = activity.TagObjects.SingleOrDefault(x => string.Equals(x.Key, tagName, StringComparison.OrdinalIgnoreCase));
-        Assert.True(matching.Equals(default(KeyValuePair<string, object?>)), $"Tag '{tagName}' was found in activity tags but should not exist.");
+        var matching = activity.TagObjects.Any(x => string.Equals(x.Key, tagName));
+        Assert.False(matching, $"Tag '{tagName}' was found in activity tags but should not exist.");
     }
 }
