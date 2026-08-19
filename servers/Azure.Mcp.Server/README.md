@@ -1260,6 +1260,7 @@ Example prompts that generate Azure CLI commands:
 * "List all resilience recovery plans in service group 'my-service-group'"
 * "Get the recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "List the recovery jobs of recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Update resilience drill 'my-drill' in service group 'my-service-group' to use manual RBAC setup"
 * "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
 * "Enroll service group 'my-service-group' into usage plan 'my-plan' in resource group 'my-rg'"
 
