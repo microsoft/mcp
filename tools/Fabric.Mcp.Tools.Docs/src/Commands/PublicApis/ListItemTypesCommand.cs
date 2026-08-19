@@ -12,7 +12,7 @@ namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
     Id = "b1f80251-df7b-4054-953b-5f452c42dd09",
     Name = "list-item-types",
     Title = "Available Fabric Item Types",
-    Description = "Lists the Microsoft Fabric item types that have public API specifications available. Use this when the user needs to discover which Fabric APIs exist. Returns item type names such as notebook, lakehouse, dataPipeline and report, plus the non-item API areas platform, admin, spark and realTimeIntelligence.",
+    Description = "Lists the Microsoft Fabric item types that have public API specifications available. Use this when the user needs to discover which Fabric APIs exist. Returns item type names such as notebook, lakehouse, dataPipeline and report, plus a few non-item areas: platform and admin (platform and tenant APIs), spark (workspace Spark settings) and realTimeIntelligence (workload-level copilot APIs).",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

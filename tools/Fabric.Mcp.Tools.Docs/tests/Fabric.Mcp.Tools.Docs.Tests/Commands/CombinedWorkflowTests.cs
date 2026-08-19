@@ -221,7 +221,7 @@ public class CombinedWorkflowTests : IDisposable
     [Fact]
     public async Task GetApis_WithNonexistentItemType_ReturnsError()
     {
-        var apiResult = await ExecuteCommandAsync(_getItemApisCommand, "--item-type", "this-itemType-does-not-exist");
+        var apiResult = await ExecuteCommandAsync(_getItemApisCommand, "--item-type", "this-item-type-does-not-exist");
 
         Assert.NotEqual(HttpStatusCode.OK, apiResult.Status);
     }
