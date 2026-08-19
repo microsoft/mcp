@@ -5,6 +5,18 @@
 
 
 
+
+## 3.0.36 (2026-08-18) (pre-release)
+
+### Added
+
+- Added the 'azmcp resilience drill get' command to list or retrieve drill details for a service group. [[#3232](https://github.com/microsoft/mcp/pull/3232)]
+- Added the 'azmcp resilience drill resource get' command to list or retrieve resources associated with a drill. [[#3232](https://github.com/microsoft/mcp/pull/3232)]
+
+### Changed
+
+- **Breaking:** Tool calls with unknown parameters are now explicitly rejected. [[#3282](https://github.com/microsoft/mcp/pull/3282)]
+
 ## 3.0.35 (2026-08-13) (pre-release)
 
 ### Changed
