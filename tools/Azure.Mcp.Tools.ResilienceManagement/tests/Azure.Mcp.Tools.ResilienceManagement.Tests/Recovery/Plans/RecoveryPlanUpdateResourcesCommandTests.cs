@@ -32,15 +32,13 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
         var command = Command.GetCommand();
         Assert.Equal("update-resources", command.Name);
         Assert.NotNull(command.Description);
-        Assert.Contains("includes a recovery resource", command.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("excludes a recovery resource", command.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("removes a recovery resource", command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("includes and configures a resource", command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("excludes it from recovery operations", command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("removes a resource", command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("CustomRunbook", command.Description, StringComparison.Ordinal);
         Assert.Contains("AzureSiteRecovery", command.Description, StringComparison.Ordinal);
-        Assert.Contains("supported only", command.Description, StringComparison.Ordinal);
-        Assert.Contains("Microsoft.Compute/virtualMachines", command.Description, StringComparison.Ordinal);
-        Assert.Contains("Validates the protection", command.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("solution type and settings", command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("only for virtual machines", command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("protection settings", command.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
