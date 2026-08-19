@@ -2,7 +2,7 @@
   "consolidated_tools": [
     {
       "name": "get_azure_resilience_management_details",
-      "description": "Get details about Azure Resilience Management resources, including resilience goals (templates, assignments, and their resources), usage plans and enrollments, and recovery plans (plans, resources, and jobs) for Azure service groups.",
+      "description": "Get details about Azure Resilience Management resources, including resilience goals (templates, assignments, and their resources), usage plans and enrollments, recovery plans (plans, resources, and jobs), and drills for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -38,7 +38,9 @@
         "resilience_recovery_plan_get",
         "resilience_recovery_plan_resource_get",
         "resilience_recovery_job_get",
-        "resilience_recovery_job_resource_get"
+        "resilience_recovery_job_resource_get",
+        "resilience_drill_get",
+        "resilience_drill_resource_get"
       ]
     },
     {
@@ -2227,6 +2229,39 @@
       ]
     },
     {
+      "name": "list_azure_iot_hub_devices",
+      "description": "List devices registered in an Azure IoT Hub's device registry, returning device identity metadata without authentication keys.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only retrieves device information from an Azure IoT Hub without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_device_list"
+      ]
+    },
+    {
       "name": "edit_azure_data_analytics_resources",
       "description": "Update and delete Azure Event Hubs resources including namespaces, event hubs, and consumer groups.",
       "toolMetadata": {
@@ -4370,7 +4405,7 @@
     },
     {
       "name": "ingest_azure_sre_agent_events_and_memories",
-      "description": "Append memory entries, trigger memory reindexing, and create incidents or response plans on an Azure SRE Agent resource. Each call is non-idempotent and may produce a new record.",
+      "description": "Append memory entries, trigger memory re-indexing, and create incidents or response plans on an Azure SRE Agent resource. Each call is non-idempotent and may produce a new record.",
       "toolMetadata": {
         "destructive": {
           "value": false,

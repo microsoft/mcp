@@ -5,11 +5,14 @@
 # Cross-cutting terms should go in the root cspell.yaml instead.
 version: "0.2"
 import:
-  - ../../cspell.yaml
+  - ../../.vscode/cspell.json
 words:
+  - enabeld
+  - existingdb
   - hyperscale
   - missingdb
   - newdb
   - olddb
+  - rulename
   - testpool
   - testserver

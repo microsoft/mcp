@@ -99,7 +99,7 @@ public class RedisCommandTests(ITestOutputHelper output, TestProxyFixture fixtur
             {
                 { "subscription", Settings.SubscriptionId },
                 { "retry-max-retries", 3 },
-                { "retry-delay-seconds", 2 }
+                { "retry-delay", 2 }
             });
 
         var caches = result.AssertProperty("resources");

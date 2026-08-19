@@ -5,10 +5,13 @@
 # Cross-cutting terms should go in the root cspell.yaml instead.
 version: "0.2"
 import:
-  - ../../cspell.yaml
+  - ../../.vscode/cspell.json
 words:
   - acaenvironment
+  - appabcde
+  - appmod
   - aztfmod
+  - azuread
   - azureaisearch
   - azureaiservices
   - azureapplicationinsights
@@ -23,9 +26,22 @@ words:
   - azurewebpubsub
   - backendservice
   - classdef
+  - containerappenv
   - copilotmd
+  - fakeservice
   - frontendservice
   - hostings
   - jsonencode
+  - kubenet
+  - kvabcde
+  - kvname
+  - mycontainerapp
+  - mylog
+  - passwordless
+  - rgabcde
+  - serviceconnector
+  - sqlabcde
   - staticwebapps
+  - svcazurecontainerapps
+  - svcazurekubernetesservice
   - tfvars

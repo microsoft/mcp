@@ -40,19 +40,33 @@
   <Folder Name="/eng/tools/CopilotCliTester/tests/">
     <Project Path="eng/tools/CopilotCliTester/tests/CopilotCliTester.Tests.csproj" />
   </Folder>
+  <Folder Name="/eng/tools/McpToolEvaluator.Core/" />
+  <Folder Name="/eng/tools/McpToolEvaluator.Core/src/">
+    <Project Path="eng/tools/McpToolEvaluator.Core/src/McpToolEvaluator.Core.csproj" />
+  </Folder>
+  <Folder Name="/eng/tools/McpToolEvaluator.Core/tests/">
+    <Project Path="eng/tools/McpToolEvaluator.Core/tests/McpToolEvaluator.Core.Tests.csproj" />
+  </Folder>
   <Folder Name="/eng/tools/ToolDescriptionEvaluator/" />
   <Folder Name="/eng/tools/ToolDescriptionEvaluator/src/">
     <Project Path="eng/tools/ToolDescriptionEvaluator/src/ToolDescriptionEvaluator.csproj" />
   </Folder>
   <Folder Name="/eng/tools/ToolDescriptionEvaluator/tests/">
-    <Project Path="eng/tools/ToolDescriptionEvaluator/tests/ToolDescriptionEvaluator.UnitTests/ToolDescriptionEvaluator.UnitTests.csproj" />
+    <Project Path="eng/tools/ToolDescriptionEvaluator/tests/ToolDescriptionEvaluator.Tests/ToolDescriptionEvaluator.Tests.csproj" />
   </Folder>
   <Folder Name="/eng/tools/ToolMetadataExporter/" />
   <Folder Name="/eng/tools/ToolMetadataExporter/src/">
     <Project Path="eng/tools/ToolMetadataExporter/src/ToolMetadataExporter.csproj" />
   </Folder>
   <Folder Name="/eng/tools/ToolMetadataExporter/tests/">
-    <Project Path="eng/tools/ToolMetadataExporter/tests/ToolMetadataExporter.UnitTests/ToolMetadataExporter.UnitTests.csproj" />
+    <Project Path="eng/tools/ToolMetadataExporter/tests/ToolMetadataExporter.Tests/ToolMetadataExporter.Tests.csproj" />
+  </Folder>
+  <Folder Name="/eng/tools/VallyEvaluator/" />
+  <Folder Name="/eng/tools/VallyEvaluator/src/">
+    <Project Path="eng/tools/VallyEvaluator/src/VallyEvaluator.csproj" />
+  </Folder>
+  <Folder Name="/eng/tools/VallyEvaluator/tests/">
+    <Project Path="eng/tools/VallyEvaluator/tests/VallyEvaluator.Tests.csproj" />
   </Folder>
   <Folder Name="/servers/" />
   <Folder Name="/servers/Azure.Mcp.Server/" />
@@ -296,15 +310,14 @@
     <Project Path="tools/Azure.Mcp.Tools.Insights/src/Azure.Mcp.Tools.Insights.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Insights/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.Insights/tests/Azure.Mcp.Tools.Insights.UnitTests/Azure.Mcp.Tools.Insights.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.Insights/tests/Azure.Mcp.Tools.Insights.Tests/Azure.Mcp.Tools.Insights.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.IoTHub/" />
   <Folder Name="/tools/Azure.Mcp.Tools.IoTHub/src/">
     <Project Path="tools/Azure.Mcp.Tools.IoTHub/src/Azure.Mcp.Tools.IoTHub.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.IoTHub/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.IoTHub/tests/Azure.Mcp.Tools.IoTHub.LiveTests/Azure.Mcp.Tools.IoTHub.LiveTests.csproj" />
-    <Project Path="tools/Azure.Mcp.Tools.IoTHub/tests/Azure.Mcp.Tools.IoTHub.UnitTests/Azure.Mcp.Tools.IoTHub.UnitTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.IoTHub/tests/Azure.Mcp.Tools.IoTHub.Tests/Azure.Mcp.Tools.IoTHub.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.KeyVault/" />
   <Folder Name="/tools/Azure.Mcp.Tools.KeyVault/src/">

@@ -2959,6 +2959,20 @@ azmcp loadtesting testrun createorupdate --subscription <subscription> \
 azmcp grafana list --subscription <subscription> \
                   [--resource-group <resource-group>]
 ```
+### Azure IoT Hub Operations
+
+#### Device Registry Operations
+
+```bash
+# List devices in an IoT Hub
+# Returns one page of device identities. --max-count sets the page size (default 100, maximum 100); values less than 1 or greater than 100 are rejected.
+# When the hub has more devices than were returned, the response sets truncated=true with an explanatory message.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub device list --subscription <subscription> \
+                         --resource-group <resource-group> \
+                         --hub-name <iot-hub-name> \
+                         [--max-count <max-count>]
+```
 
 ### Azure Marketplace Operations
 
@@ -3733,6 +3747,19 @@ azmcp resilience recovery job resource get --subscription <subscription> \
                                            --recovery-plan <recovery-plan> \
                                            --recovery-job <recovery-job> \
                                            [--name <name>]
+
+# Get a resilience drill, or list all drills in a service group (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill get --subscription <subscription> \
+                           --service-group <service-group> \
+                           [--name <name>]
+
+# Get a resource (target) of a drill, or list all resources of the drill (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill resource get --subscription <subscription> \
+                                    --service-group <service-group> \
+                                    --drill <drill> \
+                                    [--name <name>]
 ```
 
 ### Azure Resource Group Operations
