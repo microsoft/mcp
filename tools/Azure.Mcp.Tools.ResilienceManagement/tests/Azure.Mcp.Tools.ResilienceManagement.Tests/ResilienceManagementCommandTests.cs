@@ -278,17 +278,12 @@ public class ResilienceManagementCommandTests(
         var plan = result.AssertProperty("recoveryPlan");
         Assert.EndsWith($"/recoveryPlans/{recoveryPlan}", plan.AssertProperty("id").GetString());
         Assert.Equal("SystemAssigned", plan.AssertProperty("identity").AssertProperty("type").GetString());
-        var updatedRecoveryGroups = plan
-            .AssertProperty("properties")
-            .AssertProperty("recoveryGroupsSetting");
-        var updatedDefaultGroupProperties = updatedRecoveryGroups
-            .AssertProperty("defaultGroup")
-            .AssertProperty("properties");
-        Assert.Equal(defaultGroupId, updatedDefaultGroupProperties.AssertProperty("groupUniqueId").GetString());
-        Assert.Equal(defaultGroupDescription, updatedDefaultGroupProperties.AssertProperty("description").GetString());
+        var updatedDefaultGroup = plan.AssertProperty("defaultGroup");
+        Assert.Equal(defaultGroupId, updatedDefaultGroup.AssertProperty("groupUniqueId").GetString());
+        Assert.Equal(defaultGroupDescription, updatedDefaultGroup.AssertProperty("description").GetString());
         Assert.Equal(
             existingAdditionalGroups,
-            updatedRecoveryGroups.AssertProperty("additionalGroups").EnumerateArray().Select(group => group.GetRawText()));
+            plan.AssertProperty("additionalGroups").EnumerateArray().Select(group => group.GetRawText()));
     }
 
     [Fact]
