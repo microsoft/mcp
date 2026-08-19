@@ -3,8 +3,6 @@
 
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Services;
-using Azure.Mcp.Core.Services.Azure;
-using Azure.ResourceManager.ResourceGraph.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Advisor.Tests.Services;
@@ -186,23 +184,58 @@ public class AdvisorServiceMetadataJoinTests
     }
 
     [Fact]
-    public void EnsureMetadataResultsComplete_TruncatedResultsThrow()
+    public async Task CollectMetadataPagesAsync_FollowsContinuationTokens()
     {
-        var results = new ResourceQueryResults<RecommendationMetadata>([], true);
+        var requestedTokens = new List<string?>();
+        var callCount = 0;
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-        {
-            AdvisorService.EnsureMetadataResultsComplete(results);
-        });
+        var results = await AdvisorService.CollectMetadataPagesAsync(
+            (skipToken, _) =>
+            {
+                requestedTokens.Add(skipToken);
+                callCount++;
+                return Task.FromResult(callCount == 1
+                    ? (new List<RecommendationMetadata> { CreateMetadata("Type-A") }, "next-page", false)
+                    : (new List<RecommendationMetadata> { CreateMetadata("Type-B") }, (string?)null, false));
+            },
+            CancellationToken.None);
 
-        Assert.Contains("truncated", exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal([null, "next-page"], requestedTokens);
+        Assert.Equal(["Type-A", "Type-B"], results.Select(result => result.RecommendationTypeId));
     }
 
     [Fact]
-    public void EnsureMetadataResultsComplete_CompleteResultsDoNotThrow()
+    public async Task CollectMetadataPagesAsync_TruncationWithoutContinuationTokenThrows()
     {
-        AdvisorService.EnsureMetadataResultsComplete(
-            new ResourceQueryResults<RecommendationMetadata>([], false));
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            AdvisorService.CollectMetadataPagesAsync(
+                (_, _) => Task.FromResult((new List<RecommendationMetadata>(), (string?)null, true)),
+                CancellationToken.None));
+
+        Assert.Contains("without returning a continuation token", exception.Message);
+    }
+
+    [Fact]
+    public async Task CollectMetadataPagesAsync_RepeatedContinuationTokenThrows()
+    {
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            AdvisorService.CollectMetadataPagesAsync(
+                (_, _) => Task.FromResult((new List<RecommendationMetadata>(), (string?)"repeated", false)),
+                CancellationToken.None));
+
+        Assert.Contains("repeated continuation token", exception.Message);
+    }
+
+    [Fact]
+    public async Task CollectMetadataPagesAsync_ObservesCancellationBeforeRequest()
+    {
+        using var cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            AdvisorService.CollectMetadataPagesAsync(
+                (_, _) => throw new InvalidOperationException("The page request should not run."),
+                cancellationTokenSource.Token));
     }
 
     [Fact]

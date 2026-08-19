@@ -18,6 +18,7 @@ public class AdvisorService(IAzureService azureService)
         "properties.sourceProperties.serviceRetirement.retirementDate";
     private const string TrackingIdsProperty =
         "properties.sourceProperties.serviceRetirement.serviceHealth.trackingIds";
+    private const int MetadataPageSize = 1000;
 
     // Recommendation instances are not localized per request, so the metadata join always uses the
     // invariant English metadata to keep the enriched fields deterministic.
@@ -123,7 +124,7 @@ public class AdvisorService(IAzureService azureService)
             return null;
         }
 
-        var matchingMetadata = await ListRecommendationMetadataAsync(
+        var matchingMetadata = await ListAllRecommendationMetadataAsync(
             MetadataJoinLanguage,
             new RecommendationMetadataFilters(
                 ResourceType: filters!.ResourceType,
@@ -135,20 +136,7 @@ public class AdvisorService(IAzureService azureService)
                 RetirementDate: filters.RetirementDate),
             cancellationToken);
 
-        EnsureMetadataResultsComplete(matchingMetadata);
-
-        return BuildMetadataLookup(matchingMetadata.Results);
-    }
-
-    internal static void EnsureMetadataResultsComplete(
-        ResourceQueryResults<RecommendationMetadata> metadataResults)
-    {
-        if (metadataResults.AreResultsTruncated)
-        {
-            throw new InvalidOperationException(
-                "Advisor metadata results were truncated while resolving recommendation filters. " +
-                "Narrow the metadata filters and try again.");
-        }
+        return BuildMetadataLookup(matchingMetadata);
     }
 
     internal static Dictionary<string, RecommendationMetadata> BuildMetadataLookup(
@@ -255,18 +243,93 @@ public class AdvisorService(IAzureService azureService)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(language);
 
+        var query = BuildMetadataListQuery(language, filters);
         var tenantResource = await GetTenantResourceAsync(cancellationToken);
-        var queryContent = new ResourceQueryContent(
-            BuildMetadataListQuery(language, filters));
+        var result = await ExecuteMetadataPageAsync(tenantResource, query, null, cancellationToken);
 
-        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
-        if (result == null || result.Count == 0)
-        {
-            return new([], false);
-        }
+        return new(
+            SortMetadata(result.Metadata),
+            result.IsTruncated || !string.IsNullOrEmpty(result.SkipToken));
+    }
+
+    private async Task<List<RecommendationMetadata>> ListAllRecommendationMetadataAsync(
+        string language,
+        RecommendationMetadataFilters? filters,
+        CancellationToken cancellationToken)
+    {
+        var query = BuildMetadataListQuery(language, filters);
+        var tenantResource = await GetTenantResourceAsync(cancellationToken);
+        var results = new List<RecommendationMetadata>();
+        results.AddRange(await CollectMetadataPagesAsync(
+            (skipToken, token) => ExecuteMetadataPageAsync(
+                tenantResource,
+                query,
+                skipToken,
+                token),
+            cancellationToken));
+
+        return SortMetadata(BuildMetadataLookup(results).Values);
+    }
+
+    internal static async Task<List<RecommendationMetadata>> CollectMetadataPagesAsync(
+        Func<string?, CancellationToken, Task<(List<RecommendationMetadata> Metadata, string? SkipToken, bool IsTruncated)>> getPage,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(getPage);
 
         var results = new List<RecommendationMetadata>();
-        using var jsonDocument = JsonDocument.Parse(result.Data);
+        string? skipToken = null;
+
+        do
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var page = await getPage(skipToken, cancellationToken);
+            results.AddRange(page.Metadata);
+            skipToken = page.SkipToken;
+
+            if (page.IsTruncated && string.IsNullOrEmpty(skipToken))
+            {
+                throw new InvalidOperationException(
+                    "Azure Resource Graph truncated Advisor metadata results without returning a continuation token.");
+            }
+        }
+        while (!string.IsNullOrEmpty(skipToken));
+
+        return results;
+    }
+
+    private static async Task<(List<RecommendationMetadata> Metadata, string? SkipToken, bool IsTruncated)> ExecuteMetadataPageAsync(
+        TenantResource tenantResource,
+        string query,
+        string? skipToken,
+        CancellationToken cancellationToken)
+    {
+        var queryContent = new ResourceQueryContent(query)
+        {
+            Options = new ResourceQueryRequestOptions
+            {
+                Top = MetadataPageSize,
+                SkipToken = skipToken,
+            },
+        };
+
+        var response = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
+        var result = response.Value;
+        if (result == null || result.Count == 0)
+        {
+            return new([], result?.SkipToken, result?.ResultTruncated == ResultTruncated.True);
+        }
+
+        return new(
+            ParseMetadata(result.Data),
+            result.SkipToken,
+            result.ResultTruncated == ResultTruncated.True);
+    }
+
+    private static List<RecommendationMetadata> ParseMetadata(BinaryData data)
+    {
+        var results = new List<RecommendationMetadata>();
+        using var jsonDocument = JsonDocument.Parse(data);
         if (jsonDocument.RootElement.ValueKind != JsonValueKind.Array)
         {
             throw new JsonException("Azure Resource Graph returned an invalid recommendation metadata payload.");
@@ -277,12 +340,13 @@ public class AdvisorService(IAzureService azureService)
             results.Add(ConvertToRecommendationMetadataModel(item));
         }
 
-        return new(
-            [.. results
-            .OrderBy(r => ImpactRank.TryGetValue(r.Impact ?? string.Empty, out var rank) ? rank : int.MaxValue)
-            .ThenBy(r => r.DisplayName, StringComparer.OrdinalIgnoreCase)],
-            result.ResultTruncated == ResultTruncated.True);
+        return results;
     }
+
+    private static List<RecommendationMetadata> SortMetadata(IEnumerable<RecommendationMetadata> metadata) =>
+        [.. metadata
+            .OrderBy(r => ImpactRank.TryGetValue(r.Impact ?? string.Empty, out var rank) ? rank : int.MaxValue)
+            .ThenBy(r => r.DisplayName, StringComparer.OrdinalIgnoreCase)];
 
     private async Task<List<RecommendationMetadata>> ExecuteMetadataQueryAsync(
         string query,
@@ -383,7 +447,9 @@ public class AdvisorService(IAzureService azureService)
                 $"datetime({date:yyyy-MM-dd})";
         }
 
-        return query + " | project properties";
+        return query +
+            " | project id, recommendationTypeId = tostring(properties.recommendationTypeId), properties" +
+            " | order by id asc, recommendationTypeId asc";
     }
 
     private static string? ResolveServiceRetirementSubCategory(

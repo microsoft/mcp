@@ -34,6 +34,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription <subscription> | none |
 | advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> | none |
 | advisor_recommendation_list | Show me high-impact Security recommendations in subscription <subscription> | none |
+| advisor_recommendation_list | Show me the top 10 medium-impact Advisor recommendations in subscription <subscription> | none |
 | advisor_recommendation_list | List Cost recommendations for storage accounts in subscription <subscription> | none |
 | advisor_recommendation_list | Find Advisor recommendations mentioning "right-size" in subscription <subscription> | none |
 | advisor_recommendation_list | List Security recommendations directly in subscription <subscription> | none |
