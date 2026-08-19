@@ -239,10 +239,10 @@ public class FabricPublicApiServiceTests
 
     #endregion
 
-    #region GetFabricItemTypeItemDefinition Tests
+    #region GetItemDefinition Tests
 
     [Fact]
-    public void GetFabricItemTypeItemDefinition_WithValidItemType_ReturnsDefinition()
+    public void GetItemDefinition_WithValidItemType_ReturnsDefinition()
     {
         // Arrange
         var itemType = "notebook";
@@ -264,7 +264,7 @@ public class FabricPublicApiServiceTests
     [InlineData("sparkjobdefinition")]
     [InlineData("mirroredCatalog")]
     [InlineData("mirroredAzureDatabricksCatalog")]
-    public void GetFabricItemTypeItemDefinition_WithCamelCaseItemType_ReturnsDefinition(string itemType)
+    public void GetItemDefinition_WithCamelCaseItemType_ReturnsDefinition(string itemType)
     {
         // Act
         var result = _service.GetItemDefinition(itemType);

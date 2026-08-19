@@ -31,7 +31,7 @@ public class GetExamplesCommandTests : CommandUnitTestsBase<GetExamplesCommand, 
     }
 
     [Fact]
-    public async Task GetExamplesCommand_ExecuteAsync_WithValidItemTypeType_ReturnsExamples()
+    public async Task GetExamplesCommand_ExecuteAsync_WithValidItemType_ReturnsExamples()
     {
         // Arrange
         var expectedExamples = new Dictionary<string, string>
@@ -52,14 +52,14 @@ public class GetExamplesCommandTests : CommandUnitTestsBase<GetExamplesCommand, 
     }
 
     [Fact]
-    public async Task GetExamplesCommand_ExecuteAsync_WithEmptyItemTypeType_ReturnsBadRequest()
+    public async Task GetExamplesCommand_ExecuteAsync_WithEmptyItemType_ReturnsBadRequest()
     {
         // Arrange & Act
         var result = await ExecuteCommandAsync([]);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
-        Assert.Contains("Missing Required options: --itemType-type", result.Message);
+        Assert.Contains("Missing Required options: --item-type", result.Message);
         await Service.DidNotReceive().GetExamplesAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
