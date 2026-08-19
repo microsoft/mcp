@@ -237,7 +237,7 @@ public sealed class McpOutputSizeTests(ITestOutputHelper output)
                         }
                     });
                     var response = await SendRequestAsync(process, request);
-                    var document = JsonDocument.Parse(response);
+                    using var document = JsonDocument.Parse(response);
                     Assert.True(
                         document.RootElement.TryGetProperty("result", out var commandResult),
                         $"The learn response for '{tool}.{command}' did not contain a result.");
