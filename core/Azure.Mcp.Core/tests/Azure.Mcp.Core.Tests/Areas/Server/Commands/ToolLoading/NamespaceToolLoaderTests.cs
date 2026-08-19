@@ -215,6 +215,119 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var textContent = result.Content[0] as TextContentBlock;
         Assert.NotNull(textContent);
         Assert.Contains("available command", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("inputSchema", textContent.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithLearnTrue_ThreeStepDiscoveryReturnsMetadataOnly()
+    {
+        // Arrange
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        {
+            ThreeStepToolDiscovery = true
+        });
+
+        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
+        var toolName = GetFirstAvailableNamespace();
+        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["intent"] = "list resources"
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+        var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
+        Assert.Contains("\"tool\"", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("\"inputSchema\"", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("\"command\":", textContent.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_ThreeStepDiscoveryDescribesExactCommandLookup()
+    {
+        // Arrange
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        {
+            ThreeStepToolDiscovery = true
+        });
+
+        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
+
+        // Act
+        var result = await loader.ListToolsHandler(CreateListToolsRequest(), TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.All(result.Tools, tool =>
+        {
+            Assert.Contains("learn=true", tool.Description, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("no \"command\"", tool.Description, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("exact command name", tool.Description, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("do not guess", tool.Description, StringComparison.OrdinalIgnoreCase);
+        });
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithLearnTrue_ThreeStepDiscoveryReturnsSpecificCommandSchema()
+    {
+        // Arrange
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        {
+            ThreeStepToolDiscovery = true
+        });
+
+        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
+        var toolName = GetFirstAvailableNamespace();
+        var commandName = loader.GetChildToolList(CreateCallToolRequest(toolName, []), toolName).First().Name;
+        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["command"] = commandName,
+            ["intent"] = "list resources"
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+        var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
+        Assert.Contains("inputSchema", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(commandName, textContent.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithLearnTrue_UnknownThreeStepCommandReturnsExactCommandGuidance()
+    {
+        // Arrange
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        {
+            ThreeStepToolDiscovery = true
+        });
+
+        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
+        var toolName = GetFirstAvailableNamespace();
+        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["command"] = "__unknown_command__"
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.True(result.IsError);
+        var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
+        Assert.Contains("exact", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("not a guessed", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("\"command\"", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("__unknown_command__", textContent.Text, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -25,6 +25,7 @@ namespace Microsoft.Mcp.Core.Areas.Server;
 [JsonSerializable(typeof(MetadataDefinition))]
 [JsonSerializable(typeof(ConsolidatedToolDefinition))]
 [JsonSerializable(typeof(List<ConsolidatedToolDefinition>))]
+[JsonSerializable(typeof(IEnumerable<string>))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
