@@ -17,16 +17,12 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests;
 /// Live / recorded integration tests for the Resilience Management toolset.
 /// Resources are provisioned by test-resources.bicep + test-resources-post.ps1.
 /// </summary>
-[Collection(ResilienceManagementLiveTestCollection.Name)]
 public class ResilienceManagementCommandTests(
     ITestOutputHelper output,
     TestProxyFixture fixture,
-    LiveServerFixture liveServerFixture,
-    ResilienceManagementTestCleanupFixture cleanupFixture)
+    LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
-    private readonly ResilienceManagementTestCleanupFixture _cleanupFixture = cleanupFixture;
-
     // Prepend the base sanitizers (e.g. WWW-Authenticate) then add tool-specific ones.
     // Sanitize the required per-invocation operation-id request GUID for playback matching and the
     // x-ms-operation-identifier response header, which contains the real tenant ID and object ID.
