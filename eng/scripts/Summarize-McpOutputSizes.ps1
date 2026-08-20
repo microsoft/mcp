@@ -6,7 +6,7 @@
     Summarizes an MCP output size measurement report.
 
 .DESCRIPTION
-    Reads the JSON report produced by the McpOutputSizeTests measurement test
+    Reads the JSON report produced by the McpOutputSizeMeasurer tool
     (see Measure-McpOutputSizes.ps1) and prints a console summary comparing the
     consolidated and namespace server modes: tool counts, initialize greeting size,
     tools/list discovery size, and learn-mode response sizes.
