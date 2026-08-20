@@ -446,7 +446,7 @@ public class CustomChainedCredentialTests
     {
         // Arrange
         using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
-        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "MadeUpCredential"); // intentional typo
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "MadeUpCredential");
 
         var provider = new CapturingLoggerProvider();
         using var factory = LoggerFactory.Create(b => b.AddProvider(provider));

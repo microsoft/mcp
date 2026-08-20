@@ -13,11 +13,13 @@ public static class TestTelemetryHelpers
 {
     public static object GetAndAssertTagKeyValue(Activity activity, string tagName)
     {
-        var matching = activity.TagObjects.Where(x => string.Equals(x.Key, tagName));
+        var matching = activity.TagObjects.Where(x => string.Equals(x.Key, tagName)).ToList();
 
         Assert.Single(matching);
-        Assert.NotNull(matching.First().Value);
-        return matching.First().Value!;
+
+        var firstValue = matching[0].Value;
+        Assert.NotNull(firstValue);
+        return firstValue;
     }
 
     public static void AssertTagDoesNotExist(Activity activity, string tagName)
