@@ -58,87 +58,9 @@ param (
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/../common/scripts/common.ps1"
 . "$PSScriptRoot/helpers/BuildHelpers.ps1"
+. "$PSScriptRoot/helpers/PromptHelpers.ps1"
 
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
-
-class Prompt {
-    [string] $ToolArea
-    [string] $ToolName
-    [string] $Prompt
-}
-
-function Read-PromptFile {
-    <#
-    .SYNOPSIS
-        Parses an end-to-end test prompts Markdown file into structured Prompt objects.
-
-        Expected Markdown structure:
-
-            ## <ToolArea>
-
-            | Tool Name | Test Prompt | Interaction |
-            |:----------|:------------|:------------|
-            | <tool_name> | <prompt text> | <interaction>
-
-    .PARAMETER PromptsFile
-        Path to the Markdown file to parse. Must exist and follow the expected format.
-
-    .OUTPUTS
-        System.Collections.Generic.List[Prompt]
-        A list of Prompt objects, one per table data row in the file, in document order.
-    #>
-    param(
-        [Parameter(Mandatory)]
-        [string] $PromptsFile
-    )
-
-    $prompts = [System.Collections.Generic.List[Prompt]]::new()
-    $currentArea = $null
-
-    foreach ($line in [System.IO.File]::ReadLines($PromptsFile)) {
-        # Match ## section headings as ToolArea
-        if ($line -match '^##\s+(.+)$') {
-            $currentArea = $Matches[1].Trim()
-            continue
-        }
-
-        # Skip lines that are not inside a section, are table headers, or are separator rows
-        if (-not $currentArea) { continue }
-        if ($line -notmatch '^\|') { continue }
-        if ($line -match '^\|\s*Tool Name\s*\|') { continue }
-        if ($line -match '^\|[-:\s|]+$') { continue }
-
-        # Parse table data rows: | ToolName | Prompt |
-        if ($line -match '^\|\s*(.+?)\s*\|\s*(.+?)\s*\|') {
-            $entry = [Prompt]::new()
-            $entry.ToolArea = $currentArea
-            $entry.ToolName = $Matches[1].Trim()
-            $entry.Prompt   = $Matches[2].Trim()
-            $prompts.Add($entry)
-        }
-    }
-
-    return $prompts
-}
-
-function Get-PlatformName {
-    [string]$fullPlatform = ""
-
-    if ($IsWindows) {
-        $fullPlatform = "windows"
-    } elseif ($IsLinux) {
-        $fullPlatform = "linux"
-    } elseif ($IsMacOS) {
-        $fullPlatform = "macos"
-    } else {
-        throw "Unsupported platform"
-    }
-
-    $currentArch = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier.Split('-')[1]
-    $fullPlatform += "-$currentArch"
-
-    return $fullPlatform
-}
 
 # Start of script
 if (!$OutputPath) {
@@ -218,84 +140,22 @@ foreach ($serverInfo in $serversToTest) {
         Write-Host "Using prompts file: $serverPromptsFile"
     }
 
-    # Get the executable name and find the built platform
-    $executableName = $serverInfo.cliName + $(if ($IsWindows) { ".exe" } else { "" })
+    $toolNames = Get-McpServerToolNames -ServerInfo $serverInfo -OutputPath $OutputPath
 
-    # Find the first platform that was actually built
-    $builtPlatform = $serverInfo.platforms | Where-Object { 
-        Test-Path "$OutputPath/$($_.artifactPath)" 
-    } | Select-Object -First 1
-
-    if (-not $builtPlatform) {
-        Write-Warning "No built platform found for $currentServerName - skipping tool prompt validation"
+    if ($null -eq $toolNames -or $toolNames.Count -eq 0) {
         $skippedServers++
         Write-Host ""
         continue
     }
 
-    $executablePath = "$OutputPath/$($builtPlatform.artifactPath)/$executableName"
-
-    if (-not (Test-Path $executablePath)) {
-        Write-Error "Executable not found at $executablePath for $currentServerName"
-        exit 1
-    }
-
-    # Try to get tools - some servers may not support 'tools list'
-    Write-Host "Loading tools from $currentServerName"
-
-    # Example response from 'tools list --name-only' command:
-    # {
-    #   "status": 200,
-    #   "message": "Success",
-    #   "results": {
-    #     "names": [ 
-    #        "acr_registry_list",
-    #        "acr_registry_repository_list",
-    #     ]
-    #   }
-    # }
-    $toolsJson = & $executablePath tools list --name-only 2>&1 | Out-String
-
-    if ($LASTEXITCODE -ne 0) {
-        Write-Warning "$currentServerName 'tools list' command failed with exit code $LASTEXITCODE (may have no tools) - skipping"
-        continue
-    }
-
-    if ([string]::IsNullOrWhiteSpace($toolsJson)) {
-        Write-Warning "No output received from '$currentServerName tools list --name-only' - skipping"
-        $skippedServers++
-        Write-Host ""
-        continue
-    }
-
-    $toolsResult = $toolsJson | ConvertFrom-Json
-    $tools = $toolsResult.results
-
-    if ($null -eq $tools) {
-        Write-Warning "Server [$currentServerName] 'tools list' command did not return any tools - skipping"
-        $skippedServers++
-        Write-Host ""
-        continue
-    } elseif ($null -eq $tools.names) {
-        Write-Warning "Server [$currentServerName] No 'names' property found in response - skipping. Response: `n$toolsJson`n"
-        $skippedServers++
-        Write-Host ""
-        continue
-    } elseif ($tools.names.Count -eq 0) {
-        Write-Warning "Server [$currentServerName] No tool names found - skipping"
-        $skippedServers++
-        Write-Host ""
-        continue
-    }
-
-    Write-Host "Loaded $($tools.names.Count) tools"
+    Write-Host "Loaded $($toolNames.Count) tools"
     $testedServers++
 
     $allPrompts = Read-PromptFile -PromptsFile $serverPromptsFile
     $violations = [System.Collections.Generic.List[Prompt]]::new()
 
     foreach ($prompt in $allPrompts) {
-        if ($tools.names -notcontains $prompt.ToolName) {
+        if ($toolNames -notcontains $prompt.ToolName) {
             $violations.Add($prompt)
         }
     }
