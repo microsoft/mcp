@@ -212,13 +212,13 @@ If you are a release manager, follow these steps before initiating a new release
    ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -Version "<version>" -VsCodeVersion "<simplified-version>" -DryRun
    ```
 
-2. Compile entries and delete files:
+2. Compile entries (entry files are deleted by default):
    ```powershell
-   # Compile to Unreleased section and delete YAML files for Azure MCP Server
-   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DeleteFiles
+   # Compile to Unreleased section for Azure MCP Server
+   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md"
 
    # Or compile to a specific main and VS Code version
-   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -Version "<version>" -VsCodeVersion "<simplified-version>" -DeleteFiles
+   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -Version "<version>" -VsCodeVersion "<simplified-version>"
    ```
 
    Notes:
@@ -230,6 +230,8 @@ If you are a release manager, follow these steps before initiating a new release
    - Beta releases are marked `(pre-release)` in the VS Code changelog; stable releases are not
    - The VS Code changelog is synchronized automatically
    - The main changelog's `(Unreleased)` placeholder is replaced with today's date
+   - Compiled YAML files are deleted by default; use `-KeepFiles` to retain them
+   - Use `-SkipVsCode` to update only the main changelog
 
 3. Review both changelogs for reader-friendly wording and format commands and code references with backticks.
 4. Commit and initiate the release process
@@ -309,7 +311,7 @@ No! Only include entries for changes worth mentioning to users:
 
 ### What happens to the YAML files after release?
 
-They're deleted by the release manager using the `-DeleteFiles` flag when compiling entries into the main `CHANGELOG.md`.
+They're deleted automatically after successful compilation. Use `-KeepFiles` to retain them.
 
 ### What if I have any other questions?
 

@@ -30,8 +30,11 @@
 .PARAMETER DryRun
     Preview the compiled and synchronized changelog entries without modifying any files.
 
-.PARAMETER DeleteFiles
-    Delete YAML files after successful compilation.
+.PARAMETER KeepFiles
+    Keep YAML files after successful compilation. By default, compiled files are deleted.
+
+.PARAMETER SkipVsCode
+    Skip updating the VS Code extension changelog.
 
 .EXAMPLE
     ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" -DryRun
@@ -54,9 +57,9 @@
     Compile entries into the 1.0.0 version section for Fabric.Mcp.Server.
 
 .EXAMPLE
-    ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" -DeleteFiles
+    ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" -KeepFiles -SkipVsCode
 
-    Compile entries and remove YAML files after successful compilation.
+    Compile the main changelog without deleting YAML files or updating the VS Code changelog.
 #>
 
 [CmdletBinding()]
@@ -74,7 +77,10 @@ param(
     [switch]$DryRun,
 
     [Parameter(Mandatory = $false)]
-    [switch]$DeleteFiles
+    [switch]$KeepFiles,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$SkipVsCode
 )
 
 $ErrorActionPreference = 'Stop'
@@ -317,7 +323,7 @@ if (-not (Test-Path $changelogFile)) {
     exit 1
 }
 
-if (-not (Test-Path $vscodeChangelogFile)) {
+if (-not $SkipVsCode -and -not (Test-Path $vscodeChangelogFile)) {
     Write-Error "VS Code CHANGELOG.md not found: $vscodeChangelogFile"
     exit 1
 }
@@ -806,112 +812,18 @@ else {
     $updatedChangelog = $changelogContent -replace [regex]::Escape($versionHeader + $existingContent), $newContent
 }
 
-# Extract the release version from the target header and determine the VS Code version.
+# Extract the release version from the target header.
 if ($targetVersionHeader -notmatch '^##\s+(\S+)') {
     Write-Error "Unable to determine the release version from '$targetVersionHeader'."
     exit 1
 }
 $mainVersion = $Matches[1]
 
-if (-not $VsCodeVersion) {
-    $VsCodeVersion = ConvertTo-VsCodeVersion -MainVersion $mainVersion
-}
-elseif ($VsCodeVersion -notmatch '^\d+\.\d+\.\d+$') {
-    Write-Error "VS Code version '$VsCodeVersion' must use the '<major>.<minor>.<patch>' format."
+if ($SkipVsCode -and $VsCodeVersion) {
+    Write-Error "-VsCodeVersion cannot be used with -SkipVsCode."
     exit 1
 }
 
-# Parse the compiled release content into the sections used by the VS Code changelog.
-$sections = @{}
-foreach ($header in $RecommendedSectionHeaders) {
-    $sections[$header] = @()
-}
-
-$currentSection = $null
-$currentEntries = @()
-foreach ($line in ($mergedContent | Select-Object -Skip 2)) {
-    if ($line -match '^### (.+)$') {
-        if ($currentSection -and $currentEntries.Count -gt 0) {
-            $sections[$currentSection] = $currentEntries
-        }
-
-        $currentSection = $Matches[1].Trim()
-        if ($currentSection -notin $RecommendedSectionHeaders) {
-            Write-Warning "Unknown section '$currentSection' found in main CHANGELOG - skipping"
-            $currentSection = $null
-        }
-        $currentEntries = @()
-        continue
-    }
-
-    if ($currentSection) {
-        $currentEntries += $line
-    }
-}
-
-if ($currentSection -and $currentEntries.Count -gt 0) {
-    $sections[$currentSection] = $currentEntries
-}
-
-$preReleaseSuffix = if ($mainVersion.Contains('-')) { ' (pre-release)' } else { '' }
-$vscodeEntry = @(
-    "## $VsCodeVersion ($releaseDate)$preReleaseSuffix"
-    ""
-)
-
-function Add-VsCodeSection {
-    param(
-        [string]$SectionName,
-        [array]$Entries
-    )
-
-    $nonEmptyEntries = @($Entries | Where-Object { $_.Trim() -ne '' })
-    if ($nonEmptyEntries.Count -eq 0) {
-        return
-    }
-
-    $script:vscodeEntry += "### $SectionName"
-    $script:vscodeEntry += ""
-    $script:vscodeEntry += $nonEmptyEntries
-    $script:vscodeEntry += ""
-}
-
-Add-VsCodeSection -SectionName "Added" -Entries $sections['Features Added']
-
-$changedEntries = @()
-$breakingChanges = @($sections['Breaking Changes'] | Where-Object { $_.Trim() -ne '' })
-if ($breakingChanges.Count -gt 0) {
-    $changedEntries += $breakingChanges | ForEach-Object {
-        if ($_ -match '^-\s+(.+)$') {
-            "- **Breaking:** $($Matches[1])"
-        }
-        else {
-            $_
-        }
-    }
-}
-$changedEntries += @($sections['Other Changes'] | Where-Object { $_.Trim() -ne '' })
-
-Add-VsCodeSection -SectionName "Changed" -Entries $changedEntries
-Add-VsCodeSection -SectionName "Fixed" -Entries $sections['Bugs Fixed']
-
-while ($vscodeEntry.Count -gt 0 -and $vscodeEntry[-1] -eq "") {
-    $vscodeEntry = $vscodeEntry[0..($vscodeEntry.Count - 2)]
-}
-$vscodeEntryText = $vscodeEntry -join "`n"
-
-$vscodeContent = Get-Content -Path $vscodeChangelogFile -Raw
-$headerMatch = [regex]::Match($vscodeContent, '(?ms)^(# Release History\s*\r?\n)')
-if (-not $headerMatch.Success) {
-    Write-Error "Could not find '# Release History' header in VS Code CHANGELOG."
-    exit 1
-}
-
-$headerEnd = $headerMatch.Length
-$newVscodeContent = $vscodeContent.Substring(0, $headerEnd) + "`n" + $vscodeEntryText + "`n`n" + $vscodeContent.Substring($headerEnd).TrimStart("`n", "`r")
-
-# Finalize the main changelog only after the VS Code content has been generated
-# from the Unreleased section.
 $releasedVersionHeader = $targetVersionHeader -replace '\(Unreleased\)', "($releaseDate)"
 $finalChangelog = [regex]::Replace(
     $updatedChangelog,
@@ -919,11 +831,111 @@ $finalChangelog = [regex]::Replace(
     $releasedVersionHeader,
     1)
 
-Write-Host "VS Code Output (as it will appear in CHANGELOG.md):" -ForegroundColor Cyan
-Write-Host "====================================================" -ForegroundColor Cyan
-Write-Host ""
-$vscodeEntry | ForEach-Object { Write-Host $_ -ForegroundColor Gray }
-Write-Host ""
+$newVscodeContent = $null
+if (-not $SkipVsCode) {
+    if (-not $VsCodeVersion) {
+        $VsCodeVersion = ConvertTo-VsCodeVersion -MainVersion $mainVersion
+    }
+    elseif ($VsCodeVersion -notmatch '^\d+\.\d+\.\d+$') {
+        Write-Error "VS Code version '$VsCodeVersion' must use the '<major>.<minor>.<patch>' format."
+        exit 1
+    }
+
+    # Parse the compiled release content into the sections used by the VS Code changelog.
+    $sections = @{}
+    foreach ($header in $RecommendedSectionHeaders) {
+        $sections[$header] = @()
+    }
+
+    $currentSection = $null
+    $currentEntries = @()
+    foreach ($line in ($mergedContent | Select-Object -Skip 2)) {
+        if ($line -match '^### (.+)$') {
+            if ($currentSection -and $currentEntries.Count -gt 0) {
+                $sections[$currentSection] = $currentEntries
+            }
+
+            $currentSection = $Matches[1].Trim()
+            if ($currentSection -notin $RecommendedSectionHeaders) {
+                Write-Warning "Unknown section '$currentSection' found in main CHANGELOG - skipping"
+                $currentSection = $null
+            }
+            $currentEntries = @()
+            continue
+        }
+
+        if ($currentSection) {
+            $currentEntries += $line
+        }
+    }
+
+    if ($currentSection -and $currentEntries.Count -gt 0) {
+        $sections[$currentSection] = $currentEntries
+    }
+
+    $preReleaseSuffix = if ($mainVersion.Contains('-')) { ' (pre-release)' } else { '' }
+    $vscodeEntry = @(
+        "## $VsCodeVersion ($releaseDate)$preReleaseSuffix"
+        ""
+    )
+
+    function Add-VsCodeSection {
+        param(
+            [string]$SectionName,
+            [array]$Entries
+        )
+
+        $nonEmptyEntries = @($Entries | Where-Object { $_.Trim() -ne '' })
+        if ($nonEmptyEntries.Count -eq 0) {
+            return
+        }
+
+        $script:vscodeEntry += "### $SectionName"
+        $script:vscodeEntry += ""
+        $script:vscodeEntry += $nonEmptyEntries
+        $script:vscodeEntry += ""
+    }
+
+    Add-VsCodeSection -SectionName "Added" -Entries $sections['Features Added']
+
+    $changedEntries = @()
+    $breakingChanges = @($sections['Breaking Changes'] | Where-Object { $_.Trim() -ne '' })
+    if ($breakingChanges.Count -gt 0) {
+        $changedEntries += $breakingChanges | ForEach-Object {
+            if ($_ -match '^-\s+(.+)$') {
+                "- **Breaking:** $($Matches[1])"
+            }
+            else {
+                $_
+            }
+        }
+    }
+    $changedEntries += @($sections['Other Changes'] | Where-Object { $_.Trim() -ne '' })
+
+    Add-VsCodeSection -SectionName "Changed" -Entries $changedEntries
+    Add-VsCodeSection -SectionName "Fixed" -Entries $sections['Bugs Fixed']
+
+    while ($vscodeEntry.Count -gt 0 -and $vscodeEntry[-1] -eq "") {
+        $vscodeEntry = $vscodeEntry[0..($vscodeEntry.Count - 2)]
+    }
+    $vscodeEntryText = $vscodeEntry -join "`n"
+
+    $vscodeContent = Get-Content -Path $vscodeChangelogFile -Raw
+    $headerMatch = [regex]::Match($vscodeContent, '(?ms)^(# Release History\s*\r?\n)')
+    if (-not $headerMatch.Success) {
+        Write-Error "Could not find '# Release History' header in VS Code CHANGELOG."
+        exit 1
+    }
+
+    $headerEnd = $headerMatch.Length
+    $newVscodeContent = $vscodeContent.Substring(0, $headerEnd) + "`n" + $vscodeEntryText + "`n`n" + $vscodeContent.Substring($headerEnd).TrimStart("`n", "`r")
+
+    Write-Host "VS Code Output (as it will appear in CHANGELOG.md):" -ForegroundColor Cyan
+    Write-Host "====================================================" -ForegroundColor Cyan
+    Write-Host ""
+    $vscodeEntry | ForEach-Object { Write-Host $_ -ForegroundColor Gray }
+    Write-Host ""
+}
 
 if ($DryRun) {
     Write-Host "DRY RUN - No files were modified" -ForegroundColor Yellow
@@ -932,17 +944,19 @@ if ($DryRun) {
 
 if (-not $DryRun) {
     $finalChangelog | Set-Content -Path $changelogFile -Encoding UTF8 -NoNewline
-    $newVscodeContent | Set-Content -Path $vscodeChangelogFile -Encoding UTF8 -NoNewline
 
     Write-Host "✓ Updated main CHANGELOG.md" -ForegroundColor Green
     Write-Host "  Location: $changelogFile" -ForegroundColor Gray
-    Write-Host "✓ Updated VS Code CHANGELOG.md" -ForegroundColor Green
-    Write-Host "  Location: $vscodeChangelogFile" -ForegroundColor Gray
+    if (-not $SkipVsCode) {
+        $newVscodeContent | Set-Content -Path $vscodeChangelogFile -Encoding UTF8 -NoNewline
+        Write-Host "✓ Updated VS Code CHANGELOG.md" -ForegroundColor Green
+        Write-Host "  Location: $vscodeChangelogFile" -ForegroundColor Gray
+    }
     Write-Host ""
 }
 
-# Delete YAML files only after both changelogs have been updated successfully.
-if ($DeleteFiles -and -not $DryRun) {
+# Delete YAML files by default, only after all requested changelogs are updated successfully.
+if (-not $KeepFiles -and -not $DryRun) {
     Write-Host "Deleting changelog entry files..." -ForegroundColor Yellow
     foreach ($file in $yamlFiles) {
         Remove-Item -Path $file.FullName -Force
@@ -956,9 +970,17 @@ Write-Host "Summary:" -ForegroundColor Cyan
 Write-Host "  Entries compiled: $($entries.Count)" -ForegroundColor Gray
 Write-Host "  Sections updated: $($groupedEntries.Keys.Count)" -ForegroundColor Gray
 Write-Host "  Main version: $mainVersion ($releaseDate)" -ForegroundColor Gray
-Write-Host "  VS Code version: $VsCodeVersion" -ForegroundColor Gray
-if ($DeleteFiles -and -not $DryRun) {
+if ($SkipVsCode) {
+    Write-Host "  VS Code changelog: Skipped" -ForegroundColor Gray
+}
+else {
+    Write-Host "  VS Code version: $VsCodeVersion" -ForegroundColor Gray
+}
+if (-not $KeepFiles -and -not $DryRun) {
     Write-Host "  Files deleted: $($yamlFiles.Count)" -ForegroundColor Gray
+}
+elseif ($KeepFiles) {
+    Write-Host "  Entry files: Kept" -ForegroundColor Gray
 }
 Write-Host ""
 Write-Host "Done!" -ForegroundColor Green

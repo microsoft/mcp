@@ -214,8 +214,8 @@ extension changelog, and replaces the `(Unreleased)` placeholder with today's da
 # Compile to a specific version with an explicit VS Code version
 ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -Version "3.0.0-beta.27" -VsCodeVersion "3.0.27"
 
-# Compile and remove YAML files after successful compilation
-./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DeleteFiles
+# Compile only the main changelog and keep the YAML files
+./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -SkipVsCode -KeepFiles
 ```
 
 **Parameters:**
@@ -223,7 +223,8 @@ extension changelog, and replaces the `(Unreleased)` placeholder with today's da
 - `-Version`: Optional. Target version section to compile into. If not specified, compiles to "Unreleased" section
 - `-VsCodeVersion`: Optional. VS Code version; derived automatically when omitted (for example, `3.0.0-beta.27` becomes `3.0.27`)
 - `-DryRun`: Preview compilation without modifying files
-- `-DeleteFiles`: Remove YAML files after successful compilation
+- `-KeepFiles`: Keep YAML files instead of deleting them after successful compilation
+- `-SkipVsCode`: Skip updating the VS Code extension changelog
 
 **Features:**
 - Reads all YAML files from `changelog-entries/`
@@ -234,7 +235,8 @@ extension changelog, and replaces the `(Unreleased)` placeholder with today's da
 - Syncs the release to the VS Code extension changelog
 - Marks beta VS Code releases as `(pre-release)` while leaving stable releases unmarked
 - Replaces the `(Unreleased)` placeholder with the current date
-- Optional deletion of YAML files after compilation
+- Deletes compiled YAML files by default, with an option to keep them
+- Supports opting out of the VS Code changelog update
 - Error handling for missing/invalid files
 - Summary output
 
@@ -248,7 +250,7 @@ extension changelog, and replaces the `(Unreleased)` placeholder with today's da
 6. Generate markdown format with PR links
 7. Find the target version section in CHANGELOG.md (or "Unreleased")
 8. Insert compiled entries under appropriate section headers
-9. Optionally delete YAML files if `-DeleteFiles` flag is set
+9. Delete YAML files unless `-KeepFiles` is specified
 
 ---
 
@@ -288,7 +290,7 @@ Before tagging a release:
 
 2. **Compile and clean up:**
    ```powershell
-   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DeleteFiles
+   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md"
    ```
 
 3. **Review both changelogs:**
@@ -477,7 +479,7 @@ No. Only include entries for changes worth mentioning to users (new features, br
 
 ### Q: What happens to the YAML files after release?
 
-They're deleted by the release manager using `Compile-Changelog.ps1 -DeleteFiles` after compilation.
+They're deleted automatically after successful compilation. Use `-KeepFiles` to retain them.
 
 ---
 
