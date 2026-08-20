@@ -7,6 +7,8 @@ using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -23,6 +25,11 @@ public class VmCreateCommandTests : SubscriptionCommandUnitTestsBase<VmCreateCom
     private readonly string _knownAdminUsername = "azureuser";
     private readonly string _knownPassword = "TestPassword123!";
     private readonly string _knownSshKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC...";
+
+    public VmCreateCommandTests()
+    {
+        Services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration()));
+    }
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -61,7 +68,6 @@ public class VmCreateCommandTests : SubscriptionCommandUnitTestsBase<VmCreateCom
                 Tags: null);
 
             Service.CreateVmAsync(
-                Arg.Any<bool>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -120,7 +126,6 @@ public class VmCreateCommandTests : SubscriptionCommandUnitTestsBase<VmCreateCom
             Tags: new Dictionary<string, string> { { "env", "test" } });
 
         Service.CreateVmAsync(
-            Arg.Any<bool>(),
             Arg.Is(_knownVmName),
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
@@ -187,7 +192,6 @@ public class VmCreateCommandTests : SubscriptionCommandUnitTestsBase<VmCreateCom
         var conflictException = new RequestFailedException((int)HttpStatusCode.Conflict, "A VM with this name already exists");
 
         Service.CreateVmAsync(
-            Arg.Any<bool>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -234,7 +238,6 @@ public class VmCreateCommandTests : SubscriptionCommandUnitTestsBase<VmCreateCom
         var forbiddenException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
 
         Service.CreateVmAsync(
-            Arg.Any<bool>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -291,7 +294,6 @@ public class VmCreateCommandTests : SubscriptionCommandUnitTestsBase<VmCreateCom
             Tags: null);
 
         Service.CreateVmAsync(
-            Arg.Any<bool>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),

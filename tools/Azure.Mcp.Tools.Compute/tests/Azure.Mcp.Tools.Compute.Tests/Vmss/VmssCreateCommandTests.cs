@@ -7,6 +7,8 @@ using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -23,6 +25,11 @@ public class VmssCreateCommandTests : SubscriptionCommandUnitTestsBase<VmssCreat
     private readonly string _knownAdminUsername = "azureuser";
     private readonly string _knownPassword = "TestPassword123!";
     private readonly string _knownSshKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC...";
+
+    public VmssCreateCommandTests()
+    {
+        Services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration()));
+    }
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -61,7 +68,6 @@ public class VmssCreateCommandTests : SubscriptionCommandUnitTestsBase<VmssCreat
                 Tags: null);
 
             Service.CreateVmssAsync(
-                Arg.Any<bool>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -118,7 +124,6 @@ public class VmssCreateCommandTests : SubscriptionCommandUnitTestsBase<VmssCreat
             Tags: new Dictionary<string, string> { { "env", "test" } });
 
         Service.CreateVmssAsync(
-            Arg.Any<bool>(),
             _knownVmssName,
             _knownResourceGroup,
             _knownSubscription,
@@ -185,7 +190,6 @@ public class VmssCreateCommandTests : SubscriptionCommandUnitTestsBase<VmssCreat
         var conflictException = new RequestFailedException((int)HttpStatusCode.Conflict, "A VMSS with this name already exists");
 
         Service.CreateVmssAsync(
-            Arg.Any<bool>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -240,7 +244,6 @@ public class VmssCreateCommandTests : SubscriptionCommandUnitTestsBase<VmssCreat
             Tags: null);
 
         Service.CreateVmssAsync(
-            Arg.Any<bool>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),

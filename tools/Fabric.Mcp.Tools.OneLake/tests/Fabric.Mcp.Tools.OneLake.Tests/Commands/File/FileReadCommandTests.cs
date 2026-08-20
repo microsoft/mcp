@@ -5,15 +5,27 @@ using System.Net;
 using Fabric.Mcp.Tools.OneLake.Commands.File;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
+using ExtensionOptions = Microsoft.Extensions.Options.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.File;
 
 public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLakeService>
 {
+    private readonly ServerRuntimeConfiguration _serverRuntimeConfiguration;
+
+    public FileReadCommandTests()
+    {
+        _serverRuntimeConfiguration = new ServerRuntimeConfiguration();
+        Services.AddSingleton(ExtensionOptions.Create(_serverRuntimeConfiguration));
+    }
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
@@ -38,13 +50,25 @@ public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLa
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenLoggerIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(null!, Service));
+        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(null!, Service, ExtensionOptions.Create(new ServerRuntimeConfiguration())));
     }
 
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenOneLakeServiceIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, null!));
+        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, null!, ExtensionOptions.Create(new ServerRuntimeConfiguration())));
+    }
+
+    [Fact]
+    public void Constructor_ThrowsArgumentNullException_WhenConfigurationIsNull()
+    {
+        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, Service, null!));
+    }
+
+    [Fact]
+    public void Constructor_ThrowsArgumentNullException_WhenConfigurationValueIsNull()
+    {
+        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, null!, ExtensionOptions.Create<ServerRuntimeConfiguration>(null!)));
     }
 
     [Fact]
@@ -237,10 +261,7 @@ public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLa
     [Fact]
     public async Task ExecuteAsync_RejectsDownloadPath_WhenTransportIsHttp()
     {
-        Context = new()
-        {
-            RunningInRemoteMode = true
-        };
+        _serverRuntimeConfiguration.Transport = TransportTypes.Http;
 
         var response = await ExecuteCommandAsync(
             "--workspace-id", "workspace",

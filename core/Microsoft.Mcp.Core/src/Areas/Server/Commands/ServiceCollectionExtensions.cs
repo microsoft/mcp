@@ -67,6 +67,7 @@ public static partial class ServiceCollectionExtensions
             }
         }
 
+        services.AddSingleton(serverRuntimeConfiguration);
         services.AddSingleton(Options.Create(serverRuntimeConfiguration));
 
         // Register tool loader strategies

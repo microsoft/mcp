@@ -12,14 +12,20 @@ using Azure.ResourceManager.Network;
 using Azure.ResourceManager.Network.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Compute.Services;
 
-public class ComputeService(IAzureService azureService, ILogger<ComputeService> logger)
+public class ComputeService(
+    IAzureService azureService,
+    IOptions<ServerRuntimeConfiguration> configuration,
+    ILogger<ComputeService> logger)
     : BaseAzureResourceService(azureService), IComputeService
 {
+    private readonly ServerRuntimeConfiguration _configuration = configuration.Value;
     private readonly ILogger<ComputeService> _logger = logger;
 
     // Default VM size (D-series v5, approximately 2 vCPU and 8 GB RAM)
@@ -58,7 +64,6 @@ public class ComputeService(IAzureService azureService, ILogger<ComputeService> 
     };
 
     public async Task<VmCreateResult> CreateVmAsync(
-        bool runningInRemoteMode,
         string vmName,
         string resourceGroup,
         string subscription,
@@ -180,7 +185,7 @@ public class ComputeService(IAzureService azureService, ILogger<ComputeService> 
             // Only add SSH key if explicitly provided
             if (!string.IsNullOrEmpty(sshPublicKey))
             {
-                var resolvedSshKey = ResolveSshPublicKey(sshPublicKey, runningInRemoteMode);
+                var resolvedSshKey = ComputeUtilities.ResolveSshPublicKey(sshPublicKey, _configuration.IsHttpMode);
 
                 vmData.OSProfile.LinuxConfiguration.SshPublicKeys.Add(new()
                 {
@@ -710,7 +715,6 @@ public class ComputeService(IAzureService azureService, ILogger<ComputeService> 
     }
 
     public async Task<VmssCreateResult> CreateVmssAsync(
-        bool runningInRemoteMode,
         string vmssName,
         string resourceGroup,
         string subscription,
@@ -841,7 +845,7 @@ public class ComputeService(IAzureService azureService, ILogger<ComputeService> 
 
             if (!string.IsNullOrEmpty(sshPublicKey))
             {
-                var resolvedSshKey = ResolveSshPublicKey(sshPublicKey, runningInRemoteMode);
+                var resolvedSshKey = ComputeUtilities.ResolveSshPublicKey(sshPublicKey, _configuration.IsHttpMode);
 
                 vmssData.VirtualMachineProfile.OSProfile.LinuxConfiguration.SshPublicKeys.Add(new()
                 {
@@ -1860,58 +1864,5 @@ public class ComputeService(IAzureService azureService, ILogger<ComputeService> 
             // Return false to indicate the disk was not found (idempotent delete)
             return false;
         }
-    }
-
-    internal static readonly string[] s_validSshKeyPrefixes =
-    [
-        "ssh-rsa ",
-        "ssh-ed25519 ",
-        "ssh-dss ",
-        "ecdsa-sha2-nistp256 ",
-        "ecdsa-sha2-nistp384 ",
-        "ecdsa-sha2-nistp521 ",
-        "sk-ssh-ed25519@openssh.com ",
-        "sk-ecdsa-sha2-nistp256@openssh.com ",
-    ];
-
-    private static string ResolveSshPublicKey(string sshPublicKey, bool runningInRemoteMode)
-    {
-        if (!runningInRemoteMode)
-        {
-            // In stdio mode, allow resolving file paths for convenience
-            if (File.Exists(sshPublicKey))
-            {
-                return File.ReadAllText(sshPublicKey).Trim();
-            }
-        }
-        else
-        {
-            // In HTTP mode, file path resolution is not allowed for security
-            if (!IsValidSshPublicKeyContent(sshPublicKey))
-            {
-                var message = LooksLikeFilePath(sshPublicKey)
-                    ? "The provided SSH public key appears to be a file path. " +
-                      "In remote HTTP mode, file paths cannot be resolved on the server. " +
-                      "Please provide the SSH public key content directly (e.g., 'ssh-rsa AAAA...', 'ssh-ed25519 AAAA...')."
-                    : "The provided SSH public key does not appear to be valid key content. " +
-                      "Please provide the SSH public key content directly (e.g., 'ssh-rsa AAAA...', 'ssh-ed25519 AAAA...').";
-
-                throw new ArgumentException(message);
-            }
-        }
-
-        return sshPublicKey.Trim();
-    }
-
-    internal static bool LooksLikeFilePath(string value)
-    {
-        var trimmed = value.Trim();
-        return trimmed.Contains('/') || trimmed.Contains('\\') || trimmed.EndsWith(".pub", StringComparison.OrdinalIgnoreCase);
-    }
-
-    internal static bool IsValidSshPublicKeyContent(string value)
-    {
-        var trimmed = value.Trim();
-        return Array.Exists(s_validSshKeyPrefixes, prefix => trimmed.StartsWith(prefix, StringComparison.Ordinal));
     }
 }

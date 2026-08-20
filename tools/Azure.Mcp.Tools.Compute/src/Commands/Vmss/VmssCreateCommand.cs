@@ -9,6 +9,8 @@ using Azure.Mcp.Tools.Compute.Options.Vmss;
 using Azure.Mcp.Tools.Compute.Services;
 using Azure.Mcp.Tools.Compute.Utilities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
@@ -36,11 +38,16 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
     ReadOnly = false,
     Secret = true,
     LocalRequired = false)]
-public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger, IComputeService computeService, ISubscriptionResolver subscriptionResolver)
+public sealed class VmssCreateCommand(
+    ILogger<VmssCreateCommand> logger,
+    IComputeService computeService,
+    ISubscriptionResolver subscriptionResolver,
+    IOptions<ServerRuntimeConfiguration> configuration)
     : SubscriptionCommand<VmssCreateOptions, VmssCreateCommand.VmssCreateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<VmssCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
+    private readonly ServerRuntimeConfiguration _configuration = configuration?.Value ?? throw new ArgumentNullException(nameof(configuration));
 
     public override void ValidateOptions(VmssCreateOptions options, ValidationResult validationResult)
     {
@@ -71,6 +78,14 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger, IComput
                 "To use SSH, first read the user's public key file (e.g., ~/.ssh/id_rsa.pub or ~/.ssh/id_ed25519.pub) " +
                 "and pass the full key content to --ssh-public-key.");
         }
+
+        if (!isWindows && !string.IsNullOrEmpty(options.SshPublicKey) && _configuration.IsHttpMode)
+        {
+            if (!ComputeUtilities.ValidateHttpModeSshPublicKey(options.SshPublicKey, out var errorMessage))
+            {
+                validationResult.Errors.Add(errorMessage);
+            }
+        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VmssCreateOptions options, CancellationToken cancellationToken)
@@ -80,7 +95,6 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger, IComput
             context.Activity?.AddTag("subscription", options.Subscription);
 
             var result = await _computeService.CreateVmssAsync(
-                context.RunningInRemoteMode,
                 options.VmssName,
                 options.ResourceGroup,
                 options.Subscription!,

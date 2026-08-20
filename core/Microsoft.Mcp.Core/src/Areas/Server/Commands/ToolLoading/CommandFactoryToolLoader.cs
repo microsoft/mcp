@@ -166,8 +166,7 @@ public sealed class CommandFactoryToolLoader(
         var commandContext = new CommandContext(activity)
         {
             McpServer = request.Server,
-            ProgressToken = request.Params.ProgressToken,
-            RunningInRemoteMode = _configuration.Value.IsHttpMode
+            ProgressToken = request.Params.ProgressToken
         };
 
         // Check if this tool requires elicitation for sensitive or destructive operations

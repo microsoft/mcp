@@ -9,6 +9,8 @@ using Azure.Mcp.Tools.Compute.Options.Vm;
 using Azure.Mcp.Tools.Compute.Services;
 using Azure.Mcp.Tools.Compute.Utilities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
@@ -35,9 +37,14 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     ReadOnly = false,
     Secret = true,
     LocalRequired = false)]
-public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger, IComputeService computeService, ISubscriptionResolver subscriptionResolver)
+public sealed class VmCreateCommand(
+    ILogger<VmCreateCommand> logger,
+    IComputeService computeService,
+    ISubscriptionResolver subscriptionResolver,
+    IOptions<ServerRuntimeConfiguration> configuration)
     : SubscriptionCommand<VmCreateOptions, VmCreateCommand.VmCreateCommandResult>(subscriptionResolver)
 {
+    private readonly ServerRuntimeConfiguration _configuration = configuration.Value;
     private readonly ILogger<VmCreateCommand> _logger = logger;
     private readonly IComputeService _computeService = computeService;
 
@@ -68,6 +75,14 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger, IComputeSer
                 "To use SSH, first read the user's public key file (e.g., ~/.ssh/id_rsa.pub or ~/.ssh/id_ed25519.pub) " +
                 "and pass the full key content to --ssh-public-key.");
         }
+
+        if (!isWindows && !string.IsNullOrEmpty(options.SshPublicKey) && _configuration.IsHttpMode)
+        {
+            if (!ComputeUtilities.ValidateHttpModeSshPublicKey(options.SshPublicKey, out var errorMessage))
+            {
+                validationResult.Errors.Add(errorMessage);
+            }
+        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VmCreateOptions options, CancellationToken cancellationToken)
@@ -77,7 +92,6 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger, IComputeSer
             context.Activity?.AddTag("subscription", options.Subscription);
 
             var result = await _computeService.CreateVmAsync(
-                context.RunningInRemoteMode,
                 options.VmName,
                 options.ResourceGroup,
                 options.Subscription!,
