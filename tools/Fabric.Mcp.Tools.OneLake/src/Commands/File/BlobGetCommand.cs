@@ -14,7 +14,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 [CommandMetadata(
     Id = "75d6cb4c-4e81-4e69-a4ec-eca53a7dacd9",
-    Name = "download_file",
+    Name = "download-file",
     Title = "Download OneLake File",
     Description = "Downloads a file from OneLake storage. Use this when the user needs to retrieve file content or metadata. Returns base64 content, metadata, and text when applicable.",
     Destructive = false,
