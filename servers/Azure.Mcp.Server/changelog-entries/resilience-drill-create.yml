@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added the resilience drill create command for creating or updating zonal and regional drills in Azure service groups.

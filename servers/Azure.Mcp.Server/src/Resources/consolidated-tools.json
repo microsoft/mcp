@@ -45,7 +45,7 @@
     },
     {
       "name": "create_azure_resilience_management_resources",
-      "description": "Create or update Azure Resilience Management resources, including usage plans and usage plan enrollments, for Azure service groups.",
+      "description": "Create or update Azure Resilience Management resources, including usage plans, usage plan enrollments, and drills, for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -73,6 +73,7 @@
         }
       },
       "mappedToolList": [
+        "resilience_drill_create",
         "resilience_usageplan_create",
         "resilience_usageplan_enrollment_create"
       ]
