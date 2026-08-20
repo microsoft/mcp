@@ -201,15 +201,15 @@ changes:
 
 ## Preparing a New Release
 
-If you are a release manager, follow these steps before initiaiting a new release pipeline run:
+If you are a release manager, follow these steps before initiating a new release pipeline run:
 
-1. Preview the changelog section for the version you are about to release:*
+1. Preview the changelogs for the version you are about to release:
    ```powershell
    # Compile to the default Unreleased section for Azure MCP Server
    ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DryRun
    
-   # Or compile to a specific version
-   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -Version "<version>" -DryRun
+   # Or compile to a specific main and VS Code version
+   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -Version "<version>" -VsCodeVersion "<simplified-version>" -DryRun
    ```
 
 2. Compile entries and delete files:
@@ -217,8 +217,8 @@ If you are a release manager, follow these steps before initiaiting a new releas
    # Compile to Unreleased section and delete YAML files for Azure MCP Server
    ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DeleteFiles
 
-   # Or compile to a specific version
-   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -Version "<version>" -DeleteFiles
+   # Or compile to a specific main and VS Code version
+   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -Version "<version>" -VsCodeVersion "<simplified-version>" -DeleteFiles
    ```
 
    Notes:
@@ -226,25 +226,20 @@ If you are a release manager, follow these steps before initiaiting a new releas
    - If `-Version` is specified: Entries are compiled into that version section (must exist in `CHANGELOG.md`)
    - If no `-Version` is specified: Entries are compiled into the "Unreleased" section at the top
    - If no "Unreleased" section exists and no `-Version` is specified: A new "Unreleased" section is created with the next version number
+   - If `-VsCodeVersion` is omitted: The VS Code version is derived automatically (for example, `3.0.0-beta.27` becomes `3.0.27`)
+   - Beta releases are marked `(pre-release)` in the VS Code changelog; stable releases are not
+   - The VS Code changelog is synchronized automatically
+   - The main changelog's `(Unreleased)` placeholder is replaced with today's date
 
-3. Sync the VS Code extension CHANGELOG (if applicable):
-   ```powershell
-   # Preview the sync
-   ./eng/scripts/Sync-VsCodeChangelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DryRun
-   
-   # Apply the sync
-   ./eng/scripts/Sync-VsCodeChangelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md"
-   ```
-
-4. Update release date in CHANGELOG.md
-5. Commit and initiate the release process
+3. Review both changelogs for reader-friendly wording and format commands and code references with backticks.
+4. Commit and initiate the release process
 
 ### Compiled Output
 
 When compiled, entries are grouped by section and subsection. Empty sections will not be included.
 
 ```markdown
-## 2.0.0-beta.3 (Unreleased)
+## 2.0.0-beta.3 (<release-date>)
 
 ### Features Added
 
