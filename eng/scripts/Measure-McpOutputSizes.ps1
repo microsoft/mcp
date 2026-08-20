@@ -25,7 +25,8 @@
     The build configuration to use. Defaults to `Debug`.
 
 .PARAMETER SkipBuild
-    Skip the build step and use the existing test binaries.
+    Skip the build step and use the existing binaries. Implied (and not required) when
+    -ServerExecutable is supplied, since that server binary isn't built by this script.
 
 .PARAMETER Clean
     Remove the output directory before running so stale artifacts are not mixed with
@@ -34,6 +35,15 @@
 .PARAMETER LearnResponseThresholdUtf8Bytes
     Include every learn response over this UTF-8 byte threshold in the summary.
     Defaults to 45000.
+
+.PARAMETER ServerExecutable
+    Path to an already-built or published azmcp server executable to measure, instead of
+    building and using the local servers/Azure.Mcp.Server/src project. Use this to measure
+    a previously released version of the server (e.g. a binary extracted from a release
+    asset or installed via a package manager) so its output sizes can be diffed against
+    the current source tree. When supplied, the local server project is not built or
+    resolved; only the McpOutputSizeMeasurer tool is still built (unless -SkipBuild is
+    also passed).
 
 .EXAMPLE
     ./eng/scripts/Measure-McpOutputSizes.ps1
@@ -44,6 +54,13 @@
     ./eng/scripts/Measure-McpOutputSizes.ps1 -SkipBuild -Clean
 
     Reuses the existing build, clears previous results, then measures and summarizes.
+
+.EXAMPLE
+    ./eng/scripts/Measure-McpOutputSizes.ps1 -ServerExecutable C:\releases\azmcp-1.2.3\azmcp.exe -OutputDirectory TestResults/released-1.2.3
+
+    Measures a previously released azmcp build (e.g. downloaded/extracted from a GitHub
+    release) instead of the local source tree, writing results to a separate directory so
+    they can be compared against a current-source run.
 #>
 
 [CmdletBinding()]
@@ -52,7 +69,8 @@ param(
     [string]$Configuration = 'Debug',
     [switch]$SkipBuild,
     [switch]$Clean,
-    [int]$LearnResponseThresholdUtf8Bytes = 45000
+    [int]$LearnResponseThresholdUtf8Bytes = 45000,
+    [string]$ServerExecutable
 )
 
 $ErrorActionPreference = 'Stop'
@@ -76,14 +94,26 @@ if ($Clean -and (Test-Path -LiteralPath $OutputDirectory)) {
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
 $reportPath = Join-Path $OutputDirectory 'mcp-output-size.json'
 
+if ($ServerExecutable) {
+    $ServerExecutable = [IO.Path]::GetFullPath($ServerExecutable)
+    if (!(Test-Path -LiteralPath $ServerExecutable -PathType Leaf)) {
+        Write-Error "Server executable not found at $ServerExecutable."
+        exit 1
+    }
+}
+
 if ($SkipBuild) {
     Write-Host "Skipping build."
 } else {
-    Write-Host "Building $serverProject ($Configuration)..."
-    dotnet build $serverProject --configuration $Configuration
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Build failed with exit code $LASTEXITCODE."
-        exit $LASTEXITCODE
+    if ($ServerExecutable) {
+        Write-Host "Using pre-built server executable $ServerExecutable; skipping local server build."
+    } else {
+        Write-Host "Building $serverProject ($Configuration)..."
+        dotnet build $serverProject --configuration $Configuration
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Build failed with exit code $LASTEXITCODE."
+            exit $LASTEXITCODE
+        }
     }
 
     Write-Host "Building $measurerProject ($Configuration)..."
@@ -94,10 +124,14 @@ if ($SkipBuild) {
     }
 }
 
-$serverExecutable = Join-Path $serverProject "bin/$Configuration/net10.0/azmcp$(if ($IsWindows) { '.exe' } else { '' })"
-if (!(Test-Path -LiteralPath $serverExecutable -PathType Leaf)) {
-    Write-Error "Server executable not found at $serverExecutable. Run without -SkipBuild to build it first."
-    exit 1
+if ($ServerExecutable) {
+    $serverExecutable = $ServerExecutable
+} else {
+    $serverExecutable = Join-Path $serverProject "bin/$Configuration/net10.0/azmcp$(if ($IsWindows) { '.exe' } else { '' })"
+    if (!(Test-Path -LiteralPath $serverExecutable -PathType Leaf)) {
+        Write-Error "Server executable not found at $serverExecutable. Run without -SkipBuild to build it first."
+        exit 1
+    }
 }
 
 $measurerExecutable = Join-Path $measurerProject "bin/$Configuration/net10.0/McpOutputSizeMeasurer$(if ($IsWindows) { '.exe' } else { '' })"
