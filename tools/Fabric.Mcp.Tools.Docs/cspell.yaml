@@ -5,11 +5,17 @@
 # Cross-cutting terms should go in the root cspell.yaml instead.
 version: "0.2"
 import:
-  - ../../cspell.yaml
+  - ../../.vscode/cspell.json
 ignorePaths:
   - src/Resources/**
 words:
   - dataagent
+  - dbtjob
   - heatmaps
+  - hlscohort
   - myfilesystem
+  - orgapp
+  - orgappaudience
   - setvariable
+  - sparkjob
+  - sparkjobdefinition

@@ -3,6 +3,37 @@
 
 
 
+
+
+
+## 3.0.36 (2026-08-18) (pre-release)
+
+### Added
+
+- Added the 'azmcp resilience drill get' command to list or retrieve drill details for a service group. [[#3232](https://github.com/microsoft/mcp/pull/3232)]
+- Added the 'azmcp resilience drill resource get' command to list or retrieve resources associated with a drill. [[#3232](https://github.com/microsoft/mcp/pull/3232)]
+
+### Changed
+
+- **Breaking:** Tool calls with unknown parameters are now explicitly rejected. [[#3282](https://github.com/microsoft/mcp/pull/3282)]
+
+## 3.0.35 (2026-08-13) (pre-release)
+
+### Changed
+
+- Improved `foundry` and `foundryexensions` namespace-level tool descriptions.
+
+## 3.0.34 (2026-08-11) (pre-release)
+
+### Added
+
+- Added the 'azmcp resilience usageplan create' command to create or update a resilience usage plan in a resource group, including its plan type. [[#3166](https://github.com/microsoft/mcp/pull/3166)]
+- Added the 'azmcp resilience usageplan enrollment create' command to create or update an enrollment under a resilience usage plan, associating it with a service group. [[#3166](https://github.com/microsoft/mcp/pull/3166)]
+
+### Fixed
+
+- Improved the Azure Quick Review (azqr) tool, extension namespace, and consolidated tool descriptions so that prompts asking to scan a subscription for compliance issues or compliance recommendations reliably select the `extension_azqr` tool in All and Namespace modes. [[#3134](https://github.com/microsoft/mcp/pull/3134)]
+
 ## 3.0.33 (2026-08-06) (pre-release)
 
 ### Added
@@ -848,7 +879,7 @@ For a complete history of changes included in this release, see entries for vers
   - `orchestrator-next`
   - `send-brownfield-analysis`
 - **Breaking:** Narrowed the `subscription list` command response model to include only (`subscriptionId`, `displayName`, `state`, `tenantId`, `isDefault`) instead of the full Azure SDK `SubscriptionData` type. [[#1974](https://github.com/microsoft/mcp/pull/1974)]
-- Improved tool descriptions to enahnce LLM selection accuracy for the following tools: [[#2131](https://github.com/microsoft/mcp/pull/2131)]
+- Improved tool descriptions to enhance LLM selection accuracy for the following tools: [[#2131](https://github.com/microsoft/mcp/pull/2131)]
   - `extension_azqr`
   - `extension_cli_generate`
   - `extension_cli_install`

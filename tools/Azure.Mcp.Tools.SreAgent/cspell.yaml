@@ -5,5 +5,24 @@
 # Cross-cutting terms should go in the root cspell.yaml instead.
 version: "0.2"
 import:
-  - ../../cspell.yaml
-words: []
+  - ../../.vscode/cspell.json
+words:
+  - apikey
+  - azuresre
+  - diagnos
+  - incidentplayground
+  - jabc
+  - kustotool
+  - linktool
+  - mcpfb
+  - myagent
+  - mycommand
+  - myskill
+  - mysubagent
+  - mytool
+  - nlcjpw
+  - servicenowservices
+  - testconnection
+  - testskill
+  - testsubagent
+  - testtool

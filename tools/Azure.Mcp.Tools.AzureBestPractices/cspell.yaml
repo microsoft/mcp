@@ -5,7 +5,12 @@
 # Cross-cutting terms should go in the root cspell.yaml instead.
 version: "0.2"
 import:
-  - ../../cspell.yaml
+  - ../../.vscode/cspell.json
 words:
   - apphost
+  - checkpointing
   - codegen
+  - deepseek
+  - magentic
+  - nosniff
+  - quickstarts

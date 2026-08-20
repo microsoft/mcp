@@ -5,5 +5,44 @@
 # Cross-cutting terms should go in the root cspell.yaml instead.
 version: "0.2"
 import:
-  - ../../cspell.yaml
-words: []
+  - ../../.vscode/cspell.json
+words:
+  - aaaab
+  - aaaae
+  - aaaai
+  - datadisk
+  - deldbl
+  - delget
+  - delvm
+  - delvms
+  - eaaaa
+  - exactdisk
+  - galleryimageversionid
+  - lnxvmss
+  - maaacbaj
+  - mysnapshot
+  - newestvm
+  - nistp
+  - noby
+  - nonexistentdisk
+  - nosize
+  - oldestvm
+  - osdisk
+  - otherdisk
+  - securedisk
+  - swingbench
+  - testdatadisk
+  - testdisk
+  - testkey
+  - testvm
+  - uploaddisk
+  - uploadnosize
+  - uploadsec
+  - upsize
+  - upsku
+  - uptag
+  - vmssipconfig
+  - vmssnic
+  - winvm
+  - wxsbw
+  - ymlu

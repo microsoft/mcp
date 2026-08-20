@@ -5,7 +5,7 @@
 # Cross-cutting terms should go in the root cspell.yaml instead.
 version: "0.2"
 import:
-  - ../../cspell.yaml
+  - ../../.vscode/cspell.json
 words:
   - accountid
   - accounturl
@@ -20,7 +20,6 @@ words:
   - authorizationcode
   - availabilitystatuses
   - azureasyncoperationuri
-  - behaviour
   - blobservices
   - buildversion
   - certificateblob
@@ -41,7 +40,6 @@ words:
   - datashareuri
   - defaultresourcegroup
   - deploymenterrors
-  - deploymentid
   - destinationstampname
   - discoveryurl
   - displaystatus

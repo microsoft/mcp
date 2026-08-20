@@ -170,9 +170,7 @@ public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
             "search_index_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
-                { "service", Settings.ResourceBaseName },
-                { "resource-group", Settings.ResourceGroupName }
+                { "service", Settings.ResourceBaseName }
             });
 
         var indexesArray = result.AssertProperty("indexes");
@@ -186,9 +184,7 @@ public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
             "search_index_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "service", Settings.ResourceBaseName },
-                { "resource-group", Settings.ResourceGroupName },
                 { "index", "products" }
             });
 

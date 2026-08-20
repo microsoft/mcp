@@ -5,7 +5,7 @@
 # Cross-cutting terms should go in the root cspell.yaml instead.
 version: "0.2"
 import:
-  - ../../cspell.yaml
+  - ../../.vscode/cspell.json
 words:
   - australiasoutheast
   - brazilsouth
@@ -31,10 +31,13 @@ words:
   - norwayeast
   - norwaywest
   - polandcentral
+  - regionalvcorequotaforsqldbanddw
+  - serverquota
   - southafricanorth
   - southcentralus
   - southindia
   - spaincentral
+  - subscriptionfreedatabasecount
   - swedensouth
   - switzerlandnorth
   - switzerlandwest

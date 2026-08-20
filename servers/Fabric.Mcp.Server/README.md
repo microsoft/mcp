@@ -102,7 +102,7 @@ Use one of the following options to configure your `mcp.json`:
 <!-- remove-section: start npm remove_dotnet_config_sub_section -->
 <!-- remove-section: start nuget remove_dotnet_config_sub_header -->
 #### Option 1: Configure using .NET (build from source)<!-- remove-section: end remove_dotnet_config_sub_header -->
-- You must have [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) or later installed.
+- You must have the latest [.NET 10 SDK LTS](https://dotnet.microsoft.com/download/dotnet) installed.
   To verify the .NET version, run: `dotnet --version`
 - Clone and build the repository:
 
@@ -136,7 +136,7 @@ Use one of the following options to configure your `mcp.json`:
 <!-- remove-section: start nuget remove_node_config_sub_section -->
 <!-- remove-section: start npm remove_node_config_sub_header -->
 #### Option 2: Configure using Node.js (npm/npx)<!-- remove-section: end remove_node_config_sub_header -->
-- To use Fabric MCP server from node one must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
+- To use Fabric MCP server from node one must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend the latest Node.js LTS version. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
 -  Configure the `mcp.json` file with the following:
 
     ```json
@@ -248,54 +248,54 @@ The Fabric MCP Server exposes tools organized into three categories:
 
 | Tool Name | Description |
 |-----------|-------------|
-| `onelake_list_workspaces` | Lists available Microsoft Fabric workspaces. |
-| `onelake_list_items` | Lists workspace items with high-level metadata. |
-| `onelake_list_items_dfs` | Lists Fabric items via the DFS endpoint. |
-| `onelake_list_files` | Lists files using the hierarchical file-list endpoint. |
-| `onelake_download_file` | Downloads a OneLake file. |
-| `onelake_upload_file` | Uploads a file to OneLake storage. |
-| `onelake_delete_file` | Deletes a file from OneLake storage. |
-| `onelake_create_directory` | Creates a directory via the DFS endpoint. |
-| `onelake_delete_directory` | Deletes a directory (optionally recursive). |
-| `onelake_get_table_config` | Retrieves table API configuration for a workspace item. |
-| `onelake_list_table_namespaces` | Lists table namespaces (schemas) exposed through the table API. |
-| `onelake_get_table_namespace` | Retrieves metadata for a specific namespace. |
-| `onelake_list_tables` | Lists tables published within a namespace. |
-| `onelake_get_table` | Retrieves the definition for a specific table. |
+| `onelake_list-workspaces` | Lists available Microsoft Fabric workspaces. |
+| `onelake_list-items` | Lists workspace items with high-level metadata. |
+| `onelake_list-items-dfs` | Lists Fabric items via the DFS endpoint. |
+| `onelake_list-files` | Lists files using the hierarchical file-list endpoint. |
+| `onelake_download-file` | Downloads a OneLake file. |
+| `onelake_upload-file` | Uploads a file to OneLake storage. |
+| `onelake_delete-file` | Deletes a file from OneLake storage. |
+| `onelake_create-directory` | Creates a directory via the DFS endpoint. |
+| `onelake_delete-directory` | Deletes a directory (optionally recursive). |
+| `onelake_get-table-config` | Retrieves table API configuration for a workspace item. |
+| `onelake_list-table-namespaces` | Lists table namespaces (schemas) exposed through the table API. |
+| `onelake_get-table-namespace` | Retrieves metadata for a specific namespace. |
+| `onelake_list-tables` | Lists tables published within a namespace. |
+| `onelake_get-table` | Retrieves the definition for a specific table. |
 
 ### OneLake Security — Data Access Roles
 
 | Tool Name | Description |
 |-----------|-------------|
-| `onelake_list_data_access_roles` | Lists all data access roles defined on a single item. |
-| `onelake_get_data_access_role` | Gets the full definition of a single data access role (members, permissions, decision rules). |
-| `onelake_create_or_update_data_access_role` | Upserts a single data access role on a single item. |
-| `onelake_delete_data_access_role` | Deletes a single data access role from an item. |
+| `onelake_list-data-access-roles` | Lists all data access roles defined on a single item. |
+| `onelake_get-data-access-role` | Gets the full definition of a single data access role (members, permissions, decision rules). |
+| `onelake_create-or-update-data-access-role` | Upserts a single data access role on a single item. |
+| `onelake_delete-data-access-role` | Deletes a single data access role from an item. |
 
 ### OneLake Shortcuts
 
 | Tool Name | Description |
 |-----------|-------------|
-| `onelake_list_shortcuts` | Lists shortcuts defined within an item. Hides DW-managed shortcuts by default (`--include-managed` to show). |
-| `onelake_get_shortcut` | Gets the properties of a single shortcut. |
-| `onelake_create_shortcut_onelake` | Creates a shortcut pointing to another OneLake location. |
-| `onelake_create_shortcut_adls_gen2` | Creates a shortcut pointing to Azure Data Lake Storage Gen2. |
-| `onelake_create_shortcut_amazon_s3` | Creates a shortcut pointing to Amazon S3. |
-| `onelake_create_shortcut_azure_blob` | Creates a shortcut pointing to Azure Blob Storage. |
-| `onelake_create_shortcut_gcs` | Creates a shortcut pointing to Google Cloud Storage. |
-| `onelake_create_shortcut_s3_compatible` | Creates a shortcut pointing to S3-compatible storage. |
-| `onelake_create_shortcut_dataverse` | Creates a shortcut pointing to a Dataverse environment. |
-| `onelake_create_shortcut_onedrive_sharepoint` | Creates a shortcut pointing to OneDrive/SharePoint Online. |
-| `onelake_delete_shortcut` | Deletes a single shortcut from an item (preserves destination data). |
-| `onelake_reset_shortcut_cache` | Drops cached shortcut reads, forcing re-resolution from destination. |
+| `onelake_list-shortcuts` | Lists shortcuts defined within an item. Hides DW-managed shortcuts by default (`--include-managed` to show). |
+| `onelake_get-shortcut` | Gets the properties of a single shortcut. |
+| `onelake_create-shortcut-onelake` | Creates a shortcut pointing to another OneLake location. |
+| `onelake_create-shortcut-adls-gen2` | Creates a shortcut pointing to Azure Data Lake Storage Gen2. |
+| `onelake_create-shortcut-amazon-s3` | Creates a shortcut pointing to Amazon S3. |
+| `onelake_create-shortcut-azure-blob` | Creates a shortcut pointing to Azure Blob Storage. |
+| `onelake_create-shortcut-gcs` | Creates a shortcut pointing to Google Cloud Storage. |
+| `onelake_create-shortcut-s3-compatible` | Creates a shortcut pointing to S3-compatible storage. |
+| `onelake_create-shortcut-dataverse` | Creates a shortcut pointing to a Dataverse environment. |
+| `onelake_create-shortcut-onedrive-sharepoint` | Creates a shortcut pointing to OneDrive/SharePoint Online. |
+| `onelake_delete-shortcut` | Deletes a single shortcut from an item (preserves destination data). |
+| `onelake_reset-shortcut-cache` | Drops cached shortcut reads, forcing re-resolution from destination. |
 
 ### OneLake Settings
 
 | Tool Name | Description |
 |-----------|-------------|
-| `onelake_get_settings` | Gets OneLake settings for a workspace (diagnostics + immutability policy). |
-| `onelake_modify_diagnostics` | Modifies diagnostic logging configuration (status, destination lakehouse) at workspace scope. |
-| `onelake_modify_immutability_policy` | Modifies the workspace-level OneLake immutability policy (scope, retention days). |
+| `onelake_get-settings` | Gets OneLake settings for a workspace (diagnostics + immutability policy). |
+| `onelake_modify-diagnostics` | Modifies diagnostic logging configuration (status, destination lakehouse) at workspace scope. |
+| `onelake_modify-immutability-policy` | Modifies the workspace-level OneLake immutability policy (scope, retention days). |
 
 ### Core Fabric Operations
 
