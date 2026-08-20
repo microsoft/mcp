@@ -33,7 +33,10 @@ logs a warning and keeps going so that as much cleanup as possible is completed.
 The resource group containing the Azure Backup test vaults.
 #>
 
-[CmdletBinding(SupportsShouldProcess = $true)]
+# NOTE: SupportsShouldProcess is intentionally not declared. The destructive
+# operations below are performed unconditionally as part of teardown, so
+# advertising -WhatIf / -Confirm without honoring them would be misleading.
+[CmdletBinding()]
 param (
     [Parameter(Mandatory = $true)]
     [string] $ResourceGroupName,
@@ -187,6 +190,10 @@ foreach ($vault in $dppVaults) {
     Write-Info "Processing Data Protection Backup Vault '$($vault.Name)'."
 
     # 1. Disable soft delete (best-effort; some tenants lock the vault into "AlwaysOn").
+    # Note: -SoftDeleteRetentionDurationInDay is intentionally omitted here. The
+    # service validates retention against a 14-180 day range, so passing 0 (or
+    # any value < 14) alongside SoftDeleteState=Off is rejected and would leave
+    # soft delete enabled.
     try {
         $currentState = $vault.SoftDeleteState
         if ($currentState -and $currentState -ne 'Off' -and $currentState -ne 'AlwaysOn') {
@@ -195,7 +202,6 @@ foreach ($vault in $dppVaults) {
                 -ResourceGroupName $ResourceGroupName `
                 -VaultName $vault.Name `
                 -SoftDeleteState 'Off' `
-                -SoftDeleteRetentionDurationInDay 0 `
                 -ErrorAction Stop | Out-Null
         } elseif ($currentState -eq 'AlwaysOn') {
             Write-Skip "  DPP vault '$($vault.Name)' has AlwaysOn soft delete (locked); skipping."
