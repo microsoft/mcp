@@ -3,6 +3,6 @@
 
 namespace Fabric.Mcp.Tools.Docs.Models;
 
-public record FabricWorkloadPublicApi(
+public record FabricPublicApi(
     string apiSpecification,
     IDictionary<string, string> apiModelDefinitions);

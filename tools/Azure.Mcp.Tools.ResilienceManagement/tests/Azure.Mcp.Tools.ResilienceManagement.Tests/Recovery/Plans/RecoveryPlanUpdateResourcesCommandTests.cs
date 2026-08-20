@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
-using Azure.Mcp.Tools.ResilienceManagement.Options.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Azure.ResourceManager.ResilienceManagement.Models;
 using Microsoft.Mcp.Core.Options;
@@ -31,7 +30,7 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = Command.GetCommand();
-        Assert.Equal("update-resources", command.Name);
+        Assert.Equal("update", command.Name);
         Assert.NotNull(command.Description);
         Assert.Contains("includes and configures a resource", command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("excludes it from recovery operations", command.Description, StringComparison.OrdinalIgnoreCase);
@@ -54,21 +53,6 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
     }
 
     [Fact]
-    public void CreateContent_RejectsUtf8PayloadOverOneMegabyte()
-    {
-        var options = new RecoveryPlanUpdateResourcesOptions
-        {
-            ServiceGroup = "sg1",
-            RecoveryPlan = "plan1",
-            ResourcesToUpdate = $"[\"{new string('é', 524_288)}\"]"
-        };
-
-        var exception = Assert.Throws<ArgumentException>(() => _ = RecoveryPlanUpdateResourcesCommand.CreateContent(options));
-
-        Assert.Contains("must not exceed 1 MB", exception.Message);
-    }
-
-    [Fact]
     public async Task ExecuteAsync_RejectsInvalidRecoveryPlanName()
     {
         var response = await ExecuteCommandAsync(
@@ -79,6 +63,25 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("5 to 24 characters", response.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("ASCII letters, numbers, or hyphens", response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsInvalidServiceGroupName()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "../sg1",
+            "--recovery-plan", "plan1",
+            "--resources-to-update", ResourcesToUpdateWithoutId);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("service group name", response.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.DidNotReceive().UpdateRecoveryPlanResourcesAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<UpdateRecoveryResourcesContent>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

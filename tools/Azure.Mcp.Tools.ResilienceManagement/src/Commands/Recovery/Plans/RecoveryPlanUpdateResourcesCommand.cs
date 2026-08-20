@@ -3,7 +3,6 @@
 
 using System.ClientModel.Primitives;
 using System.Net;
-using System.Text;
 using System.Text.Json;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
@@ -18,7 +17,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 
 [CommandMetadata(
     Id = "ace3cbba-d572-47dc-a452-ab2cb349e17b",
-    Name = "update-resources",
+    Name = "update",
     Title = "Update Resilience Recovery Plan Resources",
     Description = """
         Updates recovery resources in a resilience recovery plan in an Azure service group: includes and configures a resource
@@ -44,6 +43,7 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
     {
         base.ValidateOptions(options, validationResult);
 
+        RecoveryPlanValidation.ValidateServiceGroup(options.ServiceGroup, validationResult);
         RecoveryPlanValidation.ValidateName(options.RecoveryPlan, validationResult);
 
         try
@@ -91,8 +91,7 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
             throw new ArgumentException("Specify at least one of --resources-to-update or --resources-to-remove.");
         }
 
-        if ((options.ResourcesToUpdate is { } updatesJson && Encoding.UTF8.GetByteCount(updatesJson) > MaxPayloadLength) ||
-            (options.ResourcesToRemove is { } removalsJson && Encoding.UTF8.GetByteCount(removalsJson) > MaxPayloadLength))
+        if (options.ResourcesToUpdate?.Length > MaxPayloadLength || options.ResourcesToRemove?.Length > MaxPayloadLength)
         {
             throw new ArgumentException("Each recovery resource JSON payload must not exceed 1 MB.");
         }

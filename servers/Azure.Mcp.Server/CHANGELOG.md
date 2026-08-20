@@ -2,10 +2,21 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
+## 3.0.0-beta.37 (Unreleased)
+
+### Features Added
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
 ## 3.0.0-beta.36 (2026-08-18)
 
 ### Features Added
 
+- `azurebackup vault get` now accepts an optional `--expand` parameter (comma-separated: `security`, `mua`, `all`) to include extended vault posture fields (encryption key URI, cross-region restore state, MUA resource guard link). For DPP vaults, `encryptionState` is also returned from the service. RSV vaults omit `encryptionState` because the Recovery Services vault GET API does not return an explicit state field. Default output shape is unchanged.
 - Added the 'azmcp resilience drill get' command to list or retrieve drill details for a service group. [[#3232](https://github.com/microsoft/mcp/pull/3232)]
 - Added the 'azmcp resilience drill resource get' command to list or retrieve resources associated with a drill. [[#3232](https://github.com/microsoft/mcp/pull/3232)]
 

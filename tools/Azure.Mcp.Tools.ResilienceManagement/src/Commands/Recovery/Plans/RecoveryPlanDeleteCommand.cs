@@ -31,6 +31,7 @@ public sealed class RecoveryPlanDeleteCommand(ILogger<RecoveryPlanDeleteCommand>
     public override void ValidateOptions(RecoveryPlanDeleteOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        RecoveryPlanValidation.ValidateServiceGroup(options.ServiceGroup, validationResult);
         RecoveryPlanValidation.ValidateName(options.RecoveryPlan, validationResult);
     }
 

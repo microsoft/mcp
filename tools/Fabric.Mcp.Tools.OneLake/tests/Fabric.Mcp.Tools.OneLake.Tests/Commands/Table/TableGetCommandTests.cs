@@ -18,7 +18,7 @@ public class TableGetCommandTests : CommandUnitTestsBase<TableGetCommand, IOneLa
     [Fact]
     public void Constructor_InitializesMetadata()
     {
-        Assert.Equal("get_table", Command.Name);
+        Assert.Equal("get-table", Command.Name);
         Assert.True(Command.Metadata.ReadOnly);
         Assert.True(Command.Metadata.Idempotent);
         Assert.False(Command.Metadata.Destructive);
@@ -27,7 +27,7 @@ public class TableGetCommandTests : CommandUnitTestsBase<TableGetCommand, IOneLa
     [Fact]
     public void GetCommand_ReturnsConfiguredCommand()
     {
-        Assert.Equal("get_table", CommandDefinition.Name);
+        Assert.Equal("get-table", CommandDefinition.Name);
         Assert.NotEmpty(CommandDefinition.Options);
     }
 

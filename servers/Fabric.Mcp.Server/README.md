@@ -24,7 +24,7 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
   - [Getting Started](#getting-started)
   - [What can you do with the Fabric MCP Server?](#what-can-you-do-with-the-fabric-mcp-server)
     - [Catalog Discovery](#catalog-discovery)
-    - [Fabric Workloads & APIs](#fabric-workloads--apis)
+    - [Fabric Item Types & APIs](#fabric-item-types--apis)
     - [Resource Definitions & Schemas](#resource-definitions--schemas)
     - [Best Practices & Examples](#best-practices--examples)
     - [Development Workflows](#development-workflows)
@@ -50,7 +50,7 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
 **Microsoft Fabric MCP Server** gives your AI agents the knowledge they need to generate robust, production-ready code for Microsoft Fabric—all without directly accessing your environment.
 
 Key capabilities:
-- **Complete API Context**: Full OpenAPI specifications for all supported Fabric workloads
+- **Complete API Context**: Full OpenAPI specifications for all supported Fabric item types
 - **Item Definition Knowledge**: JSON schemas for every Fabric item type (Lakehouses, pipelines, semantic models, notebooks, etc.)
 - **Built-in Best Practices**: Embedded guidance on pagination, error handling, and recommended patterns
 - **Local-First Security**: Runs entirely on your machine—never connects to your Fabric environment
@@ -181,7 +181,7 @@ Use one of the following options to configure your `mcp.json`:
 1. Open GitHub Copilot in [VS Code](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode) and switch to Agent mode.
 1. Click `refresh` on the tools list
     - You should see the Fabric MCP Server in the list of tools
-1. Try a prompt that uses Fabric context, such as `What Fabric workload types are available?`
+1. Try a prompt that uses Fabric context, such as `What Fabric item types are available?`
     - The agent should be able to use the Fabric MCP Server tools to complete your query
 1. Check out the [Microsoft Fabric documentation](https://learn.microsoft.com/fabric/) and review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md) for commonly asked questions
 1. We're building this in the open. Your feedback is much appreciated!
@@ -198,9 +198,9 @@ The Fabric MCP Server supercharges your agents with Microsoft Fabric context. He
 * "Discover all Report items in the catalog and show which workspace they live in"
 * "Filter the catalog to Warehouse and Notebook items"
 
-### Fabric Workloads & APIs
+### Fabric Item Types & APIs
 
-* "What are the available Fabric workload types I can work with?"
+* "What are the available Fabric item types I can work with?"
 * "Show me the OpenAPI operations for 'notebook' and give a sample creation body"
 * "Get the platform-level API specifications for Microsoft Fabric"
 * "List all supported Fabric item types"
@@ -237,65 +237,65 @@ The Fabric MCP Server exposes tools organized into three categories:
 
 | Tool Name | Description |
 |-----------|-------------|
-| `docs_workloads` | Lists Fabric workload types that have public API specifications available. |
-| `docs_workload-api-spec` | Retrieves the complete OpenAPI specification for a specific Fabric workload. |
+| `docs_list-item-types` | Lists the Fabric item types that have public API specifications available, plus the non-item API areas (platform, admin, spark, realTimeIntelligence). |
+| `docs_item-api-spec` | Retrieves the complete OpenAPI specification for a specific Fabric item type. |
 | `docs_platform-api-spec` | Retrieves the OpenAPI specification for core Fabric platform APIs. |
-| `docs_item-definitions` | Retrieves JSON schema definitions for items in a Fabric workload API. |
+| `docs_item-definitions` | Retrieves the JSON schema definition for a Fabric item type. |
 | `docs_best-practices` | Retrieves best practice documentation and guidance for a specific topic. |
-| `docs_api-examples` | Retrieves example API request/response files for a specific workload. |
+| `docs_api-examples` | Retrieves example API request/response files for a specific item type. |
 
 ### OneLake Data Operations
 
 | Tool Name | Description |
 |-----------|-------------|
-| `onelake_list_workspaces` | Lists available Microsoft Fabric workspaces. |
-| `onelake_list_items` | Lists workspace items with high-level metadata. |
-| `onelake_list_items_dfs` | Lists Fabric items via the DFS endpoint. |
-| `onelake_list_files` | Lists files using the hierarchical file-list endpoint. |
-| `onelake_download_file` | Downloads a OneLake file. |
-| `onelake_upload_file` | Uploads a file to OneLake storage. |
-| `onelake_delete_file` | Deletes a file from OneLake storage. |
-| `onelake_create_directory` | Creates a directory via the DFS endpoint. |
-| `onelake_delete_directory` | Deletes a directory (optionally recursive). |
-| `onelake_get_table_config` | Retrieves table API configuration for a workspace item. |
-| `onelake_list_table_namespaces` | Lists table namespaces (schemas) exposed through the table API. |
-| `onelake_get_table_namespace` | Retrieves metadata for a specific namespace. |
-| `onelake_list_tables` | Lists tables published within a namespace. |
-| `onelake_get_table` | Retrieves the definition for a specific table. |
+| `onelake_list-workspaces` | Lists available Microsoft Fabric workspaces. |
+| `onelake_list-items` | Lists workspace items with high-level metadata. |
+| `onelake_list-items-dfs` | Lists Fabric items via the DFS endpoint. |
+| `onelake_list-files` | Lists files using the hierarchical file-list endpoint. |
+| `onelake_download-file` | Downloads a OneLake file. |
+| `onelake_upload-file` | Uploads a file to OneLake storage. |
+| `onelake_delete-file` | Deletes a file from OneLake storage. |
+| `onelake_create-directory` | Creates a directory via the DFS endpoint. |
+| `onelake_delete-directory` | Deletes a directory (optionally recursive). |
+| `onelake_get-table-config` | Retrieves table API configuration for a workspace item. |
+| `onelake_list-table-namespaces` | Lists table namespaces (schemas) exposed through the table API. |
+| `onelake_get-table-namespace` | Retrieves metadata for a specific namespace. |
+| `onelake_list-tables` | Lists tables published within a namespace. |
+| `onelake_get-table` | Retrieves the definition for a specific table. |
 
 ### OneLake Security — Data Access Roles
 
 | Tool Name | Description |
 |-----------|-------------|
-| `onelake_list_data_access_roles` | Lists all data access roles defined on a single item. |
-| `onelake_get_data_access_role` | Gets the full definition of a single data access role (members, permissions, decision rules). |
-| `onelake_create_or_update_data_access_role` | Upserts a single data access role on a single item. |
-| `onelake_delete_data_access_role` | Deletes a single data access role from an item. |
+| `onelake_list-data-access-roles` | Lists all data access roles defined on a single item. |
+| `onelake_get-data-access-role` | Gets the full definition of a single data access role (members, permissions, decision rules). |
+| `onelake_create-or-update-data-access-role` | Upserts a single data access role on a single item. |
+| `onelake_delete-data-access-role` | Deletes a single data access role from an item. |
 
 ### OneLake Shortcuts
 
 | Tool Name | Description |
 |-----------|-------------|
-| `onelake_list_shortcuts` | Lists shortcuts defined within an item. Hides DW-managed shortcuts by default (`--include-managed` to show). |
-| `onelake_get_shortcut` | Gets the properties of a single shortcut. |
-| `onelake_create_shortcut_onelake` | Creates a shortcut pointing to another OneLake location. |
-| `onelake_create_shortcut_adls_gen2` | Creates a shortcut pointing to Azure Data Lake Storage Gen2. |
-| `onelake_create_shortcut_amazon_s3` | Creates a shortcut pointing to Amazon S3. |
-| `onelake_create_shortcut_azure_blob` | Creates a shortcut pointing to Azure Blob Storage. |
-| `onelake_create_shortcut_gcs` | Creates a shortcut pointing to Google Cloud Storage. |
-| `onelake_create_shortcut_s3_compatible` | Creates a shortcut pointing to S3-compatible storage. |
-| `onelake_create_shortcut_dataverse` | Creates a shortcut pointing to a Dataverse environment. |
-| `onelake_create_shortcut_onedrive_sharepoint` | Creates a shortcut pointing to OneDrive/SharePoint Online. |
-| `onelake_delete_shortcut` | Deletes a single shortcut from an item (preserves destination data). |
-| `onelake_reset_shortcut_cache` | Drops cached shortcut reads, forcing re-resolution from destination. |
+| `onelake_list-shortcuts` | Lists shortcuts defined within an item. Hides DW-managed shortcuts by default (`--include-managed` to show). |
+| `onelake_get-shortcut` | Gets the properties of a single shortcut. |
+| `onelake_create-shortcut-onelake` | Creates a shortcut pointing to another OneLake location. |
+| `onelake_create-shortcut-adls-gen2` | Creates a shortcut pointing to Azure Data Lake Storage Gen2. |
+| `onelake_create-shortcut-amazon-s3` | Creates a shortcut pointing to Amazon S3. |
+| `onelake_create-shortcut-azure-blob` | Creates a shortcut pointing to Azure Blob Storage. |
+| `onelake_create-shortcut-gcs` | Creates a shortcut pointing to Google Cloud Storage. |
+| `onelake_create-shortcut-s3-compatible` | Creates a shortcut pointing to S3-compatible storage. |
+| `onelake_create-shortcut-dataverse` | Creates a shortcut pointing to a Dataverse environment. |
+| `onelake_create-shortcut-onedrive-sharepoint` | Creates a shortcut pointing to OneDrive/SharePoint Online. |
+| `onelake_delete-shortcut` | Deletes a single shortcut from an item (preserves destination data). |
+| `onelake_reset-shortcut-cache` | Drops cached shortcut reads, forcing re-resolution from destination. |
 
 ### OneLake Settings
 
 | Tool Name | Description |
 |-----------|-------------|
-| `onelake_get_settings` | Gets OneLake settings for a workspace (diagnostics + immutability policy). |
-| `onelake_modify_diagnostics` | Modifies diagnostic logging configuration (status, destination lakehouse) at workspace scope. |
-| `onelake_modify_immutability_policy` | Modifies the workspace-level OneLake immutability policy (scope, retention days). |
+| `onelake_get-settings` | Gets OneLake settings for a workspace (diagnostics + immutability policy). |
+| `onelake_modify-diagnostics` | Modifies diagnostic logging configuration (status, destination lakehouse) at workspace scope. |
+| `onelake_modify-immutability-policy` | Modifies the workspace-level OneLake immutability policy (scope, retention days). |
 
 ### Core Fabric Operations
 
