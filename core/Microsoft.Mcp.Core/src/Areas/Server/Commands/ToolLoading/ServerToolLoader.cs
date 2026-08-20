@@ -17,7 +17,10 @@ using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
-public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrategy, IOptions<ToolLoaderOptions> options, ILogger<ServerToolLoader> logger) : BaseToolLoader(logger)
+public sealed class ServerToolLoader(
+    IMcpDiscoveryStrategy serverDiscoveryStrategy,
+    IOptions<ServerRuntimeConfiguration> configuration,
+    ILogger<ServerToolLoader> logger) : BaseToolLoader(logger)
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = serverDiscoveryStrategy ?? throw new ArgumentNullException(nameof(serverDiscoveryStrategy));
     private readonly ConcurrentDictionary<string, List<Tool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
@@ -276,7 +279,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             Activity.Current?.SetTag(TagName.ToolId, toolId)
                 .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(resolvedTool));
 
-            if ((options?.Value?.ReadOnly ?? false) && resolvedTool.Annotations?.ReadOnlyHint != true)
+            if ((configuration?.Value?.ReadOnly ?? false) && resolvedTool.Annotations?.ReadOnlyHint != true)
             {
                 return McpHelper.InjectToolIdMetadata(new CallToolResult
                 {
@@ -291,7 +294,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                 }, toolId);
             }
 
-            if ((options?.Value?.IsHttpMode ?? false) && McpHelper.HasHint(resolvedTool, McpHelper.LocalRequiredHintMetaKey))
+            if ((configuration?.Value?.IsHttpMode ?? false) && McpHelper.HasHint(resolvedTool, McpHelper.LocalRequiredHintMetaKey))
             {
                 return McpHelper.InjectToolIdMetadata(new CallToolResult
                 {
@@ -460,8 +463,8 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     {
         var allTools = await GetAllChildToolsAsync(request, tool, cancellationToken);
         return allTools
-            .Where(t => !(options?.Value?.ReadOnly ?? false) || (t.Annotations?.ReadOnlyHint == true))
-            .Where(t => !(options?.Value?.IsHttpMode ?? false) || !McpHelper.HasHint(t, McpHelper.LocalRequiredHintMetaKey))
+            .Where(t => !(configuration?.Value?.ReadOnly ?? false) || (t.Annotations?.ReadOnlyHint == true))
+            .Where(t => !(configuration?.Value?.IsHttpMode ?? false) || !McpHelper.HasHint(t, McpHelper.LocalRequiredHintMetaKey))
             .ToList();
     }
 

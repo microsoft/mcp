@@ -4,36 +4,21 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
-using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.Runtime;
 
 public class McpRuntimeTests
 {
-    private static ServiceProvider CreateServiceProvider()
-    {
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddSingleton<ITelemetryService, NoopTelemetryService>();
-
-        return services.BuildServiceProvider();
-    }
-
-    private static IOptions<ServerStartOptions> CreateOptions(ServerStartOptions? options = null) =>
-        Microsoft.Extensions.Options.Options.Create(options ?? new ServerStartOptions());
-
     private static McpServer CreateMockServer() => Substitute.For<McpServer>();
 
     private static ITelemetryService CreateMockTelemetryService() => Substitute.For<ITelemetryService>();
@@ -63,14 +48,11 @@ public class McpRuntimeTests
     public void Constructor_WithValidParameters_InitializesCorrectly()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var mockTelemetry = CreateMockTelemetryService();
-        var options = CreateOptions();
 
         // Act
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new McpRuntime(mockToolLoader, mockTelemetry);
 
         // Assert
         Assert.NotNull(runtime);
@@ -82,86 +64,28 @@ public class McpRuntimeTests
     public void Constructor_WithNullToolLoader_ThrowsArgumentNullException()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockTelemetry = CreateMockTelemetryService();
-        var options = CreateOptions();
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() => new McpRuntime(null!, options, mockTelemetry, logger));
+        var exception = Assert.Throws<ArgumentNullException>(() => new McpRuntime(null!, mockTelemetry));
         Assert.Equal("toolLoader", exception.ParamName);
-    }
-
-    [Fact]
-    public void Constructor_WithNullOptions_ThrowsArgumentNullException()
-    {
-        // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
-        var mockToolLoader = Substitute.For<IToolLoader>();
-        var mockTelemetry = CreateMockTelemetryService();
-
-        // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() => new McpRuntime(mockToolLoader, null!, mockTelemetry, logger));
-        Assert.Equal("options", exception.ParamName);
     }
 
     [Fact]
     public void Constructor_WithNullTelemetry_ThrowsArgumentNullException()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
-        var options = CreateOptions();
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() => new McpRuntime(mockToolLoader, options, null!, logger));
+        var exception = Assert.Throws<ArgumentNullException>(() => new McpRuntime(mockToolLoader, null!));
         Assert.Equal("telemetry", exception.ParamName);
-    }
-
-    [Fact]
-    public void Constructor_WithNullLogger_ThrowsArgumentNullException()
-    {
-        // Arrange
-        var mockToolLoader = Substitute.For<IToolLoader>();
-        var mockTelemetry = CreateMockTelemetryService();
-        var options = CreateOptions();
-
-        // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() => new McpRuntime(mockToolLoader, options, mockTelemetry, null!));
-        Assert.Equal("logger", exception.ParamName);
-    }
-
-    [Fact]
-    public void Constructor_LogsInitializationInformation()
-    {
-        // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
-        var mockToolLoader = Substitute.For<IToolLoader>();
-        var mockTelemetry = CreateMockTelemetryService();
-        var options = CreateOptions(new ServerStartOptions
-        {
-            ReadOnly = true,
-            Namespace = ["storage", "keyvault"]
-        });
-
-        // Act
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
-
-        // Assert
-        Assert.NotNull(runtime);
-        // Note: In a more sophisticated test setup, we could capture and verify log messages
-        // For now, we verify that construction succeeds without throwing
     }
 
     [Fact]
     public async Task ListToolsHandler_DelegatesToToolLoader()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
 
         var mockTelemetry = CreateMockTelemetryService();
@@ -169,8 +93,7 @@ public class McpRuntimeTests
         mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>())
             .Returns(activity);
 
-        var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new McpRuntime(mockToolLoader, mockTelemetry);
 
         var expectedResult = new ListToolsResult
         {
@@ -203,8 +126,6 @@ public class McpRuntimeTests
     public async Task CallToolHandler_DelegatesToToolLoader()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
 
         var mockTelemetry = CreateMockTelemetryService();
@@ -212,8 +133,7 @@ public class McpRuntimeTests
         mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>())
             .Returns(activity);
 
-        var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new McpRuntime(mockToolLoader, mockTelemetry);
 
         var expectedResult = new CallToolResult
         {
@@ -259,11 +179,8 @@ public class McpRuntimeTests
     public async Task ListToolsHandler_WithCancellationToken_PassesTokenToToolLoader()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
-        var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
+        var runtime = new McpRuntime(mockToolLoader, CreateMockTelemetryService());
 
         var expectedResult = new ListToolsResult { Tools = [] };
         var request = CreateListToolsRequest();
@@ -284,11 +201,8 @@ public class McpRuntimeTests
     public async Task CallToolHandler_WithCancellationToken_PassesTokenToToolLoader()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
-        var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
+        var runtime = new McpRuntime(mockToolLoader, CreateMockTelemetryService());
 
         var expectedResult = new CallToolResult { Content = [] };
         var request = CreateCallToolRequest();
@@ -309,8 +223,6 @@ public class McpRuntimeTests
     public async Task ListToolsHandler_WhenToolLoaderThrows_PropagatesException()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
 
         var mockTelemetry = CreateMockTelemetryService();
@@ -318,14 +230,13 @@ public class McpRuntimeTests
         mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>())
             .Returns(activity);
 
-        var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new McpRuntime(mockToolLoader, mockTelemetry);
 
         var request = CreateListToolsRequest();
         var expectedException = new InvalidOperationException("Tool loader failed");
 
         mockToolLoader.ListToolsHandler(request, Arg.Any<CancellationToken>())
-            .Returns<ValueTask<ListToolsResult>>(x => throw expectedException);
+            .ThrowsAsync(expectedException);
 
         // Act & Assert
         var actualException = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -343,8 +254,6 @@ public class McpRuntimeTests
     public async Task CallToolHandler_WhenToolLoaderThrows_PropagatesException()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
 
         var mockTelemetry = CreateMockTelemetryService();
@@ -352,15 +261,14 @@ public class McpRuntimeTests
         mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>())
             .Returns(activity);
 
-        var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new McpRuntime(mockToolLoader, mockTelemetry);
 
         var toolName = "test-tool";
         var request = CreateCallToolRequest(toolName);
         var expectedException = new Exception("Tool loader failed");
 
         mockToolLoader.CallToolHandler(request, Arg.Any<CancellationToken>())
-            .Returns<ValueTask<CallToolResult>>(x => throw expectedException);
+            .ThrowsAsync(expectedException);
 
         // Act & Assert
         Assert.NotNull(request.Params);
@@ -382,46 +290,11 @@ public class McpRuntimeTests
     }
 
     [Fact]
-    public void Constructor_WithDifferentServiceOptions_LogsCorrectly()
-    {
-        // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
-        var mockToolLoader = Substitute.For<IToolLoader>();
-
-        // Test with ReadOnly = false and no services
-        var options1 = CreateOptions(new ServerStartOptions { ReadOnly = false });
-        var runtime1 = new McpRuntime(mockToolLoader, options1, CreateMockTelemetryService(), logger);
-        Assert.NotNull(runtime1);
-
-        // Test with ReadOnly = null and multiple services
-        var options2 = CreateOptions(new ServerStartOptions
-        {
-            ReadOnly = null,
-            Namespace = ["storage", "keyvault", "monitor"]
-        });
-        var runtime2 = new McpRuntime(mockToolLoader, options2, CreateMockTelemetryService(), logger);
-        Assert.NotNull(runtime2);
-
-        // Test with empty service array
-        var options3 = CreateOptions(new ServerStartOptions
-        {
-            ReadOnly = true,
-            Namespace = []
-        });
-        var runtime3 = new McpRuntime(mockToolLoader, options3, CreateMockTelemetryService(), logger);
-        Assert.NotNull(runtime3);
-    }
-
-    [Fact]
     public async Task Runtime_ImplementsIMcpRuntimeInterface()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
-        var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
+        var runtime = new McpRuntime(mockToolLoader, CreateMockTelemetryService());
 
         // Setup mock responses
         var listToolsResult = new ListToolsResult { Tools = [] };
@@ -444,11 +317,8 @@ public class McpRuntimeTests
     public async Task ListToolsHandler_WithNullParameters_DelegatesToToolLoader()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
-        var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
+        var runtime = new McpRuntime(mockToolLoader, CreateMockTelemetryService());
         var request = new RequestContext<ListToolsRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsList }, new ListToolsRequestParams());
 
         var expectedResult = new ListToolsResult { Tools = [] };
@@ -467,17 +337,14 @@ public class McpRuntimeTests
     public async Task CallToolHandler_WithNullParameters_ReturnsError()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
-        var options = CreateOptions();
 
         var mockTelemetry = CreateMockTelemetryService();
         var activity = new Activity("test-activity");
         mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>())
             .Returns(activity);
 
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new McpRuntime(mockToolLoader, mockTelemetry);
         // Force null Params to exercise the runtime's null-parameter guard.
         var request = new RequestContext<CallToolRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsCall }, null!);
 
@@ -503,31 +370,11 @@ public class McpRuntimeTests
     }
 
     [Fact]
-    public void Constructor_WithNullServiceArray_LogsCorrectly()
-    {
-        // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
-        var mockToolLoader = Substitute.For<IToolLoader>();
-        var options = CreateOptions(new ServerStartOptions { Namespace = null });
-
-        // Act
-        var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
-
-        // Assert
-        Assert.NotNull(runtime);
-        // Should log empty string for namespace when Service is null
-    }
-
-    [Fact]
     public async Task CallToolHandler_WithSpecificCancellationToken_PassesCorrectToken()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
-        var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
+        var runtime = new McpRuntime(mockToolLoader, CreateMockTelemetryService());
 
         var expectedResult = new CallToolResult { Content = [] };
         var request = CreateCallToolRequest();
@@ -548,11 +395,8 @@ public class McpRuntimeTests
     public async Task ListToolsHandler_WithSpecificCancellationToken_PassesCorrectToken()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
-        var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
+        var runtime = new McpRuntime(mockToolLoader, CreateMockTelemetryService());
 
         var expectedResult = new ListToolsResult { Tools = [] };
         var request = CreateListToolsRequest();
@@ -570,33 +414,12 @@ public class McpRuntimeTests
     }
 
     [Fact]
-    public void Constructor_LogsToolLoaderType()
-    {
-        // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
-        var mockToolLoader = Substitute.For<IToolLoader>();
-        var options = CreateOptions();
-
-        // Act
-        var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
-
-        // Assert
-        Assert.NotNull(runtime);
-        // The constructor should log the tool loader type name
-        // This verifies that the logging statement executes without error
-    }
-
-    [Fact]
     public async Task CallToolHandler_CanSucceedBeforeListingTools()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var mockTelemetry = CreateMockTelemetryService();
-        var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new McpRuntime(mockToolLoader, mockTelemetry);
 
         var expectedResult = new CallToolResult
         {
@@ -636,8 +459,6 @@ public class McpRuntimeTests
     public async Task CallToolHandler_SetsActivityTags()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var testSubscriptionId = "test-subscription-id";
         var toolName = "existing-tool";
@@ -646,8 +467,7 @@ public class McpRuntimeTests
         var mockTelemetry = CreateMockTelemetryService();
         mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>()).Returns(activity);
 
-        var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new McpRuntime(mockToolLoader, mockTelemetry);
 
         var expectedResult = new CallToolResult
         {
@@ -684,13 +504,10 @@ public class McpRuntimeTests
     public async Task DisposeAsync_ShouldDisposeToolLoader()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
         var mockToolLoader = Substitute.For<IToolLoader>();
-        var options = CreateOptions();
         var mockTelemetryService = CreateMockTelemetryService();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
 
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetryService, logger);
+        var runtime = new McpRuntime(mockToolLoader, mockTelemetryService);
 
         // Act
         await runtime.DisposeAsync();
@@ -703,16 +520,13 @@ public class McpRuntimeTests
     public async Task DisposeAsync_ShouldHandleNullToolLoader()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var options = CreateOptions();
         var mockTelemetryService = CreateMockTelemetryService();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
 
         // Create a mock that returns null (edge case)
         var mockToolLoader = Substitute.For<IToolLoader>();
         mockToolLoader.DisposeAsync().Returns(ValueTask.CompletedTask);
 
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetryService, logger);
+        var runtime = new McpRuntime(mockToolLoader, mockTelemetryService);
 
         // Act & Assert - should not throw
         await runtime.DisposeAsync();
@@ -723,16 +537,13 @@ public class McpRuntimeTests
     public async Task DisposeAsync_ShouldPropagateToolLoaderDisposalExceptions()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
         var mockToolLoader = Substitute.For<IToolLoader>();
-        var options = CreateOptions();
         var mockTelemetryService = CreateMockTelemetryService();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
 
         var expectedException = new InvalidOperationException("Tool loader disposal failed");
-        mockToolLoader.DisposeAsync().Returns(ValueTask.FromException(expectedException));
+        mockToolLoader.DisposeAsync().ThrowsAsync(expectedException);
 
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetryService, logger);
+        var runtime = new McpRuntime(mockToolLoader, mockTelemetryService);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => runtime.DisposeAsync().AsTask());
@@ -743,13 +554,10 @@ public class McpRuntimeTests
     public async Task DisposeAsync_ShouldBeIdempotent()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
         var mockToolLoader = Substitute.For<IToolLoader>();
-        var options = CreateOptions();
         var mockTelemetryService = CreateMockTelemetryService();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
 
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetryService, logger);
+        var runtime = new McpRuntime(mockToolLoader, mockTelemetryService);
 
         // Act - dispose multiple times
         await runtime.DisposeAsync();
@@ -764,8 +572,6 @@ public class McpRuntimeTests
     public async Task CallToolHandler_WithToolLoaderError_ShouldReturnErrorAndSetTelemetry()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
 
         var mockTelemetry = CreateMockTelemetryService();
@@ -773,8 +579,7 @@ public class McpRuntimeTests
         mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>())
             .Returns(activity);
 
-        var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new McpRuntime(mockToolLoader, mockTelemetry);
 
         var errorText = "Some error details";
         var expectedResult = new CallToolResult

@@ -1,5 +1,3 @@
-#pragma warning disable MCP9003
-#pragma warning disable MCP9005
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -7,11 +5,14 @@ using System.Text.Json;
 using Azure.Mcp.Core.Tests.Areas.Server.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 using NSubstitute;
 using Xunit;
 
@@ -19,39 +20,29 @@ namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
 public class RegistryToolLoaderTests
 {
-    private static (RegistryToolLoader toolLoader, IMcpDiscoveryStrategy mockDiscoveryStrategy) CreateToolLoader(ToolLoaderOptions? options = null)
+    private static (RegistryToolLoader toolLoader, IMcpDiscoveryStrategy mockDiscoveryStrategy) CreateToolLoader(ServerRuntimeConfiguration? options = null)
     {
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var mockDiscoveryStrategy = new MockMcpDiscoveryStrategyBuilder().Build();
         var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ToolLoaderOptions());
+        var configuration = Microsoft.Extensions.Options.Options.Create(options ?? new());
 
-        var toolLoader = new RegistryToolLoader(mockDiscoveryStrategy, toolLoaderOptions, logger);
+        var toolLoader = new RegistryToolLoader(mockDiscoveryStrategy, configuration, logger);
         return (toolLoader, mockDiscoveryStrategy);
     }
 
-    private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateListToolsRequest()
-    {
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList })
-        {
-            Params = new ListToolsRequestParams()
-        };
-    }
+    private static RequestContext<ListToolsRequestParams> CreateListToolsRequest() =>
+        new(Substitute.For<McpServer>(), new() { Method = RequestMethods.ToolsList }, new());
 
-    private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName, IDictionary<string, JsonElement>? arguments = null)
-    {
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+    private static RequestContext<CallToolRequestParams> CreateCallToolRequest(
+        string toolName,
+        IDictionary<string, JsonElement>? arguments = null) =>
+        new(Substitute.For<McpServer>(), new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = toolName,
-                Arguments = arguments ?? new Dictionary<string, JsonElement>()
-            }
-        };
-    }
+            Name = toolName,
+            Arguments = arguments ?? new Dictionary<string, JsonElement>()
+        });
 
     [Fact]
     public async Task ListToolsHandler_WithNoServers_ReturnsEmptyToolList()
@@ -87,7 +78,7 @@ public class RegistryToolLoaderTests
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
 
         var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
         var request = CreateListToolsRequest();
@@ -131,7 +122,7 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
+        var readOnlyOptions = new ServerRuntimeConfiguration { ReadOnly = true };
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
@@ -185,7 +176,7 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var defaultOptions = new ToolLoaderOptions(ReadOnly: false);
+        var defaultOptions = new ServerRuntimeConfiguration();
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
@@ -244,7 +235,7 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var isHttpOptions = new ToolLoaderOptions(IsHttpMode: true);
+        var isHttpOptions = new ServerRuntimeConfiguration { Transport = TransportTypes.Http };
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
@@ -302,7 +293,7 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var isHttpOptions = new ToolLoaderOptions(IsHttpMode: false);
+        var isHttpOptions = new ServerRuntimeConfiguration { Transport = TransportTypes.StdIo };
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
@@ -359,8 +350,8 @@ public class RegistryToolLoaderTests
     public async Task RegistryToolLoader_WithDifferentOptions_BehavesConsistently()
     {
         // Arrange - Test with different service options
-        var defaultOptions = new ToolLoaderOptions();
-        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
+        var defaultOptions = new ServerRuntimeConfiguration();
+        var readOnlyOptions = new ServerRuntimeConfiguration { ReadOnly = true };
 
         // Create empty discovery strategies for both tests
         var defaultDiscoveryStrategy = new MockMcpDiscoveryStrategyBuilder().Build();
@@ -415,7 +406,7 @@ public class RegistryToolLoaderTests
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
 
         var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
         var request = CreateCallToolRequest("microsoft_docs_search",
@@ -470,7 +461,7 @@ public class RegistryToolLoaderTests
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
 
         var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
 
@@ -538,7 +529,7 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
+        var readOnlyOptions = new ServerRuntimeConfiguration { ReadOnly = true };
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
@@ -684,7 +675,7 @@ public class RegistryToolLoaderTests
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
 
         var toolLoader = new RegistryToolLoader(mockDiscoveryStrategy, serviceOptions, logger);
         var request = CreateListToolsRequest();
@@ -757,7 +748,7 @@ public class RegistryToolLoaderTests
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
 
         var toolLoader = new RegistryToolLoader(mockDiscoveryStrategy, serviceOptions, logger);
         var request = CreateListToolsRequest();
@@ -793,7 +784,7 @@ public class RegistryToolLoaderTests
 
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<RegistryToolLoader>();
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+        var toolLoader = new RegistryToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration()), logger);
 
         // Act
         var result = await toolLoader.ListToolsHandler(CreateListToolsRequest(), TestContext.Current.CancellationToken);
@@ -828,7 +819,7 @@ public class RegistryToolLoaderTests
 
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<RegistryToolLoader>();
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+        var toolLoader = new RegistryToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration()), logger);
 
         // Act — call using the prefixed name
         var result = await toolLoader.CallToolHandler(
@@ -856,7 +847,7 @@ public class RegistryToolLoaderTests
 
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<RegistryToolLoader>();
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+        var toolLoader = new RegistryToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration()), logger);
 
         // Act
         var result = await toolLoader.ListToolsHandler(CreateListToolsRequest(), TestContext.Current.CancellationToken);
@@ -894,7 +885,7 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
+        var readOnlyOptions = new ServerRuntimeConfiguration { ReadOnly = true };
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
@@ -942,7 +933,7 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
+        var readOnlyOptions = new ServerRuntimeConfiguration { ReadOnly = true };
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
@@ -992,7 +983,7 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var httpOptions = new ToolLoaderOptions(IsHttpMode: true);
+        var httpOptions = new ServerRuntimeConfiguration { Transport = TransportTypes.Http };
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
@@ -1031,7 +1022,7 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
+        var readOnlyOptions = new ServerRuntimeConfiguration { ReadOnly = true };
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<RegistryToolLoader>();

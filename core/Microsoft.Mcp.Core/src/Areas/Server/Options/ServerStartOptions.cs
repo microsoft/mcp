@@ -29,8 +29,8 @@ public sealed class ServerStartOptions
     /// Gets or sets the mode mode for the server.
     /// Defaults to 'namespace' mode which exposes one tool per namespace.
     /// </summary>
-    [Option(Description = "Mode for the MCP server. 'single' exposes one azure tool that routes to all services. 'namespace' (default) exposes one tool per service namespace. 'all' exposes all tools individually.", DefaultValue = "namespace")]
-    public string? Mode { get; set; } = ModeTypes.NamespaceProxy;
+    [Option(Description = "Mode for the MCP server. 'single' exposes one azure tool that routes to all services. 'namespace' (default) exposes one tool per service namespace. 'all' exposes all tools individually.", DefaultValue = ModeTypes.Default)]
+    public string? Mode { get; set; } = ModeTypes.Default;
 
     /// <summary>
     /// Gets or sets the specific tool names to expose.

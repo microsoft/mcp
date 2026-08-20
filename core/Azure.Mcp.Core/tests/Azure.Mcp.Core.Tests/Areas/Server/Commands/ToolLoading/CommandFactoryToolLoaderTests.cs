@@ -1,4 +1,3 @@
-#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -7,12 +6,15 @@ using System.Net;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 using NSubstitute;
 using Xunit;
 
@@ -20,26 +22,20 @@ namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
 public class CommandFactoryToolLoaderTests
 {
-    private static (CommandFactoryToolLoader toolLoader, ICommandFactory commandFactory) CreateToolLoader(ToolLoaderOptions? options = null)
+    private static (CommandFactoryToolLoader toolLoader, ICommandFactory commandFactory) CreateToolLoader(ServerRuntimeConfiguration? options = null)
     {
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ToolLoaderOptions());
+        var configuration = Microsoft.Extensions.Options.Options.Create(options ?? new());
 
-        var toolLoader = new CommandFactoryToolLoader(commandFactory, toolLoaderOptions, logger);
+        var toolLoader = new CommandFactoryToolLoader(commandFactory, configuration, logger);
         return (toolLoader, commandFactory);
     }
 
-    private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateRequest()
-    {
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList })
-        {
-            Params = new ListToolsRequestParams()
-        };
-    }
+    private static RequestContext<ListToolsRequestParams> CreateRequest() =>
+        new(Substitute.For<McpServer>(), new() { Method = RequestMethods.ToolsList }, new());
 
     [Fact]
     public async Task ListToolsHandler_ReturnsToolsWithExpectedProperties()
@@ -83,8 +79,7 @@ public class CommandFactoryToolLoaderTests
     [Fact]
     public async Task ListToolsHandler_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
     {
-        var readOnlyOptions = new ToolLoaderOptions { ReadOnly = true };
-        var (toolLoader, _) = CreateToolLoader(readOnlyOptions);
+        var (toolLoader, _) = CreateToolLoader(new() { ReadOnly = true });
         var request = CreateRequest();
 
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -105,8 +100,7 @@ public class CommandFactoryToolLoaderTests
     [Fact]
     public async Task ListToolsHandler_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
     {
-        var readOnlyOptions = new ToolLoaderOptions { IsHttpMode = true };
-        var (toolLoader, _) = CreateToolLoader(readOnlyOptions);
+        var (toolLoader, _) = CreateToolLoader(new() { Transport = TransportTypes.Http });
         var request = CreateRequest();
 
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -138,8 +132,7 @@ public class CommandFactoryToolLoaderTests
         }
 
         var specificToolName = availableCommands.First().Key;
-        var toolOptions = new ToolLoaderOptions { Tool = [specificToolName] };
-        var (toolLoader, _) = CreateToolLoader(toolOptions);
+        var (toolLoader, _) = CreateToolLoader(new() { Tool = [specificToolName] });
         var request = CreateRequest();
 
         // Act
@@ -157,8 +150,7 @@ public class CommandFactoryToolLoaderTests
     {
         // Arrange
         var nonExistentTool = "non-existent-tool-name";
-        var toolOptions = new ToolLoaderOptions { Tool = [nonExistentTool] };
-        var (toolLoader, _) = CreateToolLoader(toolOptions);
+        var (toolLoader, _) = CreateToolLoader(new() { Tool = [nonExistentTool] });
         var request = CreateRequest();
 
         // Act
@@ -184,8 +176,7 @@ public class CommandFactoryToolLoaderTests
         }
 
         var specificToolName = availableCommands.First().Key;
-        var toolOptions = new ToolLoaderOptions { Tool = [specificToolName.ToUpperInvariant()] }; // Test case insensitive
-        var (toolLoader, _) = CreateToolLoader(toolOptions);
+        var (toolLoader, _) = CreateToolLoader(new() { Tool = [specificToolName.ToUpperInvariant()] }); // Test case insensitive
         var request = CreateRequest();
 
         // Act
@@ -202,11 +193,8 @@ public class CommandFactoryToolLoaderTests
     public async Task ListToolsHandler_WithServiceFilter_ReturnsOnlyFilteredTools()
     {
         // Try to filter by a specific service/group - using a common Azure service name
-        var filteredOptions = new ToolLoaderOptions
-        {
-            Namespace = ["storage"]  // Assuming there's a storage service group
-        };
-        var (toolLoader, _) = CreateToolLoader(filteredOptions);
+        // Assuming there's a storage service group
+        var (toolLoader, _) = CreateToolLoader(new() { Namespace = ["storage"] });
         var request = CreateRequest();
 
         try
@@ -241,9 +229,10 @@ public class CommandFactoryToolLoaderTests
     public async Task ListToolsHandler_WithMultipleServiceFilters_ReturnsToolsFromAllSpecifiedServices()
     {
         // Try to filter by multiple real service/group names from the codebase
-        var multiServiceOptions = new ToolLoaderOptions
+        // Real Azure service groups from the codebase
+        var multiServiceOptions = new ServerRuntimeConfiguration
         {
-            Namespace = ["storage", "appconfig", "search"]  // Real Azure service groups from the codebase
+            Namespace = ["storage", "appconfig", "search"]
         };
         var (toolLoader, commandFactory) = CreateToolLoader(multiServiceOptions);
         var request = CreateRequest();
@@ -287,8 +276,8 @@ public class CommandFactoryToolLoaderTests
                 }
 
                 // Verify that tools from non-specified services are not included
-                var allToolsOptions = new ToolLoaderOptions(); // No filter = all tools
-                var (allToolsLoader, _) = CreateToolLoader(allToolsOptions);
+                // No filter = all tools
+                var (allToolsLoader, _) = CreateToolLoader(new());
                 var allToolsResult = await allToolsLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
                 var excludedTools = allToolsResult.Tools.Where(t =>
@@ -325,15 +314,12 @@ public class CommandFactoryToolLoaderTests
         var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands);
         var firstCommand = availableCommands.First();
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var mockServer = Substitute.For<McpServer>();
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = firstCommand.Key,
-                Arguments = new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = firstCommand.Key,
+            Arguments = new Dictionary<string, JsonElement>()
+        });
 
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
@@ -347,8 +333,8 @@ public class CommandFactoryToolLoaderTests
     {
         var (toolLoader, _) = CreateToolLoader();
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, null!);
+        var mockServer = Substitute.For<McpServer>();
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, null!);
 
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
@@ -367,15 +353,12 @@ public class CommandFactoryToolLoaderTests
     {
         var (toolLoader, _) = CreateToolLoader();
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var mockServer = Substitute.For<McpServer>();
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = "non-existent-tool",
-                Arguments = new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = "non-existent-tool",
+            Arguments = new Dictionary<string, JsonElement>()
+        });
 
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
@@ -392,11 +375,8 @@ public class CommandFactoryToolLoaderTests
     [Fact]
     public async Task GetsToolsWithRawMcpInputOption()
     {
-        var filteredOptions = new ToolLoaderOptions
-        {
-            Namespace = ["deploy"]  // Assuming there's a deploy service group
-        };
-        var (toolLoader, _) = CreateToolLoader(filteredOptions);
+        // Assuming there's a deploy service group
+        var (toolLoader, _) = CreateToolLoader(new() { Namespace = ["deploy"] });
         var request = CreateRequest();
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
@@ -458,17 +438,14 @@ public class CommandFactoryToolLoaderTests
 
         var targetCommand = subscriptionListCommand;
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var mockServer = Substitute.For<McpServer>();
         var arguments = new Dictionary<string, JsonElement>();
 
-        var callToolRequest = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var callToolRequest = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = targetCommand.Key,
-                Arguments = arguments
-            }
-        };
+            Name = targetCommand.Key,
+            Arguments = arguments
+        });
 
         // Act - Call CallToolHandler BEFORE ListToolsHandler
         var callResult = await toolLoader.CallToolHandler(callToolRequest, TestContext.Current.CancellationToken);
@@ -609,7 +586,7 @@ public class CommandFactoryToolLoaderTests
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
 
         var fakeSystemCommand = new Command("fake-enum-get", "A fake command with an enum option for testing.");
         OptionBinder.RegisterOptions<EnumSchemaTestOptions>(fakeSystemCommand);
@@ -624,7 +601,7 @@ public class CommandFactoryToolLoaderTests
         var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
         commandMap["fake-enum-get"] = fakeCommand;
 
-        var toolLoader = new CommandFactoryToolLoader(commandFactory, toolLoaderOptions, logger);
+        var toolLoader = new CommandFactoryToolLoader(commandFactory, configuration, logger);
         var request = CreateRequest();
 
         // Act
@@ -705,7 +682,7 @@ public class CommandFactoryToolLoaderTests
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
 
         // Create a fake command factory that includes a command with secret metadata
         var fakeCommand = Substitute.For<IBaseCommand>();
@@ -724,7 +701,7 @@ public class CommandFactoryToolLoaderTests
         var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
         commandMap["fake-secret-get"] = fakeCommand;
 
-        var toolLoader = new CommandFactoryToolLoader(commandFactory, toolLoaderOptions, logger);
+        var toolLoader = new CommandFactoryToolLoader(commandFactory, configuration, logger);
         var request = CreateRequest();
 
         // Act
@@ -765,17 +742,14 @@ public class CommandFactoryToolLoaderTests
         commandMap["fake-secret-get"] = fakeCommand;
 
         // Create mock server without elicitation capabilities
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var mockServer = Substitute.For<McpServer>();
         mockServer.ClientCapabilities.Returns((ClientCapabilities?)null);
 
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = "fake-secret-get",
-                Arguments = new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = "fake-secret-get",
+            Arguments = new Dictionary<string, JsonElement>()
+        });
 
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
@@ -805,18 +779,15 @@ public class CommandFactoryToolLoaderTests
         commandMap["fake-non-secret-get"] = fakeCommand;
 
         // Create mock server with elicitation capabilities
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities { Elicitation = new ElicitationCapability() };
         mockServer.ClientCapabilities.Returns(capabilities);
 
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = "fake-non-secret-get",
-                Arguments = new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = "fake-non-secret-get",
+            Arguments = new Dictionary<string, JsonElement>()
+        });
 
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
@@ -829,8 +800,7 @@ public class CommandFactoryToolLoaderTests
     public async Task CallToolHandler_WithSecretTool_WhenDangerouslyDisableElicitationEnabled_BypassesElicitation()
     {
         // Create tool loader with dangerously disable elicitation enabled
-        var options = new ToolLoaderOptions(DangerouslyDisableElicitation: true);
-        var (toolLoader, commandFactory) = CreateToolLoader(options);
+        var (toolLoader, commandFactory) = CreateToolLoader(new() { DangerouslyDisableElicitation = true });
 
         // Add the fake secret command to the command factory
         var fakeCommand = Substitute.For<IBaseCommand>();
@@ -847,17 +817,14 @@ public class CommandFactoryToolLoaderTests
         commandMap["fake-secret-get"] = fakeCommand;
 
         // Create mock server - elicitation support doesn't matter when bypassed
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var mockServer = Substitute.For<McpServer>();
         mockServer.ClientCapabilities.Returns((ClientCapabilities?)null);
 
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = "fake-secret-get",
-                Arguments = new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = "fake-secret-get",
+            Arguments = new Dictionary<string, JsonElement>()
+        });
 
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
@@ -874,8 +841,7 @@ public class CommandFactoryToolLoaderTests
     public async Task CallToolHandler_WithSecretTool_WhenDangerouslyDisableElicitationDisabled_StillRequiresElicitation()
     {
         // Create tool loader with dangerously disable elicitation disabled (default)
-        var options = new ToolLoaderOptions(DangerouslyDisableElicitation: false);
-        var (toolLoader, commandFactory) = CreateToolLoader(options);
+        var (toolLoader, commandFactory) = CreateToolLoader(new() { DangerouslyDisableElicitation = false });
 
         // Add the fake secret command to the command factory
         var fakeCommand = Substitute.For<IBaseCommand>();
@@ -892,17 +858,14 @@ public class CommandFactoryToolLoaderTests
         commandMap["fake-secret-get"] = fakeCommand;
 
         // Create mock server without elicitation capabilities
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var mockServer = Substitute.For<McpServer>();
         mockServer.ClientCapabilities.Returns((ClientCapabilities?)null);
 
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = "fake-secret-get",
-                Arguments = new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = "fake-secret-get",
+            Arguments = new Dictionary<string, JsonElement>()
+        });
 
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
@@ -913,20 +876,20 @@ public class CommandFactoryToolLoaderTests
     }
 
     [Fact]
-    public void ToolLoaderOptions_DefaultDangerouslyDisableElicitation_IsFalse()
+    public void ServerRuntimeConfiguration_DefaultDangerouslyDisableElicitation_IsFalse()
     {
         // Arrange & Act
-        var options = new ToolLoaderOptions();
+        var options = new ServerRuntimeConfiguration();
 
         // Assert
         Assert.False(options.DangerouslyDisableElicitation);
     }
 
     [Fact]
-    public void ToolLoaderOptions_WithDangerouslyDisableElicitationTrue_IsSetCorrectly()
+    public void ServerRuntimeConfiguration_WithDangerouslyDisableElicitationTrue_IsSetCorrectly()
     {
         // Arrange & Act
-        var options = new ToolLoaderOptions(DangerouslyDisableElicitation: true);
+        var options = new ServerRuntimeConfiguration { DangerouslyDisableElicitation = true };
 
         // Assert
         Assert.True(options.DangerouslyDisableElicitation);
@@ -946,18 +909,15 @@ public class CommandFactoryToolLoaderTests
         }
 
         var specificToolName = availableCommands.First().Key;
-        var toolOptions = new ToolLoaderOptions { Tool = [specificToolName] };
+        var toolOptions = new ServerRuntimeConfiguration { Tool = [specificToolName] };
         var (toolLoader, _) = CreateToolLoader(toolOptions);
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var mockServer = Substitute.For<McpServer>();
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = specificToolName,
-                Arguments = new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = specificToolName,
+            Arguments = new Dictionary<string, JsonElement>()
+        });
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -989,18 +949,15 @@ public class CommandFactoryToolLoaderTests
 
         var specificToolName = availableCommands.First().Key;
         var otherToolName = availableCommands.Skip(1).First().Key;
-        var toolOptions = new ToolLoaderOptions { Tool = [specificToolName] };
+        var toolOptions = new ServerRuntimeConfiguration { Tool = [specificToolName] };
         var (toolLoader, _) = CreateToolLoader(toolOptions);
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var mockServer = Substitute.For<McpServer>();
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = otherToolName, // Request a different tool than the filtered one
-                Arguments = new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = otherToolName, // Request a different tool than the filtered one
+            Arguments = new Dictionary<string, JsonElement>()
+        });
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -1028,18 +985,14 @@ public class CommandFactoryToolLoaderTests
         }
 
         var specificToolName = availableCommands.First().Key;
-        var toolOptions = new ToolLoaderOptions { Tool = [specificToolName.ToUpperInvariant()] }; // Set filter to uppercase
-        var (toolLoader, _) = CreateToolLoader(toolOptions);
+        var (toolLoader, _) = CreateToolLoader(new() { Tool = [specificToolName.ToUpperInvariant()] }); // Set filter to uppercase
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var mockServer = Substitute.For<McpServer>();
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = specificToolName, // Request with original case
-                Arguments = new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = specificToolName, // Request with original case
+            Arguments = new Dictionary<string, JsonElement>()
+        });
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -1055,22 +1008,22 @@ public class CommandFactoryToolLoaderTests
     }
 
     [Fact]
-    public void ToolLoaderOptions_WithTool_IsSetCorrectly()
+    public void ServerRuntimeConfiguration_WithTool_IsSetCorrectly()
     {
         // Arrange & Act
         var expectedTools = new[] { "azmcp_group_list" };
-        var options = new ToolLoaderOptions(Tool: expectedTools);
+        var options = new ServerRuntimeConfiguration { Tool = expectedTools };
 
         // Assert
         Assert.Equal(expectedTools, options.Tool);
     }
 
     [Fact]
-    public void ToolLoaderOptions_WithMultipleTools_IsSetCorrectly()
+    public void ServerRuntimeConfiguration_WithMultipleTools_IsSetCorrectly()
     {
         // Arrange & Act
         var expectedTools = new[] { "azmcp_acr_registry_list", "azmcp_group_list" };
-        var options = new ToolLoaderOptions(Tool: expectedTools);
+        var options = new ServerRuntimeConfiguration { Tool = expectedTools };
 
         // Assert
         Assert.Equal(expectedTools, options.Tool);
@@ -1090,8 +1043,7 @@ public class CommandFactoryToolLoaderTests
         }
 
         var toolNames = allCommands.Take(2).Select(kvp => kvp.Key).ToArray();
-        var toolOptions = new ToolLoaderOptions { Tool = toolNames };
-        var (filteredToolLoader, _) = CreateToolLoader(toolOptions);
+        var (filteredToolLoader, _) = CreateToolLoader(new() { Tool = toolNames });
         var request = CreateRequest();
 
         // Act
@@ -1106,10 +1058,10 @@ public class CommandFactoryToolLoaderTests
     }
 
     [Fact]
-    public void ToolLoaderOptions_DefaultTool_IsNull()
+    public void ServerRuntimeConfiguration_DefaultTool_IsNull()
     {
         // Arrange & Act
-        var options = new ToolLoaderOptions();
+        var options = new ServerRuntimeConfiguration();
 
         // Assert
         Assert.Null(options.Tool);
@@ -1123,8 +1075,7 @@ public class CommandFactoryToolLoaderTests
     public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyTool()
     {
         // Arrange - create a tool loader with read-only mode enabled
-        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
-        var (toolLoader, commandFactory) = CreateToolLoader(readOnlyOptions);
+        var (toolLoader, commandFactory) = CreateToolLoader(new() { ReadOnly = true });
 
         // Add a fake non-read-only command
         var fakeCommand = Substitute.For<IBaseCommand>();
@@ -1137,15 +1088,12 @@ public class CommandFactoryToolLoaderTests
         var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
         commandMap["fake-write-tool"] = fakeCommand;
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var mockServer = Substitute.For<McpServer>();
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = "fake-write-tool",
-                Arguments = new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = "fake-write-tool",
+            Arguments = new Dictionary<string, JsonElement>()
+        });
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -1162,8 +1110,7 @@ public class CommandFactoryToolLoaderTests
     public async Task CallToolHandler_WithReadOnlyMode_AllowsReadOnlyTool()
     {
         // Arrange - create a tool loader with read-only mode enabled
-        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
-        var (toolLoader, commandFactory) = CreateToolLoader(readOnlyOptions);
+        var (toolLoader, commandFactory) = CreateToolLoader(new() { ReadOnly = true });
 
         // Add a fake read-only command
         var fakeCommand = Substitute.For<IBaseCommand>();
@@ -1178,15 +1125,12 @@ public class CommandFactoryToolLoaderTests
         var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
         commandMap["fake-readonly-tool"] = fakeCommand;
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var mockServer = Substitute.For<McpServer>();
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = "fake-readonly-tool",
-                Arguments = new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = "fake-readonly-tool",
+            Arguments = new Dictionary<string, JsonElement>()
+        });
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -1200,8 +1144,7 @@ public class CommandFactoryToolLoaderTests
     public async Task CallToolHandler_WithHttpMode_RejectsLocalRequiredTool()
     {
         // Arrange - create a tool loader with HTTP mode enabled
-        var httpOptions = new ToolLoaderOptions(IsHttpMode: true);
-        var (toolLoader, commandFactory) = CreateToolLoader(httpOptions);
+        var (toolLoader, commandFactory) = CreateToolLoader(new() { Transport = TransportTypes.Http });
 
         // Add a fake local-required command
         var fakeCommand = Substitute.For<IBaseCommand>();
@@ -1214,15 +1157,12 @@ public class CommandFactoryToolLoaderTests
         var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
         commandMap["fake-local-tool"] = fakeCommand;
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var mockServer = Substitute.For<McpServer>();
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = "fake-local-tool",
-                Arguments = new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = "fake-local-tool",
+            Arguments = new Dictionary<string, JsonElement>()
+        });
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -1239,8 +1179,7 @@ public class CommandFactoryToolLoaderTests
     public async Task CallToolHandler_WithoutReadOnlyMode_AllowsNonReadOnlyTool()
     {
         // Arrange - create a tool loader WITHOUT read-only mode
-        var defaultOptions = new ToolLoaderOptions(ReadOnly: false);
-        var (toolLoader, commandFactory) = CreateToolLoader(defaultOptions);
+        var (toolLoader, commandFactory) = CreateToolLoader(new() { ReadOnly = false });
 
         // Add a fake non-read-only command
         var fakeCommand = Substitute.For<IBaseCommand>();
@@ -1255,15 +1194,12 @@ public class CommandFactoryToolLoaderTests
         var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
         commandMap["fake-write-tool-2"] = fakeCommand;
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var mockServer = Substitute.For<McpServer>();
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = "fake-write-tool-2",
-                Arguments = new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = "fake-write-tool-2",
+            Arguments = new Dictionary<string, JsonElement>()
+        });
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -1290,18 +1226,15 @@ public class CommandFactoryToolLoaderTests
         var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
         commandMap["fake-write-tool"] = fakeCommand;
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        var mockServer = Substitute.For<McpServer>();
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = "fake-write-tool",
-                Arguments = new Dictionary<string, JsonElement>()
+            Name = "fake-write-tool",
+            Arguments = new Dictionary<string, JsonElement>()
                 {
                     { "unknown-param", JsonDocument.Parse("\"some-value\"").RootElement }
                 }
-            }
-        };
+        });
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);

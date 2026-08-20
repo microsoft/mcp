@@ -4,8 +4,8 @@
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
@@ -21,7 +21,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 {
     private readonly ServiceProvider _serviceProvider;
     private readonly ICommandFactory _commandFactory;
-    private readonly IOptions<ServerStartOptions> _options;
+    private readonly IOptions<ServerRuntimeConfiguration> _options;
     private readonly ILogger<NamespaceToolLoader> _logger;
 
     public NamespaceToolLoaderTests()
@@ -29,8 +29,8 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         _serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider() as ServiceProvider
             ?? throw new InvalidOperationException("Failed to create service provider");
         _commandFactory = CommandFactoryHelpers.CreateCommandFactory(_serviceProvider);
-        _options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
-        _logger = NullLogger<NamespaceToolLoader>.Instance;
+        _options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
+        _logger = Substitute.For<ILogger<NamespaceToolLoader>>();
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task ListToolsHandler_FiltersNamespacesWhenConfigured()
     {
         // Arrange
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             Namespace = ["storage", "keyvault"]
         });
@@ -138,7 +138,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         rootGroup.SubGroup.AddRange([storageGroup, keyvaultGroup]);
         commandFactory.RootGroup.Returns(rootGroup);
 
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             ReadOnly = true
         });
@@ -171,7 +171,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         rootGroup.SubGroup.AddRange([storageGroup, keyvaultGroup]);
         commandFactory.RootGroup.Returns(rootGroup);
 
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             Transport = TransportTypes.Http
         });
@@ -661,7 +661,10 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         commandFactory.GroupCommands(Arg.Any<string[]>())
             .Returns(new Dictionary<string, IBaseCommand> { ["write-cmd"] = writeCmd });
 
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { ReadOnly = true });
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            ReadOnly = true
+        });
 
         var loader = new NamespaceToolLoader(commandFactory, options, _logger);
         var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
@@ -701,7 +704,10 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         commandFactory.GroupCommands(Arg.Any<string[]>())
             .Returns(new Dictionary<string, IBaseCommand> { ["read-cmd"] = readCmd });
 
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { ReadOnly = true });
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            ReadOnly = true
+        });
 
         var loader = new NamespaceToolLoader(commandFactory, options, _logger);
         var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
@@ -735,7 +741,10 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         commandFactory.GroupCommands(Arg.Any<string[]>())
             .Returns(new Dictionary<string, IBaseCommand> { ["read-cmd"] = readCmd });
 
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { ReadOnly = true });
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            ReadOnly = true
+        });
 
         var loader = new NamespaceToolLoader(commandFactory, options, _logger);
         var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
@@ -781,7 +790,10 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         commandFactory.GroupCommands(Arg.Any<string[]>())
             .Returns(new Dictionary<string, IBaseCommand> { ["local-cmd"] = localCmd });
 
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { Transport = TransportTypes.Http });
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            Transport = TransportTypes.Http
+        });
 
         var loader = new NamespaceToolLoader(commandFactory, options, _logger);
         var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
@@ -821,7 +833,10 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         commandFactory.GroupCommands(Arg.Any<string[]>())
             .Returns(new Dictionary<string, IBaseCommand> { ["remote-cmd"] = remoteCmd });
 
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { Transport = TransportTypes.Http });
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            Transport = TransportTypes.Http
+        });
 
         var loader = new NamespaceToolLoader(commandFactory, options, _logger);
         var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
@@ -841,7 +856,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task GetChildToolList_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
     {
         // Arrange
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             ReadOnly = true
         });
@@ -861,7 +876,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task GetChildToolList_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
     {
         // Arrange
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             Transport = TransportTypes.Http
         });

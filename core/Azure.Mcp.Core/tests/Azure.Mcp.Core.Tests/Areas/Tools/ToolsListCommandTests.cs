@@ -132,7 +132,9 @@ public class ToolsListCommandTests
         var result = DeserializeCommandsResults(response);
 
         Assert.NotNull(result.Commands);
-        Assert.DoesNotContain(result.Commands, cmd => cmd.Name == "list" && cmd.Command.Contains("tool"));
+        // CommandInfo.Command is the full command path, e.g., "tool list" or "tool get"
+        // Make sure we don't have any hidden commands.
+        Assert.DoesNotContain(result.Commands, cmd => cmd.Name == "list" && cmd.Command == "tool list");
         Assert.Contains(result.Commands, cmd => !string.IsNullOrEmpty(cmd.Name));
     }
 

@@ -3,8 +3,8 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
-using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using NSubstitute;
@@ -16,12 +16,12 @@ public class ConsolidatedToolDiscoveryStrategyTests
 {
     private static ConsolidatedToolDiscoveryStrategy CreateStrategy(
         ICommandFactory? commandFactory = null,
-        ServerStartOptions? options = null,
+        ServerRuntimeConfiguration? options = null,
         string? entryPoint = null)
     {
         var factory = commandFactory ?? CommandFactoryHelpers.CreateCommandFactory();
         var serviceProvider = CommandFactoryHelpers.SetupCommonServices().BuildServiceProvider();
-        var startOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServerStartOptions());
+        var startOptions = Microsoft.Extensions.Options.Options.Create(options ?? new());
         var configurationOptions = Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
         {
             Name = "Test Server",
@@ -78,8 +78,7 @@ public class ConsolidatedToolDiscoveryStrategyTests
     public void CreateConsolidatedCommandFactory_WithNamespaceFilter_FiltersCommands()
     {
         // Arrange
-        var options = new ServerStartOptions { Namespace = ["storage"] };
-        var strategy = CreateStrategy(options: options);
+        var strategy = CreateStrategy(options: new() { Namespace = ["storage"] });
 
         // Act
         var factory = strategy.CreateConsolidatedCommandFactory();
@@ -94,8 +93,7 @@ public class ConsolidatedToolDiscoveryStrategyTests
     public void CreateConsolidatedCommandFactory_WithReadOnlyFilter_FiltersCommands()
     {
         // Arrange
-        var options = new ServerStartOptions { ReadOnly = true };
-        var strategy = CreateStrategy(options: options);
+        var strategy = CreateStrategy(options: new() { ReadOnly = true });
 
         // Act
         var factory = strategy.CreateConsolidatedCommandFactory();
@@ -112,8 +110,7 @@ public class ConsolidatedToolDiscoveryStrategyTests
     public void CreateConsolidatedCommandFactory_HandlesEmptyNamespaceFilter()
     {
         // Arrange
-        var options = new ServerStartOptions { Namespace = [] };
-        var strategy = CreateStrategy(options: options);
+        var strategy = CreateStrategy(options: new() { Namespace = [] });
 
         // Act
         var factory = strategy.CreateConsolidatedCommandFactory();
