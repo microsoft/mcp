@@ -333,7 +333,7 @@ public class SearchServiceTests
         {
             DefaultConfigurationName = "default-config"
         };
-        index.SemanticSearch.Configurations.Add(new SemanticConfiguration("other-config", new SemanticPrioritizedFields()));
+        index.SemanticSearch.Configurations.Add(new SemanticConfiguration("default-config", new SemanticPrioritizedFields()));
         var options = new SearchOptions();
 
         SearchService.ConfigureQueryType(options, index, IndexQueryType.Semantic);
