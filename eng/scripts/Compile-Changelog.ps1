@@ -930,8 +930,8 @@ if (-not $SkipVsCode) {
     $headerEnd = $headerMatch.Length
     $newVscodeContent = $vscodeContent.Substring(0, $headerEnd) + "`n" + $vscodeEntryText + "`n`n" + $vscodeContent.Substring($headerEnd).TrimStart("`n", "`r")
 
-    Write-Host "VS Code Output (as it will appear in CHANGELOG.md):" -ForegroundColor Cyan
-    Write-Host "====================================================" -ForegroundColor Cyan
+    Write-Host "VS Code Output (as it will appear in vscode/CHANGELOG.md):" -ForegroundColor Cyan
+    Write-Host "===========================================================" -ForegroundColor Cyan
     Write-Host ""
     $vscodeEntry | ForEach-Object { Write-Host $_ -ForegroundColor Gray }
     Write-Host ""
