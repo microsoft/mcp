@@ -17,13 +17,13 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Id = "e3f09221-523a-4107-a715-823cebd97902",
     Name = "list",
     Title = "List Advisor Recommendations",
-    Description = "Retrieve individual Azure Advisor recommendation records (one row per recommendation) from a subscription. " +
-        "Use this ONLY when the user wants to see the actual recommendation contents/details. " +
+    Description = "List, show, search, or find individual active Azure Advisor recommendation records in a subscription, including affected resource details when available. " +
+        "Use this when the user wants actual recommendation contents or details in the Cost, Security, Performance, HighAvailability, or OperationalExcellence categories. " +
+        "Filter by category, business impact, recommendation type ID, impacted Azure resource type (for example, Microsoft.Storage/storageAccounts), resource name or ID, recommendation text, subcategory, Service Health tracking IDs, or retirement date. " +
         "Do NOT use this to answer aggregate questions like 'how many', 'top N resource types', 'breakdown by category', " +
         "or 'which impact has the most' — for those, call the 'summary' tool instead (it aggregates server-side over the " +
         "entire population, while 'list' returns at most 100 records and reports when results are truncated). " +
         "Only active recommendations (status 'New') are returned; completed, dismissed, and postponed ones are excluded. " +
-        "Supports optional filters: --category, --impact, --resource-type, --resource, --search, --sub-category, --tracking-ids, --retirement-date. " +
         "--tracking-ids accepts multiple Service Health tracking IDs and returns recommendations matching any of them. " +
         "--tracking-ids and --retirement-date can be used independently or together. With either filter, --sub-category " +
         "is optional; when specified, it must be ServiceUpgradeAndRetirement. " +
@@ -47,21 +47,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
     public override void ValidateOptions(RecommendationListOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-
-        ServiceRetirementFilterValidator.Validate(
-            validationResult,
-            options.SubCategory,
-            options.TrackingIds,
-            options.RetirementDate);
-
-        if (string.Equals(options.Category?.Trim(), "Security", StringComparison.OrdinalIgnoreCase) &&
-                        (!string.IsNullOrWhiteSpace(options.SubCategory) ||
-                         options.TrackingIds?.Any(id => !string.IsNullOrWhiteSpace(id)) == true ||
-                         !string.IsNullOrWhiteSpace(options.RetirementDate)))
-        {
-            validationResult.Errors.Add(
-                "Subcategory, tracking ID, and retirement-date filters are not applicable to Security recommendations.");
-        }
+        RecommendationFilterValidator.Validate(options, validationResult);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecommendationListOptions options, CancellationToken cancellationToken)
@@ -79,6 +65,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
             var filters = new Models.RecommendationFilters(
                 Category: options.Category,
                 Impact: options.Impact,
+                RecommendationTypeId: RecommendationFilterValidator.NormalizeRecommendationTypeId(options.RecommendationTypeId),
                 ResourceType: options.ResourceType,
                 Resource: options.Resource,
                 Search: options.Search,
@@ -103,12 +90,13 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         {
             _logger.LogError(ex,
                 "Error listing Advisor recommendations. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, " +
-                "Category: {Category}, Impact: {Impact}, ResourceType: {ResourceType}, Resource: {Resource}, " +
+                "Category: {Category}, Impact: {Impact}, RecommendationTypeId: {RecommendationTypeId}, ResourceType: {ResourceType}, Resource: {Resource}, " +
                 "SubCategory: {SubCategory}, TrackingIdCount: {TrackingIdCount}, RetirementDate: {RetirementDate}, Top: {Top}, HasSearch: {HasSearch}.",
                 options.Subscription,
                 options.ResourceGroup,
                 options.Category,
                 options.Impact,
+                options.RecommendationTypeId,
                 options.ResourceType,
                 options.Resource,
                 options.SubCategory,

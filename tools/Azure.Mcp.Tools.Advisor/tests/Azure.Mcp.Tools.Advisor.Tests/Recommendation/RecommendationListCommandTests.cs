@@ -191,6 +191,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
             "--subscription", "sub123",
             "--category", "Security",
             "--impact", "High",
+            "--recommendation-type-id", "1D70919C-1A4A-4F79-8300-BB576C291E9D",
             "--resource-type", "Microsoft.Storage/storageAccounts",
             "--resource", "mystorage",
             "--search", "encryption");
@@ -200,6 +201,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Assert.NotNull(captured);
         Assert.Equal("Security", captured!.Category);
         Assert.Equal("High", captured.Impact);
+        Assert.Equal("1d70919c-1a4a-4f79-8300-bb576c291e9d", captured.RecommendationTypeId);
         Assert.Equal("Microsoft.Storage/storageAccounts", captured.ResourceType);
         Assert.Equal("mystorage", captured.Resource);
         Assert.Equal("encryption", captured.Search);
@@ -228,9 +230,53 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Assert.NotNull(captured);
         Assert.Null(captured!.Category);
         Assert.Null(captured.Impact);
+        Assert.Null(captured.RecommendationTypeId);
         Assert.Null(captured.ResourceType);
         Assert.Null(captured.Resource);
         Assert.Null(captured.Search);
+    }
+
+    [Theory]
+    [InlineData("--recommendation-type-id", "not-a-guid")]
+    [InlineData("--recommendation-type-id", "{1d70919c-1a4a-4f79-8300-bb576c291e9d}")]
+    [InlineData("--category", "Unknown")]
+    [InlineData("--impact", "Critical")]
+    public async Task ExecuteAsync_InvalidClosedFilter_ReturnsBadRequest(string option, string value)
+    {
+        var response = await ExecuteCommandAsync("--subscription", "sub123", option, value);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(option, response.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.DidNotReceive().ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RecommendationTypeId_TrimsAndNormalizesGuid()
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--recommendation-type-id", "  1D70919C-1A4A-4F79-8300-BB576C291E9D  ");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal("1d70919c-1a4a-4f79-8300-bb576c291e9d", captured!.RecommendationTypeId);
     }
 
     [Theory]

@@ -278,6 +278,7 @@ public class AdvisorService(IAzureService azureService)
         ArgumentNullException.ThrowIfNull(getPage);
 
         var results = new List<RecommendationMetadata>();
+        var seenSkipTokens = new HashSet<string>(StringComparer.Ordinal);
         string? skipToken = null;
 
         do
@@ -291,6 +292,12 @@ public class AdvisorService(IAzureService azureService)
             {
                 throw new InvalidOperationException(
                     "Azure Resource Graph truncated Advisor metadata results without returning a continuation token.");
+            }
+
+            if (!string.IsNullOrEmpty(skipToken) && !seenSkipTokens.Add(skipToken))
+            {
+                throw new InvalidOperationException(
+                    "Azure Resource Graph returned a repeated continuation token while paging Advisor metadata.");
             }
         }
         while (!string.IsNullOrEmpty(skipToken));
@@ -716,6 +723,11 @@ public class AdvisorService(IAzureService azureService)
             if (!metadataWasResolved && !string.IsNullOrWhiteSpace(filters.Impact))
             {
                 clauses.Add($"tostring(properties.impact) =~ '{SanitizeForKql(filters.Impact)}'");
+            }
+
+            if (!string.IsNullOrWhiteSpace(filters.RecommendationTypeId))
+            {
+                clauses.Add($"tostring(properties.recommendationTypeId) =~ '{SanitizeForKql(filters.RecommendationTypeId)}'");
             }
 
             if (!string.IsNullOrWhiteSpace(filters.ResourceType))

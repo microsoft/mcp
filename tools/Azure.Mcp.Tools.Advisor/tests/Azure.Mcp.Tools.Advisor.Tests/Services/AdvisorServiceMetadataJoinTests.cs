@@ -66,6 +66,14 @@ public class AdvisorServiceMetadataJoinTests
             new RecommendationFilters(Resource: "mystorage", Search: "encryption")));
     }
 
+    [Fact]
+    public void HasMetadataFilters_RecommendationTypeIdOnly_ReturnsFalse()
+    {
+        Assert.False(AdvisorService.HasMetadataFilters(
+            new RecommendationFilters(
+                RecommendationTypeId: "1d70919c-1a4a-4f79-8300-bb576c291e9d")));
+    }
+
     [Theory]
     [InlineData("Security", true)]
     [InlineData(" security ", true)]

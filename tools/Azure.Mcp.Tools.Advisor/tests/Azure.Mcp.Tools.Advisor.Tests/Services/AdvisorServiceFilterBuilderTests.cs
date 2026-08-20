@@ -54,6 +54,17 @@ public class AdvisorServiceFilterBuilderTests
     }
 
     [Fact]
+    public void BuildAdditionalFilter_RecommendationTypeId_UsesCaseInsensitiveEquality()
+    {
+        var result = AdvisorService.BuildAdditionalFilter(
+            new RecommendationFilters(RecommendationTypeId: "1d70919c-1a4a-4f79-8300-bb576c291e9d"));
+
+        Assert.Equal(
+            $"{StatusClause} and tostring(properties.recommendationTypeId) =~ '1d70919c-1a4a-4f79-8300-bb576c291e9d'",
+            result);
+    }
+
+    [Fact]
     public void BuildAdditionalFilter_ResourceType_UsesCaseInsensitiveContainsOnResourceId()
     {
         var result = AdvisorService.BuildAdditionalFilter(
@@ -113,6 +124,7 @@ public class AdvisorServiceFilterBuilderTests
         var filters = new RecommendationFilters(
             Category: "Sec|urity",
             Impact: "Hi|gh",
+            RecommendationTypeId: "Type|Id",
             ResourceType: "Microsoft.Storage|fake",
             Resource: "my|storage",
             Search: "tls|injection");
@@ -184,5 +196,30 @@ public class AdvisorServiceFilterBuilderTests
         Assert.Equal(
             $"{StatusClause} and tostring(properties.recommendationTypeId) in~ ('Type-A')",
             result);
+    }
+
+    [Fact]
+    public void BuildAdditionalFilter_RecommendationTypeId_IntersectsMetadataMatches()
+    {
+        var result = AdvisorService.BuildAdditionalFilter(
+            new RecommendationFilters(RecommendationTypeId: "1d70919c-1a4a-4f79-8300-bb576c291e9d"),
+            ["Type-A", "1d70919c-1a4a-4f79-8300-bb576c291e9d"]);
+
+        Assert.Equal(
+            $"{StatusClause} and " +
+            "tostring(properties.recommendationTypeId) =~ '1d70919c-1a4a-4f79-8300-bb576c291e9d' and " +
+            "tostring(properties.recommendationTypeId) in~ ('Type-A', '1d70919c-1a4a-4f79-8300-bb576c291e9d')",
+            result);
+    }
+
+    [Fact]
+    public void BuildAdditionalFilter_RecommendationTypeId_IsSanitizedForInternalCallers()
+    {
+        var result = AdvisorService.BuildAdditionalFilter(
+            new RecommendationFilters(RecommendationTypeId: "bad'|id"));
+
+        Assert.NotNull(result);
+        Assert.DoesNotContain('|', result!);
+        Assert.Contains("'bad''id'", result);
     }
 }

@@ -336,6 +336,7 @@ azmcp advisor recommendation list --subscription <subscription> \
                                   [--top <top>] \
                                   [--category <category>] \
                                   [--impact <impact>] \
+                                  [--recommendation-type-id <guid>] \
                                   [--resource-type <resource-type>] \
                                   [--resource <resource>] \
                                   [--search <search>] \

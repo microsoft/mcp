@@ -15,6 +15,10 @@ public class RecommendationListOptions : ISubscriptionOption
     [Option(Description = "Filter recommendations by business impact ('High', 'Medium', or 'Low'). Case-insensitive exact match.")]
     public string? Impact { get; set; }
 
+    [Option(Description = "Filter recommendations by the recommendation type ID GUID. " +
+        "Uses a case-insensitive exact match and can be combined with other filters.")]
+    public string? RecommendationTypeId { get; set; }
+
     [Option(Description = "Filter recommendations by impacted Azure resource type (e.g., 'Microsoft.Storage/storageAccounts'). Case-insensitive exact match.")]
     public string? ResourceType { get; set; }
 
