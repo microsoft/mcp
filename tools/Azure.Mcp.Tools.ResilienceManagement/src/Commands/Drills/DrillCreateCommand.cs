@@ -27,6 +27,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
+// Drills are service-group-scoped; subscription identifies supporting resources rather than the ARM command scope.
 public sealed class DrillCreateCommand(ILogger<DrillCreateCommand> logger, IResilienceManagementService resilienceManagementService)
     : AuthenticatedCommand<DrillCreateOptions, DrillCreateCommand.DrillCreateCommandResult>
 {
@@ -47,10 +48,9 @@ public sealed class DrillCreateCommand(ILogger<DrillCreateCommand> logger, IResi
             validationResult.Errors.Add("The service group name must be a single path segment.");
         }
 
-        if (options.ResourceGroup is { } resourceGroup &&
-            (resourceGroup.Length is < 1 or > 90 || resourceGroup.EndsWith('.') || !resourceGroup.All(IsValidResourceGroupCharacter)))
+        if (options.ResourceGroup is { } resourceGroup && resourceGroup.Contains('/'))
         {
-            validationResult.Errors.Add("The resource group name must be 1 to 90 characters, contain only ASCII letters, numbers, underscores, hyphens, or periods, and not end with a period.");
+            validationResult.Errors.Add("The resource group name must be a single path segment.");
         }
 
         if (options.RecoveryPlan is { } recoveryPlan && recoveryPlan.Contains('/'))
@@ -90,9 +90,6 @@ public sealed class DrillCreateCommand(ILogger<DrillCreateCommand> logger, IResi
 
         return context.Response;
     }
-
-    private static bool IsValidResourceGroupCharacter(char character) =>
-        character is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9' or '_' or '-' or '.';
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {

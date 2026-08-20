@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ClientModel.Primitives;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
@@ -512,7 +513,13 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         ResilienceManagementDrillCollection drills = armClient.GetResilienceManagementDrills(serviceGroupId);
         Response<ResilienceManagementDrillResource> response = await drills.GetAsync(drill, cancellationToken);
 
-        using JsonDocument document = JsonDocument.Parse(response.GetRawResponse().Content.ToMemory());
+        return MapDrill(response.Value.Data);
+    }
+
+    private static DrillInfo MapDrill(ResilienceManagementDrillData data)
+    {
+        BinaryData serializedData = ((IPersistableModel<ResilienceManagementDrillData>)data).Write(new ModelReaderWriterOptions("W"));
+        using JsonDocument document = JsonDocument.Parse(serializedData.ToMemory());
         JsonElement root = document.RootElement;
 
         return new DrillInfo(
@@ -548,9 +555,16 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             ResourceGroup = resourceGroup
         };
         properties.ChaosResourceProperties = new ChaosResourcePropertiesOfDrill(associatedIdentity, associatedIdentity);
-        properties.RbacSetupMode = new ResilienceManagementRbacSetupMode(rbacSetupMode.ToString());
+        properties.RbacSetupMode = rbacSetupMode switch
+        {
+            DrillRbacSetupMode.AutomatedCustomRole => new ResilienceManagementRbacSetupMode("AutomatedCustomRole"),
+            DrillRbacSetupMode.AutomatedBuiltinRoles => new ResilienceManagementRbacSetupMode("AutomatedBuiltinRoles"),
+            DrillRbacSetupMode.Manual => new ResilienceManagementRbacSetupMode("Manual"),
+            _ => throw new ArgumentOutOfRangeException(nameof(rbacSetupMode), rbacSetupMode, "Unsupported RBAC setup mode.")
+        };
         if (!string.IsNullOrWhiteSpace(recoveryPlan))
         {
+            // The SDK model exposes no public constructor or setters for RecoveryPlanId, so the model factory is required.
             properties.RecoveryPlanProperties = ArmResilienceManagementModelFactory.RecoveryPlanPropertiesOfDrill(
                 associatedIdentity,
                 RecoveryPlanResource.CreateResourceIdentifier(serviceGroup, recoveryPlan),
@@ -566,17 +580,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         ArmOperation<ResilienceManagementDrillResource> operation = await drills.CreateOrUpdateAsync(WaitUntil.Started, drill, drillData, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
-        using JsonDocument document = JsonDocument.Parse(operation.GetRawResponse().Content.ToMemory());
-        JsonElement root = document.RootElement;
-
-        return new DrillInfo(
-            Id: root.TryGetProperty("id", out JsonElement idElement) ? idElement.GetString() ?? string.Empty : string.Empty,
-            Name: root.TryGetProperty("name", out JsonElement nameElement) ? nameElement.GetString() ?? string.Empty : string.Empty,
-            ResourceType: root.TryGetProperty("type", out JsonElement typeElement) ? typeElement.GetString() : null,
-            Location: root.TryGetProperty("location", out JsonElement locationElement) ? locationElement.GetString() : null,
-            Tags: GetTagsOrNull(root),
-            Properties: root.TryGetProperty("properties", out JsonElement propertiesElement) ? propertiesElement.Clone() : default,
-            SystemData: root.TryGetProperty("systemData", out JsonElement systemDataElement) ? systemDataElement.Clone() : default);
+        return MapDrill(operation.Value.Data);
     }
 
     public async Task<IEnumerable<ResourceSummary>> ListDrillResourcesAsync(string serviceGroup, string drill, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)

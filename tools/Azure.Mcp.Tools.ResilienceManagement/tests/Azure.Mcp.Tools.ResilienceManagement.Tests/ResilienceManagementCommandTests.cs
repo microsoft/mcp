@@ -153,6 +153,11 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
 
         var drill = result.AssertProperty("drill");
         Assert.EndsWith(drillName, drill.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
+        var properties = drill.AssertProperty("properties");
+        Assert.Equal("Succeeded", properties.AssertProperty("provisioningState").GetString());
+        Assert.Equal("Zonal", properties.AssertProperty("drillType").GetString());
+        var recoveryPlanId = properties.AssertProperty("recoveryPlanProperties").AssertProperty("recoveryPlanId").GetString();
+        Assert.EndsWith($"/recoveryPlans/{recoveryPlan}", recoveryPlanId, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

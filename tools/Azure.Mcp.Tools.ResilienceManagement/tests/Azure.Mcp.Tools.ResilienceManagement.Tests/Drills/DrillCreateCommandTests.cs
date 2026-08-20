@@ -61,6 +61,53 @@ public sealed class DrillCreateCommandTests : CommandUnitTestsBase<DrillCreateCo
         Assert.Contains("single path segment", response.Message);
     }
 
+    [Theory]
+    [InlineData("rg(prod)")]
+    [InlineData("资源组")]
+    public async Task ExecuteAsync_AcceptsValidResourceGroupName(string resourceGroup)
+    {
+        ConfigureCreatedDrill();
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--drill", "drill1",
+            "--subscription", "sub",
+            "--region", "westus2",
+            "--resource-group", resourceGroup,
+            "--drill-type", "Zonal",
+            "--rbac-setup-mode", "Manual");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).CreateDrillAsync(
+            "sg1",
+            "drill1",
+            "sub",
+            "westus2",
+            resourceGroup,
+            DrillKind.Zonal,
+            DrillRbacSetupMode.Manual,
+            null,
+            null,
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsResourceGroupNameContainingPathSeparator()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--drill", "drill1",
+            "--subscription", "sub",
+            "--region", "westus2",
+            "--resource-group", "parent/rg",
+            "--drill-type", "Zonal",
+            "--rbac-setup-mode", "Manual");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("single path segment", response.Message);
+    }
+
     [Fact]
     public async Task ExecuteAsync_ReturnsCreatedDrill()
     {
