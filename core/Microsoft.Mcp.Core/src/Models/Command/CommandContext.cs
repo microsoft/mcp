@@ -24,6 +24,11 @@ public class CommandContext
     public Activity? Activity { get; }
 
     /// <summary>
+    /// Whether the MCP server is running in remote mode.
+    /// </summary>
+    public bool RunningInRemoteMode { get; init; }
+
+    /// <summary>
     /// The MCP server handling the current tool call. Used by commands that need to send
     /// progress notifications or invoke sampling (deprecated in MCP 2026-07-28).
     /// <para>

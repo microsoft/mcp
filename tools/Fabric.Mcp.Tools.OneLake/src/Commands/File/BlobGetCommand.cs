@@ -6,8 +6,6 @@ using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
@@ -25,14 +23,11 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false)]
-public sealed class BlobGetCommand(
-    ILogger<BlobGetCommand> logger,
-    IOneLakeService oneLakeService,
-    IOptions<ServerStartOptions> serviceOptions) : AuthenticatedCommand<BlobGetOptions, BlobGetCommand.BlobGetCommandResult>
+public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IOneLakeService oneLakeService)
+    : AuthenticatedCommand<BlobGetOptions, BlobGetCommand.BlobGetCommandResult>
 {
     private readonly ILogger<BlobGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-    private readonly IOptions<ServerStartOptions> _serviceOptions = serviceOptions ?? throw new ArgumentNullException(nameof(serviceOptions));
 
     private const long InlineContentLimitBytes = 1 * 1024 * 1024; // 1 MiB inline payload limit
 
@@ -62,13 +57,10 @@ public sealed class BlobGetCommand(
                 ? options.ItemId
                 : options.Item!;
 
-            var transport = _serviceOptions.Value.Transport ?? "stdio";
-            var isLocalTransport = string.Equals(transport, "stdio", StringComparison.OrdinalIgnoreCase);
-
             string? downloadPath = null;
             if (!string.IsNullOrWhiteSpace(options.DownloadFilePath))
             {
-                if (!isLocalTransport)
+                if (context.RunningInRemoteMode)
                 {
                     throw new ArgumentException("The --download-file-path option is only supported when the server runs with stdio transport.", nameof(options.DownloadFilePath));
                 }

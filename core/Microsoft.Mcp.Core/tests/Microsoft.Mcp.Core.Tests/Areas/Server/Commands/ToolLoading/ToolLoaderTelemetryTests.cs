@@ -5,9 +5,9 @@ using System.CommandLine;
 using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
-using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
@@ -44,7 +44,7 @@ public class ToolLoaderTelemetryTests : IDisposable
         var toolName = "tool";
         var mcpServer = Substitute.For<McpServer>();
         var commandFactory = Substitute.For<ICommandFactory>();
-        var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions(Tool: ["nevercalled"]));
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Tool = ["nevercalled"] });
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
         var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger));
@@ -69,7 +69,7 @@ public class ToolLoaderTelemetryTests : IDisposable
         {
             ["nevercalled"] = Substitute.For<IBaseCommand>()
         });
-        var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
         var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger));
@@ -100,7 +100,7 @@ public class ToolLoaderTelemetryTests : IDisposable
         {
             [toolName] = toolCommand
         });
-        var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
         var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger));
@@ -134,7 +134,7 @@ public class ToolLoaderTelemetryTests : IDisposable
         {
             [toolName] = toolCommand
         });
-        var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
         var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger));
@@ -169,7 +169,7 @@ public class ToolLoaderTelemetryTests : IDisposable
         {
             [toolName] = toolCommand
         });
-        var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
         var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(commandFactory, options, logger));
@@ -186,38 +186,20 @@ public class ToolLoaderTelemetryTests : IDisposable
 
     private IMcpRuntime CreateRuntime(IToolLoader toolLoader)
     {
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
         var telemetry = Substitute.For<ITelemetryService>();
         telemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>(), Arg.Any<RequestParams?>()).Returns(_activity);
-        var logger = Substitute.For<ILogger<McpRuntime>>();
 
-        var runtime = new McpRuntime(toolLoader, options, telemetry, logger);
+        var runtime = new McpRuntime(toolLoader, telemetry);
 
         return runtime;
     }
 
-    private static RequestContext<CallToolRequestParams> CreateToolCallRequest(McpServer mcpServer, string toolName)
-    {
-        var parameters = new CallToolRequestParams()
+    private static RequestContext<CallToolRequestParams> CreateToolCallRequest(McpServer mcpServer, string toolName) =>
+        new(mcpServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
             Name = toolName,
             Arguments = new Dictionary<string, JsonElement>()
-        };
-        return new RequestContext<CallToolRequestParams>(mcpServer, CreateJsonRpcRequest("tools/call"), parameters)
-        {
-            Params = parameters
-        };
-    }
-
-    private static JsonRpcRequest CreateJsonRpcRequest(string method)
-    {
-        return new JsonRpcRequest
-        {
-            Id = new RequestId(Guid.NewGuid().ToString()),
-            JsonRpc = "2.0",
-            Method = method
-        };
-    }
+        });
 
     private static object GetAndAssertTagKeyValue(Activity activity, string tagName)
     {

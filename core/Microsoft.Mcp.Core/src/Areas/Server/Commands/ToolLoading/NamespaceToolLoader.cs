@@ -28,12 +28,12 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// </summary>
 public sealed class NamespaceToolLoader(
     ICommandFactory commandFactory,
-    IOptions<ServerStartOptions> options,
+    IOptions<ServerRuntimeConfiguration> configuration,
     ILogger<NamespaceToolLoader> logger,
     bool applyFilter = true) : BaseToolLoader(logger)
 {
     private readonly ICommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
-    private readonly IOptions<ServerStartOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
     private readonly Lazy<IReadOnlyList<string>> _availableNamespaces = new(() =>
     {
@@ -43,9 +43,9 @@ public sealed class NamespaceToolLoader(
         {
             allSubGroups = allSubGroups
                 .Where(group => !DiscoveryConstants.IgnoredCommandGroups.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
-                .Where(group => options.Value.Namespace == null ||
-                               options.Value.Namespace.Length == 0 ||
-                               options.Value.Namespace.Contains(group.Name, StringComparer.OrdinalIgnoreCase));
+                .Where(group => configuration.Value.Namespace == null ||
+                               configuration.Value.Namespace.Length == 0 ||
+                               configuration.Value.Namespace.Contains(group.Name, StringComparer.OrdinalIgnoreCase));
         }
 
         return [.. allSubGroups.Select(group => group.Name)];
@@ -118,13 +118,13 @@ public sealed class NamespaceToolLoader(
             var group = _commandFactory.RootGroup.SubGroup
                 .First(g => string.Equals(g.Name, namespaceName, StringComparison.OrdinalIgnoreCase));
 
-            if (_options.Value.ReadOnly == true && AllToolsInGroupMatch(meta => !meta.ReadOnly, group))
+            if (_configuration.Value.ReadOnly == true && AllToolsInGroupMatch(meta => !meta.ReadOnly, group))
             {
                 // If ReadOnly mode is enabled and all commands in the group are not read-only, skip exposing this namespace as a tool.
                 continue;
             }
 
-            if (_options.Value.IsHttpMode && AllToolsInGroupMatch(meta => meta.LocalRequired, group))
+            if (_configuration.Value.IsHttpMode && AllToolsInGroupMatch(meta => meta.LocalRequired, group))
             {
                 // If HTTP mode is enabled and all commands in the group are local-required, skip exposing this namespace as a tool.
                 continue;
@@ -371,7 +371,7 @@ public sealed class NamespaceToolLoader(
             Activity.Current?.SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(cmd));
 
             // Enforce read-only mode at execution time
-            if ((_options.Value.ReadOnly ?? false) && !cmd.Metadata.ReadOnly)
+            if (_configuration.Value.ReadOnly && !cmd.Metadata.ReadOnly)
             {
                 return new CallToolResult
                 {
@@ -388,7 +388,7 @@ public sealed class NamespaceToolLoader(
             }
 
             // Enforce HTTP mode restrictions at execution time
-            if (_options.Value.IsHttpMode && cmd.Metadata.LocalRequired)
+            if (_configuration.Value.IsHttpMode && cmd.Metadata.LocalRequired)
             {
                 return new CallToolResult
                 {
@@ -409,7 +409,7 @@ public sealed class NamespaceToolLoader(
                 request,
                 $"{namespaceName} {command}",
                 cmd,
-                _options.Value.DangerouslyDisableElicitation,
+                _configuration.Value.DangerouslyDisableElicitation,
                 _logger,
                 cancellationToken);
 
@@ -422,7 +422,8 @@ public sealed class NamespaceToolLoader(
             var commandContext = new CommandContext(currentActivity)
             {
                 McpServer = request.Server,
-                ProgressToken = request.Params?.ProgressToken
+                ProgressToken = request.Params?.ProgressToken,
+                RunningInRemoteMode = _configuration.Value.IsHttpMode
             };
             var realCommand = cmd.GetCommand();
 
@@ -605,8 +606,8 @@ public sealed class NamespaceToolLoader(
         }
 
         var list = namespaceCommands
-            .Where(kvp => !(_options.Value.ReadOnly ?? false) || kvp.Value.Metadata.ReadOnly)
-            .Where(kvp => !_options.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
+            .Where(kvp => !_configuration.Value.ReadOnly || kvp.Value.Metadata.ReadOnly)
+            .Where(kvp => !_configuration.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
             .Select(kvp => CreateToolFromCommand(kvp.Key, kvp.Value))
             .ToList();
 

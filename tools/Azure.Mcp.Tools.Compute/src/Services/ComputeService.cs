@@ -12,21 +12,15 @@ using Azure.ResourceManager.Network;
 using Azure.ResourceManager.Network.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Compute.Services;
 
-public class ComputeService(
-    IAzureService azureService,
-    ILogger<ComputeService> logger,
-    IOptions<ServerStartOptions> serviceStartOptions)
+public class ComputeService(IAzureService azureService, ILogger<ComputeService> logger)
     : BaseAzureResourceService(azureService), IComputeService
 {
     private readonly ILogger<ComputeService> _logger = logger;
-    private readonly IOptions<ServerStartOptions> _serviceStartOptions = serviceStartOptions;
 
     // Default VM size (D-series v5, approximately 2 vCPU and 8 GB RAM)
     private const string DefaultVmSize = "Standard_D2s_v5";
@@ -64,6 +58,7 @@ public class ComputeService(
     };
 
     public async Task<VmCreateResult> CreateVmAsync(
+        bool runningInRemoteMode,
         string vmName,
         string resourceGroup,
         string subscription,
@@ -185,7 +180,7 @@ public class ComputeService(
             // Only add SSH key if explicitly provided
             if (!string.IsNullOrEmpty(sshPublicKey))
             {
-                var resolvedSshKey = ResolveSshPublicKey(sshPublicKey);
+                var resolvedSshKey = ResolveSshPublicKey(sshPublicKey, runningInRemoteMode);
 
                 vmData.OSProfile.LinuxConfiguration.SshPublicKeys.Add(new()
                 {
@@ -715,6 +710,7 @@ public class ComputeService(
     }
 
     public async Task<VmssCreateResult> CreateVmssAsync(
+        bool runningInRemoteMode,
         string vmssName,
         string resourceGroup,
         string subscription,
@@ -845,7 +841,7 @@ public class ComputeService(
 
             if (!string.IsNullOrEmpty(sshPublicKey))
             {
-                var resolvedSshKey = ResolveSshPublicKey(sshPublicKey);
+                var resolvedSshKey = ResolveSshPublicKey(sshPublicKey, runningInRemoteMode);
 
                 vmssData.VirtualMachineProfile.OSProfile.LinuxConfiguration.SshPublicKeys.Add(new()
                 {
@@ -1878,9 +1874,9 @@ public class ComputeService(
         "sk-ecdsa-sha2-nistp256@openssh.com ",
     ];
 
-    private string ResolveSshPublicKey(string sshPublicKey)
+    private static string ResolveSshPublicKey(string sshPublicKey, bool runningInRemoteMode)
     {
-        if (!_serviceStartOptions.Value.IsHttpMode)
+        if (!runningInRemoteMode)
         {
             // In stdio mode, allow resolving file paths for convenience
             if (File.Exists(sshPublicKey))

@@ -61,6 +61,7 @@ public class VmssCreateCommandTests : SubscriptionCommandUnitTestsBase<VmssCreat
                 Tags: null);
 
             Service.CreateVmssAsync(
+                Arg.Any<bool>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -117,6 +118,7 @@ public class VmssCreateCommandTests : SubscriptionCommandUnitTestsBase<VmssCreat
             Tags: new Dictionary<string, string> { { "env", "test" } });
 
         Service.CreateVmssAsync(
+            Arg.Any<bool>(),
             _knownVmssName,
             _knownResourceGroup,
             _knownSubscription,
@@ -183,6 +185,7 @@ public class VmssCreateCommandTests : SubscriptionCommandUnitTestsBase<VmssCreat
         var conflictException = new RequestFailedException((int)HttpStatusCode.Conflict, "A VMSS with this name already exists");
 
         Service.CreateVmssAsync(
+            Arg.Any<bool>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -237,6 +240,7 @@ public class VmssCreateCommandTests : SubscriptionCommandUnitTestsBase<VmssCreat
             Tags: null);
 
         Service.CreateVmssAsync(
+            Arg.Any<bool>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),

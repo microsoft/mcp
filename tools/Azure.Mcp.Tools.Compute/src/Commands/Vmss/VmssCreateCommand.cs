@@ -47,16 +47,16 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger, IComput
         base.ValidateOptions(options, validationResult);
 
         // Determine OS type from image
-        var effectiveOsType = ComputeUtilities.DetermineOsType(options.OsType, options.Image);
+        var isWindows = "windows".Equals(ComputeUtilities.DetermineOsType(options.OsType, options.Image), StringComparison.OrdinalIgnoreCase);
 
         // Custom validation: For Windows VMSS, password is required
-        if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(options.AdminPassword))
+        if (isWindows && string.IsNullOrEmpty(options.AdminPassword))
         {
             validationResult.Errors.Add("The --admin-password option is required for Windows VMSS.");
         }
 
         // Custom validation: For Windows VMSS, name cannot exceed 9 characters (Azure adds 6-char suffix for computer name)
-        if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase) && options.VmssName?.Length > 9)
+        if (isWindows && options.VmssName?.Length > 9)
         {
             validationResult.Errors.Add(
                 "Windows VMSS name cannot exceed 9 characters. Azure appends a 6-character suffix to create the computer name, " +
@@ -64,9 +64,7 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger, IComput
         }
 
         // Custom validation: For Linux VMSS, either SSH key or password must be provided
-        if (effectiveOsType.Equals("linux", StringComparison.OrdinalIgnoreCase) &&
-            string.IsNullOrEmpty(options.SshPublicKey) &&
-            string.IsNullOrEmpty(options.AdminPassword))
+        if (!isWindows && string.IsNullOrEmpty(options.SshPublicKey) && string.IsNullOrEmpty(options.AdminPassword))
         {
             validationResult.Errors.Add(
                 "Linux VMSS require authentication. Please provide either --ssh-public-key or --admin-password. " +
@@ -82,6 +80,7 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger, IComput
             context.Activity?.AddTag("subscription", options.Subscription);
 
             var result = await _computeService.CreateVmssAsync(
+                context.RunningInRemoteMode,
                 options.VmssName,
                 options.ResourceGroup,
                 options.Subscription!,

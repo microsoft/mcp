@@ -5,9 +5,6 @@ using System.Net;
 using Fabric.Mcp.Tools.OneLake.Commands.File;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -17,15 +14,6 @@ namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.File;
 
 public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLakeService>
 {
-    private readonly IOptions<ServerStartOptions> _serviceStartOptions;
-
-    public FileReadCommandTests()
-    {
-        _serviceStartOptions = Substitute.For<IOptions<ServerStartOptions>>();
-        _serviceStartOptions.Value.Returns(new ServerStartOptions { Transport = TransportTypes.StdIo });
-        Services.AddSingleton(_serviceStartOptions);
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
@@ -50,19 +38,13 @@ public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLa
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenLoggerIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(null!, Service, _serviceStartOptions));
+        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(null!, Service));
     }
 
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenOneLakeServiceIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, null!, _serviceStartOptions));
-    }
-
-    [Fact]
-    public void Constructor_ThrowsArgumentNullException_WhenServiceStartOptionsIsNull()
-    {
-        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, Service, null!));
+        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, null!));
     }
 
     [Fact]
@@ -250,6 +232,24 @@ public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLa
         await Service.DidNotReceive()
             .ReadFileAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<BlobDownloadOptions?>(), Arg.Any<CancellationToken>());
 
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsDownloadPath_WhenTransportIsHttp()
+    {
+        Context = new()
+        {
+            RunningInRemoteMode = true
+        };
+
+        var response = await ExecuteCommandAsync(
+            "--workspace-id", "workspace",
+            "--item-id", "lakehouse",
+            "--file-path", "Files/sample.txt",
+            "--download-file-path", "c:/temp/file.bin");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        await Service.DidNotReceive().ReadFileAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<BlobDownloadOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
