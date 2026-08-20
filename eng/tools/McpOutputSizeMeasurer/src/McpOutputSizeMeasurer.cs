@@ -4,66 +4,64 @@
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
-using Xunit;
 
-namespace Azure.Mcp.Server.Tests.Infrastructure;
+namespace McpOutputSizeMeasurer;
 
 /// <summary>
-/// Measures MCP responses from a client perspective for the server's exposed tool surfaces.
-/// This test is opt-in: set <c>MCP_OUTPUT_SIZE_ENABLED=true</c> to run it, otherwise it is
-/// skipped so it does not slow down normal test runs.
-/// Set <c>MCP_OUTPUT_SIZE_REPORT</c> to change the JSON report path.
+/// Measures MCP responses from a client perspective for a server's exposed tool surfaces.
+/// Starts the given azmcp-compatible executable over stdio, walks tool discovery
+/// (tools/list, paginated), calls every tool's learn-mode response, and re-queries every
+/// inner command a tool's learn response advertises. All requests/responses are exchanged
+/// as raw JSON-RPC text so that UTF-8 byte counts reflect exactly what crosses the wire.
 /// </summary>
-public sealed class McpOutputSizeTests(ITestOutputHelper output)
+public sealed class McpOutputSizeMeasurer
 {
-    private static readonly string[] s_modes = ["consolidated", "namespace"];
+    private readonly Action<string>? _logger;
 
-    [Fact]
-    public async Task MeasureOutputSizesForAllTools()
+    public McpOutputSizeMeasurer(Action<string>? logger = null)
     {
-        Assert.SkipUnless(
-            IsEnabled(),
-            "Set MCP_OUTPUT_SIZE_ENABLED=true to run the MCP output size measurement test.");
-
-        var measurements = new List<object>();
-        var reportPath = GetReportPath();
-        Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
-
-        foreach (var mode in s_modes)
-        {
-            measurements.Add(await MeasureModeAsync(mode, Path.GetDirectoryName(reportPath)!));
-        }
-
-        var report = JsonSerializer.Serialize(
-            new
-            {
-                transport = "stdio",
-                generatedAtUtc = DateTimeOffset.UtcNow,
-                reportPath,
-                modes = measurements
-            },
-            new JsonSerializerOptions { WriteIndented = true });
-
-        Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
-        await File.WriteAllTextAsync(
-            reportPath,
-            report,
-            Encoding.UTF8,
-            TestContext.Current.CancellationToken);
-
-        output.WriteLine(report);
-        output.WriteLine($"Measurement report saved to {reportPath}");
-        Console.WriteLine(report);
-        Console.WriteLine($"Measurement report saved to {reportPath}");
+        _logger = logger;
     }
 
-    private async Task<object> MeasureModeAsync(string mode, string reportDirectory)
+    /// <summary>
+    /// Runs the full measurement workflow for every mode in <paramref name="modes"/> and
+    /// returns a report object with the same shape previously produced by
+    /// Report shape: <c>{ transport, generatedAtUtc, reportPath, modes }</c>.
+    /// </summary>
+    public async Task<object> MeasureAsync(
+        string executablePath,
+        IReadOnlyList<string> modes,
+        string reportDirectory,
+        string reportPath,
+        CancellationToken cancellationToken = default)
     {
-        var executableName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var executablePath = Path.Combine(AppContext.BaseDirectory, executableName);
-        Assert.True(
-            File.Exists(executablePath),
-            $"Executable not found at {executablePath}. Build the Azure.Mcp.Server project first.");
+        var measurements = new List<object>();
+        foreach (var mode in modes)
+        {
+            measurements.Add(await MeasureModeAsync(executablePath, mode, reportDirectory, cancellationToken));
+        }
+
+        return new
+        {
+            transport = "stdio",
+            generatedAtUtc = DateTimeOffset.UtcNow,
+            reportPath,
+            modes = measurements
+        };
+    }
+
+    public async Task<object> MeasureModeAsync(
+        string executablePath,
+        string mode,
+        string reportDirectory,
+        CancellationToken cancellationToken = default)
+    {
+        if (!File.Exists(executablePath))
+        {
+            throw new FileNotFoundException(
+                $"Executable not found at {executablePath}. Build the server project first.",
+                executablePath);
+        }
 
         using var process = Process.Start(new ProcessStartInfo
         {
@@ -74,22 +72,23 @@ public sealed class McpOutputSizeTests(ITestOutputHelper output)
             RedirectStandardOutput = true,
             RedirectStandardError = false,
             CreateNoWindow = true
-        });
-        Assert.NotNull(process);
+        }) ?? throw new InvalidOperationException($"Failed to start process for {executablePath}.");
 
         try
         {
-            await Task.Delay(500, TestContext.Current.CancellationToken);
+            await Task.Delay(500, cancellationToken);
 
             var initializeResponse = await SendRequestAsync(
                 process,
                 """
-                {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"mcp-output-size-test","version":"1.0"}}}
-                """);
+                {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"mcp-output-size-measurer","version":"1.0"}}}
+                """,
+                cancellationToken);
 
             await SendNotificationAsync(
                 process,
-                """{"jsonrpc":"2.0","method":"notifications/initialized"}""");
+                """{"jsonrpc":"2.0","method":"notifications/initialized"}""",
+                cancellationToken);
 
             var discoveryResponses = new List<object>();
             var discoveryTexts = new List<string>();
@@ -115,7 +114,7 @@ public sealed class McpOutputSizeTests(ITestOutputHelper output)
                         method = "tools/list",
                         @params = new { cursor }
                     });
-                var response = await SendRequestAsync(process, request);
+                var response = await SendRequestAsync(process, request, cancellationToken);
                 discoveryTexts.Add(response);
                 using var document = JsonDocument.Parse(response);
                 var result = document.RootElement.GetProperty("result");
@@ -139,15 +138,10 @@ public sealed class McpOutputSizeTests(ITestOutputHelper output)
             }
             while (cursor is not null);
 
-            Assert.NotEmpty(tools);
-            var discoveryTextPath = Path.Combine(
-                reportDirectory,
-                $"mcp-output-size-{mode}-discovery.jsonl");
-            await File.WriteAllTextAsync(
-                discoveryTextPath,
-                string.Join(Environment.NewLine, discoveryTexts) + Environment.NewLine,
-                Encoding.UTF8,
-                TestContext.Current.CancellationToken);
+            if (tools.Count == 0)
+            {
+                throw new InvalidOperationException($"No tools were discovered for mode '{mode}'.");
+            }
 
             // Save every tool's learn response in a per-mode subdirectory so any payload can be
             // inspected without re-running the server. The directory is cleared first so stale
@@ -182,11 +176,12 @@ public sealed class McpOutputSizeTests(ITestOutputHelper output)
                         }
                     }
                 });
-                var response = await SendRequestAsync(process, request);
+                var response = await SendRequestAsync(process, request, cancellationToken);
                 using var document = JsonDocument.Parse(response);
-                Assert.True(
-                    document.RootElement.TryGetProperty("result", out _),
-                    $"The learn response for '{tool}' did not contain a result.");
+                if (!document.RootElement.TryGetProperty("result", out _))
+                {
+                    throw new InvalidOperationException($"The learn response for '{tool}' did not contain a result.");
+                }
 
                 learnTotalUtf8Bytes += GetUtf8ByteCount(response);
                 learnResponseTextByTool[tool] = response;
@@ -194,11 +189,7 @@ public sealed class McpOutputSizeTests(ITestOutputHelper output)
                 var learnResponseFile = Path.Combine(
                     learnDirectory,
                     $"{SanitizeFileNameSegment(tool)}.json");
-                await File.WriteAllTextAsync(
-                    learnResponseFile,
-                    response,
-                    Encoding.UTF8,
-                    TestContext.Current.CancellationToken);
+                await File.WriteAllTextAsync(learnResponseFile, response, Encoding.UTF8, cancellationToken);
 
                 learnResponses.Add(new
                 {
@@ -236,15 +227,17 @@ public sealed class McpOutputSizeTests(ITestOutputHelper output)
                             }
                         }
                     });
-                    var response = await SendRequestAsync(process, request);
+                    var response = await SendRequestAsync(process, request, cancellationToken);
                     using var document = JsonDocument.Parse(response);
-                    Assert.True(
-                        document.RootElement.TryGetProperty("result", out var commandResult),
-                        $"The learn response for '{tool}.{command}' did not contain a result.");
-                    Assert.True(
-                        commandResult.TryGetProperty("content", out var commandContent) &&
-                            commandContent.GetArrayLength() > 0,
-                        $"The learn response for '{tool}.{command}' did not contain any content.");
+                    if (!document.RootElement.TryGetProperty("result", out var commandResult))
+                    {
+                        throw new InvalidOperationException($"The learn response for '{tool}.{command}' did not contain a result.");
+                    }
+                    if (!commandResult.TryGetProperty("content", out var commandContent) ||
+                        commandContent.GetArrayLength() == 0)
+                    {
+                        throw new InvalidOperationException($"The learn response for '{tool}.{command}' did not contain any content.");
+                    }
 
                     commandLearnTotalUtf8Bytes += GetUtf8ByteCount(response);
                     commandLearnResponses.Add(new
@@ -257,6 +250,15 @@ public sealed class McpOutputSizeTests(ITestOutputHelper output)
                     requestId++;
                 }
             }
+
+            var discoveryTextPath = Path.Combine(
+                reportDirectory,
+                $"mcp-output-size-{mode}-discovery.jsonl");
+            await File.WriteAllTextAsync(
+                discoveryTextPath,
+                string.Join(Environment.NewLine, discoveryTexts) + Environment.NewLine,
+                Encoding.UTF8,
+                cancellationToken);
 
             return new
             {
@@ -285,23 +287,24 @@ public sealed class McpOutputSizeTests(ITestOutputHelper output)
         }
     }
 
-    private static async Task<string> SendRequestAsync(Process process, string request)
+    private async Task<string> SendRequestAsync(Process process, string request, CancellationToken cancellationToken)
     {
+        _logger?.Invoke($"--> {request}");
         await process.StandardInput.WriteLineAsync(request);
-        await process.StandardInput.FlushAsync(TestContext.Current.CancellationToken);
+        await process.StandardInput.FlushAsync(cancellationToken);
 
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(
-            TestContext.Current.CancellationToken);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(30));
-        var response = await process.StandardOutput.ReadLineAsync(timeout.Token);
-        Assert.NotNull(response);
+        var response = await process.StandardOutput.ReadLineAsync(timeout.Token)
+            ?? throw new InvalidOperationException("The server closed its output stream before responding.");
+        _logger?.Invoke($"<-- {response}");
         return response;
     }
 
-    private static async Task SendNotificationAsync(Process process, string notification)
+    private static async Task SendNotificationAsync(Process process, string notification, CancellationToken cancellationToken)
     {
         await process.StandardInput.WriteLineAsync(notification);
-        await process.StandardInput.FlushAsync(TestContext.Current.CancellationToken);
+        await process.StandardInput.FlushAsync(cancellationToken);
     }
 
     private static object MeasureMessage(string message) => new
@@ -328,7 +331,7 @@ public sealed class McpOutputSizeTests(ITestOutputHelper output)
     /// Parses the inner command names from a tool's learn response. The learn text is a short
     /// preamble followed by a JSON array of command descriptors.
     /// </summary>
-    private static List<string> GetInnerCommandNames(string learnResponse)
+    internal static List<string> GetInnerCommandNames(string learnResponse)
     {
         var commands = new List<string>();
 
@@ -382,21 +385,5 @@ public sealed class McpOutputSizeTests(ITestOutputHelper output)
         }
 
         return commands;
-    }
-
-    private static bool IsEnabled()
-    {
-        var configured = Environment.GetEnvironmentVariable("MCP_OUTPUT_SIZE_ENABLED");
-        return !string.IsNullOrWhiteSpace(configured) &&
-            (configured.Equals("true", StringComparison.OrdinalIgnoreCase) || configured == "1");
-    }
-
-    private static string GetReportPath()
-    {
-        var configuredPath = Environment.GetEnvironmentVariable("MCP_OUTPUT_SIZE_REPORT");
-        return Path.GetFullPath(
-            string.IsNullOrWhiteSpace(configuredPath)
-                ? Path.Combine("TestResults", "mcp-output-size.json")
-                : configuredPath);
     }
 }

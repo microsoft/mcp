@@ -8,16 +8,14 @@
 .DESCRIPTION
     Runs the full measurement workflow end to end:
 
-    1. Builds the Azure.Mcp.Server.Tests project (which also builds the azmcp server).
-    2. Runs the McpOutputSizeTests measurement test, which starts the MCP server over
-       stdio in both consolidated and namespace modes and measures the initialize
-       greeting, tools/list discovery, and learn-mode responses for every tool.
+    1. Builds the Azure.Mcp.Server project and the standalone McpOutputSizeMeasurer tool.
+    2. Runs McpOutputSizeMeasurer, which starts the MCP server over stdio in both
+       consolidated and namespace modes and measures the initialize greeting,
+       tools/list discovery, and learn-mode responses (including inner commands) for
+       every tool.
     3. Runs Summarize-McpOutputSizes.ps1 to produce console, JSON, and Markdown
        summaries, extract readable description text, and split each top tool's inner
        commands into individual files.
-
-    The measurement test is opt-in and normally skipped, so this script sets
-    MCP_OUTPUT_SIZE_ENABLED for the duration of the run.
 
 .PARAMETER OutputDirectory
     Directory for the measurement report and its artifacts.
@@ -62,7 +60,8 @@ $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $repoRoot = $RepoRoot.Path
 
-$testProject = Join-Path $repoRoot 'servers/Azure.Mcp.Server/tests/Azure.Mcp.Server.Tests'
+$serverProject = Join-Path $repoRoot 'servers/Azure.Mcp.Server/src'
+$measurerProject = Join-Path $repoRoot 'eng/tools/McpOutputSizeMeasurer/src'
 
 if (!$OutputDirectory) {
     $OutputDirectory = Join-Path $repoRoot 'TestResults'
@@ -80,35 +79,38 @@ $reportPath = Join-Path $OutputDirectory 'mcp-output-size.json'
 if ($SkipBuild) {
     Write-Host "Skipping build."
 } else {
-    Write-Host "Building $testProject ($Configuration)..."
-    dotnet build $testProject --configuration $Configuration
+    Write-Host "Building $serverProject ($Configuration)..."
+    dotnet build $serverProject --configuration $Configuration
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Build failed with exit code $LASTEXITCODE."
+        exit $LASTEXITCODE
+    }
+
+    Write-Host "Building $measurerProject ($Configuration)..."
+    dotnet build $measurerProject --configuration $Configuration
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Build failed with exit code $LASTEXITCODE."
         exit $LASTEXITCODE
     }
 }
 
-$testExecutable = Join-Path $testProject "bin/$Configuration/net10.0/Azure.Mcp.Server.Tests$(if ($IsWindows) { '.exe' } else { '' })"
-if (!(Test-Path -LiteralPath $testExecutable -PathType Leaf)) {
-    Write-Error "Test executable not found at $testExecutable. Run without -SkipBuild to build it first."
+$serverExecutable = Join-Path $serverProject "bin/$Configuration/net10.0/azmcp$(if ($IsWindows) { '.exe' } else { '' })"
+if (!(Test-Path -LiteralPath $serverExecutable -PathType Leaf)) {
+    Write-Error "Server executable not found at $serverExecutable. Run without -SkipBuild to build it first."
     exit 1
 }
 
-Write-Host "Running MCP output size measurement test..."
-$previousEnabled = $env:MCP_OUTPUT_SIZE_ENABLED
-$previousReport = $env:MCP_OUTPUT_SIZE_REPORT
-try {
-    $env:MCP_OUTPUT_SIZE_ENABLED = 'true'
-    $env:MCP_OUTPUT_SIZE_REPORT = $reportPath
+$measurerExecutable = Join-Path $measurerProject "bin/$Configuration/net10.0/McpOutputSizeMeasurer$(if ($IsWindows) { '.exe' } else { '' })"
+if (!(Test-Path -LiteralPath $measurerExecutable -PathType Leaf)) {
+    Write-Error "Measurer executable not found at $measurerExecutable. Run without -SkipBuild to build it first."
+    exit 1
+}
 
-    & $testExecutable --filter-class Azure.Mcp.Server.Tests.Infrastructure.McpOutputSizeTests --no-progress
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Measurement test failed with exit code $LASTEXITCODE."
-        exit $LASTEXITCODE
-    }
-} finally {
-    $env:MCP_OUTPUT_SIZE_ENABLED = $previousEnabled
-    $env:MCP_OUTPUT_SIZE_REPORT = $previousReport
+Write-Host "Running MCP output size measurement..."
+& $measurerExecutable --executable $serverExecutable --report $reportPath
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Measurement failed with exit code $LASTEXITCODE."
+    exit $LASTEXITCODE
 }
 
 if (!(Test-Path -LiteralPath $reportPath -PathType Leaf)) {
