@@ -392,7 +392,12 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
                         $"Index '{indexDefinition.Name}' doesn't have a semantic configuration, semantic queries cannot be used against it.");
 
                 options.QueryType = SearchQueryType.Semantic;
-                options.SemanticSearch = new SemanticSearchOptions { SemanticConfigurationName = semanticConfiguration };
+                options.SemanticSearch = new SemanticSearchOptions
+                {
+                    SemanticConfigurationName = semanticConfiguration,
+                    QueryCaption = new(QueryCaptionType.Extractive),
+                    QueryAnswer = new(QueryAnswerType.Extractive)
+                };
                 break;
 
             // Full Lucene syntax is used by default as it is a superset of the simple syntax.
