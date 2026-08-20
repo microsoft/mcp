@@ -17,4 +17,11 @@ public sealed record BackupVaultInfo(
     int? SoftDeleteRetentionDays,
     string? ImmutabilityState,
     string? IdentityType,
-    IDictionary<string, string>? Tags);
+    IDictionary<string, string>? Tags,
+    // Expanded fields (populated only when 'vault get --expand' selects them). All optional
+    // and defaulted to null so existing callers and record construction remain backward compatible.
+    string? MuaState = null,
+    string? MuaResourceGuardId = null,
+    string? CrossRegionRestoreState = null,
+    string? EncryptionState = null,
+    string? EncryptionKeyUri = null);
