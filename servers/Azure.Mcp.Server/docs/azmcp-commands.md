@@ -3755,8 +3755,8 @@ azmcp resilience recovery plan resource update --service-group <service-group> \
 
 # Discover and assess whether a recovery plan and its protected resources are ready for recovery operations. Waits for the readiness job to finish and returns its status, errors, failed tasks, and failed resources.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recovery plan check-readiness --service-group <service-group> \
-                                               --recovery-plan <recovery-plan>
+azmcp resilience recovery plan checkreadiness --service-group <service-group> \
+                                              --recovery-plan <recovery-plan>
 
 # Get a resource (member) of a recovery plan, or list all resources of the plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

@@ -17,6 +17,62 @@ public sealed class ResilienceManagementServiceTests
     private const string UserAssignedIdentityResourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/testIdentity";
 
     [Fact]
+    public void GetRecoveryJobName_ReadsTypedTopLevelJobId()
+    {
+        string result = ResilienceManagementService.GetRecoveryJobName(BinaryData.FromString("""
+            {"jobId":"/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryJobs/job1"}
+            """));
+
+        Assert.Equal("job1", result);
+    }
+
+    [Fact]
+    public void GetRecoveryJobName_RejectsNestedJobId()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            ResilienceManagementService.GetRecoveryJobName(BinaryData.FromString("""
+                {"details":{"jobId":"wrong-job"}}
+                """)));
+
+        Assert.Contains("without returning a recovery job identifier", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ExecuteWithTimeoutAsync_TimesOutOperation()
+    {
+        TimeoutException exception = await Assert.ThrowsAsync<TimeoutException>(() =>
+            ResilienceManagementService.ExecuteWithTimeoutAsync(
+                async token =>
+                {
+                    await Task.Delay(Timeout.InfiniteTimeSpan, token);
+                    return "completed";
+                },
+                "readiness operation",
+                TimeSpan.FromMilliseconds(20),
+                CancellationToken.None));
+
+        Assert.Contains("readiness operation", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ExecuteWithTimeoutAsync_PreservesCallerCancellation()
+    {
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            ResilienceManagementService.ExecuteWithTimeoutAsync(
+                async token =>
+                {
+                    await Task.Delay(Timeout.InfiniteTimeSpan, token);
+                    return "completed";
+                },
+                "readiness operation",
+                TimeSpan.FromSeconds(1),
+                cancellation.Token));
+    }
+
+    [Fact]
     public async Task WaitForCompletionAsync_RetriesUntilCompletion()
     {
         var states = new Queue<string?>([null, "InProgress", "Completed"]);

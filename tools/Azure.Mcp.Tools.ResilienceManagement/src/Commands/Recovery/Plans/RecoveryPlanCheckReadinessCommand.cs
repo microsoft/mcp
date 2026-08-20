@@ -13,7 +13,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 
 [CommandMetadata(
     Id = "6f991f5e-0218-46b5-8d6d-8b59defb1143",
-    Name = "check-readiness",
+    Name = "checkreadiness",
     Title = "Check Resilience Recovery Plan Readiness",
     Description = "Checks whether a resilience recovery plan and its protected resources are ready for recovery operations in an Azure service group.",
     Destructive = false,
@@ -31,6 +31,7 @@ public sealed class RecoveryPlanCheckReadinessCommand(ILogger<RecoveryPlanCheckR
     public override void ValidateOptions(RecoveryPlanCheckReadinessOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        RecoveryPlanValidation.ValidateServiceGroup(options.ServiceGroup, validationResult);
         RecoveryPlanValidation.ValidateName(options.RecoveryPlan, validationResult);
     }
 
@@ -62,6 +63,10 @@ public sealed class RecoveryPlanCheckReadinessCommand(ILogger<RecoveryPlanCheckR
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        TimeoutException =>
+            "The recovery plan readiness check timed out before it completed. Retry the operation.",
+        InvalidOperationException =>
+            "The recovery plan readiness check completed without returning a recovery job identifier. Retry the operation. If the problem persists, contact support.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "The recovery plan readiness check cannot start in its current state. Complete or cancel active recovery operations and try again.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
@@ -71,5 +76,12 @@ public sealed class RecoveryPlanCheckReadinessCommand(ILogger<RecoveryPlanCheckR
         RequestFailedException =>
             "The recovery plan readiness request failed. Verify the recovery plan, service group, and request parameters, then try again.",
         _ => base.GetErrorMessage(ex)
+    };
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        TimeoutException => HttpStatusCode.GatewayTimeout,
+        InvalidOperationException => HttpStatusCode.BadGateway,
+        _ => base.GetStatusCode(ex)
     };
 }

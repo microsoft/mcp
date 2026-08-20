@@ -22,7 +22,7 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = Command.GetCommand();
-        Assert.Equal("check-readiness", command.Name);
+        Assert.Equal("checkreadiness", command.Name);
         Assert.Contains("protected resources", command.Description, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -58,6 +58,23 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("5 to 24 characters", response.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.DidNotReceive().CheckRecoveryPlanReadinessAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsInvalidServiceGroupName()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "../sg1",
+            "--recovery-plan", "plan1");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("service group name", response.Message, StringComparison.OrdinalIgnoreCase);
         await Service.DidNotReceive().CheckRecoveryPlanReadinessAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -141,6 +158,46 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
         Assert.Equal(status, response.Status);
         Assert.Contains(expectedMessage, response.Message, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(providerDetails, response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_MapsTimeoutExceptionToGatewayTimeout()
+    {
+        const string internalDetails = "Internal polling timeout details";
+        Service.CheckRecoveryPlanReadinessAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new TimeoutException(internalDetails));
+
+        var response = await ExecuteCommandAsync(ValidArgs);
+
+        Assert.Equal(HttpStatusCode.GatewayTimeout, response.Status);
+        Assert.Contains("timed out", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Retry", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(internalDetails, response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_MapsMissingJobIdToBadGateway()
+    {
+        const string internalDetails = "Internal response parsing details";
+        Service.CheckRecoveryPlanReadinessAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException(internalDetails));
+
+        var response = await ExecuteCommandAsync(ValidArgs);
+
+        Assert.Equal(HttpStatusCode.BadGateway, response.Status);
+        Assert.Contains("without returning a recovery job identifier", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Retry", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(internalDetails, response.Message);
     }
 
     private static RecoveryPlanReadinessResult CreateSuccessfulResult() => new(

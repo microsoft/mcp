@@ -290,7 +290,7 @@ public class ResilienceManagementCommandTests(
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
 
         var result = await CallToolAsync(
-            "resilience_recovery_plan_check-readiness",
+            "resilience_recovery_plan_checkreadiness",
             new()
             {
                 { "tenant", Settings.TenantId },

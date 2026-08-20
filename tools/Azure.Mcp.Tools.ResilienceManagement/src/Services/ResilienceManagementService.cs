@@ -18,7 +18,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IResilienceManagementService
 {
     private static readonly TimeSpan ReadinessJobPollingInterval = TimeSpan.FromSeconds(30);
-    private static readonly TimeSpan ReadinessJobTimeout = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan ReadinessTimeout = TimeSpan.FromMinutes(10);
 
     public async Task<IEnumerable<ResourceSummary>> ListGoalTemplatesAsync(string serviceGroup, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
@@ -517,7 +517,16 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return CreateRecoveryPlanUpdateResourcesResult(operation.Value.FailedResources);
     }
 
-    public async Task<RecoveryPlanReadinessResult> CheckRecoveryPlanReadinessAsync(string serviceGroup, string recoveryPlan, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    public Task<RecoveryPlanReadinessResult> CheckRecoveryPlanReadinessAsync(string serviceGroup, string recoveryPlan, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        return ExecuteWithTimeoutAsync(
+            token => CheckRecoveryPlanReadinessCoreAsync(serviceGroup, recoveryPlan, tenant, retryPolicy, token),
+            "recovery plan readiness check",
+            ReadinessTimeout,
+            cancellationToken);
+    }
+
+    private async Task<RecoveryPlanReadinessResult> CheckRecoveryPlanReadinessCoreAsync(string serviceGroup, string recoveryPlan, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
@@ -525,7 +534,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         RecoveryPlanResource recoveryPlanResource = await armClient.GetRecoveryPlanResource(recoveryPlanId).GetAsync(cancellationToken);
         string operationId = Guid.NewGuid().ToString();
         ArmOperation operation = await recoveryPlanResource.CheckReadinessAsync(WaitUntil.Completed, operationId, cancellationToken);
-        string recoveryJobId = GetRecoveryJobName(operation.GetRawResponse());
+        string recoveryJobId = GetRecoveryJobName(operation.GetRawResponse().Content);
 
         var recoveryJobResourceId = RecoveryJobResource.CreateResourceIdentifier(serviceGroup, recoveryPlan, recoveryJobId);
         RecoveryJobResource recoveryJob = armClient.GetRecoveryJobResource(recoveryJobResourceId);
@@ -565,65 +574,39 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             failedResources);
     }
 
-    private static string GetRecoveryJobName(Response response)
+    internal static async Task<T> ExecuteWithTimeoutAsync<T>(
+        Func<CancellationToken, Task<T>> operation,
+        string operationDescription,
+        TimeSpan timeout,
+        CancellationToken cancellationToken)
     {
-        using JsonDocument document = JsonDocument.Parse(response.Content.ToMemory());
-        if (TryFindStringProperty(document.RootElement, "jobId", out string? recoveryJobId) && recoveryJobId is not null)
+        using var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCancellation.CancelAfter(timeout);
+
+        try
         {
-            return recoveryJobId.StartsWith("/", StringComparison.Ordinal)
-                ? new ResourceIdentifier(recoveryJobId).Name
-                : recoveryJobId;
+            return await operation(timeoutCancellation.Token);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException($"The {operationDescription} did not complete within {timeout.TotalMinutes} minutes.");
+        }
+    }
+
+    internal static string GetRecoveryJobName(BinaryData responseContent)
+    {
+        RecoveryPlanActionBaseResult? result = ModelReaderWriter.Read<RecoveryPlanActionBaseResult>(
+            responseContent,
+            ModelReaderWriterOptions.Json,
+            AzureResourceManagerResilienceManagementContext.Default);
+        if (!string.IsNullOrWhiteSpace(result?.JobId))
+        {
+            return result.JobId.StartsWith("/", StringComparison.Ordinal)
+                ? new ResourceIdentifier(result.JobId).Name
+                : result.JobId;
         }
 
         throw new InvalidOperationException("The readiness operation completed without returning a recovery job identifier.");
-    }
-
-    private static bool TryFindStringProperty(JsonElement element, string propertyName, out string? value)
-    {
-        if (element.ValueKind == JsonValueKind.Object)
-        {
-            foreach (JsonProperty property in element.EnumerateObject())
-            {
-                if (property.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase) && property.Value.ValueKind == JsonValueKind.String)
-                {
-                    value = property.Value.GetString();
-                    return !string.IsNullOrWhiteSpace(value);
-                }
-
-                if (TryFindStringProperty(property.Value, propertyName, out value))
-                {
-                    return true;
-                }
-            }
-        }
-        else if (element.ValueKind == JsonValueKind.Array)
-        {
-            foreach (JsonElement item in element.EnumerateArray())
-            {
-                if (TryFindStringProperty(item, propertyName, out value))
-                {
-                    return true;
-                }
-            }
-        }
-        else if (element.ValueKind == JsonValueKind.String)
-        {
-            string? serializedValue = element.GetString();
-            if (!string.IsNullOrWhiteSpace(serializedValue) && serializedValue.TrimStart().StartsWith('{'))
-            {
-                try
-                {
-                    using JsonDocument nestedDocument = JsonDocument.Parse(serializedValue);
-                    return TryFindStringProperty(nestedDocument.RootElement, propertyName, out value);
-                }
-                catch (JsonException)
-                {
-                }
-            }
-        }
-
-        value = null;
-        return false;
     }
 
     private static bool IsTerminalJobStatus(string status) =>
@@ -641,7 +624,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             job => IsTerminalJobStatus(job.Data.Properties.Status?.ToString() ?? string.Empty),
             $"readiness recovery job '{recoveryJobId}'",
             ReadinessJobPollingInterval,
-            ReadinessJobTimeout,
+            ReadinessTimeout,
             cancellationToken);
     }
 
@@ -687,6 +670,8 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         }
         catch (ArgumentNullException ex) when (ex.ParamName == "id")
         {
+            // A newly created job can return a successful response before its required resource ID is populated.
+            // The generated SDK throws while constructing RecoveryJobResource; retry until the job materializes.
             return null;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)

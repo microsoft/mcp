@@ -926,8 +926,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_recovery_plan_create | Change recovery plan <recovery_plan_name> in service group <service_group> to a system-assigned managed identity and description <plan_description>. Keep its Zonal plan type and existing recovery groups | none |
 | resilience_recovery_plan_create | Change a system-assigned recovery plan <recovery_plan_name> in service group <service_group> to use a user-assigned managed identity | clarification-required |
 | resilience_recovery_plan_create | Update recovery plan <recovery_plan_name> in service group <service_group> to use both its system-assigned identity and user-assigned managed identity <user_assigned_identity_resource_id>. Preserve its existing plan settings | none |
-| resilience_recovery_plan_check-readiness | Check whether recovery plan <recovery_plan_name> and its protected resources are ready for recovery operations in service group <service_group> | none |
-| resilience_recovery_plan_check-readiness | Discover readiness issues for the resources in recovery plan <recovery_plan_name> in service group <service_group> | none |
+| resilience_recovery_plan_checkreadiness | Check whether recovery plan <recovery_plan_name> and its protected resources are ready for recovery operations in service group <service_group> | none |
+| resilience_recovery_plan_checkreadiness | Discover readiness issues for the resources in recovery plan <recovery_plan_name> in service group <service_group> | none |
 | resilience_recovery_plan_delete | Delete the entire recovery plan <recovery_plan_name> from service group <service_group> | none |
 | resilience_recovery_plan_delete | Recovery plan <recovery_plan_name> is no longer needed. Delete it from resilience service group <service_group> | none |
 | resilience_recovery_plan_get | List all resilience recovery plans in service group <service_group> | none |
