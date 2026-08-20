@@ -334,10 +334,11 @@ function Get-PathsToTest {
         $hasTestsProject = Test-Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj"
         $testProjectDetails = $hasTestsProject ? (& "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj") : $null
         # Need to parse $testProjectDetails.HasLiveTests as it's based on JSON values, therefore HasLiveTests will not be a PowerShell boolean
-        $hasLiveTests = $hasTestsProject -and [bool]::TryParse($testProjectDetails.HasLiveTests, [ref]$result) -and $result
-        $hasRecordedTests = $hasLiveTests -and (Get-ChildItem $rootedTestResourcesPath -Filter 'assets.json' -Recurse).Count -gt 0
+        $result = $false
         # Need to parse $testProjectDetails.HasUnitTests as it's based on JSON values, therefore HasLiveTests will not be a PowerShell boolean
         $hasUnitTests = $hasTestsProject -and [bool]::TryParse($testProjectDetails.HasUnitTests, [ref]$result) -and $result
+        $hasLiveTests = $hasTestsProject -and [bool]::TryParse($testProjectDetails.HasLiveTests, [ref]$result) -and $result
+        $hasRecordedTests = $hasLiveTests -and (Get-ChildItem $rootedTestResourcesPath -Filter 'assets.json' -Recurse).Count -gt 0
 
         $sourcePath = Join-Path $using:RepoRoot $path "src"
 
