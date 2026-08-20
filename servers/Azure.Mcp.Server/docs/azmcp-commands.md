@@ -3753,6 +3753,14 @@ azmcp resilience drill get --subscription <subscription> \
                            --service-group <service-group> \
                            [--name <name>]
 
+# Update mutable properties of a resilience drill
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill update --service-group <service-group> \
+                              --drill <drill> \
+                              [--subscription <subscription> --region <region>] \
+                              [--rbac-setup-mode <AutomatedCustomRole|AutomatedBuiltinRoles|Manual>] \
+                              [--recovery-plan <recovery-plan>]
+
 # Get a resource (target) of a drill, or list all resources of the drill (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill resource get --subscription <subscription> \
