@@ -118,6 +118,32 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             TestContext.Current.CancellationToken);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_RejectsInvalidServiceGroupName()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "../sg1",
+            "--recovery-plan", "plan1",
+            "--plan-type", "Zonal",
+            "--plan-description", "description",
+            "--identity-type", "SystemAssigned",
+            "--default-group-description", "default");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("service group name", response.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.DidNotReceive().CreateRecoveryPlanAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RecoveryPlanKind>(),
+            Arg.Any<string>(),
+            Arg.Any<RecoveryPlanIdentityKind>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            TestContext.Current.CancellationToken);
+    }
+
     [Theory]
     [InlineData("plan1")]
     [InlineData("123456789012345678901234")]

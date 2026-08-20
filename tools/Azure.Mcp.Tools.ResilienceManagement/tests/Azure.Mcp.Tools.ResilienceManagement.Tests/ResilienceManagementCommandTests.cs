@@ -444,7 +444,7 @@ public class ResilienceManagementCommandTests(
         };
 
         var result = await CallToolAsync(
-            "resilience_recovery_plan_update-resources",
+            "resilience_recovery_plan_resource_update",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -453,7 +453,25 @@ public class ResilienceManagementCommandTests(
                 { "resources-to-update", $"[{updatedResource.ToJsonString()}]" }
             });
 
-        Assert.Equal(JsonValueKind.Array, result.AssertProperty("result").AssertProperty("failedResources").ValueKind);
+        var failedResources = result.AssertProperty("result").AssertProperty("failedResources");
+        Assert.Equal(JsonValueKind.Array, failedResources.ValueKind);
+        Assert.Empty(failedResources.EnumerateArray());
+
+        var updatedResourceResult = await CallToolAsync(
+            "resilience_recovery_plan_resource_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan },
+                { "name", resourceName }
+            });
+        var inclusionState = updatedResourceResult
+            .AssertProperty("recoveryResource")
+            .AssertProperty("properties")
+            .AssertProperty("inclusionState")
+            .GetString();
+        Assert.Equal("Excluded", inclusionState);
     }
 
     [Fact]

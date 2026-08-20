@@ -44,6 +44,7 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
             validationResult.Errors.Add("Only Zonal recovery plans are currently supported.");
         }
 
+        RecoveryPlanValidation.ValidateServiceGroup(options.ServiceGroup, validationResult);
         RecoveryPlanValidation.ValidateName(options.RecoveryPlan, validationResult);
 
         if (options.PlanDescription is not null && options.PlanDescription.Length is < 5 or > 50)

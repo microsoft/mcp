@@ -639,12 +639,24 @@ public sealed class ResilienceManagementService(IAzureService azureService)
     internal static RecoveryGroupsSetting CreateRecoveryGroupsSetting(RecoveryGroupsSetting? existingRecoveryGroups, string? defaultGroupDescription)
     {
         RecoveryGroup? existingDefaultGroup = existingRecoveryGroups?.DefaultGroup;
-        string defaultGroupId = existingDefaultGroup?.Properties?.GroupUniqueId ?? Guid.NewGuid().ToString();
-        defaultGroupDescription ??= existingDefaultGroup?.Properties?.Description ?? "Default recovery group";
-        var defaultGroup = new RecoveryGroup
+        RecoveryGroup defaultGroup;
+        if (existingDefaultGroup?.Properties is { } existingDefaultGroupProperties)
         {
-            Properties = new RecoveryGroupProperties(defaultGroupId, 0, defaultGroupDescription)
-        };
+            if (defaultGroupDescription is not null)
+            {
+                existingDefaultGroupProperties.Description = defaultGroupDescription;
+            }
+
+            return existingRecoveryGroups!;
+        }
+        else
+        {
+            defaultGroup = new RecoveryGroup
+            {
+                Properties = new RecoveryGroupProperties(Guid.NewGuid().ToString(), 0, defaultGroupDescription ?? "Default recovery group")
+            };
+        }
+
         var recoveryGroups = new RecoveryGroupsSetting(defaultGroup);
         foreach (RecoveryGroup additionalGroup in existingRecoveryGroups?.AdditionalGroups ?? [])
         {

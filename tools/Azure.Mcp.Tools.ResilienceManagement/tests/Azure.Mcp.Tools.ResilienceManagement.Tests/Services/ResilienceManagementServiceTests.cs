@@ -38,6 +38,7 @@ public sealed class ResilienceManagementServiceTests
 
         RecoveryGroupsSetting result = ResilienceManagementService.CreateRecoveryGroupsSetting(existingGroups, null);
 
+        Assert.Same(existingGroups, result);
         Assert.Equal(existingDefaultGroup.Properties?.GroupUniqueId, result.DefaultGroup.Properties?.GroupUniqueId);
         Assert.Equal(existingDefaultGroup.Properties?.Description, result.DefaultGroup.Properties?.Description);
         Assert.Equal([firstAdditionalGroup, secondAdditionalGroup], result.AdditionalGroups);
@@ -46,13 +47,20 @@ public sealed class ResilienceManagementServiceTests
     [Fact]
     public void CreateRecoveryGroupsSetting_ForUpdate_OverridesDefaultGroupDescription()
     {
-        var existingGroups = new RecoveryGroupsSetting(
-            CreateGroup("7f35c9f5-bec2-455d-8161-c904b2532e5d", 0, "Existing default group"));
+        var existingDefaultGroup = CreateGroup("7f35c9f5-bec2-455d-8161-c904b2532e5d", 0, "Existing default group");
+        var preAction = new RecoveryGroupManualAction("pre-action", 10);
+        var postAction = new RecoveryGroupManualAction("post-action", 10);
+        existingDefaultGroup.Properties!.PreActions.Add(preAction);
+        existingDefaultGroup.Properties.PostActions.Add(postAction);
+        var existingGroups = new RecoveryGroupsSetting(existingDefaultGroup);
 
         RecoveryGroupsSetting result = ResilienceManagementService.CreateRecoveryGroupsSetting(existingGroups, "Updated default group");
 
+        Assert.Same(existingDefaultGroup, result.DefaultGroup);
         Assert.Equal("7f35c9f5-bec2-455d-8161-c904b2532e5d", result.DefaultGroup.Properties?.GroupUniqueId);
         Assert.Equal("Updated default group", result.DefaultGroup.Properties?.Description);
+        Assert.Equal([preAction], result.DefaultGroup.Properties?.PreActions);
+        Assert.Equal([postAction], result.DefaultGroup.Properties?.PostActions);
     }
 
     [Fact]

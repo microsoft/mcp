@@ -15,6 +15,7 @@ $testSettings = Get-Content $TestSettingsPath -Raw | ConvertFrom-Json
 $outputs = $testSettings.DeploymentOutputs
 $subscriptionId = $testSettings.SubscriptionId
 $tenantId = $testSettings.TenantId
+$serviceGroupApiVersion = '2024-02-01-preview'
 $membershipApiVersion = '2023-09-01-preview'
 $resilienceApiVersion = '2026-04-01-preview'
 
@@ -143,3 +144,9 @@ Remove-Resource -ResourceId "$resilienceBase/goalTemplates/$goalTemplateName" -A
 Remove-Resource -ResourceId "$usagePlanId/enrollments/$enrollmentName" -ApiVersion $resilienceApiVersion
 Remove-Resource -ResourceId "$usagePlanId/enrollments/$lifecycleEnrollmentName" -ApiVersion $resilienceApiVersion
 Remove-Resource -ResourceId "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/rhub-rg-member" -ApiVersion $membershipApiVersion
+
+foreach ($serviceGroupIdToDelete in @($lifecycleServiceGroupId, $serviceGroupId)) {
+    if ($serviceGroupIdToDelete -notmatch '/$') {
+        Remove-Resource -ResourceId $serviceGroupIdToDelete -ApiVersion $serviceGroupApiVersion
+    }
+}

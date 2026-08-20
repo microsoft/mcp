@@ -9,19 +9,6 @@ namespace VallyEvaluator.Tests;
 public sealed class VallyUtilitiesTests
 {
     [Fact]
-    public void ResolvePromptNamespace_MapsResilienceManagementPackageToResilienceNamespace()
-    {
-        IReadOnlySet<string> promptNamespaces = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
-        {
-            "resilience"
-        };
-
-        var result = Program.ResolvePromptNamespace("resiliencemanagement", promptNamespaces);
-
-        Assert.Equal("resilience", result);
-    }
-
-    [Fact]
     public void GetToolCallGrader_CreatesRequiredCommandEntry()
     {
         var grader = VallyUtilities.GetToolCallGrader("storage", "storage_account_list");

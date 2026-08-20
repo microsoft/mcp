@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 
 [CommandMetadata(
     Id = "ace3cbba-d572-47dc-a452-ab2cb349e17b",
-    Name = "update-resources",
+    Name = "update",
     Title = "Update Resilience Recovery Plan Resources",
     Description = """
         Updates recovery resources in a resilience recovery plan in an Azure service group: includes and configures a resource
@@ -43,6 +43,7 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
     {
         base.ValidateOptions(options, validationResult);
 
+        RecoveryPlanValidation.ValidateServiceGroup(options.ServiceGroup, validationResult);
         RecoveryPlanValidation.ValidateName(options.RecoveryPlan, validationResult);
 
         try

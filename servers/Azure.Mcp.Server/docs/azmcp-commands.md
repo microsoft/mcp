@@ -3747,7 +3747,7 @@ azmcp resilience recovery plan delete --service-group <service-group> \
 # First inclusion requires matching protection type and settings. CustomRunbook requires failover and reprotect runbook resource IDs.
 # AzureSiteRecovery is supported for virtual machines and requires disk reprotect details. Existing configuration is preserved on sparse updates.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recovery plan update-resources --service-group <service-group> \
+azmcp resilience recovery plan resource update --service-group <service-group> \
                                                 --recovery-plan <recovery-plan> \
                                                 [--resources-to-update '<json-array>'] \
                                                 [--resources-to-remove '<json-array>']
