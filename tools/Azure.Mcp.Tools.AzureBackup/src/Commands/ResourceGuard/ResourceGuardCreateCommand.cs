@@ -25,8 +25,8 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ResourceGuard;
         the other. The --location must match the region of vaults that will link to this guard.
         Optionally pass --excluded-operations to exempt operations from MUA (e.g., 'updatePolicy').
         """,
-    Destructive = false,
-    Idempotent = true,
+    Destructive = true,
+    Idempotent = false,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,

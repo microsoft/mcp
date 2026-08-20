@@ -22,7 +22,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Security;
         protection) require approval from a security admin with permissions on the Resource Guard.
         To disable MUA, use the 'security disable-mua' command (requires --force).
         """,
-    Destructive = false,
+    Destructive = true,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = false,
