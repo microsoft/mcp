@@ -770,12 +770,10 @@ public class AdvisorService(IAzureService azureService)
         return new(
             Properties: new RecommendationProperties(
                 Category: advisorRecommendation.Properties?.Category,
-                Control: advisorRecommendation.Properties?.Control,
                 Impact: advisorRecommendation.Properties?.Impact,
                 ImpactedField: advisorRecommendation.Properties?.ImpactedField,
                 ImpactedValue: advisorRecommendation.Properties?.ImpactedValue,
                 RecommendationStatus: advisorRecommendation.Properties?.RecommendationStatus,
-                CompletionType: advisorRecommendation.Properties?.CompletionType,
                 LastRefreshed: advisorRecommendation.Properties?.LastRefreshed,
                 LastUpdated: advisorRecommendation.Properties?.LastUpdated,
                 CreatedTime: advisorRecommendation.Properties?.CreatedTime,

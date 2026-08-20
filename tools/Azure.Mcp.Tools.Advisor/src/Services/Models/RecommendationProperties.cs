@@ -11,9 +11,6 @@ internal sealed class RecommendationProperties
     /// <summary> The recommendation category. </summary>
     public string? Category { get; set; }
 
-    /// <summary> The Advisor control associated with the recommendation, such as Scalability. </summary>
-    public string? Control { get; set; }
-
     /// <summary> The recommendation type ID used to join with recommendation metadata. </summary>
     public string? RecommendationTypeId { get; set; }
 
@@ -28,8 +25,6 @@ internal sealed class RecommendationProperties
 
     /// <summary> The lifecycle state of the recommendation (e.g., New, Dismissed, Postponed). </summary>
     public string? RecommendationStatus { get; set; }
-
-    public string? CompletionType { get; set; }
 
     /// <summary> The time the recommendation was first generated. </summary>
     public DateTimeOffset? CreatedTime { get; set; }

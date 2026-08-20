@@ -9,12 +9,10 @@ namespace Azure.Mcp.Tools.Advisor.Models;
 /// <summary>Properties returned for an Azure Advisor recommendation.</summary>
 public sealed record RecommendationProperties(
     [property: JsonPropertyName("category")] string? Category,
-    [property: JsonPropertyName("control")] string? Control = null,
     [property: JsonPropertyName("impact")] string? Impact = null,
     [property: JsonPropertyName("impactedField")] string? ImpactedField = null,
     [property: JsonPropertyName("impactedValue")] string? ImpactedValue = null,
     [property: JsonPropertyName("recommendationStatus")] string? RecommendationStatus = null,
-    [property: JsonPropertyName("completionType")] string? CompletionType = null,
     [property: JsonPropertyName("lastRefreshed")] DateTimeOffset? LastRefreshed = null,
     [property: JsonPropertyName("lastUpdated")] DateTimeOffset? LastUpdated = null,
     [property: JsonPropertyName("createdTime")] DateTimeOffset? CreatedTime = null,
