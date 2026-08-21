@@ -24,30 +24,48 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         "X-MSEdge-Ref"
     ];
 
+    private List<HeaderRegexSanitizer>? _headerRegexSanitizers;
+    private List<BodyKeySanitizer>? _bodyKeySanitizers;
+    private List<GeneralRegexSanitizer>? _generalRegexSanitizers;
+    private List<UriRegexSanitizer>? _uriRegexSanitizers;
+
     // Keep the default sanitizers defined in RecordedCommandTestsBase and add the following headers to be sanitized:
     // - x-ms-correlation-request-id
     // - x-ms-operation-identifier
     // - x-ms-routing-request-id
     // - x-ms-served-by
     // - X-MSEdge-Ref
-    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
+    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers => _headerRegexSanitizers ??=
     [
         .. base.HeaderRegexSanitizers,
         .. _sanitizedHeaders.Select(h => new HeaderRegexSanitizer(new HeaderRegexSanitizerBody(h)))
     ];
 
-    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    public override List<BodyKeySanitizer> BodyKeySanitizers => _bodyKeySanitizers ??=
     [
         .. base.BodyKeySanitizers,
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..encryptionSettings.keyEncryptionKey.keyUrl")
         {
-            Value = "sanitized",
-            Regex = "https://(.*?)\\.",
-            GroupForReplace = "1"
+            Value = "https://Sanitized.vault.azure.net/keys/Sanitized/Sanitized"
         })
     ];
 
-    public override List<UriRegexSanitizer> UriRegexSanitizers =>
+    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers => _generalRegexSanitizers ??=
+    [
+        .. base.GeneralRegexSanitizers,
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
+        {
+            Regex = "(?i)resourcegroups/[^/\"?]+",
+            Value = "resourceGroups/Sanitized"
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
+        {
+            Regex = "https://[^./]+\\.vault\\.azure\\.net/keys/[^/\"?]+/[^/\"?]+",
+            Value = "https://Sanitized.vault.azure.net/keys/Sanitized/Sanitized"
+        })
+    ];
+
+    public override List<UriRegexSanitizer> UriRegexSanitizers => _uriRegexSanitizers ??=
     [
         .. base.UriRegexSanitizers,
         // Sanitize operation IDs in ascOperations URLs
@@ -578,6 +596,132 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
         var importDeleteJobName = importDeleteResult.AssertProperty("jobName");
         Assert.Contains(importJobNameStr, importDeleteJobName.GetRawText());
+
+        // Wait for filesystem to stabilize after deleting import job and before creating expansion job
+        await Task.Delay(PollInterval(15_000), TestContext.Current.CancellationToken);
+
+        // Test expansion job lifecycle
+        var expansionJobNameStr = $"expansion-{fsName}";
+        var expansionCreateResult = await CallToolAsync(
+            "managedlustre_fs_expansion_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "filesystem-name", fsName },
+                { "new-size", 8 },
+                { "expansion-job-name", expansionJobNameStr },
+                { "tenant", Settings.TenantId }
+            });
+
+        var expansionJobName = expansionCreateResult.AssertProperty("jobName");
+        Assert.Equal(JsonValueKind.String, expansionJobName.ValueKind);
+        Assert.False(string.IsNullOrWhiteSpace(expansionJobName.GetString()));
+
+        // Wait for expansion job to complete before listing/getting
+        var expansionMaxWaitTime = TimeSpan.FromMinutes(30);
+        var expansionStartTime = DateTime.UtcNow;
+        var expansionCompleted = false;
+
+        while (DateTime.UtcNow - expansionStartTime < expansionMaxWaitTime)
+        {
+            var expansionCheckResult = await CallToolAsync(
+                "managedlustre_fs_expansion_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", resourceGroupName },
+                    { "filesystem-name", fsName },
+                    { "expansion-job-name", expansionJobNameStr },
+                    { "tenant", Settings.TenantId }
+                });
+
+            var expansionCheckJob = expansionCheckResult.AssertProperty("job");
+            var expansionCheckJobText = expansionCheckJob.GetRawText();
+            Output.WriteLine($"Expansion job status: {expansionCheckJobText}");
+
+            var expansionState = expansionCheckJob
+                .AssertProperty("properties")
+                .AssertProperty("status")
+                .AssertProperty("state")
+                .GetString();
+
+            if (string.Equals(expansionState, "Completed", StringComparison.OrdinalIgnoreCase))
+            {
+                expansionCompleted = true;
+                break;
+            }
+
+            Assert.False(
+                string.Equals(expansionState, "Failed", StringComparison.OrdinalIgnoreCase),
+                $"Expansion job '{expansionJobNameStr}' failed: {expansionCheckJobText}");
+
+            await Task.Delay(PollInterval(30_000), TestContext.Current.CancellationToken);
+        }
+
+        Assert.True(expansionCompleted, $"Expansion job '{expansionJobNameStr}' did not complete within {expansionMaxWaitTime.TotalMinutes} minutes.");
+
+        // List expansion jobs (get without expansion-job-name returns all jobs)
+        var expansionListResult = await CallToolAsync(
+            "managedlustre_fs_expansion_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "filesystem-name", fsName },
+                { "tenant", Settings.TenantId }
+                // Intentionally omitting expansion-job-name to list all jobs
+            });
+
+        var expansionJobs = expansionListResult.AssertProperty("jobs");
+        Assert.Equal(JsonValueKind.Array, expansionJobs.ValueKind);
+        var foundExpansion = false;
+        var expansionJobTexts = expansionJobs.EnumerateArray().Select(job => job.GetRawText());
+        foreach (var jobText in expansionJobTexts)
+        {
+            Output.WriteLine($"Checking expansion job: {jobText}");
+            if (jobText.Contains(expansionJobNameStr))
+            {
+                Output.WriteLine($"Found expansion job containing: '{expansionJobNameStr}'");
+                foundExpansion = true;
+                break;
+            }
+        }
+        Assert.True(foundExpansion, $"Expected to find expansion job '{expansionJobNameStr}' in the list.");
+
+        // Get expansion job
+        var expansionGetResult = await CallToolAsync(
+            "managedlustre_fs_expansion_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "filesystem-name", fsName },
+                { "expansion-job-name", expansionJobNameStr },
+                { "tenant", Settings.TenantId }
+            });
+
+        var expansionJob = expansionGetResult.AssertProperty("job");
+        Assert.Equal(JsonValueKind.Object, expansionJob.ValueKind);
+        var expansionJobText = expansionJob.GetRawText();
+        Assert.Contains(expansionJobNameStr, expansionJobText);
+
+        // Delete expansion job
+        var expansionDeleteResult = await CallToolAsync(
+            "managedlustre_fs_expansion_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "filesystem-name", fsName },
+                { "expansion-job-name", expansionJobNameStr },
+                { "tenant", Settings.TenantId }
+            });
+
+        var expansionDeleteJobName = expansionDeleteResult.AssertProperty("jobName");
+        Assert.Contains(expansionJobNameStr, expansionDeleteJobName.GetRawText());
+        var expansionDeleteStatus = expansionDeleteResult.AssertProperty("status");
+        Assert.Equal("Deleted", expansionDeleteStatus.GetString());
     }
 
     [Fact]
@@ -775,10 +919,10 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
     private string SanitizeAndRecordBaseName(string baseName, string name) => SanitizeAndRecord(baseName, name, val => "Sanitized");
 
     private string SanitizeAndRecordResourceGroupName(string resourceGroupName, string name)
-        => SanitizeAndRecord(resourceGroupName, name, val => Regex.Replace(val, @"^([^-]+)-.*", "$1-Sanitized"));
+        => SanitizeAndRecord(resourceGroupName, name, val => "Sanitized");
 
     private string SanitizeAndRecordKeyVaultUri(string keyUri, string name)
-        => SanitizeAndRecord(keyUri, name, val => Regex.Replace(val, "https://.*?\\.", "https://Sanitized."));
+        => SanitizeAndRecord(keyUri, name, val => "https://Sanitized.vault.azure.net/keys/Sanitized/Sanitized");
 
     private string SanitizeAndRecordSubnetId(string subnetId, string name)
         => SanitizeAndRecordWithSubscription(subnetId, name, "/virtualNetworks/.*?-vnet/subnets", "/virtualNetworks/Sanitized-vnet/subnets");
@@ -808,6 +952,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         => SanitizeAndRecord(unsanitizedValue, name, val =>
         {
             var sanitizedValue = SubscriptionSanitizationRegex().Replace(val, $"/subscriptions/{Guid.Empty}/resourceGroups");
+            sanitizedValue = ResourceGroupSanitizationRegex().Replace(sanitizedValue, "/resourceGroups/Sanitized/");
             return Regex.Replace(sanitizedValue, replaceRegex, replacement);
         });
 
@@ -834,4 +979,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
     [GeneratedRegex("/subscriptions/(.*?)/resourceGroups")]
     private static partial Regex SubscriptionSanitizationRegex();
+
+    [GeneratedRegex("/resourceGroups/[^/]+/", RegexOptions.IgnoreCase)]
+    private static partial Regex ResourceGroupSanitizationRegex();
 }

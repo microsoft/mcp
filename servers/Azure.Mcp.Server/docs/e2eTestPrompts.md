@@ -735,6 +735,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | managedlustre_fs_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> | none |
 | managedlustre_fs_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> | none |
 | managedlustre_fs_sku_get | List the Azure Managed Lustre SKUs available in location <location> | none |
+| managedlustre_fs_expansion_create | Create an expansion job to increase the storage capacity of the Azure Managed Lustre filesystem <filesystem_name> to <new_size_tib> TiB in resource group <resource_group_name> | none |
+| managedlustre_fs_expansion_get | Get the details of expansion job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
+| managedlustre_fs_expansion_get | List all expansion jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
+| managedlustre_fs_expansion_delete | Delete the expansion job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_autoexport_create | Create an autoexport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_autoexport_cancel | Cancel the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_autoexport_get | Get the details of autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
