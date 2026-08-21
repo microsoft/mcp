@@ -4018,7 +4018,8 @@
         "azurebackup_backup_status",
         "azurebackup_job_get",
         "azurebackup_recoverypoint_get",
-        "azurebackup_governance_find-unprotected"
+        "azurebackup_governance_find-unprotected",
+        "azurebackup_vault_private-endpoint_get"
       ]
     },
     {
@@ -4053,7 +4054,8 @@
       "mappedToolList": [
         "azurebackup_vault_create",
         "azurebackup_policy_create",
-        "azurebackup_protecteditem_protect"
+        "azurebackup_protecteditem_protect",
+        "azurebackup_vault_private-endpoint_create"
       ]
     },
     {
@@ -4093,7 +4095,10 @@
         "azurebackup_disasterrecovery_enable-crr",
         "azurebackup_protecteditem_undelete",
         "azurebackup_security_configure-encryption",
-        "azurebackup_security_configure-mua"
+        "azurebackup_security_configure-mua",
+        "azurebackup_vault_private-endpoint_delete",
+        "azurebackup_vault_private-endpoint_approve",
+        "azurebackup_vault_private-endpoint_reject"
       ]
     },
     {

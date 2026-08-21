@@ -902,6 +902,67 @@ azmcp azurebackup vault update --subscription <subscription> \
                                [--redundancy <redundancy>]
 ```
 
+#### Private Endpoint (RSV only)
+
+```bash
+# Creates a Private Endpoint (v2 experience) for a Recovery Services vault in a customer VNet subnet.
+# Provisions the Microsoft.Network/privateEndpoints resource and, when --auto-approve is true, approves
+# the resulting Private Endpoint Connection on the vault. Backup vaults (DPP) are not supported. The
+# vault must have no protected items; RSV supports at most 12 Private Endpoints per vault. --group-id
+# must be 'AzureBackup' (primary region) or 'AzureBackup_secondary' (paired region / CRR).
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault private-endpoint create --subscription <subscription> \
+                                                --resource-group <resource-group> \
+                                                --vault <vault> \
+                                                --private-endpoint-name <private-endpoint-name> \
+                                                --vnet-subnet-id <vnet-subnet-id> \
+                                                [--vault-type <vault-type>] \
+                                                [--group-id <AzureBackup|AzureBackup_secondary>] \
+                                                [--location <location>] \
+                                                [--auto-approve <true|false>]
+
+# Retrieves Private Endpoint Connections on a Recovery Services vault. When --private-endpoint-name is
+# specified, returns that single connection; when omitted, lists every PEC on the vault. Backup vaults
+# (DPP) are not supported.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault private-endpoint get --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --vault <vault> \
+                                             [--vault-type <vault-type>] \
+                                             [--private-endpoint-name <private-endpoint-name>]
+
+# Deletes a Private Endpoint Connection from a Recovery Services vault. This removes the vault-side
+# connection object only; the Microsoft.Network/privateEndpoints resource must be deleted separately.
+# Backup vaults (DPP) are not supported.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault private-endpoint delete --subscription <subscription> \
+                                                --resource-group <resource-group> \
+                                                --vault <vault> \
+                                                --private-endpoint-name <private-endpoint-name> \
+                                                [--vault-type <vault-type>]
+
+# Approves a pending Private Endpoint Connection on a Recovery Services vault. If already Approved,
+# returns the current state unchanged. Requires
+# Microsoft.RecoveryServices/vaults/privateEndpointConnectionsApproval/action on the vault.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault private-endpoint approve --subscription <subscription> \
+                                                 --resource-group <resource-group> \
+                                                 --vault <vault> \
+                                                 --private-endpoint-name <private-endpoint-name> \
+                                                 [--vault-type <vault-type>] \
+                                                 [--description <description>]
+
+# Rejects a pending Private Endpoint Connection on a Recovery Services vault. If already Rejected,
+# returns the current state unchanged.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault private-endpoint reject --subscription <subscription> \
+                                                --resource-group <resource-group> \
+                                                --vault <vault> \
+                                                --private-endpoint-name <private-endpoint-name> \
+                                                [--vault-type <vault-type>] \
+                                                [--description <description>]
+```
+
 #### Policy
 
 ```bash
