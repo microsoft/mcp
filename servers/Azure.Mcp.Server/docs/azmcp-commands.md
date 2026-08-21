@@ -12,11 +12,6 @@ The following options are available for most commands:
 | `--subscription` | No | Environment variable `AZURE_SUBSCRIPTION_ID` | Azure subscription ID for target resources |
 | `--tenant-id` | No | - | Azure tenant ID for authentication |
 | `--auth-method` | No | 'credential' | Authentication method ('credential', 'key', 'connectionString') |
-| `--retry-max-retries` | No | 3 | Maximum retry attempts for failed operations |
-| `--retry-delay` | No | 2 | Delay between retry attempts (seconds) |
-| `--retry-max-delay` | No | 10 | Maximum delay between retries (seconds) |
-| `--retry-mode` | No | 'exponential' | Retry strategy ('fixed' or 'exponential') |
-| `--retry-network-timeout` | No | 100 | Network operation timeout (seconds) |
 | `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
 
 ### Discovery with `--learn`

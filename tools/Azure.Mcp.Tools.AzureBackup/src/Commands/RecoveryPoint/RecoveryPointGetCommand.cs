@@ -56,7 +56,6 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
                     options.VaultType,
                     options.Container,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -73,7 +72,6 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
                     options.VaultType,
                     options.Container,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(

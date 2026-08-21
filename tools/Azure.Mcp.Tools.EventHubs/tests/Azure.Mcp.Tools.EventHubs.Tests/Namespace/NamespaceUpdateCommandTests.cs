@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -56,7 +55,6 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
                 Arg.Any<bool?>(),
                 Arg.Any<Dictionary<string, string>?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(updatedNamespace);
         }
@@ -100,7 +98,6 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             null, // zoneRedundant
             null, // tags
             null, // tenant
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
@@ -130,7 +127,6 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             null,
             null,
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -153,7 +149,6 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<bool?>(),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
@@ -200,7 +195,6 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
                 tags.ContainsKey("team") &&
                 tags["team"] == "platform"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
@@ -251,7 +245,6 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             true,
             Arg.Any<Dictionary<string, string>?>(),
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
@@ -285,7 +278,6 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             true,
             Arg.Any<Dictionary<string, string>?>(),
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -307,7 +299,6 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<bool?>(),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Update failed"));
 
@@ -341,7 +332,6 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<bool?>(),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new KeyNotFoundException("Namespace not found"));
 
@@ -376,7 +366,6 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<bool?>(),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
@@ -404,7 +393,6 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             null,
             null,
             "test-tenant-123",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 

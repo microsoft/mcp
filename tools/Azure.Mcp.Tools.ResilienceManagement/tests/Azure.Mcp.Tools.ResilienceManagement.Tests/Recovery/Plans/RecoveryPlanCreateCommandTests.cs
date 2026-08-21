@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -50,7 +49,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(Element("plan1"));
         }
@@ -84,7 +82,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             TestContext.Current.CancellationToken);
     }
 
@@ -114,7 +111,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             TestContext.Current.CancellationToken);
     }
 
@@ -140,7 +136,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             TestContext.Current.CancellationToken);
     }
 
@@ -158,7 +153,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Element(recoveryPlan));
 
@@ -203,7 +197,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
@@ -248,7 +241,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             defaultGroupDescription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
@@ -286,7 +278,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -301,7 +292,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             RecoveryPlanIdentityKind.UserAssigned,
             UserAssignedIdentityResourceId,
             "default",
-            null,
             null,
             Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
@@ -319,7 +309,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             UserAssignedIdentityResourceId,
             "default",
             null,
-            null,
             Arg.Any<CancellationToken>());
     }
 
@@ -333,7 +322,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "description",
             RecoveryPlanIdentityKind.UserAssigned,
             UserAssignedIdentityResourceId,
-            null,
             null,
             null,
             Arg.Any<CancellationToken>())
@@ -355,7 +343,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "description",
             RecoveryPlanIdentityKind.UserAssigned,
             UserAssignedIdentityResourceId,
-            null,
             null,
             null,
             Arg.Any<CancellationToken>());
@@ -395,7 +382,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             TestContext.Current.CancellationToken);
     }
 
@@ -408,7 +394,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             RecoveryPlanKind.Zonal,
             "description",
             RecoveryPlanIdentityKind.SystemAssigned,
-            null,
             null,
             null,
             null,
@@ -432,7 +417,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             null,
-            null,
             Arg.Any<CancellationToken>());
     }
 
@@ -446,7 +430,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "description",
             RecoveryPlanIdentityKind.SystemAndUserAssigned,
             UserAssignedIdentityResourceId,
-            null,
             null,
             null,
             Arg.Any<CancellationToken>())
@@ -468,7 +451,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "description",
             RecoveryPlanIdentityKind.SystemAndUserAssigned,
             UserAssignedIdentityResourceId,
-            null,
             null,
             null,
             Arg.Any<CancellationToken>());
@@ -533,7 +515,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -565,7 +546,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, message));
     }

@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Security;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -35,7 +34,7 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
 
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
@@ -59,7 +58,7 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
 
         Service.DisableMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
@@ -80,7 +79,7 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
         // Arrange
         Service.DisableMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -100,7 +99,7 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
         // Arrange
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
 
         // Act
@@ -121,7 +120,7 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
         // Arrange
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
         // Act
@@ -142,7 +141,7 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
         // Arrange
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(400, "Region mismatch"));
 
         // Act
@@ -163,7 +162,7 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
         // Arrange
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "Already configured"));
 
         // Act
@@ -204,7 +203,7 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
     {
         Service.DisableMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(vaultType),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new OperationResult("Succeeded", null, null)));
 
         var response = await ExecuteCommandAsync(
@@ -225,7 +224,7 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
         {
             Service.DisableMultiUserAuthorizationAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new OperationResult("Succeeded", null, null));
         }
 
@@ -266,7 +265,7 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
 
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
@@ -289,7 +288,7 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
         // Arrange
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, null));
 
         // Act
@@ -302,11 +301,11 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
         // Assert - Enable was called, not Disable
         await Service.Received(1).ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
 
         await Service.DidNotReceive().DisableMultiUserAuthorizationAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -315,7 +314,7 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
         // Arrange
         Service.DisableMultiUserAuthorizationAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, null));
 
         // Act
@@ -327,10 +326,10 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
         // Assert - Disable was called, not Enable
         await Service.Received(1).DisableMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
 
         await Service.DidNotReceive().ConfigureMultiUserAuthorizationAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

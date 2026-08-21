@@ -8,7 +8,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Grafana.Models;
 using Azure.Mcp.Tools.Grafana.Services.Models;
 using Microsoft.Mcp.Core.Models.Identity;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Grafana.Services;
 
@@ -19,7 +18,6 @@ public class GrafanaService(IAzureService azureService)
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
@@ -28,7 +26,7 @@ public class GrafanaService(IAzureService azureService)
             "Microsoft.Dashboard/grafana",
             resourceGroup: resourceGroup,
             subscription,
-            retryPolicy,
+            null,
             ConvertToWorkspaceModel,
             tenant: tenant,
             cancellationToken: cancellationToken);

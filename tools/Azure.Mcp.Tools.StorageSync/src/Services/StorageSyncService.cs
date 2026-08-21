@@ -8,7 +8,6 @@ using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.StorageSync;
 using Azure.ResourceManager.StorageSync.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.StorageSync.Services;
 
@@ -24,12 +23,11 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
 
         var services = new List<StorageSyncServiceDataSchema>();
@@ -72,7 +70,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string resourceGroup,
         string storageSyncServiceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -83,7 +80,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
 
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -106,7 +103,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string location,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -115,7 +111,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
             (nameof(storageSyncServiceName), storageSyncServiceName),
             (nameof(location), location));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
@@ -150,7 +146,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         Dictionary<string, string>? tags = null,
         string? identityType = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -158,7 +153,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -201,7 +196,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string resourceGroup,
         string storageSyncServiceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -209,7 +203,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -228,7 +222,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string resourceGroup,
         string storageSyncServiceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -236,7 +229,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -256,7 +249,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string storageSyncServiceName,
         string syncGroupName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -267,7 +259,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
 
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -288,7 +280,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string storageSyncServiceName,
         string syncGroupName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -297,7 +288,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
             (nameof(storageSyncServiceName), storageSyncServiceName),
             (nameof(syncGroupName), syncGroupName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -315,7 +306,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string storageSyncServiceName,
         string syncGroupName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -324,7 +314,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
             (nameof(storageSyncServiceName), storageSyncServiceName),
             (nameof(syncGroupName), syncGroupName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -343,7 +333,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string storageSyncServiceName,
         string syncGroupName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -352,7 +341,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
             (nameof(storageSyncServiceName), storageSyncServiceName),
             (nameof(syncGroupName), syncGroupName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -374,7 +363,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string syncGroupName,
         string cloudEndpointName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -386,7 +374,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
 
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -411,7 +399,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string storageAccountResourceId,
         string azureFileShareName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -423,7 +410,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
             (nameof(storageAccountResourceId), storageAccountResourceId),
             (nameof(azureFileShareName), azureFileShareName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
 
         // Get subscription data to access tenant ID
@@ -465,7 +452,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string syncGroupName,
         string cloudEndpointName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -475,7 +461,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
             (nameof(syncGroupName), syncGroupName),
             (nameof(cloudEndpointName), cloudEndpointName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -498,7 +484,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string? changeDetectionMode = null,
         IList<string>? paths = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -509,7 +494,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
             (nameof(cloudEndpointName), cloudEndpointName),
             (nameof(directoryPath), directoryPath));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -549,7 +534,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string storageSyncServiceName,
         string syncGroupName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -558,7 +542,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
             (nameof(storageSyncServiceName), storageSyncServiceName),
             (nameof(syncGroupName), syncGroupName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -580,7 +564,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string syncGroupName,
         string serverEndpointName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -592,7 +575,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
 
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -621,7 +604,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         int? tierFilesOlderThanDays = null,
         string? localCacheMode = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -633,7 +615,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
             (nameof(serverResourceId), serverResourceId),
             (nameof(serverLocalPath), serverLocalPath));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -681,7 +663,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         int? tierFilesOlderThanDays = null,
         string? localCacheMode = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -691,7 +672,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
             (nameof(syncGroupName), syncGroupName),
             (nameof(serverEndpointName), serverEndpointName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -730,7 +711,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string syncGroupName,
         string serverEndpointName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -740,7 +720,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
             (nameof(syncGroupName), syncGroupName),
             (nameof(serverEndpointName), serverEndpointName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -759,7 +739,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string resourceGroup,
         string storageSyncServiceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -767,7 +746,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
             (nameof(resourceGroup), resourceGroup),
             (nameof(storageSyncServiceName), storageSyncServiceName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -787,7 +766,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string storageSyncServiceName,
         string registeredServerId,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -801,7 +779,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
 
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -822,7 +800,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string storageSyncServiceName,
         string registeredServerId,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -834,7 +811,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         // Validate registeredServerId is a valid GUID
         var serverGuid = CheckGuid(registeredServerId, nameof(registeredServerId));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -855,7 +832,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string registeredServerId,
         Dictionary<string, object>? properties = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -867,7 +843,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         // Validate registeredServerId is a valid GUID
         var serverGuid = CheckGuid(registeredServerId, nameof(registeredServerId));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
@@ -889,7 +865,6 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string storageSyncServiceName,
         string registeredServerId,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -901,7 +876,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         // Validate registeredServerId is a valid GUID
         var serverGuid = CheckGuid(registeredServerId, nameof(registeredServerId));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);

@@ -8,7 +8,6 @@ using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.IoTHub.Services;
 
@@ -56,7 +55,6 @@ public class IoTHubDeviceService(
         string subscription,
         string? tenant = null,
         int? maxCount = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -66,7 +64,7 @@ public class IoTHubDeviceService(
 
         return await ExecuteWithTimeoutAsync(async ct =>
         {
-            var hostname = await _hostnameResolver.GetHostnameAsync(hubName, resourceGroup, subscription, tenant, retryPolicy, ct);
+            var hostname = await _hostnameResolver.GetHostnameAsync(hubName, resourceGroup, subscription, tenant, ct);
 
             // The registry API has no continuation token, so fetch one more than the requested max
             // (top = maxCount + 1). If the hub returns the extra device we know more devices exist
@@ -75,10 +73,9 @@ public class IoTHubDeviceService(
             var maxCountParam = maxCount.HasValue ? $"&top={maxCount.Value + 1}" : string.Empty;
             var requestUri = $"https://{hostname}/devices?api-version={RegistryApiVersion}{maxCountParam}";
 
-            // Send the request through an Azure.Core pipeline so the caller's RetryPolicyOptions
-            // governs transient-failure retries (408/429/5xx and network errors).
+            // Send the request through an Azure.Core pipeline with the SDK's default retry behavior.
             using var httpClient = _httpClientFactory.CreateClient();
-            var clientOptions = ConfigureRetryPolicy(AddDefaultPolicies(new IoTHubClientOptions()), retryPolicy);
+            var clientOptions = AddDefaultPolicies(new IoTHubClientOptions());
             clientOptions.Transport = new HttpClientTransport(httpClient);
             var pipeline = HttpPipelineBuilder.Build(clientOptions);
 

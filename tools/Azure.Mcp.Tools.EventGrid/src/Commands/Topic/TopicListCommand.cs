@@ -37,7 +37,6 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger, IEventGri
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(topics ?? []), EventGridJsonContext.Default.TopicListCommandResult);

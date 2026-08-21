@@ -8,7 +8,6 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ResourceHealth.Models;
 using Azure.Mcp.Tools.ResourceHealth.Models.Internal;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Services;
 
@@ -19,7 +18,6 @@ public class ResourceHealthService(IAzureService azureService)
 
     public async Task<AvailabilityStatus> GetAvailabilityStatusAsync(
         string resourceId,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(resourceId), resourceId));
@@ -51,12 +49,11 @@ public class ResourceHealthService(IAzureService azureService)
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
         var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint;
@@ -93,12 +90,11 @@ public class ResourceHealthService(IAzureService azureService)
         string? queryStartTime = null,
         string? queryEndTime = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
         var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint;

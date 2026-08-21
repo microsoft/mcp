@@ -58,7 +58,6 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
                 options.Data,
                 options.Schema,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

@@ -181,9 +181,6 @@ public class {Resource}{Operation}Options : ISubscriptionOption
 
     [Option(OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
-
-    [Option(Name = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
 
@@ -222,7 +219,6 @@ public interface I{Toolset}Service
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     // Data plane operation (returns simple List)
@@ -230,7 +226,6 @@ public interface I{Toolset}Service
         string resourceName,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }
 ```
@@ -254,14 +249,13 @@ public class {Toolset}Service(IAzureService azureService)
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         return await ExecuteResourceQueryAsync(
             "Microsoft.{Provider}/{resourceType}",
             resourceGroup,
             subscription,
-            retryPolicy,
+            null,
             ConvertToModel,
             tenant: tenant,
             cancellationToken: cancellationToken);
@@ -290,10 +284,9 @@ public class {Toolset}Service(IAzureService azureService)
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
 
         // CRITICAL: Use GetResourceGroupAsync with await
         var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -319,11 +312,10 @@ public class MyService(IAzureService azureService)
     private async Task<MyDataPlaneClient> CreateDataPlaneClientAsync(
         string resourceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         var endpoint = GetResourceEndpoint(resourceName);
-        var options = ConfigureRetryPolicy(AddDefaultPolicies(new MyClientOptions()), retryPolicy);
+        var options = AddDefaultPolicies(new MyClientOptions());
         options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new MyDataPlaneClient(
             new Uri(endpoint),
@@ -411,7 +403,7 @@ public sealed class {Resource}{Operation}Command(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
+                null,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
@@ -1402,10 +1394,10 @@ var vms = await vmssResource.Value
 
 ```csharp
 // ✅ Correct: use IAzureService
-var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, retryPolicy);
+var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, cancellationToken);
 
 // ❌ Wrong: manual ARM client creation
-var armClient = await CreateArmClientAsync(tenant, retryPolicy);
+var armClient = await CreateArmClientAsync(tenant, null, cancellationToken: cancellationToken);
 var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{subscription}"));
 ```
 
@@ -1733,17 +1725,15 @@ catch (Exception ex)
 Task<List<string>> GetStorageAccounts(
     string subscription,
     string? tenant = null,
-    RetryPolicyOptions? retryPolicy = null,
     CancellationToken cancellationToken = default);
 
 // ❌ Incorrect: all on single line
-Task<List<string>> GetStorageAccounts(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null);
+Task<List<string>> GetStorageAccounts(string subscription, string? tenant = null, CancellationToken cancellationToken = default);
 
 // ❌ Incorrect: missing CancellationToken
 Task<List<string>> GetStorageAccounts(
     string subscription,
-    string? tenant = null,
-    RetryPolicyOptions? retryPolicy = null);
+    string? tenant = null);
 ```
 
 Rules:
@@ -2003,7 +1993,8 @@ private MyOptions? _currentOptions;      // Race condition!
 
 ```csharp
 public async Task<List<Resource>> GetResourcesAsync(
-    string subscription, string? tenant, RetryPolicyOptions? retryPolicy,
+    string subscription,
+    string? tenant,
     CancellationToken cancellationToken)
 {
     // IAzureService handles tenant resolution for all modes:

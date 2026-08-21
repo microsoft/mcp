@@ -16,6 +16,4 @@ public sealed class IndexQueryOptions
     [Option(Description = SearchOptionDescriptions.Index)]
     public required string Index { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

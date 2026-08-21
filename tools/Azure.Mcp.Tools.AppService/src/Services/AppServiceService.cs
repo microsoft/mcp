@@ -11,7 +11,6 @@ using Azure.Mcp.Tools.AppService.Models;
 using Azure.ResourceManager.AppService;
 using Azure.ResourceManager.AppService.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.AppService.Services;
@@ -32,7 +31,6 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         string connectionString,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation(
@@ -49,7 +47,7 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
             (nameof(subscription), subscription));
 
         // Get Azure resources
-        var webApp = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        var webApp = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, cancellationToken);
 
         // Prepare connection string
         var finalConnectionString = PrepareConnectionString(connectionString, databaseType, databaseServer, databaseName);
@@ -66,9 +64,9 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
     }
 
     private async Task<WebSiteResource> GetWebAppResourceAsync(string subscription, string resourceGroup,
-        string appName, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string appName, string? tenant, CancellationToken cancellationToken)
     {
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
 
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         if (resourceGroupResource?.Value == null)
@@ -191,12 +189,11 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         string? resourceGroup = null,
         string? appName = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
 
         var results = new List<WebappDetails>();
 
@@ -250,12 +247,11 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         string resourceGroup,
         string appName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(appName), appName));
 
-        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, cancellationToken);
         var configResource = await webAppResource.GetApplicationSettingsAsync(cancellationToken: cancellationToken);
 
         return configResource.Value.Properties;
@@ -269,7 +265,6 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         string settingUpdateType,
         string? settingValue = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -289,7 +284,7 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
             throw new ArgumentException(errorMessage);
         }
 
-        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, cancellationToken);
         var configResource = await webAppResource.GetApplicationSettingsAsync(cancellationToken: cancellationToken);
 
         // Don't worry about an else case here because validation should have already caught invalid update types
@@ -329,12 +324,11 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         string appName,
         string? deploymentId = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(appName), appName));
 
-        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, cancellationToken);
 
         var results = new List<DeploymentDetails>();
 
@@ -363,7 +357,6 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         string resourceGroup,
         string appName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(appName), appName));
@@ -371,7 +364,7 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         // TODO (alzimmer): Once https://github.com/Azure/azure-sdk-for-net/issues/51444 is resolved,
         // use WebSiteResource.GetSiteDetectors().GetAllAsync instead of using a direct HttpClient.
         // var results = new List<DetectorDetails>();
-        // var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        // var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, cancellationToken);
         // await foreach (var detector = await webAppResource.GetSiteDetectors().GetAllAsync(cancellationToken))
         // {
         //     results.Add(MapToDetectorDetails(detector.Data));
@@ -429,7 +422,6 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         DateTimeOffset? endTime = null,
         string? interval = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -440,7 +432,7 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
 
         // TODO (alzimmer): Once https://github.com/Azure/azure-sdk-for-net/issues/51444 is resolved,
         // // use WebSiteResource.GetSiteDetectorAsync instead of using a direct HttpClient.
-        // var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        // var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, cancellationToken);
         // var diagnoses = await webAppResource.GetSiteDetectorAsync(detectorName, startTime, endTime, interval, cancellationToken);
 
         // return new DiagnosesResults(diagnoses.Value.Data.Dataset, diagnoses.Value.Data.Metadata);
@@ -552,7 +544,6 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         bool softRestart,
         bool waitForCompletion,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -566,7 +557,7 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
             throw new ArgumentException(errorMessage);
         }
 
-        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, cancellationToken);
 
         if (stateChange.Equals("start", StringComparison.OrdinalIgnoreCase))
         {

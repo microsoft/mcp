@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -33,9 +32,7 @@ public class TestRunGetCommandTests : SubscriptionCommandUnitTestsBase<TestRunGe
             Arg.Is("testResourceName"),
             Arg.Is("run1"),
             Arg.Is("resourceGroup123"),
-            Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+            Arg.Is("tenant123"), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -61,9 +58,7 @@ public class TestRunGetCommandTests : SubscriptionCommandUnitTestsBase<TestRunGe
             Arg.Is("testResourceName"),
             Arg.Is("run1"),
             Arg.Is("resourceGroup123"),
-            Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+            Arg.Is("tenant123"), Arg.Any<CancellationToken>())
             .Returns(new TestRun());
 
         var response = await ExecuteCommandAsync("--tenant", "tenant123");
@@ -79,9 +74,7 @@ public class TestRunGetCommandTests : SubscriptionCommandUnitTestsBase<TestRunGe
             Arg.Is("testResourceName"),
             Arg.Is("run1"),
             Arg.Is("resourceGroup123"),
-            Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+            Arg.Is("tenant123"), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var response = await ExecuteCommandAsync(
@@ -109,9 +102,7 @@ public class TestRunGetCommandTests : SubscriptionCommandUnitTestsBase<TestRunGe
             Arg.Is("testResourceName"),
             Arg.Is("testId"),
             Arg.Is("resourceGroup123"),
-            Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+            Arg.Is("tenant123"), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -137,9 +128,7 @@ public class TestRunGetCommandTests : SubscriptionCommandUnitTestsBase<TestRunGe
             Arg.Is("testResourceName"),
             Arg.Is("testId"),
             Arg.Is("resourceGroup123"),
-            Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+            Arg.Is("tenant123"), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var response = await ExecuteCommandAsync(

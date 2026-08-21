@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -45,9 +44,7 @@ public class AutoimportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Is(_resourceGroup),
             Arg.Is(_fileSystemName),
             Arg.Is(_jobName),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedJob);
 
         // Act
@@ -66,9 +63,7 @@ public class AutoimportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Is(_resourceGroup),
             Arg.Is(_fileSystemName),
             Arg.Is(_jobName),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -99,9 +94,7 @@ public class AutoimportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Autoimport job not found"));
 
         // Act
@@ -125,9 +118,7 @@ public class AutoimportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
         // Act
@@ -161,9 +152,7 @@ public class AutoimportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedJob);
 
         // Act
@@ -180,9 +169,7 @@ public class AutoimportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Is(_resourceGroup),
             Arg.Is(_fileSystemName),
             Arg.Is(_jobName),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -197,9 +184,7 @@ public class AutoimportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
 
         Service.ListAutoimportJobsAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedJobs);
 
         // Act
@@ -216,13 +201,11 @@ public class AutoimportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Is(_subscription),
             Arg.Is(_resourceGroup),
             Arg.Is(_fileSystemName),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
 
         // Should NOT have called GetAutoimportJobAsync
         await Service.DidNotReceive().GetAutoimportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

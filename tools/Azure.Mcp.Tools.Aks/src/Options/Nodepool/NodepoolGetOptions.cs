@@ -17,8 +17,6 @@ public class NodepoolGetOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 
     [Option(Description = "AKS Cluster name.")]
     public required string Cluster { get; set; }

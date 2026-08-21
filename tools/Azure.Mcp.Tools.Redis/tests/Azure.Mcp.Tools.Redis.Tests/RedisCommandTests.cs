@@ -90,19 +90,4 @@ public class RedisCommandTests(ITestOutputHelper output, TestProxyFixture fixtur
         Assert.Equal(JsonValueKind.Array, caches.ValueKind);
     }
 
-    [Fact]
-    public async Task Should_list_redis_caches_with_retry_policy()
-    {
-        var result = await CallToolAsync(
-            "redis_list",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "retry-max-retries", 3 },
-                { "retry-delay", 2 }
-            });
-
-        var caches = result.AssertProperty("resources");
-        Assert.Equal(JsonValueKind.Array, caches.ValueKind);
-    }
 }

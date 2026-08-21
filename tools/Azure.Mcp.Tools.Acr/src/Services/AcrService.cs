@@ -7,7 +7,6 @@ using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Acr.Models;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Acr.Services;
@@ -19,7 +18,6 @@ public sealed class AcrService(IAzureService azureService)
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
@@ -28,7 +26,7 @@ public sealed class AcrService(IAzureService azureService)
             "Microsoft.ContainerRegistry/registries",
             resourceGroup,
             subscription,
-            retryPolicy,
+            retryPolicy: null,
             ConvertToAcrRegistryInfoModel,
             tenant: tenant,
             cancellationToken: cancellationToken);
@@ -41,7 +39,6 @@ public sealed class AcrService(IAzureService azureService)
         string registry,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(registry), registry));
@@ -50,7 +47,7 @@ public sealed class AcrService(IAzureService azureService)
             "Microsoft.ContainerRegistry/registries",
             resourceGroup: resourceGroup,
             subscription: subscription,
-            retryPolicy: retryPolicy,
+            retryPolicy: null,
             converter: ConvertToAcrRegistryInfoModel,
             additionalFilter: $"name =~ '{EscapeKqlString(registry)}'",
             tenant: tenant,
@@ -63,7 +60,7 @@ public sealed class AcrService(IAzureService azureService)
         return registries;
     }
 
-    private async Task<List<string>> AddRepositoriesForRegistryAsync(AcrRegistryInfo reg, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    private async Task<List<string>> AddRepositoriesForRegistryAsync(AcrRegistryInfo reg, string? tenant, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrEmpty(reg.LoginServer))
         {
@@ -73,7 +70,7 @@ public sealed class AcrService(IAzureService azureService)
 
         // Build data-plane client for this login server
         var credential = await GetCredential(tenant, cancellationToken);
-        var options = ConfigureRetryPolicy(AddDefaultPolicies(new ContainerRegistryClientOptions()), retryPolicy);
+        var options = AddDefaultPolicies(new ContainerRegistryClientOptions());
         options.Transport = new HttpClientTransport(AzureService.GetClient());
         options.Audience = GetAcrAudience();
         var acrEndpoint = new Uri($"https://{reg.LoginServer}");
@@ -96,7 +93,6 @@ public sealed class AcrService(IAzureService azureService)
         string? resourceGroup = null,
         string? registry = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
@@ -105,21 +101,21 @@ public sealed class AcrService(IAzureService azureService)
 
         if (string.IsNullOrWhiteSpace(registry))
         {
-            var registries = await ListRegistries(subscription, resourceGroup, tenant, retryPolicy, cancellationToken);
+            var registries = await ListRegistries(subscription, resourceGroup, tenant, cancellationToken);
             foreach (var reg in registries.Results)
             {
                 if (!string.IsNullOrWhiteSpace(reg.Name) && !string.IsNullOrWhiteSpace(reg.LoginServer))
                 {
-                    result[reg.Name] = await AddRepositoriesForRegistryAsync(reg, tenant, retryPolicy, cancellationToken);
+                    result[reg.Name] = await AddRepositoriesForRegistryAsync(reg, tenant, cancellationToken);
                 }
             }
         }
         else
         {
-            var reg = await GetRegistry(subscription, registry, resourceGroup, tenant, retryPolicy, cancellationToken);
+            var reg = await GetRegistry(subscription, registry, resourceGroup, tenant, cancellationToken);
             if (!string.IsNullOrWhiteSpace(reg.Name) && !string.IsNullOrWhiteSpace(reg.LoginServer))
             {
-                result[reg.Name] = await AddRepositoriesForRegistryAsync(reg, tenant, retryPolicy, cancellationToken);
+                result[reg.Name] = await AddRepositoriesForRegistryAsync(reg, tenant, cancellationToken);
             }
         }
 

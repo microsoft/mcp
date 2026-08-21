@@ -73,7 +73,6 @@ public sealed class IoTHubDeviceListCommand(
                 options.Subscription!,
                 options.Tenant,
                 maxCount,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(result, IoTHubJsonContext.Default.DeviceListResult);

@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -41,8 +40,7 @@ public class ImportJobCancelCommandTests : SubscriptionCommandUnitTestsBase<Impo
         {
             var mockJob = new Models.ImportJob { Name = JobName, Properties = new Models.ImportJobProperties { AdminStatus = "Cancel" } };
             Service.CancelImportJobAsync(
-                Arg.Is(Sub), Arg.Is(Rg), Arg.Is(Name), Arg.Is(JobName), Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Is(Sub), Arg.Is(Rg), Arg.Is(Name), Arg.Is(JobName), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(mockJob);
         }
 
@@ -68,8 +66,7 @@ public class ImportJobCancelCommandTests : SubscriptionCommandUnitTestsBase<Impo
         // Arrange
         var mockJob = new Models.ImportJob { Name = JobName, Properties = new Models.ImportJobProperties { AdminStatus = "Cancel" } };
         Service.CancelImportJobAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(mockJob);
 
         var args = $"--subscription {Sub} --resource-group {Rg} --filesystem-name {Name} --job-name {JobName}";
@@ -87,7 +84,7 @@ public class ImportJobCancelCommandTests : SubscriptionCommandUnitTestsBase<Impo
         // Arrange
         Service.CancelImportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
         var args = $"--subscription {Sub} --resource-group {Rg} --filesystem-name {Name} --job-name {JobName}";
@@ -107,7 +104,7 @@ public class ImportJobCancelCommandTests : SubscriptionCommandUnitTestsBase<Impo
         var mockJob = new Models.ImportJob { Name = JobName, Properties = new Models.ImportJobProperties { AdminStatus = "Cancel" } };
         Service.CancelImportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(mockJob);
 
         // Act

@@ -52,7 +52,6 @@ public sealed class ServerDeleteCommand(ISqlService sqlService, ILogger<ServerDe
                 options.Server,
                 options.ResourceGroup,
                 options.Subscription!,
-                options.RetryPolicy,
                 cancellationToken);
 
             if (deleted)

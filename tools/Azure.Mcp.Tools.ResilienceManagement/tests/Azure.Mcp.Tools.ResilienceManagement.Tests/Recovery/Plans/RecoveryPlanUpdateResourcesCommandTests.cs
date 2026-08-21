@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Azure.ResourceManager.ResilienceManagement.Models;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -80,7 +79,6 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Any<UpdateRecoveryResourcesContent>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -98,7 +96,6 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
                 content.ResourcesToUpdate[0].Properties.SelectedProtectionSolutionType == ResourceProtectionSolutionType.AzureNative &&
                 content.ResourcesToUpdate[0].Properties.SelectedProtectionSolutionSetting != null),
             null,
-            null,
             Arg.Any<CancellationToken>())
             .Returns(UpdateResult());
 
@@ -114,7 +111,6 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
             "plan1",
             Arg.Any<UpdateRecoveryResourcesContent>(),
             null,
-            null,
             Arg.Any<CancellationToken>());
     }
 
@@ -128,7 +124,6 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
                 content.ResourcesToUpdate.Count == 0 &&
                 content.ResourcesToRemove.Count == 1 &&
                 content.ResourcesToRemove[0].ToString() == RecoveryResourceId),
-            null,
             null,
             Arg.Any<CancellationToken>())
             .Returns(UpdateResult());
@@ -164,7 +159,6 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Is<UpdateRecoveryResourcesContent>(content => content.ResourcesToUpdate[0].Properties.InclusionState == null),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(UpdateResult());
 
@@ -186,7 +180,6 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
                 content.ResourcesToUpdate.Count == 1 &&
                 content.ResourcesToUpdate[0].Properties.RecoveryResourceUniqueId == "12345678-9012-3456-7890-123456789012"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(UpdateResult());
 
@@ -262,7 +255,6 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Any<UpdateRecoveryResourcesContent>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.BadRequest, "provider details"));
 

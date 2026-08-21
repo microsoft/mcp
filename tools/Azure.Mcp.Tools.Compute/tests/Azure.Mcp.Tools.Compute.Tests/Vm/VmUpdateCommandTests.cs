@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -64,7 +63,6 @@ public class VmUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmUpdateCom
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(updateResult);
         }
@@ -110,7 +108,6 @@ public class VmUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmUpdateCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -155,7 +152,6 @@ public class VmUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmUpdateCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -188,7 +184,6 @@ public class VmUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmUpdateCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
@@ -220,7 +215,6 @@ public class VmUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmUpdateCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(conflictException);
 
@@ -262,7 +256,6 @@ public class VmUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmUpdateCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -319,7 +312,6 @@ public class VmUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmUpdateCom
             Arg.Any<string?>(),
             Arg.Is(base64UserData),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -342,7 +334,6 @@ public class VmUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmUpdateCom
             Arg.Any<string?>(),
             base64UserData,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -372,7 +363,6 @@ public class VmUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmUpdateCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -395,7 +385,6 @@ public class VmUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmUpdateCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -424,7 +413,6 @@ public class VmUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmUpdateCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -445,7 +433,6 @@ public class VmUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmUpdateCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 }

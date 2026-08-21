@@ -14,7 +14,6 @@ using Azure.Mcp.Tools.ApplicationInsights.Models;
 using Azure.ResourceManager;
 using Azure.ResourceManager.ApplicationInsights;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Services;
@@ -160,9 +159,9 @@ public class ProfilerDataService(ILogger<ProfilerDataService> logger, IAzureServ
         return await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<Guid> ResolveAppIdAsync(ResourceIdentifier resourceId, CancellationToken cancellationToken, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
+    private async Task<Guid> ResolveAppIdAsync(ResourceIdentifier resourceId, CancellationToken cancellationToken, string? tenantId = null)
     {
-        ArmClient armClient = await CreateArmClientAsync(tenantId, retryPolicy).ConfigureAwait(false);
+        ArmClient armClient = await CreateArmClientAsync(tenantId, null).ConfigureAwait(false);
 
         ApplicationInsightsComponentResource applicationInsightsComponentResource = armClient.GetApplicationInsightsComponentResource(resourceId);
 

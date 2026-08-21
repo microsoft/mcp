@@ -9,7 +9,6 @@ using Azure.Mcp.Tools.Cosmos.Commands.Item;
 using Azure.Mcp.Tools.Cosmos.Models;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -41,8 +40,7 @@ public class ItemVectorSearchCommandTests : SubscriptionCommandUnitTestsBase<Ite
             Arg.Is<IReadOnlyList<string>?>(p => p != null && p.Count == 2 && p[0] == "id" && p[1] == "title"),
             Arg.Is<IReadOnlyList<float>>(v => v.Count == 2 && v[0] == 0.5f),
             Arg.Is(3),
-            Arg.Is("sub"), Arg.Any<AuthMethod>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is("sub"), Arg.Any<AuthMethod>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(items);
 
         var response = await ExecuteCommandAsync(

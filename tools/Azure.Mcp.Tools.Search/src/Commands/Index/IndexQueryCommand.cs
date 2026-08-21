@@ -38,7 +38,6 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearch
                 options.Service,
                 options.Index,
                 options.Query,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(results, SearchJsonContext.Default.ListJsonElement);

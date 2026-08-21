@@ -50,8 +50,6 @@ public class BlobUploadOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
 
@@ -112,7 +110,7 @@ Replace the options class hierarchy with a single flat POCO that implements `ISu
 - **Required**: Driven by the `required` keyword (`RequiredMemberAttribute`). Use `required` on required options; use nullable types (`?`) for optional options.
 - **Description**: Always required, passed using attribute properties: `[Option(Description = "description")]`.
 - **Shared descriptions**: Use constants from `OptionDescriptions` (e.g., `OptionDescriptions.Subscription`, `OptionDescriptions.Tenant`).
-- **Nested objects**: Use `[OptionContainer(Prefix = "prefix")]` on a property of a complex type. Its child properties become `--prefix-child-name`. Example: `RetryPolicyOptions` with `[OptionContainer(Prefix = "retry")]` produces `--retry-delay`, `--retry-max-retries`, etc.
+- **Nested objects**: Use `[OptionContainer(Prefix = "prefix")]` only when a command intentionally exposes a grouped complex input. Do not expose retry policy options; tools use Azure SDK retry defaults.
 - **Property ordering**: List command-specific options first, then sink common/infrastructure options to the bottom in this order: `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`, `RetryPolicy`. This keeps the most relevant options visible at a glance.
 
 **Before (hierarchy of 6 classes):**
@@ -147,8 +145,6 @@ public class BlobUploadOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
 
@@ -297,8 +293,6 @@ public class BlobUploadOptions : ISubscriptionOption, IBlobOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
 
@@ -353,17 +347,6 @@ dotnet run --project servers/Azure.Mcp.Server/src -- storage blob upload --help
 ```
 
 **Option names and required status must not change** — this is a public API.
-
-#### Known pre-existing inconsistencies
-
-Some commands on `main` already have minor description differences due to older one-generic commands using locally instantiated `RetryPolicyOptions` with slightly different description text. These show up in before/after diffs but are **not** caused by conversion:
-
-| Option | Command | Description on `main` |
-|---|---|---|
-| `--retry-max-retries` | `appconfig kv lock set` | "Maximum number of retry attempts before giving up." |
-| `--retry-max-retries` | All other commands (240+) | "Maximum number of retry attempts for failed operations before giving up." |
-
-If your diff flags only these known discrepancies, it's safe to proceed. The inconsistency lives in the unconverted command's own `RetryPolicyOptions` instance (not in shared infrastructure) and will be resolved when that command is converted to the two-generic pattern.
 
 #### Distinguishing unused options from removable inherited properties
 

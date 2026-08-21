@@ -4,7 +4,6 @@
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ContainerApps.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ContainerApps.Services;
 
@@ -15,7 +14,6 @@ public sealed class ContainerAppsService(IAzureService azureService)
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
@@ -24,7 +22,7 @@ public sealed class ContainerAppsService(IAzureService azureService)
             "Microsoft.App/containerApps",
             resourceGroup,
             subscription,
-            retryPolicy,
+            null,
             ConvertToContainerAppInfoModel,
             tenant: tenant,
             cancellationToken: cancellationToken);

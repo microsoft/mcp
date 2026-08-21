@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.Cosmos.Commands;
 using Azure.Mcp.Tools.Cosmos.Commands.Item;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -30,8 +29,7 @@ public class ItemListRecentCommandTests : SubscriptionCommandUnitTestsBase<ItemL
 
         Service.GetRecentItems(
             Arg.Is("acct"), Arg.Is("db"), Arg.Is("c"), Arg.Is(2),
-            Arg.Is("sub"), Arg.Any<AuthMethod>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is("sub"), Arg.Any<AuthMethod>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(items);
 
         var response = await ExecuteCommandAsync(

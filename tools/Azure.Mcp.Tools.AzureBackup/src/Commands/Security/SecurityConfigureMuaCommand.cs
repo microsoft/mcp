@@ -64,7 +64,6 @@ public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaComm
                     options.ResourceGuardId,
                     options.VaultType,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else
@@ -75,7 +74,6 @@ public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaComm
                     options.Subscription!,
                     options.VaultType,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
 

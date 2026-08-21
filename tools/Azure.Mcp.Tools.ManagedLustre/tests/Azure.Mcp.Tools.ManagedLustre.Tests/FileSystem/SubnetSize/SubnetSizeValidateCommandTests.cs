@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.SubnetSize;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -35,9 +34,7 @@ public class FileSystemCheckSubnetCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Any<int>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(true);
 
         // Act
@@ -79,9 +76,7 @@ public class FileSystemCheckSubnetCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Any<int>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("error"));
 
         // Act

@@ -101,7 +101,7 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
 
         var results = new List<T>();
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
         var tenantResource = await GetTenantResourceAsync(subscriptionResource!.Data.TenantId, cancellationToken);
 
         var queryFilter = $"{tableName} | where type =~ '{EscapeKqlString(resourceType)}'";

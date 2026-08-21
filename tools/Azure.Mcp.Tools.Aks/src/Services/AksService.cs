@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Aks.Commands;
 using Azure.Mcp.Tools.Aks.Models;
 using Azure.ResourceManager.ContainerService;
 using Azure.ResourceManager.ContainerService.Models;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.Aks.Services;
@@ -27,7 +26,6 @@ public sealed class AksService(IAzureService azureService, ICacheService cacheSe
         string? clusterName,
         string? resourceGroup,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
@@ -54,7 +52,7 @@ public sealed class AksService(IAzureService azureService, ICacheService cacheSe
                 "Microsoft.ContainerService/managedClusters",
                 resourceGroup,
                 subscription,
-                retryPolicy,
+                null,
                 ConvertToClusterFromJson,
                 tenant: tenant,
                 cancellationToken: cancellationToken);
@@ -90,7 +88,7 @@ public sealed class AksService(IAzureService azureService, ICacheService cacheSe
                 "Microsoft.ContainerService/managedClusters",
                 resourceGroup: resourceGroup,
                 subscription: subscription,
-                retryPolicy: retryPolicy,
+                retryPolicy: null,
                 converter: ConvertToClusterFromJson,
                 additionalFilter: $"name =~ '{EscapeKqlString(clusterName!)}'",
                 tenant: tenant,
@@ -116,7 +114,7 @@ public sealed class AksService(IAzureService azureService, ICacheService cacheSe
         string clusterName,
         string? nodePoolName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
@@ -137,7 +135,7 @@ public sealed class AksService(IAzureService azureService, ICacheService cacheSe
                 return cachedNodePools;
             }
 
-            var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
 
             var nodePools = new List<NodePool>();
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -184,7 +182,7 @@ public sealed class AksService(IAzureService azureService, ICacheService cacheSe
                 return cachedNodePool;
             }
 
-            var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             if (resourceGroupResource?.Value == null)
             {

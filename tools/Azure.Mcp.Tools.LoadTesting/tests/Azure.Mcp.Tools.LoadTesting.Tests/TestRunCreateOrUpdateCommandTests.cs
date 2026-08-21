@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -38,9 +37,7 @@ public class TestRunCreateOrUpdateCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Is("tenant123"),
             Arg.Is("displayName"),
             Arg.Is((string?)null),
-            Arg.Is(false),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+            Arg.Is(false), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -69,9 +66,7 @@ public class TestRunCreateOrUpdateCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Is("tenant123"),
             Arg.Is((string?)null),
             Arg.Is((string?)null),
-            Arg.Is(false),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+            Arg.Is(false), Arg.Any<CancellationToken>())
             .Returns(new TestRun());
 
         var response = await ExecuteCommandAsync(
@@ -98,9 +93,7 @@ public class TestRunCreateOrUpdateCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Is("tenant123"),
             Arg.Is("displayName"),
             Arg.Is((string?)null),
-            Arg.Is(false),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+            Arg.Is(false), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -133,9 +126,7 @@ public class TestRunCreateOrUpdateCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Is("tenant123"),
             Arg.Is((string?)null),
             Arg.Is((string?)null),
-            Arg.Is(false),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+            Arg.Is(false), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -167,9 +158,7 @@ public class TestRunCreateOrUpdateCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Is("tenant123"),
             Arg.Is((string?)null),
             Arg.Is((string?)null),
-            Arg.Is(false),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+            Arg.Is(false), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var response = await ExecuteCommandAsync(

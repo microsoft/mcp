@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -24,8 +23,7 @@ public class DetectorListCommandTests : SubscriptionCommandUnitTestsBase<Detecto
 
         // Arrange
         // Set up the mock to return success for any arguments
-        Service.ListDetectorsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListDetectorsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedValue);
 
         // Act
@@ -33,8 +31,7 @@ public class DetectorListCommandTests : SubscriptionCommandUnitTestsBase<Detecto
 
         // Assert
         // Verify that the mock was called with the expected parameters
-        await Service.Received(1).ListDetectorsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListDetectorsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(), Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.DetectorListResult);
 
@@ -69,7 +66,6 @@ public class DetectorListCommandTests : SubscriptionCommandUnitTestsBase<Detecto
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -78,8 +74,7 @@ public class DetectorListCommandTests : SubscriptionCommandUnitTestsBase<Detecto
     {
         // Arrange
         // Set up the mock to return success for any arguments
-        Service.ListDetectorsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListDetectorsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
         // Act
@@ -90,6 +85,6 @@ public class DetectorListCommandTests : SubscriptionCommandUnitTestsBase<Detecto
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
 
         await Service.Received(1).ListDetectorsAsync("sub123", "rg1", "test-app",
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

@@ -9,7 +9,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Resource;
 using Microsoft.Mcp.Core.Models.ResourceGroup;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 
@@ -130,7 +129,6 @@ public sealed class AzureService(
     /// <inheritdoc/>
     public async Task<List<SubscriptionData>> GetSubscriptions(
         string? tenant,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         // Try to get from cache first
@@ -142,7 +140,7 @@ public sealed class AzureService(
         }
 
         // If not in cache, fetch from Azure
-        var armClient = await AzureHelper.CreateArmClientAsync(this, tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await AzureHelper.CreateArmClientAsync(this, tenant, null, cancellationToken: cancellationToken);
         var subscriptions = armClient.GetSubscriptions();
         var results = new List<SubscriptionData>();
 
@@ -166,13 +164,12 @@ public sealed class AzureService(
     public async Task<SubscriptionResource> GetSubscription(
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         AzureHelper.ValidateRequiredParameters((nameof(subscription), subscription));
 
         // Get the subscription ID first, whether the input is a name or ID
-        var subscriptionId = await GetSubscriptionId(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionId = await GetSubscriptionId(subscription, tenant, cancellationToken);
 
         // Use subscription ID for cache key
         var cacheKey = string.IsNullOrEmpty(tenant)
@@ -184,7 +181,7 @@ public sealed class AzureService(
             return cachedSubscription;
         }
 
-        var armClient = await AzureHelper.CreateArmClientAsync(this, tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await AzureHelper.CreateArmClientAsync(this, tenant, null, cancellationToken: cancellationToken);
         var response = await armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscriptionId)).GetAsync(cancellationToken);
         if (response?.Value == null)
         {
@@ -204,10 +201,9 @@ public sealed class AzureService(
     public async Task<string> GetSubscriptionIdByName(
         string subscriptionName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var subscriptions = await GetSubscriptions(tenant, retryPolicy, cancellationToken);
+        var subscriptions = await GetSubscriptions(tenant, cancellationToken);
         var matchingSubscriptions = subscriptions.Where(s => s.DisplayName.Equals(subscriptionName, StringComparisons.SubscriptionDisplayName)).ToList();
         if (matchingSubscriptions.Count == 0)
         {
@@ -227,7 +223,6 @@ public sealed class AzureService(
     private async Task<string> GetSubscriptionId(
         string subscription,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         if (IsSubscriptionId(subscription))
@@ -235,18 +230,18 @@ public sealed class AzureService(
             return subscription;
         }
 
-        return await GetSubscriptionIdByName(subscription, tenant, retryPolicy, cancellationToken);
+        return await GetSubscriptionIdByName(subscription, tenant, cancellationToken);
     }
 
     #endregion Subscription
 
     #region Resource Group
 
-    public async Task<List<ResourceGroupInfo>> GetResourceGroups(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    public async Task<List<ResourceGroupInfo>> GetResourceGroups(string subscription, string? tenant = null, CancellationToken cancellationToken = default)
     {
         AzureHelper.ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await GetSubscription(subscription, tenant, cancellationToken);
         var subscriptionId = subscriptionResource.Data.SubscriptionId;
 
         // Try to get from cache first
@@ -276,12 +271,11 @@ public sealed class AzureService(
         string subscription,
         string resourceGroupName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         AzureHelper.ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroupName), resourceGroupName));
 
-        var subscriptionResource = await GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await GetSubscription(subscription, tenant, cancellationToken);
         var subscriptionId = subscriptionResource.Data.SubscriptionId;
 
         // Try to get from cache first
@@ -292,7 +286,7 @@ public sealed class AzureService(
             return cachedResults.FirstOrDefault(rg => rg.Name.Equals(resourceGroupName, StringComparisons.ResourceGroup));
         }
 
-        var rg = await GetResourceGroupResource(subscription, resourceGroupName, tenant, retryPolicy, cancellationToken);
+        var rg = await GetResourceGroupResource(subscription, resourceGroupName, tenant, cancellationToken);
         if (rg == null)
         {
             return null;
@@ -309,12 +303,11 @@ public sealed class AzureService(
         string subscription,
         string resourceGroupName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         AzureHelper.ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroupName), resourceGroupName));
 
-        var subscriptionResource = await GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await GetSubscription(subscription, tenant, cancellationToken);
         var resourceGroupResponse = await subscriptionResource.GetResourceGroups()
             .GetAsync(resourceGroupName, cancellationToken)
             .ConfigureAwait(false);
@@ -326,12 +319,11 @@ public sealed class AzureService(
         string subscription,
         string resourceGroupName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         AzureHelper.ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroupName), resourceGroupName));
 
-        var resourceGroupResource = await GetResourceGroupResource(subscription, resourceGroupName, tenant, retryPolicy, cancellationToken)
+        var resourceGroupResource = await GetResourceGroupResource(subscription, resourceGroupName, tenant, cancellationToken)
             ?? throw new KeyNotFoundException($"Resource group '{resourceGroupName}' not found");
 
         await foreach (var r in resourceGroupResource.GetGenericResourcesAsync(cancellationToken: cancellationToken))

@@ -10,7 +10,6 @@ using Azure.ResourceManager.ApplicationInsights.Models;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Workbooks.Services;
 
@@ -33,7 +32,6 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
         int maxResults = 50,
         bool includeTotalCount = true,
         OutputFormat outputFormat = OutputFormat.Standard,
-        RetryPolicyOptions? retryPolicy = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -52,7 +50,7 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
             foreach (var sub in subscriptions)
             {
                 // Resolve subscription name to ID if needed
-                var subscriptionResource = await AzureService.GetSubscription(sub, tenant, retryPolicy, cancellationToken);
+                var subscriptionResource = await AzureService.GetSubscription(sub, tenant, cancellationToken);
                 query.Subscriptions.Add(subscriptionResource.Data.SubscriptionId);
             }
         }
@@ -79,7 +77,7 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
         int? totalCount = null;
         if (includeTotalCount)
         {
-            totalCount = await GetTotalCountAsync(subscriptions, resourceGroups, filters, tenant, retryPolicy, cancellationToken);
+            totalCount = await GetTotalCountAsync(subscriptions, resourceGroups, filters, tenant, cancellationToken);
         }
 
         return new(workbooks, totalCount, ContinuationToken: null);
@@ -87,7 +85,6 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
 
     public async Task<WorkbookBatchResult> GetWorkbooksAsync(
         IReadOnlyList<string> workbookIds,
-        RetryPolicyOptions? retryPolicy = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -104,7 +101,7 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
             await _throttle.WaitAsync(cancellationToken);
             try
             {
-                var workbook = await GetSingleWorkbookAsync(id, retryPolicy, tenant, cancellationToken);
+                var workbook = await GetSingleWorkbookAsync(id, tenant, cancellationToken);
                 if (workbook is null)
                 {
                     throw new InvalidOperationException($"Workbook with ID '{id}' was not found or returned null.");
@@ -144,7 +141,6 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
         string displayName,
         string serializedData,
         string sourceId,
-        RetryPolicyOptions? retryPolicy = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -157,7 +153,7 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
 
         ValidateSerializedData(serializedData);
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken)
             ?? throw new InvalidOperationException($"Subscription '{subscription}' not found");
 
         var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroupName, cancellationToken);
@@ -191,7 +187,6 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
         string workbookId,
         string? displayName = null,
         string? serializedContent = null,
-        RetryPolicyOptions? retryPolicy = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -202,7 +197,7 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
             ValidateSerializedData(serializedContent);
         }
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, cancellationToken: cancellationToken);
 
         var workbookResourceId = new ResourceIdentifier(workbookId);
         var workbookResource = armClient.GetApplicationInsightsWorkbookResource(workbookResourceId)
@@ -239,7 +234,6 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
 
     public async Task<WorkbookDeleteBatchResult> DeleteWorkbooksAsync(
         IReadOnlyList<string> workbookIds,
-        RetryPolicyOptions? retryPolicy = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -256,7 +250,7 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
             await _throttle.WaitAsync(cancellationToken);
             try
             {
-                await DeleteSingleWorkbookAsync(id, retryPolicy, tenant, cancellationToken);
+                await DeleteSingleWorkbookAsync(id, tenant, cancellationToken);
                 return (Id: id, Error: (WorkbookError?)null);
             }
             catch (Exception ex)
@@ -289,13 +283,12 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
 
     private async Task<WorkbookInfo?> GetSingleWorkbookAsync(
         string workbookId,
-        RetryPolicyOptions? retryPolicy,
         string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateWorkbookId(workbookId);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, cancellationToken: cancellationToken);
 
         var workbookResourceId = new ResourceIdentifier(workbookId);
         var workbookResource = armClient.GetApplicationInsightsWorkbookResource(workbookResourceId)
@@ -316,13 +309,12 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
 
     private async Task DeleteSingleWorkbookAsync(
         string workbookId,
-        RetryPolicyOptions? retryPolicy,
         string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateWorkbookId(workbookId);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, cancellationToken: cancellationToken);
 
         var workbookResourceId = new ResourceIdentifier(workbookId);
         var workbookResource = armClient.GetApplicationInsightsWorkbookResource(workbookResourceId)
@@ -338,7 +330,6 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
         IReadOnlyList<string>? resourceGroups,
         WorkbookFilters? filters,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         try
@@ -357,7 +348,7 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
             {
                 foreach (var sub in subscriptions)
                 {
-                    var subscriptionResource = await AzureService.GetSubscription(sub, tenant, retryPolicy, cancellationToken);
+                    var subscriptionResource = await AzureService.GetSubscription(sub, tenant, cancellationToken);
                     query.Subscriptions.Add(subscriptionResource.Data.SubscriptionId);
                 }
             }

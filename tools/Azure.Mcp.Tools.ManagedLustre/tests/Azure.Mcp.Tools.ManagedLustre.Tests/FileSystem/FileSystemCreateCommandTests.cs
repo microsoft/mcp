@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -73,9 +72,7 @@ public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<Fil
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(expected);
         }
 
@@ -141,9 +138,7 @@ public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             null,
             null,
             null,
-            null,
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            null, Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -185,9 +180,7 @@ public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             null,
             null,
             null,
-            null,
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
+            null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -259,9 +252,7 @@ public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             "https://kv.vault.azure.net/keys/k/123",
             "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
             "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1",
-            null,
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            null, Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -303,9 +294,7 @@ public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             "https://kv.vault.azure.net/keys/k/123",
             "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
             "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1",
-            null,
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
+            null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -333,9 +322,7 @@ public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("error"));
 
         var response = await ExecuteCommandAsync(
@@ -379,9 +366,7 @@ public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "conflict"));
 
         var response = await ExecuteCommandAsync(
@@ -425,9 +410,7 @@ public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Both hsm-container and hsm-log-container must be provided"));
 
         var response = await ExecuteCommandAsync(

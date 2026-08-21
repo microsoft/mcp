@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -82,9 +81,7 @@ public class FileSystemListCommandTests : SubscriptionCommandUnitTestsBase<FileS
         Service.ListFileSystemsAsync(
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
@@ -136,9 +133,7 @@ public class FileSystemListCommandTests : SubscriptionCommandUnitTestsBase<FileS
             Service.ListFileSystemsAsync(
                 Arg.Is(_knownSubscriptionId),
                 Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(expected);
         }
 
@@ -168,9 +163,7 @@ public class FileSystemListCommandTests : SubscriptionCommandUnitTestsBase<FileS
         Service.ListFileSystemsAsync(
             Arg.Is(_knownSubscriptionId),
             Arg.Is<string?>(x => x == null),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -189,9 +182,7 @@ public class FileSystemListCommandTests : SubscriptionCommandUnitTestsBase<FileS
         Service.ListFileSystemsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "not found"));
 
         var response = await ExecuteCommandAsync("--subscription", _knownSubscriptionId);
@@ -208,9 +199,7 @@ public class FileSystemListCommandTests : SubscriptionCommandUnitTestsBase<FileS
         Service.ListFileSystemsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "forbidden"));
 
         var response = await ExecuteCommandAsync("--subscription", _knownSubscriptionId);

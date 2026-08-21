@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -55,9 +54,7 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
                 Arg.Any<string?>(),
                 Arg.Any<long?>(),
                 Arg.Any<long?>(),
-                Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(CreateLustre());
         }
 
@@ -95,9 +92,7 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             null,
             null,
             null,
-            null,
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            null, Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -118,9 +113,7 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             null,
             null,
             null,
-            null,
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
+            null, Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemUpdateResult);
         Assert.Equal(Name, result.FileSystem.Name);
@@ -140,9 +133,7 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             "nid1,nid2",
             1000,
             1000,
-            null,
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            null, Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -165,9 +156,7 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             "nid1,nid2",
             1000,
             1000,
-            null,
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
+            null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -183,9 +172,7 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             Arg.Any<string?>(),
             Arg.Any<long?>(),
             Arg.Any<long?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "not found"));
 
         var response = await ExecuteCommandAsync(
@@ -221,9 +208,7 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
                 Arg.Any<string?>(),
                 Arg.Any<long?>(),
                 Arg.Any<long?>(),
-                Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(CreateLustre());
         }
 
@@ -254,9 +239,7 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             "nid1,nid2",
             2000,
             3000,
-            null,
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            null, Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -279,9 +262,7 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             "nid1,nid2",
             2000,
             3000,
-            null,
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
+            null, Arg.Any<CancellationToken>());
     }
 
     [Fact]

@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Removed user-configurable retry policy options from Azure MCP tools and service contracts; Azure SDK retry defaults now apply."

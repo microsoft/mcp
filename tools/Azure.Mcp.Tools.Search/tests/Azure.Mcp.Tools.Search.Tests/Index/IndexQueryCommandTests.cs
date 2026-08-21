@@ -5,7 +5,6 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.Search.Commands.Index;
 using Azure.Mcp.Tools.Search.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -43,7 +42,6 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(serviceName),
             Arg.Is(indexName),
             Arg.Is(queryText),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
@@ -73,7 +71,6 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(serviceName),
             Arg.Is(indexName),
             Arg.Is(queryText),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 

@@ -206,14 +206,13 @@ Choose the appropriate base class for your service based on the operations neede
            string resourceGroup,
            string subscription,
            string? tenant = null,
-           RetryPolicyOptions? retryPolicy,
            CancellationToken cancellationToken)
        {
            return await ExecuteResourceQueryAsync(
                "Microsoft.MyService/resources",
                resourceGroup,
                subscription,
-               retryPolicy,
+               null,
                ConvertToMyResourceModel,
                tenant: tenant,
                cancellationToken: cancellationToken);
@@ -224,14 +223,13 @@ Choose the appropriate base class for your service based on the operations neede
            string resourceGroup,
            string subscription,
            string? tenant = null,
-           RetryPolicyOptions? retryPolicy,
            CancellationToken cancellationToken)
        {
            return await ExecuteSingleResourceQueryAsync(
                "Microsoft.MyService/resources",
                resourceGroup,
                subscription,
-               retryPolicy,
+               null,
                ConvertToMyResourceModel,
                additionalFilter: $"name =~ '{EscapeKqlString(resourceName)}'",
                tenant: tenant,
@@ -261,10 +259,9 @@ Choose the appropriate base class for your service based on the operations neede
        public async Task<MyResource> CreateResourceAsync(
            string subscription,
            string? tenant = null,
-           RetryPolicyOptions? retryPolicy,
            CancellationToken cancellationToken)
        {
-           var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy);
+           var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
            // Use subscriptionResource for Azure Resource write operations
        }
    }
@@ -315,7 +312,7 @@ var resources = await ExecuteResourceQueryAsync(
     "Microsoft.Sql/servers/databases",
     resourceGroup,
     subscription,
-    retryPolicy,
+    null,
     ConvertToSqlDatabaseModel,
     additionalFilter: $"name =~ '{EscapeKqlString(databaseName)}'",
     tenant: tenant,
@@ -391,14 +388,13 @@ public class MyService(IAzureService azureService)
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         return await ExecuteResourceQueryAsync(
             "Microsoft.MyService/resources",
             resourceGroup,
             subscription,
-            retryPolicy,
+            null,
             ConvertToModel,
             tenant: tenant,
             cancellationToken: cancellationToken);
@@ -420,11 +416,10 @@ public class MyService(IAzureService azureService)
     private async Task<MyDataPlaneClient> CreateDataPlaneClientAsync(
         string resourceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         var endpoint = GetResourceEndpoint(resourceName);
-        var options = ConfigureRetryPolicy(AddDefaultPolicies(new MyClientOptions()), retryPolicy);
+        var options = AddDefaultPolicies(new MyClientOptions());
         options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new MyDataPlaneClient(
             new Uri(endpoint),
@@ -493,8 +488,6 @@ public class {Resource}{Operation}Options : ISubscriptionOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
 
@@ -519,7 +512,7 @@ The `[Option]` attribute drives automatic option registration and binding via `O
 
 **Key Principles:**
 - Options classes are **flat POCOs** — no class inheritance. Each command has its own options class.
-- `OptionBinder` discovers **all public writable properties** on the concrete class and handles both registration (adding to the CLI parser) and binding (populating from parse results) automatically. The `[Option]` attribute is only needed to override name, description, or hidden status — un-attributed properties are still discovered and bound.
+- `OptionBinder` discovers public writable properties marked with `[Option]` or `[OptionContainer]` and handles both registration and binding automatically. Unattributed properties are ignored.
 - **Required vs optional** is determined entirely by nullability: non-nullable types = required; `?` = optional. The `required` keyword suppresses C# compiler warnings about uninitialized non-nullable reference properties but does **not** drive CLI validation — only nullability matters to `OptionBinder`.
 - **No shared state**: Each command gets its own options instance per request — thread-safe by design.
 - **Implement `ISubscriptionOption`** if the command needs optional `string? Subscription`. This enables post-processing by `SubscriptionCommand` and `ISubscriptionResolver`. Note: `ISubscriptionOption` only provides `Subscription` — add a separate `Tenant` property if the command accepts `--tenant`.
@@ -528,12 +521,12 @@ The `[Option]` attribute drives automatic option registration and binding via `O
 - **No manual registration or binding**: Remove all `RegisterOptions`/`BindOptions` overrides. If you find yourself writing these, you're using the old pattern.
 
 **Conventions:**
-- **Name**: Derived automatically from the property name in kebab-case (e.g., `LocalFilePath` → `--local-file-path`). Only use `[Option(Name = "...")]` when the convention doesn't produce the desired name (e.g., `RetryPolicy` → `--retry` instead of `--retry-policy`). **Do not** specify `Name =` when it matches the default.
+- **Name**: Derived automatically from the property name in kebab-case (e.g., `LocalFilePath` → `--local-file-path`). Only use `[Option(Name = "...")]` when the convention doesn't produce the desired name. **Do not** specify `Name =` when it matches the default.
 - **Required**: Driven by the `required` keyword (`RequiredMemberAttribute`). Use `required` on required options; use nullable types (`?`) for optional options.
 - **Description**: Always required, passed using attribute properties: `[Option(Description = "description")]`.
 - **Shared descriptions**: Use constants from `OptionDescriptions` (e.g., `OptionDescriptions.Subscription`, `OptionDescriptions.Tenant`).
-- **Nested objects**: Use `[OptionContainer(Prefix = "prefix")]` on a property of a complex type. Its child properties become `--prefix-child-name`. Example: `RetryPolicyOptions` with `[OptionContainer(Prefix = "retry")]` produces `--retry-delay`, `--retry-max-retries`, etc.
-- **Property ordering**: List command-specific options first, then sink common/infrastructure options to the bottom in this order: `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`, `RetryPolicy`. This keeps the most relevant options visible at a glance.
+- **Nested objects**: Use `[OptionContainer(Prefix = "prefix")]` only when a command intentionally exposes a grouped complex input. Do not expose retry policy options; tools use Azure SDK retry defaults.
+- **Property ordering**: List command-specific options first, then sink common/infrastructure options to the bottom in this order: `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`. This keeps the most relevant options visible at a glance.
 
 ### Usage Patterns
 
@@ -562,8 +555,6 @@ public class {Resource}{Operation}Options : ISubscriptionOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
 
@@ -586,8 +577,6 @@ public class MyCommandOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 
 // In the command class:
@@ -626,8 +615,6 @@ public class MyCommandOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 
 // In the command class:
@@ -681,8 +668,6 @@ public class BlobUploadOptions : ISubscriptionOption, IContainerOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
 
@@ -702,8 +687,6 @@ public class StorageAccountListOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
 
@@ -778,7 +761,7 @@ public sealed class {Resource}{Operation}Command(
                 options.RequiredOption,   // Required options are non-nullable (no ! needed)
                 options.OptionalOption,   // Optional options are nullable
                 options.Subscription!,   // From ISubscriptionOption (resolved by ISubscriptionResolver)
-                options.RetryPolicy,     // From options POCO
+                null,     // From options POCO
                 cancellationToken);      // Passed in ExecuteAsync
 
             // Set results if any were returned
@@ -964,17 +947,15 @@ All interface methods should follow consistent formatting with proper line break
 Task<List<string>> GetStorageAccounts(
     string subscription,
     string? tenant = null,
-    RetryPolicyOptions? retryPolicy = null,
     CancellationToken cancellationToken = default);
 
 // Incorrect formatting - all parameters on single line
-Task<List<string>> GetStorageAccounts(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null);
+Task<List<string>> GetStorageAccounts(string subscription, string? tenant = null, CancellationToken cancellationToken = default);
 
 // Incorrect - missing CancellationToken parameter
 Task<List<string>> GetStorageAccounts(
     string subscription,
-    string? tenant = null,
-    RetryPolicyOptions? retryPolicy = null);
+    string? tenant = null);
 ```
 
 **Formatting Rules:**
@@ -999,7 +980,6 @@ public interface IMyService
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }
 ```
@@ -1123,11 +1103,10 @@ public class {Toolset}Service(IAzureService azureService)
         string resourceGroup,
         string resourceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         // Always use Azure service for resolution
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
 
         var resourceGroupResource = await subscriptionResource
             .GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -1973,7 +1952,6 @@ Task<List<ResourceModel>> GetResources(
     string subscription,
     string? resourceGroup = null,
     string? tenant = null,
-    RetryPolicyOptions? retryPolicy = null,
     CancellationToken cancellationToken = default);
 ```
 
@@ -1982,7 +1960,7 @@ Task<List<ResourceModel>> GetResources(
 - **Pattern**:
 ```csharp
 // Correct pattern
-var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, retryPolicy);
+var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, cancellationToken);
 ```
 
 ### Command Option Patterns
@@ -2007,8 +1985,6 @@ public class MyOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 
 // Command uses two-generic base class — no RegisterOptions/BindOptions needed
@@ -2249,10 +2225,10 @@ catch (Exception ex)
 - **Pattern**:
 ```csharp
 // Correct - use service
-var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, cancellationToken);
 
 // Wrong - manual creation
-var armClient = await CreateArmClientAsync(tenant, retryPolicy);
+var armClient = await CreateArmClientAsync(tenant, null, cancellationToken: cancellationToken);
 var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{subscription}"));
 ```
 
@@ -2489,7 +2465,7 @@ public sealed class StorageAccountGetCommand(
         var accounts = await _storageService.GetStorageAccountsAsync(
             options.Subscription!,
             options.ResourceGroup,
-            options.RetryPolicy,
+            null,
             cancellationToken);
 
         // Standard response format works for all transports
@@ -2540,11 +2516,10 @@ public class StorageService(
         string subscription,
         string? resourceGroup,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
         // ✅ Use base class methods that handle authentication and ARM client creation
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, null, cancellationToken: cancellationToken);
 
         // ✅ CreateArmClientAsync automatically uses appropriate auth strategy:
         // - OBO flow in remote HTTP mode with --outgoing-auth-strategy UseOnBehalfOf
@@ -2632,7 +2607,6 @@ Some commands need tenant ID for Azure calls. Handle this correctly for both mod
 public async Task<List<Resource>> GetResourcesAsync(
     string subscription,
     string? tenant,
-    RetryPolicyOptions? retryPolicy,
     CancellationToken cancellationToken)
 {
     // ✅ IAzureService handles tenant resolution for all modes

@@ -91,7 +91,6 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
                 options.UserAssignedIdentity,
                 options.DefaultGroupDescription,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

@@ -4,7 +4,6 @@
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AzureMigrate.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Helpers;
 
@@ -26,7 +25,6 @@ public sealed class AzureMigrateProjectHelper(IAzureService azureService)
         string location,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -41,10 +39,10 @@ public sealed class AzureMigrateProjectHelper(IAzureService azureService)
                 MigrateProjectResourceType,
                 MigrateProjectApiVersion,
                 tenant,
-                retryPolicy,
+                null,
                 cancellationToken);
 
-            var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
             ResourceIdentifier projectId = new(
                 $"/subscriptions/{subscriptionResource.Data.SubscriptionId}/resourceGroups/{resourceGroup}/providers/{MigrateProjectResourceType}/{projectName}");
 

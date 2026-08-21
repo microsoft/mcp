@@ -88,6 +88,35 @@ public sealed class CommandTypeInventoryTests
         Assert.True(commands.Count > 100, $"Expected 100+ commands, found {commands.Count}");
     }
 
+    [Fact]
+    public async Task RegisteredCommands_DoNotExposeRetryPolicyOptions()
+    {
+        var serviceCollection = new ServiceCollection();
+        Program.ConfigureServices(serviceCollection);
+        await using var services = serviceCollection.BuildServiceProvider();
+
+        var commands = serviceCollection
+            .Where(static descriptor => typeof(IBaseCommand).IsAssignableFrom(descriptor.ServiceType))
+            .Select(descriptor => (IBaseCommand)services.GetRequiredService(descriptor.ServiceType))
+            .Distinct()
+            .ToList();
+
+        var retryOptions = commands
+            .SelectMany(command => command.GetCommand().Options
+                .Where(static option => option.Name.TrimStart('-') is
+                    "retry-delay" or
+                    "retry-max-delay" or
+                    "retry-max-retries" or
+                    "retry-mode" or
+                    "retry-network-timeout")
+                .Select(option => $"{command.Name}: {option.Name}"))
+            .Order()
+            .ToList();
+
+        Assert.True(retryOptions.Count == 0,
+            $"Registered commands expose retry options:{Environment.NewLine}{string.Join(Environment.NewLine, retryOptions)}");
+    }
+
     private static List<string> GetTypeHierarchy(Type type)
     {
         var hierarchy = new List<string>();
