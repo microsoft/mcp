@@ -3,6 +3,8 @@
 
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Resources;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Templates;
@@ -45,6 +47,8 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<RecoveryJobResourceGetCommand>();
         services.AddSingleton<DrillGetCommand>();
         services.AddSingleton<DrillResourceGetCommand>();
+        services.AddSingleton<DrillRunGetCommand>();
+        services.AddSingleton<DrillRunResourceGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -134,6 +138,18 @@ public class ResilienceManagementSetup : IAreaSetup
         drills.AddSubGroup(drillResources);
 
         drillResources.AddCommand<DrillResourceGetCommand>(serviceProvider);
+
+        // Create run subgroup under drill
+        var drillRuns = new CommandGroup("run", "Resilience drill run operations - Commands for listing and getting the runs of a resilience drill.");
+        drills.AddSubGroup(drillRuns);
+
+        drillRuns.AddCommand<DrillRunGetCommand>(serviceProvider);
+
+        // Create resource subgroup under drill run
+        var drillRunResources = new CommandGroup("resource", "Resilience drill run resource operations - Commands for listing and getting the resources (targets) of a resilience drill run.");
+        drillRuns.AddSubGroup(drillRunResources);
+
+        drillRunResources.AddCommand<DrillRunResourceGetCommand>(serviceProvider);
 
         return resilienceManagement;
     }
