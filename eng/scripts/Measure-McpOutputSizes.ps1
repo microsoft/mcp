@@ -101,6 +101,7 @@ if ($ServerExecutable -and $ReleaseTag) {
 }
 
 $ErrorActionPreference = 'Stop'
+$maximumToolsPerClientRequest = 128
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $repoRoot = $RepoRoot.Path
@@ -595,6 +596,22 @@ if ($LASTEXITCODE -ne 0) {
 if (!(Test-Path -LiteralPath $reportPath -PathType Leaf)) {
     Write-Error "Measurement report was not produced at $reportPath."
     exit 1
+}
+
+Write-Host "Validating MCP tool counts against the maximum supported client request size ($maximumToolsPerClientRequest)..."
+$measurementReport = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
+$exceedingModes = @(
+    $measurementReport.modes |
+        Where-Object { [int]$_.toolCount -gt $maximumToolsPerClientRequest }
+)
+if ($exceedingModes.Count -gt 0) {
+    $details = $exceedingModes |
+        ForEach-Object { "'$($_.mode)' has $($_.toolCount) tools" } |
+        Join-String -Separator ', '
+    $limitMessage = "MCP tool count exceeds the maximum supported client request size of ${maximumToolsPerClientRequest}: $details."
+    Write-Host ""
+    Write-Host "ERROR: $limitMessage" -ForegroundColor Red
+    Write-Warning $limitMessage
 }
 
 Write-Host "Summarizing results..."
