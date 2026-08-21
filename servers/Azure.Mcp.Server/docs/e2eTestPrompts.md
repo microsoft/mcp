@@ -163,7 +163,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| applicationinsights_recommendation_list | List code optimization recommendations across my Application Insights components | none |
+| applicationinsights_recommendation_list | Use applicationinsights_recommendation_list to list code optimization recommendations across my Application Insights components | none |
 | applicationinsights_recommendation_list | Show me code optimization recommendations for all Application Insights resources in my subscription | none |
 | applicationinsights_recommendation_list | List profiler recommendations for Application Insights in resource group <resource_group_name> | none |
 | applicationinsights_recommendation_list | List Application Insights code optimization recommendations for improving application performance | none |
@@ -176,10 +176,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_backup_status | What is the backup status of <resource_id> in location <location> in my subscription? | none |
 | azurebackup_disasterrecovery_enable-crr | Enable cross-region restore on vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> | none |
-| azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription | none |
+| azurebackup_governance_find-unprotected | Use azurebackup_governance_find-unprotected to find unprotected resources of type <resource_type> in my subscription | none |
 | azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> | none |
 | azurebackup_governance_find-unprotected | Find unprotected SQL databases and file shares discovered by backup vaults in my subscription | none |
-| azurebackup_governance_find-unprotected | Find all resources and sub-resources in resource group <resource_group> that are not protected by Azure Backup | none |
+| azurebackup_governance_find-unprotected | Use azurebackup_governance_find-unprotected to find resources and sub-resources in resource group <resource_group> not protected by Azure Backup | none |
 | azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> | clarification-required |
 | azurebackup_governance_immutability | Set immutability to Enabled on vault <vault_name> in resource group <resource_group> | none |
 | azurebackup_governance_soft-delete | Configure soft delete on Azure Backup vault <vault_name> in resource group <resource_group> | clarification-required |
@@ -327,7 +327,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vmss_get | Show me instance <instance-id> of VMSS <vmss-name> in resource group <resource-group-name> | none |
 | compute_vmss_get | What is the status of instance <instance-id> in scale set <vmss-name>? | none |
 | compute_vmss_update | Update the capacity of scale set <vmss-name> to 10 | none |
-| compute_vmss_update | Enable automatic OS upgrades on VMSS <vmss-name> | none |
+| compute_vmss_update | Use compute_vmss_update to enable automatic OS upgrades on VMSS <vmss-name> | none |
 | compute_vmss_update | Change upgrade policy to Rolling for <vmss-name> | none |
 | compute_vmss_update | Add tags to scale set <vmss-name> in resource group <resource-group-name> | clarification-required |
 | compute_vmss_delete | Delete scale set <vmss-name> in resource group <resource-group-name> | none |
@@ -406,7 +406,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | cosmos_database_container_item_get | Get the document with id <document_id> from container <container_name> in database <database_name> of the cosmosdb account <account_name> | none |
 | cosmos_database_container_item_get | Find the document <document_id> in container <container_name> from database <database_name> of the cosmosdb account <account_name> using partition key <partition_key> | none |
 | cosmos_database_container_item_list-recent | Show me the 15 most recent documents in container <container_name> of database <database_name> in cosmosdb account <account_name> | none |
-| cosmos_database_container_item_list-recent | Get the latest documents from <container_name> in <database_name> for cosmosdb account <account_name> | none |
+| cosmos_database_container_item_list-recent | Use cosmos_database_container_item_list-recent to get the latest documents from <container_name> in <database_name> for cosmosdb account <account_name> | none |
 | cosmos_database_container_item_text-search | Search documents in container <container_name> from database <database_name> of the cosmosdb account <account_name> where <search_property> contains "<search_phrase>" | none |
 | cosmos_database_container_item_text-search | Run a full-text search for the word "<search_phrase>" against property <search_property> in container <container_name> of database <database_name> for cosmosdb account <account_name> | none |
 | cosmos_database_container_item_vector-search | Find documents similar to "<text_to_search>" in container <container_name> of database <database_name> in cosmosdb account <account_name> using vector property <vector_property> with Azure OpenAI endpoint <endpoint> and deployment <deployment> | context-required |
@@ -537,9 +537,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_get | Show me the file shares in resource group <resource_group_name> | none |
 | fileshares_fileshare_get | Get details of file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_get | Show me the file share <file_share_name> in resource group <resource_group_name> | none |
-| fileshares_fileshare_get | What file shares exist in resource group <resource_group_name>? | none |
-| fileshares_limits | Get the file share limits for subscription <subscription> in location <location> | none |
-| fileshares_limits | Get the Azure Files share service limits in my subscription for location <location> | none |
+| fileshares_fileshare_get | Use fileshares_fileshare_get to get file share details in resource group <resource_group_name> | none |
+| fileshares_limits | Use fileshares_limits to get file share limits for subscription <subscription> in location <location> | none |
+| fileshares_limits | Use fileshares_limits to get Azure Files share service limits in my subscription for location <location> | none |
 | fileshares_limits | Show me the file share service limits in location <location> | none |
 | fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in <location> in subscription <subscription> | none |
 | fileshares_fileshare_check-name-availability | Is the file share name <file_share_name> available in <location>? | none |
@@ -568,9 +568,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_update | Update file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_update | Update the provisioned storage for file share <file_share_name> to 200 GB | none |
 | fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings | clarification-required |
-| fileshares_usage | Get Azure Files usage data for file share <file_share_name> in resource group <resource_group_name> | none |
+| fileshares_usage | Use fileshares_usage to get Azure Files usage data for file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_usage | Show me the usage statistics for file share <file_share_name> | none |
-| fileshares_usage | Get the current Azure Files usage for file share <file_share_name> | none |
+| fileshares_usage | Use fileshares_usage to get the current Azure Files usage for file share <file_share_name> | none |
 
 ## Azure Function App
 
@@ -620,14 +620,24 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 ## Azure IoT Hub
 
-| Tool Name | Test Prompt |
-|:----------|:----------|
-| iothub_device_list | List devices in IoT Hub <hub_name> in resource group <resource_group_name> |
-| iothub_device_list | Show all devices registered to IoT Hub <hub_name> |
-| iothub_device_list | Get the device registry for IoT Hub <hub_name> in subscription <subscription_id> |
-| iothub_hub_get | Get details for IoT Hub <hub_name> in resource group <resource_group_name> |
-| iothub_hub_get | Show IoT Hub <hub_name> in resource group <resource_group_name> for subscription <subscription_id> |
-| iothub_hub_get | Retrieve IoT Hub <hub_name> metadata from resource group <resource_group_name> |
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| iothub_device_list | List devices in IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_device_list | Show all devices registered to IoT Hub <hub_name> | none |
+| iothub_device_list | List the device registry for IoT Hub <hub_name> in subscription <subscription_id> | none |
+| iothub_device_show | Show device <device_id> in IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_device_show | Get the device identity for <device_id> in IoT Hub <hub_name> | none |
+| iothub_device_stats | Show device statistics for IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_device_stats | How many devices are registered in IoT Hub <hub_name>? | none |
+| iothub_device_twin_get | Get the device twin for <device_id> in IoT Hub <hub_name> | none |
+| iothub_device_twin_get | Show desired and reported properties for device <device_id> in IoT Hub <hub_name> | none |
+| iothub_hub_get | Get details for IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_hub_get | Show IoT Hub <hub_name> in resource group <resource_group_name> for subscription <subscription_id> | none |
+| iothub_hub_get | Retrieve IoT Hub <hub_name> metadata from resource group <resource_group_name> | none |
+| iothub_query_run | Run the query "SELECT * FROM devices WHERE status = 'enabled'" against IoT Hub <hub_name> | none |
+| iothub_query_run | Query all devices in IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_query_run | Find devices in IoT Hub <hub_name> where reported batteryLevel is less than 20 | none |
+| iothub_query_run | Discover the queryable device twin fields in IoT Hub <hub_name> | none |
 
 ## Azure Key Vault
 
@@ -659,7 +669,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | keyvault_certificate_get | Show certificate names in the key vault <key_vault_account_name> | none |
 | keyvault_key_create | Create a new key called <key_name> with the RSA type in the key vault <key_vault_account_name> | none |
 | keyvault_key_create | Generate a key <key_name> with type <key_type> in vault <key_vault_account_name> | none |
-| keyvault_key_create | Create an oct key in the vault <key_vault_account_name> | none |
+| keyvault_key_create | Use keyvault_key_create to create an oct key in the vault <key_vault_account_name> | none |
 | keyvault_key_create | Create an RSA key in the vault <key_vault_account_name> with name <key_name> | none |
 | keyvault_key_create | Create an EC key with name <key_name> in the vault <key_vault_account_name> | none |
 | keyvault_key_get | Show me the key <key_name> in the key vault <key_vault_account_name> | none |
@@ -824,7 +834,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_instrumentation_get-learning-resource | What learning resources are available for Azure Monitor instrumentation onboarding? | none |
 | monitor_instrumentation_orchestrator-next | After completing the previous Azure Monitor instrumentation step, get the next action for session <session_id> with completion note <completion_note> | none |
 | monitor_instrumentation_orchestrator-next | Get the next Azure Monitor instrumentation onboarding action for session <session_id> after I completed <completion_note> | none |
-| monitor_instrumentation_orchestrator-next | I finished the previous instrumentation step; return the next step for session <session_id> with note <completion_note> | none |
+| monitor_instrumentation_orchestrator-next | Use monitor_instrumentation_orchestrator-next to return the next Azure Monitor instrumentation step for session <session_id> with note <completion_note> | none |
 | monitor_instrumentation_orchestrator-start | Start Azure Monitor instrumentation orchestration for workspace <workspace_path> | none |
 | monitor_instrumentation_orchestrator-start | Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step | none |
 | monitor_instrumentation_orchestrator-start | Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one | none |
@@ -837,12 +847,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace | none |
 | monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> | none |
 | monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> | none |
-| monitor_metrics_query | Analyze the performance trends and response times for Application Insights resource <resource_name> over the last <time_period> | none |
+| monitor_metrics_query | Use monitor_metrics_query to analyze performance trends and response times for Application Insights resource <resource_name> over the last <time_period> | none |
 | monitor_metrics_query | Check the availability metrics for my Application Insights resource <resource_name> for the last <time_period> | none |
 | monitor_metrics_query | Get the <aggregation_type> <metric_name> metric for <resource_type> <resource_name> over the last <time_period> with intervals | none |
 | monitor_metrics_query | Investigate error rates and failed requests for Application Insights resource <resource_name> for the last <time_period> | investigation-required |
 | monitor_metrics_query | Query the <metric_name> metric for <resource_type> <resource_name> for the last <time_period> | none |
-| monitor_metrics_query | What's the request per second rate for my Application Insights resource <resource_name> over the last <time_period> | none |
+| monitor_metrics_query | Use monitor_metrics_query to get the request per second rate for my Application Insights resource <resource_name> over the last <time_period> | none |
 | monitor_resource_log_query | Show me the logs for the past hour for the resource <resource_name> in the Log Analytics workspace <workspace_name> | none |
 | monitor_table_list | List all tables in the Log Analytics workspace <workspace_name> | none |
 | monitor_table_list | Show me the tables in the Log Analytics workspace <workspace_name> | none |
@@ -1254,7 +1264,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | wellarchitectedframework_serviceguide_get | List all services with Well-Architected Framework guidance | none |
-| wellarchitectedframework_serviceguide_get | What services have architectural guidance? | none |
+| wellarchitectedframework_serviceguide_get | Use the Well-Architected Framework service guide tool to list services with architectural guidance | none |
 | wellarchitectedframework_serviceguide_get | Get Well-Architected Framework guidance for App Service | none |
 | wellarchitectedframework_serviceguide_get | What's the waf guidance for a VM? | none |
 | wellarchitectedframework_serviceguide_get | What's the architectural guidance for Azure Cosmos DB | none |
