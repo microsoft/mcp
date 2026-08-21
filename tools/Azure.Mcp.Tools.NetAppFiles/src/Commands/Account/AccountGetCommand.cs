@@ -1,0 +1,97 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Core.Commands.Subscription;
+using Microsoft.Mcp.Core.Extensions;
+using Azure.Mcp.Tools.NetAppFiles.Models;
+using Azure.Mcp.Tools.NetAppFiles.Options;
+using Azure.Mcp.Tools.NetAppFiles.Options.Account;
+using Azure.Mcp.Tools.NetAppFiles.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
+
+namespace Azure.Mcp.Tools.NetAppFiles.Commands.Account;
+
+[CommandMetadata(
+    Id = "a7c3e1b4-9d2f-4a8e-b5c6-d3e7f0a1b2c4",
+    Name = "get",
+    Description =
+        """
+        Retrieves detailed information about Azure NetApp Files accounts, including account name, location, resource group, provisioning state, active directory configuration, and encryption settings. If a specific account name is not provided, the command will return details for all NetApp Files accounts in a subscription.
+        """,
+    Title = "Get NetApp Files Account Details",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false
+)]
+public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<AccountGetOptions>()
+{
+    private readonly ILogger<AccountGetCommand> _logger = logger;
+
+    private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
+
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(NetAppFilesOptionDefinitions.Account.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(NetAppFilesOptionDefinitions.Ids.AsOptional());
+    }
+
+    protected override AccountGetOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.Ids = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Ids.Name);
+        return options;
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
+        var options = BindOptions(parseResult);
+
+        try
+        {
+            var accounts = await _netAppFilesService.GetAccountDetails(
+                options.Account,
+                options.ResourceGroup,
+                options.Ids,
+                options.Subscription!,
+                options.Tenant,
+                options.RetryPolicy,
+                cancellationToken);
+
+            context.Response.Results = ResponseResult.Create(
+                new(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false),
+                NetAppFilesJsonContext.Default.AccountGetCommandResult);
+        }
+        catch (Exception ex)
+        {
+            if (options.Account is null)
+            {
+                _logger.LogError(ex, "Error listing NetApp Files account details. Subscription: {Subscription}, Options: {@Options}", options.Subscription, options);
+            }
+            else
+            {
+                _logger.LogError(ex, "Error getting NetApp Files account details. Account: {Account}, Subscription: {Subscription}, Options: {@Options}",
+                    options.Account, options.Subscription, options);
+            }
+            HandleException(context, ex);
+        }
+
+        return context.Response;
+    }
+
+    internal record AccountGetCommandResult(List<NetAppAccountInfo> Accounts, bool AreResultsTruncated);
+}
