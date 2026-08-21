@@ -2,6 +2,6 @@ paths:
   .github/workflows/*.lock.yml:
     ignore:
       - ".+"
-  .github/workflows/vally-eval.yml:
+  .github/workflows/*.yml:
     ignore:
       - "unknown permission scope \"copilot-requests\""
