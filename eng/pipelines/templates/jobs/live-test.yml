@@ -17,6 +17,8 @@ jobs:
     matrix: $[ ${{ parameters.Matrix }} ]
   steps:
   - checkout: self
+    fetchDepth: 1
+    fetchTags: false
 
   - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
@@ -81,7 +83,7 @@ jobs:
 
   # Only perform a second deployment of test resources if the live tests are not self-contained.
   # Self-contained live tests do not require a fresh set of test resources to be deployed.
-  - ${{ if ne(variables['SelfContainedLiveTests'], true) }}:
+  - ${{ if ne(variables['hasSelfContainedLiveTests'], 'true') }}:
     - template: /eng/common/TestResources/remove-test-resources.yml
       parameters:
         ServiceConnection: azure-sdk-tests-public
