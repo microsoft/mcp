@@ -11,4 +11,5 @@ internal static class SearchOptionDescriptions
     internal const string QueryType = "The query syntax to use when searching the index. 'simple' uses the simple query syntax, "
         + "'full' (default) uses the full Lucene query syntax which supports field-scoped queries, fuzzy search and regular expressions, "
         + "and 'semantic' applies semantic ranking, which requires the index to have a semantic configuration.";
+    internal const string SemanticConfiguration = "Optional semantic configuration name to use when 'queryType' is 'semantic'. If omitted, the index default semantic configuration is used.";
 }

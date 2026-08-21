@@ -128,6 +128,7 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         string indexName,
         string searchText,
         IndexQueryType? queryType = null,
+        string? semanticConfiguration = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
@@ -150,7 +151,7 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         // TODO (alzimmer): this isn't used and probably should be.
         var vectorizableFields = FindVectorizableFields(indexDefinition.Value, vectorFields);
         ConfigureSearchOptions(searchText, options, indexDefinition.Value, vectorFields);
-        ConfigureQueryType(options, indexDefinition.Value, queryType);
+        ConfigureQueryType(options, indexDefinition.Value, queryType, semanticConfiguration);
 
         var searchResponse = await client.SearchAsync(searchText, SearchJsonContext.Default.JsonElement, options, cancellationToken: cancellationToken);
 
@@ -377,7 +378,11 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         }
     }
 
-    internal static void ConfigureQueryType(SearchOptions options, SearchIndex indexDefinition, IndexQueryType? queryType)
+    internal static void ConfigureQueryType(
+        SearchOptions options,
+        SearchIndex indexDefinition,
+        IndexQueryType? queryType,
+        string? semanticConfiguration = null)
     {
         switch (queryType)
         {
@@ -386,15 +391,28 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
                 break;
 
             case IndexQueryType.Semantic:
-                var semanticConfiguration = indexDefinition.SemanticSearch?.DefaultConfigurationName
-                    ?? indexDefinition.SemanticSearch?.Configurations?.FirstOrDefault()?.Name
+                var semanticConfigurationName = string.IsNullOrWhiteSpace(semanticConfiguration)
+                    ? indexDefinition.SemanticSearch?.DefaultConfigurationName
+                        ?? indexDefinition.SemanticSearch?.Configurations?.FirstOrDefault()?.Name
+                    : semanticConfiguration;
+
+                _ = semanticConfigurationName
                     ?? throw new InvalidOperationException(
                         $"Index '{indexDefinition.Name}' doesn't have a semantic configuration, semantic queries cannot be used against it.");
+
+                var semanticConfigurationExists = indexDefinition.SemanticSearch?.Configurations?.Any(c =>
+                    string.Equals(c.Name, semanticConfigurationName, StringComparison.OrdinalIgnoreCase)) == true;
+
+                if (!string.IsNullOrWhiteSpace(semanticConfiguration) && !semanticConfigurationExists)
+                {
+                    throw new InvalidOperationException(
+                        $"Semantic configuration '{semanticConfigurationName}' was not found on index '{indexDefinition.Name}'.");
+                }
 
                 options.QueryType = SearchQueryType.Semantic;
                 options.SemanticSearch = new SemanticSearchOptions
                 {
-                    SemanticConfigurationName = semanticConfiguration,
+                    SemanticConfigurationName = semanticConfigurationName,
                     QueryCaption = new(QueryCaptionType.Extractive),
                     QueryAnswer = new(QueryAnswerType.Extractive)
                 };

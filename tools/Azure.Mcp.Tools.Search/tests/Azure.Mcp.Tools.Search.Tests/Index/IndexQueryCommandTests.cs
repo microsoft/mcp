@@ -45,6 +45,7 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(indexName),
             Arg.Is(queryText),
             Arg.Any<IndexQueryType?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResults);
@@ -78,6 +79,7 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(indexName),
             Arg.Is(queryText),
             Arg.Is<IndexQueryType?>(expectedQueryType),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
@@ -94,6 +96,47 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(indexName),
             Arg.Is(queryText),
             Arg.Is<IndexQueryType?>(expectedQueryType),
+            Arg.Is<string?>(s => s == null),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PassesSemanticConfigurationToService()
+    {
+        // Arrange
+        var serviceName = "service123";
+        var indexName = "index1";
+        var queryText = "test query";
+        var semanticConfiguration = "food-semantic";
+
+        Service.QueryIndex(
+            Arg.Is(serviceName),
+            Arg.Is(indexName),
+            Arg.Is(queryText),
+            Arg.Is<IndexQueryType?>(IndexQueryType.Semantic),
+            Arg.Is<string?>(semanticConfiguration),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--service", serviceName,
+            "--index", indexName,
+            "--query", queryText,
+            "--query-type", "semantic",
+            "--semantic-configuration", semanticConfiguration);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).QueryIndex(
+            Arg.Is(serviceName),
+            Arg.Is(indexName),
+            Arg.Is(queryText),
+            Arg.Is<IndexQueryType?>(IndexQueryType.Semantic),
+            Arg.Is<string?>(semanticConfiguration),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
@@ -111,6 +154,7 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(indexName),
             Arg.Is(queryText),
             Arg.Any<IndexQueryType?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
@@ -126,6 +170,7 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(indexName),
             Arg.Is(queryText),
             Arg.Is<IndexQueryType?>(t => t == null),
+            Arg.Is<string?>(s => s == null),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
@@ -157,6 +202,7 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(indexName),
             Arg.Is(queryText),
             Arg.Any<IndexQueryType?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));

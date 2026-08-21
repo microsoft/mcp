@@ -40,6 +40,7 @@ public interface ISearchService
         string indexName,
         string searchText,
         IndexQueryType? queryType = null,
+        string? semanticConfiguration = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 

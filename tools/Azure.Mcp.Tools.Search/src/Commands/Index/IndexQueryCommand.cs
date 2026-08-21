@@ -39,6 +39,7 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearch
                 options.Index,
                 options.Query,
                 options.QueryType,
+                options.SemanticConfiguration,
                 options.RetryPolicy,
                 cancellationToken);
 

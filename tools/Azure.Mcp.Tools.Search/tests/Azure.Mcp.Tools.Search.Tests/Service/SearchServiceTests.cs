@@ -359,6 +359,38 @@ public class SearchServiceTests
     }
 
     [Fact]
+    public void ConfigureQueryType_UsesProvidedSemanticConfiguration_WhenSemanticRequested()
+    {
+        var index = CreateIndex();
+        index.SemanticSearch = new SemanticSearch
+        {
+            DefaultConfigurationName = "default-config"
+        };
+        index.SemanticSearch.Configurations.Add(new SemanticConfiguration("default-config", new SemanticPrioritizedFields()));
+        index.SemanticSearch.Configurations.Add(new SemanticConfiguration("food-config", new SemanticPrioritizedFields()));
+        var options = new SearchOptions();
+
+        SearchService.ConfigureQueryType(options, index, IndexQueryType.Semantic, "food-config");
+
+        Assert.Equal(SearchQueryType.Semantic, options.QueryType);
+        Assert.Equal("food-config", options.SemanticSearch?.SemanticConfigurationName);
+    }
+
+    [Fact]
+    public void ConfigureQueryType_Throws_WhenProvidedSemanticConfigurationDoesNotExist()
+    {
+        var index = CreateIndex();
+        index.SemanticSearch = new SemanticSearch();
+        index.SemanticSearch.Configurations.Add(new SemanticConfiguration("default-config", new SemanticPrioritizedFields()));
+        var options = new SearchOptions();
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => SearchService.ConfigureQueryType(options, index, IndexQueryType.Semantic, "unknown-config"));
+
+        Assert.Contains("not found", exception.Message);
+    }
+
+    [Fact]
     public void ConfigureQueryType_Throws_WhenSemanticRequestedWithoutConfiguration()
     {
         var options = new SearchOptions();
