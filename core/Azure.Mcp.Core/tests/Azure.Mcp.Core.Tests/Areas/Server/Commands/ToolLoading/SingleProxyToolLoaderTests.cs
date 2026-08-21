@@ -3,6 +3,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Tests.Areas.Server.Helpers;
@@ -11,8 +12,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
@@ -643,6 +647,103 @@ public class SingleProxyToolLoaderTests
         Assert.False(result.IsError ?? false);
         var textContent = result.Content.OfType<TextContentBlock>().First();
         Assert.Equal("Created account", textContent.Text);
+    }
+
+    #endregion
+
+    #region Telemetry tests
+
+    [Fact]
+    public async Task SingleToolLoader_HasSingleToolParameters_WhenToolDoesNotGetCalled()
+    {
+        // Arrange
+        var clientBuilder = new MockMcpClientBuilder();
+
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
+        var toolLoader = CreateToolLoaderWithMockClient(
+            new ToolLoaderOptions(ReadOnly: true), clientBuilder);
+
+        var request = CreateCallToolRequestWithToolAndCommand("storage", "account_list");
+        request.Params.Arguments?.Add("learn", JsonDocument.Parse("true").RootElement);
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolParameters);
+        Assert.NotNull(toolParameters);
+        var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
+        Assert.NotNull(parametersList);
+        Assert.Equal(4, parametersList.Count);
+        Assert.Contains("intent", parametersList);
+        Assert.Contains("command", parametersList);
+        Assert.Contains("tool", parametersList);
+        Assert.Contains("learn", parametersList);
+    }
+
+    [Fact]
+    public async Task SingleToolLoader_HasNoToolParameters_WhenToolCallHasNoParameters()
+    {
+        // Arrange
+        var readOnlyTool = new Tool
+        {
+            Name = "account_list",
+            Description = "List storage accounts",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = true }
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(readOnlyTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Listed accounts" }] });
+
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
+        var toolLoader = CreateToolLoaderWithMockClient(
+            new ToolLoaderOptions(ReadOnly: true), clientBuilder);
+
+        var request = CreateCallToolRequestWithToolAndCommand("storage", "account_list");
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        TestTelemetryHelpers.AssertTagDoesNotExist(activity, TagName.ToolParameters);
+    }
+
+    [Fact]
+    public async Task SingleToolLoader_CollectsToolParameters_WhenToolCallHasParameters()
+    {
+        // Arrange
+        var readOnlyTool = new Tool
+        {
+            Name = "account_list",
+            Description = "List storage accounts",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = true }
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(readOnlyTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Listed accounts" }] });
+
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
+        var toolLoader = CreateToolLoaderWithMockClient(
+            new ToolLoaderOptions(ReadOnly: true), clientBuilder);
+
+        var request = CreateCallToolRequestWithToolAndCommand("storage", "account_list");
+        request.Params.Arguments?.Add("parameters", JsonDocument.Parse("""{"subscription": "test-sub"}""").RootElement);
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolParameters);
+        Assert.NotNull(toolParameters);
+        var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
+        Assert.NotNull(parametersList);
+        Assert.Single(parametersList);
+        Assert.Contains("subscription", parametersList);
     }
 
     #endregion
