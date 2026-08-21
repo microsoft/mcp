@@ -3,12 +3,19 @@ paths:
   results: ".work/vally/vally-results/"
 
 environments:
-  linux:
+  linux-default:
     mcpServers:
       azmcp:
         type: stdio
         command: ".work/build/Azure.Mcp.Server/linux-x64/azmcp"
         args: ["server", "start"]
+        timeout: "2m"
+  linux-two-step:
+    mcpServers:
+      azmcp:
+        type: stdio
+        command: ".work/build/Azure.Mcp.Server/linux-x64/azmcp"
+        args: ["server", "start", "--disable-automatic-three-step-tool-discovery"]
         timeout: "2m"
   linux-three-step:
     mcpServers:
@@ -17,12 +24,19 @@ environments:
         command: ".work/build/Azure.Mcp.Server/linux-x64/azmcp"
         args: ["server", "start", "--three-step-tool-discovery"]
         timeout: "2m"
-  windows:
+  windows-default:
     mcpServers:
       azmcp:
         type: stdio
         command: ".work/build/Azure.Mcp.Server/windows-x64/azmcp"
         args: ["server", "start"]
+        timeout: "2m"
+  windows-two-step:
+    mcpServers:
+      azmcp:
+        type: stdio
+        command: ".work/build/Azure.Mcp.Server/windows-x64/azmcp"
+        args: ["server", "start", "--disable-automatic-three-step-tool-discovery"]
         timeout: "2m"
   windows-three-step:
     mcpServers:

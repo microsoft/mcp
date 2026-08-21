@@ -3,21 +3,21 @@
 
 <#
 .SYNOPSIS
-    Compares Vally evaluation metrics for a single tool namespace between two-step
-    and three-step Azure MCP Server tool discovery.
+    Compares Vally evaluation metrics for a single tool namespace across default,
+    two-step, and three-step Azure MCP Server tool discovery.
 
 .DESCRIPTION
-    Runs `Invoke-VallyEvalTests.ps1` twice for the given namespace -- once with
-    `-ToolDiscoveryMode TwoStep` and once with `-ToolDiscoveryMode ThreeStep` --
+    Runs `Invoke-VallyEvalTests.ps1` for the given namespace in Default, TwoStep,
+    and ThreeStep modes --
     restricted to the transient eval.yaml file(s) generated under
     `<repo-root>/.work/vally/evals/<Namespace>` (the "official" eval suite produced
     by VallyEvaluator). Checked-in eval.yaml files under `tools/*/tests` are
     excluded.
 
-    For each stimulus present in both runs' `results.jsonl` output, this script
+    For each stimulus present in the runs' `results.jsonl` output, this script
     extracts total tokens, turn count, tool-call count, wall-clock time, and AI
-    credits consumed, then prints a table contrasting the two-step and three-step
-    values (absolute and percentage difference).
+    credits consumed, then prints a table contrasting all three modes and their
+    deltas from Default.
 
     These are end-to-end Vally/Copilot metrics. They include model behavior such as
     extra turns, context replay, retries, and command selection. They are distinct
@@ -36,7 +36,7 @@
     The number of times to run each eval spec in each mode. Defaults to 1.
 
 .PARAMETER OutputPath
-    Base directory used to hold the two-step and three-step Vally output folders
+    Base directory used to hold the default, two-step, and three-step Vally output folders
     for this comparison. Defaults to `<repo-root>/.work/vally/compare-results/<Namespace>`.
 
 .PARAMETER SkipAgentsInstructions
@@ -47,12 +47,42 @@
     Passed through to `Invoke-VallyEvalTests.ps1` for both runs to add `--verbose`
     output.
 
+.PARAMETER SkipEval
+    Skip re-running `Invoke-VallyEvalTests.ps1` for all three modes and instead
+    reprocess the existing results already present under `-OutputPath` (e.g.
+    `.work/vally/compare-results/<Namespace>`). Use this to iterate on output
+    formatting (CSV/JSON/summary/turn reports) without re-invoking Vally. Fails
+    if `-OutputPath` does not already contain results from a prior run.
+
+.PARAMETER Warmup
+    Passed through to `Invoke-VallyEvalTests.ps1` for every mode. Runs a
+    throwaway warmup pass (discarded afterward) before each mode's measured
+    run, priming the model provider's prompt cache for that mode's system
+    prompt/tool schema prefix. Without this, AI-credit comparisons across
+    modes can be skewed by cache-state differences left over from whichever
+    mode happened to run first, rather than reflecting genuine discovery-mode
+    behavior differences. Has no effect when combined with -SkipEval, since no
+    Vally run occurs in that case.
+
 .EXAMPLE
     ./eng/scripts/Compare-VallyToolDiscoveryMetrics.ps1 -Namespace appconfig
 
-    Runs the appconfig eval suite in both two-step and three-step discovery modes
-    and prints a comparison table of tokens, turns, tool calls, wall time, and AI
-    credits.
+    Runs the appconfig eval suite in all three discovery modes and prints a
+    comparison table of tokens, turns, tool calls, wall time, and AI credits.
+
+.EXAMPLE
+    ./eng/scripts/Compare-VallyToolDiscoveryMetrics.ps1 -Namespace appconfig -SkipEval
+
+    Reprocesses the existing appconfig comparison results (from a prior run) to
+    regenerate the CSV/JSON/summary/turn reports without re-running Vally. Useful
+    when iterating on report formatting.
+
+.EXAMPLE
+    ./eng/scripts/Compare-VallyToolDiscoveryMetrics.ps1 -Namespace appconfig -Warmup
+
+    Runs the appconfig eval suite in all three discovery modes, warming up the
+    model provider's prompt cache before each mode's measured run so AI-credit
+    comparisons aren't skewed by cache-state noise between modes.
 #>
 
 param(
@@ -61,7 +91,9 @@ param(
     [int]$NumberOfRuns = 1,
     [string]$OutputPath,
     [switch]$SkipAgentsInstructions,
-    [switch]$IsDebug
+    [switch]$IsDebug,
+    [switch]$SkipEval,
+    [switch]$Warmup
 )
 
 $ErrorActionPreference = 'Stop'
@@ -73,10 +105,17 @@ if (!$OutputPath) {
     $OutputPath = Join-Path $RepoRoot ".work/vally/compare-results/$Namespace"
 }
 
-if (Test-Path $OutputPath) {
-    Remove-Item -Recurse -Force $OutputPath
+if ($SkipEval) {
+    if (!(Test-Path $OutputPath)) {
+        Write-Error "-SkipEval was specified but $OutputPath does not exist. Run without -SkipEval first to generate results."
+        exit 1
+    }
+} else {
+    if (Test-Path $OutputPath) {
+        Remove-Item -Recurse -Force $OutputPath
+    }
+    New-Item -ItemType Directory -Path $OutputPath | Out-Null
 }
-New-Item -ItemType Directory -Path $OutputPath | Out-Null
 
 # Restrict discovery to the transient eval.yaml generated for this namespace under
 # .work/vally/evals -- explicitly excludes any checked-in tools/*/tests/eval.yaml.
@@ -85,7 +124,8 @@ $evalPathFilter = "*evals*$Namespace*eval.yaml"
 function Invoke-DiscoveryMode {
     param(
         [string]$Mode,
-        [string]$ResultsRoot
+        [string]$ResultsRoot,
+        [bool]$SkipBuild
     )
 
     Write-Host "`n=== Running $Mode discovery for namespace '$Namespace' ===" -ForegroundColor Cyan
@@ -96,11 +136,17 @@ function Invoke-DiscoveryMode {
         OutputPath        = $ResultsRoot
         NumberOfRuns      = $NumberOfRuns
     }
+    if ($SkipBuild) {
+        $scriptArgs["SkipBuild"] = $true
+    }
     if ($SkipAgentsInstructions) {
         $scriptArgs["SkipAgentsInstructions"] = $true
     }
     if ($IsDebug) {
         $scriptArgs["IsDebug"] = $true
+    }
+    if ($Warmup) {
+        $scriptArgs["Warmup"] = $true
     }
 
     & "$PSScriptRoot/Invoke-VallyEvalTests.ps1" @scriptArgs
@@ -320,72 +366,84 @@ function Get-StimulusMetrics {
     return $metrics
 }
 
-$twoStepResultsRoot = Join-Path $OutputPath "twostep"
-$threeStepResultsRoot = Join-Path $OutputPath "threestep"
+$modes = @(
+    [ordered]@{ Name = 'Default'; Directory = 'default' },
+    [ordered]@{ Name = 'TwoStep'; Directory = 'twostep' },
+    [ordered]@{ Name = 'ThreeStep'; Directory = 'threestep' }
+)
+$modeMetrics = [ordered]@{}
+$modeRoots = [ordered]@{}
 
-Invoke-DiscoveryMode -Mode "TwoStep" -ResultsRoot $twoStepResultsRoot
-Invoke-DiscoveryMode -Mode "ThreeStep" -ResultsRoot $threeStepResultsRoot
-
-$twoStepMetrics = Get-StimulusMetrics -ResultsRoot $twoStepResultsRoot
-$threeStepMetrics = Get-StimulusMetrics -ResultsRoot $threeStepResultsRoot
+for ($modeIndex = 0; $modeIndex -lt $modes.Count; $modeIndex++) {
+    $mode = $modes[$modeIndex]
+    $modeRoot = Join-Path $OutputPath $mode.Directory
+    $modeRoots[$mode.Name] = $modeRoot
+    if (!$SkipEval) {
+        Invoke-DiscoveryMode -Mode $mode.Name -ResultsRoot $modeRoot -SkipBuild ($modeIndex -gt 0)
+    }
+    $modeMetrics[$mode.Name] = Get-StimulusMetrics -ResultsRoot $modeRoot
+}
 
 $allKeys = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
-$twoStepMetrics.Keys | ForEach-Object { [void]$allKeys.Add($_) }
-$threeStepMetrics.Keys | ForEach-Object { [void]$allKeys.Add($_) }
+foreach ($metrics in $modeMetrics.Values) {
+    $metrics.Keys | ForEach-Object { [void]$allKeys.Add($_) }
+}
 
 function Get-Delta {
-    param([Nullable[double]]$TwoStep, [Nullable[double]]$ThreeStep)
+    param([Nullable[double]]$Baseline, [Nullable[double]]$Value)
 
-    if ($null -eq $TwoStep -or $null -eq $ThreeStep) {
+    if ($null -eq $Baseline -or $null -eq $Value) {
         return $null
     }
-    return $ThreeStep - $TwoStep
+    return $Value - $Baseline
 }
 
 function Get-PercentDelta {
-    param([Nullable[double]]$TwoStep, [Nullable[double]]$ThreeStep)
+    param([Nullable[double]]$Baseline, [Nullable[double]]$Value)
 
-    if ($null -eq $TwoStep -or $null -eq $ThreeStep -or $TwoStep -eq 0) {
+    if ($null -eq $Baseline -or $null -eq $Value -or $Baseline -eq 0) {
         return $null
     }
-    return [math]::Round((($ThreeStep - $TwoStep) / $TwoStep) * 100, 1)
+    return [math]::Round((($Value - $Baseline) / $Baseline) * 100, 1)
 }
 
 $comparison = @()
 foreach ($key in ($allKeys | Sort-Object)) {
-    $two = $twoStepMetrics[$key]
-    $three = $threeStepMetrics[$key]
-
-    $stimulus = if ($two) { $two.Stimulus } else { $three.Stimulus }
-    $evalName = if ($two) { $two.EvalName } else { $three.EvalName }
-
-    $comparison += [PSCustomObject]@{
-        EvalName            = $evalName
-        Stimulus            = $stimulus
-        TwoStepStatus       = if ($two) { $two.Status } else { "missing" }
-        ThreeStepStatus     = if ($three) { $three.Status } else { "missing" }
-        TwoStepTokens       = if ($two) { $two.TotalTokens } else { $null }
-        ThreeStepTokens     = if ($three) { $three.TotalTokens } else { $null }
-        TokensDelta         = Get-Delta -TwoStep $two.TotalTokens -ThreeStep $three.TotalTokens
-        TokensDeltaPct      = Get-PercentDelta -TwoStep $two.TotalTokens -ThreeStep $three.TotalTokens
-        TwoStepTurns        = if ($two) { $two.TurnCount } else { $null }
-        ThreeStepTurns      = if ($three) { $three.TurnCount } else { $null }
-        TurnsDelta          = Get-Delta -TwoStep $two.TurnCount -ThreeStep $three.TurnCount
-        TwoStepToolCalls    = if ($two) { $two.ToolCallCount } else { $null }
-        ThreeStepToolCalls  = if ($three) { $three.ToolCallCount } else { $null }
-        ToolCallsDelta      = Get-Delta -TwoStep $two.ToolCallCount -ThreeStep $three.ToolCallCount
-        TwoStepWallMs       = if ($two) { $two.WallTimeMs } else { $null }
-        ThreeStepWallMs     = if ($three) { $three.WallTimeMs } else { $null }
-        WallMsDelta         = Get-Delta -TwoStep $two.WallTimeMs -ThreeStep $three.WallTimeMs
-        WallMsDeltaPct      = Get-PercentDelta -TwoStep $two.WallTimeMs -ThreeStep $three.WallTimeMs
-        TwoStepAICredits    = if ($two) { $two.AICredits } else { $null }
-        ThreeStepAICredits  = if ($three) { $three.AICredits } else { $null }
-        AICreditsDelta      = Get-Delta -TwoStep $two.AICredits -ThreeStep $three.AICredits
-        AICreditsDeltaPct   = Get-PercentDelta -TwoStep $two.AICredits -ThreeStep $three.AICredits
+    $row = [ordered]@{
+        EvalName = $null
+        Stimulus = $null
     }
+    foreach ($mode in $modes) {
+        $metric = $modeMetrics[$mode.Name][$key]
+        if ($metric) {
+            if ($null -eq $row.EvalName) { $row.EvalName = $metric.EvalName }
+            if ($null -eq $row.Stimulus) { $row.Stimulus = $metric.Stimulus }
+        }
+        $prefix = $mode.Name
+        $row["${prefix}Status"] = if ($metric) { $metric.Status } else { "missing" }
+        $row["${prefix}Tokens"] = if ($metric) { $metric.TotalTokens } else { $null }
+        $row["${prefix}Turns"] = if ($metric) { $metric.TurnCount } else { $null }
+        $row["${prefix}ToolCalls"] = if ($metric) { $metric.ToolCallCount } else { $null }
+        $row["${prefix}WallMs"] = if ($metric) { $metric.WallTimeMs } else { $null }
+        $row["${prefix}AICredits"] = if ($metric) { $metric.AICredits } else { $null }
+    }
+    $baseline = $modeMetrics['Default'][$key]
+    foreach ($mode in $modes | Where-Object { $_.Name -ne 'Default' }) {
+        $metric = $modeMetrics[$mode.Name][$key]
+        $prefix = $mode.Name
+        $row["${prefix}TokensDelta"] = Get-Delta -Baseline $baseline.TotalTokens -Value $metric.TotalTokens
+        $row["${prefix}TokensDeltaPct"] = Get-PercentDelta -Baseline $baseline.TotalTokens -Value $metric.TotalTokens
+        $row["${prefix}TurnsDelta"] = Get-Delta -Baseline $baseline.TurnCount -Value $metric.TurnCount
+        $row["${prefix}ToolCallsDelta"] = Get-Delta -Baseline $baseline.ToolCallCount -Value $metric.ToolCallCount
+        $row["${prefix}WallMsDelta"] = Get-Delta -Baseline $baseline.WallTimeMs -Value $metric.WallTimeMs
+        $row["${prefix}WallMsDeltaPct"] = Get-PercentDelta -Baseline $baseline.WallTimeMs -Value $metric.WallTimeMs
+        $row["${prefix}AICreditsDelta"] = Get-Delta -Baseline $baseline.AICredits -Value $metric.AICredits
+        $row["${prefix}AICreditsDeltaPct"] = Get-PercentDelta -Baseline $baseline.AICredits -Value $metric.AICredits
+    }
+    $comparison += [PSCustomObject]$row
 }
 
-Write-Host "`n=== Comparison: $Namespace (TwoStep vs ThreeStep) ===" -ForegroundColor Green
+Write-Host "`n=== Comparison: $Namespace (Default, TwoStep, and ThreeStep) ===" -ForegroundColor Green
 if (!$IsLinux -and !$IsMacOS) {
     try {
         $Host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(300, $Host.UI.RawUI.BufferSize.Height)
@@ -393,25 +451,17 @@ if (!$IsLinux -and !$IsMacOS) {
         # Ignore -- not all hosts (e.g. non-interactive) support resizing the buffer.
     }
 }
-$comparison |
-    Format-Table -Wrap -Property `
-        Stimulus,
-    @{ Label = "2S Tok"; Expression = { $_.TwoStepTokens } },
-    @{ Label = "3S Tok"; Expression = { $_.ThreeStepTokens } },
-    @{ Label = "TokDelta"; Expression = { $_.TokensDelta } },
-    @{ Label = "TokDelta%"; Expression = { $_.TokensDeltaPct } },
-    @{ Label = "2S Turns"; Expression = { $_.TwoStepTurns } },
-    @{ Label = "3S Turns"; Expression = { $_.ThreeStepTurns } },
-    @{ Label = "2S Tools"; Expression = { $_.TwoStepToolCalls } },
-    @{ Label = "3S Tools"; Expression = { $_.ThreeStepToolCalls } },
-    @{ Label = "2S Wall(ms)"; Expression = { $_.TwoStepWallMs } },
-    @{ Label = "3S Wall(ms)"; Expression = { $_.ThreeStepWallMs } },
-    @{ Label = "WallDelta(ms)"; Expression = { $_.WallMsDelta } },
-    @{ Label = "WallDelta%"; Expression = { $_.WallMsDeltaPct } },
-    @{ Label = "2S AICr"; Expression = { $_.TwoStepAICredits } },
-    @{ Label = "3S AICr"; Expression = { $_.ThreeStepAICredits } },
-    @{ Label = "AICrDelta"; Expression = { $_.AICreditsDelta } },
-    @{ Label = "AICrDelta%"; Expression = { $_.AICreditsDeltaPct } }
+$tableProperties = @([string]'Stimulus')
+foreach ($mode in $modes) {
+    $tableProperties += @{ Label = "$($mode.Name) Tok"; Expression = [scriptblock]::Create("`$_.$($mode.Name)Tokens") }
+    $tableProperties += @{ Label = "$($mode.Name) Turns"; Expression = [scriptblock]::Create("`$_.$($mode.Name)Turns") }
+    $tableProperties += @{ Label = "$($mode.Name) Tools"; Expression = [scriptblock]::Create("`$_.$($mode.Name)ToolCalls") }
+}
+foreach ($mode in $modes | Where-Object { $_.Name -ne 'Default' }) {
+    $tableProperties += @{ Label = "$($mode.Name) Tok Δ"; Expression = [scriptblock]::Create("`$_.$($mode.Name)TokensDelta") }
+    $tableProperties += @{ Label = "$($mode.Name) Tok Δ%"; Expression = [scriptblock]::Create("`$_.$($mode.Name)TokensDeltaPct") }
+}
+$comparison | Format-Table -Wrap -Property $tableProperties
 
 $measurementInfo = [ordered]@{
     scope = 'End-to-end Vally/Copilot evaluation'
@@ -438,69 +488,143 @@ $measurementInfo = [ordered]@{
     }
 }
 Write-Host "`n=== Measurement scope ===" -ForegroundColor Green
-Write-Host "The table above contains end-to-end Vally/Copilot usage metrics."
+Write-Host "The table above contains end-to-end Vally/Copilot usage metrics for all three modes."
 Write-Host "It includes model turns, context replay, retries, and command selection."
 Write-Host "Raw MCP response sizes require Measure-McpOutputSizes.ps1 and are not measured here."
 
-$averages = [PSCustomObject]@{
-    AvgTwoStepTokens     = [math]::Round(($comparison.TwoStepTokens | Where-Object { $null -ne $_ } | Measure-Object -Average).Average, 0)
-    AvgThreeStepTokens   = [math]::Round(($comparison.ThreeStepTokens | Where-Object { $null -ne $_ } | Measure-Object -Average).Average, 0)
-    AvgTwoStepWallMs     = [math]::Round(($comparison.TwoStepWallMs | Where-Object { $null -ne $_ } | Measure-Object -Average).Average, 0)
-    AvgThreeStepWallMs   = [math]::Round(($comparison.ThreeStepWallMs | Where-Object { $null -ne $_ } | Measure-Object -Average).Average, 0)
-    AvgTwoStepAICredits  = [math]::Round(($comparison.TwoStepAICredits | Where-Object { $null -ne $_ } | Measure-Object -Average).Average, 4)
-    AvgThreeStepAICredits = [math]::Round(($comparison.ThreeStepAICredits | Where-Object { $null -ne $_ } | Measure-Object -Average).Average, 4)
+function Format-Value {
+    param($Value)
+
+    if ($null -eq $Value) {
+        return 'n/a'
+    }
+    if ($Value -is [double]) {
+        return [string][math]::Round($Value, 5)
+    }
+    return [string]$Value
 }
-Write-Host "`n=== Averages ===" -ForegroundColor Green
-$averages | Format-Table -AutoSize
+
+$averages = [ordered]@{}
+foreach ($mode in $modes) {
+    $prefix = $mode.Name
+    $averages["Avg${prefix}Tokens"] = [math]::Round(($comparison | ForEach-Object { $_."${prefix}Tokens" } | Where-Object { $null -ne $_ } | Measure-Object -Average).Average, 0)
+    $averages["Avg${prefix}Turns"] = [math]::Round(($comparison | ForEach-Object { $_."${prefix}Turns" } | Where-Object { $null -ne $_ } | Measure-Object -Average).Average, 1)
+    $averages["Avg${prefix}WallMs"] = [math]::Round(($comparison | ForEach-Object { $_."${prefix}WallMs" } | Where-Object { $null -ne $_ } | Measure-Object -Average).Average, 0)
+    $averages["Avg${prefix}AICredits"] = [math]::Round(($comparison | ForEach-Object { $_."${prefix}AICredits" } | Where-Object { $null -ne $_ } | Measure-Object -Average).Average, 4)
+}
+$aggregate = [ordered]@{}
+foreach ($mode in $modes) {
+    $prefix = $mode.Name
+    foreach ($metric in @('Tokens', 'Turns', 'ToolCalls', 'WallMs', 'AICredits')) {
+        $values = @($comparison | ForEach-Object { $_."${prefix}$metric" } | Where-Object { $null -ne $_ })
+        $aggregate["${prefix}$metric"] = if ($values.Count -gt 0) {
+            ($values | Measure-Object -Sum).Sum
+        } else {
+            $null
+        }
+    }
+}
+$averageRows = @()
+foreach ($metric in @(
+    [ordered]@{ Key = 'Tokens'; Label = 'Avg Tokens' },
+    [ordered]@{ Key = 'Turns'; Label = 'Avg Turns' },
+    [ordered]@{ Key = 'WallMs'; Label = 'Avg Wall (ms)' },
+    [ordered]@{ Key = 'AICredits'; Label = 'Avg AI Credits' }
+)) {
+    $row = [ordered]@{ Metric = $metric.Label }
+    foreach ($mode in $modes) {
+        $row[$mode.Name] = $averages["Avg$($mode.Name)$($metric.Key)"]
+    }
+    $averageRows += [PSCustomObject]$row
+}
+
+$aggregateRows = @()
+foreach ($metric in @(
+    [ordered]@{ Key = 'Tokens'; Label = 'Tokens' },
+    [ordered]@{ Key = 'Turns'; Label = 'Turns' },
+    [ordered]@{ Key = 'ToolCalls'; Label = 'Tool Calls' },
+    [ordered]@{ Key = 'WallMs'; Label = 'Wall (ms)' },
+    [ordered]@{ Key = 'AICredits'; Label = 'AI Credits' }
+)) {
+    $row = [ordered]@{ Metric = $metric.Label }
+    foreach ($mode in $modes) {
+        $row[$mode.Name] = $aggregate["$($mode.Name)$($metric.Key)"]
+    }
+    $aggregateRows += [PSCustomObject]$row
+}
+
+Write-Host "`n=== Averages (per evaluation) ===" -ForegroundColor Green
+$averageRows | Format-Table -AutoSize
+Write-Host "`n=== Aggregate costs across evaluations ===" -ForegroundColor Green
+$aggregateRows | Format-Table -AutoSize
+
+$summaryLines = [System.Collections.Generic.List[string]]::new()
+$summaryLines.Add("Tool discovery aggregate comparison: $Namespace")
+$summaryLines.Add("Generated: $([DateTimeOffset]::UtcNow)")
+$summaryLines.Add("Each row aggregates all discovered evaluations; Default is the baseline.")
+$summaryLines.Add('')
+$summaryLines.Add('Metric           Default     TwoStep    ThreeStep')
+$summaryLines.Add('---------------  ----------  ----------  ----------')
+foreach ($row in $aggregateRows) {
+    $summaryLines.Add(('{0,-15}  {1,10}  {2,10}  {3,10}' -f `
+        $row.Metric, (Format-Value $row.Default), (Format-Value $row.TwoStep), (Format-Value $row.ThreeStep)))
+}
+$summaryTextPath = Join-Path $OutputPath "$Namespace-summary.txt"
+Set-Content -LiteralPath $summaryTextPath -Value $summaryLines -Encoding utf8
+
+$summaryMarkdown = [System.Collections.Generic.List[string]]::new()
+$summaryMarkdown.Add("# Tool Discovery Aggregate Comparison: $Namespace")
+$summaryMarkdown.Add('')
+$summaryMarkdown.Add('Default is the baseline; this table aggregates all discovered evaluations.')
+$summaryMarkdown.Add('')
+$summaryMarkdown.Add('| Metric | Default | TwoStep | ThreeStep |')
+$summaryMarkdown.Add('| --- | ---: | ---: | ---: |')
+foreach ($row in $aggregateRows) {
+    $summaryMarkdown.Add("| $($row.Metric) | $($row.Default) | $($row.TwoStep) | $($row.ThreeStep) |")
+}
+$summaryMarkdownPath = Join-Path $OutputPath "$Namespace-summary.md"
+Set-Content -LiteralPath $summaryMarkdownPath -Value $summaryMarkdown -Encoding utf8
+Write-Host "Aggregate summary written to $summaryTextPath"
+Write-Host "Aggregate summary written to $summaryMarkdownPath"
 
 $csvPath = Join-Path $OutputPath "comparison.csv"
 $comparison | Export-Csv -Path $csvPath -NoTypeInformation
 Write-Host "`nFull comparison data written to $csvPath"
 
 $jsonPath = Join-Path $OutputPath "comparison.json"
+$perTurn = [ordered]@{}
+foreach ($mode in $modes) {
+    $perTurn[$mode.Name] = @($modeMetrics[$mode.Name].Values | ForEach-Object {
+        [ordered]@{
+            evalName = $_.EvalName
+            stimulus = $_.Stimulus
+            eventsFile = $_.EventsFile
+            turns = $_.Turns
+            session = $_.SessionCost
+        }
+    })
+}
 [ordered]@{
     namespace = $Namespace
     generatedAtUtc = [DateTimeOffset]::UtcNow
     measurement = $measurementInfo
-    twoStepResultsRoot = $twoStepResultsRoot
-    threeStepResultsRoot = $threeStepResultsRoot
+    resultsRoots = $modeRoots
     averages = $averages
+    aggregate = $aggregate
     comparison = $comparison
-    perTurn = [ordered]@{
-        twoStep = @($twoStepMetrics.Values | ForEach-Object {
-            [ordered]@{
-                evalName = $_.EvalName
-                stimulus = $_.Stimulus
-                eventsFile = $_.EventsFile
-                turns = $_.Turns
-                session = $_.SessionCost
-            }
-        })
-        threeStep = @($threeStepMetrics.Values | ForEach-Object {
-            [ordered]@{
-                evalName = $_.EvalName
-                stimulus = $_.Stimulus
-                eventsFile = $_.EventsFile
-                turns = $_.Turns
-                session = $_.SessionCost
-            }
-        })
-    }
+    perTurn = $perTurn
 } | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $jsonPath -Encoding utf8
 Write-Host "Comparison metadata and results written to $jsonPath"
 
 $turnCsvPath = Join-Path $OutputPath "turns.csv"
 $turnRows = @()
-foreach ($mode in @(
-    [ordered]@{ name = 'TwoStep'; metrics = $twoStepMetrics },
-    [ordered]@{ name = 'ThreeStep'; metrics = $threeStepMetrics }
-)) {
-    foreach ($metric in $mode.metrics.Values) {
+foreach ($mode in $modes) {
+    foreach ($metric in $modeMetrics[$mode.Name].Values) {
         foreach ($turn in $metric.Turns) {
             $toolName = if ($turn.toolName) { [string]$turn.toolName } else { $null }
             $turnLabel = if ($toolName) { "{0}: {1}" -f [string]$turn.turn, $toolName } else { [string]$turn.turn }
             $turnRows += [PSCustomObject]@{
-                Mode = $mode.name
+                Mode = $mode.Name
                 EvalName = $metric.EvalName
                 Stimulus = $metric.Stimulus
                 Turn = $turnLabel
@@ -520,18 +644,6 @@ foreach ($mode in @(
 $turnRows | Export-Csv -Path $turnCsvPath -NoTypeInformation
 Write-Host "Per-turn data written to $turnCsvPath"
 
-function Format-Value {
-    param($Value)
-
-    if ($null -eq $Value) {
-        return 'n/a'
-    }
-    if ($Value -is [double]) {
-        return [string][math]::Round($Value, 5)
-    }
-    return [string]$Value
-}
-
 function Get-TurnByNumber {
     param($Turns, $TurnNumber)
 
@@ -550,49 +662,48 @@ function Get-TurnDisplayLabel {
 
 $reportRows = @()
 foreach ($key in ($allKeys | Sort-Object)) {
-    $two = $twoStepMetrics[$key]
-    $three = $threeStepMetrics[$key]
-
-    $stimulus = if ($two) { $two.Stimulus } else { $three.Stimulus }
+    $metricValues = @($modes | ForEach-Object { $modeMetrics[$_.Name][$key] } | Where-Object { $null -ne $_ })
+    $stimulus = $metricValues[0].Stimulus
     $turnNumbers = [System.Collections.Generic.SortedSet[int]]::new()
-    foreach ($turn in @($two.Turns) + @($three.Turns)) {
-        if ($null -ne $turn -and $null -ne $turn.turn) {
-            [void]$turnNumbers.Add([int]$turn.turn)
+    foreach ($mode in $modes) {
+        foreach ($turn in $modeMetrics[$mode.Name][$key].Turns) {
+            if ($null -ne $turn -and $null -ne $turn.turn) {
+                [void]$turnNumbers.Add([int]$turn.turn)
+            }
         }
     }
 
     $stimulusRows = @()
     foreach ($turnNumber in $turnNumbers) {
-        $twoTurn = Get-TurnByNumber -Turns $two.Turns -TurnNumber $turnNumber
-        $threeTurn = Get-TurnByNumber -Turns $three.Turns -TurnNumber $turnNumber
-
         $toolNames = @()
-        foreach ($turnObj in @($twoTurn, $threeTurn)) {
-            if ($null -ne $turnObj -and $null -ne $turnObj.toolName -and $turnObj.toolName -ne '') {
+        foreach ($mode in $modes) {
+            $turnObj = Get-TurnByNumber -Turns $modeMetrics[$mode.Name][$key].Turns -TurnNumber $turnNumber
+            if ($null -ne $turnObj -and $turnObj.toolName) {
                 $toolNames += [string]$turnObj.toolName
             }
         }
         $toolName = if ($toolNames.Count -gt 0) { ($toolNames | Select-Object -Unique) -join '; ' } else { '' }
         $displayTurn = Get-TurnDisplayLabel -TurnNumber $turnNumber -ToolName $toolName
 
-        $stimulusRows += [PSCustomObject]@{
-            Stimulus = $stimulus
-            Turn = $displayTurn
-            TurnNumber = $turnNumber
-            ToolName = $toolName
-            TwoStepInputTokens = $twoTurn.inputTokens
-            ThreeStepInputTokens = $threeTurn.inputTokens
-            InputTokensDelta = Get-Delta -TwoStep $twoTurn.inputTokens -ThreeStep $threeTurn.inputTokens
-            TwoStepOutputTokens = $twoTurn.outputTokens
-            ThreeStepOutputTokens = $threeTurn.outputTokens
-            OutputTokensDelta = Get-Delta -TwoStep $twoTurn.outputTokens -ThreeStep $threeTurn.outputTokens
-            TwoStepMcpBytes = $twoTurn.mcpResponseUtf8Bytes
-            ThreeStepMcpBytes = $threeTurn.mcpResponseUtf8Bytes
-            McpBytesDelta = Get-Delta -TwoStep $twoTurn.mcpResponseUtf8Bytes -ThreeStep $threeTurn.mcpResponseUtf8Bytes
-            TwoStepAICredits = $twoTurn.aiCredits
-            ThreeStepAICredits = $threeTurn.aiCredits
-            AICreditsDelta = Get-Delta -TwoStep $twoTurn.aiCredits -ThreeStep $threeTurn.aiCredits
+        $turnRow = [ordered]@{ Stimulus = $stimulus; Turn = $displayTurn; TurnNumber = $turnNumber; ToolName = $toolName }
+        foreach ($mode in $modes) {
+            $turn = Get-TurnByNumber -Turns $modeMetrics[$mode.Name][$key].Turns -TurnNumber $turnNumber
+            $prefix = $mode.Name
+            $turnRow["${prefix}InputTokens"] = $turn.inputTokens
+            $turnRow["${prefix}OutputTokens"] = $turn.outputTokens
+            $turnRow["${prefix}McpBytes"] = $turn.mcpResponseUtf8Bytes
+            $turnRow["${prefix}AICredits"] = $turn.aiCredits
         }
+        foreach ($mode in $modes | Where-Object { $_.Name -ne 'Default' }) {
+            $prefix = $mode.Name
+            $baselineTurn = Get-TurnByNumber -Turns $modeMetrics.Default[$key].Turns -TurnNumber $turnNumber
+            $modeTurn = Get-TurnByNumber -Turns $modeMetrics[$mode.Name][$key].Turns -TurnNumber $turnNumber
+            $turnRow["${prefix}InputDelta"] = Get-Delta -Baseline $baselineTurn.inputTokens -Value $modeTurn.inputTokens
+            $turnRow["${prefix}OutputDelta"] = Get-Delta -Baseline $baselineTurn.outputTokens -Value $modeTurn.outputTokens
+            $turnRow["${prefix}McpBytesDelta"] = Get-Delta -Baseline $baselineTurn.mcpResponseUtf8Bytes -Value $modeTurn.mcpResponseUtf8Bytes
+            $turnRow["${prefix}AICreditsDelta"] = Get-Delta -Baseline $baselineTurn.aiCredits -Value $modeTurn.aiCredits
+        }
+        $stimulusRows += [PSCustomObject]$turnRow
     }
 
     $reportRows += [PSCustomObject]@{
@@ -621,79 +732,50 @@ $textLines.Add('')
 $markdownLines.Add("# Tool Discovery Cost Comparison: $Namespace")
 $markdownLines.Add('')
 $markdownLines.Add("- **Generated:** $([DateTimeOffset]::UtcNow)")
-$markdownLines.Add('- **Modes:** two-step vs. three-step tool discovery')
-$markdownLines.Add('- **Delta:** three-step minus two-step')
+$markdownLines.Add('- **Modes:** Default, TwoStep, and ThreeStep tool discovery')
+$markdownLines.Add('- **Delta:** TwoStep and ThreeStep minus Default')
 $markdownLines.Add('')
 
 foreach ($report in $reportRows) {
     $rows = $report.Rows
 
-    $totalRow = [PSCustomObject]@{
-        Turn = 'Total'
-        TwoStepInputTokens = Get-Total -Rows $rows -Property 'TwoStepInputTokens'
-        ThreeStepInputTokens = Get-Total -Rows $rows -Property 'ThreeStepInputTokens'
-        TwoStepOutputTokens = Get-Total -Rows $rows -Property 'TwoStepOutputTokens'
-        ThreeStepOutputTokens = Get-Total -Rows $rows -Property 'ThreeStepOutputTokens'
-        TwoStepMcpBytes = Get-Total -Rows $rows -Property 'TwoStepMcpBytes'
-        ThreeStepMcpBytes = Get-Total -Rows $rows -Property 'ThreeStepMcpBytes'
-        TwoStepAICredits = Get-Total -Rows $rows -Property 'TwoStepAICredits'
-        ThreeStepAICredits = Get-Total -Rows $rows -Property 'ThreeStepAICredits'
+    $totalRow = [ordered]@{ Turn = 'Total' }
+    foreach ($mode in $modes) {
+        foreach ($metric in @('InputTokens', 'OutputTokens', 'McpBytes', 'AICredits')) {
+            $totalRow["$($mode.Name)$metric"] = Get-Total -Rows $rows -Property "$($mode.Name)$metric"
+        }
+    }
+    foreach ($mode in $modes | Where-Object { $_.Name -ne 'Default' }) {
+        foreach ($metric in @('InputTokens', 'OutputTokens', 'McpBytes', 'AICredits')) {
+            $totalRow["$($mode.Name)$metric`Delta"] = Get-Delta `
+                -Baseline $totalRow["Default$metric"] -Value $totalRow["$($mode.Name)$metric"]
+        }
     }
 
     $textLines.Add("Stimulus: $($report.Stimulus)")
-    $textLines.Add(('{0,-6} {1,12} {2,12} {3,12} {4,10} {5,10} {6,10} {7,12} {8,12} {9,12}' -f `
-        'Turn', '2S Input', '3S Input', 'InputDelta', '2S Out', '3S Out', 'OutDelta', '2S MCP B', '3S MCP B', 'MCPDelta'))
+    $textLines.Add("Modes: Default baseline; deltas are mode minus Default")
 
     $markdownLines.Add("## $($report.Stimulus)")
     $markdownLines.Add('')
-    $markdownLines.Add('| Turn | 2S Input Tokens | 3S Input Tokens | Input Delta | 2S Output | 3S Output | Output Delta | 2S MCP Bytes | 3S MCP Bytes | MCP Bytes Delta | 2S AI Credits | 3S AI Credits | AI Credits Delta |')
-    $markdownLines.Add('| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |')
+    $markdownLines.Add('| Turn | Default input | TwoStep input | TwoStep Δ | ThreeStep input | ThreeStep Δ | Default output | TwoStep output | TwoStep Δ | ThreeStep output | ThreeStep Δ |')
+    $markdownLines.Add('| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |')
 
     foreach ($row in $rows) {
-        $textLines.Add(('{0,-6} {1,12} {2,12} {3,12} {4,10} {5,10} {6,10} {7,12} {8,12} {9,12}' -f `
-            (Format-Value $row.Turn),
-            (Format-Value $row.TwoStepInputTokens),
-            (Format-Value $row.ThreeStepInputTokens),
-            (Format-Value $row.InputTokensDelta),
-            (Format-Value $row.TwoStepOutputTokens),
-            (Format-Value $row.ThreeStepOutputTokens),
-            (Format-Value $row.OutputTokensDelta),
-            (Format-Value $row.TwoStepMcpBytes),
-            (Format-Value $row.ThreeStepMcpBytes),
-            (Format-Value $row.McpBytesDelta)))
+        $textLines.Add(("{0}: Default input={1}, TwoStep input={2} (Δ {3}), ThreeStep input={4} (Δ {5}); Default output={6}, TwoStep output={7} (Δ {8}), ThreeStep output={9} (Δ {10})" -f `
+            $row.Turn, $row.DefaultInputTokens, $row.TwoStepInputTokens, $row.TwoStepInputDelta,
+            $row.ThreeStepInputTokens, $row.ThreeStepInputDelta, $row.DefaultOutputTokens,
+            $row.TwoStepOutputTokens, $row.TwoStepOutputDelta, $row.ThreeStepOutputTokens, $row.ThreeStepOutputDelta))
 
-        $markdownLines.Add(
-            "| $(Format-Value $row.Turn) | $(Format-Value $row.TwoStepInputTokens) | $(Format-Value $row.ThreeStepInputTokens) | " +
-            "$(Format-Value $row.InputTokensDelta) | $(Format-Value $row.TwoStepOutputTokens) | $(Format-Value $row.ThreeStepOutputTokens) | " +
-            "$(Format-Value $row.OutputTokensDelta) | $(Format-Value $row.TwoStepMcpBytes) | $(Format-Value $row.ThreeStepMcpBytes) | " +
-            "$(Format-Value $row.McpBytesDelta) | $(Format-Value $row.TwoStepAICredits) | $(Format-Value $row.ThreeStepAICredits) | " +
-            "$(Format-Value $row.AICreditsDelta) |")
+        $markdownLines.Add("| $($row.Turn) | $($row.DefaultInputTokens) | $($row.TwoStepInputTokens) | $($row.TwoStepInputDelta) | $($row.ThreeStepInputTokens) | $($row.ThreeStepInputDelta) | $($row.DefaultOutputTokens) | $($row.TwoStepOutputTokens) | $($row.TwoStepOutputDelta) | $($row.ThreeStepOutputTokens) | $($row.ThreeStepOutputDelta) |")
     }
 
-    $totalInputDelta = Get-Delta -TwoStep $totalRow.TwoStepInputTokens -ThreeStep $totalRow.ThreeStepInputTokens
-    $totalOutputDelta = Get-Delta -TwoStep $totalRow.TwoStepOutputTokens -ThreeStep $totalRow.ThreeStepOutputTokens
-    $totalMcpDelta = Get-Delta -TwoStep $totalRow.TwoStepMcpBytes -ThreeStep $totalRow.ThreeStepMcpBytes
-    $totalCreditsDelta = Get-Delta -TwoStep $totalRow.TwoStepAICredits -ThreeStep $totalRow.ThreeStepAICredits
-
-    $textLines.Add(('{0,-6} {1,12} {2,12} {3,12} {4,10} {5,10} {6,10} {7,12} {8,12} {9,12}' -f `
-        'Total',
-        (Format-Value $totalRow.TwoStepInputTokens),
-        (Format-Value $totalRow.ThreeStepInputTokens),
-        (Format-Value $totalInputDelta),
-        (Format-Value $totalRow.TwoStepOutputTokens),
-        (Format-Value $totalRow.ThreeStepOutputTokens),
-        (Format-Value $totalOutputDelta),
-        (Format-Value $totalRow.TwoStepMcpBytes),
-        (Format-Value $totalRow.ThreeStepMcpBytes),
-        (Format-Value $totalMcpDelta)))
+    $textLines.Add(("Total: Default input={0}, TwoStep input={1} (Δ {2}), ThreeStep input={3} (Δ {4}); Default output={5}, TwoStep output={6} (Δ {7}), ThreeStep output={8} (Δ {9})" -f `
+        $totalRow.DefaultInputTokens, $totalRow.TwoStepInputTokens, $totalRow.TwoStepInputTokensDelta,
+        $totalRow.ThreeStepInputTokens, $totalRow.ThreeStepInputTokensDelta, $totalRow.DefaultOutputTokens,
+        $totalRow.TwoStepOutputTokens, $totalRow.TwoStepOutputTokensDelta, $totalRow.ThreeStepOutputTokens, $totalRow.ThreeStepOutputTokensDelta))
     $textLines.Add('')
 
-    $markdownLines.Add(
-        "| **Total** | $(Format-Value $totalRow.TwoStepInputTokens) | $(Format-Value $totalRow.ThreeStepInputTokens) | " +
-        "$(Format-Value $totalInputDelta) | $(Format-Value $totalRow.TwoStepOutputTokens) | $(Format-Value $totalRow.ThreeStepOutputTokens) | " +
-        "$(Format-Value $totalOutputDelta) | $(Format-Value $totalRow.TwoStepMcpBytes) | $(Format-Value $totalRow.ThreeStepMcpBytes) | " +
-        "$(Format-Value $totalMcpDelta) | $(Format-Value $totalRow.TwoStepAICredits) | $(Format-Value $totalRow.ThreeStepAICredits) | " +
-        "$(Format-Value $totalCreditsDelta) |")
+    $markdownLines.Add("| **Total** | $($totalRow.DefaultInputTokens) | $($totalRow.TwoStepInputTokens) | $($totalRow.TwoStepInputTokensDelta) | $($totalRow.ThreeStepInputTokens) | $($totalRow.ThreeStepInputTokensDelta) | $($totalRow.DefaultOutputTokens) | $($totalRow.TwoStepOutputTokens) | $($totalRow.TwoStepOutputTokensDelta) | $($totalRow.ThreeStepOutputTokens) | $($totalRow.ThreeStepOutputTokensDelta) |")
     $markdownLines.Add('')
 }
 
