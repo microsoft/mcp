@@ -403,7 +403,7 @@ function Get-TestMatrix {
 
             $entry.testResourcesPath = $path.TestResourcesPath
             $entry.hasTestResources = $path.HasTestResources
-            $entry.hasSelfContainedLiveTests = $path.SelfContainedLiveTests
+            $entry.hasSelfContainedLiveTests = $path.hasSelfContainedLiveTests
 
             if ($ServerName) {
                 $entry.serverName = $ServerName
