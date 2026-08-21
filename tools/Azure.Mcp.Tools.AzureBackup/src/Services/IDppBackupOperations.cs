@@ -25,13 +25,15 @@ public interface IDppBackupOperations
         string subscription,
         string? tenant,
         RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None);
 
     Task<List<BackupVaultInfo>> ListVaultsAsync(
         string subscription,
         string? tenant,
         RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None);
 
     Task<OperationResult> UpdateVaultAsync(
         string vaultName,

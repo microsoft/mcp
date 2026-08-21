@@ -439,14 +439,14 @@ public class CustomChainedCredentialTests
 
     /// <summary>
     /// Tests that an unrecognized AZURE_TOKEN_CREDENTIALS value logs a warning and falls back to
-    /// the default credential chain. This catches typos such as "AzuerCliCredential".
+    /// the default credential chain.
     /// </summary>
     [Fact]
     public void UnknownCredentialValue_LogsWarning_AndFallsBackToDefaultChain()
     {
         // Arrange
         using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
-        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "AzuerCliCredential"); // intentional typo
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "MadeUpCredential");
 
         var provider = new CapturingLoggerProvider();
         using var factory = LoggerFactory.Create(b => b.AddProvider(provider));
@@ -468,7 +468,7 @@ public class CustomChainedCredentialTests
 
         // Assert — exactly one warning was logged containing the unrecognized value
         var warning = Assert.Single(provider.Warnings);
-        Assert.Contains("AzuerCliCredential", warning);
+        Assert.Contains("MadeUpCredential", warning);
         Assert.Contains("AZURE_TOKEN_CREDENTIALS", warning);
     }
 

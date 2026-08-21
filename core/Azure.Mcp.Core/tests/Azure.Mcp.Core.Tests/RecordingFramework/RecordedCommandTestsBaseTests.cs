@@ -4,6 +4,7 @@
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -157,7 +158,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         Assert.True(File.Exists(recordingPath));
 
         using var document = JsonDocument.Parse(await File.ReadAllTextAsync(recordingPath, TestContext.Current.CancellationToken));
-        Assert.True(document.RootElement.TryGetProperty("Variables", out var variablesElement));
+        var variablesElement = document.RootElement.AssertProperty("Variables");
         Assert.Equal("sampleValue", variablesElement.GetProperty("sampleKey").GetString());
     }
 
