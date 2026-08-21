@@ -67,18 +67,6 @@ public static class TestExtensions
     public static bool IsLiveTestMode() => s_testMode.Value == TestMode.Live;
 
     /// <summary>
-    /// Asserts that a tag with the specified name exists in the activity and only has a single match.
-    /// </summary>
-    /// <param name="activity">The activity to assert on.</param>
-    /// <param name="tagName">The tag name to validate existence.</param>
-    /// <param name="action">Additional assertions to perform on the found tag value.</param>
-    public static void AssertTagExists(this Activity activity, string tagName, Action<object>? action = null)
-    {
-        var matching = activity.TagObjects.Where(x => string.Equals(x.Key, tagName)).ToList();
-        Assert.Single(matching);
-    }
-
-    /// <summary>
     /// Asserts that a tag with the specified name exists in the activity and has a single match, and that the value of the tag matches the expected value.
     /// </summary>
     /// <param name="activity">The activity to assert on.</param>
