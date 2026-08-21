@@ -147,12 +147,19 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
         return ValueTask.CompletedTask;
     }
 
-    protected McpClientOptions CreateClientOptions(McpServer server)
+    protected static bool SupportsSampling(McpServer server)
+    {
+#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
+        return server.ClientCapabilities?.Sampling != null;
+#pragma warning restore MCP9005
+    }
+
+    protected internal static McpClientOptions CreateClientOptions(McpServer server)
     {
         McpClientHandlers handlers = new();
 
 #pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
-        if (server.ClientCapabilities?.Sampling != null)
+        if (SupportsSampling(server))
         {
             handlers.SamplingHandler = (request, progress, token) =>
             {
@@ -195,7 +202,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     /// Null if elicitation was accepted or bypassed (operation should proceed).
     /// A CallToolResult with IsError=true if elicitation was rejected or failed (operation should not proceed).
     /// </returns>
-    protected static async Task<CallToolResult?> HandleElicitationAsync(
+    protected internal static async Task<CallToolResult?> HandleElicitationAsync(
         RequestContext<CallToolRequestParams> request,
         string toolName,
         IBaseCommand command,

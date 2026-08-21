@@ -1,5 +1,3 @@
-#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
-#pragma warning disable MCP9005 // Deprecated Sampling/Logging APIs - backward compat during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -115,9 +113,11 @@ public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProx
         // logging/setLevel was removed in MCP 2026-07-28 (SDK 2.0.0-preview.3).
         // The method is no longer supported; per-request log level is now set via
         // _meta/io.modelcontextprotocol/logLevel. The call should throw rather than hang.
+#pragma warning disable MCP9005 // Type or member is obsolete
         var ex = await Assert.ThrowsAsync<McpProtocolException>(
             async () => await Client.SetLoggingLevelAsync(LoggingLevel.Info,
                 cancellationToken: TestContext.Current.CancellationToken));
+#pragma warning restore MCP9005 // Type or member is obsolete
         Assert.Contains("logging/setLevel", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 

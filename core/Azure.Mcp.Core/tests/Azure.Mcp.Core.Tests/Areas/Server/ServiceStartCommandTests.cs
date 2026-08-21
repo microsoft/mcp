@@ -12,7 +12,7 @@ using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
-using Microsoft.Mcp.Tests.Helpers;
+using Microsoft.Mcp.Tests;
 using NSubstitute;
 using Xunit;
 
@@ -554,29 +554,14 @@ public class ServiceStartCommandTests
         // Assert
         mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);
 
-        var dangerouslyDisableHttpIncomingAuth = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.DangerouslyDisableHttpIncomingAuth);
-        Assert.Equal(serviceStartOptions.DangerouslyDisableHttpIncomingAuth, dangerouslyDisableHttpIncomingAuth);
-
-        var dangerouslyDisableElicitation = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.DangerouslyDisableElicitation);
-        Assert.Equal(serviceStartOptions.DangerouslyDisableElicitation, dangerouslyDisableElicitation);
-
-        var transport = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.Transport);
-        Assert.Equal(serviceStartOptions.Transport, transport);
-
-        var mode = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ServerMode);
-        Assert.Equal(serviceStartOptions.Mode, mode);
-
-        var tool = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.Tool);
-        Assert.Equal(string.Join(",", serviceStartOptions.Tool), tool);
-
-        var readOnly = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.IsReadOnly);
-        Assert.Equal(serviceStartOptions.ReadOnly, readOnly);
-
-        var debug = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.IsDebug);
-        Assert.Equal(serviceStartOptions.Debug, debug);
-
-        var namespaces = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.Namespace);
-        Assert.Equal(string.Join(",", serviceStartOptions.Namespace), namespaces);
+        activity.AssertTagEquals(TagName.DangerouslyDisableHttpIncomingAuth, serviceStartOptions.DangerouslyDisableHttpIncomingAuth);
+        activity.AssertTagEquals(TagName.DangerouslyDisableElicitation, serviceStartOptions.DangerouslyDisableElicitation);
+        activity.AssertTagEquals(TagName.Transport, serviceStartOptions.Transport);
+        activity.AssertTagEquals(TagName.ServerMode, serviceStartOptions.Mode);
+        activity.AssertTagEquals(TagName.Tool, string.Join(",", serviceStartOptions.Tool));
+        activity.AssertTagEquals(TagName.IsReadOnly, serviceStartOptions.ReadOnly);
+        activity.AssertTagEquals(TagName.IsDebug, serviceStartOptions.Debug);
+        activity.AssertTagEquals(TagName.Namespace, string.Join(",", serviceStartOptions.Namespace));
     }
 
     [Fact]
@@ -603,26 +588,14 @@ public class ServiceStartCommandTests
         // Assert
         mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);
 
-        var dangerouslyDisableHttpIncomingAuth = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.DangerouslyDisableHttpIncomingAuth);
-        Assert.Equal(serviceStartOptions.DangerouslyDisableHttpIncomingAuth, dangerouslyDisableHttpIncomingAuth);
-
-        var dangerouslyDisableElicitation = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.DangerouslyDisableElicitation);
-        Assert.Equal(serviceStartOptions.DangerouslyDisableElicitation, dangerouslyDisableElicitation);
-
-        var transport = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.Transport);
-        Assert.Equal(serviceStartOptions.Transport, transport);
-
-        Assert.DoesNotContain(TagName.ServerMode, activity.TagObjects.Select(x => x.Key));
-
-        Assert.DoesNotContain(TagName.Tool, activity.TagObjects.Select(x => x.Key));
-
-        var readOnly = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.IsReadOnly);
-        Assert.Equal(serviceStartOptions.ReadOnly, readOnly);
-
-        var debug = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.IsDebug);
-        Assert.Equal(serviceStartOptions.Debug, debug);
-
-        Assert.DoesNotContain(TagName.Namespace, activity.TagObjects.Select(x => x.Key));
+        activity.AssertTagEquals(TagName.DangerouslyDisableHttpIncomingAuth, serviceStartOptions.DangerouslyDisableHttpIncomingAuth);
+        activity.AssertTagEquals(TagName.DangerouslyDisableElicitation, serviceStartOptions.DangerouslyDisableElicitation);
+        activity.AssertTagEquals(TagName.Transport, serviceStartOptions.Transport);
+        activity.AssertTagDoesNotExist(TagName.ServerMode);
+        activity.AssertTagDoesNotExist(TagName.Tool);
+        activity.AssertTagEquals(TagName.IsReadOnly, serviceStartOptions.ReadOnly);
+        activity.AssertTagEquals(TagName.IsDebug, serviceStartOptions.Debug);
+        activity.AssertTagDoesNotExist(TagName.Namespace);
     }
 
     [Fact]
