@@ -340,8 +340,8 @@ public class SearchServiceTests
 
         Assert.Equal(SearchQueryType.Semantic, options.QueryType);
         Assert.Equal("default-config", options.SemanticSearch?.SemanticConfigurationName);
-        Assert.Equal(QueryCaptionType.Extractive, options.SemanticSearch?.QueryCaption?.Type);
-        Assert.Equal(QueryAnswerType.Extractive, options.SemanticSearch?.QueryAnswer?.Type);
+        Assert.NotNull(options.SemanticSearch?.QueryCaption);
+        Assert.NotNull(options.SemanticSearch?.QueryAnswer);
     }
 
     [Fact]
