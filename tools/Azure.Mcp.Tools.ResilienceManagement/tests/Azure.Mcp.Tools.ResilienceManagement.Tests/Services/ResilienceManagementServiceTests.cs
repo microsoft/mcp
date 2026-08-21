@@ -15,26 +15,104 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests.Services;
 public sealed class ResilienceManagementServiceTests
 {
     private const string UserAssignedIdentityResourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/testIdentity";
+    private const string RecoveryJobName = "11111111-1111-1111-1111-111111111111";
 
     [Fact]
-    public void GetRecoveryJobName_ReadsTypedTopLevelJobId()
+    public void GetRecoveryJobResourceId_UsesAbsoluteJobIdExactly()
     {
-        string result = ResilienceManagementService.GetRecoveryJobName(BinaryData.FromString("""
-            {"jobId":"/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryJobs/job1"}
-            """));
+        ResourceIdentifier result = ResilienceManagementService.GetRecoveryJobResourceId(BinaryData.FromString("""
+            {"jobId":"/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryJobs/11111111-1111-1111-1111-111111111111"}
+            """), "sg1", "plan1");
 
-        Assert.Equal("job1", result);
+        Assert.Equal(
+            $"/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryJobs/{RecoveryJobName}",
+            result.ToString());
     }
 
     [Fact]
-    public void GetRecoveryJobName_RejectsNestedJobId()
+    public void GetRecoveryJobResourceId_ResolvesBareJobIdUnderRequestedPlan()
+    {
+        ResourceIdentifier result = ResilienceManagementService.GetRecoveryJobResourceId(
+            BinaryData.FromString($$"""{"jobId":"{{RecoveryJobName}}"}"""),
+            "sg1",
+            "plan1");
+
+        Assert.Equal(
+            $"/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryJobs/{RecoveryJobName}",
+            result.ToString());
+    }
+
+    [Fact]
+    public void TryGetRecoveryJobResourceId_ReturnsNullWhenResponseDoesNotContainJobId()
+    {
+        ResourceIdentifier? result = ResilienceManagementService.TryGetRecoveryJobResourceId(
+            BinaryData.FromString("""
+                {"id":"/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1"}
+                """),
+            "sg1",
+            "plan1");
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void GetRecoveryJobResourceId_RejectsJobFromDifferentRecoveryPlan()
     {
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            ResilienceManagementService.GetRecoveryJobName(BinaryData.FromString("""
+            ResilienceManagementService.GetRecoveryJobResourceId(BinaryData.FromString("""
+                {"jobId":"/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/other-plan/recoveryJobs/11111111-1111-1111-1111-111111111111"}
+                """), "sg1", "plan1"));
+
+        Assert.Contains("invalid recovery job identifier", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void GetRecoveryJobResourceId_RejectsInvalidJobName()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            ResilienceManagementService.GetRecoveryJobResourceId(
+                BinaryData.FromString("""{"jobId":"job1"}"""),
+                "sg1",
+                "plan1"));
+
+        Assert.Contains("invalid recovery job identifier", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("11111111111111111111111111111111")]
+    [InlineData("{11111111-1111-1111-1111-111111111111}")]
+    [InlineData("/not-an-arm-resource-id")]
+    [InlineData("not-json")]
+    public void GetRecoveryJobResourceId_RejectsMalformedProviderResponse(string jobId)
+    {
+        BinaryData response = jobId == "not-json"
+            ? BinaryData.FromString(jobId)
+            : BinaryData.FromObjectAsJson(new { jobId });
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            ResilienceManagementService.GetRecoveryJobResourceId(response, "sg1", "plan1"));
+
+        Assert.Contains("invalid recovery job identifier", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void GetRecoveryJobResourceId_RejectsNestedJobId()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            ResilienceManagementService.GetRecoveryJobResourceId(BinaryData.FromString("""
                 {"details":{"jobId":"wrong-job"}}
-                """)));
+                """), "sg1", "plan1"));
 
         Assert.Contains("without returning a recovery job identifier", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void GetRequiredProperties_RejectsMissingProperties()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            ResilienceManagementService.GetRequiredProperties<RecoveryJobProperties>(null, "recovery job"));
+
+        Assert.Contains("recovery job without required properties", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -70,6 +148,17 @@ public sealed class ResilienceManagementServiceTests
                 "readiness operation",
                 TimeSpan.FromSeconds(1),
                 cancellation.Token));
+    }
+
+    [Fact]
+    public async Task ExecuteWithTimeoutAsync_PreservesDownstreamCancellation()
+    {
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            ResilienceManagementService.ExecuteWithTimeoutAsync<string>(
+                _ => Task.FromCanceled<string>(new CancellationToken(canceled: true)),
+                "readiness operation",
+                TimeSpan.FromSeconds(1),
+                CancellationToken.None));
     }
 
     [Fact]
@@ -123,6 +212,37 @@ public sealed class ResilienceManagementServiceTests
                 TimeSpan.FromMilliseconds(1),
                 TimeSpan.FromSeconds(1),
                 cancellation.Token));
+    }
+
+    [Fact]
+    public async Task WaitForCompletionAsync_PreservesDownstreamCancellation()
+    {
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            ResilienceManagementService.WaitForCompletionAsync<string>(
+                _ => Task.FromCanceled<string?>(new CancellationToken(canceled: true)),
+                _ => false,
+                "test operation",
+                TimeSpan.FromMilliseconds(1),
+                TimeSpan.FromSeconds(1),
+                CancellationToken.None));
+    }
+
+    [Theory]
+    [InlineData("NotApplicable", true)]
+    [InlineData("Completed", true)]
+    [InlineData("CompletedWithWarnings", true)]
+    [InlineData("Failed", true)]
+    [InlineData("Skipped", true)]
+    [InlineData("Cancelled", true)]
+    [InlineData("NotStarted", false)]
+    [InlineData("Pending", false)]
+    [InlineData("InProgress", false)]
+    [InlineData("Cancelling", false)]
+    [InlineData("Paused", false)]
+    [InlineData("", false)]
+    public void IsTerminalJobStatus_ClassifiesDocumentedStatuses(string status, bool expected)
+    {
+        Assert.Equal(expected, ResilienceManagementService.IsTerminalJobStatus(status));
     }
 
     [Fact]

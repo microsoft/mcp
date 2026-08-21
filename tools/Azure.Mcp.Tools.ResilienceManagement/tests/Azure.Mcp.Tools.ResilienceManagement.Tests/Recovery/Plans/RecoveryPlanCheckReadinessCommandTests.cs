@@ -195,7 +195,7 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
         var response = await ExecuteCommandAsync(ValidArgs);
 
         Assert.Equal(HttpStatusCode.BadGateway, response.Status);
-        Assert.Contains("without returning a recovery job identifier", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("without returning a valid recovery job response", response.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Retry", response.Message, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(internalDetails, response.Message);
     }

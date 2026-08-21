@@ -35,10 +35,10 @@
         "resilience_goal_resource_get",
         "resilience_usageplan_get",
         "resilience_usageplan_enrollment_get",
-        "resilience_recovery_plan_get",
-        "resilience_recovery_plan_resource_get",
-        "resilience_recovery_job_get",
-        "resilience_recovery_job_resource_get",
+        "resilience_recoveryplan_get",
+        "resilience_recoveryplan_resource_get",
+        "resilience_recoveryjob_get",
+        "resilience_recoveryjob_resource_get",
         "resilience_drill_get",
         "resilience_drill_resource_get"
       ]
@@ -75,9 +75,9 @@
       "mappedToolList": [
         "resilience_usageplan_create",
         "resilience_usageplan_enrollment_create",
-        "resilience_recovery_plan_create",
-        "resilience_recovery_plan_delete",
-        "resilience_recovery_plan_resource_update"
+        "resilience_recoveryplan_create",
+        "resilience_recoveryplan_delete",
+        "resilience_recoveryplan_resource_update"
       ]
     },
     {
@@ -110,7 +110,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recovery_plan_checkreadiness"
+        "resilience_recoveryplan_checkreadiness"
       ]
     },
     {

@@ -532,15 +532,23 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
         var recoveryPlanId = RecoveryPlanResource.CreateResourceIdentifier(serviceGroup, recoveryPlan);
         RecoveryPlanResource recoveryPlanResource = await armClient.GetRecoveryPlanResource(recoveryPlanId).GetAsync(cancellationToken);
+        RecoveryJobCollection recoveryJobs = recoveryPlanResource.GetRecoveryJobs();
+        HashSet<string> existingRecoveryJobIds = await GetRecoveryJobIdsAsync(recoveryJobs, cancellationToken);
         string operationId = Guid.NewGuid().ToString();
         ArmOperation operation = await recoveryPlanResource.CheckReadinessAsync(WaitUntil.Completed, operationId, cancellationToken);
-        string recoveryJobId = GetRecoveryJobName(operation.GetRawResponse().Content);
+        ResourceIdentifier recoveryJobResourceId = TryGetRecoveryJobResourceId(
+                operation.GetRawResponse().Content,
+                serviceGroup,
+                recoveryPlan)
+            ?? await WaitForNewReadinessJobAsync(recoveryJobs, existingRecoveryJobIds, cancellationToken);
+        string recoveryJobId = recoveryJobResourceId.Name;
 
-        var recoveryJobResourceId = RecoveryJobResource.CreateResourceIdentifier(serviceGroup, recoveryPlan, recoveryJobId);
         RecoveryJobResource recoveryJob = armClient.GetRecoveryJobResource(recoveryJobResourceId);
         RecoveryJobResource recoveryJobResource = await WaitForRecoveryJobCompletionAsync(recoveryJob, recoveryJobId, cancellationToken);
 
-        RecoveryJobProperties recoveryJobProperties = recoveryJobResource.Data.Properties;
+        RecoveryJobProperties recoveryJobProperties = GetRequiredProperties(
+            recoveryJobResource.Data.Properties,
+            "recovery job");
         string status = recoveryJobProperties.Status?.ToString() ?? string.Empty;
         RecoveryPlanReadinessError? error = CreateReadinessError(recoveryJobProperties.ErrorDetails);
         List<RecoveryPlanReadinessFailedTask> failedTasks = GetFailedTasks(recoveryJobProperties.JobExtendedInfo?.TasksList);
@@ -548,7 +556,9 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
         await foreach (RecoveryJobTargetResource recoveryJobTarget in recoveryJobResource.GetRecoveryJobTargets().GetAllAsync(cancellationToken: cancellationToken))
         {
-            RecoveryJobResourceProperties properties = recoveryJobTarget.Data.Properties;
+            RecoveryJobResourceProperties properties = GetRequiredProperties(
+                recoveryJobTarget.Data.Properties,
+                "recovery job target");
             string targetStatus = properties.Status?.ToString() ?? string.Empty;
             if (!string.Equals(targetStatus, "Completed", StringComparison.OrdinalIgnoreCase))
             {
@@ -587,31 +597,98 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         {
             return await operation(timeoutCancellation.Token);
         }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (timeoutCancellation.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
         {
             throw new TimeoutException($"The {operationDescription} did not complete within {timeout.TotalMinutes} minutes.");
         }
     }
 
-    internal static string GetRecoveryJobName(BinaryData responseContent)
+    internal static ResourceIdentifier GetRecoveryJobResourceId(BinaryData responseContent, string serviceGroup, string recoveryPlan)
     {
-        RecoveryPlanActionBaseResult? result = ModelReaderWriter.Read<RecoveryPlanActionBaseResult>(
-            responseContent,
-            ModelReaderWriterOptions.Json,
-            AzureResourceManagerResilienceManagementContext.Default);
-        if (!string.IsNullOrWhiteSpace(result?.JobId))
-        {
-            return result.JobId.StartsWith("/", StringComparison.Ordinal)
-                ? new ResourceIdentifier(result.JobId).Name
-                : result.JobId;
-        }
-
-        throw new InvalidOperationException("The readiness operation completed without returning a recovery job identifier.");
+        return TryGetRecoveryJobResourceId(responseContent, serviceGroup, recoveryPlan)
+            ?? throw new InvalidOperationException("The readiness operation completed without returning a recovery job identifier.");
     }
 
-    private static bool IsTerminalJobStatus(string status) =>
+    internal static ResourceIdentifier? TryGetRecoveryJobResourceId(BinaryData responseContent, string serviceGroup, string recoveryPlan)
+    {
+        try
+        {
+            RecoveryPlanActionBaseResult? result = ModelReaderWriter.Read<RecoveryPlanActionBaseResult>(
+                responseContent,
+                ModelReaderWriterOptions.Json,
+                AzureResourceManagerResilienceManagementContext.Default);
+            if (string.IsNullOrWhiteSpace(result?.JobId))
+            {
+                return null;
+            }
+
+            ResourceIdentifier recoveryJobResourceId = result.JobId.StartsWith("/", StringComparison.Ordinal)
+                ? new ResourceIdentifier(result.JobId)
+                : RecoveryJobResource.CreateResourceIdentifier(serviceGroup, recoveryPlan, result.JobId);
+            var expectedJobId = RecoveryJobResource.CreateResourceIdentifier(serviceGroup, recoveryPlan, recoveryJobResourceId.Name);
+            if (!Guid.TryParseExact(recoveryJobResourceId.Name, "D", out _) ||
+                recoveryJobResourceId.ResourceType != RecoveryJobResource.ResourceType ||
+                !string.Equals(recoveryJobResourceId.Parent?.ToString(), expectedJobId.Parent?.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("The readiness operation returned an invalid recovery job identifier.");
+            }
+
+            return recoveryJobResourceId;
+        }
+        catch (Exception ex) when (ex is JsonException or FormatException or ArgumentException)
+        {
+            throw new InvalidOperationException("The readiness operation returned an invalid recovery job identifier.", ex);
+        }
+    }
+
+    private static async Task<HashSet<string>> GetRecoveryJobIdsAsync(RecoveryJobCollection recoveryJobs, CancellationToken cancellationToken)
+    {
+        HashSet<string> recoveryJobIds = new(StringComparer.OrdinalIgnoreCase);
+        await foreach (RecoveryJobResource recoveryJob in recoveryJobs.GetAllAsync(cancellationToken: cancellationToken))
+        {
+            recoveryJobIds.Add(recoveryJob.Data.Id.ToString());
+        }
+
+        return recoveryJobIds;
+    }
+
+    private static async Task<ResourceIdentifier> WaitForNewReadinessJobAsync(
+        RecoveryJobCollection recoveryJobs,
+        HashSet<string> existingRecoveryJobIds,
+        CancellationToken cancellationToken)
+    {
+        while (true)
+        {
+            List<ResourceIdentifier> matchingJobIds = [];
+            await foreach (RecoveryJobResource recoveryJob in recoveryJobs.GetAllAsync(cancellationToken: cancellationToken))
+            {
+                if (!existingRecoveryJobIds.Contains(recoveryJob.Data.Id.ToString()) &&
+                    string.Equals(recoveryJob.Data.Properties?.Operation, "CheckRecoveryPlanReadiness", StringComparison.OrdinalIgnoreCase))
+                {
+                    matchingJobIds.Add(recoveryJob.Data.Id);
+                }
+            }
+
+            if (matchingJobIds.Count == 1)
+            {
+                return matchingJobIds[0];
+            }
+
+            if (matchingJobIds.Count > 1)
+            {
+                throw new InvalidOperationException("Multiple recovery jobs were created by concurrent readiness operations.");
+            }
+
+            await Task.Delay(ReadinessJobPollingInterval, cancellationToken);
+        }
+    }
+
+    internal static bool IsTerminalJobStatus(string status) =>
+        status.Equals("NotApplicable", StringComparison.OrdinalIgnoreCase) ||
         status.Equals("Completed", StringComparison.OrdinalIgnoreCase) ||
+        status.Equals("CompletedWithWarnings", StringComparison.OrdinalIgnoreCase) ||
         status.Equals("Failed", StringComparison.OrdinalIgnoreCase) ||
+        status.Equals("Skipped", StringComparison.OrdinalIgnoreCase) ||
         status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase);
 
     private static async Task<RecoveryJobResource> WaitForRecoveryJobCompletionAsync(
@@ -621,11 +698,17 @@ public sealed class ResilienceManagementService(IAzureService azureService)
     {
         return await WaitForCompletionAsync(
             token => GetRecoveryJobIfAvailableAsync(recoveryJob, token),
-            job => IsTerminalJobStatus(job.Data.Properties.Status?.ToString() ?? string.Empty),
+            job => IsTerminalJobStatus(GetRequiredProperties(job.Data.Properties, "recovery job").Status?.ToString() ?? string.Empty),
             $"readiness recovery job '{recoveryJobId}'",
             ReadinessJobPollingInterval,
             ReadinessTimeout,
             cancellationToken);
+    }
+
+    internal static T GetRequiredProperties<T>(T? properties, string resourceDescription) where T : class
+    {
+        return properties ?? throw new InvalidOperationException(
+            $"The readiness operation returned a {resourceDescription} without required properties.");
     }
 
     internal static async Task<T> WaitForCompletionAsync<T>(
@@ -653,7 +736,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
                 await Task.Delay(pollingInterval, timeoutCancellation.Token);
             }
         }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (timeoutCancellation.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
         {
             throw new TimeoutException($"The {operationDescription} did not complete within {timeout.TotalMinutes} minutes.");
         }
@@ -667,12 +750,6 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         {
             Response<RecoveryJobResource> response = await recoveryJob.GetAsync(cancellationToken);
             return response.Value;
-        }
-        catch (ArgumentNullException ex) when (ex.ParamName == "id")
-        {
-            // A newly created job can return a successful response before its required resource ID is populated.
-            // The generated SDK throws while constructing RecoveryJobResource; retry until the job materializes.
-            return null;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
         {

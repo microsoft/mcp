@@ -66,7 +66,7 @@ public sealed class RecoveryPlanCheckReadinessCommand(ILogger<RecoveryPlanCheckR
         TimeoutException =>
             "The recovery plan readiness check timed out before it completed. Retry the operation.",
         InvalidOperationException =>
-            "The recovery plan readiness check completed without returning a recovery job identifier. Retry the operation. If the problem persists, contact support.",
+            "The recovery plan readiness check completed without returning a valid recovery job response. Retry the operation. If the problem persists, contact support.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "The recovery plan readiness check cannot start in its current state. Complete or cancel active recovery operations and try again.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
