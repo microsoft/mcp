@@ -1,6 +1,6 @@
 # Finding Rules
 
-Use these rules to turn candidate findings into a concise draft review.
+Use these rules to turn candidate findings into a concise review.
 
 ## Candidate Format
 
@@ -59,10 +59,12 @@ Do not treat every source-level API improvement as blocking. Escalate it only wh
 ## Diff Anchoring
 
 - Anchor each inline comment to the smallest relevant changed range.
-- Use `RIGHT` for added or modified code and `LEFT` for removed code.
+- Use `ADDED_OR_MODIFIED` for added or modified code and `REMOVED` for removed code.
 - Use `startLine` and `startSide` only when the full changed range is needed to understand the issue.
 - Never invent a line number or attach a comment to an unrelated changed line.
 - Put a verified cross-cutting issue in the review body when no valid changed line exists.
+
+When a finding is posted through the pull request review API, map `ADDED_OR_MODIFIED` to `RIGHT` and `REMOVED` to `LEFT` in the `side` and `start_side` fields.
 
 ## Voice
 
@@ -77,23 +79,27 @@ Do not treat every source-level API improvement as blocking. Escalate it only wh
 
 ## Output
 
-Return a draft review in this structure:
+In interactive IDE and CLI sessions, return a draft review in this structure:
 
 ```yaml
 body: "One concise sentence. Include a cross-cutting finding here only when it cannot be anchored to the diff."
 comments:
   - path: "relative/path/to/file.cs"
     line: 42
-    side: RIGHT
+    side: ADDED_OR_MODIFIED
     startLine: 39
-    startSide: RIGHT
+    startSide: ADDED_OR_MODIFIED
     severity: blocking
     body: "Inline comment text."
 ```
 
-Omit `startLine` and `startSide` for a single-line comment. If no findings survive triage, return:
+Omit `startLine` and `startSide` for a single-line comment. In GitHub Copilot Code Review, post the same qualified findings through the native inline review interface as a comment-only review.
+
+If no findings survive triage, use this result in interactive sessions:
 
 ```yaml
 body: "No blocking findings identified."
 comments: []
 ```
+
+In GitHub Copilot Code Review, submit the same brief statement as a comment-only review with no inline comments.

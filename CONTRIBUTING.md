@@ -856,11 +856,13 @@ External servers integrate seamlessly with the Azure MCP Server's tool aggregati
 
 #### Assisted Pull Request Review
 
-The repository includes the `.github/skills/mcp-code-reviewer/SKILL.md` skill for consistent, repository-aware reviews in supported IDE and CLI review sessions.
+The repository includes the `.github/skills/mcp-code-reviewer/SKILL.md` skill for consistent, repository-aware reviews in supported IDE, CLI, and GitHub Copilot Code Review sessions.
 
 1. Open the repository in the pull request branch or worktree.
 2. Ask the reviewing agent to `Review pull request <number> using the mcp-code-reviewer skill. Return draft inline comments only and do not post them.`
 3. Inspect each draft finding against the diff and post only the comments you agree with.
+
+In GitHub Copilot Code Review, requesting a review authorizes the agent to post qualified inline comments directly. The skill keeps these reviews read-only and comment-only: it does not modify the branch, approve or request changes, resolve threads, or invoke another agent to implement changes.
 
 The skill does not replace maintainer judgment, required validation, or the security inspection required before authorizing live tests for an untrusted contribution.
 
