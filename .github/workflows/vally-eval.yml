@@ -16,6 +16,15 @@ on:
         required: false
         default: 1
         type: number
+      toolDiscoveryMode:
+        description: 'Azure MCP tool discovery mode'
+        required: false
+        default: Default
+        type: choice
+        options:
+          - Default
+          - TwoStep
+          - ThreeStep
 
 permissions:
   copilot-requests: write
@@ -90,15 +99,24 @@ jobs:
         run: |
           $isDebug = '${{ github.event.inputs.logLevel }}' -eq 'true'
           $numberOfRuns = [int]'${{ inputs.numberOfRuns || 1 }}'
+          $toolDiscoveryMode = '${{ inputs.toolDiscoveryMode || 'Default' }}'
           $buildInfo = '${{ github.workspace }}/.work/build_info.json'
 
           $baseVallyDirectory = '${{ github.workspace }}/.work/vally'
           $evalsDirectory = "$baseVallyDirectory/evals"
-          $outputPath = "$baseVallyDirectory/vally-results"
+          $outputDirectoryName = switch ($toolDiscoveryMode) {
+            'ThreeStep' { 'vally-results-three-step' }
+            'TwoStep' { 'vally-results-two-step' }
+            default { 'vally-results-default' }
+          }
+          $outputPath = "$baseVallyDirectory/$outputDirectoryName"
 
           $workingDirectory = "${{ github.workspace }}"
 
-          ./eng/scripts/Invoke-VallyEvalTests.ps1 -BuildInfoPath $buildInfo -WorkDirectory $workingDirectory -EvalsDirectory $evalsDirectory -OutputPath $outputPath -NumberOfRuns $numberOfRuns -IsDebug:$isDebug
+          # Invoke-VallyEvalTests.ps1 temporarily replaces AGENTS.md with the Vally
+          # evaluation instructions (and restores it afterward) by default, so no
+          # manual Copy-Item step is needed here.
+          ./eng/scripts/Invoke-VallyEvalTests.ps1 -BuildInfoPath $buildInfo -WorkDirectory $workingDirectory -EvalsDirectory $evalsDirectory -OutputPath $outputPath -NumberOfRuns $numberOfRuns -ToolDiscoveryMode $toolDiscoveryMode -IsDebug:$isDebug
         shell: pwsh
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
@@ -108,5 +126,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: vally-results
-          path: ${{ github.workspace }}/.work/vally/vally-results
+          path: ${{ github.workspace }}/.work/vally/vally-results-*
           if-no-files-found: warn

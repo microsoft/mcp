@@ -46,6 +46,42 @@ In a terminal window, navigate to the repository root:
 
 The repository's `.vally.yaml` currently defines environments only for Azure MCP Server on Windows and Linux. Running another MCP server requires adding an environment that launches that server and passing its environment name through `ENVIRONMENT`.
 
+To run the same evaluations against three-step tool discovery, use the evaluation runner:
+
+```powershell
+./eng/scripts/Invoke-VallyEvalTests.ps1 -ToolDiscoveryMode ThreeStep
+```
+
+The default `TwoStep` mode uses the existing `windows` or `linux` Vally environment.
+`ThreeStep` uses the corresponding `windows-three-step` or `linux-three-step`
+environment and writes results to `.work/vally/vally-results-three-step` unless an
+output path is specified.
+
+To limit a run to selected specifications, pass one or more wildcard path filters:
+
+```powershell
+./eng/scripts/Invoke-VallyEvalTests.ps1 -EvalPathFilter '*AppConfig*', '*Storage*'
+```
+
+### AGENTS.md and evaluation behavior
+
+`Invoke-VallyEvalTests.ps1` temporarily replaces the repository's root `AGENTS.md`
+with `eng/tools/VallyEvaluator/src/Resources/eval.instructions.md` for the duration
+of the run, then restores the original file (or removes it, if none existed)
+afterward. These instructions tell the evaluated agent to treat angle-bracket
+placeholders as supplied synthetic test values, use a fixed synthetic subscription
+ID, and never call `subscription_list` or `az login`. Without them, the agent
+correctly asks for clarification on placeholder prompts instead of invoking the
+expected tool, which causes `tool-calls` graders to fail for reasons unrelated to
+the Azure MCP Server itself.
+
+Always run evaluations through `Invoke-VallyEvalTests.ps1` rather than invoking
+`vally eval` directly, so this substitution happens automatically. Pass
+`-SkipAgentsInstructions` only if you intentionally want to evaluate against the
+repository's real `AGENTS.md` contribution guidelines instead.
+
+## Automated runs with GitHub workflow
+
 ## Run generated end-to-end prompt evaluations
 
 VallyEvaluator accepts any server that provides `servers/<ServerName>/docs/e2eTestPrompts.md`. It converts the file's non-interactive prompts into Vally specifications. The following example uses Azure MCP Server because the repository's `.vally.yaml` already defines environments that launch it.

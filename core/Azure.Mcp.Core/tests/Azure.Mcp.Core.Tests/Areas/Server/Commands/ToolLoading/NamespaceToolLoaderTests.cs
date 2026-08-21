@@ -214,6 +214,263 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var textContent = result.Content[0] as TextContentBlock;
         Assert.NotNull(textContent);
         Assert.Contains("available command", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("inputSchema", textContent.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithLearnTrue_ThreeStepDiscoveryReturnsMetadataOnly()
+    {
+        // Arrange
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        {
+            ThreeStepToolDiscovery = true
+        });
+
+        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
+        var toolName = GetFirstAvailableNamespace();
+        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["intent"] = "list resources"
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+        var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
+        Assert.Contains("\"tool\"", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("\"inputSchema\"", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("\"command\":", textContent.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_ThreeStepDiscoveryDescribesExactCommandLookup()
+    {
+        // Arrange
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        {
+            ThreeStepToolDiscovery = true
+        });
+
+        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
+
+        // Act
+        var result = await loader.ListToolsHandler(CreateListToolsRequest(), TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.All(result.Tools, tool =>
+        {
+            Assert.Contains("learn=true", tool.Description, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("no \"command\"", tool.Description, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("exact command name", tool.Description, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("do not guess", tool.Description, StringComparison.OrdinalIgnoreCase);
+        });
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithLearnTrue_ThreeStepDiscoveryReturnsSpecificCommandSchema()
+    {
+        // Arrange
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        {
+            ThreeStepToolDiscovery = true
+        });
+
+        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
+        var toolName = GetFirstAvailableNamespace();
+        var commandName = loader.GetChildToolList(CreateCallToolRequest(toolName, []), toolName).First().Name;
+        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["command"] = commandName,
+            ["intent"] = "list resources"
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+        var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
+        Assert.Contains("inputSchema", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(commandName, textContent.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithLearnTrue_UnknownThreeStepCommandReturnsExactCommandGuidance()
+    {
+        // Arrange
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        {
+            ThreeStepToolDiscovery = true
+        });
+
+        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
+        var toolName = GetFirstAvailableNamespace();
+        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["command"] = "__unknown_command__"
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.True(result.IsError);
+        var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
+        Assert.Contains("exact", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("not a guessed", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("\"command\"", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("__unknown_command__", textContent.Text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithLearnTrue_LargeResponseAutomaticallyFallsBackToThreeStep()
+    {
+        // Arrange - explicit switch left off, but the threshold is set so low that any namespace's
+        // full-schema learn response will exceed it.
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        {
+            ThreeStepToolDiscovery = false,
+            ThreeStepToolDiscoveryThresholdBytes = 1
+        });
+
+        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
+        var toolName = GetFirstAvailableNamespace();
+        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        {
+            ["learn"] = true
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - behaves like ThreeStepToolDiscovery = true: metadata only, no schemas.
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+        var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
+        Assert.Contains("\"tool\"", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("\"inputSchema\"", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("\"command\":", textContent.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithLearnTrue_DisableAutomaticThreeStepKeepsTwoStep()
+    {
+        // Arrange - force the full-schema response to exceed the threshold, then disable only the
+        // automatic fallback so the legacy two-step behavior is retained.
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        {
+            ThreeStepToolDiscovery = false,
+            ThreeStepToolDiscoveryThresholdBytes = 1,
+            DisableAutomaticThreeStepToolDiscovery = true
+        });
+
+        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
+        var toolName = GetFirstAvailableNamespace();
+        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        {
+            ["learn"] = true
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - automatic fallback is disabled, so the legacy two-step response includes schemas.
+        var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
+        Assert.Contains("inputSchema", textContent.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithLearnTrue_SmallResponseUnderThresholdKeepsTwoStep()
+    {
+        // Arrange - explicit switch off, and threshold set very high so the size-based fallback never triggers.
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        {
+            ThreeStepToolDiscovery = false,
+            ThreeStepToolDiscoveryThresholdBytes = int.MaxValue
+        });
+
+        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
+        var toolName = GetFirstAvailableNamespace();
+        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        {
+            ["learn"] = true
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - default two-step behavior: full schemas included.
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+        var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
+        Assert.Contains("inputSchema", textContent.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithLearnTrue_ExplicitThreeStepSwitchIgnoresThreshold()
+    {
+        // Arrange - explicit switch on, threshold set very high (well above any real response size).
+        // Behavior must remain three-step regardless of the threshold value.
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        {
+            ThreeStepToolDiscovery = true,
+            ThreeStepToolDiscoveryThresholdBytes = int.MaxValue
+        });
+
+        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
+        var toolName = GetFirstAvailableNamespace();
+        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        {
+            ["learn"] = true
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - still metadata only because the explicit switch takes effect independent of threshold.
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+        var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
+        Assert.Contains("\"tool\"", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("\"inputSchema\"", textContent.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithLearnTrue_LargeResponseFallbackReturnsSpecificCommandSchema()
+    {
+        // Arrange - size-based fallback triggered (threshold=1); individual command learn must still
+        // return the full input schema for the specific command, just like the explicit switch.
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        {
+            ThreeStepToolDiscovery = false,
+            ThreeStepToolDiscoveryThresholdBytes = 1
+        });
+
+        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
+        var toolName = GetFirstAvailableNamespace();
+        var commandName = loader.GetChildToolList(CreateCallToolRequest(toolName, []), toolName).First().Name;
+        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["command"] = commandName
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+        var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
+        Assert.Contains("inputSchema", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(commandName, textContent.Text, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
