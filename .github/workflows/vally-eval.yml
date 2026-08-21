@@ -19,9 +19,10 @@ on:
       toolDiscoveryMode:
         description: 'Azure MCP tool discovery mode'
         required: false
-        default: TwoStep
+        default: Default
         type: choice
         options:
+          - Default
           - TwoStep
           - ThreeStep
 
@@ -98,12 +99,17 @@ jobs:
         run: |
           $isDebug = '${{ github.event.inputs.logLevel }}' -eq 'true'
           $numberOfRuns = [int]'${{ inputs.numberOfRuns || 1 }}'
-          $toolDiscoveryMode = '${{ inputs.toolDiscoveryMode || 'TwoStep' }}'
+          $toolDiscoveryMode = '${{ inputs.toolDiscoveryMode || 'Default' }}'
           $buildInfo = '${{ github.workspace }}/.work/build_info.json'
 
           $baseVallyDirectory = '${{ github.workspace }}/.work/vally'
           $evalsDirectory = "$baseVallyDirectory/evals"
-          $outputPath = "$baseVallyDirectory/vally-results"
+          $outputDirectoryName = switch ($toolDiscoveryMode) {
+            'ThreeStep' { 'vally-results-three-step' }
+            'TwoStep' { 'vally-results-two-step' }
+            default { 'vally-results-default' }
+          }
+          $outputPath = "$baseVallyDirectory/$outputDirectoryName"
 
           $workingDirectory = "${{ github.workspace }}"
 
@@ -120,5 +126,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: vally-results
-          path: ${{ github.workspace }}/.work/vally/vally-results
+          path: ${{ github.workspace }}/.work/vally/vally-results-*
           if-no-files-found: warn
