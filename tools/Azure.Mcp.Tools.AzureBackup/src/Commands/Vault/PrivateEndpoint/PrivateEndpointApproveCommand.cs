@@ -22,7 +22,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault.PrivateEndpoint;
         Microsoft.RecoveryServices/vaults/privateEndpointConnectionsApproval/action on the vault.
         Backup vaults (DPP) are not supported.
         """,
-    Destructive = false,
+    Destructive = true,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = false,

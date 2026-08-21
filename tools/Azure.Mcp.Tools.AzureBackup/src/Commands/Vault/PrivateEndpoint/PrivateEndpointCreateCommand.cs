@@ -24,7 +24,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault.PrivateEndpoint;
         have no protected items; RSV supports at most 12 Private Endpoints per vault. --group-id must be
         'AzureBackup' (primary region) or 'AzureBackup_secondary' (paired region / Cross-Region Restore).
         """,
-    Destructive = false,
+    Destructive = true,
     Idempotent = false,
     OpenWorld = false,
     ReadOnly = false,
