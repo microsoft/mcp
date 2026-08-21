@@ -391,7 +391,9 @@ azmcp search index get --service <service> \
 azmcp search index query --subscription <subscription> \
                          --service <service> \
                          --index <index> \
-                         --query <query>
+                         --query <query> \
+                         [--query-type <simple|full|semantic>] \
+                         [--semantic-configuration <semantic-configuration>]
 
 # Get AI Search knowledge bases (all or a specific one)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
