@@ -3753,6 +3753,11 @@ azmcp resilience drill get --subscription <subscription> \
                            --service-group <service-group> \
                            [--name <name>]
 
+# Delete a resilience drill from a service group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill delete --service-group <service-group> \
+                              --drill <drill>
+
 # Get a resource (target) of a drill, or list all resources of the drill (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill resource get --subscription <subscription> \
