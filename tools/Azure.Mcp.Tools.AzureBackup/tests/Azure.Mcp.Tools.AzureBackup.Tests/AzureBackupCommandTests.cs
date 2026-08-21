@@ -2239,7 +2239,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureMua_RSV_Enable");
 
         var result = await CallToolAsync(
-            "azurebackup_security_configure-mua",
+            "azurebackup_security_enable-mua",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -2284,8 +2284,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
-                { "force", true }
-            });
+                });
 
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityDisableMua_RSV");
 
@@ -2326,7 +2325,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureMua_DPP_Enable");
 
         var result = await CallToolAsync(
-            "azurebackup_security_configure-mua",
+            "azurebackup_security_enable-mua",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -2373,8 +2372,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "vault-type", "dpp" },
-                { "force", true }
-            });
+                });
 
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityDisableMua_DPP");
 
@@ -2409,7 +2407,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
             ?? "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-security/providers/Microsoft.DataProtection/resourceGuards/test-guard";
 
         var result = await CallToolAsync(
-            "azurebackup_security_configure-mua",
+            "azurebackup_security_enable-mua",
             new()
             {
                 { "subscription", Settings.SubscriptionId },

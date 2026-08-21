@@ -25,7 +25,7 @@ public class ResourceGuardDeleteCommandTests : SubscriptionCommandUnitTestsBase<
     }
 
     [Fact]
-    public async Task ExecuteAsync_DeletesGuard_WithForce()
+    public async Task ExecuteAsync_DeletesGuard()
     {
         Service.DeleteResourceGuardAsync(
             Arg.Is("guard1"), Arg.Is("rg"), Arg.Is("sub"),
@@ -35,27 +35,10 @@ public class ResourceGuardDeleteCommandTests : SubscriptionCommandUnitTestsBase<
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--resource-group", "rg",
-            "--resource-guard", "guard1",
-            "--force");
+            "--resource-guard", "guard1");
 
         var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.ResourceGuardDeleteCommandResult);
         Assert.Equal("Succeeded", result.Result.Status);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_MissingForce_ReturnsBadRequest()
-    {
-        var response = await ExecuteCommandAsync(
-            "--subscription", "sub",
-            "--resource-group", "rg",
-            "--resource-guard", "guard1");
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("--force", response.Message);
-
-        await Service.DidNotReceive().DeleteResourceGuardAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -69,8 +52,7 @@ public class ResourceGuardDeleteCommandTests : SubscriptionCommandUnitTestsBase<
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--resource-group", "rg",
-            "--resource-guard", "guard1",
-            "--force");
+            "--resource-guard", "guard1");
 
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
     }
@@ -86,8 +68,7 @@ public class ResourceGuardDeleteCommandTests : SubscriptionCommandUnitTestsBase<
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--resource-group", "rg",
-            "--resource-guard", "guard1",
-            "--force");
+            "--resource-guard", "guard1");
 
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
     }
@@ -101,6 +82,5 @@ public class ResourceGuardDeleteCommandTests : SubscriptionCommandUnitTestsBase<
         Assert.Contains(options, o => o.Name == "--subscription");
         Assert.Contains(options, o => o.Name == "--resource-group");
         Assert.Contains(options, o => o.Name == "--resource-guard");
-        Assert.Contains(options, o => o.Name == "--force");
     }
 }

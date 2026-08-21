@@ -18,10 +18,9 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Security;
     Title = "Disable Multi-User Authorization",
     Description = """
         Disables Multi-User Authorization (MUA) on a vault by unlinking its Resource Guard.
-        This removes protection from critical operations (disable soft delete, remove immutability,
-        stop protection). Requires --force to acknowledge the safety impact. The caller also needs
-        Backup MUA Operator role on the linked Resource Guard because the unlink itself is a
-        MUA-protected operation.
+        This is a destructive operation: it removes protection from critical operations (disable
+        soft delete, remove immutability, stop protection). The caller needs the Backup MUA Operator
+        role on the linked Resource Guard because the unlink itself is a MUA-protected operation.
         """,
     Destructive = true,
     Idempotent = true,
@@ -34,16 +33,6 @@ public sealed class SecurityDisableMuaCommand(ILogger<SecurityDisableMuaCommand>
 {
     private readonly ILogger<SecurityDisableMuaCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    public override void ValidateOptions(SecurityDisableMuaOptions options, ValidationResult validationResult)
-    {
-        base.ValidateOptions(options, validationResult);
-
-        if (!options.Force)
-        {
-            validationResult.Errors.Add("--force is required to disable Multi-User Authorization. Disabling MUA removes the Resource Guard's protection from critical vault operations. Pass --force to confirm.");
-        }
-    }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SecurityDisableMuaOptions options, CancellationToken cancellationToken)
     {
@@ -85,14 +74,6 @@ public sealed class SecurityDisableMuaCommand(ILogger<SecurityDisableMuaCommand>
             $"Authorization failed. Disabling MUA requires the Backup MUA Operator role on the linked Resource Guard. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        UnauthorizedAccessException => HttpStatusCode.Forbidden,
-        ArgumentException or FormatException => HttpStatusCode.BadRequest,
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     public sealed record SecurityDisableMuaCommandResult(OperationResult Result);

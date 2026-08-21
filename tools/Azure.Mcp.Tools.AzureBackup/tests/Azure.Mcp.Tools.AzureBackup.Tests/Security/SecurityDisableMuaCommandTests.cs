@@ -26,7 +26,7 @@ public class SecurityDisableMuaCommandTests : SubscriptionCommandUnitTestsBase<S
     }
 
     [Fact]
-    public async Task ExecuteAsync_DisablesMua_WithForce()
+    public async Task ExecuteAsync_DisablesMua()
     {
         var expected = new OperationResult("Succeeded", null, "MUA disabled");
         Service.DisableMultiUserAuthorizationAsync(
@@ -37,30 +37,13 @@ public class SecurityDisableMuaCommandTests : SubscriptionCommandUnitTestsBase<S
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--vault", "v",
-            "--resource-group", "rg",
-            "--force");
+            "--resource-group", "rg");
 
         var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.SecurityDisableMuaCommandResult);
         Assert.Equal("Succeeded", result.Result.Status);
 
         await Service.Received(1).DisableMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_MissingForce_ReturnsBadRequest()
-    {
-        var response = await ExecuteCommandAsync(
-            "--subscription", "sub",
-            "--vault", "v",
-            "--resource-group", "rg");
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("--force", response.Message);
-
-        await Service.DidNotReceive().DisableMultiUserAuthorizationAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
@@ -75,8 +58,7 @@ public class SecurityDisableMuaCommandTests : SubscriptionCommandUnitTestsBase<S
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--vault", "v",
-            "--resource-group", "rg",
-            "--force");
+            "--resource-group", "rg");
 
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Backup MUA Operator", response.Message);
@@ -93,8 +75,7 @@ public class SecurityDisableMuaCommandTests : SubscriptionCommandUnitTestsBase<S
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--vault", "v",
-            "--resource-group", "rg",
-            "--force");
+            "--resource-group", "rg");
 
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("not configured", response.Message);
@@ -110,6 +91,5 @@ public class SecurityDisableMuaCommandTests : SubscriptionCommandUnitTestsBase<S
         Assert.Contains(options, o => o.Name == "--resource-group");
         Assert.Contains(options, o => o.Name == "--vault");
         Assert.Contains(options, o => o.Name == "--vault-type");
-        Assert.Contains(options, o => o.Name == "--force");
     }
 }

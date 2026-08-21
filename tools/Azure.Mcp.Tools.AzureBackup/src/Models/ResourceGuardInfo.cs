@@ -12,8 +12,8 @@ public sealed record ResourceGuardInfo(
     string Name,
     string Location,
     string ResourceGroup,
-    IReadOnlyList<string> VaultCriticalOperationExclusionList,
-    IReadOnlyList<string> ProtectedOperations,
-    IReadOnlyDictionary<string, string>? Tags = null,
+    List<string> VaultCriticalOperationExclusionList,
+    List<string> ProtectedOperations,
+    Dictionary<string, string>? Tags = null,
     string? ProvisioningState = null,
     string? Description = null);

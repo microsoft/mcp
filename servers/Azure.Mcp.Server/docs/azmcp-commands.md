@@ -1116,23 +1116,22 @@ azmcp azurebackup disasterrecovery enable-crr --subscription <subscription> \
 
 ```bash
 # Enables Multi-User Authorization (MUA) on a vault by linking a Resource Guard.
-# --resource-guard-id is required. To disable MUA, use 'security disable-mua' (requires --force).
+# --resource-guard-id is required. To disable MUA, use 'security disable-mua'.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp azurebackup security configure-mua --subscription <subscription> \
-                                         --resource-group <resource-group> \
-                                         --vault <vault> \
-                                         --resource-guard-id <resource-guard-id> \
-                                         [--vault-type <vault-type>]
+azmcp azurebackup security enable-mua --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --vault <vault> \
+                                      --resource-guard-id <resource-guard-id> \
+                                      [--vault-type <vault-type>]
 ```
 
 ```bash
 # Disables Multi-User Authorization (MUA) on a vault by unlinking the Resource Guard.
-# Requires --force to acknowledge that critical operations will no longer require approval.
+# Critical operations will no longer require approval after this call.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup security disable-mua --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --vault <vault> \
-                                       --force \
                                        [--vault-type <vault-type>]
 ```
 
@@ -1175,13 +1174,12 @@ azmcp azurebackup resourceguard get --subscription <subscription> \
 ```
 
 ```bash
-# Deletes a Resource Guard. Requires --force to acknowledge that any vaults still linked to this
-# guard will no longer be protected by MUA.
+# Deletes a Resource Guard. Any vaults still linked to this guard will no longer be protected
+# by MUA after deletion.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup resourceguard delete --subscription <subscription> \
                                        --resource-group <resource-group> \
-                                       --resource-guard <resource-guard> \
-                                       --force
+                                       --resource-guard <resource-guard>
 ```
 
 ### Azure CLI Operations

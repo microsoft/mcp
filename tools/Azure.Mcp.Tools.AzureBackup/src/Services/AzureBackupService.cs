@@ -898,12 +898,12 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         var resourceGroup = id?.ResourceGroupName ?? string.Empty;
 
         var exclusions = data.Properties?.VaultCriticalOperationExclusionList is { } excl
-            ? (IReadOnlyList<string>)[.. excl]
-            : (IReadOnlyList<string>)[];
+            ? excl.ToList()
+            : new List<string>();
 
         var protectedOps = data.Properties?.ResourceGuardOperations is { } ops
-            ? (IReadOnlyList<string>)[.. ops.Select(o => o.VaultCriticalOperation ?? string.Empty).Where(s => !string.IsNullOrEmpty(s))]
-            : (IReadOnlyList<string>)[];
+            ? ops.Select(o => o.VaultCriticalOperation ?? string.Empty).Where(s => !string.IsNullOrEmpty(s)).ToList()
+            : new List<string>();
 
         var tags = data.Tags is { Count: > 0 }
             ? data.Tags.ToDictionary(kv => kv.Key, kv => kv.Value)

@@ -11,9 +11,6 @@ public sealed class ResourceGuardDeleteOptions : ISubscriptionOption
     [Option(Description = "Name of the Resource Guard to delete.")]
     public required string ResourceGuard { get; set; }
 
-    [Option(Description = "Required confirmation flag. Deleting a Resource Guard removes MUA protection from all linked vaults. Set --force to acknowledge.")]
-    public bool Force { get; set; }
-
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 

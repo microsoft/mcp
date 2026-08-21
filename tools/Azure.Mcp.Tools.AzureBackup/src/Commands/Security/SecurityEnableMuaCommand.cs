@@ -14,13 +14,13 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Security;
 
 [CommandMetadata(
     Id = "c3a21f68-9b5e-4d1a-bf3c-7e2a0f8d4b19",
-    Name = "configure-mua",
-    Title = "Configure Multi-User Authorization",
+    Name = "enable-mua",
+    Title = "Enable Multi-User Authorization",
     Description = """
         Enables Multi-User Authorization (MUA) on a vault by linking a Resource Guard. --resource-guard-id
         is required. Once enabled, critical operations (disable soft delete, remove immutability, stop
         protection) require approval from a security admin with permissions on the Resource Guard.
-        To disable MUA, use the 'security disable-mua' command (requires --force).
+        To disable MUA, use the 'security disable-mua' command.
         """,
     Destructive = true,
     Idempotent = true,
@@ -28,19 +28,19 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Security;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
-    : BaseAzureBackupCommand<SecurityConfigureMuaOptions, SecurityConfigureMuaCommand.SecurityConfigureMuaCommandResult>(subscriptionResolver)
+public sealed class SecurityEnableMuaCommand(ILogger<SecurityEnableMuaCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : BaseAzureBackupCommand<SecurityEnableMuaOptions, SecurityEnableMuaCommand.SecurityEnableMuaCommandResult>(subscriptionResolver)
 {
-    private readonly ILogger<SecurityConfigureMuaCommand> _logger = logger;
+    private readonly ILogger<SecurityEnableMuaCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    public override void ValidateOptions(SecurityConfigureMuaOptions options, ValidationResult validationResult)
+    public override void ValidateOptions(SecurityEnableMuaOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
 
         if (string.IsNullOrWhiteSpace(options.ResourceGuardId))
         {
-            validationResult.Errors.Add("--resource-guard-id is required to enable Multi-User Authorization. To disable MUA on a vault, use the 'security disable-mua' command (which requires --force).");
+            validationResult.Errors.Add("--resource-guard-id is required to enable Multi-User Authorization. To disable MUA on a vault, use the 'security disable-mua' command.");
             return;
         }
 
@@ -50,7 +50,7 @@ public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaComm
         }
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SecurityConfigureMuaOptions options, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SecurityEnableMuaOptions options, CancellationToken cancellationToken)
     {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
@@ -70,7 +70,7 @@ public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaComm
 
             context.Response.Results = ResponseResult.Create(
                 new(result),
-                AzureBackupJsonContext.Default.SecurityConfigureMuaCommandResult);
+                AzureBackupJsonContext.Default.SecurityEnableMuaCommandResult);
         }
         catch (Exception ex)
         {
@@ -89,22 +89,14 @@ public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaComm
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Vault or Resource Guard not found. Verify the vault name, resource group, and Resource Guard ID.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
-            $"Bad request configuring MUA. Ensure the Resource Guard is in the same region as the vault. Details: {reqEx.Message}",
+            $"Bad request enabling MUA. Ensure the Resource Guard is in the same region as the vault. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed. Enabling MUA requires Reader role on the Resource Guard and Backup Contributor role on the vault. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
-            "MUA configuration conflict. The vault may already have a different Resource Guard linked. Disable the existing link with 'security disable-mua --force' before configuring a new one.",
+            "MUA configuration conflict. The vault may already have a different Resource Guard linked. Disable the existing link with 'security disable-mua' before enabling with a new Resource Guard.",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        UnauthorizedAccessException => HttpStatusCode.Forbidden,
-        ArgumentException or FormatException => HttpStatusCode.BadRequest,
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
-    public sealed record SecurityConfigureMuaCommandResult(OperationResult Result);
+    public sealed record SecurityEnableMuaCommandResult(OperationResult Result);
 }

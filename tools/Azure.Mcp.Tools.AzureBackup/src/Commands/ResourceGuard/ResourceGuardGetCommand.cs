@@ -100,12 +100,5 @@ public sealed class ResourceGuardGetCommand(ILogger<ResourceGuardGetCommand> log
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
     public sealed record ResourceGuardGetCommandResult(List<ResourceGuardInfo> Guards);
 }

@@ -18,10 +18,10 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ResourceGuard;
     Name = "delete",
     Title = "Delete Resource Guard",
     Description = """
-        Deletes a Resource Guard (Microsoft.DataProtection/resourceGuards). Requires --force to
-        acknowledge the safety impact: deleting a Resource Guard removes MUA protection from every
-        vault currently linked to it. Vaults will need to be re-linked to a different Resource
-        Guard to restore MUA protection.
+        Deletes a Resource Guard (Microsoft.DataProtection/resourceGuards). This is a destructive
+        operation: deleting a Resource Guard removes MUA protection from every vault currently
+        linked to it. Vaults will need to be re-linked to a different Resource Guard to restore
+        MUA protection.
         """,
     Destructive = true,
     Idempotent = true,
@@ -34,16 +34,6 @@ public sealed class ResourceGuardDeleteCommand(ILogger<ResourceGuardDeleteComman
 {
     private readonly ILogger<ResourceGuardDeleteCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    public override void ValidateOptions(ResourceGuardDeleteOptions options, ValidationResult validationResult)
-    {
-        base.ValidateOptions(options, validationResult);
-
-        if (!options.Force)
-        {
-            validationResult.Errors.Add("--force is required to delete a Resource Guard. Deleting the guard removes MUA protection from all linked vaults.");
-        }
-    }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ResourceGuardDeleteOptions options, CancellationToken cancellationToken)
     {
@@ -85,13 +75,6 @@ public sealed class ResourceGuardDeleteCommand(ILogger<ResourceGuardDeleteComman
             $"Cannot delete the Resource Guard while vaults are linked to it. First disable MUA on all linked vaults using 'security disable-mua --force'. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     public sealed record ResourceGuardDeleteCommandResult(OperationResult Result);

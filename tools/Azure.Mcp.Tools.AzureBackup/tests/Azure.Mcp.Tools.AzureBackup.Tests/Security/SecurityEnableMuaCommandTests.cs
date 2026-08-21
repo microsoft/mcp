@@ -14,7 +14,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.Tests.Security;
 
-public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase<SecurityConfigureMuaCommand, IAzureBackupService>
+public class SecurityEnableMuaCommandTests : SubscriptionCommandUnitTestsBase<SecurityEnableMuaCommand, IAzureBackupService>
 {
     private const string TestResourceGuardId = "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-security/providers/Microsoft.DataProtection/resourceGuards/test-guard";
 
@@ -22,7 +22,7 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = Command.GetCommand();
-        Assert.Equal("configure-mua", command.Name);
+        Assert.Equal("enable-mua", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }
@@ -42,7 +42,7 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
             "--resource-group", "rg",
             "--resource-guard-id", TestResourceGuardId);
 
-        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.SecurityConfigureMuaCommandResult);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.SecurityEnableMuaCommandResult);
         Assert.Equal("Succeeded", result.Result.Status);
     }
 
@@ -264,7 +264,7 @@ public class SecurityConfigureMuaCommandTests : SubscriptionCommandUnitTestsBase
             "--resource-group", "rg",
             "--resource-guard-id", TestResourceGuardId);
 
-        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.SecurityConfigureMuaCommandResult);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.SecurityEnableMuaCommandResult);
         Assert.Equal("Succeeded", result.Result.Status);
         Assert.Equal("MUA enabled with guard", result.Result.Message);
     }
