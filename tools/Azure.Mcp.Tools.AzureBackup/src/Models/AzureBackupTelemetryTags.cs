@@ -13,6 +13,7 @@ public static class AzureBackupTelemetryTags
     public static readonly string WorkloadType = AddPrefix("WorkloadType");
     public static readonly string DatasourceType = AddPrefix("DatasourceType");
     public static readonly string OperationScope = AddPrefix("OperationScope");
+    public static readonly string VaultExpand = AddPrefix("VaultExpand");
     public static readonly string MuaAction = AddPrefix("MuaAction");
     public static readonly string ResourceGuardOperation = AddPrefix("ResourceGuardOperation");
 

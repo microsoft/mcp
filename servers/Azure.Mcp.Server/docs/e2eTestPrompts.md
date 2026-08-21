@@ -228,6 +228,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_vault_create | Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp' | none |
 | azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> | none |
 | azurebackup_vault_get | Show me information about Azure Backup vault <vault_name> in resource group <resource_group> | none |
+| azurebackup_vault_get | Show the full security posture of vault <vault_name> in resource group <resource_group> including soft delete, immutability, encryption, and MUA | none |
+| azurebackup_vault_get | Get vault <vault_name> in resource group <resource_group> and include all extended posture fields | none |
 | azurebackup_vault_update | Update Azure Backup vault <vault_name> in resource group <resource_group> to enable soft delete | investigation-required |
 | azurebackup_vault_update | Change the identity type of Azure Backup vault <vault_name> in resource group <resource_group> to SystemAssigned | none |
 
@@ -931,8 +933,22 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_recovery_job_get | Get the details of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> | none |
 | resilience_recovery_job_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> | none |
 | resilience_recovery_job_resource_get | Get the recovery job resource <resource_name> for recovery job <recovery_job_name> of recovery plan <recovery_plan_name> in service group <service_group> | none |
+| resilience_recovery_plan_create | Create a Zonal recovery plan named <recovery_plan_name> in service group <service_group> | clarification-required |
+| resilience_recovery_plan_create | Set up a Zonal recovery plan named <recovery_plan_name> in service group <service_group>. Use a system-assigned managed identity, description <plan_description>, and default recovery group description <default_group_description> | none |
+| resilience_recovery_plan_create | Create Zonal recovery plan <recovery_plan_name> in service group <service_group> and attach user-assigned managed identity <user_assigned_identity_resource_id>. Use <plan_description> for the plan description and <default_group_description> for the default recovery group | none |
+| resilience_recovery_plan_create | Change recovery plan <recovery_plan_name> in service group <service_group> to a system-assigned managed identity and description <plan_description>. Keep its Zonal plan type and existing recovery groups | none |
+| resilience_recovery_plan_create | Change a system-assigned recovery plan <recovery_plan_name> in service group <service_group> to use a user-assigned managed identity | clarification-required |
+| resilience_recovery_plan_create | Update recovery plan <recovery_plan_name> in service group <service_group> to use both its system-assigned identity and user-assigned managed identity <user_assigned_identity_resource_id>. Preserve its existing plan settings | none |
+| resilience_recovery_plan_delete | Delete the entire recovery plan <recovery_plan_name> from service group <service_group> | none |
+| resilience_recovery_plan_delete | Recovery plan <recovery_plan_name> is no longer needed. Delete it from resilience service group <service_group> | none |
 | resilience_recovery_plan_get | List all resilience recovery plans in service group <service_group> | none |
 | resilience_recovery_plan_get | Get the details of recovery plan <recovery_plan_name> in service group <service_group> | none |
+| resilience_recovery_plan_resource_update | Include and configure recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group> with selected protection solution type <protection_solution_type> and settings <protection_settings_json> | none |
+| resilience_recovery_plan_resource_update | Add recovery resource <recovery_resource_id> to recovery plan <recovery_plan_name> in service group <service_group>. Protect it with CustomRunbook using failover runbook <failover_runbook_resource_id> and reprotect runbook <reprotect_runbook_resource_id> | none |
+| resilience_recovery_plan_resource_update | Include virtual machine recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group> using AzureSiteRecovery protection settings <protection_settings_json> with disk reprotection, staging storage, and a test failover virtual network | none |
+| resilience_recovery_plan_resource_update | Include recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group>, but I have not chosen CustomRunbook or AzureSiteRecovery protection settings | clarification-required |
+| resilience_recovery_plan_resource_update | Keep recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group>, but exclude it from recovery operations | none |
+| resilience_recovery_plan_resource_update | Update recovery plan <recovery_plan_name> in service group <service_group> by removing recovery resource <recovery_resource_id> from its resource membership while retaining the recovery plan and its other recovery resources | none |
 | resilience_recovery_plan_resource_get | List all resources (members) of recovery plan <recovery_plan_name> in service group <service_group> | none |
 | resilience_recovery_plan_resource_get | Get the recovery resource <resource_name> for recovery plan <recovery_plan_name> in service group <service_group> | none |
 | resilience_usageplan_create | Create a resilience usage plan <usage_plan_name> with plan type Basic in resource group <resource_group_name> | none |

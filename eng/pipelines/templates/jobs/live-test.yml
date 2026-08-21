@@ -89,6 +89,7 @@ jobs:
       PersistOidcToken: true
       TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
       AdditionalParameters: "@{ UseHttpTransport = true }"
+      SkipEnvironmentSetup: true # environment setup was performed in the first deployment
 
   - task: AzurePowershell@5
     displayName: "Run tests (http) - az pwsh"

@@ -87,7 +87,8 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     public async Task<BackupVaultInfo> GetVaultAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -99,12 +100,17 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
 
-        return MapToVaultInfo(vault.Value.Data, resourceGroup);
+        var mua = (expand & VaultExpand.Mua) != 0
+            ? await GetMuaProxyAsync(vaultResource, cancellationToken)
+            : default;
+
+        return MapToVaultInfo(vault.Value.Data, resourceGroup, expand, mua.state, mua.resourceGuardId);
     }
 
     public async Task<List<BackupVaultInfo>> ListVaultsAsync(
         string subscription, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
@@ -116,10 +122,28 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         await foreach (var vault in subResource.GetDataProtectionBackupVaultsAsync(cancellationToken))
         {
             var rg = vault.Id?.ResourceGroupName;
-            vaults.Add(MapToVaultInfo(vault.Data, rg));
+            var mua = (expand & VaultExpand.Mua) != 0
+                ? await GetMuaProxyAsync(vault, cancellationToken)
+                : default;
+            vaults.Add(MapToVaultInfo(vault.Data, rg, expand, mua.state, mua.resourceGuardId));
         }
 
         return vaults;
+    }
+
+    private static async Task<(string? state, string? resourceGuardId)> GetMuaProxyAsync(
+        DataProtectionBackupVaultResource vaultResource, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var proxyResponse = await vaultResource.GetResourceGuardProxyBaseResourceAsync("DppResourceGuardProxy", cancellationToken);
+            var proxyId = proxyResponse.Value.Data.Properties?.ResourceGuardResourceId;
+            return ("Enabled", proxyId);
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            return ("Disabled", null);
+        }
     }
 
     public async Task<ProtectResult> ProtectItemAsync(
@@ -1052,10 +1076,31 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
 
     private static BackupVaultInfo MapToVaultInfo(DataProtectionBackupVaultData data, string? resourceGroup)
+        => MapToVaultInfo(data, resourceGroup, VaultExpand.None, muaState: null, muaResourceGuardId: null);
+
+    private static BackupVaultInfo MapToVaultInfo(
+        DataProtectionBackupVaultData data,
+        string? resourceGroup,
+        VaultExpand expand,
+        string? muaState,
+        string? muaResourceGuardId)
     {
-        var securitySettings = data.Properties?.SecuritySettings;
+        var properties = data.Properties;
+        var securitySettings = properties?.SecuritySettings;
         var softDeleteSettings = securitySettings?.SoftDeleteSettings;
         var identityType = data.Identity?.ManagedServiceIdentityType.ToString();
+
+        string? crossRegionRestoreState = null;
+        string? encryptionState = null;
+        string? encryptionKeyUri = null;
+
+        if ((expand & VaultExpand.Security) != 0)
+        {
+            crossRegionRestoreState = properties?.FeatureSettings?.CrossRegionRestoreState?.ToString();
+            var encryption = securitySettings?.EncryptionSettings;
+            encryptionState = encryption?.State?.ToString();
+            encryptionKeyUri = encryption?.KeyUri?.ToString();
+        }
 
         return new BackupVaultInfo(
             data.Id?.ToString(),
@@ -1063,15 +1108,20 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             VaultType,
             data.Location.Name,
             resourceGroup,
-            data.Properties?.ProvisioningState?.ToString(),
+            properties?.ProvisioningState?.ToString(),
             null,
-            data.Properties?.StorageSettings?.FirstOrDefault()?.StorageSettingType?.ToString(),
-            data.Properties?.StorageSettings?.FirstOrDefault()?.StorageSettingType?.ToString(),
+            properties?.StorageSettings?.FirstOrDefault()?.StorageSettingType?.ToString(),
+            properties?.StorageSettings?.FirstOrDefault()?.StorageSettingType?.ToString(),
             softDeleteSettings?.State?.ToString(),
             softDeleteSettings?.RetentionDurationInDays.HasValue == true ? (int)softDeleteSettings.RetentionDurationInDays.Value : null,
             securitySettings?.ImmutabilityState?.ToString(),
             identityType,
-            data.Tags?.ToDictionary(t => t.Key, t => t.Value));
+            data.Tags?.ToDictionary(t => t.Key, t => t.Value),
+            MuaState: muaState,
+            MuaResourceGuardId: muaResourceGuardId,
+            CrossRegionRestoreState: crossRegionRestoreState,
+            EncryptionState: encryptionState,
+            EncryptionKeyUri: encryptionKeyUri);
     }
 
     private static ProtectedItemInfo MapToProtectedItemInfo(DataProtectionBackupInstanceData data)

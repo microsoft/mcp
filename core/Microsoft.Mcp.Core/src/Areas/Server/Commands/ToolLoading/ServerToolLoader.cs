@@ -116,7 +116,8 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         }
 
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
-            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request));
+            // At this point the tool parameters is the server tool schema
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params.Arguments?.Keys));
 
         string tool = request.Params.Name;
         var args = request.Params.Arguments;
@@ -260,6 +261,9 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                 command = samplingResult.commandName;
                 parameters = samplingResult.parameters;
             }
+
+            // Here the parameters are now those for the tool call, instead of being the server parameters.
+            Activity.Current?.SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(parameters.Keys));
 
             // Verify the resolved command (which may have been updated by sampling)
             // exists and is permitted under current mode restrictions.

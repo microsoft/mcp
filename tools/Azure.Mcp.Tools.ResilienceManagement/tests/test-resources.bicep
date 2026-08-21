@@ -6,6 +6,8 @@ var uniqueSuffix = uniqueString(resourceGroup().id)
 var usagePlanName = take('up${uniqueSuffix}', 24)
 var enrollmentName = take('en${uniqueSuffix}', 24)
 var serviceGroupName = 'sgr${uniqueSuffix}'
+var lifecycleEnrollmentName = take('el${uniqueSuffix}', 24)
+var lifecycleServiceGroupName = take('sgl${uniqueSuffix}', 24)
 var goalTemplateName = take('gt${uniqueSuffix}', 24)
 var goalAssignmentName = take('ga${uniqueSuffix}', 24)
 var recoveryPlanName = take('rp${uniqueSuffix}', 24)
@@ -53,6 +55,8 @@ resource usagePlan 'Microsoft.AzureResilienceManagement/usagePlans@2026-04-01-pr
 output usagePlanName string = usagePlanName
 output enrollmentName string = enrollmentName
 output serviceGroupName string = serviceGroupName
+output lifecycleEnrollmentName string = lifecycleEnrollmentName
+output lifecycleServiceGroupName string = lifecycleServiceGroupName
 output goalTemplateName string = goalTemplateName
 output goalAssignmentName string = goalAssignmentName
 output recoveryPlanName string = recoveryPlanName

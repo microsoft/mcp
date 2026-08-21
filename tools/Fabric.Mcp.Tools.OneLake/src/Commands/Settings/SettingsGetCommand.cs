@@ -12,7 +12,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Settings;
 
 [CommandMetadata(
     Id = "a1b2c3d4-3001-4000-8000-000000000001",
-    Name = "get_settings",
+    Name = "get-settings",
     Title = "Get OneLake Settings",
     Description = """
         Get the OneLake settings for a workspace — diagnostics configuration and

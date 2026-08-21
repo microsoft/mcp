@@ -113,25 +113,27 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     public async Task<BackupVaultInfo> GetVaultAsync(
         string vaultName, string resourceGroup, string subscription,
         string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
         if (VaultTypeResolver.IsVaultTypeSpecified(vaultType))
         {
             return VaultTypeResolver.IsRsv(vaultType)
-                ? await rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken)
-                : await dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+                ? await rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken, expand)
+                : await dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken, expand);
         }
 
         return await AutoDetectAndExecuteAsync(
-            () => rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken),
-            () => dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken),
+            () => rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken, expand),
+            () => dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken, expand),
             vaultName);
     }
 
     public async Task<List<BackupVaultInfo>> ListVaultsAsync(
         string subscription, string? resourceGroup, string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
         List<BackupVaultInfo> FilterByResourceGroup(List<BackupVaultInfo> vaults) =>
@@ -141,16 +143,16 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
         if (VaultTypeResolver.IsRsv(vaultType))
         {
-            return FilterByResourceGroup(await rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken));
+            return FilterByResourceGroup(await rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken, expand));
         }
 
         if (VaultTypeResolver.IsDpp(vaultType))
         {
-            return FilterByResourceGroup(await dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken));
+            return FilterByResourceGroup(await dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken, expand));
         }
 
-        var rsvTask = rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var dppTask = dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var rsvTask = rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken, expand);
+        var dppTask = dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken, expand);
 
         try
         {
