@@ -332,6 +332,9 @@ function Get-PathsToTest {
         $hasRecordedTests = $hasLiveTests -and (Get-ChildItem $rootedTestResourcesPath -Filter 'assets.json' -Recurse).Count -gt 0
         $hasUnitTests = $hasTestsProject -and $testProjectDetails.HasUnitTests
 
+
+        $hasTestsProject -and [bool]::TryParse($testProjectDetails.SelfContainedLiveTests, [ref]$result) -and $result
+
         $sourcePath = Join-Path $using:RepoRoot $path "src"
 
         $sourceProject = Get-ChildItem $sourcePath -Filter '*.csproj' | Select-Object -First 1
@@ -352,14 +355,15 @@ function Get-PathsToTest {
         }
 
         return @{
-            _error               = $false
-            path                 = $path
-            hasTestResources     = $hasTestResources
-            testResourcesPath    = $hasTestResources ? $testResourcesPath : $null
-            hasLiveTests         = $hasLiveTests
-            hasUnitTests         = $hasUnitTests
-            hasRecordedTests     = $hasRecordedTests
-            azureSupportedClouds = $resolvedClouds
+            _error                      = $false
+            path                        = $path
+            hasTestResources            = $hasTestResources
+            testResourcesPath           = $hasTestResources ? $testResourcesPath : $null
+            hasLiveTests                = $hasLiveTests
+            hasUnitTests                = $hasUnitTests
+            hasSelfContainedLiveTests   = $hasSelfContainedLiveTests
+            hasRecordedTests            = $hasRecordedTests
+            azureSupportedClouds        = $resolvedClouds
         }
     }
 
@@ -394,6 +398,7 @@ function Get-TestMatrix {
 
             $entry.testResourcesPath = $path.TestResourcesPath
             $entry.hasTestResources = $path.HasTestResources
+            $entry.hasSelfContainedLiveTests = $path.SelfContainedLiveTests
 
             if ($ServerName) {
                 $entry.serverName = $ServerName

@@ -67,7 +67,8 @@ $propertyList = @(
     'AzureSupportedClouds',
 
     'HasLiveTests',
-    'HasUnitTests'
+    'HasUnitTests',
+    'SelfContainedLiveTests'
 )
 
 $projectFile = $projectFiles | Select-Object -First 1
