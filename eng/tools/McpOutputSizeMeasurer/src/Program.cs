@@ -12,7 +12,7 @@ namespace McpOutputSizeMeasurer;
 /// the server's exposed tool surfaces. Starts the azmcp executable over stdio in both
 /// consolidated and namespace modes and measures the initialize greeting, tools/list
 /// discovery, and learn-mode responses (including inner commands) for every tool, writing a
-/// JSON report that Summarize-McpOutputSizes.ps1 can consume.
+/// JSON report that Measure-McpOutputSizes.ps1 summarizes.
 /// </summary>
 internal static class Program
 {

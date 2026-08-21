@@ -13,9 +13,9 @@
        consolidated and namespace modes and measures the initialize greeting,
        tools/list discovery, and learn-mode responses (including inner commands) for
        every tool.
-    3. Runs Summarize-McpOutputSizes.ps1 to produce console, JSON, and Markdown
-       summaries, extract readable description text, and split each top tool's inner
-       commands into individual files.
+    3. Summarizes the report to produce console, JSON, and Markdown summaries,
+       extract readable description text, and split each top tool's inner commands
+       into individual files.
 
 .PARAMETER OutputDirectory
     Directory for the measurement report and its artifacts.
