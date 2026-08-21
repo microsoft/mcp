@@ -338,9 +338,7 @@ function Get-PathsToTest {
         $hasUnitTests = $hasTestsProject -and [bool]::TryParse($testProjectDetails.HasUnitTests, [ref]$result) -and $result
         $hasLiveTests = $hasTestsProject -and [bool]::TryParse($testProjectDetails.HasLiveTests, [ref]$result) -and $result
         $hasRecordedTests = $hasLiveTests -and (Get-ChildItem $rootedTestResourcesPath -Filter 'assets.json' -Recurse).Count -gt 0
-
-
-        $hasTestsProject -and [bool]::TryParse($testProjectDetails.SelfContainedLiveTests, [ref]$result) -and $result
+        $hasSelfContainedLiveTests = $hasTestsProject -and [bool]::TryParse($testProjectDetails.SelfContainedLiveTests, [ref]$result) -and $result
 
         $sourcePath = Join-Path $using:RepoRoot $path "src"
 
