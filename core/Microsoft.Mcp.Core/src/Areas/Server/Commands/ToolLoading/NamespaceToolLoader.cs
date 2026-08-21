@@ -4,6 +4,7 @@
 using System.CommandLine;
 using System.Diagnostics;
 using System.Net;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
@@ -234,7 +235,7 @@ public sealed class NamespaceToolLoader(
 
             if (learn)
             {
-                if (_options.Value.ThreeStepToolDiscovery && !string.IsNullOrWhiteSpace(command))
+                if (!string.IsNullOrWhiteSpace(command) && IsThreeStepDiscoveryEnabled(request, tool, out _, out _))
                 {
                     return await InvokeCommandLearn(request, tool, command, cancellationToken);
                 }
@@ -555,14 +556,56 @@ public sealed class NamespaceToolLoader(
         }
     }
 
+    /// <summary>
+    /// Determines whether three-step (metadata-only) learn behavior should be used for the given namespace,
+    /// either because <see cref="ServerStartOptions.ThreeStepToolDiscovery"/> is explicitly enabled, or because
+    /// automatic fallback is enabled and the namespace's full-schema (two-step) learn response would exceed
+    /// <see cref="ServerStartOptions.ThreeStepToolDiscoveryThresholdBytes"/>.
+    /// </summary>
+    /// <param name="availableToolsForSizeCheck">
+    /// Set to the namespace's tool list when it was computed as part of the size check, so callers can reuse it
+    /// instead of recomputing. Left <see langword="null"/> when the explicit switch already made the size check unnecessary.
+    /// </param>
+    /// <param name="defaultLearnToolsJson">
+    /// Set to the serialized full-schema learn response computed as part of the size check, so callers can reuse
+    /// it instead of re-serializing. Left <see langword="null"/> when the explicit switch already made the size check unnecessary.
+    /// </param>
+    private bool IsThreeStepDiscoveryEnabled(RequestContext<CallToolRequestParams> request, string namespaceName, out List<Tool>? availableToolsForSizeCheck, out string? defaultLearnToolsJson)
+    {
+        availableToolsForSizeCheck = null;
+        defaultLearnToolsJson = null;
+
+        if (_options.Value.ThreeStepToolDiscovery)
+        {
+            return true;
+        }
+
+        if (_options.Value.DisableAutomaticThreeStepToolDiscovery)
+        {
+            return false;
+        }
+
+        // The explicit switch is off, but a namespace's full-schema learn response can still be
+        // large enough to overwhelm smaller-context models. Compute the would-be two-step response
+        // size and automatically fall back to three-step (metadata-only) behavior when it exceeds
+        // the configured threshold. This only changes behavior when the switch is off.
+        availableToolsForSizeCheck = GetChildToolList(request, namespaceName);
+        var defaultLearnTools = availableToolsForSizeCheck.Select(t => new ToolCommandInfo(t));
+        defaultLearnToolsJson = JsonSerializer.Serialize(defaultLearnTools, ServerJsonContext.Default.IEnumerableToolCommandInfo);
+
+        return Encoding.UTF8.GetByteCount(defaultLearnToolsJson) > _options.Value.ThreeStepToolDiscoveryThresholdBytes;
+    }
+
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string namespaceName, CancellationToken cancellationToken)
     {
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
             .SetTag(TagName.IsLearn, true);
 
-        if (_options.Value.ThreeStepToolDiscovery)
+        var useThreeStepDiscovery = IsThreeStepDiscoveryEnabled(request, namespaceName, out var availableToolsForSizeCheck, out var defaultLearnToolsJson);
+
+        if (useThreeStepDiscovery)
         {
-            var availableTools = GetChildToolList(request, namespaceName);
+            var availableTools = availableToolsForSizeCheck ?? GetChildToolList(request, namespaceName);
             var learnTools = availableTools.Select(t => new ToolCommandInfo(t, includeSchema: false));
             var learnToolsJson = JsonSerializer.Serialize(learnTools, ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
@@ -597,8 +640,8 @@ public sealed class NamespaceToolLoader(
             return learnResponse;
         }
 
-        var defaultLearnTools = GetChildToolList(request, namespaceName).Select(t => new ToolCommandInfo(t));
-        var defaultLearnToolsJson = JsonSerializer.Serialize(defaultLearnTools, ServerJsonContext.Default.IEnumerableToolCommandInfo);
+        var defaultLearnTools = (availableToolsForSizeCheck ?? GetChildToolList(request, namespaceName)).Select(t => new ToolCommandInfo(t));
+        defaultLearnToolsJson ??= JsonSerializer.Serialize(defaultLearnTools, ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
         var defaultLearnResponse = new CallToolResult
         {
@@ -620,7 +663,7 @@ public sealed class NamespaceToolLoader(
         var response = defaultLearnResponse;
         if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
         {
-            var availableTools = GetChildToolList(request, namespaceName);
+            var availableTools = availableToolsForSizeCheck ?? GetChildToolList(request, namespaceName);
             (string? commandName, IDictionary<string, JsonElement> parameters) = await GetCommandAndParametersFromIntentAsync(request, intent, namespaceName, availableTools, cancellationToken);
             if (commandName != null)
             {

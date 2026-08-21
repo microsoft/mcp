@@ -8,6 +8,8 @@ param(
     [switch] $NoSelfContained,
     [switch] $NoUsePaths,
     [switch] $AllPlatforms,
+    [ValidateSet('x64', 'arm64')]
+    [string[]] $Architectures,
     [switch] $VerifyNpx,
     [switch] $ReleaseBuild,
     [switch] $IncludeNative
@@ -31,7 +33,7 @@ Remove-Item -Path $packageOutputPath -Recurse -Force -ErrorAction SilentlyContin
     -IncludeNative:$IncludeNative
 
 $oses = $AllPlatforms ? @('linux', 'windows', 'macos') : $null
-$architectures = $AllPlatforms ? @('x64', 'arm64') : $null
+$architectures = $AllPlatforms ? @('x64', 'arm64') : $Architectures
 
 & "$RepoRoot/eng/scripts/Build-Code.ps1" `
     -ServerName $ServerName `

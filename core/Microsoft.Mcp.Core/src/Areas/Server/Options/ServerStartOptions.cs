@@ -48,6 +48,21 @@ public sealed class ServerStartOptions
     public bool ThreeStepToolDiscovery { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets the UTF-8 byte size threshold above which a top-level learn response automatically
+    /// falls back to three-step (metadata-only) discovery, even when <see cref="ThreeStepToolDiscovery"/> is false.
+    /// This does not change behavior when <see cref="ThreeStepToolDiscovery"/> is already true.
+    /// </summary>
+    [Option(Description = "The UTF-8 byte size threshold for a top-level learn response above which the server automatically falls back to three-step (metadata-only) discovery, even when --three-step-tool-discovery is not set. Has no effect when --three-step-tool-discovery is already enabled.", DefaultValue = 45000)]
+    public int ThreeStepToolDiscoveryThresholdBytes { get; set; } = 45000;
+
+    /// <summary>
+    /// Gets or sets whether automatic size-based fallback to three-step discovery is disabled.
+    /// The explicit <see cref="ThreeStepToolDiscovery"/> option still takes precedence.
+    /// </summary>
+    [Option(Description = "Disable automatic fallback to three-step tool discovery when a top-level learn response exceeds the configured byte threshold. The explicit --three-step-tool-discovery option still enables three-step discovery.", DefaultValue = false)]
+    public bool DisableAutomaticThreeStepToolDiscovery { get; set; } = false;
+
+    /// <summary>
     /// Gets or sets whether the server should operate in read-only mode.
     /// When true, only tools marked as read-only will be available.
     /// </summary>
