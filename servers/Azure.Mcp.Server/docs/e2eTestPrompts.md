@@ -76,6 +76,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | search_index_query | Search for instances of \<search_term> in the index \<index-name> in Cognitive Search service \<service-name> | none |
 | search_index_query | Search the index \<index-name> in Cognitive Search service \<service-name> for \<search_term> using the simple query syntax | none |
 | search_index_query | Run a semantic query for \<search_term> against the index \<index-name> in Cognitive Search service \<service-name> | none |
+| search_index_query | Run a semantic query for \<search_term> against index \<index-name> in Cognitive Search service \<service-name> using semantic configuration \<semantic-configuration> | none |
 | search_service_list | List all Cognitive Search services in my subscription | none |
 | search_service_list | Show me the Cognitive Search services in my subscription | none |
 | search_service_list | Show me my Cognitive Search services | none |
