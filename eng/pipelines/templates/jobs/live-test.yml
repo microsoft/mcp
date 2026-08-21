@@ -29,20 +29,6 @@ jobs:
 
   - template: /eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml
 
-  - pwsh: |
-      $serverName = $env:SERVERNAME
-
-      if ([string]::IsNullOrWhiteSpace($serverName)) {
-        ./eng/scripts/Build-Local.ps1 -VerifyNpx
-      }
-      else {
-        ./eng/scripts/Build-Local.ps1 -ServerName $serverName -VerifyNpx
-      }
-
-      exit $LastExitCode
-    displayName: "Build local package"
-    workingDirectory: $(Build.SourcesDirectory)
-
   - pwsh: >
       ./eng/scripts/Test-Code.ps1
       -TestType 'Live'
@@ -83,7 +69,7 @@ jobs:
 
   # Only perform a second deployment of test resources if the live tests are not self-contained.
   # Self-contained live tests do not require a fresh set of test resources to be deployed.
-  - ${{ if ne(variables['hasSelfContainedLiveTests'], 'true') }}:
+  - ${{ if ne(variables['HasSelfContainedLiveTests'], 'true') }}:
     - template: /eng/common/TestResources/remove-test-resources.yml
       parameters:
         ServiceConnection: azure-sdk-tests-public
