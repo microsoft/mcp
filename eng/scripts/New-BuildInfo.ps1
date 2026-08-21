@@ -338,6 +338,7 @@ function Get-PathsToTest {
         $hasUnitTests = $hasTestsProject -and [bool]::TryParse($testProjectDetails.HasUnitTests, [ref]$result) -and $result
         $hasLiveTests = $hasTestsProject -and [bool]::TryParse($testProjectDetails.HasLiveTests, [ref]$result) -and $result
         $hasRecordedTests = $hasLiveTests -and (Get-ChildItem $rootedTestResourcesPath -Filter 'assets.json' -Recurse).Count -gt 0
+        $hasSelfContainedLiveTests = $hasTestsProject -and [bool]::TryParse($testProjectDetails.SelfContainedLiveTests, [ref]$result) -and $result
 
         $sourcePath = Join-Path $using:RepoRoot $path "src"
 
@@ -359,14 +360,15 @@ function Get-PathsToTest {
         }
 
         return @{
-            _error               = $false
-            path                 = $path
-            hasTestResources     = $hasTestResources
-            testResourcesPath    = $hasTestResources ? $testResourcesPath : $null
-            hasLiveTests         = $hasLiveTests
-            hasUnitTests         = $hasUnitTests
-            hasRecordedTests     = $hasRecordedTests
-            azureSupportedClouds = $resolvedClouds
+            _error                      = $false
+            path                        = $path
+            hasTestResources            = $hasTestResources
+            testResourcesPath           = $hasTestResources ? $testResourcesPath : $null
+            hasLiveTests                = $hasLiveTests
+            hasUnitTests                = $hasUnitTests
+            hasSelfContainedLiveTests   = $hasSelfContainedLiveTests
+            hasRecordedTests            = $hasRecordedTests
+            azureSupportedClouds        = $resolvedClouds
         }
     }
 
@@ -401,6 +403,7 @@ function Get-TestMatrix {
 
             $entry.testResourcesPath = $path.TestResourcesPath
             $entry.hasTestResources = $path.HasTestResources
+            $entry.hasSelfContainedLiveTests = $path.hasSelfContainedLiveTests
 
             if ($ServerName) {
                 $entry.serverName = $ServerName

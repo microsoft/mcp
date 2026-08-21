@@ -4,6 +4,7 @@
     <IsTestProject>true</IsTestProject>
     <HasLiveTests>true</HasLiveTests>
     <HasUnitTests>true</HasUnitTests>
+    <SelfContainedLiveTests>true</SelfContainedLiveTests>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NSubstitute" />
