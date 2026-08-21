@@ -37,9 +37,6 @@ internal sealed class RecommendationData
     /// <summary> Recommendation properties returned by Advisor. </summary>
     public RecommendationProperties? Properties { get; set; }
 
-    /// <summary> Hardware details for the assessed resource. </summary>
-    public JsonElement? HardwareDetails { get; set; }
-
     /// <summary>
     /// Deserializes a Resource Graph recommendation row.
     /// </summary>

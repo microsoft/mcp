@@ -52,10 +52,6 @@ public class AdvisorServiceConversionTests
                 "subscriptionId": "abc",
                 "resourceGroup": "rg1",
                 "tenantId": "tenant1",
-                "hardwareDetails": {
-                    "resourceId": "/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1",
-                    "size": "Standard_D2s_v5"
-                },
                 "properties": {
                     "category": "Security",
                     "impact": "High",
@@ -187,10 +183,6 @@ public class AdvisorServiceConversionTests
         Assert.Equal("Test workload", result.Properties.ResourceWorkload.Value.GetProperty("name").GetString());
         Assert.Equal("Review", result.Properties.SourceSystem);
         Assert.Equal("Review the diagnostic settings", result.Properties.Notes);
-        Assert.Equal(
-            "/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1",
-            result.HardwareDetails!.Value.GetProperty("resourceId").GetString());
-        Assert.Equal("Standard_D2s_v5", result.HardwareDetails.Value.GetProperty("size").GetString());
 
         var serialized = JsonSerializer.Serialize(
             result,
@@ -198,7 +190,6 @@ public class AdvisorServiceConversionTests
         Assert.DoesNotContain("recommendationDismissReason", serialized);
         Assert.DoesNotContain("postponedUntilDateTime", serialized);
         Assert.DoesNotContain("suppressionId", serialized);
-        Assert.Contains("hardwareDetails", serialized);
     }
 
     [Fact]

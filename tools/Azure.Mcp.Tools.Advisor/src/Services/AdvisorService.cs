@@ -801,8 +801,7 @@ public class AdvisorService(IAzureService azureService)
                 Notes: advisorRecommendation.Properties?.Notes),
             Id: advisorRecommendation.ResourceId,
             Type: advisorRecommendation.ResourceType,
-            Name: advisorRecommendation.ResourceName,
-            HardwareDetails: advisorRecommendation.HardwareDetails);
+            Name: advisorRecommendation.ResourceName);
     }
 
     private static IReadOnlyDictionary<string, JsonElement>? AddMetadataSubCategory(
