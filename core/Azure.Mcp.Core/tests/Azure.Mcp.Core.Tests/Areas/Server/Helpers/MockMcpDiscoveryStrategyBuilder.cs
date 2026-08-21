@@ -47,7 +47,7 @@ public sealed class MockMcpDiscoveryStrategyBuilder
         {
             // If no client is provided, create a real loopback client that reports no tools.
             var defaultClient = LoopbackMcpClient.Create(request =>
-                request.Method == "tools/list"
+                request.Method == RequestMethods.ToolsList
                     ? new JsonRpcResponse { Result = new JsonObject { ["tools"] = new JsonArray() } }
                     : null);
             mockProvider.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(defaultClient));

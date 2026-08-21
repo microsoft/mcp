@@ -1,5 +1,3 @@
-#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
-#pragma warning disable MCP9005 // Deprecated Sampling/Logging APIs - backward compat during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -7,7 +5,6 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Tests.Areas.Server.Helpers;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
@@ -15,7 +12,8 @@ using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Tests.Helpers;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -28,52 +26,31 @@ public class ServerToolLoaderTests
 {
     private static (ServerToolLoader toolLoader, IMcpDiscoveryStrategy mockDiscoveryStrategy) CreateToolLoader(ToolLoaderOptions? options = null)
     {
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var mockDiscoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
-        var logger = loggerFactory.CreateLogger<ServerToolLoader>();
+        var logger = Substitute.For<ILogger<ServerToolLoader>>();
         var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ToolLoaderOptions());
 
         var toolLoader = new ServerToolLoader(mockDiscoveryStrategy, toolLoaderOptions, logger);
         return (toolLoader, mockDiscoveryStrategy);
     }
 
-    private static RequestContext<ListToolsRequestParams> CreateRequest()
-    {
-        var mockServer = Substitute.For<McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsList }, new ListToolsRequestParams());
-    }
-
-    private static RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName, IDictionary<string, JsonElement>? arguments = null)
-    {
-        var mockServer = Substitute.For<McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
-        {
-            Name = toolName,
-            Arguments = arguments ?? new Dictionary<string, JsonElement>()
-        });
-    }
-
     [Fact]
     public async Task CallToolHandler_WithoutListToolsFirst_ShouldSucceed()
     {
         // Arrange - use real RegistryDiscoveryStrategy since ServerToolLoader depends on it
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
         var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
-        var discoveryLogger = loggerFactory.CreateLogger<RegistryDiscoveryStrategy>();
+        var discoveryLogger = Substitute.For<ILogger<RegistryDiscoveryStrategy>>();
         var discoveryStrategy = RegistryDiscoveryStrategyHelper.CreateStrategy(serviceStartOptions.Value, discoveryLogger);
-        var logger = loggerFactory.CreateLogger<ServerToolLoader>();
+        var logger = Substitute.For<ILogger<ServerToolLoader>>();
 
         var toolLoader = new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger);
-        var request = CreateCallToolRequest("documentation",
-            new Dictionary<string, JsonElement>
-            {
-                { "intent", JsonDocument.Parse("\"search for information about implementing MCP servers\"").RootElement },
-                { "command", JsonDocument.Parse("\"microsoft_docs_search\"").RootElement },
-                { "parameters", JsonDocument.Parse("""{"question": "how to implement mcp server in azure"}""").RootElement }
-            });
+        var request = McpTestUtilities.CreateToolCallRequest("documentation", new Dictionary<string, object?>
+        {
+            { "intent", "search for information about implementing MCP servers" },
+            { "command", "microsoft_docs_search" },
+            { "parameters", new Dictionary<string, string>() { { "question", "how to implement mcp server in azure" } } }
+        });
 
         // Act - Call CallToolHandler WITHOUT calling ListToolsHandler first
         // This should work without requiring ListToolsHandler to be called first
@@ -90,10 +67,10 @@ public class ServerToolLoaderTests
     {
         // Arrange
         var (toolLoader, mockDiscoveryStrategy) = CreateToolLoader();
-        var request = CreateRequest();
+        var request = McpTestUtilities.CreateToolListRequest();
 
         mockDiscoveryStrategy.DiscoverServersAsync(TestContext.Current.CancellationToken)
-            .Returns(Task.FromResult(Enumerable.Empty<IMcpServerProvider>()));
+            .Returns([]);
 
         // Act
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -108,16 +85,14 @@ public class ServerToolLoaderTests
     public async Task ListToolsHandler_WithRealRegistryDiscovery_ReturnsExpectedStructure()
     {
         // Arrange - use real RegistryDiscoveryStrategy
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
         var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
-        var discoveryLogger = loggerFactory.CreateLogger<RegistryDiscoveryStrategy>();
+        var discoveryLogger = Substitute.For<ILogger<RegistryDiscoveryStrategy>>();
         var discoveryStrategy = RegistryDiscoveryStrategyHelper.CreateStrategy(serviceStartOptions.Value, discoveryLogger);
-        var logger = loggerFactory.CreateLogger<ServerToolLoader>();
+        var logger = Substitute.For<ILogger<ServerToolLoader>>();
 
         var toolLoader = new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger);
-        var request = CreateRequest();
+        var request = McpTestUtilities.CreateToolListRequest();
 
         // Act
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -160,12 +135,11 @@ public class ServerToolLoaderTests
 
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         discoveryStrategy.DiscoverServersAsync(TestContext.Current.CancellationToken)
-            .Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>([providerA, providerB]));
+            .Returns([providerA, providerB]);
 
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<ServerToolLoader>();
+        var logger = Substitute.For<ILogger<ServerToolLoader>>();
         var toolLoader = new ServerToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
-        var request = CreateRequest();
+        var request = McpTestUtilities.CreateToolListRequest();
 
         // Act
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -191,16 +165,14 @@ public class ServerToolLoaderTests
         discoveryStrategy.GetOrCreateClientAsync("documentation", Arg.Any<McpClientOptions>(), TestContext.Current.CancellationToken)
             .Returns((McpClient)null!);
 
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<ServerToolLoader>();
+        var logger = Substitute.For<ILogger<ServerToolLoader>>();
         var toolLoader = new ServerToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
 
-        var request = CreateCallToolRequest("documentation",
-            new Dictionary<string, JsonElement>
+        var request = McpTestUtilities.CreateToolCallRequest("documentation", new Dictionary<string, object?>
             {
-                { "intent", JsonDocument.Parse("\"search docs\"").RootElement },
-                { "command", JsonDocument.Parse("\"microsoft_docs_search\"").RootElement },
-                { "parameters", JsonDocument.Parse("""{"question": "how to deploy azure mcp server"}""").RootElement }
+                { "intent", "search docs" },
+                { "command", "microsoft_docs_search" },
+                { "parameters", new Dictionary<string, string>() { { "question", "how to deploy azure mcp server" } } }
             });
 
         // Act
@@ -249,7 +221,7 @@ public class ServerToolLoaderTests
         var logger = Substitute.For<ILogger<ServerToolLoader>>();
 
         var toolLoader = new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger);
-        var request = CreateCallToolRequest("storage");
+        var request = McpTestUtilities.CreateToolCallRequest("storage");
 
         // Act
         var tools = await toolLoader.GetChildToolListAsync(request, "storage", TestContext.Current.CancellationToken);
@@ -292,7 +264,7 @@ public class ServerToolLoaderTests
         var logger = Substitute.For<ILogger<ServerToolLoader>>();
 
         var toolLoader = new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger);
-        var request = CreateCallToolRequest("storage");
+        var request = McpTestUtilities.CreateToolCallRequest("storage");
 
         // Act
         var tools = await toolLoader.GetChildToolListAsync(request, "storage", TestContext.Current.CancellationToken);
@@ -315,20 +287,19 @@ public class ServerToolLoaderTests
             .AddServer(serverName, serverName, $"{serverName} description", clientBuilder)
             .Build();
 
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<ServerToolLoader>();
+        var logger = Substitute.For<ILogger<ServerToolLoader>>();
         var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(options);
 
         return (new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger), discoveryStrategy);
     }
 
     private static RequestContext<CallToolRequestParams> CreateCallToolRequestWithCommand(
-        string serverName, string command, Dictionary<string, JsonElement>? extraParams = null)
+        string serverName, string command, Dictionary<string, object>? extraParams = null)
     {
-        var arguments = new Dictionary<string, JsonElement>
+        var arguments = new Dictionary<string, object?>
         {
-            { "intent", JsonDocument.Parse($"\"Execute {command}\"").RootElement },
-            { "command", JsonDocument.Parse($"\"{command}\"").RootElement },
+            { "intent", $"Execute {command}" },
+            { "command", command },
         };
 
         if (extraParams != null)
@@ -339,12 +310,7 @@ public class ServerToolLoaderTests
             }
         }
 
-        var mockServer = Substitute.For<McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
-        {
-            Name = serverName,
-            Arguments = arguments
-        });
+        return McpTestUtilities.CreateToolCallRequest(serverName, arguments);
     }
 
     [Fact]
@@ -661,14 +627,14 @@ public class ServerToolLoaderTests
 
         // Assert - Should allow execution when read-only mode is not enabled
         Assert.NotNull(result);
-
-        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolParameters);
-        Assert.NotNull(toolParameters);
-        var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
-        Assert.NotNull(parametersList);
-        Assert.Equal(2, parametersList.Count);
-        Assert.Contains("intent", parametersList);
-        Assert.Contains("command", parametersList);
+        activity.AssertTagEquals(TagName.ToolParameters, toolParameters =>
+        {
+            var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
+            Assert.NotNull(parametersList);
+            Assert.Equal(2, parametersList.Count);
+            Assert.Contains("intent", parametersList);
+            Assert.Contains("command", parametersList);
+        });
     }
 
     [Fact]
@@ -704,7 +670,7 @@ public class ServerToolLoaderTests
         Assert.NotNull(textContent);
         Assert.Equal("Created account", textContent.Text);
 
-        TestTelemetryHelpers.AssertTagDoesNotExist(activity, TagName.ToolParameters);
+        activity.AssertTagDoesNotExist(TagName.ToolParameters);
     }
 
     [Fact]
@@ -730,7 +696,7 @@ public class ServerToolLoaderTests
 
         var request = CreateCallToolRequestWithCommand("storage", "account_create", new()
         {
-            { "parameters", JsonDocument.Parse("""{"subscription": "test-sub"}""").RootElement }
+            { "parameters", new Dictionary<string, string>() { { "subscription", "test-sub" } } }
         });
 
         // Act
@@ -738,13 +704,13 @@ public class ServerToolLoaderTests
 
         // Assert - Should allow execution when read-only mode is not enabled
         Assert.NotNull(result);
-
-        var toolParameters = TestTelemetryHelpers.GetAndAssertTagKeyValue(activity, TagName.ToolParameters);
-        Assert.NotNull(toolParameters);
-        var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
-        Assert.NotNull(parametersList);
-        Assert.Single(parametersList);
-        Assert.Contains("subscription", parametersList);
+        activity.AssertTagEquals(TagName.ToolParameters, toolParameters =>
+        {
+            var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
+            Assert.NotNull(parametersList);
+            Assert.Single(parametersList);
+            Assert.Contains("subscription", parametersList);
+        });
     }
 
     #endregion
