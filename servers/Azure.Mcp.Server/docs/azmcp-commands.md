@@ -3750,8 +3750,8 @@ azmcp resilience recoveryplan create --service-group <service-group> \
 # 4. timeoutInMinutes: a positive whole number defining how long the action may run.
 # 5. actionResourceId: required only for CustomRunbook; use the full Microsoft.Automation/automationAccounts/runbooks resource ID.
 # 6. parameters: optional for CustomRunbook; use a JSON object whose values are strings.
-# ManualAction example: [{"type":"ManualAction","name":"Confirm dependencies","description":"Verify dependencies are ready","timeoutInMinutes":30}]
-# CustomRunbook example: [{"type":"CustomRunbook","name":"Start dependencies","description":"Start application dependencies","timeoutInMinutes":30,"actionResourceId":"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Automation/automationAccounts/{account}/runbooks/{runbook}","parameters":{"environment":"production"}}]
+# ManualAction example: [{"type":"ManualAction","name":"Confirm-dependencies","description":"Verify dependencies are ready","timeoutInMinutes":30}]
+# CustomRunbook example: [{"type":"CustomRunbook","name":"Start-dependencies","description":"Start application dependencies","timeoutInMinutes":30,"actionResourceId":"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Automation/automationAccounts/{account}/runbooks/{runbook}","parameters":{"environment":"production"}}]
 # Omit an action option or property to preserve existing actions. Specify [] to clear that action list.
 
 # Delete a resilience recovery plan. Returns deleted=false when the plan does not exist.

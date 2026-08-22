@@ -116,6 +116,21 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public void CreateReadinessError_UsesEmptyRecommendationsWhenProviderOmitsThem()
+    {
+        JobErrorInfo error = ModelReaderWriter.Read<JobErrorInfo>(BinaryData.FromObjectAsJson(new
+        {
+            errorCode = "NotReady",
+            errorMessage = "Resource requires attention."
+        }))!;
+
+        RecoveryPlanReadinessError result = Assert.IsType<RecoveryPlanReadinessError>(
+            ResilienceManagementService.CreateReadinessError(error));
+
+        Assert.Empty(result.Recommendations);
+    }
+
+    [Fact]
     public async Task ExecuteWithTimeoutAsync_TimesOutOperation()
     {
         TimeoutException exception = await Assert.ThrowsAsync<TimeoutException>(() =>
