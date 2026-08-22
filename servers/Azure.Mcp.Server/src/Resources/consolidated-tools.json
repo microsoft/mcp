@@ -824,6 +824,39 @@
       ]
     },
     {
+      "name": "update_azure_advisor_recommendation_state",
+      "description": "Update the customer-provided status of one Azure Advisor recommendation in a subscription. Mark an Advisor recommendation as Completed. Dismiss it because the risk is acceptable by using RiskIsAcceptable, or select another explicit reason. Postpone it until a future date and time, or reactivate it by setting it to New. Requires subscription context from a subscription ID, subscription name, or configured default, plus the recommendation stable ID, also called recommendation ID. If a dismissal reason was not provided, ask the user to choose one rather than assuming Other. State changes are rejected for Security category, Undefined-state, and platform-resolved recommendations. Returns a concise shared recommendation object with the updated lifecycle and identifying details.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool modifies the customer-provided state of an existing Azure Advisor recommendation."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments sets the recommendation to the same requested state."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to Azure Advisor recommendations."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool updates recommendation state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "advisor_recommendation_update"
+      ]
+    },
+    {
       "name": "list_azure_advisor_recommendation_metadata",
       "description": "List the global Azure Advisor recommendation metadata catalog, also known as recommendation types, from Azure Resource Graph. Use it even when no recommendation instances exist: discover available types for greenfield environments, filter by supported resource type during brownfield onboarding, or find service-retirement metadata by Service Health tracking ID and retirement date. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting subcategory filters are rejected. Returns localized IDs, names, categories, subcategories, impact, priority, descriptions, benefits, actions, scope, source query, and service-retirement details. Supports language, resource type, impact, category, subcategory, tracking ID, and retirement date filters, ordered High, Medium, then Low impact.",
       "toolMetadata": {

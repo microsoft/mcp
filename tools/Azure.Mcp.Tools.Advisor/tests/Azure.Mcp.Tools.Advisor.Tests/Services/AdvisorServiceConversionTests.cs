@@ -118,4 +118,83 @@ public class AdvisorServiceConversionTests
 
         Assert.Equal("Medium", result.Impact);
     }
+
+    [Fact]
+    public void ConvertToAdvisorRecommendationModel_PopulatesConciseSharedResponseFields()
+    {
+        const string json = """
+            {
+                "id": "/subscriptions/abc/providers/Microsoft.Advisor/recommendations/rec4",
+                "type": "Microsoft.Advisor/recommendations",
+                "name": "rec4",
+                "properties": {
+                    "category": "HighAvailability",
+                    "impact": "High",
+                    "control": "ZoneResiliency",
+                    "impactedField": "Microsoft.Compute/virtualMachines",
+                    "impactedValue": "vm1",
+                    "recommendationStatus": "Dismissed",
+                    "recommendationDismissReason": "RiskIsAcceptable",
+                    "postponedUntilDateTime": "2027-01-02T03:04:05Z",
+                    "lastRefreshed": "2026-01-02T03:04:05Z",
+                    "lastUpdated": "2026-02-03T04:05:06Z",
+                    "createdTime": "2025-03-04T05:06:07Z",
+                    "recommendationTypeId": "type-1",
+                    "completionType": "ManuallyCompleted",
+                    "risk": "Service disruption",
+                    "description": "Use availability zones.",
+                    "label": "Improve resiliency",
+                    "learnMoreLink": "https://learn.microsoft.com/azure/reliability/",
+                    "potentialBenefits": "Higher availability",
+                    "sourceSystem": "Advisor",
+                    "suppressionId": "suppression-1",
+                    "shortDescription": {
+                        "problem": "The resource is not zone resilient.",
+                        "solution": "Deploy across zones."
+                    },
+                    "resourceMetadata": {
+                        "resourceId": "/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1"
+                    }
+                }
+            }
+            """;
+
+        using var doc = JsonDocument.Parse(json);
+        var result = AdvisorService.ConvertToAdvisorRecommendationModel(doc.RootElement);
+
+        Assert.Equal("rec4", result.RecommendationId);
+        Assert.Equal("Deploy across zones.", result.Solution);
+        Assert.Equal("ZoneResiliency", result.SubCategory);
+        Assert.Equal("vm1", result.ImpactedResource);
+        Assert.Equal("Dismissed", result.RecommendationStatus);
+        Assert.Equal("RiskIsAcceptable", result.RecommendationDismissReason);
+        Assert.Equal(DateTimeOffset.Parse("2027-01-02T03:04:05Z"), result.PostponedUntilDateTime);
+        Assert.Equal(DateTimeOffset.Parse("2026-02-03T04:05:06Z"), result.LastUpdated);
+        Assert.Equal("type-1", result.RecommendationTypeId);
+        Assert.Equal("ManuallyCompleted", result.CompletionType);
+    }
+
+    [Fact]
+    public void ConvertToAdvisorRecommendationModel_PreservesUnknownLifecycleValues()
+    {
+        const string json = """
+            {
+                "name": "rec5",
+                "properties": {
+                    "category": "Cost",
+                    "recommendationStatus": "InProgress",
+                    "recommendationDismissReason": "NotRelevant",
+                    "shortDescription": {
+                        "problem": "Right-size a resource."
+                    }
+                }
+            }
+            """;
+
+        using var doc = JsonDocument.Parse(json);
+        var result = AdvisorService.ConvertToAdvisorRecommendationModel(doc.RootElement);
+
+        Assert.Equal("InProgress", result.RecommendationStatus);
+        Assert.Equal("NotRelevant", result.RecommendationDismissReason);
+    }
 }

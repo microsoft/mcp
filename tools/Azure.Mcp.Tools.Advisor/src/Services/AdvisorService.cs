@@ -2,8 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Models;
+using Azure.Mcp.Tools.Advisor.Services.Models;
+using Azure.Mcp.Tools.Advisor.Validation;
+using Azure.ResourceManager;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
@@ -14,6 +20,8 @@ namespace Azure.Mcp.Tools.Advisor.Services;
 public class AdvisorService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IAdvisorService
 {
+    private const string RecommendationUpdateApiVersion = "2026-03-01-preview";
+    private const int MaximumRecommendationUpdateRetries = 3;
     private const string RetirementDateProperty =
         "properties.sourceProperties.serviceRetirement.retirementDate";
     private const string TrackingIdsProperty =
@@ -61,6 +69,93 @@ public class AdvisorService(IAzureService azureService)
             limit: top,
             tenant: tenant,
             cancellationToken: cancellationToken);
+    }
+
+    public async Task<Recommendation> UpdateRecommendationAsync(
+        string subscription,
+        string recommendationId,
+        RecommendationStatus recommendationStatus,
+        DateTimeOffset? postponedUntilDateTime = null,
+        RecommendationDismissReason? recommendationDismissReason = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(recommendationId), recommendationId));
+        RecommendationStateUpdateValidator.Validate(
+            recommendationStatus,
+            postponedUntilDateTime,
+            recommendationDismissReason);
+
+        var subscriptionResource = await AzureService.GetSubscription(
+            subscription,
+            tenant,
+            retryPolicy,
+            cancellationToken);
+        var subscriptionId = subscriptionResource.Id.SubscriptionId
+            ?? throw new InvalidOperationException("The resolved Azure subscription does not have a subscription ID.");
+        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint;
+        var accessToken = await GetArmAccessTokenAsync(tenant, cancellationToken);
+
+        var relativePath =
+            $"/subscriptions/{Uri.EscapeDataString(subscriptionId)}/providers/Microsoft.Advisor/recommendations/" +
+            $"{Uri.EscapeDataString(recommendationId.Trim())}?api-version={RecommendationUpdateApiVersion}";
+        var requestUri = new Uri(managementEndpoint, relativePath);
+        var properties = new RecommendationStatePatchProperties(
+            recommendationStatus,
+            recommendationStatus == RecommendationStatus.Postponed ? postponedUntilDateTime : null,
+            recommendationStatus == RecommendationStatus.Dismissed ? recommendationDismissReason : null);
+
+        using var client = AzureService.GetClient();
+        using var response = await SendRecommendationUpdateAsync(
+            client,
+            requestUri,
+            accessToken.Token,
+            properties,
+            retryPolicy,
+            cancellationToken);
+
+        if (response.IsError)
+        {
+            throw CreateRecommendationUpdateException(response);
+        }
+
+        using var document = JsonDocument.Parse(response.Content.ToStream());
+
+        return ConvertToAdvisorRecommendationModel(document.RootElement);
+    }
+
+    private static async Task<Response> SendRecommendationUpdateAsync(
+        HttpClient client,
+        Uri requestUri,
+        string accessToken,
+        RecommendationStatePatchProperties properties,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        var clientOptions = ConfigureRetryPolicy(
+            AddDefaultPolicies(new ArmClientOptions()),
+            retryPolicy);
+        clientOptions.Retry.MaxRetries = Math.Clamp(
+            clientOptions.Retry.MaxRetries,
+            0,
+            MaximumRecommendationUpdateRetries);
+        clientOptions.Transport = new HttpClientTransport(client);
+
+        var pipeline = HttpPipelineBuilder.Build(clientOptions);
+        using var request = pipeline.CreateRequest();
+        request.Method = RequestMethod.Patch;
+        request.Uri.Reset(requestUri);
+        request.Headers.Add("Authorization", $"Bearer {accessToken}");
+        request.Headers.Add("Accept", "application/json");
+        request.Headers.Add("Content-Type", "application/json");
+        request.Content = RequestContent.Create(JsonSerializer.SerializeToUtf8Bytes(
+            new RecommendationStatePatchRequest(properties),
+            AdvisorJsonContext.Default.RecommendationStatePatchRequest));
+
+        return await pipeline.SendRequestAsync(request, cancellationToken);
     }
 
     public async Task<ResourceQueryResults<RecommendationMetadata>> ListRecommendationMetadataAsync(
@@ -463,14 +558,80 @@ public class AdvisorService(IAzureService azureService)
         var advisorRecommendation = Models.RecommendationData.FromJson(item)
             ?? throw new InvalidOperationException("Failed to parse Advisor recommendation data");
 
-        var resourceId = advisorRecommendation.Properties?.ResourceMetadata?.ResourceId ?? "Unknown";
+        var properties = advisorRecommendation.Properties;
+        var resourceId = properties?.ResourceMetadata?.ResourceId ?? "Unknown";
 
         return new(
             ResourceId: resourceId,
-            RecommendationText: advisorRecommendation.Properties?.ShortDescription?.Problem ?? "Unknown",
-            Category: advisorRecommendation.Properties?.Category ?? "Unknown",
-            Impact: advisorRecommendation.Properties?.Impact,
-            ImpactedResourceType: ParseImpactedResourceType(resourceId));
+            RecommendationText: properties?.ShortDescription?.Problem ?? "Unknown",
+            Category: properties?.Category ?? "Unknown",
+            Impact: properties?.Impact,
+            ImpactedResourceType: properties?.ImpactedField ?? ParseImpactedResourceType(resourceId),
+            RecommendationId: advisorRecommendation.ResourceName,
+            Solution: properties?.ShortDescription?.Solution,
+            SubCategory: properties?.Control,
+            ImpactedResource: properties?.ImpactedValue,
+            RecommendationStatus: properties?.RecommendationStatus,
+            RecommendationDismissReason: properties?.RecommendationDismissReason,
+            PostponedUntilDateTime: properties?.PostponedUntilDateTime,
+            LastUpdated: properties?.LastUpdated,
+            RecommendationTypeId: properties?.RecommendationTypeId,
+            CompletionType: properties?.CompletionType);
+    }
+
+    private static RequestFailedException CreateRecommendationUpdateException(Response response)
+    {
+        string? errorCode = null;
+        string? errorMessage = null;
+
+        try
+        {
+            using var document = JsonDocument.Parse(response.Content.ToStream());
+            if (document.RootElement.TryGetProperty("error", out var error) &&
+                error.ValueKind == JsonValueKind.Object)
+            {
+                if (error.TryGetProperty("code", out var code) &&
+                    code.ValueKind == JsonValueKind.String)
+                {
+                    errorCode = code.GetString();
+                }
+
+                if (error.TryGetProperty("message", out var messageElement) &&
+                    messageElement.ValueKind == JsonValueKind.String)
+                {
+                    errorMessage = TruncateErrorMessage(messageElement.GetString());
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            // The status code remains authoritative when the service returns a non-JSON error body.
+        }
+
+        var message = (errorCode, errorMessage) switch
+        {
+            (not null, not null) =>
+                $"Advisor recommendation update failed with error code '{errorCode}': {errorMessage}",
+            (not null, null) =>
+                $"Advisor recommendation update failed with error code '{errorCode}'.",
+            _ =>
+                $"Advisor recommendation update failed with status code {response.Status}."
+        };
+
+        return new RequestFailedException(
+            response.Status,
+            message,
+            errorCode,
+            null);
+    }
+
+    private static string? TruncateErrorMessage(string? message)
+    {
+        const int maximumLength = 2048;
+        var trimmed = message?.Trim();
+        return trimmed?.Length > maximumLength
+            ? trimmed[..maximumLength]
+            : trimmed;
     }
 
     internal static string? ParseImpactedResourceType(string? resourceId)

@@ -338,6 +338,20 @@ azmcp advisor recommendation list --subscription <subscription> \
                                   [--resource <resource>] \
                                   [--search <search>]
 
+# Update the customer-provided state of an Advisor recommendation. Subscription context can come from --subscription,
+# which accepts an Azure subscription ID or name, or from the configured default subscription. --recommendation-id
+# is the stable ID, also called recommendation ID. Set the state to New, Postponed,
+# Dismissed, or Completed. Postponed requires a future ISO 8601 date and time with a timezone offset. Dismissed
+# requires an explicit dismissal reason; do not assume Other when the user has not supplied a reason. New reactivates
+# a postponed or dismissed recommendation. Security, Undefined-state, and platform-resolved recommendations cannot
+# be updated. Returns a concise shared recommendation object with the updated lifecycle and identifying details.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor recommendation update --subscription <subscription> \
+                                    --recommendation-id <recommendation-id> \
+                                    --recommendation-status <New|Postponed|Dismissed|Completed> \
+                                    [--postponed-until-date-time <date-time-with-offset>] \
+                                    [--recommendation-dismiss-reason <ExcessiveCostInvestmentRequired|ImplementationStepsAreUnclear|IncompatibleWithTheCurrentConfiguration|RiskIsAcceptable|TooComplexOrImpracticalToImplement|AnAlternativeSolutionIsAlreadyInPlace|Other>]
+
 # Summarize Advisor recommendations grouped by a chosen field (recommendation-type, category, impact, or resource-type)
 # --group-by is optional and defaults to 'category' when omitted
 # Only active recommendations (status 'New') are aggregated; dismissed and postponed ones are excluded

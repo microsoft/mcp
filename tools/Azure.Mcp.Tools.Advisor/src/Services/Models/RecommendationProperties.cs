@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-
 namespace Azure.Mcp.Tools.Advisor.Services.Models;
 
 internal sealed class RecommendationProperties
@@ -13,9 +11,23 @@ internal sealed class RecommendationProperties
     /// <summary> The business impact of the recommendation (e.g., High, Medium, Low). </summary>
     public string? Impact { get; set; }
 
-    /// <summary> The creation date of the recommendation. </summary>
-    [JsonPropertyName("lastUpdated")]
-    public DateTimeOffset? CreatedOn { get; set; }
+    public string? Control { get; set; }
+
+    public string? ImpactedField { get; set; }
+
+    public string? ImpactedValue { get; set; }
+
+    public string? RecommendationStatus { get; set; }
+
+    public string? RecommendationDismissReason { get; set; }
+
+    public DateTimeOffset? PostponedUntilDateTime { get; set; }
+
+    public DateTimeOffset? LastUpdated { get; set; }
+
+    public string? RecommendationTypeId { get; set; }
+
+    public string? CompletionType { get; set; }
 
     /// <summary> Short description of the recommendation. </summary>
     public RecommendationDescription? ShortDescription { get; set; }
