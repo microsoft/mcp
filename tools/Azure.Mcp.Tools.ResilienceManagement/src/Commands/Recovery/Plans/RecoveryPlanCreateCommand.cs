@@ -20,7 +20,10 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Name = "create",
     Title = "Create or Update Resilience Recovery Plan",
     Description = """
-        Creates a new Zonal resilience recovery plan in an Azure service group or fully updates an existing recovery plan.
+        Creates a new Zonal resilience recovery plan in an Azure service group or updates an existing plan's identity,
+        recovery group structure, and recovery group pre/post actions. Use this command to split a plan into additional
+        recovery groups or add manual and Azure Automation runbook actions; use recoveryplan resource update instead for
+        recovery resource membership and protection settings.
         Creation requires a plan description and a customer-selected SystemAssigned, UserAssigned, or SystemAndUserAssigned
         managed identity. Do not assume an identity type; ask the user to choose one when omitted. Updates can switch identity
         types, but cannot replace an existing user-assigned identity with a different one. Additional recovery groups can be
