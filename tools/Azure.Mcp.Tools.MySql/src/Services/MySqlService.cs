@@ -77,9 +77,9 @@ public sealed class MySqlService(IAzureService azureService)
         @"\b(" + string.Join("|", ObfuscationFunctions.Select(Regex.Escape)) + @")\s*\(",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
+    private async Task<string> GetEntraIdAccessTokenAsync(string? tenant, CancellationToken cancellationToken)
     {
-        var tokenCredential = await GetCredential(null, cancellationToken);
+        var tokenCredential = await GetCredential(tenant, cancellationToken);
         var accessToken = await tokenCredential.GetTokenAsync(new([GetOpenSourceRDBMSScope()]), cancellationToken);
         return accessToken.Token;
     }
@@ -133,10 +133,10 @@ public sealed class MySqlService(IAzureService azureService)
         return server;
     }
 
-    private async Task<string> BuildConnectionStringAsync(string server, string user, string database, CancellationToken cancellationToken)
+    private async Task<string> BuildConnectionStringAsync(string server, string user, string database, string? tenant, CancellationToken cancellationToken)
     {
         var host = NormalizeServerName(server);
-        var entraIdAccessToken = await GetEntraIdAccessTokenAsync(cancellationToken);
+        var entraIdAccessToken = await GetEntraIdAccessTokenAsync(tenant, cancellationToken);
         return BuildConnectionString(host, database, user, entraIdAccessToken);
     }
 
@@ -225,9 +225,9 @@ public sealed class MySqlService(IAzureService azureService)
     internal static (string Query, List<(string Name, string Value)> Parameters) ParameterizeStringLiterals(string query) =>
         SqlQueryParameterizer.Parameterize(query, SqlQueryParameterizer.SqlDialect.MySql);
 
-    public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string server, CancellationToken cancellationToken)
+    public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string server, string? tenant, CancellationToken cancellationToken)
     {
-        var connectionString = await BuildConnectionStringAsync(server, user, "mysql", cancellationToken);
+        var connectionString = await BuildConnectionStringAsync(server, user, "mysql", tenant, cancellationToken);
 
         await using var resource = await MySqlResource.CreateAsync(connectionString, cancellationToken);
         var query = "SHOW DATABASES;";
@@ -254,13 +254,13 @@ public sealed class MySqlService(IAzureService azureService)
         return dbs;
     }
 
-    public async Task<List<string>> ExecuteQueryAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string query, CancellationToken cancellationToken)
+    public async Task<List<string>> ExecuteQueryAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string query, string? tenant, CancellationToken cancellationToken)
     {
         ValidateQuerySafety(query);
 
         var (parameterizedQuery, queryParameters) = ParameterizeStringLiterals(query);
 
-        var connectionString = await BuildConnectionStringAsync(server, user, database, cancellationToken);
+        var connectionString = await BuildConnectionStringAsync(server, user, database, tenant, cancellationToken);
 
         await using var resource = await MySqlResource.CreateAsync(connectionString, cancellationToken);
         await using var command = new MySqlCommand(parameterizedQuery, resource.Connection);
@@ -300,9 +300,9 @@ public sealed class MySqlService(IAzureService azureService)
         return rows;
     }
 
-    public async Task<List<string>> GetTableSchemaAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string table, CancellationToken cancellationToken)
+    public async Task<List<string>> GetTableSchemaAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string table, string? tenant, CancellationToken cancellationToken)
     {
-        var connectionString = await BuildConnectionStringAsync(server, user, database, cancellationToken);
+        var connectionString = await BuildConnectionStringAsync(server, user, database, tenant, cancellationToken);
 
         await using var resource = await MySqlResource.CreateAsync(connectionString, cancellationToken);
         var query = "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = @table;";
@@ -317,9 +317,9 @@ public sealed class MySqlService(IAzureService azureService)
         return schema;
     }
 
-    public async Task<List<string>> ListServersAsync(string subscriptionId, string resourceGroup, CancellationToken cancellationToken)
+    public async Task<List<string>> ListServersAsync(string subscriptionId, string resourceGroup, string? tenant, CancellationToken cancellationToken)
     {
-        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, null, cancellationToken)
             ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var serverList = new List<string>();
@@ -330,9 +330,9 @@ public sealed class MySqlService(IAzureService azureService)
         return serverList;
     }
 
-    public async Task<List<string>> ListServersInSubscriptionAsync(string subscriptionId, CancellationToken cancellationToken)
+    public async Task<List<string>> ListServersInSubscriptionAsync(string subscriptionId, string? tenant, CancellationToken cancellationToken)
     {
-        var subscriptionResource = await AzureService.GetSubscription(subscriptionId, cancellationToken: cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscriptionId, tenant, cancellationToken: cancellationToken);
         var serverList = new List<string>();
         await foreach (MySqlFlexibleServerResource server in subscriptionResource.GetMySqlFlexibleServersAsync(cancellationToken: cancellationToken))
         {
@@ -341,9 +341,9 @@ public sealed class MySqlService(IAzureService azureService)
         return serverList;
     }
 
-    public async Task<TableListResult> GetTablesAsync(string subscriptionId, string resourceGroup, string user, string server, string database, CancellationToken cancellationToken)
+    public async Task<TableListResult> GetTablesAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string? tenant, CancellationToken cancellationToken)
     {
-        var connectionString = await BuildConnectionStringAsync(server, user, database, cancellationToken);
+        var connectionString = await BuildConnectionStringAsync(server, user, database, tenant, cancellationToken);
 
         await using var resource = await MySqlResource.CreateAsync(connectionString, cancellationToken);
         var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE();";
@@ -362,9 +362,9 @@ public sealed class MySqlService(IAzureService azureService)
         return new TableListResult(tables, isTruncated);
     }
 
-    public async Task<string> GetServerConfigAsync(string subscriptionId, string resourceGroup, string server, CancellationToken cancellationToken)
+    public async Task<string> GetServerConfigAsync(string subscriptionId, string resourceGroup, string server, string? tenant, CancellationToken cancellationToken)
     {
-        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, null, cancellationToken)
             ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server, cancellationToken);
@@ -382,9 +382,9 @@ public sealed class MySqlService(IAzureService azureService)
         return System.Text.Json.JsonSerializer.Serialize(config, MySqlJsonContext.Default.ServerConfigGetResult);
     }
 
-    public async Task<string> GetServerParameterAsync(string subscriptionId, string resourceGroup, string server, string param, CancellationToken cancellationToken)
+    public async Task<string> GetServerParameterAsync(string subscriptionId, string resourceGroup, string server, string param, string? tenant, CancellationToken cancellationToken)
     {
-        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, null, cancellationToken)
             ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server, cancellationToken);
@@ -397,9 +397,9 @@ public sealed class MySqlService(IAzureService azureService)
         return configResponse.Value.Data.Value;
     }
 
-    public async Task<string> SetServerParameterAsync(string subscriptionId, string resourceGroup, string server, string param, string value, CancellationToken cancellationToken)
+    public async Task<string> SetServerParameterAsync(string subscriptionId, string resourceGroup, string server, string param, string value, string? tenant, CancellationToken cancellationToken)
     {
-        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, null, cancellationToken)
             ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server, cancellationToken);

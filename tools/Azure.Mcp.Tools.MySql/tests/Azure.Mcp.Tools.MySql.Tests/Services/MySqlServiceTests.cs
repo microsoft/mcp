@@ -42,7 +42,7 @@ public class MySqlServiceTests
         _azureService.GetResourceGroupResource("sub123", "rg1", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>()).ThrowsAsync(exception);
 
         var thrownException = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _mysqlService.ListServersAsync("sub123", "rg1", TestContext.Current.CancellationToken));
+            _mysqlService.ListServersAsync("sub123", "rg1", null, TestContext.Current.CancellationToken));
 
         Assert.Equal(exception, thrownException);
     }
@@ -54,7 +54,7 @@ public class MySqlServiceTests
         _azureService.GetSubscription("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>()).ThrowsAsync(exception);
 
         var thrownException = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _mysqlService.ListServersInSubscriptionAsync("sub123", TestContext.Current.CancellationToken));
+            _mysqlService.ListServersInSubscriptionAsync("sub123", null, TestContext.Current.CancellationToken));
 
         Assert.Equal(exception, thrownException);
     }
@@ -66,7 +66,7 @@ public class MySqlServiceTests
             .Returns(Task.FromResult<Azure.ResourceManager.Resources.ResourceGroupResource?>(null));
 
         var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
-            _mysqlService.ListServersAsync("sub123", "missing-rg", TestContext.Current.CancellationToken));
+            _mysqlService.ListServersAsync("sub123", "missing-rg", null, TestContext.Current.CancellationToken));
 
         Assert.Contains("missing-rg", ex.Message);
     }
@@ -78,7 +78,7 @@ public class MySqlServiceTests
             .Returns(Task.FromResult<Azure.ResourceManager.Resources.ResourceGroupResource?>(null));
 
         var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
-            _mysqlService.GetServerConfigAsync("sub123", "missing-rg", "some-server", TestContext.Current.CancellationToken));
+            _mysqlService.GetServerConfigAsync("sub123", "missing-rg", "some-server", null, TestContext.Current.CancellationToken));
 
         Assert.Contains("missing-rg", ex.Message);
     }
@@ -90,7 +90,7 @@ public class MySqlServiceTests
             .Returns(Task.FromResult<Azure.ResourceManager.Resources.ResourceGroupResource?>(null));
 
         var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
-            _mysqlService.GetServerParameterAsync("sub123", "missing-rg", "some-server", "some-param", TestContext.Current.CancellationToken));
+            _mysqlService.GetServerParameterAsync("sub123", "missing-rg", "some-server", "some-param", null, TestContext.Current.CancellationToken));
 
         Assert.Contains("missing-rg", ex.Message);
     }
@@ -102,7 +102,7 @@ public class MySqlServiceTests
             .Returns(Task.FromResult<Azure.ResourceManager.Resources.ResourceGroupResource?>(null));
 
         var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
-            _mysqlService.SetServerParameterAsync("sub123", "missing-rg", "some-server", "some-param", "some-value", TestContext.Current.CancellationToken));
+            _mysqlService.SetServerParameterAsync("sub123", "missing-rg", "some-server", "some-param", "some-value", null, TestContext.Current.CancellationToken));
 
         Assert.Contains("missing-rg", ex.Message);
     }

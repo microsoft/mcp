@@ -32,7 +32,7 @@ public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger, I
     {
         try
         {
-            var result = await _mysqlService.ExecuteQueryAsync(options.Subscription!, options.ResourceGroup, options.User, options.Server, options.Database, options.Query, cancellationToken);
+            var result = await _mysqlService.ExecuteQueryAsync(options.Subscription!, options.ResourceGroup, options.User, options.Server, options.Database, options.Query, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result ?? []), MySqlJsonContext.Default.DatabaseQueryCommandResult);
         }
         catch (Exception ex)

@@ -55,6 +55,7 @@ public sealed class CheckCommand(ILogger<CheckCommand> logger, IQuotaService quo
                 resourceTypes,
                 options.Subscription!,
                 options.Region,
+                options.Tenant,
                 cancellationToken);
 
             _logger.LogInformation("Quota check result: {ToolResult}", toolResult);

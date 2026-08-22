@@ -38,6 +38,7 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchServ
             var indexes = await _searchService.GetIndexDetails(
                 options.Service,
                 options.Index,
+                options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 

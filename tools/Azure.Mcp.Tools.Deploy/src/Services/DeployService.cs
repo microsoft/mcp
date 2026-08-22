@@ -15,10 +15,11 @@ public class DeployService(IAzureService azureService) : BaseAzureService(azureS
          string azdEnvName,
          string subscriptionId,
          int? limit = null,
+         string? tenant = null,
          CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(cancellationToken: cancellationToken);
-        var logsQueryClient = await CreateLogsQueryClientAsync(cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var logsQueryClient = await CreateLogsQueryClientAsync(tenant, cancellationToken);
 
         string result = await AzdResourceLogService.GetAzdResourceLogsAsync(
             armClient,
@@ -31,9 +32,9 @@ public class DeployService(IAzureService azureService) : BaseAzureService(azureS
         return result;
     }
 
-    private async Task<LogsQueryClient> CreateLogsQueryClientAsync(CancellationToken cancellationToken)
+    private async Task<LogsQueryClient> CreateLogsQueryClientAsync(string? tenant, CancellationToken cancellationToken)
     {
-        var credential = await GetCredential(null, cancellationToken);
+        var credential = await GetCredential(tenant, cancellationToken);
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
         options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new(credential, options);

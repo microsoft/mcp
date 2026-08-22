@@ -12,6 +12,7 @@ public interface IPostgresService
         string user,
         string? password,
         string server,
+        string? tenant,
         CancellationToken cancellationToken);
 
     Task<List<string>> ExecuteQueryAsync(
@@ -21,6 +22,7 @@ public interface IPostgresService
         string server,
         string database,
         string query,
+        string? tenant,
         CancellationToken cancellationToken);
 
     Task<TableListResult> ListTablesAsync(
@@ -30,6 +32,7 @@ public interface IPostgresService
         string server,
         string database,
         string schema,
+        string? tenant,
         CancellationToken cancellationToken);
 
     Task<List<string>> GetTableSchemaAsync(
@@ -39,11 +42,13 @@ public interface IPostgresService
         string server,
         string database,
         string table,
+        string? tenant,
         CancellationToken cancellationToken);
 
     Task<List<string>> ListServersAsync(
         string subscriptionId,
         string? resourceGroup,
+        string? tenant,
         CancellationToken cancellationToken);
 
     Task<string> GetServerConfigAsync(

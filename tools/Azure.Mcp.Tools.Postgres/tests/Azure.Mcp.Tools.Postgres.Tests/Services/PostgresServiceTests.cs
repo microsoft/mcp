@@ -77,7 +77,7 @@ public class PostgresServiceTests
         // Act
         CommandValidationException exception = await Assert.ThrowsAsync<CommandValidationException>(async () =>
         {
-            await _postgresService.ExecuteQueryAsync(authType, user, null, server, database, query, TestContext.Current.CancellationToken);
+            await _postgresService.ExecuteQueryAsync(authType, user, null, server, database, query, null, TestContext.Current.CancellationToken);
         });
 
         // Assert
@@ -101,7 +101,7 @@ public class PostgresServiceTests
                 [typeof(string), typeof(int), typeof(InvalidCastItem)]));
 
         // Act
-        List<string> rows = await _postgresService.ExecuteQueryAsync(authType, user, null, server, database, query, TestContext.Current.CancellationToken);
+        List<string> rows = await _postgresService.ExecuteQueryAsync(authType, user, null, server, database, query, null, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(4, rows.Count);
@@ -124,7 +124,7 @@ public class PostgresServiceTests
                 [typeof(string), typeof(int), typeof(InvalidCastItem)]));
 
         // Act
-        List<string> rows = await _postgresService.ExecuteQueryAsync(authType, user, null, server, database, query, TestContext.Current.CancellationToken);
+        List<string> rows = await _postgresService.ExecuteQueryAsync(authType, user, null, server, database, query, null, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Single(rows);
@@ -143,7 +143,7 @@ public class PostgresServiceTests
             resourceGroupServers: []);
 
         // Act
-        var result = await sut.ListServersAsync(subscriptionId, null, TestContext.Current.CancellationToken);
+        var result = await sut.ListServersAsync(subscriptionId, null, null, TestContext.Current.CancellationToken);
 
         // Assert — subscription service was called, RG service was not
         Assert.Equal(expected, result);
@@ -167,7 +167,7 @@ public class PostgresServiceTests
             resourceGroupServers: expected);
 
         // Act
-        var result = await sut.ListServersAsync(subscriptionId, resourceGroup, TestContext.Current.CancellationToken);
+        var result = await sut.ListServersAsync(subscriptionId, resourceGroup, null, TestContext.Current.CancellationToken);
 
         // Assert — RG service was called, subscription service was not
         Assert.Equal(expected, result);
@@ -191,7 +191,7 @@ public class PostgresServiceTests
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<Exception>(
-            () => sut.ListServersAsync(subscriptionId, resourceGroup, TestContext.Current.CancellationToken));
+            () => sut.ListServersAsync(subscriptionId, resourceGroup, null, TestContext.Current.CancellationToken));
         Assert.Contains(resourceGroup, ex.Message);
     }
 
@@ -205,7 +205,7 @@ public class PostgresServiceTests
         _dbProvider.GetCommand(Arg.Do<string>(q => capturedQuery = q), Arg.Any<IPostgresResource>())
             .Returns(command);
 
-        await _postgresService.ListTablesAsync(authType, user, null, server, database, "analytics", TestContext.Current.CancellationToken);
+        await _postgresService.ListTablesAsync(authType, user, null, server, database, "analytics", null, TestContext.Current.CancellationToken);
 
         Assert.NotNull(capturedQuery);
         Assert.Contains("@schema", capturedQuery);

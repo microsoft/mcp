@@ -17,6 +17,9 @@ public sealed class LogsGetOptions : ISubscriptionOption
     [Option(Description = "The maximum row number of logs to retrieve. Use this to get a specific number of logs or to avoid the retrieved logs from reaching token limit. Default is 200.", DefaultValue = 200)]
     public int? Limit { get; set; }
 
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 }

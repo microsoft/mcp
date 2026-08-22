@@ -28,6 +28,7 @@ public class KnowledgeSourceGetCommandTests : CommandUnitTestsBase<KnowledgeSour
         Service.ListKnowledgeSources(
             Arg.Is("service123"),
             Arg.Is((string?)null),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedSources);
@@ -47,6 +48,7 @@ public class KnowledgeSourceGetCommandTests : CommandUnitTestsBase<KnowledgeSour
         Service.ListKnowledgeSources(
             Arg.Is("service123"),
             Arg.Is("source1"),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([expectedSource]);
@@ -64,6 +66,7 @@ public class KnowledgeSourceGetCommandTests : CommandUnitTestsBase<KnowledgeSour
     {
         Service.ListKnowledgeSources(
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>()).Returns([]);
@@ -83,6 +86,7 @@ public class KnowledgeSourceGetCommandTests : CommandUnitTestsBase<KnowledgeSour
 
         Service.ListKnowledgeSources(
             Arg.Is(serviceName),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
