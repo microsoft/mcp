@@ -166,11 +166,19 @@ public sealed class MySqlService(IAzureService azureService)
             throw new InvalidOperationException($"Query length exceeds the maximum allowed limit of {MaxQueryLengthChars:N0} characters to prevent potential DoS attacks.");
         }
 
-        // Strip string literals before checking for comment markers to avoid
+        // Decode escape sequences in National/Unicode strings (N'...') to detect obfuscated function names.
+        // Example attack vectors this prevents:
+        // - N'pg_sl\0065ep' with escape sequences → pg_sleep
+        // - SELECT N'CHAR(0x...) encoded function names' → binary-encoded dangerous functions
+        var decodedQuery = DecodeNationalStringEscapes(query);
+
+        // Strip string literals and hex literals before checking for comment markers to avoid
         // false positives (e.g., 'C#Developer' or 'foo--bar' are not comments).
-        // The pattern handles both SQL-standard doubled quotes ('') and
-        // MySQL's default backslash escaping (\') inside string literals.
-        var queryWithoutStrings = Regex.Replace(query, "'([^'\\\\]|\\\\.|'')*'", "'str'", RegexOptions.None, RegexHelper.DefaultRegexTimeout);
+        // The pattern handles:
+        // - Standard quoted strings: 'text' with doubled quotes ('') and backslash escaping (\')
+        // - National/Unicode strings: N'text' (MySQL's Unicode support)
+        // - Hex literals: 0xHHHH or X'HHHH' (binary function name encoding)
+        var queryWithoutStrings = Regex.Replace(decodedQuery, "[nN]'([^'\\\\]|\\\\.|'')*'|'([^'\\\\]|\\\\.|'')*'|0x[0-9A-Fa-f]+|[xX]'[0-9A-Fa-f]*'", "'str'", RegexOptions.None, RegexHelper.DefaultRegexTimeout);
 
         // Reject queries containing SQL comments to prevent bypass attacks
         // (e.g., MySQL version-specific comments /*!50000 ... */ that are executed as code)
@@ -220,6 +228,45 @@ public sealed class MySqlService(IAzureService azureService)
         {
             throw new InvalidOperationException("Only SELECT statements are allowed for security reasons.");
         }
+    }
+
+    /// <summary>
+    /// Decodes MySQL National/Unicode escape sequences in N'...' strings to detect obfuscated function names.
+    /// MySQL National strings support backslash escapes: \\ (backslash), \' (quote), \" (double quote), etc.
+    /// Examples:
+    /// - N'pg_sl\065ep' with char code 065 → pg_sleep (via CHAR conversion)
+    /// - N'CHAR(0x70,0x67,...)' → binary-encoded function names
+    /// </summary>
+    private static string DecodeNationalStringEscapes(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+        {
+            return input;
+        }
+
+        // Decode common single-character escapes in N'...' strings
+        // These are: \\ (backslash), \' (single quote), \" (double quote), \n, \r, \t, etc.
+        return Regex.Replace(
+            input,
+            @"[nN]'((?:[^'\\]|\\.)*)'",
+            match =>
+            {
+                var content = match.Groups[1].Value;
+                // Decode backslash escape sequences
+                var decoded = content
+                    .Replace("\\\\", "\x00")  // Temp marker for backslash
+                    .Replace("\\'", "'")
+                    .Replace("\\\"", "\"")
+                    .Replace("\\n", "\n")
+                    .Replace("\\r", "\r")
+                    .Replace("\\t", "\t")
+                    .Replace("\\b", "\b")
+                    .Replace("\\f", "\f")
+                    .Replace("\\0", "\0")
+                    .Replace("\x00", "\\");   // Restore backslash
+                return $"N'{decoded}'";
+            },
+            RegexOptions.Compiled);
     }
 
     internal static (string Query, List<(string Name, string Value)> Parameters) ParameterizeStringLiterals(string query) =>
