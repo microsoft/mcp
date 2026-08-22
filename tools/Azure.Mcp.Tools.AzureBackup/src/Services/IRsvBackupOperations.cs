@@ -238,4 +238,64 @@ public interface IRsvBackupOperations
         string? tenant,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
+
+    // Private endpoint operations
+    Task<PrivateEndpointConnectionInfo> CreatePrivateEndpointAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string privateEndpointName,
+        string vnetSubnetId,
+        string groupId,
+        string? location,
+        bool autoApprove,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    Task<List<PrivateEndpointConnectionInfo>> ListPrivateEndpointsAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    Task<PrivateEndpointConnectionInfo> GetPrivateEndpointAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string privateEndpointConnectionName,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    Task<OperationResult> DeletePrivateEndpointAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string privateEndpointConnectionName,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    Task<PrivateEndpointConnectionInfo> ApprovePrivateEndpointAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string privateEndpointConnectionName,
+        string? description,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    Task<PrivateEndpointConnectionInfo> RejectPrivateEndpointAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string privateEndpointConnectionName,
+        string? description,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
 }
