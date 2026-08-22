@@ -14,6 +14,8 @@ public static class AzureBackupTelemetryTags
     public static readonly string DatasourceType = AddPrefix("DatasourceType");
     public static readonly string OperationScope = AddPrefix("OperationScope");
     public static readonly string VaultExpand = AddPrefix("VaultExpand");
+    public static readonly string MuaAction = AddPrefix("MuaAction");
+    public static readonly string ResourceGuardOperation = AddPrefix("ResourceGuardOperation");
 
     // Unprefixed tag name shared with Microsoft.Mcp.Core's AzureTagName.SubscriptionGuid.
     // Duplicated here as a string literal because AzureTagName is internal to that assembly.
@@ -65,5 +67,23 @@ public static class AzureBackupTelemetryTags
     {
         activity?.AddTag(VaultType, NormalizeVaultType(vaultType));
         activity?.AddTag(WorkloadType, NormalizeWorkloadType(workloadType));
+    }
+
+    /// <summary>
+    /// Adds a Multi-User Authorization (MUA) action tag. Values: "enable" or "disable".
+    /// Emitted by <c>security configure-mua</c> (enable) and <c>security disable-mua</c> (disable)
+    /// so telemetry can distinguish the two operations.
+    /// </summary>
+    public static void AddMuaActionTag(Activity? activity, string action)
+    {
+        activity?.AddTag(MuaAction, action);
+    }
+
+    /// <summary>
+    /// Adds a Resource Guard operation tag. Values: "create", "get", "list", or "delete".
+    /// </summary>
+    public static void AddResourceGuardOperationTag(Activity? activity, string operation)
+    {
+        activity?.AddTag(ResourceGuardOperation, operation);
     }
 }

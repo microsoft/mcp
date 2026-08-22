@@ -5,6 +5,8 @@ using System.Text.RegularExpressions;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AzureBackup.Models;
+using Azure.ResourceManager.DataProtectionBackup;
+using Azure.ResourceManager.DataProtectionBackup.Models;
 using Azure.ResourceManager.RecoveryServicesBackup;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Azure.ResourceManager.Resources;
@@ -873,6 +875,173 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         return VaultTypeResolver.IsRsv(resolved)
             ? await rsvOps.ConfigureEncryptionAsync(vaultName, resourceGroup, subscription, keyVaultUri, keyName, identityType, keyVersion, userAssignedIdentityId, tenant, retryPolicy, cancellationToken)
             : await dppOps.ConfigureEncryptionAsync(vaultName, resourceGroup, subscription, keyVaultUri, keyName, identityType, keyVersion, userAssignedIdentityId, tenant, retryPolicy, cancellationToken);
+    }
+
+    // ---------------------------------------------------------------------
+    // Resource Guard (Microsoft.DataProtection/resourceGuards) operations.
+    // Resource Guards are subscription/RG-scoped, not vault-scoped. They are
+    // referenced by vaults (RSV or DPP) via Multi-User Authorization (MUA).
+    // ---------------------------------------------------------------------
+
+    private static readonly HashSet<string> s_mandatoryResourceGuardOps = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "disableSoftDelete",
+        "disableMultiUserAuthorization",
+        "removeMUAProtection",
+        "disableSecurityFeatures"
+    };
+
+    private static ResourceGuardInfo ToResourceGuardInfo(ResourceGuardData data)
+    {
+        var id = data.Id;
+        var name = data.Name;
+        var location = data.Location.ToString();
+        // ARM ID: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DataProtection/resourceGuards/{name}
+        var resourceGroup = id?.ResourceGroupName ?? string.Empty;
+
+        var exclusions = data.Properties?.VaultCriticalOperationExclusionList is { } excl
+            ? excl.ToList()
+            : new List<string>();
+
+        var protectedOps = data.Properties?.ResourceGuardOperations is { } ops
+            ? ops.Select(o => o.VaultCriticalOperation ?? string.Empty).Where(s => !string.IsNullOrEmpty(s)).ToList()
+            : new List<string>();
+
+        var tags = data.Tags is { Count: > 0 }
+            ? data.Tags.ToDictionary(kv => kv.Key, kv => kv.Value)
+            : null;
+
+        return new ResourceGuardInfo(
+            id?.ToString() ?? string.Empty,
+            name,
+            location,
+            resourceGroup,
+            exclusions,
+            protectedOps,
+            tags,
+            data.Properties?.ProvisioningState?.ToString(),
+            data.Properties?.Description);
+    }
+
+    public async Task<ResourceGuardInfo> CreateResourceGuardAsync(
+        string resourceGuardName, string resourceGroup, string subscription, string location,
+        IReadOnlyList<string>? excludedOperations, IReadOnlyDictionary<string, string>? tags,
+        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(resourceGuardName), resourceGuardName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(location), location));
+
+        if (excludedOperations is not null)
+        {
+            var conflicts = excludedOperations
+                .Where(o => s_mandatoryResourceGuardOps.Contains(o))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            if (conflicts.Count > 0)
+            {
+                throw new ArgumentException(
+                    $"The following operations cannot be excluded from a Resource Guard because they are mandatory: {string.Join(", ", conflicts)}. " +
+                    $"Remove them from --excluded-operations. Typical valid RSV exclusion values are: deleteProtection, getSecurityPIN, updatePolicy, updateProtection.");
+            }
+        }
+
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+        var collection = rgResource.GetResourceGuards();
+
+        var data = new ResourceGuardData(new AzureLocation(location))
+        {
+            Properties = new ResourceGuardProperties()
+        };
+        if (excludedOperations is not null)
+        {
+            foreach (var op in excludedOperations)
+            {
+                data.Properties.VaultCriticalOperationExclusionList.Add(op);
+            }
+        }
+        if (tags is not null)
+        {
+            foreach (var kv in tags)
+            {
+                data.Tags[kv.Key] = kv.Value;
+            }
+        }
+
+        var operation = await collection.CreateOrUpdateAsync(WaitUntil.Completed, resourceGuardName, data, cancellationToken);
+        return ToResourceGuardInfo(operation.Value.Data);
+    }
+
+    public async Task<ResourceGuardInfo> GetResourceGuardAsync(
+        string resourceGuardName, string resourceGroup, string subscription,
+        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(resourceGuardName), resourceGuardName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var id = ResourceGuardResource.CreateResourceIdentifier(subscription, resourceGroup, resourceGuardName);
+        var resource = armClient.GetResourceGuardResource(id);
+        var response = await resource.GetAsync(cancellationToken);
+        return ToResourceGuardInfo(response.Value.Data);
+    }
+
+    public async Task<List<ResourceGuardInfo>> ListResourceGuardsAsync(
+        string subscription, string? resourceGroup, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription));
+
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+
+        var results = new List<ResourceGuardInfo>();
+        if (!string.IsNullOrEmpty(resourceGroup))
+        {
+            var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+            var rgResource = armClient.GetResourceGroupResource(rgId);
+            var collection = rgResource.GetResourceGuards();
+            await foreach (var item in collection.GetAllAsync(cancellationToken))
+            {
+                results.Add(ToResourceGuardInfo(item.Data));
+            }
+        }
+        else
+        {
+            var subId = SubscriptionResource.CreateResourceIdentifier(subscription);
+            var subResource = armClient.GetSubscriptionResource(subId);
+            await foreach (var item in subResource.GetResourceGuardsAsync(cancellationToken))
+            {
+                results.Add(ToResourceGuardInfo(item.Data));
+            }
+        }
+        return results;
+    }
+
+    public async Task<OperationResult> DeleteResourceGuardAsync(
+        string resourceGuardName, string resourceGroup, string subscription,
+        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(resourceGuardName), resourceGuardName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var id = ResourceGuardResource.CreateResourceIdentifier(subscription, resourceGroup, resourceGuardName);
+        var resource = armClient.GetResourceGuardResource(id);
+        var operation = await resource.DeleteAsync(WaitUntil.Started, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+        return new OperationResult("Succeeded", null, $"Resource Guard '{resourceGuardName}' deleted from resource group '{resourceGroup}'.");
     }
 
 
