@@ -49,9 +49,8 @@ public sealed class AvmVersionListCommand(
                 new(options.ModuleName, versions),
                 AzureTerraformJsonContext.Default.AvmVersionListResult);
 
-            context.Activity
-                ?.AddTag(AzureTerraformTelemetryTags.ToolArea, "avm")
-                .AddTag(AzureTerraformTelemetryTags.ModuleName, options.ModuleName);
+            context.AddTelemetryTag(AzureTerraformTelemetryTags.ToolArea, "avm")
+                .AddTelemetryTag(AzureTerraformTelemetryTags.ModuleName, options.ModuleName);
         }
         catch (Exception ex)
         {

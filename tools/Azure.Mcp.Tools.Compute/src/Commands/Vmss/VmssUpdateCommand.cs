@@ -58,7 +58,7 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger, IComput
     {
         try
         {
-            context.Activity?.AddTag("subscription", options.Subscription);
+            context.AddTelemetryTag("subscription", options.Subscription);
 
             var result = await _computeService.UpdateVmssAsync(
                 options.VmssName,

@@ -47,8 +47,8 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, GovernanceImmutabilityOptions options, CancellationToken cancellationToken)
     {
-        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
-        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+        AzureBackupTelemetryTags.AddSubscriptionTag(context, options.Subscription);
+        AzureBackupTelemetryTags.AddVaultTags(context, options.VaultType);
 
         try
         {

@@ -46,7 +46,7 @@ public sealed class BicepSchemaGetCommand(ILogger<BicepSchemaGetCommand> logger)
                 // Only log the resource type if we are able to get the schema from it.
                 // There is a slight chance that the LLM hallucinates the resource type
                 // parameter with value containing data that we shouldn't log.
-                context.Activity?.AddTag("resourceType", options.ResourceType);
+                context.AddTelemetryTag("resourceType", options.ResourceType);
                 context.Response.Results = ResponseResult.Create(new(response),
                     BicepSchemaJsonContext.Default.BicepSchemaGetCommandResult);
             }

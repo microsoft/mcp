@@ -39,7 +39,7 @@ public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger, I
     {
         try
         {
-            context.Activity?.AddTag("subscription", options.Subscription);
+            context.AddTelemetryTag("subscription", options.Subscription);
 
             var deployments = await _appServiceService.GetDeploymentsAsync(
                 options.Subscription!,

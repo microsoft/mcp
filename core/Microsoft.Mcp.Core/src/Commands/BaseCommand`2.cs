@@ -112,9 +112,9 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
 
     protected virtual void HandleException(CommandContext context, Exception ex)
     {
-        context.Activity?.SetStatus(ActivityStatusCode.Error)
-            ?.SetTag(TagName.ExceptionType, ex.GetType().ToString())
-            ?.SetTag(TagName.ExceptionStackTrace, ex.StackTrace);
+        context.SetTelemetryStatus(ActivityStatusCode.Error)
+            .SetTelemetryTag(TagName.ExceptionType, ex.GetType().ToString())
+            .SetTelemetryTag(TagName.ExceptionStackTrace, ex.StackTrace);
 
         var response = context.Response;
 
@@ -134,7 +134,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
 
             // Include the command validation exception message as it should be safe. Requires custom validators to
             // exclude any sensitive information from their error messages.
-            context.Activity?.SetTag(TagName.ExceptionMessage, response.Message);
+            context.SetTelemetryTag(TagName.ExceptionMessage, response.Message);
             response.Results = null;
             return;
         }
@@ -160,7 +160,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
             exceptionDetails.Add("CorrelationId", msalClientException.CorrelationId);
         }
 
-        context.Activity?.SetTag(TagName.ExceptionMessage, exceptionDetails);
+        context.SetTelemetryTag(TagName.ExceptionMessage, exceptionDetails);
 
         var result = new ExceptionResult(
             Message: ex.Message ?? string.Empty,

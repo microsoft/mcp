@@ -50,9 +50,8 @@ public sealed class AzureRMDocsGetCommand(
 
             context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AzureRMDocsResult);
 
-            context.Activity
-                ?.AddTag(AzureTerraformTelemetryTags.ToolArea, "azurerm")
-                .AddTag(AzureTerraformTelemetryTags.ResourceType, options.ResourceType);
+            context.AddTelemetryTag(AzureTerraformTelemetryTags.ToolArea, "azurerm")
+                .AddTelemetryTag(AzureTerraformTelemetryTags.ResourceType, options.ResourceType);
         }
         catch (Exception ex)
         {

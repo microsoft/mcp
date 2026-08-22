@@ -82,8 +82,8 @@ public sealed class SecurityConfigureEncryptionCommand(ILogger<SecurityConfigure
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SecurityConfigureEncryptionOptions options, CancellationToken cancellationToken)
     {
-        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
-        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+        AzureBackupTelemetryTags.AddSubscriptionTag(context, options.Subscription);
+        AzureBackupTelemetryTags.AddVaultTags(context, options.VaultType);
         _lastVaultType = options.VaultType;
 
         try

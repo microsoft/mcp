@@ -65,9 +65,8 @@ public sealed class AzApiDocsGetCommand(
 
             context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AzApiDocsResult);
 
-            context.Activity
-                ?.AddTag(AzureTerraformTelemetryTags.ToolArea, "azapi")
-                .AddTag(AzureTerraformTelemetryTags.ResourceType, options.ResourceType);
+            context.AddTelemetryTag(AzureTerraformTelemetryTags.ToolArea, "azapi")
+                .AddTelemetryTag(AzureTerraformTelemetryTags.ResourceType, options.ResourceType);
         }
         catch (Exception ex)
         {

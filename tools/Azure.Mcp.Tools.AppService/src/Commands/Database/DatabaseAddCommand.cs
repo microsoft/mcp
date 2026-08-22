@@ -37,7 +37,7 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger, IAppS
     {
         try
         {
-            context.Activity?.AddTag("subscription", options.Subscription);
+            context.AddTelemetryTag("subscription", options.Subscription);
 
             var connectionInfo = await _appServiceService.AddDatabaseAsync(
                 options.App,

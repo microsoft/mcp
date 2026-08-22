@@ -37,8 +37,8 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAz
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BackupStatusOptions options, CancellationToken cancellationToken)
     {
-        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
-        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, "status-check");
+        AzureBackupTelemetryTags.AddSubscriptionTag(context, options.Subscription);
+        context.AddTelemetryTag(AzureBackupTelemetryTags.OperationScope, "status-check");
 
         try
         {

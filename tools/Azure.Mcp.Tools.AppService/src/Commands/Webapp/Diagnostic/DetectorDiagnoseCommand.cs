@@ -51,7 +51,7 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
     {
         try
         {
-            context.Activity?.AddTag("subscription", options.Subscription);
+            context.AddTelemetryTag("subscription", options.Subscription);
 
             var diagnoses = await _appServiceService.DiagnoseDetectorAsync(
                 options.Subscription!,

@@ -81,7 +81,7 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
     {
         try
         {
-            context.Activity?.AddTag("subscription", options.Subscription);
+            context.AddTelemetryTag("subscription", options.Subscription);
 
             var updateResult = await _appServiceService.UpdateAppSettingsAsync(
                 options.Subscription!,

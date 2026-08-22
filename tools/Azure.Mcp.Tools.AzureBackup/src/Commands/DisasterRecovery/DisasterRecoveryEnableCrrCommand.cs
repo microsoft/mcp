@@ -31,8 +31,8 @@ public sealed class DisasterRecoveryEnableCrrCommand(ILogger<DisasterRecoveryEna
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseAzureBackupOptions options, CancellationToken cancellationToken)
     {
-        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
-        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+        AzureBackupTelemetryTags.AddSubscriptionTag(context, options.Subscription);
+        AzureBackupTelemetryTags.AddVaultTags(context, options.VaultType);
 
         try
         {

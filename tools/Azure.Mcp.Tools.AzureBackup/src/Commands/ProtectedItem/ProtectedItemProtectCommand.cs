@@ -89,9 +89,9 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ProtectedItemProtectOptions options, CancellationToken cancellationToken)
     {
-        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
-        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
-        context.Activity?.AddTag(AzureBackupTelemetryTags.DatasourceType, AzureBackupTelemetryTags.NormalizeWorkloadType(options.DatasourceType));
+        AzureBackupTelemetryTags.AddSubscriptionTag(context, options.Subscription);
+        AzureBackupTelemetryTags.AddVaultTags(context, options.VaultType);
+        context.AddTelemetryTag(AzureBackupTelemetryTags.DatasourceType, AzureBackupTelemetryTags.NormalizeWorkloadType(options.DatasourceType));
 
         try
         {

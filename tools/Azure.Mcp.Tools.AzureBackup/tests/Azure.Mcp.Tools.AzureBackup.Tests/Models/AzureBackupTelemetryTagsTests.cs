@@ -36,7 +36,7 @@ public class AzureBackupTelemetryTagsTests
     [Fact]
     public void AddVaultTags_NullActivity_DoesNotThrow()
     {
-        AzureBackupTelemetryTags.AddVaultTags(null, "rsv");
+        AzureBackupTelemetryTags.AddVaultTags(new(null), "rsv");
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class AzureBackupTelemetryTagsTests
         using var activity = source.StartActivity("test-op");
         Assert.NotNull(activity);
 
-        AzureBackupTelemetryTags.AddVaultTags(activity, null);
+        AzureBackupTelemetryTags.AddVaultTags(new(activity), null);
 
         var tag = activity.GetTagItem(AzureBackupTelemetryTags.VaultType);
         Assert.Equal("auto", tag);
@@ -73,7 +73,7 @@ public class AzureBackupTelemetryTagsTests
         using var activity = source.StartActivity("test-op");
         Assert.NotNull(activity);
 
-        AzureBackupTelemetryTags.AddVaultTags(activity, "RSV");
+        AzureBackupTelemetryTags.AddVaultTags(new(activity), "RSV");
 
         var tag = activity.GetTagItem(AzureBackupTelemetryTags.VaultType);
         Assert.Equal("rsv", tag);
@@ -93,7 +93,7 @@ public class AzureBackupTelemetryTagsTests
         using var activity = source.StartActivity("test-op");
         Assert.NotNull(activity);
 
-        AzureBackupTelemetryTags.AddVaultAndWorkloadTags(activity, null, null);
+        AzureBackupTelemetryTags.AddVaultAndWorkloadTags(new(activity), null, null);
 
         Assert.Equal("auto", activity.GetTagItem(AzureBackupTelemetryTags.VaultType));
         Assert.Equal("unspecified", activity.GetTagItem(AzureBackupTelemetryTags.WorkloadType));
@@ -118,7 +118,7 @@ public class AzureBackupTelemetryTagsTests
     [Fact]
     public void AddSubscriptionTag_NullActivity_DoesNotThrow()
     {
-        AzureBackupTelemetryTags.AddSubscriptionTag(null, "00000000-0000-0000-0000-000000000000");
+        AzureBackupTelemetryTags.AddSubscriptionTag(new(null), "00000000-0000-0000-0000-000000000000");
     }
 
     [Fact]
@@ -135,7 +135,7 @@ public class AzureBackupTelemetryTagsTests
         using var activity = source.StartActivity("test-op");
         Assert.NotNull(activity);
 
-        AzureBackupTelemetryTags.AddSubscriptionTag(activity, null);
+        AzureBackupTelemetryTags.AddSubscriptionTag(new(activity), null);
 
         Assert.Null(activity.GetTagItem(AzureBackupTelemetryTags.SubscriptionGuid));
     }
@@ -157,7 +157,7 @@ public class AzureBackupTelemetryTagsTests
         using var activity = source.StartActivity("test-op");
         Assert.NotNull(activity);
 
-        AzureBackupTelemetryTags.AddSubscriptionTag(activity, subscription);
+        AzureBackupTelemetryTags.AddSubscriptionTag(new(activity), subscription);
 
         Assert.Equal(subscription, activity.GetTagItem(AzureBackupTelemetryTags.SubscriptionGuid));
     }

@@ -42,7 +42,7 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
     {
         try
         {
-            context.Activity?.AddTag(QuotaTelemetryTags.ResourceTypes, options.ResourceTypes);
+            context.AddTelemetryTag(QuotaTelemetryTags.ResourceTypes, options.ResourceTypes);
 
             var resourceTypes = options.ResourceTypes.Split(',')
                 .Select(rt => rt.Trim())

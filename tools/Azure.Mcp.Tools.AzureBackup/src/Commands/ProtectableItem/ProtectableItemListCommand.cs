@@ -53,8 +53,8 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ProtectableItemListOptions options, CancellationToken cancellationToken)
     {
-        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
-        AzureBackupTelemetryTags.AddVaultAndWorkloadTags(context.Activity, options.VaultType ?? "rsv", options.WorkloadType);
+        AzureBackupTelemetryTags.AddSubscriptionTag(context, options.Subscription);
+        AzureBackupTelemetryTags.AddVaultAndWorkloadTags(context, options.VaultType ?? "rsv", options.WorkloadType);
 
         try
         {
