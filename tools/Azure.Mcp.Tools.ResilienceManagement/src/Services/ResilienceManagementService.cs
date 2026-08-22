@@ -399,7 +399,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return document.RootElement.Clone();
     }
 
-    public async Task<RecoveryPlanInfo> CreateRecoveryPlanAsync(string serviceGroup, string recoveryPlan, RecoveryPlanKind planType, string? planDescription, RecoveryPlanIdentityKind identityType, string? userAssignedIdentity = null, string? defaultGroupDescription = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    public async Task<RecoveryPlanInfo> CreateRecoveryPlanAsync(string serviceGroup, string recoveryPlan, RecoveryPlanKind planType, string? planDescription, RecoveryPlanIdentityKind identityType, string? userAssignedIdentity = null, string? defaultGroupDescription = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default, IReadOnlyList<RecoveryPlanGroupInput>? additionalGroups = null, IReadOnlyList<RecoveryPlanGroupActionInput>? defaultGroupPreActions = null, IReadOnlyList<RecoveryPlanGroupActionInput>? defaultGroupPostActions = null)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
@@ -412,7 +412,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         RecoveryGroupsSetting? existingRecoveryGroups = existingPlan.HasValue
             ? existingPlan.Value?.Data?.Properties?.RecoveryGroupsSetting
             : null;
-        RecoveryGroupsSetting recoveryGroups = CreateRecoveryGroupsSetting(existingRecoveryGroups, defaultGroupDescription);
+        RecoveryGroupsSetting recoveryGroups = CreateRecoveryGroupsSetting(existingRecoveryGroups, defaultGroupDescription, additionalGroups, defaultGroupPreActions, defaultGroupPostActions);
         ManagedServiceIdentity identity = CreateRecoveryPlanIdentity(identityType, userAssignedIdentity, existingPlan.HasValue ? existingPlan.Value?.Data?.Identity : null);
         var data = new RecoveryPlanData
         {
@@ -918,10 +918,10 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         }
     }
 
-    internal static RecoveryGroupsSetting CreateRecoveryGroupsSetting(RecoveryGroupsSetting? existingRecoveryGroups, string? defaultGroupDescription)
+    internal static RecoveryGroupsSetting CreateRecoveryGroupsSetting(RecoveryGroupsSetting? existingRecoveryGroups, string? defaultGroupDescription, IReadOnlyList<RecoveryPlanGroupInput>? additionalGroups = null, IReadOnlyList<RecoveryPlanGroupActionInput>? defaultGroupPreActions = null, IReadOnlyList<RecoveryPlanGroupActionInput>? defaultGroupPostActions = null)
     {
         RecoveryGroup? existingDefaultGroup = existingRecoveryGroups?.DefaultGroup;
-        RecoveryGroup defaultGroup;
+        RecoveryGroupsSetting recoveryGroups;
         if (existingDefaultGroup?.Properties is { } existingDefaultGroupProperties)
         {
             if (defaultGroupDescription is not null)
@@ -929,23 +929,99 @@ public sealed class ResilienceManagementService(IAzureService azureService)
                 existingDefaultGroupProperties.Description = defaultGroupDescription;
             }
 
-            return existingRecoveryGroups!;
+            recoveryGroups = existingRecoveryGroups!;
         }
         else
         {
-            defaultGroup = new RecoveryGroup
+            var defaultGroup = new RecoveryGroup
             {
                 Properties = new RecoveryGroupProperties(Guid.NewGuid().ToString(), 0, defaultGroupDescription ?? "Default recovery group")
             };
+            recoveryGroups = new RecoveryGroupsSetting(defaultGroup);
         }
 
-        var recoveryGroups = new RecoveryGroupsSetting(defaultGroup);
-        foreach (RecoveryGroup additionalGroup in existingRecoveryGroups?.AdditionalGroups ?? [])
+        ApplyRecoveryGroupActions(recoveryGroups.DefaultGroup.Properties!.PreActions, defaultGroupPreActions);
+        ApplyRecoveryGroupActions(recoveryGroups.DefaultGroup.Properties.PostActions, defaultGroupPostActions);
+
+        if (additionalGroups is null)
         {
-            recoveryGroups.AdditionalGroups.Add(additionalGroup);
+            return recoveryGroups;
         }
+
+        RecoveryGroup[] existingAdditionalGroups = recoveryGroups.AdditionalGroups.ToArray();
+        recoveryGroups.AdditionalGroups.Clear();
+        foreach (RecoveryPlanGroupInput groupInput in additionalGroups.OrderBy(group => group.OrderId))
+        {
+            RecoveryGroup? existingGroup = groupInput.GroupUniqueId is not null
+                ? existingAdditionalGroups.FirstOrDefault(group => string.Equals(group.Properties?.GroupUniqueId, groupInput.GroupUniqueId, StringComparison.OrdinalIgnoreCase))
+                : existingAdditionalGroups.FirstOrDefault(group => group.Properties?.OrderId == groupInput.OrderId);
+            if (existingGroup?.Properties is { } existingProperties)
+            {
+                existingProperties.OrderId = groupInput.OrderId;
+                existingProperties.Description = groupInput.Description;
+                ApplyRecoveryGroupActions(existingProperties.PreActions, groupInput.PreActions);
+                ApplyRecoveryGroupActions(existingProperties.PostActions, groupInput.PostActions);
+                recoveryGroups.AdditionalGroups.Add(existingGroup);
+                continue;
+            }
+
+            var newGroup = new RecoveryGroup
+            {
+                Properties = new RecoveryGroupProperties(groupInput.GroupUniqueId ?? Guid.NewGuid().ToString(), groupInput.OrderId, groupInput.Description)
+            };
+            ApplyRecoveryGroupActions(newGroup.Properties.PreActions, groupInput.PreActions);
+            ApplyRecoveryGroupActions(newGroup.Properties.PostActions, groupInput.PostActions);
+            recoveryGroups.AdditionalGroups.Add(newGroup);
+        }
+
+        ValidateRecoveryGroupIdentifiers(recoveryGroups);
 
         return recoveryGroups;
+    }
+
+    private static void ValidateRecoveryGroupIdentifiers(RecoveryGroupsSetting recoveryGroups)
+    {
+        string defaultGroupUniqueId = recoveryGroups.DefaultGroup.Properties!.GroupUniqueId;
+        if (recoveryGroups.AdditionalGroups.Any(group =>
+            string.Equals(group.Properties?.GroupUniqueId, defaultGroupUniqueId, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new ArgumentException("An additional recovery group groupUniqueId cannot match the default recovery group groupUniqueId.");
+        }
+    }
+
+    private static void ApplyRecoveryGroupActions(IList<RecoveryGroupBaseAction> target, IReadOnlyList<RecoveryPlanGroupActionInput>? actions)
+    {
+        if (actions is null)
+        {
+            return;
+        }
+
+        target.Clear();
+        foreach (RecoveryPlanGroupActionInput action in actions)
+        {
+            RecoveryGroupBaseAction sdkAction = action.Type switch
+            {
+                RecoveryPlanGroupActionKind.ManualAction => new RecoveryGroupManualAction(action.Name, action.TimeoutInMinutes),
+                RecoveryPlanGroupActionKind.CustomRunbook => CreateCustomRunbookAction(action),
+                _ => throw new ArgumentOutOfRangeException(nameof(action), action.Type, "Unsupported recovery group action type.")
+            };
+            sdkAction.Description = action.Description;
+            target.Add(sdkAction);
+        }
+    }
+
+    private static RecoveryGroupCustomRunbookAction CreateCustomRunbookAction(RecoveryPlanGroupActionInput action)
+    {
+        var sdkAction = new RecoveryGroupCustomRunbookAction(action.Name, action.TimeoutInMinutes)
+        {
+            ActionResourceId = new ResourceIdentifier(action.ActionResourceId!)
+        };
+        foreach ((string name, string value) in action.Parameters ?? new Dictionary<string, string>())
+        {
+            sdkAction.Parameters.Add(name, value);
+        }
+
+        return sdkAction;
     }
 
     internal static ManagedServiceIdentity CreateRecoveryPlanIdentity(RecoveryPlanIdentityKind identityType, string? userAssignedIdentity, ManagedServiceIdentity? existingIdentity = null)

@@ -249,10 +249,14 @@ public class ResilienceManagementCommandTests(
         var existingDefaultGroupProperties = existingRecoveryGroups
             .AssertProperty("defaultGroup")
             .AssertProperty("properties");
-        string[] existingAdditionalGroups = existingRecoveryGroups
+        (string? GroupUniqueId, int OrderId, string? Description)[] existingAdditionalGroups = existingRecoveryGroups
             .AssertProperty("additionalGroups")
             .EnumerateArray()
-            .Select(group => group.GetRawText())
+            .Select(group => group.AssertProperty("properties"))
+            .Select(properties => (
+                properties.AssertProperty("groupUniqueId").GetString(),
+                properties.AssertProperty("orderId").GetInt32(),
+                properties.AssertProperty("description").GetString()))
             .ToArray();
         var defaultGroupId = existingDefaultGroupProperties.AssertProperty("groupUniqueId").GetString();
         var defaultGroupDescription = existingDefaultGroupProperties.AssertProperty("description").GetString();
@@ -279,7 +283,10 @@ public class ResilienceManagementCommandTests(
         Assert.Equal(defaultGroupDescription, updatedDefaultGroup.AssertProperty("description").GetString());
         Assert.Equal(
             existingAdditionalGroups,
-            plan.AssertProperty("additionalGroups").EnumerateArray().Select(group => group.GetRawText()));
+            plan.AssertProperty("additionalGroups").EnumerateArray().Select(group => (
+                group.AssertProperty("groupUniqueId").GetString(),
+                group.AssertProperty("orderId").GetInt32(),
+                group.AssertProperty("description").GetString())));
     }
 
     [Fact]
