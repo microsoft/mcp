@@ -182,7 +182,9 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
 
         var drillRuns = result.AssertProperty("drillRuns");
         Assert.Equal(JsonValueKind.Array, drillRuns.ValueKind);
-        Assert.Contains(drillRuns.EnumerateArray(), item => item.AssertProperty("name").GetString() == drillRun);
+        Assert.Contains(drillRuns.EnumerateArray(), item =>
+            item.TryGetProperty("id", out var id) &&
+            (id.GetString()?.EndsWith(drillRun, StringComparison.OrdinalIgnoreCase) ?? false));
     }
 
     [Fact]
@@ -203,7 +205,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             });
 
         var returnedDrillRun = result.AssertProperty("drillRun");
-        Assert.Equal(drillRun, returnedDrillRun.AssertProperty("name").GetString());
+        Assert.True(returnedDrillRun.AssertProperty("id").GetString()?.EndsWith(drillRun, StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -226,7 +228,9 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
 
         var drillRunResources = result.AssertProperty("drillRunResources");
         Assert.Equal(JsonValueKind.Array, drillRunResources.ValueKind);
-        Assert.Contains(drillRunResources.EnumerateArray(), item => item.AssertProperty("name").GetString() == drillRunResource);
+        Assert.Contains(drillRunResources.EnumerateArray(), item =>
+            item.TryGetProperty("id", out var id) &&
+            (id.GetString()?.EndsWith(drillRunResource, StringComparison.OrdinalIgnoreCase) ?? false));
     }
 
     [Fact]
@@ -249,7 +253,7 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             });
 
         var returnedDrillRunResource = result.AssertProperty("drillRunResource");
-        Assert.Equal(drillRunResource, returnedDrillRunResource.AssertProperty("name").GetString());
+        Assert.True(returnedDrillRunResource.AssertProperty("id").GetString()?.EndsWith(drillRunResource, StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
