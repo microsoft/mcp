@@ -33,7 +33,7 @@ stimuli:
             - name: appconfig
               command: appconfig_kv_get
   - name: Lock key Foo
-    prompt: Lock the key Foo in App Configuration store AppConfigStore
+    prompt: Check if the key Foo exists and then Lock the key Foo in App Configuration store AppConfigStore.
     environment: ${ENVIRONMENT}
     tags: 
     graders:
