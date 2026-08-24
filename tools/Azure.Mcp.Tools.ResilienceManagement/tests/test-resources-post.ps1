@@ -84,18 +84,18 @@ function Invoke-ResilienceRestPost {
 function Wait-ResilienceProvisioning {
     param(
         [string] $Path,
-        [int] $TimeoutSeconds = 900
+        [int] $TimeoutSeconds = 900,
+        [switch] $WaitForAuthorization
     )
 
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     while ((Get-Date) -lt $deadline) {
         $response = Invoke-AzRestMethod -Method GET -Path $Path
 
-        # Creation of these resources is asynchronous and eventually consistent, so a
-        # 404 immediately after the PUT is expected. Treat it as "not ready yet" and keep
-        # polling until the resource appears or we hit the timeout.
-        if ($response.StatusCode -eq 404) {
-            Write-Host "  not found yet (still provisioning)"
+        # Resource creation is eventually consistent. Service groups also create an
+        # automatic administrator assignment that can take time to become effective.
+        if ($response.StatusCode -eq 404 -or ($WaitForAuthorization -and $response.StatusCode -eq 403)) {
+            Write-Host "  not accessible yet (still provisioning)"
             Start-Sleep -Seconds 15
             continue
         }
@@ -119,6 +119,19 @@ function Wait-ResilienceProvisioning {
     throw "Timed out waiting for $Path to finish provisioning."
 }
 
+function Add-RecoveryContributorRole {
+    param(
+        [string] $Scope
+    )
+
+    $roleName = 'Azure Resilience Management Recovery Contributor'
+    $assignment = Get-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionName $roleName -ErrorAction SilentlyContinue
+    if (!$assignment) {
+        Write-Host "Assigning $roleName to test identity at $Scope"
+        New-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionName $roleName | Out-Null
+    }
+}
+
 # 1) Create the tenant-scoped service group.
 $serviceGroupPath = "$serviceGroupId`?api-version=$serviceGroupApiVersion"
 Invoke-ResilienceRestPut -Path $serviceGroupPath -Body @{
@@ -129,7 +142,7 @@ Invoke-ResilienceRestPut -Path $serviceGroupPath -Body @{
         }
     }
 } | Out-Null
-Wait-ResilienceProvisioning -Path $serviceGroupPath
+Wait-ResilienceProvisioning -Path $serviceGroupPath -WaitForAuthorization
 
 # Create a second enrolled service group without a recovery plan. Lifecycle tests use it
 # to exercise create and delete without disturbing the shared plan used by other tests.
@@ -142,7 +155,10 @@ Invoke-ResilienceRestPut -Path $lifecycleServiceGroupPath -Body @{
         }
     }
 } | Out-Null
-Wait-ResilienceProvisioning -Path $lifecycleServiceGroupPath
+Wait-ResilienceProvisioning -Path $lifecycleServiceGroupPath -WaitForAuthorization
+
+Add-RecoveryContributorRole -Scope $serviceGroupId
+Add-RecoveryContributorRole -Scope $lifecycleServiceGroupId
 
 # 2) Add the resource group as a member of the service group so its resources
 #    (e.g. the storage account) surface as goal/recovery resource targets.
@@ -185,13 +201,27 @@ Wait-ResilienceProvisioning -Path $goalTemplatePath
 
 # 5) Assign the goal template to the service group.
 $goalAssignmentPath = "$serviceGroupResilienceBase/goalAssignments/$goalAssignmentName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPut -Path $goalAssignmentPath -Body @{
-    properties = @{
-        goalAssignmentType = 'Resiliency'
-        goalTemplateId     = "$serviceGroupResilienceBase/goalTemplates/$goalTemplateName"
+$goalTemplateId = "$serviceGroupResilienceBase/goalTemplates/$goalTemplateName"
+$existingGoalAssignment = Invoke-AzRestMethod -Method GET -Path $goalAssignmentPath
+if ($existingGoalAssignment.StatusCode -eq 404) {
+    Invoke-ResilienceRestPut -Path $goalAssignmentPath -Body @{
+        properties = @{
+            goalAssignmentType = 'Resiliency'
+            goalTemplateId     = $goalTemplateId
+        }
+    } | Out-Null
+    Wait-ResilienceProvisioning -Path $goalAssignmentPath
+} elseif ($existingGoalAssignment.StatusCode -eq 200) {
+    $goalAssignment = $existingGoalAssignment.Content | ConvertFrom-Json
+    if ($goalAssignment.properties.goalAssignmentType -ne 'Resiliency' -or
+        $goalAssignment.properties.goalTemplateId -ne $goalTemplateId -or
+        $goalAssignment.properties.provisioningState -ne 'Succeeded') {
+        throw "Existing goal assignment '$goalAssignmentName' does not match the requested test configuration."
     }
-} | Out-Null
-Wait-ResilienceProvisioning -Path $goalAssignmentPath
+    Write-Host "Goal assignment '$goalAssignmentName' already exists with the requested configuration."
+} else {
+    throw "GET $goalAssignmentPath failed with status $($existingGoalAssignment.StatusCode): $($existingGoalAssignment.Content)"
+}
 
 # 6) Create a recovery plan on the service group.
 $recoveryPlanPath = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName`?api-version=$resilienceApiVersion"
@@ -225,29 +255,47 @@ Wait-ResilienceProvisioning -Path $recoveryPlanPath
 
 # 8) Create a drill on the service group.
 $drillPath = "$serviceGroupResilienceBase/drills/$drillName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPut -Path $drillPath -Body @{
-    identity   = @{
-        type = 'SystemAssigned'
+$recoveryPlanId = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName"
+$existingDrill = Invoke-AzRestMethod -Method GET -Path $drillPath
+if ($existingDrill.StatusCode -eq 404) {
+    Invoke-ResilienceRestPut -Path $drillPath -Body @{
+        identity   = @{
+            type = 'SystemAssigned'
+        }
+        properties = @{
+            drillType               = 'Zonal'
+            rbacSetupMode           = 'AutomatedBuiltinRoles'
+            drillAssetProperties    = @{
+                subscription  = $subscriptionId
+                region        = 'westus2'
+                resourceGroup = $ResourceGroupName
+            }
+            chaosResourceProperties = @{
+                identity                       = @{ type = 'SystemAssigned' }
+                chaosResourceIdentityForFaults = @{ type = 'SystemAssigned' }
+            }
+            recoveryPlanProperties  = @{
+                recoveryPlanId = $recoveryPlanId
+                identity       = @{ type = 'SystemAssigned' }
+            }
+        }
+    } | Out-Null
+    Wait-ResilienceProvisioning -Path $drillPath
+} elseif ($existingDrill.StatusCode -eq 200) {
+    $drill = $existingDrill.Content | ConvertFrom-Json
+    if ($drill.properties.drillType -ne 'Zonal' -or
+        $drill.properties.rbacSetupMode -ne 'AutomatedBuiltinRoles' -or
+        $drill.properties.drillAssetProperties.subscription -ne $subscriptionId -or
+        $drill.properties.drillAssetProperties.region -ne 'westus2' -or
+        $drill.properties.drillAssetProperties.resourceGroup -ne $ResourceGroupName -or
+        $drill.properties.recoveryPlanProperties.recoveryPlanId -ne $recoveryPlanId -or
+        $drill.properties.provisioningState -ne 'Succeeded') {
+        throw "Existing drill '$drillName' does not match the requested test configuration."
     }
-    properties = @{
-        drillType               = 'Zonal'
-        rbacSetupMode           = 'AutomatedBuiltinRoles'
-        drillAssetProperties    = @{
-            subscription  = $subscriptionId
-            region        = 'westus2'
-            resourceGroup = $ResourceGroupName
-        }
-        chaosResourceProperties = @{
-            identity                       = @{ type = 'SystemAssigned' }
-            chaosResourceIdentityForFaults = @{ type = 'SystemAssigned' }
-        }
-        recoveryPlanProperties  = @{
-            recoveryPlanId = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName"
-            identity       = @{ type = 'SystemAssigned' }
-        }
-    }
-} | Out-Null
-Wait-ResilienceProvisioning -Path $drillPath
+    Write-Host "Drill '$drillName' already exists with the requested configuration."
+} else {
+    throw "GET $drillPath failed with status $($existingDrill.StatusCode): $($existingDrill.Content)"
+}
 
 # Capture the drill resource created by the drill provisioning so the
 # drill/resource live tests can read them from deployment outputs. The drill resources appear
