@@ -44,11 +44,11 @@ public static partial class ServiceCollectionExtensions
         // Register HTTP client services
         services.AddHttpClientServices();
 
-        // Register options for service start
+        // Register options for server start
         services.AddSingleton(serverStartOptions);
         services.AddSingleton(Options.Create(serverStartOptions));
 
-        // Register default tool loader options from service start options
+        // Register default tool loader options from server start options
         var defaultToolLoaderOptions = new ToolLoaderOptions
         {
             Namespace = serverStartOptions.Namespace,

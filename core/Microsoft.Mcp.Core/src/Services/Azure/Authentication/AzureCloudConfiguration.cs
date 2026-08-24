@@ -27,7 +27,7 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
     /// Initializes a new instance of the <see cref="AzureCloudConfiguration"/> class.
     /// </summary>
     /// <param name="configuration">The configuration to read from.</param>
-    /// <param name="serverStartOptions">Optional service start options that can provide the cloud configuration.</param>
+    /// <param name="serverStartOptions">Optional server start options that can provide the cloud configuration.</param>
     /// <param name="logger">Optional logger for diagnostics.</param>
     public AzureCloudConfiguration(
         IConfiguration configuration,
