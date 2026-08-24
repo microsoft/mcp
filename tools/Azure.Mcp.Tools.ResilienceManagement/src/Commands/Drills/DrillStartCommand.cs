@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Id = "7de91784-03ba-47e9-8cac-73172828a382",
     Name = "start",
     Title = "Start Resilience Drill",
-    Description = "Starts a new execution of a resilience drill in Failover or TestFailover mode. Returns the operation ID for the accepted asynchronous request.",
+    Description = "Starts, runs, or executes a resilience drill in Failover or TestFailover mode. Use this command to begin a new drill execution, not to get or list drill definitions. Returns the operation ID for the accepted asynchronous request.",
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

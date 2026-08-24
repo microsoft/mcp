@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Id = "d0c5ad0f-e4e8-423a-92cb-faa0af84a599",
     Name = "end",
     Title = "End Resilience Drill",
-    Description = "Ends the currently running execution of a resilience drill and records its Success or Failed attestation. Returns the operation ID for the accepted asynchronous request.",
+    Description = "Ends or stops a running resilience drill in a service group. Attests the drill as Success or Failed and records attestation notes.",
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
