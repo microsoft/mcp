@@ -40,6 +40,7 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<RecoveryPlanCreateCommand>();
         services.AddSingleton<RecoveryPlanDeleteCommand>();
         services.AddSingleton<RecoveryPlanUpdateResourcesCommand>();
+        services.AddSingleton<RecoveryPlanCheckReadinessCommand>();
         services.AddSingleton<RecoveryResourceGetCommand>();
         services.AddSingleton<RecoveryJobGetCommand>();
         services.AddSingleton<RecoveryJobResourceGetCommand>();
@@ -93,16 +94,14 @@ public class ResilienceManagementSetup : IAreaSetup
         enrollments.AddCommand<UsagePlanEnrollmentGetCommand>(serviceProvider);
         enrollments.AddCommand<UsagePlanEnrollmentCreateCommand>(serviceProvider);
 
-        // Create recovery subgroup with a plan subgroup
-        var recovery = new CommandGroup("recovery", "Resilience recovery operations - Commands for working with resilience recovery plans for an Azure service group.");
-        resilienceManagement.AddSubGroup(recovery);
-
-        var recoveryPlans = new CommandGroup("plan", "Resilience recovery plan operations - Commands for listing and getting resilience recovery plans for an Azure service group.");
-        recovery.AddSubGroup(recoveryPlans);
+        // Create recoveryplan subgroup
+        var recoveryPlans = new CommandGroup("recoveryplan", "Resilience recovery plan operations - Commands for listing and getting resilience recovery plans for an Azure service group.");
+        resilienceManagement.AddSubGroup(recoveryPlans);
 
         recoveryPlans.AddCommand<RecoveryPlanGetCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanCreateCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanDeleteCommand>(serviceProvider);
+        recoveryPlans.AddCommand<RecoveryPlanCheckReadinessCommand>(serviceProvider);
 
         // Create resource subgroup under recovery plan
         var recoveryResources = new CommandGroup("resource", "Resilience recovery resource operations - Commands for listing, getting, and updating the resources (members) of a resilience recovery plan.");
@@ -111,9 +110,9 @@ public class ResilienceManagementSetup : IAreaSetup
         recoveryResources.AddCommand<RecoveryResourceGetCommand>(serviceProvider);
         recoveryResources.AddCommand<RecoveryPlanUpdateResourcesCommand>(serviceProvider);
 
-        // Create job subgroup under recovery
-        var recoveryJobs = new CommandGroup("job", "Resilience recovery job operations - Commands for listing and getting the recovery jobs of a resilience recovery plan.");
-        recovery.AddSubGroup(recoveryJobs);
+        // Create recoveryjob subgroup
+        var recoveryJobs = new CommandGroup("recoveryjob", "Resilience recovery job operations - Commands for listing and getting the recovery jobs of a resilience recovery plan.");
+        resilienceManagement.AddSubGroup(recoveryJobs);
 
         recoveryJobs.AddCommand<RecoveryJobGetCommand>(serviceProvider);
 

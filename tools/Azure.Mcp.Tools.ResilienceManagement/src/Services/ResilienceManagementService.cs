@@ -17,6 +17,9 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Services;
 public sealed class ResilienceManagementService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IResilienceManagementService
 {
+    private static readonly TimeSpan ReadinessJobPollingInterval = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan ReadinessTimeout = TimeSpan.FromMinutes(10);
+
     public async Task<IEnumerable<ResourceSummary>> ListGoalTemplatesAsync(string serviceGroup, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
@@ -515,6 +518,285 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return CreateRecoveryPlanUpdateResourcesResult(operation.Value.FailedResources);
+    }
+
+    public Task<RecoveryPlanReadinessResult> CheckRecoveryPlanReadinessAsync(string serviceGroup, string recoveryPlan, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        return ExecuteWithTimeoutAsync(
+            token => CheckRecoveryPlanReadinessCoreAsync(serviceGroup, recoveryPlan, tenant, retryPolicy, token),
+            "recovery plan readiness check",
+            ReadinessTimeout,
+            cancellationToken);
+    }
+
+    private async Task<RecoveryPlanReadinessResult> CheckRecoveryPlanReadinessCoreAsync(string serviceGroup, string recoveryPlan, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var recoveryPlanId = RecoveryPlanResource.CreateResourceIdentifier(serviceGroup, recoveryPlan);
+        RecoveryPlanResource recoveryPlanResource = await armClient.GetRecoveryPlanResource(recoveryPlanId).GetAsync(cancellationToken);
+        RecoveryJobCollection recoveryJobs = recoveryPlanResource.GetRecoveryJobs();
+        HashSet<string> existingRecoveryJobIds = await GetRecoveryJobIdsAsync(recoveryJobs, cancellationToken);
+        string operationId = Guid.NewGuid().ToString();
+        ArmOperation operation = await recoveryPlanResource.CheckReadinessAsync(WaitUntil.Completed, operationId, cancellationToken);
+        ResourceIdentifier recoveryJobResourceId = TryGetRecoveryJobResourceId(
+                operation.GetRawResponse().Content,
+                serviceGroup,
+                recoveryPlan)
+            ?? await WaitForNewReadinessJobAsync(recoveryJobs, existingRecoveryJobIds, cancellationToken);
+        string recoveryJobId = recoveryJobResourceId.Name;
+
+        RecoveryJobResource recoveryJob = armClient.GetRecoveryJobResource(recoveryJobResourceId);
+        RecoveryJobResource recoveryJobResource = await WaitForRecoveryJobCompletionAsync(recoveryJob, recoveryJobId, cancellationToken);
+
+        RecoveryJobProperties recoveryJobProperties = GetRequiredProperties(
+            recoveryJobResource.Data.Properties,
+            "recovery job");
+        string status = recoveryJobProperties.Status?.ToString() ?? string.Empty;
+        RecoveryPlanReadinessError? error = CreateReadinessError(recoveryJobProperties.ErrorDetails);
+        List<RecoveryPlanReadinessFailedTask> failedTasks = GetFailedTasks(recoveryJobProperties.JobExtendedInfo?.TasksList);
+        List<RecoveryPlanReadinessFailedResource> failedResources = [];
+
+        await foreach (RecoveryJobTargetResource recoveryJobTarget in recoveryJobResource.GetRecoveryJobTargets().GetAllAsync(cancellationToken: cancellationToken))
+        {
+            RecoveryJobResourceProperties properties = GetRequiredProperties(
+                recoveryJobTarget.Data.Properties,
+                "recovery job target");
+            string targetStatus = properties.Status?.ToString() ?? string.Empty;
+            if (!string.Equals(targetStatus, "Completed", StringComparison.OrdinalIgnoreCase))
+            {
+                failedResources.Add(new RecoveryPlanReadinessFailedResource(
+                    recoveryJobTarget.Data.Id?.ToString() ?? string.Empty,
+                    properties.ResourceId?.ToString(),
+                    targetStatus,
+                    properties.TaskName,
+                    CreateReadinessError(properties.ErrorDetails)));
+            }
+        }
+
+        bool isReady = string.Equals(status, "Completed", StringComparison.OrdinalIgnoreCase) &&
+            failedTasks.Count == 0 && failedResources.Count == 0;
+
+        return new RecoveryPlanReadinessResult(
+            operationId,
+            recoveryJobId,
+            isReady,
+            status,
+            error,
+            failedTasks,
+            failedResources);
+    }
+
+    internal static async Task<T> ExecuteWithTimeoutAsync<T>(
+        Func<CancellationToken, Task<T>> operation,
+        string operationDescription,
+        TimeSpan timeout,
+        CancellationToken cancellationToken)
+    {
+        using var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCancellation.CancelAfter(timeout);
+
+        try
+        {
+            return await operation(timeoutCancellation.Token);
+        }
+        catch (OperationCanceledException) when (timeoutCancellation.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException($"The {operationDescription} did not complete within {timeout.TotalMinutes} minutes.");
+        }
+    }
+
+    internal static ResourceIdentifier GetRecoveryJobResourceId(BinaryData responseContent, string serviceGroup, string recoveryPlan)
+    {
+        return TryGetRecoveryJobResourceId(responseContent, serviceGroup, recoveryPlan)
+            ?? throw new InvalidOperationException("The readiness operation completed without returning a recovery job identifier.");
+    }
+
+    internal static ResourceIdentifier? TryGetRecoveryJobResourceId(BinaryData responseContent, string serviceGroup, string recoveryPlan)
+    {
+        try
+        {
+            RecoveryPlanActionBaseResult? result = ModelReaderWriter.Read<RecoveryPlanActionBaseResult>(
+                responseContent,
+                ModelReaderWriterOptions.Json,
+                AzureResourceManagerResilienceManagementContext.Default);
+            if (string.IsNullOrWhiteSpace(result?.JobId))
+            {
+                return null;
+            }
+
+            ResourceIdentifier recoveryJobResourceId = result.JobId.StartsWith("/", StringComparison.Ordinal)
+                ? new ResourceIdentifier(result.JobId)
+                : RecoveryJobResource.CreateResourceIdentifier(serviceGroup, recoveryPlan, result.JobId);
+            var expectedJobId = RecoveryJobResource.CreateResourceIdentifier(serviceGroup, recoveryPlan, recoveryJobResourceId.Name);
+            if (!Guid.TryParseExact(recoveryJobResourceId.Name, "D", out _) ||
+                recoveryJobResourceId.ResourceType != RecoveryJobResource.ResourceType ||
+                !string.Equals(recoveryJobResourceId.Parent?.ToString(), expectedJobId.Parent?.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("The readiness operation returned an invalid recovery job identifier.");
+            }
+
+            return recoveryJobResourceId;
+        }
+        catch (Exception ex) when (ex is JsonException or FormatException or ArgumentException)
+        {
+            throw new InvalidOperationException("The readiness operation returned an invalid recovery job identifier.", ex);
+        }
+    }
+
+    private static async Task<HashSet<string>> GetRecoveryJobIdsAsync(RecoveryJobCollection recoveryJobs, CancellationToken cancellationToken)
+    {
+        HashSet<string> recoveryJobIds = new(StringComparer.OrdinalIgnoreCase);
+        await foreach (RecoveryJobResource recoveryJob in recoveryJobs.GetAllAsync(cancellationToken: cancellationToken))
+        {
+            recoveryJobIds.Add(recoveryJob.Data.Id.ToString());
+        }
+
+        return recoveryJobIds;
+    }
+
+    private static async Task<ResourceIdentifier> WaitForNewReadinessJobAsync(
+        RecoveryJobCollection recoveryJobs,
+        HashSet<string> existingRecoveryJobIds,
+        CancellationToken cancellationToken)
+    {
+        while (true)
+        {
+            List<ResourceIdentifier> matchingJobIds = [];
+            await foreach (RecoveryJobResource recoveryJob in recoveryJobs.GetAllAsync(cancellationToken: cancellationToken))
+            {
+                if (!existingRecoveryJobIds.Contains(recoveryJob.Data.Id.ToString()) &&
+                    string.Equals(recoveryJob.Data.Properties?.Operation, "CheckRecoveryPlanReadiness", StringComparison.OrdinalIgnoreCase))
+                {
+                    matchingJobIds.Add(recoveryJob.Data.Id);
+                }
+            }
+
+            if (matchingJobIds.Count == 1)
+            {
+                return matchingJobIds[0];
+            }
+
+            if (matchingJobIds.Count > 1)
+            {
+                throw new InvalidOperationException("Multiple recovery jobs were created by concurrent readiness operations.");
+            }
+
+            await Task.Delay(ReadinessJobPollingInterval, cancellationToken);
+        }
+    }
+
+    internal static bool IsTerminalJobStatus(string status) =>
+        status.Equals("NotApplicable", StringComparison.OrdinalIgnoreCase) ||
+        status.Equals("Completed", StringComparison.OrdinalIgnoreCase) ||
+        status.Equals("CompletedWithWarnings", StringComparison.OrdinalIgnoreCase) ||
+        status.Equals("Failed", StringComparison.OrdinalIgnoreCase) ||
+        status.Equals("Skipped", StringComparison.OrdinalIgnoreCase) ||
+        status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase);
+
+    private static async Task<RecoveryJobResource> WaitForRecoveryJobCompletionAsync(
+        RecoveryJobResource recoveryJob,
+        string recoveryJobId,
+        CancellationToken cancellationToken)
+    {
+        return await WaitForCompletionAsync(
+            token => GetRecoveryJobIfAvailableAsync(recoveryJob, token),
+            job => IsTerminalJobStatus(GetRequiredProperties(job.Data.Properties, "recovery job").Status?.ToString() ?? string.Empty),
+            $"readiness recovery job '{recoveryJobId}'",
+            ReadinessJobPollingInterval,
+            ReadinessTimeout,
+            cancellationToken);
+    }
+
+    internal static T GetRequiredProperties<T>(T? properties, string resourceDescription) where T : class
+    {
+        return properties ?? throw new InvalidOperationException(
+            $"The readiness operation returned a {resourceDescription} without required properties.");
+    }
+
+    internal static async Task<T> WaitForCompletionAsync<T>(
+        Func<CancellationToken, Task<T?>> getCurrent,
+        Func<T, bool> isComplete,
+        string operationDescription,
+        TimeSpan pollingInterval,
+        TimeSpan timeout,
+        CancellationToken cancellationToken)
+        where T : class
+    {
+        using var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCancellation.CancelAfter(timeout);
+
+        try
+        {
+            while (true)
+            {
+                T? current = await getCurrent(timeoutCancellation.Token);
+                if (current is not null && isComplete(current))
+                {
+                    return current;
+                }
+
+                await Task.Delay(pollingInterval, timeoutCancellation.Token);
+            }
+        }
+        catch (OperationCanceledException) when (timeoutCancellation.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException($"The {operationDescription} did not complete within {timeout.TotalMinutes} minutes.");
+        }
+    }
+
+    private static async Task<RecoveryJobResource?> GetRecoveryJobIfAvailableAsync(
+        RecoveryJobResource recoveryJob,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            Response<RecoveryJobResource> response = await recoveryJob.GetAsync(cancellationToken);
+            return response.Value;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            return null;
+        }
+    }
+
+    private static RecoveryPlanReadinessError? CreateReadinessError(JobErrorInfo? error)
+    {
+        return error is null
+            ? null
+            : new RecoveryPlanReadinessError(error.ErrorCode, error.ErrorMessage, error.Recommendations);
+    }
+
+    private static List<RecoveryPlanReadinessFailedTask> GetFailedTasks(IReadOnlyList<JobTaskDetail>? tasks)
+    {
+        var failedTasks = new List<RecoveryPlanReadinessFailedTask>();
+        if (tasks is not null)
+        {
+            AddFailedTasks(tasks, failedTasks);
+        }
+
+        return failedTasks;
+    }
+
+    private static void AddFailedTasks(IReadOnlyList<JobTaskDetail> tasks, List<RecoveryPlanReadinessFailedTask> failedTasks)
+    {
+        foreach (JobTaskDetail task in tasks)
+        {
+            string status = task.Status?.ToString() ?? string.Empty;
+            if (string.Equals(status, "Failed", StringComparison.OrdinalIgnoreCase))
+            {
+                failedTasks.Add(new RecoveryPlanReadinessFailedTask(
+                    task.TaskId,
+                    task.TaskName,
+                    status,
+                    CreateReadinessError(task.ErrorDetails)));
+            }
+
+            if (task.SubTasksList.Count > 0)
+            {
+                AddFailedTasks(task.SubTasksList, failedTasks);
+            }
+        }
     }
 
     internal static RecoveryPlanUpdateResourcesResult CreateRecoveryPlanUpdateResourcesResult(IEnumerable<RecoveryMembersData> failedResources)
