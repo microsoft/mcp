@@ -514,6 +514,65 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return CreateRecoveryPlanUpdateResourcesResult(operation.Value.FailedResources);
     }
 
+    public async Task<RecoveryPlanValidateForFailoverResult> ValidateRecoveryPlanForFailoverAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string> sourceLocations, IReadOnlyList<string>? selectedResourceIds = null, string? userConsent = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var recoveryPlanId = RecoveryPlanResource.CreateResourceIdentifier(serviceGroup, recoveryPlan);
+        RecoveryPlanResource recoveryPlanResource = await armClient.GetRecoveryPlanResource(recoveryPlanId).GetAsync(cancellationToken);
+        var properties = new FailoverRequestProperties(sourceLocations);
+        foreach (string selectedResourceId in selectedResourceIds ?? [])
+        {
+            properties.SelectedResourceIds.Add(new ResourceIdentifier(selectedResourceId));
+        }
+
+        if (userConsent is not null)
+        {
+            properties.ExecutionConfigurationsUserConsent = new UserConsent(userConsent);
+        }
+
+        var content = new ResilienceManagementFailoverContent(FailoverDirectionTypes.FromSpecificLocations)
+        {
+            FailoverRequestProperties = properties
+        };
+        string operationId = Guid.NewGuid().ToString();
+        ArmOperation<ValidateForRecoveryOperationBaseResult> operation = await recoveryPlanResource.ValidateForFailoverAsync(
+            WaitUntil.Completed,
+            operationId,
+            content,
+            cancellationToken);
+
+        return CreateRecoveryPlanValidateForFailoverResult(operationId, operation.Value.RecoveryResourceQualifications);
+    }
+
+    internal static RecoveryPlanValidateForFailoverResult CreateRecoveryPlanValidateForFailoverResult(
+        string operationId,
+        IEnumerable<RecoveryResourceQualification>? recoveryResourceQualifications)
+    {
+        List<RecoveryPlanFailoverQualification> qualifications = (recoveryResourceQualifications ?? [])
+            .Select(qualification =>
+            {
+                RecoveryMembersData? resource = qualification?.RecoveryResource;
+                RecoveryResourceProperties? resourceProperties = resource?.Properties;
+                OperationQualificationDetails? details = qualification?.OperationQualificationDetails;
+                return new RecoveryPlanFailoverQualification(
+                    resource?.Id?.ToString() ?? string.Empty,
+                    resourceProperties?.RecoveryResourceUniqueId ?? resource?.Name ?? string.Empty,
+                    resourceProperties?.ResourceId?.ToString(),
+                    resourceProperties?.ResourceLocation?.ToString(),
+                    details?.QualificationState.ToString() ?? "Unknown",
+                    details?.NotQualifiedReasons?.Where(reason => !string.IsNullOrWhiteSpace(reason)).ToList() ?? [],
+                    resourceProperties?.ResourcePhysicalZones?.Where(zone => !string.IsNullOrWhiteSpace(zone)).ToList() ?? [],
+                    resourceProperties?.InclusionState?.ToString(),
+                    resourceProperties?.ProtectionStatus?.ToString(),
+                    resourceProperties?.IsAttentionRequired,
+                    resourceProperties?.AttentionReasons?.Where(reason => !string.IsNullOrWhiteSpace(reason)).ToList() ?? []);
+            })
+            .ToList();
+
+        return new RecoveryPlanValidateForFailoverResult(operationId, qualifications);
+    }
+
     internal static RecoveryPlanUpdateResourcesResult CreateRecoveryPlanUpdateResourcesResult(IEnumerable<RecoveryMembersData> failedResources)
     {
         List<RecoveryPlanUpdateResourcesFailedResource> resources = failedResources.Select(resource =>
