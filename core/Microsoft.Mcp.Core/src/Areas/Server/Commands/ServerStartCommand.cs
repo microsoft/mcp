@@ -122,7 +122,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
     }
 
     /// <summary>
-    /// Executes the service start command, creating and starting the MCP server.
+    /// Executes the server start command, creating and starting the MCP server.
     /// </summary>
     /// <param name="context">The command execution context.</param>
     /// <param name="options">The parsed command options.</param>

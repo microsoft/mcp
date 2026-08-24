@@ -2,741 +2,1033 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Net;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
+using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using Microsoft.Mcp.Tests;
-using Microsoft.Mcp.Tests.Client.Helpers;
-using ModelContextProtocol.Client;
-using ModelContextProtocol.Protocol;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server;
 
-/// <summary>
-/// Live integration tests for Azure MCP Server that validate tool loading behavior across different modes.
-/// These tests start actual MCP server instances and verify the correct tools are loaded.
-/// </summary>
-[Trait("TestType", "Live")]
-public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
+public class ServerStartCommandTests
 {
-    private Process? _httpServerProcess;
+    private readonly ServerStartCommand _command = new();
+    private static readonly Lock s_currentDirectoryLock = new();
 
-    protected ITestOutputHelper Output { get; } = output;
-
-    public ValueTask InitializeAsync()
+    [Fact]
+    public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.SkipWhen(!TestExtensions.IsLiveTestMode(), "Skipping test in non-live mode");
-        return ValueTask.CompletedTask;
+        // Assert
+        Assert.Equal("start", _command.GetCommand().Name);
+        Assert.Equal("Starts Azure MCP Server.", _command.GetCommand().Description!);
     }
 
-    public ValueTask DisposeAsync()
+    [Theory]
+    [InlineData(null, "", "stdio")]
+    [InlineData("storage", "storage", "stdio")]
+    public void ServiceOption_ParsesCorrectly(string? inputService, string expectedService, string expectedTransport)
     {
-        if (_httpServerProcess is { HasExited: false } process)
+        // Arrange
+        var args = new List<string>() { "--transport", "stdio" };
+        if (!string.IsNullOrEmpty(inputService))
+        {
+            args.Add("--namespace");
+            args.Add(inputService);
+        }
+
+        // Act
+        var options = BindOptions(args);
+
+        // Assert
+        Assert.Equal(expectedService, (options.Namespace != null && options.Namespace.Length > 0) ? options.Namespace[0] : "");
+        Assert.Equal(expectedTransport, options.Transport);
+    }
+
+    [Theory]
+    [MemberData(nameof(BoolOptionTestData))]
+    public void BoolOption_ParsesCorrectly(string optionName, bool expectedValue, bool implicitBool)
+    {
+        // Arrange
+        var args = new List<string>
+        {
+            "--transport",
+            "stdio"
+        };
+
+        if (expectedValue)
+        {
+            args.Add(optionName);
+            if (implicitBool)
+            {
+                args.Add("true");
+            }
+        }
+        else if (implicitBool)
+        {
+            args.Add(optionName);
+            args.Add("false");
+        }
+
+        // Act
+        var parseResult = _command.GetCommand().Parse(args);
+        var actualValue = parseResult.GetValue<bool>(optionName);
+
+        // Assert
+        Assert.Equal(expectedValue, actualValue);
+    }
+
+    public static TheoryData<string, bool, bool> BoolOptionTestData()
+    {
+        var options = new[] {
+            "--read-only",
+            "--debug",
+            "--dangerously-disable-http-incoming-auth",
+            "--dangerously-disable-elicitation",
+            "--dangerously-disable-retry-limits",
+            "--disable-caching"
+        };
+        var theoryData = new TheoryData<string, bool, bool>();
+        foreach (var option in options)
+        {
+            theoryData.Add(option, true, true); // explicitly set to true
+            theoryData.Add(option, true, false); // implicitly set to true
+            theoryData.Add(option, false, true); // explicitly set to false
+            theoryData.Add(option, false, false); // implicitly set to false by omitting the option
+        }
+        return theoryData;
+    }
+
+    [Fact]
+    public void AllOptionsRegistered_IncludesDangerouslyDisableElicitation()
+    {
+        // Arrange & Act
+        var command = _command.GetCommand();
+
+        // Assert
+        var hasDangerouslyDisableElicitationOption = command.Options.Any(o => o.Name == "--dangerously-disable-elicitation");
+        Assert.True(hasDangerouslyDisableElicitationOption, "DangerouslyDisableElicitation option should be registered");
+    }
+
+    [Fact]
+    public void AllOptionsRegistered_IncludesTool()
+    {
+        // Arrange & Act
+        var command = _command.GetCommand();
+
+        // Assert
+        var hasToolOption = command.Options.Any(o => o.Name == "--tool");
+        Assert.True(hasToolOption, "Tool option should be registered");
+    }
+
+    [Theory]
+    [InlineData("azmcp_storage_account_get")]
+    [InlineData("azmcp_keyvault_secret_get")]
+    [InlineData("azmcp_storage_account_get", "azmcp_keyvault_secret_get")]
+    [InlineData(null)]
+    public void ToolOption_ParsesCorrectly(params string[]? expectedTool)
+    {
+        // Arrange & Act
+        var options = BindOptions(CreateArgsWithTool(expectedTool ?? null));
+
+        // Assert
+        if (expectedTool == null)
+        {
+            Assert.True(options.Tool == null || options.Tool.Length == 0);
+        }
+        else
+        {
+            Assert.NotNull(options.Tool);
+            Assert.Equal(expectedTool.Length, options.Tool.Length);
+            foreach (var tool in expectedTool)
+            {
+                Assert.Contains(tool, options.Tool);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("sse")]
+    [InlineData("websocket")]
+    [InlineData("invalid")]
+    public async Task ExecuteAsync_InvalidTransport_ReturnsValidationError(string invalidTransport)
+    {
+        // Arrange & Act
+        var response = await ExecuteAsync(CreateArgsWithTransport(invalidTransport));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains($"Invalid transport '{invalidTransport}'", response.Message);
+        Assert.Contains("Valid transports are: stdio, http.", response.Message);
+    }
+
+    [Theory]
+    [InlineData("invalid")]
+    [InlineData("unknown")]
+    [InlineData("")]
+    public async Task ExecuteAsync_InvalidMode_ReturnsValidationError(string invalidMode)
+    {
+        // Arrange & Act
+        var response = await ExecuteAsync(CreateArgsWithMode(invalidMode));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains($"Invalid mode '{invalidMode}'", response.Message);
+        Assert.Contains("Valid modes are: single, namespace, all, consolidated.", response.Message);
+    }
+
+    [Theory]
+    [InlineData("single")]
+    [InlineData("namespace")]
+    [InlineData("all")]
+    [InlineData(null)] // null should be valid (uses default)
+    public async Task ExecuteAsync_ValidMode_DoesNotReturnValidationError(string? validMode)
+    {
+        // Arrange & Act
+        var response = await ExecuteAsync(CreateArgsWithMode(validMode));
+
+        // Assert - Should not fail validation, though may fail later due to server startup
+        if (response.Status == HttpStatusCode.BadRequest && response.Message?.Contains("Invalid mode") == true)
+        {
+            Assert.Fail($"Mode '{validMode}' should be valid but got validation error: {response.Message}");
+        }
+    }
+
+    [Fact]
+    public void BindOptions_WithAllOptions_ReturnsCorrectlyConfiguredOptions()
+    {
+        // Arrange & Act
+        var options = BindOptions(
+            "--transport", "stdio",
+            "--namespace", "storage",
+            "--namespace", "keyvault",
+            "--mode", "all",
+            "--read-only",
+            "--debug",
+            "--dangerously-disable-elicitation",
+            "--disable-caching");
+
+        // Assert
+        Assert.Equal(TransportTypes.StdIo, options.Transport);
+        Assert.Equal(new[] { "storage", "keyvault" }, options.Namespace);
+        Assert.Equal("all", options.Mode);
+        Assert.True(options.ReadOnly);
+        Assert.True(options.Debug);
+        Assert.False(options.DangerouslyDisableHttpIncomingAuth);
+        Assert.True(options.DangerouslyDisableElicitation);
+        Assert.True(options.DisableCaching);
+    }
+
+    [Fact]
+    public void BindOptions_WithTool_ReturnsCorrectlyConfiguredOptions()
+    {
+        // Arrange & Act
+        var expectedTool = "azmcp_group_list";
+        var options = BindOptions(CreateArgsWithTool([expectedTool]));
+
+        // Assert
+        Assert.NotNull(options.Tool);
+        Assert.Single(options.Tool);
+        Assert.Equal(expectedTool, options.Tool[0]);
+        Assert.Equal(TransportTypes.StdIo, options.Transport);
+        Assert.Equal("all", options.Mode);
+    }
+
+    [Fact]
+    public void BindOptions_WithMultipleToolsAndExplicitMode_OverridesToAllMode()
+    {
+        // Arrange & Act - Explicitly set mode to single but also provide multiple tools
+        var tools = new[] { "azmcp_group_list", "azmcp_subscription_list" };
+        var options = BindOptions("--transport", "stdio", "--mode", "single", "--tool", tools[0], "--tool", tools[1]);
+
+        // Assert
+        Assert.NotNull(options.Tool);
+        Assert.Equal(2, options.Tool.Length);
+        Assert.Equal(tools, options.Tool);
+        Assert.Equal("all", options.Mode);
+    }
+
+    [Fact]
+    public void BindOptions_WithDefaults_ReturnsDefaultValues()
+    {
+        // Arrange & Act
+        var options = BindOptions();
+
+        // Assert
+        Assert.Equal(TransportTypes.StdIo, options.Transport); // Default transport
+        Assert.Null(options.Namespace);
+        Assert.Equal("namespace", options.Mode); // Default mode
+        Assert.False(options.ReadOnly); // Default readonly
+        Assert.False(options.Debug);
+        Assert.False(options.DangerouslyDisableHttpIncomingAuth);
+        Assert.False(options.DangerouslyDisableElicitation);
+        Assert.Null(options.DangerouslyWriteSupportLogsToDir);
+        Assert.False(options.DisableCaching);
+    }
+
+    [Theory]
+    [InlineData("/tmp/logs")]
+    [InlineData("C:\\logs")]
+    [InlineData(null)]
+    public void DangerouslyWriteSupportLogsToDirOption_ParsesCorrectly(string? expectedFolder)
+    {
+        // Arrange & Act
+        var options = BindOptions(CreateArgsWithSupportLogging(expectedFolder));
+
+        // Assert
+        Assert.Equal(expectedFolder, options.DangerouslyWriteSupportLogsToDir);
+    }
+
+    [Fact]
+    public void BindOptions_WithSupportLoggingFolder_ReturnsCorrectlyConfiguredOptions()
+    {
+        // Arrange & Act
+        var logFolder = "/tmp/mcp-support-logs";
+        var options = BindOptions(CreateArgsWithSupportLogging(logFolder));
+
+        // Assert
+        Assert.Equal(logFolder, options.DangerouslyWriteSupportLogsToDir);
+    }
+
+    [Fact]
+    public void BindOptions_WithoutSupportLoggingFolder_ReturnsCorrectlyConfiguredOptions()
+    {
+        // Act
+        var options = BindOptions(CreateArgsWithSupportLogging(null));
+
+        // Assert
+        Assert.Null(options.DangerouslyWriteSupportLogsToDir);
+    }
+
+    [Fact]
+    public void AllOptionsRegistered_IncludesSupportLoggingToFolder()
+    {
+        // Arrange & Act
+        var command = _command.GetCommand();
+
+        // Assert
+        var hasSupportLoggingFolderOption = command.Options.Any(o => o.Name == "--dangerously-write-support-logs-to-dir");
+        Assert.True(hasSupportLoggingFolderOption, "DangerouslyWriteSupportLogsToDir option should be registered");
+    }
+
+    [Fact]
+    public void Validate_WithValidOptions_ReturnsValidResult()
+    {
+        // Arrange & Act
+        var result = ValidateOptions(CreateArgsWithTransport("stdio"));
+
+        // Assert
+        Assert.True(result.IsValid);
+        Assert.Empty(result.Errors);
+    }
+
+    [Fact]
+    public void Validate_WithInvalidTransport_ReturnsInvalidResult()
+    {
+        // Arrange & Act
+        var result = ValidateOptions(CreateArgsWithTransport("invalid"));
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains("Invalid transport 'invalid'", string.Join('\n', result.Errors));
+    }
+
+    [Fact]
+    public void Validate_WithInvalidMode_ReturnsInvalidResult()
+    {
+        // Arrange & Act
+        var result = ValidateOptions(CreateArgsWithMode("invalid"));
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains("Invalid mode 'invalid'", string.Join('\n', result.Errors));
+    }
+
+    [Fact]
+    public void Validate_WithNamespaceAndTool_ReturnsInvalidResult()
+    {
+        // Arrange & Act
+        var result = ValidateOptions(CreateArgsWithNamespaceAndTool());
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains("--namespace and --tool options cannot be used together", string.Join('\n', result.Errors));
+    }
+
+    [Fact]
+    public void Validate_WithSupportLoggingFolderWhitespace_ReturnsInvalidResult()
+    {
+        // Arrange & Act
+        var result = ValidateOptions(CreateArgsWithSupportLogging("   "));
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains("The --dangerously-write-support-logs-to-dir option requires a valid folder path", string.Join('\n', result.Errors));
+    }
+
+    [Fact]
+    public void Validate_WithValidSupportLoggingFolder_ReturnsValidResult()
+    {
+        // Arrange & Act
+        var result = ValidateOptions(CreateArgsWithSupportLogging("/tmp/mcp-support-logs"));
+
+        // Assert
+        Assert.True(result.IsValid);
+        Assert.Empty(result.Errors);
+    }
+
+    [Fact]
+    public void Validate_WithoutSupportLoggingFolder_ReturnsValidResult()
+    {
+        // Arrange & Act
+        var result = ValidateOptions(CreateArgsWithSupportLogging(null));
+
+        // Assert
+        Assert.True(result.IsValid);
+        Assert.Empty(result.Errors);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithSupportLoggingFolderWhitespace_ReturnsValidationError()
+    {
+        // Arrange & Act
+        var response = await ExecuteAsync(CreateArgsWithSupportLogging("   "));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("The --dangerously-write-support-logs-to-dir option requires a valid folder path", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithNamespaceAndTool_ReturnsValidationError()
+    {
+        // Arrange & Act
+        var response = await ExecuteAsync(CreateArgsWithNamespaceAndTool());
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--namespace and --tool options cannot be used together", response.Message);
+    }
+
+    [Fact]
+    public void GetErrorMessage_WithTransportArgumentException_ReturnsCustomMessage()
+    {
+        // Arrange
+        var exception = new ArgumentException("Invalid transport 'sse'. Valid transports are: stdio.");
+
+        // Act
+        var message = GetErrorMessage(exception);
+
+        // Assert
+        Assert.Contains("Invalid transport option specified", message);
+        Assert.Contains("Use --transport stdio", message);
+    }
+
+    [Fact]
+    public void GetErrorMessage_WithModeArgumentException_ReturnsCustomMessage()
+    {
+        // Arrange
+        var exception = new ArgumentException("Invalid mode 'invalid'. Valid modes are: single, namespace, all.");
+
+        // Act
+        var message = GetErrorMessage(exception);
+
+        // Assert
+        Assert.Contains("Invalid mode option specified", message);
+        Assert.Contains("Use --mode single, namespace, or all", message);
+    }
+
+    [Fact]
+    public void GetErrorMessage_WithDangerouslyDisableHttpIncomingAuthException_ReturnsCustomMessage()
+    {
+        // Arrange
+        var exception = new InvalidOperationException("Using --dangerously-disable-http-incoming-auth requires...");
+
+        // Act
+        var message = GetErrorMessage(exception);
+
+        // Assert
+        Assert.Contains("Configuration error to disable incoming HTTP authentication", message);
+        Assert.Contains("proper authentication is configured", message);
+    }
+
+    [Fact]
+    public void GetErrorMessage_WithNamespaceAndToolException_ReturnsCustomMessage()
+    {
+        // Arrange
+        var exception = new ArgumentException("--namespace and --tool options cannot be used together");
+
+        // Act
+        var message = GetErrorMessage(exception);
+
+        // Assert
+        Assert.Contains("Configuration error", message);
+        Assert.Contains("mutually exclusive", message);
+    }
+
+    [Theory]
+    [InlineData(typeof(ArgumentException), HttpStatusCode.BadRequest)]
+    [InlineData(typeof(InvalidOperationException), HttpStatusCode.UnprocessableEntity)]
+    [InlineData(typeof(Exception), HttpStatusCode.InternalServerError)]
+    public void GetStatusCode_ReturnsExpectedStatusCode(Type exceptionType, HttpStatusCode expectedStatusCode)
+    {
+        // Arrange
+        var exception = (Exception)Activator.CreateInstance(exceptionType, "Test exception message")!;
+
+        // Act
+        var statusCode = GetStatusCode(exception);
+
+        // Assert
+        Assert.Equal(expectedStatusCode, statusCode);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ValidTransport_DoesNotThrow()
+    {
+        // Arrange, Act, & Assert - Check that ArgumentException is not thrown for valid transport
+        try
+        {
+            await ExecuteAsync(CreateArgsWithTransport("stdio"));
+        }
+        catch (ArgumentException ex) when (ex.Message.Contains("transport"))
+        {
+            Assert.Fail($"ArgumentException should not be thrown for valid transport: {ex.Message}");
+        }
+        catch
+        {
+            // Other exceptions are expected since the server can't actually start in a unit test
+            // We only care that ArgumentException about transport is not thrown
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OmittedTransport_UsesDefaultAndDoesNotThrow()
+    {
+        // Arrange, Act, & Assert - Check that ArgumentException is not thrown when transport is omitted
+        try
+        {
+            await ExecuteAsync("--mode", "all", "--read-only");
+        }
+        catch (ArgumentException ex) when (ex.Message.Contains("transport"))
+        {
+            Assert.Fail($"ArgumentException should not be thrown when transport is omitted (should use default): {ex.Message}");
+        }
+        catch
+        {
+            // Other exceptions are expected since the server can't actually start in a unit test
+            // We only care that ArgumentException about transport is not thrown
+        }
+    }
+
+
+    [Fact]
+    public void InitializedHandler_SetsStartupInformation()
+    {
+        // Arrange
+        var serverStartOptions = new ServerStartOptions
+        {
+            Transport = TransportTypes.StdIo,
+            Mode = "test-mode",
+            Tool = ["test-tool1", "test-tool2"],
+            ReadOnly = false,
+            Debug = true,
+            Namespace = ["storage", "keyvault"],
+            DangerouslyDisableElicitation = false,
+            DangerouslyDisableHttpIncomingAuth = true,
+        };
+        var activity = new Activity("test-activity");
+        var mockTelemetry = Substitute.For<ITelemetryService>();
+        mockTelemetry.StartActivity(Arg.Any<string>()).Returns(activity);
+
+
+        // Act
+        ServerStartCommand.LogStartTelemetry(mockTelemetry, serverStartOptions);
+
+        // Assert
+        mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);
+
+        activity.AssertTagEquals(TagName.DangerouslyDisableHttpIncomingAuth, serverStartOptions.DangerouslyDisableHttpIncomingAuth);
+        activity.AssertTagEquals(TagName.DangerouslyDisableElicitation, serverStartOptions.DangerouslyDisableElicitation);
+        activity.AssertTagEquals(TagName.Transport, serverStartOptions.Transport);
+        activity.AssertTagEquals(TagName.ServerMode, serverStartOptions.Mode);
+        activity.AssertTagEquals(TagName.Tool, string.Join(",", serverStartOptions.Tool));
+        activity.AssertTagEquals(TagName.IsReadOnly, serverStartOptions.ReadOnly);
+        activity.AssertTagEquals(TagName.IsDebug, serverStartOptions.Debug);
+        activity.AssertTagEquals(TagName.Namespace, string.Join(",", serverStartOptions.Namespace));
+    }
+
+    [Fact]
+    public void InitializedHandler_SetsCorrectInformationWhenNull()
+    {
+        // Arrange
+        // Tool, Mode, and Namespace are null
+        var serverStartOptions = new ServerStartOptions
+        {
+            Transport = TransportTypes.StdIo,
+            Mode = null,
+            ReadOnly = true,
+            Debug = false,
+            DangerouslyDisableElicitation = true,
+            DangerouslyDisableHttpIncomingAuth = false,
+        };
+        var activity = new Activity("test-activity");
+        var mockTelemetry = Substitute.For<ITelemetryService>();
+        mockTelemetry.StartActivity(Arg.Any<string>()).Returns(activity);
+
+        // Act
+        ServerStartCommand.LogStartTelemetry(mockTelemetry, serverStartOptions);
+
+        // Assert
+        mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);
+
+        activity.AssertTagEquals(TagName.DangerouslyDisableHttpIncomingAuth, serverStartOptions.DangerouslyDisableHttpIncomingAuth);
+        activity.AssertTagEquals(TagName.DangerouslyDisableElicitation, serverStartOptions.DangerouslyDisableElicitation);
+        activity.AssertTagEquals(TagName.Transport, serverStartOptions.Transport);
+        activity.AssertTagDoesNotExist(TagName.ServerMode);
+        activity.AssertTagDoesNotExist(TagName.Tool);
+        activity.AssertTagEquals(TagName.IsReadOnly, serverStartOptions.ReadOnly);
+        activity.AssertTagEquals(TagName.IsDebug, serverStartOptions.Debug);
+        activity.AssertTagDoesNotExist(TagName.Namespace);
+    }
+
+    [Fact]
+    public void CreateStdioHost_UsesApplicationBaseAsContentRoot()
+    {
+        // Arrange
+        var options = new ServerStartOptions
+        {
+            Transport = TransportTypes.StdIo,
+            Mode = "namespace"
+        };
+        var originalCurrentDirectory = Environment.CurrentDirectory;
+        var temporaryDirectory = Path.Combine(Path.GetTempPath(), $"mcp-content-root-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(temporaryDirectory);
+
+        lock (s_currentDirectoryLock)
         {
             try
             {
-                process.Kill(entireProcessTree: true);
-                process.Dispose();
+                Environment.CurrentDirectory = temporaryDirectory;
+
+                // Act
+                using var host = ServerStartCommand.CreateStdioHost(options);
+                var hostEnvironment = host.Services.GetRequiredService<IHostEnvironment>();
+
+                // Assert
+                Assert.Equal(Path.GetFullPath(AppContext.BaseDirectory), Path.GetFullPath(hostEnvironment.ContentRootPath));
             }
-            catch (InvalidOperationException)
+            finally
             {
-                // Process already exited
+                Environment.CurrentDirectory = originalCurrentDirectory;
+                Directory.Delete(temporaryDirectory, recursive: true);
             }
         }
-
-        _httpServerProcess = null;
-
-        return ValueTask.CompletedTask;
     }
-
-    private async Task<McpClient?> CreateClientAsync(params string[] arguments)
-    {
-        string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
-
-        LiveTestSettings.TryLoadTestSettings(out var settings);
-        Dictionary<string, string?> envVars = settings?.EnvironmentVariables.ToDictionary(k => k.Key, v => (string?)v.Value) ?? [];
-
-        var (client, serverUrl) = await McpTestUtilities.CreateMcpClientAsync(
-            executablePath,
-            [.. arguments],
-            envVars,
-            process => _httpServerProcess = process,
-            Output,
-            settings?.TestPackage,
-            settings?.SettingsDirectory);
-
-        return client;
-    }
-
-    #region Default Mode Tests
 
     [Fact]
-    public async Task DefaultMode_LoadsNamespaceTools()
+    public void HttpContentRootOptions_UseApplicationBaseAsContentRoot()
     {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start");
-
         // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var options = Assert.IsType<WebApplicationOptions>(ServerStartCommand.s_httpWebApplicationOptions);
 
         // Assert
-        Assert.NotEmpty(listResult);
+        Assert.Equal(Path.GetFullPath(AppContext.BaseDirectory), Path.GetFullPath(options.ContentRootPath!));
+    }
 
-        // Should have tools from multiple areas
-        var toolNames = listResult.Select(t => t.Name).ToList();
+    private static string[] CreateArgsWithTransport(string transport) => ["--transport", transport, "--mode", "all", "--read-only"];
 
-        // Default mode is now namespace mode, so should have namespace-level tools (not 60+ individual tools)
-        Assert.True(toolNames.Count > 20, $"Expected more than 20 namespace tools, got {toolNames.Count}");
-
-        // Should include the documentation tool (displayed by its title)
-        Assert.Contains("documentation", toolNames, StringComparer.OrdinalIgnoreCase);
-
-        // Should include subscription and group utility commands
-        Assert.Contains(toolNames, name => name.Contains("subscription", StringComparison.OrdinalIgnoreCase) && name.Contains("list", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(toolNames, name => name.Contains("group", StringComparison.OrdinalIgnoreCase) && name.Contains("list", StringComparison.OrdinalIgnoreCase));
-
-        var uniqueNames = toolNames.Distinct().ToList();
-
-        Assert.Equal(toolNames.Count, uniqueNames.Count);
-
-        Output.WriteLine($"Verified {toolNames.Count} unique tool names in default (namespace) mode");
-
-        // Log for debugging
-        Output.WriteLine($"Default mode (namespace) loaded {toolNames.Count} tools");
-        foreach (var name in toolNames)
+    private static List<string> CreateArgsWithMode(string? mode)
+    {
+        var args = new List<string>
         {
-            Output.WriteLine($"  - {name}");
-        }
-    }
-
-    [Fact]
-    public async Task DefaultMode_CanCallSubscriptionList()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start");
-
-        // Act
-        var result = await client!.CallToolAsync("subscription_list", new Dictionary<string, object?> { },
-            cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.NotNull(result.Content);
-        Assert.NotEmpty(result.Content);
-
-        // The result should contain subscription data (even if empty list)
-        var firstContent = result.Content.FirstOrDefault();
-        Assert.NotNull(firstContent);
-
-        // Log for debugging
-        Output.WriteLine($"Subscription list result: {firstContent}");
-    }
-
-    [Fact]
-    public async Task DefaultMode_CanCallGroupList()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start");
-
-        // Act
-        var result = await client!.CallToolAsync("group_list", new Dictionary<string, object?> { },
-            cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.NotNull(result.Content);
-        Assert.NotEmpty(result.Content);
-
-        // The result should contain resource group data (even if empty list)
-        var firstContent = result.Content.FirstOrDefault();
-        Assert.NotNull(firstContent);
-
-        // Log for debugging
-        Output.WriteLine($"Group list result: {firstContent}");
-    }
-
-    #endregion
-
-    #region All Mode Tests
-
-    [Fact]
-    public async Task AllMode_LoadsAllIndividualTools()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "all");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotEmpty(listResult);
-
-        // Should have tools from multiple areas
-        var toolNames = listResult.Select(t => t.Name).ToList();
-
-        // Should include Azure service tools and extension tools (all individual tools)
-        Assert.True(toolNames.Count > 60, $"Expected more than 60 individual tools, got {toolNames.Count}");
-
-        // Should include the microsoft_docs_search tool
-        Assert.Contains("microsoft_docs_search", toolNames, StringComparer.OrdinalIgnoreCase);
-
-        // All tool names should be unique.
-        var uniqueNames = toolNames.Distinct().ToList();
-        Assert.Equal(toolNames.Count, uniqueNames.Count);
-
-        Output.WriteLine($"Verified {toolNames.Count} unique tool names in all mode");
-
-        // Log for debugging
-        Output.WriteLine($"All mode loaded {toolNames.Count} tools");
-        foreach (var name in toolNames)
-        {
-            Output.WriteLine($"  - {name}");
-        }
-    }
-
-    #endregion
-
-    #region Single Tool Proxy Mode Tests
-
-    [Fact]
-    public async Task SingleProxyMode_LoadsSingleAzureTool()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "single");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.Single(listResult);
-
-        var tool = listResult.First();
-        Assert.Equal("azure", tool.Name);
-        Assert.Contains("azure", tool.Description, StringComparison.OrdinalIgnoreCase);
-
-        Output.WriteLine($"Single proxy mode loaded 1 tool: {tool.Name}");
-        Output.WriteLine($"Description: {tool.Description}");
-    }
-
-    [Fact]
-    public async Task SingleProxyMode_WithNamespaceFilter_StillLoadsSingleAzureTool()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "single", "--namespace", "storage");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        // Single proxy mode should still expose single azure tool regardless of namespace filter
-        Assert.Single(listResult);
-        Assert.Equal("azure", listResult.First().Name);
-
-        Output.WriteLine("Single proxy mode with namespace filter still loaded 1 tool");
-    }
-
-    [Fact]
-    public async Task SingleProxyMode_WithReadOnlyFlag_LoadsSingleAzureTool()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "single", "--read-only");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.Single(listResult);
-        Assert.Equal("azure", listResult.First().Name);
-
-        // Verify read-only behavior for single proxy mode
-        var tool = listResult.First();
-        var readOnlyHint = tool.ProtocolTool?.Annotations?.ReadOnlyHint;
-
-        // The azure tool should have read-only hint when in read-only mode
-        Output.WriteLine($"Single proxy read-only tool ReadOnlyHint: {readOnlyHint}");
-        Output.WriteLine($"Tool annotations: {tool.ProtocolTool?.Annotations != null}");
-
-        // For single proxy mode, the ReadOnlyHint may be null because it's a proxy tool
-        // but we should still have annotations present
-        Assert.NotNull(tool.ProtocolTool?.Annotations);
-
-        Output.WriteLine("Single proxy read-only mode loaded 1 tool");
-    }
-
-    #endregion
-
-    #region Namespace Proxy Mode Tests
-
-    [Fact]
-    public async Task NamespaceProxyMode_LoadsNamespaceTools()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "namespace");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotEmpty(listResult);
-
-        var toolNames = listResult.Select(t => t.Name).ToList();
-
-        // In namespace mode without specific namespaces, should default to extension tools
-        Assert.True(toolNames.Count > 20, "Should have more than 20 tools in namespace mode");
-
-        // Should include the documentation tool (displayed by its title)
-        Assert.Contains("documentation", toolNames, StringComparer.OrdinalIgnoreCase);
-
-        Output.WriteLine($"Namespace proxy mode loaded {toolNames.Count} tools");
-        foreach (var name in toolNames)
-        {
-            Output.WriteLine($"  - {name}");
-        }
-    }
-
-    [Fact]
-    public async Task NamespaceProxyMode_WithSpecificNamespaces_LoadsNamespaceSpecificTools()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync(
-            "server", "start",
-            "--mode", "namespace",
-            "--namespace", "storage",
-            "--namespace", "keyvault",
-            "--namespace", "documentation");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotEmpty(listResult);
-
-        var toolNames = listResult.Select(t => t.Name).ToList();
-
-        // Should include namespace-specific tools
-        var hasRelevantTools = toolNames.Any(name =>
-            name.Contains("documentation", StringComparison.OrdinalIgnoreCase) ||
-            name.Contains("storage", StringComparison.OrdinalIgnoreCase) ||
-            name.Contains("keyvault", StringComparison.OrdinalIgnoreCase));
-
-        Assert.True(hasRelevantTools, "Should have tools related to specified namespaces");
-
-        // Should contain exactly 6 tools: 3 specified namespaces + 3 utility tools (group_list, group_resource_list, subscription_list)
-        Assert.Equal(6, toolNames.Count);
-
-        // Verify tools are from storage, keyvault namespaces, or utility tools
-        Assert.All(toolNames, toolName =>
-        {
-            var isStorageOrKeyVault = toolName.Contains("documentation", StringComparison.OrdinalIgnoreCase) ||
-                toolName.Contains("storage", StringComparison.OrdinalIgnoreCase) ||
-                toolName.Contains("keyvault", StringComparison.OrdinalIgnoreCase);
-            var isUtilityTool = toolName.Contains("group_list", StringComparison.OrdinalIgnoreCase) ||
-                toolName.Contains("group_resource_list", StringComparison.OrdinalIgnoreCase) ||
-                toolName.Contains("subscription_list", StringComparison.OrdinalIgnoreCase);
-            Assert.True(isStorageOrKeyVault || isUtilityTool, $"Tool '{toolName}' should be related to documentation, keyvault, storage namespaces, or be a utility tool");
-        });
-
-        Output.WriteLine($"Namespace proxy mode with [documentation, keyvault, storage] loaded {toolNames.Count} tools");
-    }
-
-    [Fact]
-    public async Task NamespaceProxyMode_StorageToolLearnMode_ReturnsStorageCommands()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "namespace");
-
-        // Act - Call storage tool in learn mode
-        var learnParameters = new Dictionary<string, object?>
-        {
-            ["learn"] = true
+            "--transport",
+            "stdio"
         };
 
-        var result = await client!.CallToolAsync("storage", learnParameters, cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.NotNull(result.Content);
-        Assert.NotEmpty(result.Content);
-
-        // Get the text content
-        var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
-        Assert.NotNull(textContent);
-        Assert.NotEmpty(textContent.Text);
-
-        var responseText = textContent.Text;
-
-        // Verify the response contains information about storage commands
-        Assert.Contains("available command", responseText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("storage", responseText, StringComparison.OrdinalIgnoreCase);
-
-        // Verify it contains specific storage commands we expect
-        Assert.Contains("storage_account_get", responseText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("storage_blob_container_get", responseText, StringComparison.OrdinalIgnoreCase);
-
-        Output.WriteLine("Storage tool learn mode response:");
-        Output.WriteLine(responseText);
-        Output.WriteLine($"✓ Learn mode returned {responseText.Length} characters of storage command information");
-    }
-
-    #endregion
-
-    #region Default Mode with Filters Tests
-
-    [Fact]
-    public async Task DefaultMode_WithNamespaceFilter_LoadsFilteredTools()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--namespace", "storage", "--namespace", "keyvault");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotEmpty(listResult);
-        Assert.Equal(5, listResult.Count()); // 2 specified namespaces + 3 utility tools
-
-        var toolNames = listResult.Select(t => t.Name).ToList();
-
-        // Should only include tools from specified namespaces
-        var hasStorageOrKeyVault = toolNames.Any(name =>
-            name.Contains("storage", StringComparison.OrdinalIgnoreCase) ||
-            name.Contains("keyvault", StringComparison.OrdinalIgnoreCase));
-
-        Assert.True(hasStorageOrKeyVault, "Should have tools related to storage or keyvault namespaces");
-
-        Output.WriteLine($"Default mode with namespaces [storage, keyvault] loaded {toolNames.Count} tools");
-        foreach (var name in toolNames)
+        if (mode is not null)
         {
-            Output.WriteLine($"  - {name}");
-        }
-    }
-
-    [Fact]
-    public async Task AllMode_WithNamespaceFilter_LoadsFilteredIndividualTools()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "all", "--namespace", "storage", "--namespace", "keyvault");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotEmpty(listResult);
-
-        var toolNames = listResult.Select(t => t.Name).ToList();
-
-        // Should only include individual tools from specified namespaces
-        var hasStorageOrKeyVault = toolNames.Any(name =>
-            name.Contains("storage", StringComparison.OrdinalIgnoreCase) ||
-            name.Contains("keyvault", StringComparison.OrdinalIgnoreCase));
-
-        Assert.True(hasStorageOrKeyVault, "Should have tools related to storage or keyvault namespaces");
-
-        // In all mode with namespace filter, should have more individual tools than namespace mode
-        Assert.True(toolNames.Count > 2, $"Expected more than 2 individual tools, got {toolNames.Count}");
-
-        Output.WriteLine($"All mode with namespaces [storage, keyvault] loaded {toolNames.Count} tools");
-    }
-
-    [Fact]
-    public async Task AllMode_WithReadOnlyFlag_LoadsOnlyReadOnlyTools()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "all", "--read-only");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotEmpty(listResult);
-
-        // All tools should be read-only or the count should be reduced
-        var toolCount = listResult.Count();
-        Assert.True(toolCount > 0, "Should have at least some read-only tools");
-
-        // Verify tools have read-only annotations
-        var toolsWithReadOnlyHint = 0;
-        var toolsWithAnnotations = 0;
-
-        foreach (var tool in listResult)
-        {
-            var hasAnnotations = tool.ProtocolTool?.Annotations != null;
-            var readOnlyHint = tool.ProtocolTool?.Annotations?.ReadOnlyHint;
-
-            if (hasAnnotations)
-            {
-                toolsWithAnnotations++;
-            }
-
-            if (readOnlyHint.HasValue && readOnlyHint.Value)
-            {
-                toolsWithReadOnlyHint++;
-            }
-
-            Output.WriteLine($"Tool: {tool.Name} - HasAnnotations: {hasAnnotations}, ReadOnlyHint: {readOnlyHint}");
+            args.Add("--mode");
+            args.Add(mode);
         }
 
-        Output.WriteLine($"Tools with annotations: {toolsWithAnnotations}/{toolCount}");
-        Output.WriteLine($"Tools with ReadOnlyHint=true: {toolsWithReadOnlyHint}/{toolCount}");
-
-        // In read-only mode, ALL tools must have annotations and ReadOnlyHint=true
-        Assert.Equal(toolCount, toolsWithAnnotations);
-        Assert.Equal(toolCount, toolsWithReadOnlyHint);
-
-        // Additional verification message
-        Output.WriteLine("✓ All tools have annotations and ReadOnlyHint=true as expected in read-only mode");
-
-        Output.WriteLine($"Default read-only mode loaded {toolCount} tools");
+        return args;
     }
 
-    #endregion
-
-    #region Negative Tests - Invalid Modes and Namespaces
-
-    [Fact]
-    public async Task InvalidMode_FailsToStartServer()
+    private static List<string> CreateArgsWithTool(string[]? tools)
     {
-        // Act & Assert
-        // The 2.0 SDK surfaces an early transport failure (the server process exits before the
-        // connection completes) as ClientTransportClosedException. The wrapped InnerException is
-        // platform-dependent (an IOException on Windows, null on Linux), so only the outer type
-        // is asserted.
-        await Assert.ThrowsAsync<ClientTransportClosedException>(async () =>
+        var args = new List<string>
         {
-            await using var client = await CreateClientAsync("server", "start", "--mode", "invalid-mode");
-        });
-    }
-
-    [Fact]
-    public async Task InvalidNamespace_LoadsGracefully()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--namespace", "invalid-namespace", "--namespace", "another-invalid");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        // Should not crash, but may have fewer tools
-        Assert.NotNull(listResult);
-
-        // Invalid namespaces should result in only utility tools (group_list, group_resource_list, subscription_list)
-        Assert.Equal(3, listResult.Count());
-        var toolNames = listResult.Select(t => t.Name).ToList();
-        Assert.Contains(toolNames, name => name.Contains("group", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(toolNames, name => name.Contains("subscription", StringComparison.OrdinalIgnoreCase));
-
-        Output.WriteLine($"Invalid namespaces loaded {listResult.Count()} tools");
-    }
-
-    #endregion
-
-    #region Consolidated Proxy Mode Tests
-
-    [Fact]
-    public async Task ConsolidatedProxyMode_LoadsConsolidatedTools()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotEmpty(listResult);
-
-        var toolNames = listResult.Select(t => t.Name).ToList();
-
-        // In consolidated mode, should have consolidated tools grouping related operations
-        Assert.True(toolNames.Count > 20, $"Expected more than 20 consolidated tools, got {toolNames.Count}");
-
-        // Should include some known consolidated tools
-        Assert.Contains(toolNames, name => name.Contains("azure_subscriptions_and_resource_groups", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(toolNames, name => name.Contains("azure_databases_details", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(toolNames, name => name.Contains("azure_storage_details", StringComparison.OrdinalIgnoreCase));
-
-        Output.WriteLine($"Consolidated proxy mode loaded {toolNames.Count} tools");
-        foreach (var name in toolNames)
-        {
-            Output.WriteLine($"  - {name}");
-        }
-    }
-
-    [Fact]
-    public async Task ConsolidatedProxyMode_ToolLearnMode_ReturnsConsolidatedCommands()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated");
-
-        // Act - Call a consolidated tool in learn mode
-        var learnParameters = new Dictionary<string, object?>
-        {
-            ["learn"] = true
+            "--transport", "stdio"
         };
 
-        var result = await client!.CallToolAsync("get_azure_databases_details", learnParameters, cancellationToken: TestContext.Current.CancellationToken);
+        if (tools is not null)
+        {
+            foreach (var tool in tools)
+            {
+                args.Add("--tool");
+                args.Add(tool);
+            }
+        }
 
-        // Assert
-        Assert.NotNull(result);
-        Assert.NotNull(result.Content);
-        Assert.NotEmpty(result.Content);
-
-        // Get the text content
-        var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
-        Assert.NotNull(textContent);
-        Assert.NotEmpty(textContent.Text);
-
-        var responseText = textContent.Text;
-
-        // Verify the response contains information about database commands
-        Assert.Contains("available command", responseText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("database", responseText, StringComparison.OrdinalIgnoreCase);
-
-        // Verify it contains multiple database-related commands
-        Assert.Contains("mysql", responseText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("postgres", responseText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("sql", responseText, StringComparison.OrdinalIgnoreCase);
-
-        Output.WriteLine("Consolidated database tool learn mode response:");
-        Output.WriteLine(responseText);
-        Output.WriteLine($"✓ Learn mode returned {responseText.Length} characters of consolidated command information");
+        return args;
     }
 
+    private static List<string> CreateArgsWithSupportLogging(string? folderPath)
+    {
+        var args = new List<string>
+        {
+            "--transport", "stdio"
+        };
+
+        if (folderPath is not null)
+        {
+            args.Add("--dangerously-write-support-logs-to-dir");
+            args.Add(folderPath);
+        }
+
+        return args;
+    }
+
+    private static string[] CreateArgsWithNamespaceAndTool() =>
+        ["--transport", "stdio", "--namespace", "storage", "--tool", "azmcp_storage_account_get"];
+
+    private ServerStartOptions BindOptions(params string[] args) => _command.BindOptions(_command.GetCommand().Parse(args));
+
+    private ServerStartOptions BindOptions(List<string> args) => _command.BindOptions(_command.GetCommand().Parse(args));
+
+    private ValidationResult ValidateOptions(params string[] args) => ValidateOptions(args.ToList());
+
+    private ValidationResult ValidateOptions(List<string> args)
+    {
+        var validationResult = new ValidationResult();
+        _command.ValidateOptions(BindOptions(args), validationResult);
+        return validationResult;
+    }
+
+    private async Task<CommandResponse> ExecuteAsync(params string[] args) => await ExecuteAsync(args.ToList());
+
+    private async Task<CommandResponse> ExecuteAsync(List<string> args)
+    {
+        // Need to use IBaseCommand here for ExecuteAsync as it handles binding and validating the args.
+        return await ((IBaseCommand)_command).ExecuteAsync(new(), _command.GetCommand().Parse(args), TestContext.Current.CancellationToken);
+    }
+
+    private string GetErrorMessage(Exception exception)
+    {
+        // Use reflection to access the protected GetErrorMessage method
+        var method = typeof(ServerStartCommand).GetMethod("GetErrorMessage",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        return (string)method!.Invoke(_command, [exception])!;
+    }
+
+    private HttpStatusCode GetStatusCode(Exception exception)
+    {
+        // Use reflection to access the protected GetStatusCode method
+        var method = typeof(ServerStartCommand).GetMethod("GetStatusCode",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        return (HttpStatusCode)method!.Invoke(_command, [exception])!;
+    }
+
+    #region CORS Policy Tests
+
     [Fact]
-    public async Task ConsolidatedProxyMode_WithNamespaceFilter_LoadsFilteredConsolidatedTools()
+    public void ConfigureCors_DevelopmentWithAuthDisabled_RestrictsToLocalhost()
     {
         // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated", "--namespace", "storage");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotEmpty(listResult);
-
-        var toolNames = listResult.Select(t => t.Name).ToList();
-
-        // Should only include consolidated tools related to specified namespaces
-        var hasRelevantTools = toolNames.Any(name =>
-            name.Contains("storage", StringComparison.OrdinalIgnoreCase));
-
-        Assert.True(hasRelevantTools, "Should have consolidated tools related to storage namespaces");
-
-        // In consolidated mode with namespace filter, should have fewer tools than without filter
-        Assert.True(toolNames.Count < 10, $"Expected fewer than 10 tools with namespace filter, got {toolNames.Count}");
-
-        Output.WriteLine($"Consolidated proxy mode with [storage] namespaces loaded {toolNames.Count} tools");
-        foreach (var name in toolNames)
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var serverOptions = new ServerStartOptions
         {
-            Output.WriteLine($"  - {name}");
+            DangerouslyDisableHttpIncomingAuth = true
+        };
+
+        // Set development environment
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+
+        try
+        {
+            // Arrange environment
+            var environment = Substitute.For<IWebHostEnvironment>();
+            environment.EnvironmentName.Returns("Development");
+
+            // Act
+            ServerStartCommand.ConfigureCors(services, environment, serverOptions);
+
+            // Assert
+            var serviceProvider = services.BuildServiceProvider();
+            var corsService = serviceProvider.GetService<Microsoft.AspNetCore.Cors.Infrastructure.ICorsService>();
+            Assert.NotNull(corsService);
+
+            // Verify policy was registered
+            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            Assert.NotNull(corsOptions.Value);
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
+        }
+    }
+
+    [Theory]
+    [InlineData("http://localhost:3000", true)]
+    [InlineData("http://localhost:5173", true)]
+    [InlineData("http://127.0.0.1:8080", true)]
+    [InlineData("http://[::1]:9000", true)]
+    [InlineData("https://localhost:443", true)]
+    [InlineData("http://example.com", false)]
+    [InlineData("https://evil.com", false)]
+    [InlineData("http://192.168.1.100", false)]
+    public void ConfigureCors_DevelopmentWithAuthDisabled_ValidatesOrigins(string origin, bool shouldBeAllowed)
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var serverOptions = new ServerStartOptions
+        {
+            DangerouslyDisableHttpIncomingAuth = true
+        };
+
+        // Set development environment
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+
+        try
+        {
+            // Arrange environment
+            var environment = Substitute.For<IWebHostEnvironment>();
+            environment.EnvironmentName.Returns("Development");
+
+            // Act
+            ServerStartCommand.ConfigureCors(services, environment, serverOptions);
+
+            var serviceProvider = services.BuildServiceProvider();
+            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
+
+            Assert.NotNull(policy);
+
+            // Verify origin validation
+            if (shouldBeAllowed)
+            {
+                Assert.True(policy.IsOriginAllowed(origin), $"Origin '{origin}' should be allowed in development mode with auth disabled");
+                Assert.True(policy.SupportsCredentials, "AllowCredentials should be true in development mode");
+            }
+            else
+            {
+                Assert.False(policy.IsOriginAllowed(origin), $"Origin '{origin}' should NOT be allowed in development mode with auth disabled");
+            }
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
         }
     }
 
     [Fact]
-    public async Task ConsolidatedProxyMode_WithReadOnlyFlag_LoadsOnlyReadOnlyConsolidatedTools()
+    public void ConfigureCors_DevelopmentWithAuthEnabled_AllowsAllOrigins()
     {
         // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated", "--read-only");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotEmpty(listResult);
-
-        var toolCount = listResult.Count();
-        Assert.True(toolCount > 0, "Should have at least some read-only consolidated tools");
-
-        // Verify all tools have read-only annotations
-        var toolsWithReadOnlyHint = 0;
-        var toolsWithAnnotations = 0;
-
-        foreach (var tool in listResult)
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var serverOptions = new ServerStartOptions
         {
-            var hasAnnotations = tool.ProtocolTool?.Annotations != null;
-            var readOnlyHint = tool.ProtocolTool?.Annotations?.ReadOnlyHint;
+            DangerouslyDisableHttpIncomingAuth = false
+        };
 
-            if (hasAnnotations)
-            {
-                toolsWithAnnotations++;
-            }
+        // Set development environment
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
 
-            if (readOnlyHint.HasValue && readOnlyHint.Value)
-            {
-                toolsWithReadOnlyHint++;
-            }
+        try
+        {
+            // Arrange environment
+            var environment = Substitute.For<IWebHostEnvironment>();
+            environment.EnvironmentName.Returns("Development");
 
-            // Verify tool names don't contain destructive operations
-            Assert.DoesNotContain("create_", tool.Name, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain("edit_", tool.Name, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain("delete_", tool.Name, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain("update_", tool.Name, StringComparison.OrdinalIgnoreCase);
+            // Act
+            ServerStartCommand.ConfigureCors(services, environment, serverOptions);
+
+            var serviceProvider = services.BuildServiceProvider();
+            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
+
+            Assert.NotNull(policy);
+
+            // Verify all origins are allowed
+            Assert.True(policy.AllowAnyOrigin, "AllowAnyOrigin should be true when authentication is enabled");
+            Assert.False(policy.SupportsCredentials, "SupportsCredentials should be false when AllowAnyOrigin is true");
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
         }
     }
 
     [Fact]
-    public async Task ConsolidatedProxyMode_CanCallConsolidatedTool()
+    public void ConfigureCors_ProductionWithAuthDisabled_AllowsAllOrigins()
     {
         // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated");
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var serverOptions = new ServerStartOptions
+        {
+            DangerouslyDisableHttpIncomingAuth = true
+        };
 
-        // Act - Call the consolidated subscriptions and resource groups tool
-        var result = await client!.CallToolAsync("get_azure_subscriptions_and_resource_groups",
-            new Dictionary<string, object?> { },
-            cancellationToken: TestContext.Current.CancellationToken);
+        // Set production environment
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
 
-        // Assert
-        Assert.NotNull(result);
-        Assert.NotNull(result.Content);
-        Assert.NotEmpty(result.Content);
+        try
+        {
+            // Arrange environment
+            var environment = Substitute.For<IWebHostEnvironment>();
+            environment.EnvironmentName.Returns("Production");
 
-        // The result should contain subscription and resource group data
-        var firstContent = result.Content.FirstOrDefault();
-        Assert.NotNull(firstContent);
+            // Act
+            ServerStartCommand.ConfigureCors(services, environment, serverOptions);
 
-        // Log for debugging
-        Output.WriteLine($"Consolidated tool result: {firstContent}");
-    }
+            var serviceProvider = services.BuildServiceProvider();
+            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
 
-    #endregion
+            Assert.NotNull(policy);
 
-    #region Tool Mode Tests
-
-    [Fact]
-    public async Task ToolMode_AutomaticallyChangesToAllMode()
-    {
-        // Arrange - Test that --tool switch automatically changes mode to "all"
-        await using var client = await CreateClientAsync("server", "start", "--tool", "group_list", "--tool", "subscription_list");
-
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotEmpty(listResult);
-
-        var toolNames = listResult.Select(t => t.Name).ToList();
-
-        // Should only include the specified tools
-        Assert.Equal(2, toolNames.Count);
-        Assert.Contains("group_list", toolNames);
-        Assert.Contains("subscription_list", toolNames);
+            // Verify all origins are allowed
+            Assert.True(policy.AllowAnyOrigin, "AllowAnyOrigin should be true in production");
+            Assert.False(policy.SupportsCredentials, "SupportsCredentials should be false when AllowAnyOrigin is true");
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
+        }
     }
 
     [Fact]
-    public async Task ToolMode_OverridesExplicitNamespaceMode()
+    public void ConfigureCors_ProductionWithAuthEnabled_AllowsAllOrigins()
     {
-        // Arrange - Test that --tool switch overrides --mode namespace
-        await using var client = await CreateClientAsync("server", "start", "--mode", "namespace", "--tool", "group_list");
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var serverOptions = new ServerStartOptions
+        {
+            DangerouslyDisableHttpIncomingAuth = false
+        };
 
-        // Act
-        var listResult = await client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        // Set production environment
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
 
-        // Assert
-        Assert.NotEmpty(listResult);
+        try
+        {
+            // Arrange environment
+            var environment = Substitute.For<IWebHostEnvironment>();
+            environment.EnvironmentName.Returns("Production");
 
-        var toolNames = listResult.Select(t => t.Name).ToList();
+            // Act
+            ServerStartCommand.ConfigureCors(services, environment, serverOptions);
 
-        // Should only include the specified tool, mode should be automatically changed to "all"
-        Assert.Single(toolNames);
-        Assert.Contains("group_list", toolNames);
+            var serviceProvider = services.BuildServiceProvider();
+            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
+
+            Assert.NotNull(policy);
+
+            // Verify all origins are allowed
+            Assert.True(policy.AllowAnyOrigin, "AllowAnyOrigin should be true in production with auth enabled");
+            Assert.False(policy.SupportsCredentials, "SupportsCredentials should be false when AllowAnyOrigin is true");
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
+        }
+    }
+
+    [Fact]
+    public void ConfigureCors_NoEnvironmentSet_DefaultsToAllowAllOrigins()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var serverOptions = new ServerStartOptions
+        {
+            DangerouslyDisableHttpIncomingAuth = true
+        };
+
+        // Ensure environment variable is not set
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
+
+        try
+        {
+            // Arrange environment (not Development, simulating Staging or other non-dev environment)
+            var environment = Substitute.For<IWebHostEnvironment>();
+            environment.EnvironmentName.Returns("Staging");
+
+            // Act
+            ServerStartCommand.ConfigureCors(services, environment, serverOptions);
+
+            var serviceProvider = services.BuildServiceProvider();
+            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
+
+            Assert.NotNull(policy);
+
+            // Verify all origins are allowed when environment is not Development
+            Assert.True(policy.AllowAnyOrigin, "AllowAnyOrigin should be true when ASPNETCORE_ENVIRONMENT is not set to Development");
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
+        }
+    }
+
+    [Fact]
+    public void ConfigureCors_DevelopmentWithAuthDisabled_AllowsAnyMethodAndHeader()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var serverOptions = new ServerStartOptions
+        {
+            DangerouslyDisableHttpIncomingAuth = true
+        };
+
+        // Set development environment
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+
+        try
+        {
+            // Arrange environment
+            var environment = Substitute.For<IWebHostEnvironment>();
+            environment.EnvironmentName.Returns("Development");
+
+            // Act
+            ServerStartCommand.ConfigureCors(services, environment, serverOptions);
+
+            var serviceProvider = services.BuildServiceProvider();
+            var corsOptions = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>>();
+            var policy = corsOptions.Value.GetPolicy("McpCorsPolicy");
+
+            Assert.NotNull(policy);
+
+            // Verify methods and headers
+            Assert.True(policy.AllowAnyMethod, "AllowAnyMethod should be true");
+            Assert.True(policy.AllowAnyHeader, "AllowAnyHeader should be true");
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", null);
+        }
     }
 
     #endregion
