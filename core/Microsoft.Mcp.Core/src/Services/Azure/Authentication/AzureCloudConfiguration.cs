@@ -27,17 +27,17 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
     /// Initializes a new instance of the <see cref="AzureCloudConfiguration"/> class.
     /// </summary>
     /// <param name="configuration">The configuration to read from.</param>
-    /// <param name="serviceStartOptions">Optional service start options that can provide the cloud configuration.</param>
+    /// <param name="serverStartOptions">Optional server start options that can provide the cloud configuration.</param>
     /// <param name="logger">Optional logger for diagnostics.</param>
     public AzureCloudConfiguration(
         IConfiguration configuration,
-        IOptions<ServerStartOptions>? serviceStartOptions = null,
+        IOptions<ServerStartOptions>? serverStartOptions = null,
         ILogger<AzureCloudConfiguration>? logger = null)
     {
         // Try to get cloud configuration from various sources in priority order:
-        // 1. ServiceStartOptions (--cloud command line argument)
+        // 1. ServerStartOptions (--cloud command line argument)
         // 2. Configuration (appsettings.json or environment variables)
-        var cloudValue = serviceStartOptions?.Value?.Cloud
+        var cloudValue = serverStartOptions?.Value?.Cloud
             ?? configuration["AZURE_CLOUD"]
             ?? configuration["azure_cloud"]
             ?? configuration["cloud"]

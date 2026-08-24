@@ -123,12 +123,12 @@ public class AzureCloudConfigurationTests
     }
 
     /// <summary>
-    /// Tests that ServiceStartOptions (command-line arguments) take priority over appsettings.json configuration.
+    /// Tests that ServerStartOptions (command-line arguments) take priority over appsettings.json configuration.
     /// </summary>
     [Fact]
     public void ConfigurationPriority_CommandLineOverridesAppsettings()
     {
-        // Arrange - ServiceStartOptions takes priority
+        // Arrange - ServerStartOptions takes priority
         var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { Cloud = "AzureChinaCloud" });
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = "AzureUSGovernment" })
@@ -142,7 +142,7 @@ public class AzureCloudConfigurationTests
     }
 
     /// <summary>
-    /// Tests that appsettings.json configuration is used when ServiceStartOptions is not set.
+    /// Tests that appsettings.json configuration is used when ServerStartOptions is not set.
     /// </summary>
     [Fact]
     public void ConfigurationPriority_AppsettingsUsedWhenNoCommandLine()
@@ -286,7 +286,7 @@ public class AzureCloudConfigurationTests
     }
 
     /// <summary>
-    /// Tests complete priority chain: ServiceStartOptions > cloud config > AZURE_CLOUD env var > default
+    /// Tests complete priority chain: ServerStartOptions > cloud config > AZURE_CLOUD env var > default
     /// </summary>
     [Fact]
     public void ConfigurationPriority_FullPriorityChain()
@@ -304,15 +304,15 @@ public class AzureCloudConfigurationTests
         // Act
         var cloudConfig = new AzureCloudConfiguration(config, options);
 
-        // Assert - Should use ServiceStartOptions (highest priority)
+        // Assert - Should use ServerStartOptions (highest priority)
         Assert.Equal(new Uri("https://login.chinacloudapi.cn"), cloudConfig.AuthorityHost);
     }
 
     /// <summary>
-    /// Tests that when ServiceStartOptions is null, configuration falls back to appsettings.
+    /// Tests that when ServerStartOptions is null, configuration falls back to appsettings.
     /// </summary>
     [Fact]
-    public void ConfigurationPriority_NullServiceStartOptions_FallsBackToConfig()
+    public void ConfigurationPriority_NullServerStartOptions_FallsBackToConfig()
     {
         // Arrange
         var config = new ConfigurationBuilder()
@@ -320,7 +320,7 @@ public class AzureCloudConfigurationTests
             .Build();
 
         // Act
-        var cloudConfig = new AzureCloudConfiguration(config, serviceStartOptions: null);
+        var cloudConfig = new AzureCloudConfiguration(config, serverStartOptions: null);
 
         // Assert
         Assert.Equal(new Uri("https://login.chinacloudapi.cn"), cloudConfig.AuthorityHost);
