@@ -249,7 +249,7 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(registeredOptions);
         Assert.True(registeredOptions.ReadOnly);
 
-        // Verify the option is also available as IOptions<ServerStartOptions>
+        // Verify the option is also available as IOptions<ServerRuntimeConfiguration>
         var optionsMonitor = provider.GetService<IOptions<ServerRuntimeConfiguration>>();
         Assert.NotNull(optionsMonitor);
         Assert.True(optionsMonitor.Value.ReadOnly);

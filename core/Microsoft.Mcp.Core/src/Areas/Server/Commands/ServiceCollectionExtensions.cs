@@ -50,6 +50,7 @@ public static partial class ServiceCollectionExtensions
             Transport = serverStartOptions.Transport,
             Mode = serverStartOptions.Mode ?? ModeTypes.Default,
             Namespace = serverStartOptions.Namespace,
+            Tool = serverStartOptions.Tool,
             ReadOnly = serverStartOptions.ReadOnly ?? false,
             DangerouslyDisableElicitation = serverStartOptions.DangerouslyDisableElicitation,
             Cloud = serverStartOptions.Cloud

@@ -37,7 +37,7 @@ public sealed class ServerRuntimeConfiguration
     public bool ReadOnly { get; set; } = false;
 
     /// <summary>
-    /// Wwhether elicitation (user confirmation for high-risk operations like accessing secrets) is disabled (dangerous mode).
+    /// Whether elicitation (user confirmation for high-risk operations like accessing secrets) is disabled (dangerous mode).
     /// When true, elicitation will always be treated as accepted without user confirmation.
     /// </summary>
     public bool DangerouslyDisableElicitation { get; set; } = false;

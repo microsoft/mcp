@@ -67,7 +67,7 @@ public sealed class ExtensionSetup : IAreaSetup
             return !configuration.IsHttpMode;
         }
 
-        // ServerStartOptions is unavailable in the first DI container (CLI routing), where all commands
+        // ServerRuntimeConfiguration is unavailable in the first DI container (CLI routing), where all commands
         // are exposed. See: ConfigureServices method in https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/src/Program.cs
         return true;
     }
