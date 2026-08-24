@@ -76,12 +76,11 @@ public sealed class DrillRunGetCommand(ILogger<DrillRunGetCommand> logger, IResi
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        KeyNotFoundException => "Drill run not found. Verify the drill run name, drill, service group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            "Authorization failed getting the drill run. Verify that you have access.",
+            $"Authorization failed getting the drill run. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Drill run not found. Verify the drill run, drill, and service group exist and you have access.",
-        RequestFailedException => "Failed to get the drill run. Verify the drill run, drill, and service group, then retry.",
+        RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
