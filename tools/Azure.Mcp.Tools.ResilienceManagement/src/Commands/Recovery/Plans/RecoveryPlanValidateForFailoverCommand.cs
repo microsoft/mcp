@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Id = "96622339-b89f-4764-b15f-793bd52d11bf",
     Name = "validateforfailover",
     Title = "Validate Resilience Recovery Plan for Failover",
-    Description = "Validates a resilience recovery plan for failover using source locations, selected recovery-resource IDs, or both. Use this tool to check failover qualification or readiness, identify blocking reasons per recovery resource, or supply user consent. This validation-only operation does not execute failover or update recovery resources.",
+    Description = "Validates a resilience recovery plan for failover using customer-provided source locations, selected recovery-resource IDs, or both. If the customer provides neither selector, ask which source locations or recovery-resource IDs to validate; never infer them from prior context or resource metadata. Use this tool to check failover qualification or readiness, identify blocking reasons per recovery resource, or supply user consent. This validation-only operation does not execute failover or update recovery resources.",
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

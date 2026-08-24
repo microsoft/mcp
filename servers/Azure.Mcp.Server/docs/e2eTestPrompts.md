@@ -932,6 +932,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_recoveryplan_delete | Recovery plan <recovery_plan_name> is no longer needed. Delete it from resilience service group <service_group> | none |
 | resilience_recoveryplan_get | List all resilience recovery plans in service group <service_group> | none |
 | resilience_recoveryplan_get | Get the details of recovery plan <recovery_plan_name> in service group <service_group> | none |
+| resilience_recoveryplan_validateforfailover | Validate recovery plan <recovery_plan_name> for failover in service group <service_group>, but I have not specified a source location or selected recovery-resource ID | clarification-required |
 | resilience_recoveryplan_validateforfailover | Validate which resources in recovery plan <recovery_plan_name> in service group <service_group> can fail over from <source_location> and report blocking reasons | none |
 | resilience_recoveryplan_validateforfailover | Check whether recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> is qualified for failover without requiring a source location or executing failover | none |
 | resilience_recoveryplan_validateforfailover | Validate recovery plan <recovery_plan_name> for failover from <source_location>, supply required user consent, and return per-resource qualification results without updating resources | none |

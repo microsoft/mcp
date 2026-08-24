@@ -14,10 +14,10 @@ public sealed class RecoveryPlanValidateForFailoverOptions
     [Option(Description = "The name of the recovery plan to validate for failover.")]
     public required string RecoveryPlan { get; set; }
 
-    [Option(Description = "Optional Azure locations from which resources would fail over, such as eastus. Provide source locations, selected resource IDs, or both.")]
+    [Option(Description = "Customer-provided Azure locations from which resources would fail over, such as eastus or westus2-az3. Provide source locations, selected resource IDs, or both. Do not infer omitted locations; ask the customer.")]
     public string[]? SourceLocations { get; set; }
 
-    [Option(Description = "Optional full recovery-resource IDs to validate. Provide selected resource IDs, source locations, or both.")]
+    [Option(Description = "Customer-provided full recovery-resource IDs to validate. Provide selected resource IDs, source locations, or both. Do not infer omitted IDs; ask the customer.")]
     public string[]? SelectedResourceIds { get; set; }
 
     [Option(Description = "Optional execution consent. Allowed values are Unspecified and Allowed.")]
