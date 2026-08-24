@@ -3781,6 +3781,19 @@ azmcp resilience drill get --subscription <subscription> \
                            --service-group <service-group> \
                            [--name <name>]
 
+# Start a new execution of a resilience drill in Failover or TestFailover mode
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill start --service-group <service-group> \
+                             --drill <drill> \
+                             --mode <Failover|TestFailover>
+
+# End the running execution of a resilience drill and attest its outcome
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill end --service-group <service-group> \
+                           --drill <drill> \
+                           --attestation <Success|Failed> \
+                           --attestation-notes <attestation-notes>
+
 # Get a resource (target) of a drill, or list all resources of the drill (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill resource get --subscription <subscription> \
