@@ -6,7 +6,6 @@ using System.Text.Json.Nodes;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models;
 using ModelContextProtocol.Protocol;
-using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Helpers;
 
@@ -74,16 +73,16 @@ public static class McpHelper
     /// <summary>
     /// Creates a telemetry-friendly string array representation of the tool's parameter names.
     /// </summary>
-    /// <param name="request">The tool call request parameters.</param>
-    /// <returns>A string array representing the parameter names, or null if there wasn't parameters.</returns>
-    public static string? CreateToolParametersTelemetry(RequestContext<CallToolRequestParams> request)
+    /// <param name="parameterNames">The tool call parameter names.</param>
+    /// <returns>A JSON string array representing the parameter names, or null if there wasn't parameters.</returns>
+    public static string? CreateToolParametersTelemetry(IEnumerable<string>? parameterNames)
     {
-        if (request?.Params?.Arguments == null || request.Params.Arguments.Count == 0)
+        if (parameterNames == null || !parameterNames.Any())
         {
             return null;
         }
 
-        return JsonSerializer.Serialize(request.Params.Arguments.Keys.ToList(), ModelsJsonContext.Default.ListString);
+        return JsonSerializer.Serialize(parameterNames.ToList(), ModelsJsonContext.Default.ListString);
     }
 
     /// <summary>

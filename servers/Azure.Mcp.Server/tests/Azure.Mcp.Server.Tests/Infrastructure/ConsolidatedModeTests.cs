@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Text.Json.Nodes;
+using ModelContextProtocol.Protocol;
 using Xunit;
 
 namespace Azure.Mcp.Server.Tests.Infrastructure;
@@ -76,12 +77,12 @@ public class ConsolidatedModeTests
             using var client = new HttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = CreateStateless2026RequestContent("tools/list")
+                Content = CreateStateless2026RequestContent(RequestMethods.ToolsList)
             };
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
             request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", StatelessProtocolVersion);
-            request.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
-            request.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
+            request.Headers.TryAddWithoutValidation("Mcp-Method", RequestMethods.ToolsList);
+            request.Headers.TryAddWithoutValidation("Mcp-Name", RequestMethods.ToolsList);
 
             var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);
             var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
@@ -133,7 +134,7 @@ public class ConsolidatedModeTests
             using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
                 Content = CreateStateless2026RequestContent(
-                    "tools/list",
+                    RequestMethods.ToolsList,
                     extraMeta: new JsonObject
                     {
                         ["traceparent"] = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
@@ -143,8 +144,8 @@ public class ConsolidatedModeTests
 
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
             request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", StatelessProtocolVersion);
-            request.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
-            request.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
+            request.Headers.TryAddWithoutValidation("Mcp-Method", RequestMethods.ToolsList);
+            request.Headers.TryAddWithoutValidation("Mcp-Name", RequestMethods.ToolsList);
 
             var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);
             var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
@@ -248,24 +249,24 @@ public class ConsolidatedModeTests
 
             using var request1 = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = CreateStateless2026RequestContent("tools/list", id: 1)
+                Content = CreateStateless2026RequestContent(RequestMethods.ToolsList, id: 1)
             };
             request1.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
             request1.Headers.TryAddWithoutValidation("MCP-Protocol-Version", StatelessProtocolVersion);
-            request1.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
-            request1.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
+            request1.Headers.TryAddWithoutValidation("Mcp-Method", RequestMethods.ToolsList);
+            request1.Headers.TryAddWithoutValidation("Mcp-Name", RequestMethods.ToolsList);
 
             var response1 = await SendWithRetryAsync(client, request1, TestContext.Current.CancellationToken);
             var content1 = await response1.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
             using var request2 = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = CreateStateless2026RequestContent("tools/list", id: 2)
+                Content = CreateStateless2026RequestContent(RequestMethods.ToolsList, id: 2)
             };
             request2.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
             request2.Headers.TryAddWithoutValidation("MCP-Protocol-Version", StatelessProtocolVersion);
-            request2.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
-            request2.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
+            request2.Headers.TryAddWithoutValidation("Mcp-Method", RequestMethods.ToolsList);
+            request2.Headers.TryAddWithoutValidation("Mcp-Name", RequestMethods.ToolsList);
 
             var response2 = await SendWithRetryAsync(client, request2, TestContext.Current.CancellationToken);
             var content2 = await response2.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
@@ -377,7 +378,7 @@ public class ConsolidatedModeTests
             using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
                 Content = CreateStateless2026RequestContent(
-                    "tools/list",
+                    RequestMethods.ToolsList,
                     extraMeta: new JsonObject
                     {
                         ["traceparent"] = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
@@ -388,8 +389,8 @@ public class ConsolidatedModeTests
 
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
             request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", StatelessProtocolVersion);
-            request.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
-            request.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
+            request.Headers.TryAddWithoutValidation("Mcp-Method", RequestMethods.ToolsList);
+            request.Headers.TryAddWithoutValidation("Mcp-Name", RequestMethods.ToolsList);
 
             var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);
             var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
@@ -518,7 +519,7 @@ public class ConsolidatedModeTests
             };
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
             request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
-            request.Headers.TryAddWithoutValidation("Mcp-Method", "tools/call");   // deliberate mismatch
+            request.Headers.TryAddWithoutValidation("Mcp-Method", RequestMethods.ToolsCall);   // deliberate mismatch
             request.Headers.TryAddWithoutValidation("Mcp-Name", "some-nonexistent-tool");
 
             var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);
@@ -568,7 +569,7 @@ public class ConsolidatedModeTests
             };
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
             request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
-            request.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
+            request.Headers.TryAddWithoutValidation("Mcp-Name", RequestMethods.ToolsList);
             // Intentionally omit Mcp-Method
 
             var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);
@@ -619,7 +620,7 @@ public class ConsolidatedModeTests
             };
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
             request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", "2026-07-28");
-            request.Headers.TryAddWithoutValidation("Mcp-Method", "tools/call");
+            request.Headers.TryAddWithoutValidation("Mcp-Method", RequestMethods.ToolsCall);
             // Intentionally omit Mcp-Name for a named method
 
             var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);
@@ -665,11 +666,11 @@ public class ConsolidatedModeTests
             using var client = new HttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = CreateStateless2026RequestContent("tools/list")
+                Content = CreateStateless2026RequestContent(RequestMethods.ToolsList)
             };
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
             request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", StatelessProtocolVersion);
-            request.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
+            request.Headers.TryAddWithoutValidation("Mcp-Method", RequestMethods.ToolsList);
             // Intentionally omit Mcp-Name — valid for a non-named method
 
             var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);

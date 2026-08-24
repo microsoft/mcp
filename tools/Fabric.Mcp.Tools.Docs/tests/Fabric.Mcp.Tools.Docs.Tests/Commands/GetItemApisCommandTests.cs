@@ -12,14 +12,14 @@ using Xunit;
 
 namespace Fabric.Mcp.Tools.Docs.Tests.Commands;
 
-public class GetWorkloadApisCommandTests : CommandUnitTestsBase<GetWorkloadApisCommand, IFabricPublicApiService>
+public class GetItemApisCommandTests : CommandUnitTestsBase<GetItemApisCommand, IFabricPublicApiService>
 {
     [Fact]
     public void GetApiSpecCommand_HasCorrectProperties()
     {
-        Assert.Equal("workload-api-spec", Command.Name);
+        Assert.Equal("item-api-spec", Command.Name);
         Assert.NotEmpty(Command.Description);
-        Assert.Equal("Workload API Specification", Command.Title);
+        Assert.Equal("Item API Specification", Command.Title);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.ReadOnly);
     }
@@ -27,49 +27,49 @@ public class GetWorkloadApisCommandTests : CommandUnitTestsBase<GetWorkloadApisC
     [Fact]
     public void GetApiSpecCommand_GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("workload-api-spec", CommandDefinition.Name);
+        Assert.Equal("item-api-spec", CommandDefinition.Name);
     }
 
     [Fact]
-    public async Task GetApiSpecCommand_ExecuteAsync_WithValidWorkloadType_ReturnsApis()
+    public async Task GetApiSpecCommand_ExecuteAsync_WithValidItemType_ReturnsApis()
     {
         // Arrange
-        var expectedApi = new FabricWorkloadPublicApi("api-spec", new Dictionary<string, string> { { "model1", "definition1" } });
+        var expectedApi = new FabricPublicApi("api-spec", new Dictionary<string, string> { { "model1", "definition1" } });
 
-        Service.GetWorkloadPublicApis("notebook", Arg.Any<CancellationToken>()).Returns(expectedApi);
+        Service.GetPublicApis("notebook", Arg.Any<CancellationToken>()).Returns(expectedApi);
 
         // Act
-        var result = await ExecuteCommandAsync("--workload-type", "notebook");
+        var result = await ExecuteCommandAsync("--item-type", "notebook");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
-        await Service.Received(1).GetWorkloadPublicApis("notebook", Arg.Any<CancellationToken>());
+        await Service.Received(1).GetPublicApis("notebook", Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task GetApiSpecCommand_ExecuteAsync_WithEmptyWorkloadType_ReturnsBadRequest()
+    public async Task GetApiSpecCommand_ExecuteAsync_WithEmptyItemType_ReturnsBadRequest()
     {
         // Arrange & Act
         var result = await ExecuteCommandAsync([]);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
-        Assert.Contains("Missing Required options: --workload-type", result.Message);
-        await Service.DidNotReceive().GetWorkloadPublicApis(Arg.Any<string>(), Arg.Any<CancellationToken>());
+        Assert.Contains("Missing Required options: --item-type", result.Message);
+        await Service.DidNotReceive().GetPublicApis(Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task GetApiSpecCommand_ExecuteAsync_WithCommonWorkloadType_ReturnsNotFound()
+    public async Task GetApiSpecCommand_ExecuteAsync_WithCommonItemType_ReturnsNotFound()
     {
         // Arrange & Act
-        var result = await ExecuteCommandAsync("--workload-type", "common");
+        var result = await ExecuteCommandAsync("--item-type", "common");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, result.Status);
-        Assert.Contains("No workload of type 'common' exists", result.Message);
+        Assert.Contains("No item type 'common' exists", result.Message);
         Assert.Contains("Did you mean 'platform'?", result.Message);
-        await Service.DidNotReceive().GetWorkloadPublicApis(Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().GetPublicApis(Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -77,15 +77,15 @@ public class GetWorkloadApisCommandTests : CommandUnitTestsBase<GetWorkloadApisC
     {
         // Arrange
         var httpException = new HttpRequestException("Not found", null, HttpStatusCode.NotFound);
-        Service.GetWorkloadPublicApis("invalid-workload", Arg.Any<CancellationToken>()).ThrowsAsync(httpException);
+        Service.GetPublicApis("invalid-item-type", Arg.Any<CancellationToken>()).ThrowsAsync(httpException);
 
         // Act
-        var result = await ExecuteCommandAsync("--workload-type", "invalid-workload");
+        var result = await ExecuteCommandAsync("--item-type", "invalid-item-type");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, result.Status);
-        Assert.Contains("No workload of type 'invalid-workload' exists", result.Message);
-        Assert.Contains("workloads command", result.Message);
+        Assert.Contains("No item type 'invalid-item-type' exists", result.Message);
+        Assert.Contains("list-item-types", result.Message);
     }
 
     [Fact]
@@ -93,10 +93,10 @@ public class GetWorkloadApisCommandTests : CommandUnitTestsBase<GetWorkloadApisC
     {
         // Arrange
         var httpException = new HttpRequestException("Service unavailable", null, HttpStatusCode.ServiceUnavailable);
-        Service.GetWorkloadPublicApis("notebook", Arg.Any<CancellationToken>()).ThrowsAsync(httpException);
+        Service.GetPublicApis("notebook", Arg.Any<CancellationToken>()).ThrowsAsync(httpException);
 
         // Act
-        var result = await ExecuteCommandAsync("--workload-type", "notebook");
+        var result = await ExecuteCommandAsync("--item-type", "notebook");
 
         // Assert
         Assert.Equal(HttpStatusCode.ServiceUnavailable, result.Status);
@@ -107,10 +107,10 @@ public class GetWorkloadApisCommandTests : CommandUnitTestsBase<GetWorkloadApisC
     public async Task GetApiSpecCommand_ExecuteAsync_WithGeneralException_ReturnsInternalServerError()
     {
         // Arrange
-        Service.GetWorkloadPublicApis("notebook", Arg.Any<CancellationToken>()).ThrowsAsync(new InvalidOperationException("Service error"));
+        Service.GetPublicApis("notebook", Arg.Any<CancellationToken>()).ThrowsAsync(new InvalidOperationException("Service error"));
 
         // Act
-        var result = await ExecuteCommandAsync("--workload-type", "notebook");
+        var result = await ExecuteCommandAsync("--item-type", "notebook");
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, result.Status);

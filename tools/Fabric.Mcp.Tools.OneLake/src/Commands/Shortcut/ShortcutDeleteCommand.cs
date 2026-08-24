@@ -12,7 +12,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 
 [CommandMetadata(
     Id = "a1b2c3d4-2001-4000-8000-000000000004",
-    Name = "delete_shortcut",
+    Name = "delete-shortcut",
     Title = "Delete OneLake Shortcut",
     Description = """
         Delete a single shortcut from an item. Destructive but the destination
