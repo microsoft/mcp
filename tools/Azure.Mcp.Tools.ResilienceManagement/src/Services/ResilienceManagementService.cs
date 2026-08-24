@@ -816,11 +816,11 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         }
     }
 
-    private static RecoveryPlanReadinessError? CreateReadinessError(JobErrorInfo? error)
+    internal static RecoveryPlanReadinessError? CreateReadinessError(JobErrorInfo? error)
     {
         return error is null
             ? null
-            : new RecoveryPlanReadinessError(error.ErrorCode, error.ErrorMessage, error.Recommendations);
+            : new RecoveryPlanReadinessError(error.ErrorCode, error.ErrorMessage, error.Recommendations ?? []);
     }
 
     private static List<RecoveryPlanReadinessFailedTask> GetFailedTasks(IReadOnlyList<JobTaskDetail>? tasks)

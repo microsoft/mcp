@@ -340,6 +340,21 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public void CreateReadinessError_DefaultsMissingRecommendationsToEmptyList()
+    {
+        JobErrorInfo providerError = ModelReaderWriter.Read<JobErrorInfo>(BinaryData.FromObjectAsJson(new
+        {
+            errorCode = "NotReady",
+            errorMessage = "The recovery plan is not ready."
+        }))!;
+
+        RecoveryPlanReadinessError? result = ResilienceManagementService.CreateReadinessError(providerError);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Recommendations);
+    }
+
+    [Fact]
     public void CreateRecoveryPlanValidateForFailoverResult_MapsQualificationDetails()
     {
         ValidateForRecoveryOperationBaseResult sdkResult = ModelReaderWriter.Read<ValidateForRecoveryOperationBaseResult>(BinaryData.FromObjectAsJson(new
