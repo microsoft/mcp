@@ -63,7 +63,7 @@ public sealed class DrillEndCommandTests : CommandUnitTestsBase<DrillEndCommand,
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("drill attestation", response.Message, StringComparison.OrdinalIgnoreCase);
-    Assert.DoesNotContain(Service.ReceivedCalls(), call => call.GetMethodInfo().Name == nameof(IResilienceManagementService.EndDrillAsync));
+        Assert.DoesNotContain(Service.ReceivedCalls(), call => call.GetMethodInfo().Name == nameof(IResilienceManagementService.EndDrillAsync));
     }
 
     [Fact]
