@@ -313,6 +313,28 @@ public class ResilienceManagementCommandTests(
 
     [Fact]
     [CustomMatcher(compareBody: false)]
+    public async Task Should_check_recovery_plan_readiness()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+
+        var result = await CallToolAsync(
+            "resilience_recoveryplan_checkreadiness",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan }
+            });
+
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
+        Assert.True(Guid.TryParse(result.AssertProperty("recoveryJobId").GetString(), out _));
+        Assert.False(string.IsNullOrWhiteSpace(result.AssertProperty("status").GetString()));
+        Assert.True(result.AssertProperty("isReady").ValueKind is JsonValueKind.True or JsonValueKind.False);
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: false)]
     public async Task Should_create_update_and_delete_recovery_plan()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("lifecycleServiceGroupName", "LIFECYCLESERVICEGROUPNAME");
