@@ -211,7 +211,7 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_get_recovery_plan()
+    public async Task Should_get_recoveryplan()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
@@ -230,7 +230,7 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_update_recovery_plan()
+    public async Task Should_update_recoveryplan()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
@@ -284,7 +284,7 @@ public class ResilienceManagementCommandTests(
 
     [Fact]
     [CustomMatcher(compareBody: false)]
-    public async Task Should_check_recovery_plan_readiness()
+    public async Task Should_check_recoveryplan_readiness()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
@@ -306,7 +306,7 @@ public class ResilienceManagementCommandTests(
 
     [Fact]
     [CustomMatcher(compareBody: false)]
-    public async Task Should_create_update_and_delete_recovery_plan()
+    public async Task Should_create_update_and_delete_recoveryplan()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("lifecycleServiceGroupName", "LIFECYCLESERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveVariable("lifecycleRecoveryPlanName", $"mcp-lifecycle-{Guid.NewGuid().ToString("N")[..8]}");
@@ -424,7 +424,7 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_update_recovery_plan_resources()
+    public async Task Should_update_recoveryplan_resources()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
@@ -497,7 +497,7 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_validate_recovery_plan_for_failover()
+    public async Task Should_validate_recoveryplan_for_failover()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
@@ -558,7 +558,7 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_validate_recovery_plan_for_reprotect()
+    public async Task Should_validate_recoveryplan_for_reprotect()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
@@ -579,7 +579,7 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_validate_recovery_plan_for_operation()
+    public async Task Should_validate_recoveryplan_for_operation()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
