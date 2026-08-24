@@ -15,7 +15,7 @@ public class DirectoryCreateCommandTests : CommandUnitTestsBase<DirectoryCreateC
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("create_directory", Command.Name);
+        Assert.Equal("create-directory", Command.Name);
         Assert.Equal("Create OneLake Directory", Command.Title);
         Assert.False(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
@@ -27,7 +27,7 @@ public class DirectoryCreateCommandTests : CommandUnitTestsBase<DirectoryCreateC
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("create_directory", CommandDefinition.Name);
+        Assert.Equal("create-directory", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);
     }
