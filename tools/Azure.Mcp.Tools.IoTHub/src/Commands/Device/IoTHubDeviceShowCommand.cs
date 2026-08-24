@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.Mcp.Tools.IoTHub.Options.Device;
@@ -18,7 +17,7 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
     Title = "Show IoT Hub Device",
     Description = """
         Show the device identity for a device in an IoT Hub device registry.
-        Returns device identity metadata while intentionally excluding authentication keys.
+        Returns device identity metadata while intentionally excluding authentication secrets.
         Device names/IDs are case-sensitive and must match exactly.
         """,
     Destructive = false,
@@ -31,7 +30,7 @@ public sealed class IoTHubDeviceShowCommand(
     ILogger<IoTHubDeviceShowCommand> logger,
     IIoTHubDeviceService service,
     ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<IoTHubDeviceShowOptions, DeviceIdentity>(subscriptionResolver)
+    : BaseIoTHubCommand<IoTHubDeviceShowOptions, DeviceIdentity>(subscriptionResolver)
 {
     private readonly ILogger<IoTHubDeviceShowCommand> _logger = logger;
     private readonly IIoTHubDeviceService _service = service;

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.Mcp.Tools.IoTHub.Options.Device;
@@ -22,7 +21,7 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
         Device names/IDs are case-sensitive and must match exactly.
         """,
     Destructive = false,
-    Idempotent = true,
+    Idempotent = false,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
@@ -31,7 +30,7 @@ public sealed class IoTHubDeviceTwinGetCommand(
     ILogger<IoTHubDeviceTwinGetCommand> logger,
     IIoTHubDeviceService service,
     ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<IoTHubDeviceTwinGetOptions, DeviceTwin>(subscriptionResolver)
+    : BaseIoTHubCommand<IoTHubDeviceTwinGetOptions, DeviceTwin>(subscriptionResolver)
 {
     private readonly ILogger<IoTHubDeviceTwinGetCommand> _logger = logger;
     private readonly IIoTHubDeviceService _service = service;

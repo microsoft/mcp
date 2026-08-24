@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.Mcp.Tools.IoTHub.Options.Device;
@@ -23,7 +21,7 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
         Hub names/IDs are case-sensitive and must match exactly.
         """,
     Destructive = false,
-    Idempotent = true,
+    Idempotent = false,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
@@ -32,7 +30,7 @@ public sealed class IoTHubDeviceStatisticsCommand(
     ILogger<IoTHubDeviceStatisticsCommand> logger,
     IIoTHubDeviceService service,
     ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<IoTHubDeviceStatisticsOptions, IoTHubRegistryStatistics>(subscriptionResolver)
+    : BaseIoTHubCommand<IoTHubDeviceStatisticsOptions, IoTHubRegistryStatistics>(subscriptionResolver)
 {
     private readonly ILogger<IoTHubDeviceStatisticsCommand> _logger = logger;
     private readonly IIoTHubDeviceService _service = service;
@@ -64,10 +62,4 @@ public sealed class IoTHubDeviceStatisticsCommand(
 
         return context.Response;
     }
-
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        TimeoutException => HttpStatusCode.RequestTimeout,
-        _ => base.GetStatusCode(ex)
-    };
 }

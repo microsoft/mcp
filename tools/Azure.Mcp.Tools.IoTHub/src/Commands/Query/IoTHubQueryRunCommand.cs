@@ -3,8 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using System.Text.RegularExpressions;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.Mcp.Tools.IoTHub.Options.Query;
@@ -21,13 +19,11 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.Query;
     Name = "run",
     Title = "Run IoT Hub Query",
     Description = """
-        Run an IoT Hub query against the device registry and return a single page of results. Choose this tool whenever the request is phrased as a query or filter over devices - for example 'query the devices', 'query all devices', 'find devices where <field> <op> <value>', a raw IoT Hub SQL statement, or 'discover which device twin fields are queryable'. For a plain 'list/show the registered devices' request with no query wording, use the iothub device list command instead.
+        Run an IoT Hub query against the device registry and return the matching results. The tool pages through IoT Hub internally and aggregates every page, so a single call returns the full result set - the caller never has to follow a continuation token or make repeated next-page requests. Choose this tool whenever the request is phrased as a query or filter over devices - for example 'query the devices', 'query all devices', 'find devices where <field> <op> <value>', or a raw IoT Hub SQL statement. For a plain 'list/show the registered devices' request with no query wording, use the iothub device list command instead.
         Provide a raw SQL-like query with --query, OR structured predicates with --filters (each has scope/field/operator/value) that are compiled into the query for you; supply only one of the two.
-        When neither is provided, a bare 'SELECT * FROM devices' runs and the response additionally returns a 'discoveredFields' catalog: queryable field paths grouped by device, tags, desired, and reported, with observed types and example values. Forward that catalog to a later --filters call via --discovered-fields so unknown fields are rejected before the query runs.
-        Prefer projecting only the specific property fields you need; avoid raw 'SELECT *' unless you want full device twins or the field catalog.
-        Use --max-count to set the page size (default 100, maximum 100). Values greater than 100 are capped at 100, so one page is always at most 100 items.
-        Never make repeated calls or loop for additional pages in a single user request. Return exactly one page and, when hasMore is true, include the continuationToken for a later explicit next-page request.
-        The --continuation-token input must be the opaque continuationToken string returned by a previous iothub_query_run response; do not pass hasMore=true/false or any boolean value.
+        When --filters is used, the tool first samples the twin registry to discover which fields exist, validates every predicate field against them, and fails with an error if a referenced tag or property is not found; it then compiles a valid query and runs it.
+        When neither --query nor --filters is provided, a bare 'SELECT * FROM devices' runs. Prefer projecting only the specific property fields you need; avoid raw 'SELECT *' unless you want full device twins.
+        Use --max-count to cap the total number of items returned across all pages; omit it to return every matching item. If the query matches more items than the cap, the tool returns an error stating the max-count limit was hit (the partial items are still included) - raise --max-count, narrow the query, or omit --max-count to get a complete result.
         """,
     Destructive = false,
     Idempotent = false,
@@ -35,16 +31,15 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.Query;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed partial class IoTHubQueryRunCommand(
+public sealed class IoTHubQueryRunCommand(
     ILogger<IoTHubQueryRunCommand> logger,
     IIoTHubDeviceService service,
     ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<IoTHubQueryRunOptions, IoTHubQueryRunResult>(subscriptionResolver)
+    : BaseIoTHubCommand<IoTHubQueryRunOptions, IoTHubQueryRunResult>(subscriptionResolver)
 {
     private const string DefaultQuery = "SELECT * FROM devices";
-    private const int DefaultMaxCount = IoTHubQueryLimits.MaxPageSize;
     private const int MinMaxCount = 1;
-    private const int MaxMaxCount = IoTHubQueryLimits.MaxPageSize;
+    private const int PageSize = IoTHubQueryLimits.MaxPageSize;
 
     private readonly ILogger<IoTHubQueryRunCommand> _logger = logger;
     private readonly IIoTHubDeviceService _service = service;
@@ -54,24 +49,11 @@ public sealed partial class IoTHubQueryRunCommand(
         IoTHubQueryRunOptions options,
         CancellationToken cancellationToken)
     {
-        var maxCount = options.MaxCount switch
-        {
-            null => DefaultMaxCount,
-            > MaxMaxCount => MaxMaxCount,
-            _ => options.MaxCount.Value
-        };
-
-        if (maxCount < MinMaxCount)
+        var maxCount = options.MaxCount;
+        if (maxCount is < MinMaxCount)
         {
             context.Response.Status = HttpStatusCode.BadRequest;
-            context.Response.Message = $"The entered max-count '{maxCount}' is less than 1 item. Please specify a value of at least {MinMaxCount}.";
-            return context.Response;
-        }
-
-        if (IsBooleanContinuationToken(options.ContinuationToken))
-        {
-            context.Response.Status = HttpStatusCode.BadRequest;
-            context.Response.Message = "The continuation-token value must be the opaque continuationToken string returned by a previous iothub_query_run response, not hasMore=true/false. Omit --continuation-token to fetch the first page.";
+            context.Response.Message = $"The entered max-count '{maxCount}' is less than 1 item. Please specify a value of at least {MinMaxCount}, or omit it to return every matching item.";
             return context.Response;
         }
 
@@ -92,10 +74,13 @@ public sealed partial class IoTHubQueryRunCommand(
         }
         else if (hasFilters)
         {
-            if (!TryCompileFilters(context, options, out effectiveQuery))
+            var compiledQuery = await DiscoverCompileFiltersAsync(context, options, cancellationToken);
+            if (compiledQuery is null)
             {
                 return context.Response;
             }
+
+            effectiveQuery = compiledQuery;
         }
         else
         {
@@ -104,35 +89,63 @@ public sealed partial class IoTHubQueryRunCommand(
 
         try
         {
-            var page = await _service.RunQuery(
-                effectiveQuery,
-                options.HubName,
-                options.ResourceGroup,
-                options.Subscription!,
-                maxCount,
-                options.ContinuationToken,
-                options.Tenant,
-                options.RetryPolicy,
-                cancellationToken);
+            var items = new List<JsonElement>();
+            var seenIdentities = new HashSet<string>(StringComparer.Ordinal);
+            string? continuationToken = null;
+            var truncated = false;
+            do
+            {
+                var pageSize = maxCount.HasValue
+                    ? Math.Min(maxCount.Value - items.Count, PageSize)
+                    : PageSize;
 
-            var hasMore = !string.IsNullOrEmpty(page.ContinuationToken);
-            var message = hasMore
-                ? $"Showing {page.Items.Count} results. More results are available; return this page now and use the continuationToken only on a later explicit next-page request."
-                : $"Showing {page.Items.Count} results. No more results are available.";
+                var page = await _service.RunQuery(
+                    effectiveQuery,
+                    options.HubName,
+                    options.ResourceGroup,
+                    options.Subscription!,
+                    pageSize,
+                    continuationToken,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
 
-            // On a bare 'SELECT * FROM <source>' (no WHERE clause) also surface a compact catalog of
-            // queryable field paths so callers can build validated --filters without a separate discover tool.
-            var discoveredFields = IsUnfilteredSelectStar(effectiveQuery)
-                ? IoTHubQueryFieldDiscoverer.Discover(page.Items)
-                : null;
+                foreach (var item in page.Items)
+                {
+                    var identity = TryGetResultIdentity(item);
+                    if (identity is null || seenIdentities.Add(identity))
+                    {
+                        items.Add(item);
+                    }
+                }
+
+                continuationToken = page.ContinuationToken;
+
+                if (maxCount.HasValue && items.Count >= maxCount.Value)
+                {
+                    truncated = !string.IsNullOrEmpty(continuationToken);
+                    break;
+                }
+            }
+            while (!string.IsNullOrEmpty(continuationToken));
+
+            var message = truncated
+                ? $"The max-count limit of {maxCount} was reached before all matching items were returned, so the results are incomplete. Raise --max-count to return more items, narrow the query, or omit --max-count to return every matching item."
+                : $"Showing all {items.Count} results.";
+
+            // A hit cap means the query matched more items than the caller allowed, so surface it as an
+            // error (the partial items are still included) instead of silently returning a truncated set.
+            if (truncated)
+            {
+                context.Response.Status = HttpStatusCode.BadRequest;
+                context.Response.Message = message;
+            }
 
             var result = new IoTHubQueryRunResult(
-                page.Items,
-                page.Items.Count,
-                hasMore,
-                page.ContinuationToken,
-                message,
-                discoveredFields);
+                items,
+                items.Count,
+                truncated,
+                message);
 
             context.Response.Results = ResponseResult.Create(
                 result,
@@ -147,23 +160,54 @@ public sealed partial class IoTHubQueryRunCommand(
         return context.Response;
     }
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    // Extracts a stable identity for a query result row so that duplicates produced by IoT Hub's
+    // unordered registry paging can be removed. Covers the documented query sources: devices
+    // (deviceId), devices.modules (deviceId + moduleId) and devices.jobs (jobId). Returns null when
+    // no identity field is projected, in which case the row cannot be safely de-duplicated and is
+    // kept as-is.
+    private static string? TryGetResultIdentity(JsonElement element)
     {
-        TimeoutException => HttpStatusCode.RequestTimeout,
-        _ => base.GetStatusCode(ex)
-    };
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
 
-    private static bool IsBooleanContinuationToken(string? continuationToken)
-    {
-        var normalizedToken = continuationToken?.Trim();
-        return string.Equals(normalizedToken, bool.TrueString, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(normalizedToken, bool.FalseString, StringComparison.OrdinalIgnoreCase);
+        if (TryGetStringProperty(element, "deviceId", out var deviceId))
+        {
+            return TryGetStringProperty(element, "moduleId", out var moduleId)
+                ? $"d:{deviceId}\u0000m:{moduleId}"
+                : $"d:{deviceId}";
+        }
+
+        if (TryGetStringProperty(element, "jobId", out var jobId))
+        {
+            return $"j:{jobId}";
+        }
+
+        return null;
     }
 
-    private static bool TryCompileFilters(CommandContext context, IoTHubQueryRunOptions options, out string query)
+    private static bool TryGetStringProperty(JsonElement element, string propertyName, out string? value)
     {
-        query = string.Empty;
+        if (element.TryGetProperty(propertyName, out var property) &&
+            property.ValueKind == JsonValueKind.String)
+        {
+            value = property.GetString();
+            return !string.IsNullOrEmpty(value);
+        }
 
+        value = null;
+        return false;
+    }
+
+    // Filters pipeline: sample the twin registry to discover which fields exist, validate the predicates
+    // against them (failing on any unknown tag/property), then compile a valid query. Returns the compiled
+    // query, or null when the request was rejected (context.Response is populated with the reason).
+    private async Task<string?> DiscoverCompileFiltersAsync(
+        CommandContext context,
+        IoTHubQueryRunOptions options,
+        CancellationToken cancellationToken)
+    {
         List<QueryPredicate>? filters;
         try
         {
@@ -173,56 +217,55 @@ public sealed partial class IoTHubQueryRunCommand(
         {
             context.Response.Status = HttpStatusCode.BadRequest;
             context.Response.Message = $"The --filters value is not valid JSON: {ex.Message}";
-            return false;
+            return null;
         }
 
         if (filters is null || filters.Count == 0)
         {
             context.Response.Status = HttpStatusCode.BadRequest;
             context.Response.Message = "The --filters value must be a non-empty JSON array of predicate objects.";
-            return false;
+            return null;
         }
 
-        QueryDiscoveredFields? discoveredFields = null;
-        if (!string.IsNullOrWhiteSpace(options.DiscoveredFields))
+        var source = string.IsNullOrWhiteSpace(options.From) ? "devices" : options.From!;
+
+        QueryDiscoveredFields discoveredFields;
+        try
         {
-            try
-            {
-                discoveredFields = JsonSerializer.Deserialize(options.DiscoveredFields, IoTHubJsonContext.Default.QueryDiscoveredFields);
-            }
-            catch (JsonException ex)
-            {
-                context.Response.Status = HttpStatusCode.BadRequest;
-                context.Response.Message = $"The --discovered-fields value is not valid JSON: {ex.Message}";
-                return false;
-            }
+            discoveredFields = await IoTHubQueryDiscovery.DiscoverFieldsAsync(
+                _service,
+                source,
+                options.HubName,
+                options.ResourceGroup,
+                options.Subscription!,
+                options.Tenant,
+                options.RetryPolicy,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error discovering fields for IoT Hub '{HubName}'.", options.HubName);
+            HandleException(context, ex);
+            return null;
         }
 
         var request = new QueryCompileRequest
         {
             Filters = filters,
-            From = string.IsNullOrWhiteSpace(options.From) ? "devices" : options.From!,
+            From = source,
             LogicalOperator = string.IsNullOrWhiteSpace(options.LogicalOperator) ? "AND" : options.LogicalOperator!,
             DiscoveredFields = discoveredFields
         };
 
         try
         {
-            query = IoTHubQueryCompiler.Compile(request);
+            return IoTHubQueryCompiler.Compile(request);
         }
         catch (ArgumentException ex)
         {
             context.Response.Status = HttpStatusCode.BadRequest;
             context.Response.Message = ex.Message;
-            return false;
+            return null;
         }
-
-        return true;
     }
-
-    private static bool IsUnfilteredSelectStar(string query) =>
-        UnfilteredSelectStarRegex().IsMatch(query.Trim());
-
-    [GeneratedRegex(@"^SELECT\s+\*\s+FROM\s+[A-Za-z0-9_.]+\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
-    private static partial Regex UnfilteredSelectStarRegex();
 }

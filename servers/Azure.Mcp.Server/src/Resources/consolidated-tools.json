@@ -2303,8 +2303,8 @@
           "description": "This tool only performs read operations on an Azure IoT Hub without deleting or modifying existing resources."
         },
         "idempotent": {
-          "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
         },
         "openWorld": {
           "value": false,
@@ -2336,8 +2336,8 @@
           "description": "This tool only performs read operations on an Azure IoT Hub without deleting or modifying existing resources."
         },
         "idempotent": {
-          "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
         },
         "openWorld": {
           "value": false,

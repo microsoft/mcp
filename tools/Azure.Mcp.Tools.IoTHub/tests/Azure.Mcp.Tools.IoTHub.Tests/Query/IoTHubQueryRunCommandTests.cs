@@ -20,8 +20,53 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
     private static List<JsonElement> Items(params string[] json) =>
         json.Select(j => JsonDocument.Parse(j).RootElement.Clone()).ToList();
 
+    private static List<JsonElement> ItemsRepeated(int count, int start = 0) =>
+        Enumerable.Range(start, count)
+            .Select(i => JsonDocument.Parse($"{{\"deviceId\":\"device{i}\"}}").RootElement.Clone())
+            .ToList();
+
     private void SetupRunQuery(IoTHubQueryPage page) => Service.RunQuery(
         Arg.Any<string>(),
+        Arg.Any<string>(),
+        Arg.Any<string>(),
+        Arg.Any<string>(),
+        Arg.Any<int?>(),
+        Arg.Any<string?>(),
+        Arg.Any<string?>(),
+        Arg.Any<RetryPolicyOptions?>(),
+        Arg.Any<CancellationToken>())
+        .Returns(page);
+
+    // Configures successive RunQuery calls to return the given pages in order so the command's internal
+    // paging loop walks the whole sequence. The final page should carry a null token to end the loop.
+    private void SetupRunQuerySequence(IoTHubQueryPage first, params IoTHubQueryPage[] rest) => Service.RunQuery(
+        Arg.Any<string>(),
+        Arg.Any<string>(),
+        Arg.Any<string>(),
+        Arg.Any<string>(),
+        Arg.Any<int?>(),
+        Arg.Any<string?>(),
+        Arg.Any<string?>(),
+        Arg.Any<RetryPolicyOptions?>(),
+        Arg.Any<CancellationToken>())
+        .Returns(first, rest);
+
+    // Discovery (the internal bare 'SELECT *' sample) is any query issued without a WHERE clause.
+    private void SetupDiscoverySample(params string[] twinsJson) => Service.RunQuery(
+        Arg.Is<string>(query => !query.Contains("WHERE", StringComparison.Ordinal)),
+        Arg.Any<string>(),
+        Arg.Any<string>(),
+        Arg.Any<string>(),
+        Arg.Any<int?>(),
+        Arg.Any<string?>(),
+        Arg.Any<string?>(),
+        Arg.Any<RetryPolicyOptions?>(),
+        Arg.Any<CancellationToken>())
+        .Returns(new IoTHubQueryPage(Items(twinsJson), null));
+
+    // The compiled, filtered query is the one carrying a WHERE clause.
+    private void SetupFilteredResult(IoTHubQueryPage page) => Service.RunQuery(
+        Arg.Is<string>(query => query.Contains("WHERE", StringComparison.Ordinal)),
         Arg.Any<string>(),
         Arg.Any<string>(),
         Arg.Any<string>(),
@@ -74,32 +119,70 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
         var result = ValidateAndDeserializeResponse(response, IoTHubJsonContext.Default.IoTHubQueryRunResult);
         Assert.Equal(2, result.Count);
         Assert.False(result.HasMore);
-        Assert.Null(result.ContinuationToken);
         Assert.Equal(2, result.Items.Count);
         Assert.Equal("device1", result.Items[0].GetProperty("deviceId").GetString());
         Assert.Equal("device2", result.Items[1].GetProperty("deviceId").GetString());
-        Assert.Contains("No more results", result.Message);
-        Assert.Null(result.DiscoveredFields);
+        Assert.Contains("all", result.Message);
     }
 
     [Fact]
-    public async Task ExecuteAsync_SurfacesContinuationTokenWhenMoreResults()
+    public async Task ExecuteAsync_PagesThroughAllResultsWhenNoMaxCount()
     {
-        SetupRunQuery(new IoTHubQueryPage(
-            Items("{\"deviceId\":\"device1\"}"),
-            "next-page-token"));
+        // Three pages: the loop must follow each token until the final null token ends it.
+        SetupRunQuerySequence(
+            new IoTHubQueryPage(Items("{\"deviceId\":\"device1\"}"), "token-1"),
+            new IoTHubQueryPage(Items("{\"deviceId\":\"device2\"}"), "token-2"),
+            new IoTHubQueryPage(Items("{\"deviceId\":\"device3\"}"), null));
 
         var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1", "--query", "SELECT deviceId FROM devices");
 
         var result = ValidateAndDeserializeResponse(response, IoTHubJsonContext.Default.IoTHubQueryRunResult);
-        Assert.Equal(1, result.Count);
-        Assert.True(result.HasMore);
-        Assert.Equal("next-page-token", result.ContinuationToken);
-        Assert.Contains("continuationToken", result.Message);
+        Assert.Equal(3, result.Count);
+        Assert.Equal(3, result.Items.Count);
+        Assert.Equal("device1", result.Items[0].GetProperty("deviceId").GetString());
+        Assert.Equal("device2", result.Items[1].GetProperty("deviceId").GetString());
+        Assert.Equal("device3", result.Items[2].GetProperty("deviceId").GetString());
+        Assert.False(result.HasMore);
+        Assert.Contains("all", result.Message);
+
+        // The loop issued three requests, forwarding each page's token to the next call.
+        var runQueryCalls = Service.ReceivedCalls()
+            .Where(c => c.GetMethodInfo().Name == nameof(IIoTHubDeviceService.RunQuery))
+            .Select(c => c.GetArguments())
+            .ToList();
+
+        Assert.Equal(3, runQueryCalls.Count);
+        Assert.All(runQueryCalls, args =>
+        {
+            Assert.Equal("SELECT deviceId FROM devices", args[0]);
+            Assert.Equal(100, args[4]);
+        });
+        Assert.Equal(new string?[] { null, "token-1", "token-2" }, runQueryCalls.Select(args => (string?)args[5]));
     }
 
     [Fact]
-    public async Task ExecuteAsync_DefaultsMaxCountToPageLimitAndOmitsContinuationToken()
+    public async Task ExecuteAsync_DeduplicatesDevicesRepeatedAcrossPages()
+    {
+        // IoT Hub registry query paging is not stably ordered, so the same device can reappear on a
+        // later page. The command must return each device exactly once.
+        SetupRunQuerySequence(
+            new IoTHubQueryPage(Items("{\"deviceId\":\"device1\"}", "{\"deviceId\":\"device2\"}"), "token-1"),
+            new IoTHubQueryPage(Items("{\"deviceId\":\"device2\"}", "{\"deviceId\":\"device3\"}"), null));
+
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1", "--query", "SELECT deviceId FROM devices");
+
+        var result = ValidateAndDeserializeResponse(response, IoTHubJsonContext.Default.IoTHubQueryRunResult);
+        Assert.Equal(3, result.Count);
+        Assert.Equal(3, result.Items.Count);
+        Assert.Equal("device1", result.Items[0].GetProperty("deviceId").GetString());
+        Assert.Equal("device2", result.Items[1].GetProperty("deviceId").GetString());
+        Assert.Equal("device3", result.Items[2].GetProperty("deviceId").GetString());
+        Assert.False(result.HasMore);
+        Assert.Contains("all", result.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithoutMaxCount_RequestsFullPagesStartingWithNoToken()
     {
         SetupRunQuery(new IoTHubQueryPage([], null));
 
@@ -118,45 +201,37 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
     }
 
     [Fact]
-    public async Task ExecuteAsync_CapsMaxCountAtPageLimitAndForwardsContinuationToken()
+    public async Task ExecuteAsync_ReturnsErrorWhenMaxCountReachedBeforeCompletion()
     {
-        SetupRunQuery(new IoTHubQueryPage([], null));
+        // A cap of 150 spans two pages: a full 100, then only the remaining 50 are requested.
+        // The pages carry distinct device IDs so de-duplication does not collapse them.
+        SetupRunQuerySequence(
+            new IoTHubQueryPage(ItemsRepeated(100), "token-1"),
+            new IoTHubQueryPage(ItemsRepeated(50, 100), "token-2"));
 
-        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1", "--query", "SELECT * FROM devices", "--max-count", "500", "--continuation-token", "token-abc");
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1", "--query", "SELECT * FROM devices", "--max-count", "150");
 
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        await Service.Received(1).RunQuery(
-            "SELECT * FROM devices",
-            "hub1",
-            "rg1",
-            "sub123",
-            100,
-            "token-abc",
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Theory]
-    [InlineData("true")]
-    [InlineData("false")]
-    [InlineData("TRUE")]
-    public async Task ExecuteAsync_RejectsBooleanContinuationToken(string token)
-    {
-        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1", "--query", "SELECT * FROM devices", "--continuation-token", token);
-
+        // The cap was hit with more results remaining, so the command surfaces an error naming max-count...
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("continuationToken", response.Message);
-        await Service.DidNotReceive().RunQuery(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
+        Assert.Contains("max-count", response.Message);
+
+        // ...while still returning the partial page that was collected before the cap.
+        var result = ValidateAndDeserializeResponse(response, IoTHubJsonContext.Default.IoTHubQueryRunResult, HttpStatusCode.BadRequest);
+        Assert.Equal(150, result.Count);
+        Assert.Equal(150, result.Items.Count);
+        Assert.True(result.HasMore);
+
+        // First request asks for a full page with no token; the second is trimmed to the remaining cap of 50.
+        var runQueryCalls = Service.ReceivedCalls()
+            .Where(c => c.GetMethodInfo().Name == nameof(IIoTHubDeviceService.RunQuery))
+            .Select(c => c.GetArguments())
+            .ToList();
+
+        Assert.Equal(2, runQueryCalls.Count);
+        Assert.Equal(100, runQueryCalls[0][4]);
+        Assert.Null(runQueryCalls[0][5]);
+        Assert.Equal(50, runQueryCalls[1][4]);
+        Assert.Equal("token-1", runQueryCalls[1][5]);
     }
 
     [Fact]
@@ -169,10 +244,11 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
     }
 
     [Fact]
-    public async Task ExecuteAsync_DefaultsToSelectStarAndReturnsDiscoveredFields()
+    public async Task ExecuteAsync_WithoutFilters_ReturnsAllResultFields()
     {
+        // No --query and no --filters: a single bare 'SELECT * FROM devices' runs (no discovery step).
         SetupRunQuery(new IoTHubQueryPage(
-            Items("{\"deviceId\":\"device1\",\"status\":\"enabled\",\"properties\":{\"reported\":{\"temperature\":42}}}"),
+            Items("{\"deviceId\":\"device1\"}", "{\"deviceId\":\"device2\"}"),
             null));
 
         var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1");
@@ -190,30 +266,23 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
             Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, IoTHubJsonContext.Default.IoTHubQueryRunResult);
-        Assert.NotNull(result.DiscoveredFields);
-        Assert.Contains("deviceId", result.DiscoveredFields!.Device.Select(f => f.Field));
-        Assert.Contains("status", result.DiscoveredFields.Device.Select(f => f.Field));
-        Assert.Contains("temperature", result.DiscoveredFields.Reported.Select(f => f.Field));
+        Assert.Equal(2, result.Count);
+        Assert.Equal(2, result.Items.Count);
+        Assert.Equal("device1", result.Items[0].GetProperty("deviceId").GetString());
+        Assert.Equal("device2", result.Items[1].GetProperty("deviceId").GetString());
+        Assert.False(result.HasMore);
+        Assert.Contains("all", result.Message);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsDiscoveredFieldsForRawSelectStar()
+    public async Task ExecuteAsync_WithSingleFilter_ReturnsAllResultFields()
     {
-        SetupRunQuery(new IoTHubQueryPage(
-            Items("{\"deviceId\":\"device1\",\"tags\":{\"env\":\"prod\"}}"),
+        // Discovery must expose the field being filtered on so compilation succeeds.
+        SetupDiscoverySample("{\"deviceId\":\"sample\",\"properties\":{\"reported\":{\"temperature\":42}}}");
+        // The compiled, filtered query returns the matching devices in a single terminal page.
+        SetupFilteredResult(new IoTHubQueryPage(
+            Items("{\"deviceId\":\"hot-1\"}", "{\"deviceId\":\"hot-2\"}"),
             null));
-
-        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1", "--query", "SELECT * FROM devices");
-
-        var result = ValidateAndDeserializeResponse(response, IoTHubJsonContext.Default.IoTHubQueryRunResult);
-        Assert.NotNull(result.DiscoveredFields);
-        Assert.Contains("env", result.DiscoveredFields!.Tags.Select(f => f.Field));
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_CompilesFiltersIntoQueryAndOmitsDiscoveredFields()
-    {
-        SetupRunQuery(new IoTHubQueryPage(Items("{\"deviceId\":\"device1\"}"), null));
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1",
@@ -232,13 +301,22 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
             Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, IoTHubJsonContext.Default.IoTHubQueryRunResult);
-        Assert.Null(result.DiscoveredFields);
+        Assert.Equal(2, result.Count);
+        Assert.Equal(2, result.Items.Count);
+        Assert.Equal("hot-1", result.Items[0].GetProperty("deviceId").GetString());
+        Assert.Equal("hot-2", result.Items[1].GetProperty("deviceId").GetString());
+        Assert.False(result.HasMore);
+        Assert.Contains("all", result.Message);
     }
 
     [Fact]
-    public async Task ExecuteAsync_CompilesFiltersWithSourceAndLogicalOperator()
+    public async Task ExecuteAsync_WithMultipleFilters_ReturnsAllResultFields()
     {
-        SetupRunQuery(new IoTHubQueryPage([], null));
+        // Discovery exposes both fields referenced by the two predicates.
+        SetupDiscoverySample("{\"status\":\"enabled\",\"tags\":{\"floor\":3}}");
+        SetupFilteredResult(new IoTHubQueryPage(
+            Items("{\"deviceId\":\"dev-a\"}"),
+            null));
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1",
@@ -257,6 +335,13 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
+
+        var result = ValidateAndDeserializeResponse(response, IoTHubJsonContext.Default.IoTHubQueryRunResult);
+        Assert.Equal(1, result.Count);
+        Assert.Single(result.Items);
+        Assert.Equal("dev-a", result.Items[0].GetProperty("deviceId").GetString());
+        Assert.False(result.HasMore);
+        Assert.Contains("all", result.Message);
     }
 
     [Fact]
@@ -304,16 +389,29 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
     }
 
     [Fact]
-    public async Task ExecuteAsync_ValidatesFiltersAgainstDiscoveredFields()
+    public async Task ExecuteAsync_RejectsFilterFieldNotDiscovered()
     {
+        // Discovery samples twins exposing reported.temperature but not humidity.
+        SetupRunQuery(new IoTHubQueryPage(
+            Items("{\"deviceId\":\"device1\",\"properties\":{\"reported\":{\"temperature\":42}}}"), null));
+
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1",
-            "--filters", "[{\"scope\":\"reported\",\"field\":\"humidity\",\"operator\":\"equals\",\"value\":50}]",
-            "--discovered-fields", "{\"device\":[],\"tags\":[],\"desired\":[],\"reported\":[{\"field\":\"temperature\",\"type\":\"number\",\"examples\":[]}]}");
+            "--filters", "[{\"scope\":\"reported\",\"field\":\"humidity\",\"operator\":\"equals\",\"value\":50}]");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("unknown field", response.Message);
         Assert.Contains("temperature", response.Message);
+        await Service.DidNotReceive().RunQuery(
+            Arg.Is<string>(query => query.Contains("WHERE")),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.Mcp.Tools.IoTHub.Options.Device;
@@ -34,7 +33,7 @@ public sealed class IoTHubDeviceListCommand(
     ILogger<IoTHubDeviceListCommand> logger,
     IIoTHubDeviceService service,
     ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<IoTHubDeviceListOptions, DeviceListResult>(subscriptionResolver)
+    : BaseIoTHubCommand<IoTHubDeviceListOptions, DeviceListResult>(subscriptionResolver)
 {
     private const int DefaultMaxCount = 100;
     private const int MinMaxCount = 1;
