@@ -13,6 +13,7 @@ public static class AzureBackupTelemetryTags
     public static readonly string WorkloadType = AddPrefix("WorkloadType");
     public static readonly string DatasourceType = AddPrefix("DatasourceType");
     public static readonly string OperationScope = AddPrefix("OperationScope");
+    public static readonly string VaultExpand = AddPrefix("VaultExpand");
 
     // Unprefixed tag name shared with Microsoft.Mcp.Core's AzureTagName.SubscriptionGuid.
     // Duplicated here as a string literal because AzureTagName is internal to that assembly.
