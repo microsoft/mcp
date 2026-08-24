@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 
 namespace Microsoft.Mcp.Core.Services.Http;
 
@@ -45,7 +45,7 @@ public static class HttpClientFactoryConfigurator
             var httpClientOptions = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
             client.Timeout = httpClientOptions.DefaultTimeout;
 
-            var transport = serviceProvider.GetRequiredService<IOptions<ServerStartOptions>>().Value.Transport;
+            var transport = serviceProvider.GetRequiredService<IOptions<ServerRuntimeConfiguration>>().Value.Transport;
             client.DefaultRequestHeaders.UserAgent.ParseAdd(BuildUserAgent(transport));
         });
 

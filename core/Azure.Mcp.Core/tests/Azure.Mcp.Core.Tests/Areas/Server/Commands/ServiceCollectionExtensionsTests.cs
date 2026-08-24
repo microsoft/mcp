@@ -218,14 +218,13 @@ public class ServiceCollectionExtensionsTests
 
         // Assert
         var provider = services.BuildServiceProvider();
-        var registeredOptions = provider.GetService<ServerStartOptions>();
-        var wrappedOptions = provider.GetService<IOptions<ServerStartOptions>>()?.Value;
+        var registeredOptions = provider.GetService<ServerRuntimeConfiguration>();
+        var wrappedOptions = provider.GetService<IOptions<ServerRuntimeConfiguration>>()?.Value;
 
         // Verify both registrations point to the same instance
         Assert.NotNull(registeredOptions);
         Assert.NotNull(wrappedOptions);
-        Assert.Same(options, registeredOptions);
-        Assert.Same(options, wrappedOptions);
+        Assert.Same(registeredOptions, wrappedOptions);
         Assert.True(registeredOptions.ReadOnly);
     }
 
@@ -245,13 +244,13 @@ public class ServiceCollectionExtensionsTests
 
         // Assert
         var provider = services.BuildServiceProvider();
-        var registeredOptions = provider.GetService<ServerStartOptions>();
+        var registeredOptions = provider.GetService<ServerRuntimeConfiguration>();
 
         Assert.NotNull(registeredOptions);
         Assert.True(registeredOptions.ReadOnly);
 
         // Verify the option is also available as IOptions<ServerStartOptions>
-        var optionsMonitor = provider.GetService<IOptions<ServerStartOptions>>();
+        var optionsMonitor = provider.GetService<IOptions<ServerRuntimeConfiguration>>();
         Assert.NotNull(optionsMonitor);
         Assert.True(optionsMonitor.Value.ReadOnly);
     }
