@@ -538,7 +538,8 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         RecoveryJobCollection recoveryJobs = recoveryPlanResource.GetRecoveryJobs();
         HashSet<string> existingRecoveryJobIds = await GetRecoveryJobIdsAsync(recoveryJobs, cancellationToken);
         string operationId = Guid.NewGuid().ToString();
-        ArmOperation operation = await recoveryPlanResource.CheckReadinessAsync(WaitUntil.Completed, operationId, cancellationToken);
+        ArmOperation operation = await recoveryPlanResource.CheckReadinessAsync(WaitUntil.Started, operationId, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
         ResourceIdentifier recoveryJobResourceId = TryGetRecoveryJobResourceId(
                 operation.GetRawResponse().Content,
                 serviceGroup,
