@@ -144,6 +144,26 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
+    public async Task Should_validate_drill_for_execution()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+
+        var result = await CallToolAsync(
+            "resilience_drill_validate-for-execution",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drillName },
+                { "source-locations", new[] { "westus2-az1" } }
+            });
+
+        var validation = result.AssertProperty("validation");
+        Assert.False(string.IsNullOrEmpty(validation.AssertProperty("operationId").GetString()));
+    }
+
+    [Fact]
     public async Task Should_list_drill_resources()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");

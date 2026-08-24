@@ -3781,6 +3781,12 @@ azmcp resilience drill get --subscription <subscription> \
                            --service-group <service-group> \
                            [--name <name>]
 
+# Validate whether a resilience drill is eligible for execution from the specified source locations
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill validate-for-execution --service-group <service-group> \
+                                              --drill <drill> \
+                                              --source-locations <source-locations>
+
 # Get a resource (target) of a drill, or list all resources of the drill (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill resource get --subscription <subscription> \

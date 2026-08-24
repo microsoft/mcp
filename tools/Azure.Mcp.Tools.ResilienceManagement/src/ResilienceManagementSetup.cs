@@ -44,6 +44,7 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<RecoveryJobGetCommand>();
         services.AddSingleton<RecoveryJobResourceGetCommand>();
         services.AddSingleton<DrillGetCommand>();
+        services.AddSingleton<DrillValidateForExecutionCommand>();
         services.AddSingleton<DrillResourceGetCommand>();
     }
 
@@ -124,10 +125,11 @@ public class ResilienceManagementSetup : IAreaSetup
         recoveryJobResources.AddCommand<RecoveryJobResourceGetCommand>(serviceProvider);
 
         // Create drill subgroup
-        var drills = new CommandGroup("drill", "Resilience drill operations - Commands for listing and getting resilience drills for an Azure service group.");
+        var drills = new CommandGroup("drill", "Resilience drill operations - Commands for listing, getting, and validating resilience drills for an Azure service group.");
         resilienceManagement.AddSubGroup(drills);
 
         drills.AddCommand<DrillGetCommand>(serviceProvider);
+        drills.AddCommand<DrillValidateForExecutionCommand>(serviceProvider);
 
         // Create resource subgroup under drill
         var drillResources = new CommandGroup("resource", "Resilience drill resource operations - Commands for listing and getting the resources (targets) of a resilience drill.");

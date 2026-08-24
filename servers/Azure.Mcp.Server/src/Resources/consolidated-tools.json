@@ -45,15 +45,15 @@
     },
     {
       "name": "create_azure_resilience_management_resources",
-      "description": "Create, update, or delete Azure Resilience Management resources, including usage plans, usage plan enrollments, and recovery plans for Azure service groups.",
+      "description": "Create, update, delete, or validate Azure Resilience Management resources, including usage plans, usage plan enrollments, recovery plans, and drills for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": true,
           "description": "This tool may delete or modify existing resources in its environment."
         },
         "idempotent": {
-          "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+          "value": false,
+          "description": "This tool includes operations that may produce additional effects when run multiple times with the same arguments."
         },
         "openWorld": {
           "value": false,
@@ -77,7 +77,8 @@
         "resilience_usageplan_enrollment_create",
         "resilience_recovery_plan_create",
         "resilience_recovery_plan_delete",
-        "resilience_recovery_plan_resource_update"
+        "resilience_recovery_plan_resource_update",
+        "resilience_drill_validate-for-execution"
       ]
     },
     {
