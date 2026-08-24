@@ -545,8 +545,91 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             content,
             cancellationToken);
 
-        return CreateRecoveryPlanValidateForFailoverResult(operationId, operation.Value.RecoveryResourceQualifications);
+        return CreateRecoveryPlanValidateForFailoverResult(
+            operationId,
+            operation.GetRawResponse().Content,
+            operation.Value.RecoveryResourceQualifications);
     }
+
+    internal static RecoveryPlanValidateForFailoverResult CreateRecoveryPlanValidateForFailoverResult(
+        string operationId,
+        BinaryData operationResponse,
+        IEnumerable<RecoveryResourceQualification>? fallbackQualifications)
+    {
+        using JsonDocument document = JsonDocument.Parse(operationResponse);
+        if (!document.RootElement.TryGetProperty("properties", out JsonElement properties))
+        {
+            return CreateRecoveryPlanValidateForFailoverResult(operationId, fallbackQualifications);
+        }
+
+        string resultJson = properties.ValueKind switch
+        {
+            JsonValueKind.String => properties.GetString() ?? string.Empty,
+            JsonValueKind.Object => properties.GetRawText(),
+            _ => throw new JsonException("The ValidateForFailover operation result has an invalid properties value.")
+        };
+
+        using JsonDocument resultDocument = JsonDocument.Parse(resultJson);
+        if (!resultDocument.RootElement.TryGetProperty("recoveryResourceQualifications", out JsonElement qualifications))
+        {
+            return CreateRecoveryPlanValidateForFailoverResult(operationId, fallbackQualifications);
+        }
+
+        List<RecoveryPlanFailoverQualification> mappedQualifications = qualifications
+            .EnumerateArray()
+            .Select(qualification =>
+            {
+                JsonElement resource = GetOptionalObject(qualification, "recoveryResource");
+                JsonElement resourceProperties = GetOptionalObject(resource, "properties");
+                JsonElement details = GetOptionalObject(qualification, "operationQualificationDetails");
+                return new RecoveryPlanFailoverQualification(
+                    GetOptionalString(resource, "id") ?? string.Empty,
+                    GetOptionalString(resourceProperties, "recoveryResourceUniqueId") ?? GetOptionalString(resource, "name") ?? string.Empty,
+                    GetOptionalString(resourceProperties, "resourceId"),
+                    GetOptionalString(resourceProperties, "resourceLocation"),
+                    GetOptionalString(details, "qualificationState") ?? "Unknown",
+                    GetStringList(details, "notQualifiedReasons"),
+                    GetStringList(resourceProperties, "resourcePhysicalZones"),
+                    GetOptionalString(resourceProperties, "inclusionState"),
+                    GetOptionalString(resourceProperties, "protectionStatus"),
+                    GetOptionalBoolean(resourceProperties, "needsAttention"),
+                    GetStringList(resourceProperties, "attentionReasons"));
+            })
+            .ToList();
+
+        return new RecoveryPlanValidateForFailoverResult(operationId, mappedQualifications);
+    }
+
+    private static JsonElement GetOptionalObject(JsonElement element, string propertyName) =>
+        element.ValueKind == JsonValueKind.Object &&
+        element.TryGetProperty(propertyName, out JsonElement property) &&
+        property.ValueKind == JsonValueKind.Object
+            ? property
+            : default;
+
+    private static string? GetOptionalString(JsonElement element, string propertyName) =>
+        element.ValueKind == JsonValueKind.Object &&
+        element.TryGetProperty(propertyName, out JsonElement property) &&
+        property.ValueKind == JsonValueKind.String
+            ? property.GetString()
+            : null;
+
+    private static bool? GetOptionalBoolean(JsonElement element, string propertyName) =>
+        element.ValueKind == JsonValueKind.Object &&
+        element.TryGetProperty(propertyName, out JsonElement property) &&
+        property.ValueKind is JsonValueKind.True or JsonValueKind.False
+            ? property.GetBoolean()
+            : null;
+
+    private static IReadOnlyList<string> GetStringList(JsonElement element, string propertyName) =>
+        element.ValueKind == JsonValueKind.Object &&
+        element.TryGetProperty(propertyName, out JsonElement property) &&
+        property.ValueKind == JsonValueKind.Array
+            ? property.EnumerateArray()
+                .Where(item => item.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(item.GetString()))
+                .Select(item => item.GetString()!)
+                .ToList()
+            : [];
 
     internal static RecoveryPlanValidateForFailoverResult CreateRecoveryPlanValidateForFailoverResult(
         string operationId,

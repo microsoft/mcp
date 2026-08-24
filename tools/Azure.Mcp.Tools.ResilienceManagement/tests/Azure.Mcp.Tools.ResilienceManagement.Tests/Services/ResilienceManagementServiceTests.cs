@@ -407,6 +407,27 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public void CreateRecoveryPlanValidateForFailoverResult_ParsesOperationStatusProperties()
+    {
+        BinaryData operationResponse = BinaryData.FromObjectAsJson(new
+        {
+            status = "Succeeded",
+            properties = """
+                {"recoveryResourceQualifications":[{"recoveryResource":{"id":"/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/resource1","name":"resource1","properties":{"recoveryResourceUniqueId":"resource1"}},"operationQualificationDetails":{"qualificationState":"Qualified","notQualifiedReasons":[]}}]}
+                """
+        });
+
+        RecoveryPlanValidateForFailoverResult result = ResilienceManagementService.CreateRecoveryPlanValidateForFailoverResult(
+            "11111111-1111-1111-1111-111111111111",
+            operationResponse,
+            []);
+
+        RecoveryPlanFailoverQualification qualification = Assert.Single(result.RecoveryResourceQualifications);
+        Assert.Equal("resource1", qualification.RecoveryResourceUniqueId);
+        Assert.Equal("Qualified", qualification.QualificationState);
+    }
+
+    [Fact]
     public void CreateRecoveryPlanValidateForFailoverResult_HandlesMissingQualifications()
     {
         RecoveryPlanValidateForFailoverResult result = ResilienceManagementService.CreateRecoveryPlanValidateForFailoverResult(

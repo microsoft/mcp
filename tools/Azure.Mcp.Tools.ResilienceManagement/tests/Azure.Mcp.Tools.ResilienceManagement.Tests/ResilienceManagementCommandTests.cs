@@ -552,7 +552,9 @@ public class ResilienceManagementCommandTests(
             });
 
         Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
-        Assert.Equal(JsonValueKind.Array, result.AssertProperty("recoveryResourceQualifications").ValueKind);
+        JsonElement qualifications = result.AssertProperty("recoveryResourceQualifications");
+        Assert.Equal(JsonValueKind.Array, qualifications.ValueKind);
+        Assert.NotEmpty(qualifications.EnumerateArray());
     }
 
     [Fact]
