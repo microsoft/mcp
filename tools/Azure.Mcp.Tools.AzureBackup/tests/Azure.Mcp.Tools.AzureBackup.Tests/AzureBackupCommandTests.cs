@@ -1347,7 +1347,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     /// <summary>
     /// End-to-end Disk protection through DPP vault.
     /// Validates the Bug #2 (DPP) fix: <c>protecteditem protect</c> waits for the operation
-    /// to complete (<see cref="Azure.WaitUntil.Completed"/>), reads the backup-instance back,
+    /// to complete (<see cref="WaitUntil.Completed"/>), reads the backup-instance back,
     /// and surfaces a real <c>protectionStatus</c> rather than a fake <c>"Accepted"</c>.
     /// Also implicitly validates the Bug #1 fix because protection succeeds only when the
     /// DPP vault MSI created by <c>vault create</c> has the right RBAC on the disk + RG.

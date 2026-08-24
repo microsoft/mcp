@@ -2747,9 +2747,10 @@ Lists storage accounts in a subscription.
 
 ## Consolidated Mode Requirements
 
-Every new command needs to be added to the consolidated mode. Here is the instructions on how to do it:
-- `core/Azure.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json` file is where the tool grouping definition is stored for consolidated mode.
+Every new command needs to be added to the consolidated mode. Here are the instructions on how to do it:
+- `servers/Azure.Mcp.Server/src/Resources/consolidated-tools.json` is where the tool grouping definition is stored for consolidated mode.
 - Add the new commands to the one with the best matching category and exact matching toolMetadata. Update existing consolidated tool descriptions where newly mapped tools are added. If you can't find one, suggest a new consolidated tool.
+- Update `servers/Azure.Mcp.Server/README.md` with at least one representative prompt for the new command and update the supported-service description when the command adds a new resource or capability.
 - Use the following command to find out the correct tool name for your new tool
     ```
     cd servers/Azure.Mcp.Server/src/bin/Debug/net10.0
@@ -2771,8 +2772,10 @@ Before submitting:
 - [ ] Command registered in toolset setup RegisterCommands method
 - [ ] Follows file structure exactly
 - [ ] Error handling implemented
-- [ ] New tools have been added to consolidated-tools.json
-- [ ] Documentation complete
+- [ ] New tools have been mapped in `servers/Azure.Mcp.Server/src/Resources/consolidated-tools.json`, and the consolidated tool description reflects the new capability
+- [ ] `servers/Azure.Mcp.Server/README.md` includes a representative prompt and an updated supported-service description when applicable
+- [ ] `servers/Azure.Mcp.Server/docs/azmcp-commands.md` documents the command
+- [ ] `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` includes command prompts
 
 ### **CRITICAL: Live Test Infrastructure (Required for Azure Service Commands)**
 

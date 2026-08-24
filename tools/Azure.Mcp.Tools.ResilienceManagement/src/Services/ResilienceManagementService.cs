@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ClientModel.Primitives;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.ResourceManager;
+using Azure.ResourceManager.Models;
 using Azure.ResourceManager.ResilienceManagement;
 using Azure.ResourceManager.ResilienceManagement.Models;
 using Microsoft.Mcp.Core.Options;
@@ -394,6 +396,328 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return document.RootElement.Clone();
     }
 
+    public async Task<RecoveryPlanInfo> CreateRecoveryPlanAsync(string serviceGroup, string recoveryPlan, RecoveryPlanKind planType, string? planDescription, RecoveryPlanIdentityKind identityType, string? userAssignedIdentity = null, string? defaultGroupDescription = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
+        RecoveryPlanCollection recoveryPlans = armClient.GetRecoveryPlans(serviceGroupId);
+        NullableResponse<RecoveryPlanResource> existingPlan = await recoveryPlans.GetIfExistsAsync(recoveryPlan, cancellationToken);
+        string effectivePlanDescription = ResolveRecoveryPlanDescription(
+            planDescription,
+            existingPlan.HasValue ? existingPlan.Value?.Data?.Properties?.PlanDescription : null);
+        RecoveryGroupsSetting? existingRecoveryGroups = existingPlan.HasValue
+            ? existingPlan.Value?.Data?.Properties?.RecoveryGroupsSetting
+            : null;
+        RecoveryGroupsSetting recoveryGroups = CreateRecoveryGroupsSetting(existingRecoveryGroups, defaultGroupDescription);
+        ManagedServiceIdentity identity = CreateRecoveryPlanIdentity(identityType, userAssignedIdentity, existingPlan.HasValue ? existingPlan.Value?.Data?.Identity : null);
+        var data = new RecoveryPlanData
+        {
+            Identity = identity,
+            Properties = new RecoveryPlanProperties(
+                new RecoveryPlanType(planType.ToString()),
+                effectivePlanDescription,
+                recoveryGroups)
+        };
+
+        ArmOperation<RecoveryPlanResource> operation = await recoveryPlans.CreateOrUpdateAsync(
+            WaitUntil.Completed,
+            recoveryPlan,
+            data,
+            cancellationToken);
+
+        return CreateRecoveryPlanInfo(operation.Value.Data);
+    }
+
+    internal static RecoveryPlanInfo CreateRecoveryPlanInfo(RecoveryPlanData recoveryPlan)
+    {
+        RecoveryPlanProperties? properties = recoveryPlan.Properties;
+        ManagedServiceIdentity? identity = recoveryPlan.Identity;
+        RecoveryGroupsSetting? groups = properties?.RecoveryGroupsSetting;
+        RecoveryPlanIdentityInfo? identityInfo = identity is null
+            ? null
+            : new RecoveryPlanIdentityInfo(
+                identity.ManagedServiceIdentityType.ToString(),
+                identity.UserAssignedIdentities.Keys
+                    .Select(resourceId => resourceId.ToString())
+                    .Order(StringComparer.OrdinalIgnoreCase)
+                    .ToList());
+
+        return new RecoveryPlanInfo(
+            recoveryPlan.Id?.ToString() ?? string.Empty,
+            recoveryPlan.Name ?? string.Empty,
+            properties?.PlanType.ToString() ?? string.Empty,
+            properties?.PlanDescription ?? string.Empty,
+            properties?.ProvisioningState?.ToString(),
+            properties?.PlanState?.ToString(),
+            identityInfo,
+            CreateRecoveryPlanGroupInfo(groups?.DefaultGroup),
+            groups?.AdditionalGroups.Select(CreateRecoveryPlanGroupInfo).OfType<RecoveryPlanGroupInfo>().ToList() ?? []);
+    }
+
+    private static RecoveryPlanGroupInfo? CreateRecoveryPlanGroupInfo(RecoveryGroup? group)
+    {
+        RecoveryGroupProperties? properties = group?.Properties;
+        return properties is null
+            ? null
+            : new RecoveryPlanGroupInfo(properties.GroupUniqueId, properties.OrderId, properties.Description);
+    }
+
+    internal static string ResolveRecoveryPlanDescription(string? planDescription, string? existingPlanDescription)
+        => planDescription ?? existingPlanDescription
+            ?? throw new ArgumentException("--plan-description is required when creating a recovery plan.", nameof(planDescription));
+
+    public async Task<bool> DeleteRecoveryPlanAsync(string serviceGroup, string recoveryPlan, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
+        RecoveryPlanCollection recoveryPlans = armClient.GetRecoveryPlans(serviceGroupId);
+        NullableResponse<RecoveryPlanResource> existingPlan = await recoveryPlans.GetIfExistsAsync(recoveryPlan, cancellationToken);
+        if (!existingPlan.HasValue || existingPlan.Value is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            await existingPlan.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+            return true;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            return false;
+        }
+    }
+
+    public async Task<RecoveryPlanUpdateResourcesResult> UpdateRecoveryPlanResourcesAsync(string serviceGroup, string recoveryPlan, UpdateRecoveryResourcesContent content, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var recoveryPlanId = RecoveryPlanResource.CreateResourceIdentifier(serviceGroup, recoveryPlan);
+        RecoveryPlanResource recoveryPlanResource = await armClient.GetRecoveryPlanResource(recoveryPlanId).GetAsync(cancellationToken);
+        RecoveryMembersCollection recoveryMembers = recoveryPlanResource.GetAllRecoveryMembers();
+        foreach (RecoveryMembersData requestedResource in content.ResourcesToUpdate)
+        {
+            Response<RecoveryMembersResource> existingResource = await recoveryMembers.GetAsync(
+                requestedResource.Properties.RecoveryResourceUniqueId,
+                cancellationToken);
+            ValidateRecoveryResourceUpdate(requestedResource, existingResource.Value.Data);
+        }
+
+        ArmOperation<UpdateRecoveryResourcesResult> operation = await recoveryPlanResource.UpdateResourcesAsync(
+            WaitUntil.Completed,
+            Guid.NewGuid().ToString(),
+            content,
+            cancellationToken);
+
+        return CreateRecoveryPlanUpdateResourcesResult(operation.Value.FailedResources);
+    }
+
+    internal static RecoveryPlanUpdateResourcesResult CreateRecoveryPlanUpdateResourcesResult(IEnumerable<RecoveryMembersData> failedResources)
+    {
+        List<RecoveryPlanUpdateResourcesFailedResource> resources = failedResources.Select(resource =>
+        {
+            RecoveryResourceProperties? properties = resource.Properties;
+            ResponseError? error = properties?.ErrorDetails;
+            RecoveryPlanUpdateResourcesError? resultError = error is null
+                ? null
+                : new RecoveryPlanUpdateResourcesError(error.Code, error.Message);
+
+            return new RecoveryPlanUpdateResourcesFailedResource(
+                resource.Id?.ToString() ?? string.Empty,
+                properties?.RecoveryResourceUniqueId ?? resource.Name ?? string.Empty,
+                properties?.ResourceId?.ToString(),
+                resultError);
+        }).ToList();
+
+        return new RecoveryPlanUpdateResourcesResult(resources);
+    }
+
+    internal static void ValidateRecoveryResourceUpdate(RecoveryMembersData requestedResource, RecoveryMembersData existingResource)
+    {
+        RecoveryResourceProperties requested = requestedResource.Properties
+            ?? throw new ArgumentException("Each recovery resource update must contain properties.");
+        RecoveryResourceProperties existing = existingResource.Properties
+            ?? throw new ArgumentException($"Recovery resource '{requested.RecoveryResourceUniqueId}' has no existing properties.");
+        ResourceInclusionState? effectiveInclusionState = requested.InclusionState ?? existing.InclusionState;
+        if (effectiveInclusionState == ResourceInclusionState.Excluded)
+        {
+            return;
+        }
+
+        if (effectiveInclusionState != ResourceInclusionState.Included)
+        {
+            return;
+        }
+
+        ResourceProtectionSolutionType? effectiveSolutionType = IsNullOrNone(requested.SelectedProtectionSolutionType)
+            ? existing.SelectedProtectionSolutionType
+            : requested.SelectedProtectionSolutionType;
+        ResourceBaseProtectionSolutionSetting? effectiveSolutionSetting = requested.SelectedProtectionSolutionSetting ?? existing.SelectedProtectionSolutionSetting;
+        string resourceId = requested.RecoveryResourceUniqueId;
+
+        if (effectiveSolutionType is null || effectiveSolutionType == ResourceProtectionSolutionType.None || effectiveSolutionSetting is null)
+        {
+            throw new ArgumentException($"Recovery resource '{resourceId}' requires selectedProtectionSolutionType and selectedProtectionSolutionSetting when it is first included.");
+        }
+
+        if (effectiveSolutionType == ResourceProtectionSolutionType.AzureNative)
+        {
+            throw new ArgumentException($"Recovery resource '{resourceId}' cannot use AzureNative when included. Use AzureSiteRecovery for a virtual machine or CustomRunbook for another resource type.");
+        }
+
+        if (effectiveSolutionType == ResourceProtectionSolutionType.CustomRunbook)
+        {
+            if (effectiveSolutionSetting is not ResourceCustomProtectionSetting customRunbookSetting)
+            {
+                throw new ArgumentException($"Recovery resource '{resourceId}' requires a CustomRunbook selectedProtectionSolutionSetting that matches selectedProtectionSolutionType.");
+            }
+
+            if (customRunbookSetting.FailoverActionResourceId is null || customRunbookSetting.ReprotectActionResourceId is null)
+            {
+                throw new ArgumentException($"Recovery resource '{resourceId}' requires failoverAction.resourceId and reprotectAction.resourceId in its CustomRunbook selectedProtectionSolutionSetting.");
+            }
+
+            ValidateResourceType(customRunbookSetting.FailoverActionResourceId, "Microsoft.Automation/automationAccounts/runbooks", resourceId, "failoverAction.resourceId");
+            ValidateResourceType(customRunbookSetting.FailoverCommitActionResourceId, "Microsoft.Automation/automationAccounts/runbooks", resourceId, "failoverCommitAction.resourceId");
+            ValidateResourceType(customRunbookSetting.TestFailoverActionResourceId, "Microsoft.Automation/automationAccounts/runbooks", resourceId, "testFailoverAction.resourceId");
+            ValidateResourceType(customRunbookSetting.TestFailoverCleanupActionResourceId, "Microsoft.Automation/automationAccounts/runbooks", resourceId, "testFailoverCleanupAction.resourceId");
+            ValidateResourceType(customRunbookSetting.ReprotectActionResourceId, "Microsoft.Automation/automationAccounts/runbooks", resourceId, "reprotectAction.resourceId");
+            return;
+        }
+
+        if (effectiveSolutionType != ResourceProtectionSolutionType.AzureSiteRecovery || effectiveSolutionSetting is not ResourceSiteRecoveryProtectionSetting siteRecoverySetting)
+        {
+            throw new ArgumentException($"Recovery resource '{resourceId}' has inconsistent selectedProtectionSolutionType and selectedProtectionSolutionSetting values.");
+        }
+
+        if (!string.Equals(existing.ResourceId?.ResourceType.ToString(), "Microsoft.Compute/virtualMachines", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException($"Recovery resource '{resourceId}' can use AzureSiteRecovery only for a Microsoft.Compute/virtualMachines resource. Use CustomRunbook for this resource type.");
+        }
+
+        if (siteRecoverySetting.DiskReprotectInputDetails.Count == 0 ||
+            siteRecoverySetting.DiskReprotectInputDetails.Any(detail => detail.DiskResourceId is null || detail.StagingStorageAccountResourceId is null))
+        {
+            throw new ArgumentException($"Recovery resource '{resourceId}' requires at least one diskReprotectInputDetails entry with diskResourceId and stagingStorageAccountResourceId in its AzureSiteRecovery selectedProtectionSolutionSetting.");
+        }
+
+        foreach (DiskReprotectInputDetails detail in siteRecoverySetting.DiskReprotectInputDetails)
+        {
+            ValidateResourceType(detail.DiskResourceId, "Microsoft.Compute/disks", resourceId, "diskReprotectInputDetails.diskResourceId");
+            ValidateResourceType(detail.StagingStorageAccountResourceId, "Microsoft.Storage/storageAccounts", resourceId, "diskReprotectInputDetails.stagingStorageAccountResourceId");
+        }
+
+        if (siteRecoverySetting.TestFailoverParamsNetworkResourceId is null)
+        {
+            throw new ArgumentException($"Recovery resource '{resourceId}' requires testFailoverParams.networkResourceId in its AzureSiteRecovery selectedProtectionSolutionSetting.");
+        }
+
+        ValidateResourceType(siteRecoverySetting.TestFailoverParamsNetworkResourceId, "Microsoft.Network/virtualNetworks", resourceId, "testFailoverParams.networkResourceId");
+
+        if (!existing.ResourceProtectionSolutions.Any(solution =>
+            solution.ProtectionSolutionType == ResourceProtectionSolutionType.AzureSiteRecovery &&
+            solution.ProtectionStatus == ResourceProtectionStatus.Protected))
+        {
+            throw new ArgumentException($"Recovery resource '{resourceId}' cannot use AzureSiteRecovery because healthy Azure Site Recovery protection was not detected. Enable Azure Site Recovery protection, wait until its status is Protected, and refresh the recovery plan.");
+        }
+    }
+
+    private static bool IsNullOrNone(ResourceProtectionSolutionType? solutionType)
+        => solutionType is null || solutionType == ResourceProtectionSolutionType.None || string.IsNullOrEmpty(solutionType.Value.ToString());
+
+    private static void ValidateResourceType(ResourceIdentifier? resourceIdentifier, string expectedResourceType, string recoveryResourceId, string propertyName)
+    {
+        if (resourceIdentifier is not null &&
+            !string.Equals(resourceIdentifier.ResourceType.ToString(), expectedResourceType, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException($"Recovery resource '{recoveryResourceId}' requires {propertyName} to identify a {expectedResourceType} resource.");
+        }
+    }
+
+    internal static RecoveryGroupsSetting CreateRecoveryGroupsSetting(RecoveryGroupsSetting? existingRecoveryGroups, string? defaultGroupDescription)
+    {
+        RecoveryGroup? existingDefaultGroup = existingRecoveryGroups?.DefaultGroup;
+        RecoveryGroup defaultGroup;
+        if (existingDefaultGroup?.Properties is { } existingDefaultGroupProperties)
+        {
+            if (defaultGroupDescription is not null)
+            {
+                existingDefaultGroupProperties.Description = defaultGroupDescription;
+            }
+
+            return existingRecoveryGroups!;
+        }
+        else
+        {
+            defaultGroup = new RecoveryGroup
+            {
+                Properties = new RecoveryGroupProperties(Guid.NewGuid().ToString(), 0, defaultGroupDescription ?? "Default recovery group")
+            };
+        }
+
+        var recoveryGroups = new RecoveryGroupsSetting(defaultGroup);
+        foreach (RecoveryGroup additionalGroup in existingRecoveryGroups?.AdditionalGroups ?? [])
+        {
+            recoveryGroups.AdditionalGroups.Add(additionalGroup);
+        }
+
+        return recoveryGroups;
+    }
+
+    internal static ManagedServiceIdentity CreateRecoveryPlanIdentity(RecoveryPlanIdentityKind identityType, string? userAssignedIdentity, ManagedServiceIdentity? existingIdentity = null)
+    {
+        if (identityType == RecoveryPlanIdentityKind.SystemAssigned)
+        {
+            return new ManagedServiceIdentity(ManagedServiceIdentityType.SystemAssigned);
+        }
+
+        ResourceIdentifier identityResourceId = ParseUserAssignedIdentityResourceId(userAssignedIdentity!);
+        if (existingIdentity?.UserAssignedIdentities.Keys.Any(existingIdentityResourceId => existingIdentityResourceId != identityResourceId) == true)
+        {
+            throw new ArgumentException("Changing the user-assigned managed identity of an existing recovery plan is not supported.", nameof(userAssignedIdentity));
+        }
+
+        ManagedServiceIdentityType managedServiceIdentityType = identityType == RecoveryPlanIdentityKind.SystemAndUserAssigned
+            ? ManagedServiceIdentityType.SystemAssignedUserAssigned
+            : ManagedServiceIdentityType.UserAssigned;
+        var identity = new ManagedServiceIdentity(managedServiceIdentityType);
+        foreach (ResourceIdentifier existingIdentityResourceId in existingIdentity?.UserAssignedIdentities.Keys ?? [])
+        {
+            if (existingIdentityResourceId != identityResourceId)
+            {
+                identity.UserAssignedIdentities.Add(existingIdentityResourceId, null!);
+            }
+        }
+
+        identity.UserAssignedIdentities.Add(identityResourceId, new UserAssignedIdentity());
+        return identity;
+    }
+
+    internal static ResourceIdentifier ParseUserAssignedIdentityResourceId(string userAssignedIdentity)
+    {
+        try
+        {
+            var identityResourceId = new ResourceIdentifier(userAssignedIdentity);
+            if (!string.Equals(identityResourceId.ResourceType.ToString(), "Microsoft.ManagedIdentity/userAssignedIdentities", StringComparison.OrdinalIgnoreCase) ||
+                string.IsNullOrWhiteSpace(identityResourceId.SubscriptionId) ||
+                string.IsNullOrWhiteSpace(identityResourceId.ResourceGroupName) ||
+                string.IsNullOrWhiteSpace(identityResourceId.Name))
+            {
+                throw new FormatException();
+            }
+
+            return identityResourceId;
+        }
+        catch (Exception ex) when (ex is ArgumentException or FormatException)
+        {
+            throw new ArgumentException(
+                "The user-assigned identity must be a valid Azure resource ID in the format /subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identity}.",
+                nameof(userAssignedIdentity));
+        }
+    }
+
     public async Task<IEnumerable<ResourceSummary>> ListRecoveryResourcesAsync(string serviceGroup, string recoveryPlan, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
@@ -680,7 +1004,8 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             }
         };
 
-        ArmOperation<UsagePlanResource> operation = await usagePlans.CreateOrUpdateAsync(WaitUntil.Completed, usagePlan, usagePlanData, cancellationToken);
+        ArmOperation<UsagePlanResource> operation = await usagePlans.CreateOrUpdateAsync(WaitUntil.Started, usagePlan, usagePlanData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return MapUsagePlan(operation.Value.Data);
     }
@@ -702,7 +1027,8 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             Properties = new EnrollmentProperties(serviceGroupId)
         };
 
-        ArmOperation<UsagePlanEnrollmentResource> operation = await enrollments.CreateOrUpdateAsync(WaitUntil.Completed, enrollment, enrollmentData, cancellationToken);
+        ArmOperation<UsagePlanEnrollmentResource> operation = await enrollments.CreateOrUpdateAsync(WaitUntil.Started, enrollment, enrollmentData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return MapUsagePlanEnrollment(operation.Value.Data);
     }

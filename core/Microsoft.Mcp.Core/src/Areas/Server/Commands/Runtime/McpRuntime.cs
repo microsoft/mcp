@@ -100,7 +100,7 @@ public sealed class McpRuntime : IMcpRuntime
 
         try
         {
-            CallToolResult callTool = await _toolLoader.CallToolHandler(request!, cancellationToken);
+            CallToolResult callTool = await _toolLoader.CallToolHandler(request, cancellationToken);
 
             var isSuccessful = !callTool.IsError.HasValue || !callTool.IsError.Value;
             if (isSuccessful)

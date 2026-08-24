@@ -47,6 +47,8 @@
 
 ## Code Review Guidelines
 
+When reviewing a pull request, use the `mcp-code-reviewer` skill. In interactive IDE and CLI sessions, return draft findings for human approval before posting them. In GitHub Copilot Code Review, post qualified inline comments directly as a comment-only review. Keep the review read-only: never modify code or the branch, approve or request changes, resolve threads, or invoke an agent to implement changes.
+
 When reviewing PRs that add or modify MCP tools, cross-reference the [pre-merge checklist](PULL_REQUEST_TEMPLATE.md) and check the following repository-specific completeness requirements:
 
 - **`consolidated-tools.json`**: If a tool is renamed or removed, `servers/Azure.Mcp.Server/src/Resources/consolidated-tools.json` must be updated. Flag a tool rename when this file is not in the diff.

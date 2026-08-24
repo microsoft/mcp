@@ -15,7 +15,7 @@ public class DirectoryDeleteCommandTests : CommandUnitTestsBase<DirectoryDeleteC
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("delete_directory", Command.Name);
+        Assert.Equal("delete-directory", Command.Name);
         Assert.Equal("Delete OneLake Directory", Command.Title);
         Assert.False(Command.Metadata.ReadOnly);
         Assert.True(Command.Metadata.Destructive);
@@ -27,7 +27,7 @@ public class DirectoryDeleteCommandTests : CommandUnitTestsBase<DirectoryDeleteC
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("delete_directory", CommandDefinition.Name);
+        Assert.Equal("delete-directory", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);
     }

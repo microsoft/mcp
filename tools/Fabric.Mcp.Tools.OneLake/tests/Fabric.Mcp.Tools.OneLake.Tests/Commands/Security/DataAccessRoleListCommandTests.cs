@@ -13,7 +13,7 @@ public class DataAccessRoleListCommandTests : CommandUnitTestsBase<DataAccessRol
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("list_data_access_roles", Command.Name);
+        Assert.Equal("list-data-access-roles", Command.Name);
         Assert.Equal("List OneLake Data Access Roles", Command.Title);
         Assert.Contains("List all data access roles", Command.Description);
         Assert.True(Command.Metadata.ReadOnly);
@@ -24,7 +24,7 @@ public class DataAccessRoleListCommandTests : CommandUnitTestsBase<DataAccessRol
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("list_data_access_roles", CommandDefinition.Name);
+        Assert.Equal("list-data-access-roles", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);
     }
