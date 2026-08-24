@@ -55,6 +55,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands;
 [JsonSerializable(typeof(RecoveryPlanValidateForFailoverResult))]
 [JsonSerializable(typeof(RecoveryPlanFailoverQualification))]
 [JsonSerializable(typeof(RecoveryPlanUpdateResourcesCommand.RecoveryPlanUpdateResourcesCommandResult))]
+[JsonSerializable(typeof(RecoveryPlanReadinessResult))]
 [JsonSerializable(typeof(RecoveryPlanUpdateResourcesResult))]
 [JsonSerializable(typeof(RecoveryPlanUpdateResourcesFailedResource))]
 [JsonSerializable(typeof(RecoveryPlanUpdateResourcesError))]
