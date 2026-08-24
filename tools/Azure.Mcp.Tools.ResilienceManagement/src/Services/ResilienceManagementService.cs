@@ -940,9 +940,6 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             recoveryGroups = new RecoveryGroupsSetting(defaultGroup);
         }
 
-                return error is null
-                    ? null
-                    : new RecoveryPlanReadinessError(error.ErrorCode, error.ErrorMessage, error.Recommendations ?? []);
         if (additionalGroups is null)
         {
             return recoveryGroups;
