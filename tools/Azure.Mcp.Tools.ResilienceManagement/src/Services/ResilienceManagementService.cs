@@ -566,7 +566,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         {
             JsonValueKind.String => properties.GetString() ?? string.Empty,
             JsonValueKind.Object => properties.GetRawText(),
-            _ => throw new JsonException("The ValidateForFailover operation result has an invalid properties value.")
+            _ => throw new JsonException("The recovery-plan validation operation result has an invalid properties value.")
         };
 
         using JsonDocument resultDocument = JsonDocument.Parse(resultJson);
@@ -657,6 +657,103 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             .ToList();
 
         return new RecoveryPlanValidateForFailoverResult(operationId, qualifications);
+    }
+
+    public async Task<RecoveryPlanValidateForReprotectResult> ValidateRecoveryPlanForReprotectAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string>? selectedResourceIds = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var recoveryPlanId = RecoveryPlanResource.CreateResourceIdentifier(serviceGroup, recoveryPlan);
+        RecoveryPlanResource recoveryPlanResource = await armClient.GetRecoveryPlanResource(recoveryPlanId).GetAsync(cancellationToken);
+        var content = new ReprotectContent();
+        foreach (string selectedResourceId in selectedResourceIds ?? [])
+        {
+            content.ReprotectRequestSelectedResourceIds.Add(new ResourceIdentifier(selectedResourceId));
+        }
+
+        string operationId = Guid.NewGuid().ToString();
+        ArmOperation<ValidateForRecoveryOperationBaseResult> operation = await recoveryPlanResource.ValidateForReprotectAsync(
+            WaitUntil.Completed,
+            operationId,
+            content,
+            cancellationToken);
+
+        RecoveryPlanValidateForFailoverResult result = CreateRecoveryPlanValidateForFailoverResult(
+            operationId,
+            operation.GetRawResponse().Content,
+            operation.Value.RecoveryResourceQualifications);
+        return new RecoveryPlanValidateForReprotectResult(
+            result.OperationId,
+            result.RecoveryResourceQualifications);
+    }
+
+    public async Task<RecoveryPlanValidateForOperationResult> ValidateRecoveryPlanForOperationAsync(string serviceGroup, string recoveryPlan, RecoveryOperationNames operationName, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var recoveryPlanId = RecoveryPlanResource.CreateResourceIdentifier(serviceGroup, recoveryPlan);
+        RecoveryPlanResource recoveryPlanResource = await armClient.GetRecoveryPlanResource(recoveryPlanId).GetAsync(cancellationToken);
+        var content = new ValidateForOperationContent(operationName);
+        string operationId = Guid.NewGuid().ToString();
+        ArmOperation<ArmResponseErrorResponseResult> operation = await recoveryPlanResource.ValidateForOperationAsync(
+            WaitUntil.Completed,
+            operationId,
+            content,
+            cancellationToken);
+
+        return CreateRecoveryPlanValidateForOperationResult(
+            operationId,
+            operationName.ToString(),
+            operation.GetRawResponse().Content);
+    }
+
+    internal static RecoveryPlanValidateForOperationResult CreateRecoveryPlanValidateForOperationResult(
+        string operationId,
+        string operationName,
+        BinaryData operationResponse)
+    {
+        using JsonDocument document = JsonDocument.Parse(operationResponse);
+        JsonElement root = document.RootElement;
+        if (root.TryGetProperty("properties", out JsonElement properties))
+        {
+            if (properties.ValueKind == JsonValueKind.String)
+            {
+                string resultJson = properties.GetString() ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(resultJson))
+                {
+                    return new RecoveryPlanValidateForOperationResult(operationId, operationName, true, null, null);
+                }
+
+                using JsonDocument resultDocument = JsonDocument.Parse(resultJson);
+                return CreateRecoveryPlanValidateForOperationResult(operationId, operationName, resultDocument.RootElement);
+            }
+
+            if (properties.ValueKind == JsonValueKind.Object)
+            {
+                return CreateRecoveryPlanValidateForOperationResult(operationId, operationName, properties);
+            }
+        }
+
+        return CreateRecoveryPlanValidateForOperationResult(operationId, operationName, root);
+    }
+
+    private static RecoveryPlanValidateForOperationResult CreateRecoveryPlanValidateForOperationResult(
+        string operationId,
+        string operationName,
+        JsonElement result)
+    {
+        JsonElement error = GetOptionalObject(result, "error");
+        string? errorCode = GetOptionalString(error, "code");
+        bool isValid = error.ValueKind != JsonValueKind.Object ||
+            string.IsNullOrWhiteSpace(errorCode) ||
+            string.Equals(errorCode, "None", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(errorCode, "Success", StringComparison.OrdinalIgnoreCase);
+        return new RecoveryPlanValidateForOperationResult(
+            operationId,
+            operationName,
+            isValid,
+            isValid ? null : errorCode,
+            isValid ? null : GetOptionalString(error, "message"));
     }
 
     public Task<RecoveryPlanReadinessResult> CheckRecoveryPlanReadinessAsync(string serviceGroup, string recoveryPlan, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)

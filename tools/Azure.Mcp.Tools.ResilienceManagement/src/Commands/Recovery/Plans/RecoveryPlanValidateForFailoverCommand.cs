@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Core;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Azure.ResourceManager.ResilienceManagement;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -57,14 +55,11 @@ public sealed class RecoveryPlanValidateForFailoverCommand(
             validationResult.Errors.Add("--user-consent must be Unspecified or Allowed when specified.");
         }
 
-        foreach (string resourceId in options.SelectedResourceIds ?? [])
-        {
-            if (string.IsNullOrWhiteSpace(resourceId) || !IsRecoveryResourceIdForPlan(resourceId, options.ServiceGroup, options.RecoveryPlan))
-            {
-                validationResult.Errors.Add("Each --selected-resource-ids value must be a full recovery-resource ID under the requested service group and recovery plan.");
-                break;
-            }
-        }
+        RecoveryPlanValidation.ValidateSelectedResourceIds(
+            options.SelectedResourceIds,
+            options.ServiceGroup,
+            options.RecoveryPlan,
+            validationResult);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecoveryPlanValidateForFailoverOptions options, CancellationToken cancellationToken)
@@ -94,21 +89,6 @@ public sealed class RecoveryPlanValidateForFailoverCommand(
         }
 
         return context.Response;
-    }
-
-    private static bool IsRecoveryResourceIdForPlan(string resourceId, string serviceGroup, string recoveryPlan)
-    {
-        try
-        {
-            var parsed = new ResourceIdentifier(resourceId);
-            return parsed.ResourceType == RecoveryMembersResource.ResourceType &&
-                string.Equals(parsed.Parent?.Name, recoveryPlan, StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(parsed.Parent?.Parent?.Name, serviceGroup, StringComparison.OrdinalIgnoreCase);
-        }
-        catch (Exception ex) when (ex is ArgumentException or FormatException)
-        {
-            return false;
-        }
     }
 
     protected override string GetErrorMessage(Exception ex) => ex switch

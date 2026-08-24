@@ -81,7 +81,7 @@
       ]
     },
     {
-      "name": "validate_azure_resilience_recovery_plan_for_failover",
+      "name": "validate_azure_resilience_recoveryplan_for_failover",
       "description": "Validate which resources in an Azure Resilience Management recovery plan are qualified for failover from specified source locations.",
       "toolMetadata": {
         "destructive": {
@@ -111,6 +111,72 @@
       },
       "mappedToolList": [
         "resilience_recoveryplan_validateforfailover"
+      ]
+    },
+    {
+      "name": "validate_azure_resilience_recoveryplan_for_reprotect",
+      "description": "Validate which resources in an Azure Resilience Management recovery plan are qualified for reprotect after failover.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not delete or modify recovery plan resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each invocation starts a new reprotect validation operation."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool starts a validation operation and may update operation state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_recoveryplan_validateforreprotect"
+      ]
+    },
+    {
+      "name": "validate_azure_resilience_recoveryplan_for_operation",
+      "description": "Validate a specific recovery operation for an Azure Resilience Management recovery plan before execution. Checks whether the requested Failover, FailoverCommit, Reprotect, TestFailover, or TestFailoverCleanup operation is supported and allowed by the recovery plan's current state, readiness status, and permissions. Use for operation-specific pre-validation, not general readiness assessment or per-resource qualification.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not execute the recovery operation or modify recovery plan resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each invocation starts a new plan operation validation."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool starts a validation operation and may update operation state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_recoveryplan_validateforoperation"
       ]
     },
     {

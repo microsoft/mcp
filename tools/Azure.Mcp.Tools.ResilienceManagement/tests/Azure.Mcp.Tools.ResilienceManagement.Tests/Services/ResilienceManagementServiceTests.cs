@@ -428,6 +428,54 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public void CreateRecoveryPlanValidateForOperationResult_ParsesSuccessfulStringProperties()
+    {
+        BinaryData operationResponse = BinaryData.FromObjectAsJson(new
+        {
+            status = "Succeeded",
+            properties = """
+                {"error":{"code":"None","message":"Operation validated successfully."}}
+                """
+        });
+
+        RecoveryPlanValidateForOperationResult result = ResilienceManagementService.CreateRecoveryPlanValidateForOperationResult(
+            "11111111-1111-1111-1111-111111111111",
+            "Failover",
+            operationResponse);
+
+        Assert.True(result.IsValid);
+        Assert.Equal("Failover", result.OperationName);
+        Assert.Null(result.ErrorCode);
+        Assert.Null(result.ErrorMessage);
+    }
+
+    [Fact]
+    public void CreateRecoveryPlanValidateForOperationResult_MapsBlockedOperationFromObjectProperties()
+    {
+        BinaryData operationResponse = BinaryData.FromObjectAsJson(new
+        {
+            status = "Succeeded",
+            properties = new
+            {
+                error = new
+                {
+                    code = "RecoveryPlanStateDoesNotSupportOperation",
+                    message = "Operation Reprotect is not allowed for the current recovery plan state."
+                }
+            }
+        });
+
+        RecoveryPlanValidateForOperationResult result = ResilienceManagementService.CreateRecoveryPlanValidateForOperationResult(
+            "11111111-1111-1111-1111-111111111111",
+            "Reprotect",
+            operationResponse);
+
+        Assert.False(result.IsValid);
+        Assert.Equal("RecoveryPlanStateDoesNotSupportOperation", result.ErrorCode);
+        Assert.Equal("Operation Reprotect is not allowed for the current recovery plan state.", result.ErrorMessage);
+    }
+
+    [Fact]
     public void CreateRecoveryPlanValidateForFailoverResult_HandlesMissingQualifications()
     {
         RecoveryPlanValidateForFailoverResult result = ResilienceManagementService.CreateRecoveryPlanValidateForFailoverResult(

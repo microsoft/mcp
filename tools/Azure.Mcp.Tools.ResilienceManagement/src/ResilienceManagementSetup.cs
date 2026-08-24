@@ -40,6 +40,8 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<RecoveryPlanCreateCommand>();
         services.AddSingleton<RecoveryPlanDeleteCommand>();
         services.AddSingleton<RecoveryPlanValidateForFailoverCommand>();
+        services.AddSingleton<RecoveryPlanValidateForReprotectCommand>();
+        services.AddSingleton<RecoveryPlanValidateForOperationCommand>();
         services.AddSingleton<RecoveryPlanUpdateResourcesCommand>();
         services.AddSingleton<RecoveryPlanCheckReadinessCommand>();
         services.AddSingleton<RecoveryResourceGetCommand>();
@@ -103,6 +105,8 @@ public class ResilienceManagementSetup : IAreaSetup
         recoveryPlans.AddCommand<RecoveryPlanCreateCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanDeleteCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanValidateForFailoverCommand>(serviceProvider);
+        recoveryPlans.AddCommand<RecoveryPlanValidateForReprotectCommand>(serviceProvider);
+        recoveryPlans.AddCommand<RecoveryPlanValidateForOperationCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanCheckReadinessCommand>(serviceProvider);
 
         // Create resource subgroup under recoveryplan

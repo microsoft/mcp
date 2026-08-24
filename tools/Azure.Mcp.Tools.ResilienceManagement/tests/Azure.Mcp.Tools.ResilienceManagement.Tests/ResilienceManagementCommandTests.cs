@@ -558,6 +558,48 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
+    public async Task Should_validate_recovery_plan_for_reprotect()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+
+        var result = await CallToolAsync(
+            "resilience_recoveryplan_validateforreprotect",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan }
+            });
+
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
+        JsonElement qualifications = result.AssertProperty("recoveryResourceQualifications");
+        Assert.Equal(JsonValueKind.Array, qualifications.ValueKind);
+        Assert.NotEmpty(qualifications.EnumerateArray());
+    }
+
+    [Fact]
+    public async Task Should_validate_recovery_plan_for_operation()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+
+        var result = await CallToolAsync(
+            "resilience_recoveryplan_validateforoperation",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan },
+                { "operation-name", "Failover" }
+            });
+
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
+        Assert.Equal("Failover", result.AssertProperty("operationName").GetString());
+        Assert.True(result.AssertProperty("isValid").GetBoolean());
+    }
+
+    [Fact]
     public async Task Should_get_recovery_job()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
