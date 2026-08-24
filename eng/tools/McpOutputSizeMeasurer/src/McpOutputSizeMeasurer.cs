@@ -14,14 +14,13 @@ namespace McpOutputSizeMeasurer;
 /// inner command a tool's learn response advertises. All requests/responses are exchanged
 /// as raw JSON-RPC text so that UTF-8 byte counts reflect exactly what crosses the wire.
 /// </summary>
-public sealed class McpOutputSizeMeasurer
+public sealed class McpOutputSizeMeasurer(
+    Action<string>? logger = null,
+    TimeSpan? requestTimeout = null)
 {
-    private readonly Action<string>? _logger;
-
-    public McpOutputSizeMeasurer(Action<string>? logger = null)
-    {
-        _logger = logger;
-    }
+    private static readonly TimeSpan DefaultRequestTimeout = TimeSpan.FromMinutes(2);
+    private readonly Action<string>? _logger = logger;
+    private readonly TimeSpan _requestTimeout = requestTimeout ?? DefaultRequestTimeout;
 
     /// <summary>
     /// Runs the full measurement workflow for every mode in <paramref name="modes"/> and
@@ -83,6 +82,7 @@ public sealed class McpOutputSizeMeasurer
                 """
                 {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"mcp-output-size-measurer","version":"1.0"}}}
                 """,
+                "initialize",
                 cancellationToken);
 
             await SendNotificationAsync(
@@ -114,7 +114,7 @@ public sealed class McpOutputSizeMeasurer
                         method = "tools/list",
                         @params = new { cursor }
                     });
-                var response = await SendRequestAsync(process, request, cancellationToken);
+                var response = await SendRequestAsync(process, request, "tools/list", cancellationToken);
                 discoveryTexts.Add(response);
                 using var document = JsonDocument.Parse(response);
                 var result = document.RootElement.GetProperty("result");
@@ -176,7 +176,11 @@ public sealed class McpOutputSizeMeasurer
                         }
                     }
                 });
-                var response = await SendRequestAsync(process, request, cancellationToken);
+                var response = await SendRequestAsync(
+                    process,
+                    request,
+                    $"tools/call ({tool})",
+                    cancellationToken);
                 using var document = JsonDocument.Parse(response);
                 if (!document.RootElement.TryGetProperty("result", out _))
                 {
@@ -227,7 +231,11 @@ public sealed class McpOutputSizeMeasurer
                             }
                         }
                     });
-                    var response = await SendRequestAsync(process, request, cancellationToken);
+                    var response = await SendRequestAsync(
+                        process,
+                        request,
+                        $"tools/call ({tool}.{command})",
+                        cancellationToken);
                     using var document = JsonDocument.Parse(response);
                     if (!document.RootElement.TryGetProperty("result", out var commandResult))
                     {
@@ -287,18 +295,42 @@ public sealed class McpOutputSizeMeasurer
         }
     }
 
-    private async Task<string> SendRequestAsync(Process process, string request, CancellationToken cancellationToken)
+    private async Task<string> SendRequestAsync(
+        Process process,
+        string request,
+        string requestDescription,
+        CancellationToken cancellationToken)
     {
         _logger?.Invoke($"--> {request}");
         await process.StandardInput.WriteLineAsync(request);
         await process.StandardInput.FlushAsync(cancellationToken);
 
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeout.CancelAfter(TimeSpan.FromSeconds(30));
-        var response = await process.StandardOutput.ReadLineAsync(timeout.Token)
-            ?? throw new InvalidOperationException("The server closed its output stream before responding.");
+        var response = await WaitForResponseAsync(
+            process.StandardOutput.ReadLineAsync(cancellationToken).AsTask(),
+            _requestTimeout,
+            requestDescription,
+            cancellationToken);
         _logger?.Invoke($"<-- {response}");
         return response;
+    }
+
+    internal static async Task<string> WaitForResponseAsync(
+        Task<string?> responseTask,
+        TimeSpan timeout,
+        string requestDescription,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await responseTask.WaitAsync(timeout, cancellationToken)
+                ?? throw new InvalidOperationException("The server closed its output stream before responding.");
+        }
+        catch (TimeoutException ex)
+        {
+            throw new TimeoutException(
+                $"The MCP server did not respond to '{requestDescription}' within {timeout.TotalSeconds:N0} seconds.",
+                ex);
+        }
     }
 
     private static async Task SendNotificationAsync(Process process, string notification, CancellationToken cancellationToken)
