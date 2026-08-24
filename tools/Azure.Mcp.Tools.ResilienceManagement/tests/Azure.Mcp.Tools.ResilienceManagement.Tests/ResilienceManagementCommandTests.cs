@@ -509,29 +509,36 @@ public class ResilienceManagementCommandTests(
                 { "service-group", serviceGroup },
                 { "recovery-plan", recoveryPlan }
             });
-        var resourceId = listedResources
-            .AssertProperty("recoveryResources")
-            .EnumerateArray()
-            .First()
-            .AssertProperty("id")
-            .GetString();
-        Assert.False(string.IsNullOrEmpty(resourceId));
-
-        var resourceResult = await CallToolAsync(
-            "resilience_recoveryplan_resource_get",
-            new()
+        string? resourceId = null;
+        string? sourceLocation = null;
+        foreach (JsonElement resource in listedResources.AssertProperty("recoveryResources").EnumerateArray())
+        {
+            string candidateResourceId = resource.AssertProperty("id").GetString()!;
+            var resourceResult = await CallToolAsync(
+                "resilience_recoveryplan_resource_get",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "recovery-plan", recoveryPlan },
+                    { "name", candidateResourceId.Split('/').Last() }
+                });
+            JsonElement physicalZones = resourceResult
+                .AssertProperty("recoveryResource")
+                .AssertProperty("properties")
+                .AssertProperty("resourcePhysicalZones");
+            sourceLocation = physicalZones.ValueKind == JsonValueKind.Array
+                ? physicalZones.EnumerateArray().Select(zone => zone.GetString()).FirstOrDefault(zone => !string.IsNullOrWhiteSpace(zone))
+                : null;
+            if (sourceLocation is not null)
             {
-                { "tenant", Settings.TenantId },
-                { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan },
-                { "name", resourceId.Split('/').Last() }
-            });
-        var sourceLocation = resourceResult
-            .AssertProperty("recoveryResource")
-            .AssertProperty("properties")
-            .AssertProperty("resourceLocation")
-            .GetString();
-        Assert.False(string.IsNullOrEmpty(sourceLocation));
+                resourceId = candidateResourceId;
+                break;
+            }
+        }
+
+        Assert.False(string.IsNullOrEmpty(resourceId), "The Zonal recovery plan must contain a resource with a physical zone.");
+        Assert.False(string.IsNullOrEmpty(sourceLocation), "A physical source zone is required for Zonal failover validation.");
 
         var result = await CallToolAsync(
             "resilience_recoveryplan_validateforfailover",

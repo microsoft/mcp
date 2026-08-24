@@ -110,7 +110,13 @@ function Wait-ResilienceProvisioning {
             return
         }
         if ($state -in @('Failed', 'Canceled')) {
-            throw "Provisioning of $Path ended in state '$state'."
+            $errorDetails = ($response.Content | ConvertFrom-Json).properties.errorDetails
+            $errorMessage = if ($errorDetails) {
+                " ErrorCode: $($errorDetails.code). Message: $($errorDetails.message)"
+            } else {
+                ''
+            }
+            throw "Provisioning of $Path ended in state '$state'.$errorMessage"
         }
 
         Start-Sleep -Seconds 15
@@ -223,30 +229,49 @@ if ($existingGoalAssignment.StatusCode -eq 404) {
     throw "GET $goalAssignmentPath failed with status $($existingGoalAssignment.StatusCode): $($existingGoalAssignment.Content)"
 }
 
-# 6) Create a recovery plan on the service group.
+# 6) Create or validate the recovery plan on the service group. Do not PUT an
+# existing plan because recovery group IDs are referenced by its recovery resources.
 $recoveryPlanPath = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPut -Path $recoveryPlanPath -Body @{
-    identity   = @{
-        type = 'SystemAssigned'
-    }
-    properties = @{
-        planDescription       = 'Recovery plan for live testing.'
-        planType              = 'Zonal'
-        recoveryGroupsSetting = @{
-            defaultGroup     = @{
-                properties = @{
-                    description   = 'Default recovery group'
-                    groupUniqueId = (New-Guid).Guid
-                    orderId       = 0
-                    preActions    = @()
-                    postActions   = @()
-                }
-            }
-            additionalGroups = @()
+$existingRecoveryPlan = Invoke-AzRestMethod -Method GET -Path $recoveryPlanPath
+if ($existingRecoveryPlan.StatusCode -eq 404) {
+    Invoke-ResilienceRestPut -Path $recoveryPlanPath -Body @{
+        identity   = @{
+            type = 'SystemAssigned'
         }
+        properties = @{
+            planDescription       = 'Recovery plan for live testing.'
+            planType              = 'Zonal'
+            recoveryGroupsSetting = @{
+                defaultGroup     = @{
+                    properties = @{
+                        description   = 'Default recovery group'
+                        groupUniqueId = (New-Guid).Guid
+                        orderId       = 0
+                        preActions    = @()
+                        postActions   = @()
+                    }
+                }
+                additionalGroups = @()
+            }
+        }
+    } | Out-Null
+    Wait-ResilienceProvisioning -Path $recoveryPlanPath
+} elseif ($existingRecoveryPlan.StatusCode -eq 200) {
+    $recoveryPlan = $existingRecoveryPlan.Content | ConvertFrom-Json
+    if ($recoveryPlan.properties.provisioningState -ne 'Succeeded') {
+        $errorDetails = $recoveryPlan.properties.errorDetails
+        throw "Existing recovery plan '$recoveryPlanName' is in provisioning state '$($recoveryPlan.properties.provisioningState)'. ErrorCode: $($errorDetails.code). Message: $($errorDetails.message)"
     }
-} | Out-Null
-Wait-ResilienceProvisioning -Path $recoveryPlanPath
+    if ($recoveryPlan.properties.planType -ne 'Zonal') {
+        throw "Existing recovery plan '$recoveryPlanName' does not match the requested Zonal test configuration."
+    }
+    if ([string]::IsNullOrWhiteSpace($recoveryPlan.properties.recoveryGroupsSetting.defaultGroup.properties.groupUniqueId)) {
+        throw "Existing recovery plan '$recoveryPlanName' does not have a valid default recovery group."
+    }
+    Write-Host "Recovery plan '$recoveryPlanName' already exists with the requested configuration."
+} else {
+    throw "GET $recoveryPlanPath failed with status $($existingRecoveryPlan.StatusCode): $($existingRecoveryPlan.Content)"
+}
 
 # 7) Run a readiness check on the recovery plan so it has a recorded validation status.
 $checkReadinessPath = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName/checkReadiness`?api-version=$resilienceApiVersion"
