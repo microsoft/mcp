@@ -267,31 +267,55 @@ else {
 
 # 8) Create a drill. The service creates its drillResources from the service-group membership.
 $drillPath = "$serviceGroupResilienceBase/drills/$drillName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPut -Path $drillPath -Body @{
-    identity   = @{
-        type = 'SystemAssigned'
+$recoveryPlanId = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName"
+$existingDrill = Invoke-AzRestMethod -Method GET -Path $drillPath
+if ($existingDrill.StatusCode -eq 404) {
+    Invoke-ResilienceRestPut -Path $drillPath -Body @{
+        identity   = @{
+            type = 'SystemAssigned'
+        }
+        properties = @{
+            drillType               = 'Zonal'
+            rbacSetupMode           = 'AutomatedBuiltinRoles'
+            metricsProperties       = @{
+                identity       = @{ type = 'SystemAssigned' }
+                metricsToTrack = @()
+            }
+            recoveryPlanProperties  = @{
+                recoveryPlanId = $recoveryPlanId
+                identity       = @{ type = 'SystemAssigned' }
+            }
+            drillAssetProperties    = @{
+                subscription  = $subscriptionId
+                region        = $location
+                resourceGroup = $ResourceGroupName
+            }
+            chaosResourceProperties = @{
+                identity                       = @{ type = 'SystemAssigned' }
+                chaosResourceIdentityForFaults = @{ type = 'SystemAssigned' }
+            }
+        }
+    } | Out-Null
+    Wait-ResilienceProvisioning -Path $drillPath
+}
+elseif ($existingDrill.StatusCode -eq 200) {
+    $drill = $existingDrill.Content | ConvertFrom-Json
+    if ($drill.properties.drillType -ne 'Zonal' -or
+        $drill.properties.rbacSetupMode -ne 'AutomatedBuiltinRoles' -or
+        $drill.properties.drillAssetProperties.subscription -ne $subscriptionId -or
+        $drill.properties.drillAssetProperties.region -ne $location -or
+        $drill.properties.drillAssetProperties.resourceGroup -ne $ResourceGroupName -or
+        $drill.properties.recoveryPlanProperties.recoveryPlanId -ne $recoveryPlanId -or
+        -not $drill.properties.metricsProperties.identity -or
+        $drill.properties.metricsProperties.metricsToTrack.Count -ne 0 -or
+        $drill.properties.provisioningState -ne 'Succeeded') {
+        throw "Existing drill '$drillName' does not match the requested test configuration."
     }
-    properties = @{
-        drillType             = 'Zonal'
-        rbacSetupMode         = 'AutomatedCustomRole'
-        metricsProperties     = @{
-            identity       = @{ type = 'SystemAssigned' }
-            metricsToTrack = @()
-        }
-        recoveryPlanProperties = @{
-            identity = @{ type = 'SystemAssigned' }
-        }
-        drillAssetProperties = @{
-            subscription = $subscriptionId
-            region       = $location
-        }
-        chaosResourceProperties = @{
-            identity                       = @{ type = 'SystemAssigned' }
-            chaosResourceIdentityForFaults = @{ type = 'SystemAssigned' }
-        }
-    }
-} | Out-Null
-Wait-ResilienceProvisioning -Path $drillPath
+    Write-Host "Drill '$drillName' already exists with the requested configuration."
+}
+else {
+    throw "GET $drillPath failed with status $($existingDrill.StatusCode): $($existingDrill.Content)"
+}
 
 # Wait for the drill resource created from the storage-account service-group member.
 $drillResourcesPath = "$serviceGroupResilienceBase/drills/$drillName/drillResources`?api-version=$resilienceApiVersion"
