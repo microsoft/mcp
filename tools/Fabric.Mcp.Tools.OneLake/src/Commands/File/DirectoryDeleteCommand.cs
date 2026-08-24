@@ -13,7 +13,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 [CommandMetadata(
     Id = "86991cd6-75fa-4870-9d99-f986ba9f5f73",
-    Name = "delete_directory",
+    Name = "delete-directory",
     Title = "Delete OneLake Directory",
     Description = "Deletes a directory from OneLake storage. Use this when the user wants to remove a folder. Use recursive flag to delete non-empty directories.",
     Destructive = true,

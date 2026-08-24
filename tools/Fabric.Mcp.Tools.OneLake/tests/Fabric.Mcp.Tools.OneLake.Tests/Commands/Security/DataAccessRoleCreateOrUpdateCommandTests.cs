@@ -17,7 +17,7 @@ public class DataAccessRoleCreateOrUpdateCommandTests : CommandUnitTestsBase<Dat
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("create_or_update_data_access_role", Command.Name);
+        Assert.Equal("create-or-update-data-access-role", Command.Name);
         Assert.Equal("Create or Update OneLake Data Access Role", Command.Title);
         Assert.Contains("Upsert a single data access role", Command.Description);
         Assert.False(Command.Metadata.ReadOnly);
@@ -28,7 +28,7 @@ public class DataAccessRoleCreateOrUpdateCommandTests : CommandUnitTestsBase<Dat
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("create_or_update_data_access_role", CommandDefinition.Name);
+        Assert.Equal("create-or-update-data-access-role", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);
     }

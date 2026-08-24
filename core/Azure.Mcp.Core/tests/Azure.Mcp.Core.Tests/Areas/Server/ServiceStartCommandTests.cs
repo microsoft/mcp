@@ -12,6 +12,7 @@ using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
+using Microsoft.Mcp.Tests;
 using NSubstitute;
 using Xunit;
 
@@ -553,29 +554,14 @@ public class ServiceStartCommandTests
         // Assert
         mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);
 
-        var dangerouslyDisableHttpIncomingAuth = GetAndAssertTagKeyValue(activity, TagName.DangerouslyDisableHttpIncomingAuth);
-        Assert.Equal(serviceStartOptions.DangerouslyDisableHttpIncomingAuth, dangerouslyDisableHttpIncomingAuth);
-
-        var dangerouslyDisableElicitation = GetAndAssertTagKeyValue(activity, TagName.DangerouslyDisableElicitation);
-        Assert.Equal(serviceStartOptions.DangerouslyDisableElicitation, dangerouslyDisableElicitation);
-
-        var transport = GetAndAssertTagKeyValue(activity, TagName.Transport);
-        Assert.Equal(serviceStartOptions.Transport, transport);
-
-        var mode = GetAndAssertTagKeyValue(activity, TagName.ServerMode);
-        Assert.Equal(serviceStartOptions.Mode, mode);
-
-        var tool = GetAndAssertTagKeyValue(activity, TagName.Tool);
-        Assert.Equal(string.Join(",", serviceStartOptions.Tool), tool);
-
-        var readOnly = GetAndAssertTagKeyValue(activity, TagName.IsReadOnly);
-        Assert.Equal(serviceStartOptions.ReadOnly, readOnly);
-
-        var debug = GetAndAssertTagKeyValue(activity, TagName.IsDebug);
-        Assert.Equal(serviceStartOptions.Debug, debug);
-
-        var namespaces = GetAndAssertTagKeyValue(activity, TagName.Namespace);
-        Assert.Equal(string.Join(",", serviceStartOptions.Namespace), namespaces);
+        activity.AssertTagEquals(TagName.DangerouslyDisableHttpIncomingAuth, serviceStartOptions.DangerouslyDisableHttpIncomingAuth);
+        activity.AssertTagEquals(TagName.DangerouslyDisableElicitation, serviceStartOptions.DangerouslyDisableElicitation);
+        activity.AssertTagEquals(TagName.Transport, serviceStartOptions.Transport);
+        activity.AssertTagEquals(TagName.ServerMode, serviceStartOptions.Mode);
+        activity.AssertTagEquals(TagName.Tool, string.Join(",", serviceStartOptions.Tool));
+        activity.AssertTagEquals(TagName.IsReadOnly, serviceStartOptions.ReadOnly);
+        activity.AssertTagEquals(TagName.IsDebug, serviceStartOptions.Debug);
+        activity.AssertTagEquals(TagName.Namespace, string.Join(",", serviceStartOptions.Namespace));
     }
 
     [Fact]
@@ -602,26 +588,14 @@ public class ServiceStartCommandTests
         // Assert
         mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);
 
-        var dangerouslyDisableHttpIncomingAuth = GetAndAssertTagKeyValue(activity, TagName.DangerouslyDisableHttpIncomingAuth);
-        Assert.Equal(serviceStartOptions.DangerouslyDisableHttpIncomingAuth, dangerouslyDisableHttpIncomingAuth);
-
-        var dangerouslyDisableElicitation = GetAndAssertTagKeyValue(activity, TagName.DangerouslyDisableElicitation);
-        Assert.Equal(serviceStartOptions.DangerouslyDisableElicitation, dangerouslyDisableElicitation);
-
-        var transport = GetAndAssertTagKeyValue(activity, TagName.Transport);
-        Assert.Equal(serviceStartOptions.Transport, transport);
-
-        Assert.DoesNotContain(TagName.ServerMode, activity.TagObjects.Select(x => x.Key));
-
-        Assert.DoesNotContain(TagName.Tool, activity.TagObjects.Select(x => x.Key));
-
-        var readOnly = GetAndAssertTagKeyValue(activity, TagName.IsReadOnly);
-        Assert.Equal(serviceStartOptions.ReadOnly, readOnly);
-
-        var debug = GetAndAssertTagKeyValue(activity, TagName.IsDebug);
-        Assert.Equal(serviceStartOptions.Debug, debug);
-
-        Assert.DoesNotContain(TagName.Namespace, activity.TagObjects.Select(x => x.Key));
+        activity.AssertTagEquals(TagName.DangerouslyDisableHttpIncomingAuth, serviceStartOptions.DangerouslyDisableHttpIncomingAuth);
+        activity.AssertTagEquals(TagName.DangerouslyDisableElicitation, serviceStartOptions.DangerouslyDisableElicitation);
+        activity.AssertTagEquals(TagName.Transport, serviceStartOptions.Transport);
+        activity.AssertTagDoesNotExist(TagName.ServerMode);
+        activity.AssertTagDoesNotExist(TagName.Tool);
+        activity.AssertTagEquals(TagName.IsReadOnly, serviceStartOptions.ReadOnly);
+        activity.AssertTagEquals(TagName.IsDebug, serviceStartOptions.Debug);
+        activity.AssertTagDoesNotExist(TagName.Namespace);
     }
 
     [Fact]
@@ -760,16 +734,6 @@ public class ServiceStartCommandTests
         var method = typeof(ServerStartCommand).GetMethod("GetStatusCode",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         return (HttpStatusCode)method!.Invoke(_command, [exception])!;
-    }
-
-    private static object GetAndAssertTagKeyValue(Activity activity, string tagName)
-    {
-        var matching = activity.TagObjects.SingleOrDefault(x => string.Equals(x.Key, tagName, StringComparison.OrdinalIgnoreCase));
-
-        Assert.False(matching.Equals(default(KeyValuePair<string, object?>)), $"Tag '{tagName}' was not found in activity tags.");
-        Assert.NotNull(matching.Value);
-
-        return matching.Value;
     }
 
     #region CORS Policy Tests

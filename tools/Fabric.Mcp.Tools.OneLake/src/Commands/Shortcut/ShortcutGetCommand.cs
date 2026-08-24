@@ -12,7 +12,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 
 [CommandMetadata(
     Id = "a1b2c3d4-2001-4000-8000-000000000002",
-    Name = "get_shortcut",
+    Name = "get-shortcut",
     Title = "Get OneLake Shortcut",
     Description = """
         Get the properties of a single shortcut (name, path, target,
