@@ -44,6 +44,7 @@ $goalTemplateName = $DeploymentOutputs['GOALTEMPLATENAME']
 $goalAssignmentName = $DeploymentOutputs['GOALASSIGNMENTNAME']
 $recoveryPlanName = $DeploymentOutputs['RECOVERYPLANNAME']
 $drillName = $DeploymentOutputs['DRILLNAME']
+$deleteDrillName = $DeploymentOutputs['DELETEDRILLNAME']
 
 $serviceGroupApiVersion = '2024-02-01-preview'
 $membershipApiVersion = '2023-09-01-preview'
@@ -223,31 +224,33 @@ $checkReadinessPath = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanNa
 Invoke-ResilienceRestPost -Path $checkReadinessPath | Out-Null
 Wait-ResilienceProvisioning -Path $recoveryPlanPath
 
-# 8) Create a drill on the service group.
-$drillPath = "$serviceGroupResilienceBase/drills/$drillName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPut -Path $drillPath -Body @{
-    identity   = @{
-        type = 'SystemAssigned'
-    }
-    properties = @{
-        drillType               = 'Zonal'
-        rbacSetupMode           = 'AutomatedBuiltinRoles'
-        drillAssetProperties    = @{
-            subscription  = $subscriptionId
-            region        = 'westus2'
-            resourceGroup = $ResourceGroupName
+# 8) Create a shared drill for read tests and an isolated drill for the delete test.
+foreach ($currentDrillName in @($drillName, $deleteDrillName)) {
+    $currentDrillPath = "$serviceGroupResilienceBase/drills/$currentDrillName`?api-version=$resilienceApiVersion"
+    Invoke-ResilienceRestPut -Path $currentDrillPath -Body @{
+        identity   = @{
+            type = 'SystemAssigned'
         }
-        chaosResourceProperties = @{
-            identity                       = @{ type = 'SystemAssigned' }
-            chaosResourceIdentityForFaults = @{ type = 'SystemAssigned' }
+        properties = @{
+            drillType               = 'Zonal'
+            rbacSetupMode           = 'AutomatedBuiltinRoles'
+            drillAssetProperties    = @{
+                subscription  = $subscriptionId
+                region        = 'westus2'
+                resourceGroup = $ResourceGroupName
+            }
+            chaosResourceProperties = @{
+                identity                       = @{ type = 'SystemAssigned' }
+                chaosResourceIdentityForFaults = @{ type = 'SystemAssigned' }
+            }
+            recoveryPlanProperties  = @{
+                recoveryPlanId = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName"
+                identity       = @{ type = 'SystemAssigned' }
+            }
         }
-        recoveryPlanProperties  = @{
-            recoveryPlanId = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName"
-            identity       = @{ type = 'SystemAssigned' }
-        }
-    }
-} | Out-Null
-Wait-ResilienceProvisioning -Path $drillPath
+    } | Out-Null
+    Wait-ResilienceProvisioning -Path $currentDrillPath
+}
 
 # Capture the drill resource created by the drill provisioning so the
 # drill/resource live tests can read them from deployment outputs. The drill resources appear

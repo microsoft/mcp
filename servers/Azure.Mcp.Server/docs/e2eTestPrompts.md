@@ -900,8 +900,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 ## Azure Resilience Management
 
-| Tool Name | Test Prompt |
-|:----------|:----------|
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
 | resilience_drill_delete | Delete resilience drill <drill_name> from service group <service_group> | none |
 | resilience_drill_delete | Permanently remove drill <drill_name> in service group <service_group> | none |
 | resilience_drill_get | List all resilience drills in service group <service_group> | none |

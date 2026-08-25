@@ -61,6 +61,12 @@ public sealed class DrillDeleteCommand(ILogger<DrillDeleteCommand> logger, IResi
                 new DrillDeleteCommandResult($"Resilience drill '{options.Drill}' was successfully deleted from service group '{options.ServiceGroup}'.", true),
                 ResilienceManagementJsonContext.Default.DrillDeleteCommandResult);
         }
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
+        {
+            context.Response.Results = ResponseResult.Create(
+                new DrillDeleteCommandResult($"Resilience drill '{options.Drill}' is already absent from service group '{options.ServiceGroup}'.", true),
+                ResilienceManagementJsonContext.Default.DrillDeleteCommandResult);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex,
@@ -79,8 +85,8 @@ public sealed class DrillDeleteCommand(ILogger<DrillDeleteCommand> logger, IResi
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             "Authorization failed deleting the drill. Verify you have the required permissions.",
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Drill not found. Verify the drill and service group exist and you have access.",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
+            "The drill cannot be deleted while it is running or locked. Complete or stop the active drill execution and try again.",
         RequestFailedException =>
             "The drill delete request failed. Verify the request parameters and try again.",
         _ => base.GetErrorMessage(ex)

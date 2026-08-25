@@ -71,14 +71,31 @@ public class DrillDeleteCommandTests : CommandUnitTestsBase<DrillDeleteCommand, 
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesNotFoundException()
+    public async Task ExecuteAsync_TreatsNotFoundAsSuccess()
     {
+        const string providerDetails = "Sensitive provider not-found details";
         Service.DeleteDrillAsync(ServiceGroup, Drill, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Drill not found"));
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, providerDetails));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.Status);
-        Assert.StartsWith("Drill not found.", response.Message);
+        var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.DrillDeleteCommandResult);
+        Assert.True(result.Success);
+        Assert.Contains("already absent", result.Message);
+        Assert.DoesNotContain(providerDetails, result.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesConflictException()
+    {
+        const string providerDetails = "Sensitive provider conflict details";
+        Service.DeleteDrillAsync(ServiceGroup, Drill, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, providerDetails));
+
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.Status);
+        Assert.Contains("running or locked", response.Message);
+        Assert.DoesNotContain(providerDetails, response.Message);
     }
 }
