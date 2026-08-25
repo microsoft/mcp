@@ -150,7 +150,7 @@
     },
     {
       "name": "validate_azure_resilience_recoveryplan_for_operation",
-      "description": "Validate a specific recovery operation for an Azure Resilience Management recovery plan before execution. Checks whether the requested Failover, FailoverCommit, Reprotect, TestFailover, or TestFailoverCleanup operation is supported and allowed by the recovery plan's current state, readiness status, and permissions. Use for operation-specific pre-validation, not general readiness assessment or per-resource qualification.",
+      "description": "Validate a specific customer-selected recovery operation for an Azure Resilience Management recovery plan before execution. Supported operations are Failover, FailoverCommit, Reprotect, TestFailover, and TestFailoverCleanup. If the customer does not specify an operation, ask them to choose one; never infer it from prior context, plan state, or resource metadata. Use for operation-specific pre-validation, not general readiness assessment or per-resource qualification.",
       "toolMetadata": {
         "destructive": {
           "value": false,

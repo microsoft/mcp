@@ -3762,6 +3762,7 @@ azmcp resilience recoveryplan validateforreprotect --service-group <service-grou
 
 # Validate whether a recovery plan is eligible to start a specified operation based on plan support, current state, readiness, and permissions.
 # Supported operations are Failover, FailoverCommit, Reprotect, TestFailover, and TestFailoverCleanup.
+# The operation must be explicitly selected; do not infer it from prior context, plan state, or resource metadata.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan validateforoperation --service-group <service-group> \
                                                     --recovery-plan <recovery-plan> \

@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Id = "2b68f7b2-fcaa-44a5-9968-d4a3ec3950d4",
     Name = "validateforoperation",
     Title = "Validate Resilience Recovery Plan for Operation",
-    Description = "Validates a specific recovery operation for a resilience recovery plan before execution. Checks whether the requested Failover, FailoverCommit, Reprotect, TestFailover, or TestFailoverCleanup operation is supported and allowed by the recovery plan's current state, readiness status, and permissions. Use this operation-specific pre-validation tool instead of general readiness assessment or per-resource qualification. It does not execute the operation or update recovery resources.",
+    Description = "Validates a specific recovery operation for a resilience recovery plan before execution. The customer must explicitly choose Failover, FailoverCommit, Reprotect, TestFailover, or TestFailoverCleanup. If no operation is provided, ask the customer which supported operation to validate; never infer one from prior context, the recovery plan state, or resource metadata. Checks whether the requested operation is supported and allowed by the recovery plan's current state, readiness status, and permissions. Use this operation-specific pre-validation tool instead of general readiness assessment or per-resource qualification. It does not execute the operation or update recovery resources.",
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
