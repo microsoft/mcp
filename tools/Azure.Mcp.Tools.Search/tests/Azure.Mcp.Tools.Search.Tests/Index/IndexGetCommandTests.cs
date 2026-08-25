@@ -27,6 +27,7 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Is("service123"),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedIndexes);
@@ -44,6 +45,7 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Any<string>(),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
@@ -64,6 +66,7 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
@@ -87,6 +90,7 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is(indexName),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([expectedDefinition]);
@@ -113,6 +117,7 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is(indexName),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
@@ -137,6 +142,7 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is(indexName),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));

@@ -17,7 +17,7 @@ public class MySqlListCommandTests : SubscriptionCommandUnitTestsBase<MySqlListC
     public async Task ExecuteAsync_ListsServersInSubscription_WhenNoResourceGroupOrServerProvided()
     {
         var expectedServers = new List<string> { "mysql-server-1", "mysql-server-2", "mysql-server-3" };
-        Service.ListServersInSubscriptionAsync("sub123", Arg.Any<CancellationToken>()).Returns(expectedServers);
+        Service.ListServersInSubscriptionAsync("sub123", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedServers);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123");
@@ -39,7 +39,7 @@ public class MySqlListCommandTests : SubscriptionCommandUnitTestsBase<MySqlListC
     public async Task ExecuteAsync_ListsServersInResourceGroup_WhenResourceGroupProvided()
     {
         var expectedServers = new List<string> { "mysql-server-1", "mysql-server-2" };
-        Service.ListServersAsync("sub123", "rg1", Arg.Any<CancellationToken>()).Returns(expectedServers);
+        Service.ListServersAsync("sub123", "rg1", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedServers);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -55,7 +55,7 @@ public class MySqlListCommandTests : SubscriptionCommandUnitTestsBase<MySqlListC
     public async Task ExecuteAsync_ListsDatabases_WhenServerProvided()
     {
         var expectedDatabases = new List<string> { "db1", "db2", "db3" };
-        Service.ListDatabasesAsync("sub123", Arg.Any<string>(), "user1", "server1", Arg.Any<CancellationToken>()).Returns(expectedDatabases);
+        Service.ListDatabasesAsync("sub123", Arg.Any<string>(), "user1", "server1", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedDatabases);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -72,7 +72,7 @@ public class MySqlListCommandTests : SubscriptionCommandUnitTestsBase<MySqlListC
     public async Task ExecuteAsync_ListsTables_WhenServerAndDatabaseProvided()
     {
         var expectedTables = new List<string> { "users", "products", "orders" };
-        Service.GetTablesAsync("sub123", Arg.Any<string>(), "user1", "server1", "db1", Arg.Any<CancellationToken>())
+        Service.GetTablesAsync("sub123", Arg.Any<string>(), "user1", "server1", "db1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new TableListResult(expectedTables, false));
 
         var response = await ExecuteCommandAsync(
@@ -91,7 +91,7 @@ public class MySqlListCommandTests : SubscriptionCommandUnitTestsBase<MySqlListC
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoServersExistInSubscription()
     {
-        Service.ListServersInSubscriptionAsync("sub123", Arg.Any<CancellationToken>()).Returns([]);
+        Service.ListServersInSubscriptionAsync("sub123", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns([]);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123");
@@ -106,7 +106,7 @@ public class MySqlListCommandTests : SubscriptionCommandUnitTestsBase<MySqlListC
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoServersExistInResourceGroup()
     {
-        Service.ListServersAsync("sub123", "rg1", Arg.Any<CancellationToken>()).Returns([]);
+        Service.ListServersAsync("sub123", "rg1", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns([]);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -122,7 +122,7 @@ public class MySqlListCommandTests : SubscriptionCommandUnitTestsBase<MySqlListC
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoDatabasesExist()
     {
-        Service.ListDatabasesAsync("sub123", Arg.Any<string>(), "user1", "server1", Arg.Any<CancellationToken>()).Returns([]);
+        Service.ListDatabasesAsync("sub123", Arg.Any<string>(), "user1", "server1", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns([]);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -139,7 +139,7 @@ public class MySqlListCommandTests : SubscriptionCommandUnitTestsBase<MySqlListC
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoTablesExist()
     {
-        Service.GetTablesAsync("sub123", Arg.Any<string>(), "user1", "server1", "db1", Arg.Any<CancellationToken>())
+        Service.GetTablesAsync("sub123", Arg.Any<string>(), "user1", "server1", "db1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new TableListResult([], false));
 
         var response = await ExecuteCommandAsync(
@@ -159,7 +159,7 @@ public class MySqlListCommandTests : SubscriptionCommandUnitTestsBase<MySqlListC
     [Fact]
     public async Task ExecuteAsync_SetsTablesTruncated_WhenTableResultsAreTruncated()
     {
-        Service.GetTablesAsync("sub123", Arg.Any<string>(), "user1", "server1", "db1", Arg.Any<CancellationToken>())
+        Service.GetTablesAsync("sub123", Arg.Any<string>(), "user1", "server1", "db1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new TableListResult(["users"], true));
 
         var response = await ExecuteCommandAsync(
@@ -177,7 +177,7 @@ public class MySqlListCommandTests : SubscriptionCommandUnitTestsBase<MySqlListC
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenListServersInSubscriptionThrows()
     {
-        Service.ListServersInSubscriptionAsync("sub123", Arg.Any<CancellationToken>())
+        Service.ListServersInSubscriptionAsync("sub123", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
         var response = await ExecuteCommandAsync(
@@ -191,7 +191,7 @@ public class MySqlListCommandTests : SubscriptionCommandUnitTestsBase<MySqlListC
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenListServersInResourceGroupThrows()
     {
-        Service.ListServersAsync("sub123", "rg1", Arg.Any<CancellationToken>())
+        Service.ListServersAsync("sub123", "rg1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
         var response = await ExecuteCommandAsync(
@@ -206,7 +206,7 @@ public class MySqlListCommandTests : SubscriptionCommandUnitTestsBase<MySqlListC
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenListDatabasesThrows()
     {
-        Service.ListDatabasesAsync("sub123", Arg.Any<string>(), "user1", "server1", Arg.Any<CancellationToken>())
+        Service.ListDatabasesAsync("sub123", Arg.Any<string>(), "user1", "server1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
         var response = await ExecuteCommandAsync(
@@ -222,7 +222,7 @@ public class MySqlListCommandTests : SubscriptionCommandUnitTestsBase<MySqlListC
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenGetTablesThrows()
     {
-        Service.GetTablesAsync("sub123", Arg.Any<string>(), "user1", "server1", "db1", Arg.Any<CancellationToken>())
+        Service.GetTablesAsync("sub123", Arg.Any<string>(), "user1", "server1", "db1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
         var response = await ExecuteCommandAsync(

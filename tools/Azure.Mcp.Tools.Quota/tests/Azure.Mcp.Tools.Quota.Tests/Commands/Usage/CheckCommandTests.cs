@@ -50,6 +50,7 @@ public sealed class CheckCommandTests : SubscriptionCommandUnitTestsBase<CheckCo
                 list.Contains("Microsoft.Storage/storageAccounts")),
             subscriptionId,
             region,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
@@ -68,6 +69,7 @@ public sealed class CheckCommandTests : SubscriptionCommandUnitTestsBase<CheckCo
                 list.Contains("Microsoft.Storage/storageAccounts")),
             subscriptionId,
             region,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
 
         // Verify the response structure
@@ -103,6 +105,7 @@ public sealed class CheckCommandTests : SubscriptionCommandUnitTestsBase<CheckCo
             Arg.Any<List<string>>(),
             subscriptionId,
             region,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -130,6 +133,7 @@ public sealed class CheckCommandTests : SubscriptionCommandUnitTestsBase<CheckCo
             Arg.Any<List<string>>(),
             subscriptionId,
             region,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(expectedException);
 
@@ -168,6 +172,7 @@ public sealed class CheckCommandTests : SubscriptionCommandUnitTestsBase<CheckCo
                 list.Contains("Microsoft.Compute/virtualMachines")),
             subscriptionId,
             region,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
@@ -190,6 +195,7 @@ public sealed class CheckCommandTests : SubscriptionCommandUnitTestsBase<CheckCo
                 list.Contains("Microsoft.Compute/virtualMachines")),
             subscriptionId,
             region,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -205,6 +211,7 @@ public sealed class CheckCommandTests : SubscriptionCommandUnitTestsBase<CheckCo
             Arg.Any<List<string>>(),
             subscriptionId,
             region,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -261,6 +268,7 @@ public sealed class CheckCommandTests : SubscriptionCommandUnitTestsBase<CheckCo
                 list.Contains("Microsoft.Compute/VirtualMachines")),
             subscriptionId,
             region,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
@@ -284,6 +292,7 @@ public sealed class CheckCommandTests : SubscriptionCommandUnitTestsBase<CheckCo
                 list.Contains("Microsoft.Compute/VirtualMachines")),
             subscriptionId,
             region,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -312,6 +321,7 @@ public sealed class CheckCommandTests : SubscriptionCommandUnitTestsBase<CheckCo
                 list.Contains("Microsoft.UnsupportedProvider/resourceType")),
             subscriptionId,
             region,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
@@ -329,6 +339,7 @@ public sealed class CheckCommandTests : SubscriptionCommandUnitTestsBase<CheckCo
                 list.Contains("Microsoft.UnsupportedProvider/resourceType")),
             subscriptionId,
             region,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
 
         // Verify the response structure
@@ -372,6 +383,7 @@ public sealed class CheckCommandTests : SubscriptionCommandUnitTestsBase<CheckCo
             Arg.Is<List<string>>(list => list.Count == 50),
             subscriptionId,
             region,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
@@ -387,6 +399,7 @@ public sealed class CheckCommandTests : SubscriptionCommandUnitTestsBase<CheckCo
             Arg.Is<List<string>>(list => list.Count == 50),
             subscriptionId,
             region,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
 
         // Verify the response contains all expected resource types
@@ -421,6 +434,7 @@ public sealed class CheckCommandTests : SubscriptionCommandUnitTestsBase<CheckCo
                 list.Contains("Microsoft.Storage/storageAccounts")),
             subscriptionId,
             region,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
@@ -438,6 +452,7 @@ public sealed class CheckCommandTests : SubscriptionCommandUnitTestsBase<CheckCo
                 list.Contains("Microsoft.Storage/storageAccounts")),
             subscriptionId,
             region,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
 
         // Verify the response structure contains descriptive error in Description

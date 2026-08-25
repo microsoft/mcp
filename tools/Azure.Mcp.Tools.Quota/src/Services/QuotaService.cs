@@ -17,9 +17,10 @@ public class QuotaService(IAzureService azureService, ILoggerFactory loggerFacto
         List<string> resourceTypes,
         string subscriptionId,
         string location,
+        string? tenant,
         CancellationToken cancellationToken)
     {
-        TokenCredential credential = await GetCredential(null, cancellationToken);
+        TokenCredential credential = await GetCredential(tenant, cancellationToken);
         return await AzureQuotaService.GetAzureQuotaAsync(
             credential,
             resourceTypes,
@@ -36,9 +37,10 @@ public class QuotaService(IAzureService azureService, ILoggerFactory loggerFacto
         string? cognitiveServiceModelName = null,
         string? cognitiveServiceModelVersion = null,
         string? cognitiveServiceDeploymentSkuName = null,
+        string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync(cancellationToken: cancellationToken);
+        ArmClient armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         // Create cognitive service properties if any of the parameters are provided
         CognitiveServiceProperties? cognitiveServiceProperties = null;

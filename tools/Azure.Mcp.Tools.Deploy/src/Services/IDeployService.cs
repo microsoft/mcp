@@ -9,5 +9,7 @@ public interface IDeployService
         string workspaceFolder,
         string azdEnvName,
         string subscriptionId,
-        int? limit = null, CancellationToken cancellationToken = default);
+        int? limit = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
 }

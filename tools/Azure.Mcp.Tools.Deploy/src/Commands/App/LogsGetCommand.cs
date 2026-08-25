@@ -37,6 +37,7 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger, IDeployServic
                 options.AzdEnvName,
                 options.Subscription!,
                 options.Limit,
+                options.Tenant,
                 cancellationToken);
 
             context.Response.Message = result;

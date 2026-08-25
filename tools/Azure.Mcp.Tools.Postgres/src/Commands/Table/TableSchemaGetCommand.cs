@@ -38,6 +38,7 @@ public sealed class TableSchemaGetCommand(IPostgresService postgresService, ILog
                 options.Server,
                 options.Database,
                 options.Table,
+                options.Tenant,
                 cancellationToken);
             context.Response.Results = ResponseResult.Create(new(schema ?? []), PostgresJsonContext.Default.TableSchemaGetCommandResult);
         }

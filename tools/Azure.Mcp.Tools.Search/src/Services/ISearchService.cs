@@ -19,18 +19,21 @@ public interface ISearchService
     Task<List<IndexInfo>> GetIndexDetails(
         string serviceName,
         string? indexName,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<KnowledgeSourceInfo>> ListKnowledgeSources(
         string serviceName,
         string? knowledgeSourceName = null,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<KnowledgeBaseInfo>> ListKnowledgeBases(
         string serviceName,
         string? knowledgeBaseName = null,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
@@ -38,6 +41,7 @@ public interface ISearchService
         string serviceName,
         string indexName,
         string searchText,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
@@ -46,6 +50,7 @@ public interface ISearchService
         string baseName,
         string? query,
         IEnumerable<(string role, string message)>? messages,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

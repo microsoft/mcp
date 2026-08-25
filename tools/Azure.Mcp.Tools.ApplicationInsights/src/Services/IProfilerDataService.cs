@@ -11,5 +11,5 @@ public interface IProfilerDataService
     /// <summary>
     /// Get code optimization recommendations from multiple application insights resources.
     /// </summary>
-    Task<IEnumerable<JsonNode>> GetInsightsAsync(IEnumerable<ResourceIdentifier> resourceIds, DateTime? startDateTimeUtc = null, DateTime? endDateTimeUtc = null, CancellationToken cancellationToken = default);
+    Task<IEnumerable<JsonNode>> GetInsightsAsync(IEnumerable<ResourceIdentifier> resourceIds, DateTime? startDateTimeUtc = null, DateTime? endDateTimeUtc = null, string? tenant = null, CancellationToken cancellationToken = default);
 }

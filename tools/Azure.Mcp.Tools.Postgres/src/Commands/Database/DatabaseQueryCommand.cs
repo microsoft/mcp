@@ -40,6 +40,7 @@ public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogg
                 options.Server,
                 options.Database,
                 options.Query,
+                options.Tenant,
                 cancellationToken);
             context.Response.Results = ResponseResult.Create(new(queryResult ?? []), PostgresJsonContext.Default.DatabaseQueryCommandResult);
         }

@@ -39,6 +39,7 @@ public sealed class AvailabilityListCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
@@ -56,6 +57,7 @@ public sealed class AvailabilityListCommandTests : SubscriptionCommandUnitTestsB
             null,
             null,
             null,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
 
         // Verify the response structure
@@ -96,6 +98,7 @@ public sealed class AvailabilityListCommandTests : SubscriptionCommandUnitTestsB
             cognitiveServiceModelName,
             Arg.Any<string?>(),
             cognitiveServiceDeploymentSkuName,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
@@ -116,6 +119,7 @@ public sealed class AvailabilityListCommandTests : SubscriptionCommandUnitTestsB
             cognitiveServiceModelName,
             null,
             cognitiveServiceDeploymentSkuName,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
 
         // Verify the response structure
@@ -155,6 +159,7 @@ public sealed class AvailabilityListCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -169,6 +174,7 @@ public sealed class AvailabilityListCommandTests : SubscriptionCommandUnitTestsB
         Service.GetAvailableRegionsForResourceTypesAsync(
             Arg.Any<string[]>(),
             subscriptionId,
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -205,6 +211,7 @@ public sealed class AvailabilityListCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
@@ -228,6 +235,7 @@ public sealed class AvailabilityListCommandTests : SubscriptionCommandUnitTestsB
             null,
             null,
             null,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -241,6 +249,7 @@ public sealed class AvailabilityListCommandTests : SubscriptionCommandUnitTestsB
         Service.GetAvailableRegionsForResourceTypesAsync(
             Arg.Any<string[]>(),
             subscriptionId,
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -276,6 +285,7 @@ public sealed class AvailabilityListCommandTests : SubscriptionCommandUnitTestsB
             cognitiveServiceModelName,
             cognitiveServiceModelVersion,
             cognitiveServiceDeploymentSkuName,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
@@ -300,6 +310,7 @@ public sealed class AvailabilityListCommandTests : SubscriptionCommandUnitTestsB
             cognitiveServiceModelName,
             cognitiveServiceModelVersion,
             cognitiveServiceDeploymentSkuName,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -319,6 +330,7 @@ public sealed class AvailabilityListCommandTests : SubscriptionCommandUnitTestsB
                 array.Contains("MICROSOFT.Storage/storageaccounts") &&
                 array.Contains("Microsoft.COMPUTE/VirtualMachines")),
             subscriptionId,
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -345,6 +357,7 @@ public sealed class AvailabilityListCommandTests : SubscriptionCommandUnitTestsB
             null,
             null,
             null,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -377,6 +390,7 @@ public sealed class AvailabilityListCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
@@ -393,6 +407,7 @@ public sealed class AvailabilityListCommandTests : SubscriptionCommandUnitTestsB
             null,
             null,
             null,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
 
         // Verify the response structure

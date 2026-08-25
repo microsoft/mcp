@@ -26,9 +26,9 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
 
     internal const int MaxRowCount = 10_000;
 
-    private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
+    private async Task<string> GetEntraIdAccessTokenAsync(string? tenant, CancellationToken cancellationToken)
     {
-        var tokenCredential = await GetCredential(null, cancellationToken);
+        var tokenCredential = await GetCredential(tenant, cancellationToken);
         var accessToken = await _entraTokenAuth.GetEntraToken(tokenCredential, cancellationToken);
 
         return accessToken.Token;
@@ -73,9 +73,10 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
         string user,
         string? password,
         string server,
+        string? tenant,
         CancellationToken cancellationToken)
     {
-        string? passwordToUse = await GetPassword(authType, password, cancellationToken);
+        string? passwordToUse = await GetPassword(authType, password, tenant, cancellationToken);
         var host = NormalizeServerName(server);
         var connectionString = BuildConnectionString(host, "postgres", user, passwordToUse);
 
@@ -107,9 +108,10 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
         string server,
         string database,
         string query,
+        string? tenant,
         CancellationToken cancellationToken)
     {
-        string? passwordToUse = await GetPassword(authType, password, cancellationToken);
+        string? passwordToUse = await GetPassword(authType, password, tenant, cancellationToken);
         var host = NormalizeServerName(server);
         var connectionString = BuildConnectionString(host, database, user, passwordToUse);
 
@@ -163,9 +165,10 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
         string server,
         string database,
         string schema,
+        string? tenant,
         CancellationToken cancellationToken)
     {
-        string? passwordToUse = await GetPassword(authType, password, cancellationToken);
+        string? passwordToUse = await GetPassword(authType, password, tenant, cancellationToken);
         var host = NormalizeServerName(server);
         var connectionString = BuildConnectionString(host, database, user, passwordToUse);
 
@@ -198,9 +201,10 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
         string server,
         string database,
         string table,
+        string? tenant,
         CancellationToken cancellationToken)
     {
-        string? passwordToUse = await GetPassword(authType, password, cancellationToken);
+        string? passwordToUse = await GetPassword(authType, password, tenant, cancellationToken);
         var host = NormalizeServerName(server);
         var connectionString = BuildConnectionString(host, database, user, passwordToUse);
 
@@ -220,6 +224,7 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
     public async Task<List<string>> ListServersAsync(
         string subscriptionId,
         string? resourceGroup,
+        string? tenant,
         CancellationToken cancellationToken)
     {
         var serverList = new List<string>();
@@ -227,14 +232,14 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
         if (string.IsNullOrEmpty(resourceGroup))
         {
             // List all Flexible Servers across the entire subscription
-            var subscription = await AzureService.GetSubscription(subscriptionId, cancellationToken: cancellationToken);
+            var subscription = await AzureService.GetSubscription(subscriptionId, tenant, cancellationToken: cancellationToken);
             await foreach (var name in ListSubscriptionServerNamesAsync(subscription, cancellationToken))
                 serverList.Add(name);
         }
         else
         {
             // List Flexible Servers scoped to the given resource group
-            var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken);
+            var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, cancellationToken: cancellationToken);
             if (rg == null)
                 throw new Exception($"Resource group '{resourceGroup}' not found.");
             await foreach (var name in ListResourceGroupServerNamesAsync(rg, cancellationToken))
@@ -364,11 +369,11 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
     internal static (string Query, List<(string Name, string Value)> Parameters) ParameterizeStringLiterals(string query) =>
         SqlQueryParameterizer.Parameterize(query, SqlQueryParameterizer.SqlDialect.Standard);
 
-    private async Task<string> GetPassword(string authType, string? password, CancellationToken cancellationToken)
+    private async Task<string> GetPassword(string authType, string? password, string? tenant, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(authType) || AuthTypes.MicrosoftEntra.Equals(authType, StringComparison.InvariantCultureIgnoreCase))
         {
-            return await GetEntraIdAccessTokenAsync(cancellationToken);
+            return await GetEntraIdAccessTokenAsync(tenant, cancellationToken);
         }
 
         if (AuthTypes.PostgreSQL.Equals(authType, StringComparison.InvariantCultureIgnoreCase))

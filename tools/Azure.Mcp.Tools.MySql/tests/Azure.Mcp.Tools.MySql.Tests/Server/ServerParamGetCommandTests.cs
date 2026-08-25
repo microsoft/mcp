@@ -18,7 +18,7 @@ public class ServerParamGetCommandTests : SubscriptionCommandUnitTestsBase<Serve
     public async Task ExecuteAsync_ReturnsParameter_WhenSuccessful()
     {
         var expectedValue = "ON";
-        Service.GetServerParameterAsync("sub123", "rg1", "test-server", "max_connections", Arg.Any<CancellationToken>()).Returns(expectedValue);
+        Service.GetServerParameterAsync("sub123", "rg1", "test-server", "max_connections", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedValue);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -34,7 +34,7 @@ public class ServerParamGetCommandTests : SubscriptionCommandUnitTestsBase<Serve
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenServiceThrows()
     {
-        Service.GetServerParameterAsync("sub123", "rg1", "test-server", "invalid_param", Arg.Any<CancellationToken>())
+        Service.GetServerParameterAsync("sub123", "rg1", "test-server", "invalid_param", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Parameter 'invalid_param' not found."));
 
         var response = await ExecuteCommandAsync(

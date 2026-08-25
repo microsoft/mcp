@@ -60,6 +60,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
                     options.Server!,
                     options.Database!,
                     string.IsNullOrEmpty(options.Schema) ? "public" : options.Schema,
+                    options.Tenant,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -74,6 +75,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
                     options.User!,
                     options.Password,
                     options.Server!,
+                    options.Tenant,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -86,6 +88,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
                 List<string> servers = await _postgresService.ListServersAsync(
                     options.Subscription!,
                     options.ResourceGroup,
+                    options.Tenant,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
