@@ -51,6 +51,9 @@ public static partial class ServiceCollectionExtensions
             Mode = serverStartOptions.Mode ?? ModeTypes.Default,
             Namespace = serverStartOptions.Namespace,
             Tool = serverStartOptions.Tool,
+            ThreeStepToolDiscovery = serverStartOptions.ThreeStepToolDiscovery,
+            ThreeStepToolDiscoveryThresholdBytes = serverStartOptions.ThreeStepToolDiscoveryThresholdBytes,
+            DisableAutomaticThreeStepToolDiscovery = serverStartOptions.DisableAutomaticThreeStepToolDiscovery,
             ReadOnly = serverStartOptions.ReadOnly ?? false,
             DangerouslyDisableElicitation = serverStartOptions.DangerouslyDisableElicitation,
             Cloud = serverStartOptions.Cloud
