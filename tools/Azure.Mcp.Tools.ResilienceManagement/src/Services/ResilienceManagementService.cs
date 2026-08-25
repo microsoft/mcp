@@ -840,7 +840,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
     private static DrillInfo MapDrill(ResilienceManagementDrillData data)
     {
-        BinaryData serializedData = ((IPersistableModel<ResilienceManagementDrillData>)data).Write(new ModelReaderWriterOptions("W"));
+        BinaryData serializedData = ((IPersistableModel<ResilienceManagementDrillData>)data).Write(new ModelReaderWriterOptions("J"));
         using JsonDocument document = JsonDocument.Parse(serializedData.ToMemory());
         return MapDrill(document.RootElement);
     }
@@ -902,9 +902,9 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
         ArmOperation<ResilienceManagementDrillResource> operation = await drills.CreateOrUpdateAsync(WaitUntil.Started, drill, drillData, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
+        Response<ResilienceManagementDrillResource> completedDrill = await drills.GetAsync(drill, cancellationToken);
 
-        using JsonDocument document = JsonDocument.Parse(operation.GetRawResponse().Content.ToMemory());
-        return MapDrill(document.RootElement);
+        return MapDrill(completedDrill.Value.Data);
     }
 
     public async Task<IEnumerable<ResourceSummary>> ListDrillResourcesAsync(string serviceGroup, string drill, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
