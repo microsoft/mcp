@@ -15,6 +15,7 @@
   <Folder Name="/core/Microsoft.Mcp.Core/tests/">
     <Project Path="../../core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Core.Tests/Microsoft.Mcp.Core.Tests.csproj" />
     <Project Path="../../core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Microsoft.Mcp.Tests.csproj" />
+    <Project Path="../../core/Microsoft.Mcp.Core/tests/TrimmedOptionContainerApp/TrimmedOptionContainerApp.csproj" />
   </Folder>
   <Folder Name="/servers/" />
   <Folder Name="/servers/Azure.Mcp.Server/" />
