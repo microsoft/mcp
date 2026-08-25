@@ -11,9 +11,4 @@ public sealed class RemediationGetOptions
         "Microsoft.Advisor/remediationTypes ARM path to fetch the remediation package. " +
         "Must be a 36-character GUID in the form xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx. Required.")]
     public required string RecommendationId { get; set; }
-
-    [Option(Description = "Optional comma-separated subset of remediation artifact types to return. " +
-        "Allowed values: cli, powershell, bicep, arm. When omitted, all approved artifacts are returned. " +
-        "Unsupported values are rejected. Example: 'cli,bicep'.")]
-    public string? ArtifactTypes { get; set; }
 }

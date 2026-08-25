@@ -13,14 +13,12 @@ public interface IRemediationService
     /// Microsoft.Advisor/remediationTypes ARM API.
     /// </summary>
     /// <param name="recommendationId">The recommendation type id (GUID) used in the ARM resource path.</param>
-    /// <param name="artifactTypes">Optional subset of artifact types (cli, powershell, bicep, arm) to return.</param>
     /// <param name="tenant">Optional tenant id or name to authenticate against.</param>
     /// <param name="retryPolicy">Optional retry policy for the underlying request.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>The remediation package for the recommendation type.</returns>
     Task<RemediationPackage> GetRemediationAsync(
         string recommendationId,
-        string[]? artifactTypes = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

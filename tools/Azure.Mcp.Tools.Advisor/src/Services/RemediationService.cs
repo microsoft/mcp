@@ -21,7 +21,6 @@ public sealed class RemediationService(IAzureService azureService)
 
     public async Task<RemediationPackage> GetRemediationAsync(
         string recommendationId,
-        string[]? artifactTypes = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -29,7 +28,7 @@ public sealed class RemediationService(IAzureService azureService)
         ValidateRequiredParameters((nameof(recommendationId), recommendationId));
 
         var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
-        var url = BuildRemediationUrl(managementEndpoint, recommendationId, artifactTypes);
+        var url = BuildRemediationUrl(managementEndpoint, recommendationId);
 
         using var httpClient = AzureService.GetClient();
         var clientOptions = ConfigureRetryPolicy(
@@ -39,7 +38,8 @@ public sealed class RemediationService(IAzureService azureService)
 
         var pipeline = HttpPipelineBuilder.Build(clientOptions);
 
-        var accessToken = (await GetArmAccessTokenAsync(tenant, cancellationToken)).Token;
+        var armToken = await GetArmAccessTokenAsync(tenant, cancellationToken);
+        var accessToken = armToken.Token;
         ValidateRequiredParameters((nameof(accessToken), accessToken));
 
         using var request = pipeline.CreateRequest();
@@ -63,17 +63,9 @@ public sealed class RemediationService(IAzureService azureService)
             (HttpStatusCode)response.Status);
     }
 
-    private static string BuildRemediationUrl(string managementEndpoint, string recommendationId, string[]? artifactTypes)
+    private static string BuildRemediationUrl(string managementEndpoint, string recommendationId)
     {
-        var queryParams = new List<string> { $"api-version={ApiVersion}" };
-
-        if (artifactTypes is { Length: > 0 })
-        {
-            var joined = string.Join(",", artifactTypes);
-            queryParams.Add($"artifactTypes={Uri.EscapeDataString(joined)}");
-        }
-
-        var queryString = string.Join("&", queryParams);
+        var queryString = $"api-version={ApiVersion}";
         return $"{managementEndpoint}/providers/Microsoft.Advisor/remediationTypes/{Uri.EscapeDataString(recommendationId)}?{queryString}";
     }
 }

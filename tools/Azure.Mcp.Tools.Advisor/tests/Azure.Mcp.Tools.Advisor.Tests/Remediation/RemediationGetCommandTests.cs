@@ -75,18 +75,12 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
 
     [Theory]
     [InlineData("--recommendation-id 18745007-438b-4c68-bfa3-b6576d85a831", true)]
-    [InlineData("--recommendation-id 18745007-438b-4c68-bfa3-b6576d85a831 --artifact-types cli", true)]
-    [InlineData("--recommendation-id 18745007-438b-4c68-bfa3-b6576d85a831 --artifact-types cli,bicep", true)]
-    [InlineData("--recommendation-id 18745007-438b-4c68-bfa3-b6576d85a831 --artifact-types cli,powershell,bicep,arm", true)]
-    [InlineData("--recommendation-id 18745007-438b-4c68-bfa3-b6576d85a831 --artifact-types yaml", false)]
-    [InlineData("--recommendation-id 18745007-438b-4c68-bfa3-b6576d85a831 --artifact-types cli,yaml", false)]
     [InlineData("--recommendation-id not-a-guid", false)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         Service.GetRemediationAsync(
             Arg.Any<string>(),
-            Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -107,7 +101,6 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
     {
         Service.GetRemediationAsync(
             Arg.Any<string>(),
-            Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -134,11 +127,10 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
     }
 
     [Fact]
-    public async Task ExecuteAsync_DefaultsArtifactTypesToNull()
+    public async Task ExecuteAsync_PassesRecommendationIdToService()
     {
         Service.GetRemediationAsync(
             Arg.Any<string>(),
-            Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -148,28 +140,6 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
 
         await Service.Received(1).GetRemediationAsync(
             RecommendationId,
-            null,
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_PassesArtifactTypesToService()
-    {
-        Service.GetRemediationAsync(
-            Arg.Any<string>(),
-            Arg.Any<string[]?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(CreateSamplePackage());
-
-        await ExecuteCommandAsync("--recommendation-id", RecommendationId, "--artifact-types", "cli,bicep");
-
-        await Service.Received(1).GetRemediationAsync(
-            RecommendationId,
-            Arg.Is<string[]>(a => a.Length == 2 && a[0] == "cli" && a[1] == "bicep"),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
@@ -188,7 +158,6 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
 
         await Service.DidNotReceive().GetRemediationAsync(
             Arg.Any<string>(),
-            Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
@@ -197,32 +166,12 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
     [Fact]
     public async Task ExecuteAsync_MissingRecommendationId_ReturnsBadRequest()
     {
-        var response = await ExecuteCommandAsync("--artifact-types", "cli");
+        var response = await ExecuteCommandAsync("");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
 
         await Service.DidNotReceive().GetRemediationAsync(
             Arg.Any<string>(),
-            Arg.Any<string[]?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Theory]
-    [InlineData("yaml")]
-    [InlineData("cli,yaml")]
-    [InlineData("terraform")]
-    public async Task ExecuteAsync_UnsupportedArtifactType_ReturnsBadRequest(string artifactTypes)
-    {
-        var response = await ExecuteCommandAsync("--recommendation-id", RecommendationId, "--artifact-types", artifactTypes);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("unsupported value", response.Message, StringComparison.OrdinalIgnoreCase);
-
-        await Service.DidNotReceive().GetRemediationAsync(
-            Arg.Any<string>(),
-            Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
@@ -233,7 +182,6 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
     {
         Service.GetRemediationAsync(
             Arg.Any<string>(),
-            Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -250,7 +198,6 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
     {
         Service.GetRemediationAsync(
             Arg.Any<string>(),
-            Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -267,7 +214,6 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
     {
         Service.GetRemediationAsync(
             Arg.Any<string>(),
-            Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
