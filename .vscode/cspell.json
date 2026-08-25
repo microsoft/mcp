@@ -295,6 +295,8 @@
     "distributedtask",
     "dockerfiles",
     "drawcord",
+    "drillrunname",
+    "drillrunresourcename",
     "dssldrf",
     "embeddingdeploymentname",
     "environmentcredential",

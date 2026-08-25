@@ -424,10 +424,11 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         };
 
         ArmOperation<RecoveryPlanResource> operation = await recoveryPlans.CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             recoveryPlan,
             data,
             cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return CreateRecoveryPlanInfo(operation.Value.Data);
     }
@@ -484,7 +485,8 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
         try
         {
-            await existingPlan.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+            var operation = await existingPlan.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
             return true;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
@@ -509,10 +511,11 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         }
 
         ArmOperation<UpdateRecoveryResourcesResult> operation = await recoveryPlanResource.UpdateResourcesAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             Guid.NewGuid().ToString(),
             content,
             cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return CreateRecoveryPlanUpdateResourcesResult(operation.Value.FailedResources);
     }
@@ -774,7 +777,8 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         RecoveryJobCollection recoveryJobs = recoveryPlanResource.GetRecoveryJobs();
         HashSet<string> existingRecoveryJobIds = await GetRecoveryJobIdsAsync(recoveryJobs, cancellationToken);
         string operationId = Guid.NewGuid().ToString();
-        ArmOperation operation = await recoveryPlanResource.CheckReadinessAsync(WaitUntil.Completed, operationId, cancellationToken);
+        ArmOperation operation = await recoveryPlanResource.CheckReadinessAsync(WaitUntil.Started, operationId, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
         ResourceIdentifier recoveryJobResourceId = TryGetRecoveryJobResourceId(
                 operation.GetRawResponse().Content,
                 serviceGroup,
