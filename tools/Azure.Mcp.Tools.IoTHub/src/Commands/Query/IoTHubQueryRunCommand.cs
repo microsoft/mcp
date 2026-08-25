@@ -41,6 +41,14 @@ public sealed class IoTHubQueryRunCommand(
     private const int MinMaxCount = 1;
     private const int PageSize = IoTHubQueryLimits.MaxPageSize;
 
+    // Upper bounds on caller-supplied query input
+    private const int MaxQueryLength = 10000;
+    private const int MaxFilterCount = 100;
+
+    // Scopes that structured --filters can target. Anything else must be written as raw IoT Hub SQL
+    // via --query. Mirrors the Models.PredicateScope enum members.
+    private static readonly string[] s_supportedFilterScopes = ["device", "tags", "desired", "reported"];
+
     private readonly ILogger<IoTHubQueryRunCommand> _logger = logger;
     private readonly IIoTHubDeviceService _service = service;
 
@@ -64,6 +72,13 @@ public sealed class IoTHubQueryRunCommand(
         {
             context.Response.Status = HttpStatusCode.BadRequest;
             context.Response.Message = "Provide either --query or --filters, not both. Use --query for raw IoT Hub SQL, or --filters to compile structured predicates.";
+            return context.Response;
+        }
+
+        if (hasQuery && options.Query!.Length > MaxQueryLength)
+        {
+            context.Response.Status = HttpStatusCode.BadRequest;
+            context.Response.Message = $"The --query length ({options.Query!.Length:N0} characters) exceeds the maximum allowed limit of {MaxQueryLength:N0} characters. Shorten the query or narrow it with --filters.";
             return context.Response;
         }
 
@@ -211,6 +226,19 @@ public sealed class IoTHubQueryRunCommand(
         List<QueryPredicate>? filters;
         try
         {
+            // Reject unsupported scopes up-front with an actionable message. Structured filters can only
+            // target device/tags/desired/reported; the enum deserializer would otherwise fail these with a
+            // generic "not valid JSON" error and hide that raw --query SQL is the way to target other scopes.
+            if (TryFindUnsupportedFilterScope(options.Filters!, out var unsupportedScope))
+            {
+                context.Response.Status = HttpStatusCode.BadRequest;
+                context.Response.Message =
+                    $"The --filters scope '{unsupportedScope}' is not supported. Structured filters can only target these scopes: " +
+                    $"{string.Join(", ", s_supportedFilterScopes)}. To filter on anything else, pass a raw IoT Hub SQL statement with " +
+                    "--query instead (for example: --query \"SELECT * FROM devices WHERE ...\").";
+                return null;
+            }
+
             filters = JsonSerializer.Deserialize(options.Filters!, IoTHubJsonContext.Default.ListQueryPredicate);
         }
         catch (JsonException ex)
@@ -224,6 +252,13 @@ public sealed class IoTHubQueryRunCommand(
         {
             context.Response.Status = HttpStatusCode.BadRequest;
             context.Response.Message = "The --filters value must be a non-empty JSON array of predicate objects.";
+            return null;
+        }
+
+        if (filters.Count > MaxFilterCount)
+        {
+            context.Response.Status = HttpStatusCode.BadRequest;
+            context.Response.Message = $"The --filters array contains {filters.Count} predicates, which exceeds the maximum of {MaxFilterCount}. Reduce the number of predicates, or use --query for a raw IoT Hub SQL statement.";
             return null;
         }
 
@@ -267,5 +302,39 @@ public sealed class IoTHubQueryRunCommand(
             context.Response.Message = ex.Message;
             return null;
         }
+    }
+
+    // Scans the raw --filters JSON for a predicate whose scope is outside the supported set, returning the
+    // offending value so the caller can surface an actionable message. Non-array or malformed JSON is left
+    // for JsonSerializer.Deserialize to report, keeping the existing "not valid JSON" handling intact.
+    private static bool TryFindUnsupportedFilterScope(string filtersJson, out string? unsupportedScope)
+    {
+        unsupportedScope = null;
+
+        using var document = JsonDocument.Parse(filtersJson);
+        if (document.RootElement.ValueKind != JsonValueKind.Array)
+        {
+            return false;
+        }
+
+        foreach (var element in document.RootElement.EnumerateArray())
+        {
+            if (element.ValueKind != JsonValueKind.Object
+                || !element.TryGetProperty("scope", out var scopeElement)
+                || scopeElement.ValueKind != JsonValueKind.String)
+            {
+                continue;
+            }
+
+            var scope = scopeElement.GetString();
+            if (!string.IsNullOrWhiteSpace(scope)
+                && !Array.Exists(s_supportedFilterScopes, supported => string.Equals(supported, scope, StringComparison.OrdinalIgnoreCase)))
+            {
+                unsupportedScope = scope;
+                return true;
+            }
+        }
+
+        return false;
     }
 }

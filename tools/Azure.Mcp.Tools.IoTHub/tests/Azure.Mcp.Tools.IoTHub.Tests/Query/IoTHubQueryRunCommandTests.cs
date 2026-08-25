@@ -378,6 +378,85 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
     }
 
     [Fact]
+    public async Task ExecuteAsync_RejectsUnsupportedFilterScope()
+    {
+        // A scope outside device/tags/desired/reported must yield an actionable message that points to
+        // raw --query SQL, not the generic "not valid JSON" enum-deserialization error.
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1",
+            "--filters", "[{\"scope\":\"connectionState\",\"field\":\"status\",\"operator\":\"equals\",\"value\":\"connected\"}]");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("connectionState", response.Message);
+        Assert.Contains("not supported", response.Message);
+        Assert.Contains("--query", response.Message);
+        Assert.DoesNotContain("not valid JSON", response.Message);
+
+        // An unsupported scope is rejected before any discovery or query call is issued.
+        await Service.DidNotReceive().RunQuery(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsQueryExceedingMaxLength()
+    {
+        // A raw --query beyond the length cap is rejected before any query call is issued.
+        var longQuery = "SELECT * FROM devices WHERE deviceId = '" + new string('a', 10000) + "'";
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1",
+            "--query", longQuery);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("exceeds the maximum allowed limit", response.Message);
+        Assert.Contains("--query", response.Message);
+        await Service.DidNotReceive().RunQuery(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsFiltersExceedingMaxCount()
+    {
+        // 101 predicates exceeds the cap of 100 and is rejected before the discovery query runs.
+        var predicate = "{\"scope\":\"device\",\"field\":\"status\",\"operator\":\"equals\",\"value\":\"enabled\"}";
+        var filters = "[" + string.Join(",", Enumerable.Repeat(predicate, 101)) + "]";
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1",
+            "--filters", filters);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("exceeds the maximum of 100", response.Message);
+        Assert.Contains("predicates", response.Message);
+        await Service.DidNotReceive().RunQuery(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ExecuteAsync_RejectsEmptyFiltersArray()
     {
         var response = await ExecuteCommandAsync(

@@ -31,7 +31,7 @@ public class IoTHubDeviceService(
     // Upper bound for a single IoT Hub operation (control-plane + data-plane). If exceeded the
     // caller gets a clear timeout error instead of appearing to hang indefinitely.
     private static readonly TimeSpan s_operationTimeout = TimeSpan.FromSeconds(100);
-    private static readonly TimeSpan s_queryRunTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan s_queryRunTimeout = TimeSpan.FromSeconds(100);
     private const string RegistryApiVersion = "2021-04-12";
 
     // Microsoft Entra ID scope for the IoT Hub service (data-plane) REST API.
