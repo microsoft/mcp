@@ -190,6 +190,49 @@ public class RegistryServerProviderTests
     }
 
     [Fact]
+    public async Task CreateClientAsync_HttpWithOAuthScopes_NonHttpsUrl_ThrowsForHttps()
+    {
+        // Arrange - MCP 2026-07-28 requires OAuth-protected registry endpoints to use HTTPS so
+        // that Azure Identity bearer tokens are never sent over plaintext HTTP.
+        string testId = "insecureOAuthProvider";
+        var serverInfo = new RegistryServerInfo
+        {
+            Description = "OAuth provider over plaintext HTTP",
+            Url = "http://insecure.example.com/mcp",
+            OAuthScopes = ["api://insecure/.default"]
+        };
+        var provider = CreateServerProvider(testId, serverInfo);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => provider.CreateClientAsync(new McpClientOptions(), TestContext.Current.CancellationToken));
+
+        Assert.Contains("does not use HTTPS", exception.Message);
+        Assert.Contains("MCP 2026-07-28", exception.Message);
+    }
+
+    [Fact]
+    public async Task CreateClientAsync_HttpWithEmptyOAuthScopeEntry_ThrowsForEmptyScope()
+    {
+        // Arrange - every entry in OAuthScopes must be a non-empty string, otherwise the acquired
+        // token would carry a meaningless scope that no downstream resource accepts.
+        string testId = "emptyScopeProvider";
+        var serverInfo = new RegistryServerInfo
+        {
+            Description = "OAuth provider with an empty scope entry",
+            Url = "https://secure.example.com/mcp",
+            OAuthScopes = ["api://secure/.default", "   "]
+        };
+        var provider = CreateServerProvider(testId, serverInfo);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => provider.CreateClientAsync(new McpClientOptions(), TestContext.Current.CancellationToken));
+
+        Assert.Contains("empty OAuth scope entries", exception.Message);
+    }
+
+    [Fact]
     public async Task CreateClientAsync_StdioWithoutCommand_ThrowsInvalidOperationException()
     {
         // Arrange

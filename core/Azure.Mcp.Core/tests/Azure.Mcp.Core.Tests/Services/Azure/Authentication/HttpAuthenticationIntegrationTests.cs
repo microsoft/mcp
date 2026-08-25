@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// cSpell:ignore XVCJ
+
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
@@ -350,7 +352,7 @@ public class HttpAuthenticationIntegrationTests(ITestOutputHelper output) : IAsy
         var json = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         var metadata = JsonSerializer.Deserialize<OAuthProtectedResourceMetadata>(json);
 
-        // Verify ALL fields per RFC 8705
+        // Verify ALL fields per RFC 9728 (OAuth 2.0 Protected Resource Metadata)
         Assert.NotNull(metadata);
         Assert.NotEmpty(metadata.AuthorizationServers);
         Assert.NotEmpty(metadata.ScopesSupported);
