@@ -1175,6 +1175,70 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             SystemData: root.TryGetProperty("systemData", out JsonElement systemDataElement) ? systemDataElement.Clone() : default);
     }
 
+    public async Task<IEnumerable<ResourceSummary>> ListDrillRunsAsync(string serviceGroup, string drill, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+
+        var drillId = ResilienceManagementDrillResource.CreateResourceIdentifier(serviceGroup, drill);
+        ResilienceManagementDrillResource drillResource = armClient.GetResilienceManagementDrillResource(drillId);
+        DrillRunCollection drillRuns = drillResource.GetDrillRuns();
+
+        var result = new List<ResourceSummary>();
+        await foreach (var drillRun in drillRuns.GetAllAsync(cancellationToken: cancellationToken))
+        {
+            result.Add(new ResourceSummary(
+                Id: drillRun.Data.Id?.ToString() ?? string.Empty,
+                Name: drillRun.Data.Name ?? string.Empty));
+        }
+
+        return result;
+    }
+
+    public async Task<JsonElement> GetDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+
+        var drillId = ResilienceManagementDrillResource.CreateResourceIdentifier(serviceGroup, drill);
+        ResilienceManagementDrillResource drillResource = armClient.GetResilienceManagementDrillResource(drillId);
+        DrillRunCollection drillRuns = drillResource.GetDrillRuns();
+        Response<DrillRunResource> response = await drillRuns.GetAsync(drillRun, cancellationToken);
+
+        using JsonDocument document = JsonDocument.Parse(response.GetRawResponse().Content.ToMemory());
+        return document.RootElement.Clone();
+    }
+
+    public async Task<IEnumerable<ResourceSummary>> ListDrillRunResourcesAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+
+        var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
+        DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
+        DrillRunTargetCollection drillRunTargets = drillRunResource.GetDrillRunTargets();
+
+        var result = new List<ResourceSummary>();
+        await foreach (var drillRunTarget in drillRunTargets.GetAllAsync(cancellationToken: cancellationToken))
+        {
+            result.Add(new ResourceSummary(
+                Id: drillRunTarget.Data.Id?.ToString() ?? string.Empty,
+                Name: drillRunTarget.Data.Name ?? string.Empty));
+        }
+
+        return result;
+    }
+
+    public async Task<JsonElement> GetDrillRunResourceAsync(string serviceGroup, string drill, string drillRun, string drillRunResource, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+
+        var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
+        DrillRunResource drillRunResourceInstance = armClient.GetDrillRunResource(drillRunId);
+        DrillRunTargetCollection drillRunTargets = drillRunResourceInstance.GetDrillRunTargets();
+        Response<DrillRunTargetResource> response = await drillRunTargets.GetAsync(drillRunResource, cancellationToken);
+
+        using JsonDocument document = JsonDocument.Parse(response.GetRawResponse().Content.ToMemory());
+        return document.RootElement.Clone();
+    }
+
     private static ResourceIdentifier CreateServiceGroupResourceIdentifier(string serviceGroup)
     {
         // Validate the caller-supplied segment before interpolating it into a raw ARM resource path.

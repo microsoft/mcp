@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the 'azmcp resilience drill run get' command to list runs of a resilience drill or get a specific drill run."

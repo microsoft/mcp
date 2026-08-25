@@ -353,6 +353,7 @@
       "azure-enterprise-infra-planner\\references\\phases\\5-verify.md",
       "azure-enterprise-infra-planner\\references\\phases\\6-generate-iac.md",
       "azure-enterprise-infra-planner\\references\\phases\\7-deploy.md",
+      "azure-enterprise-infra-planner\\references\\referenced-workload.md",
       "azure-enterprise-infra-planner\\references\\resources\\README.md",
       "azure-enterprise-infra-planner\\references\\resources\\ai-ml.md",
       "azure-enterprise-infra-planner\\references\\resources\\compute-apps.md",
