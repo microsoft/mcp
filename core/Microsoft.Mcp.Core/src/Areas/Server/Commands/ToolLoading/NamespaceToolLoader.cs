@@ -130,7 +130,7 @@ public sealed class NamespaceToolLoader(
                 continue;
             }
 
-            var toolRouterDescription = _options.Value.ThreeStepToolDiscovery
+            var toolRouterDescription = _configuration.Value.ThreeStepToolDiscovery
                 ? """
                     This tool is a hierarchical MCP command router.
                     Sub commands are routed to MCP servers that require specific fields inside the "parameters" object.
@@ -558,9 +558,9 @@ public sealed class NamespaceToolLoader(
 
     /// <summary>
     /// Determines whether three-step (metadata-only) learn behavior should be used for the given namespace,
-    /// either because <see cref="ServerStartOptions.ThreeStepToolDiscovery"/> is explicitly enabled, or because
+    /// either because <see cref="ServerRuntimeConfiguration.ThreeStepToolDiscovery"/> is explicitly enabled, or because
     /// automatic fallback is enabled and the namespace's full-schema (two-step) learn response would exceed
-    /// <see cref="ServerStartOptions.ThreeStepToolDiscoveryThresholdBytes"/>.
+    /// <see cref="ServerRuntimeConfiguration.ThreeStepToolDiscoveryThresholdBytes"/>.
     /// </summary>
     /// <param name="availableToolsForSizeCheck">
     /// Set to the namespace's tool list when it was computed as part of the size check, so callers can reuse it
@@ -575,12 +575,12 @@ public sealed class NamespaceToolLoader(
         availableToolsForSizeCheck = null;
         defaultLearnToolsJson = null;
 
-        if (_options.Value.ThreeStepToolDiscovery)
+        if (_configuration.Value.ThreeStepToolDiscovery)
         {
             return true;
         }
 
-        if (_options.Value.DisableAutomaticThreeStepToolDiscovery)
+        if (_configuration.Value.DisableAutomaticThreeStepToolDiscovery)
         {
             return false;
         }
@@ -593,7 +593,7 @@ public sealed class NamespaceToolLoader(
         var defaultLearnTools = availableToolsForSizeCheck.Select(t => new ToolCommandInfo(t));
         defaultLearnToolsJson = JsonSerializer.Serialize(defaultLearnTools, ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
-        return Encoding.UTF8.GetByteCount(defaultLearnToolsJson) > _options.Value.ThreeStepToolDiscoveryThresholdBytes;
+        return Encoding.UTF8.GetByteCount(defaultLearnToolsJson) > _configuration.Value.ThreeStepToolDiscoveryThresholdBytes;
     }
 
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string namespaceName, CancellationToken cancellationToken)

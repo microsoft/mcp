@@ -222,14 +222,14 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task CallToolHandler_WithLearnTrue_ThreeStepDiscoveryReturnsMetadataOnly()
     {
         // Arrange
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             ThreeStepToolDiscovery = true
         });
 
         var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
         var toolName = GetFirstAvailableNamespace();
-        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
         {
             ["learn"] = true,
             ["intent"] = "list resources"
@@ -251,7 +251,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task ListToolsHandler_ThreeStepDiscoveryDescribesExactCommandLookup()
     {
         // Arrange
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             ThreeStepToolDiscovery = true
         });
@@ -259,7 +259,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
 
         // Act
-        var result = await loader.ListToolsHandler(CreateListToolsRequest(), TestContext.Current.CancellationToken);
+        var result = await loader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.All(result.Tools, tool =>
@@ -275,15 +275,17 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task CallToolHandler_WithLearnTrue_ThreeStepDiscoveryReturnsSpecificCommandSchema()
     {
         // Arrange
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             ThreeStepToolDiscovery = true
         });
 
         var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
         var toolName = GetFirstAvailableNamespace();
-        var commandName = loader.GetChildToolList(CreateCallToolRequest(toolName, []), toolName).First().Name;
-        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        var commandName = loader.GetChildToolList(
+            McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>()),
+            toolName).First().Name;
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
         {
             ["learn"] = true,
             ["command"] = commandName,
@@ -305,14 +307,14 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task CallToolHandler_WithLearnTrue_UnknownThreeStepCommandReturnsExactCommandGuidance()
     {
         // Arrange
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             ThreeStepToolDiscovery = true
         });
 
         var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
         var toolName = GetFirstAvailableNamespace();
-        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
         {
             ["learn"] = true,
             ["command"] = "__unknown_command__"
@@ -335,7 +337,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     {
         // Arrange - explicit switch left off, but the threshold is set so low that any namespace's
         // full-schema learn response will exceed it.
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             ThreeStepToolDiscovery = false,
             ThreeStepToolDiscoveryThresholdBytes = 1
@@ -343,7 +345,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
         var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
         var toolName = GetFirstAvailableNamespace();
-        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
         {
             ["learn"] = true
         });
@@ -365,7 +367,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     {
         // Arrange - force the full-schema response to exceed the threshold, then disable only the
         // automatic fallback so the legacy two-step behavior is retained.
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             ThreeStepToolDiscovery = false,
             ThreeStepToolDiscoveryThresholdBytes = 1,
@@ -374,7 +376,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
         var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
         var toolName = GetFirstAvailableNamespace();
-        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
         {
             ["learn"] = true
         });
@@ -391,7 +393,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task CallToolHandler_WithLearnTrue_SmallResponseUnderThresholdKeepsTwoStep()
     {
         // Arrange - explicit switch off, and threshold set very high so the size-based fallback never triggers.
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             ThreeStepToolDiscovery = false,
             ThreeStepToolDiscoveryThresholdBytes = int.MaxValue
@@ -399,7 +401,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
         var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
         var toolName = GetFirstAvailableNamespace();
-        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
         {
             ["learn"] = true
         });
@@ -419,7 +421,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     {
         // Arrange - explicit switch on, threshold set very high (well above any real response size).
         // Behavior must remain three-step regardless of the threshold value.
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             ThreeStepToolDiscovery = true,
             ThreeStepToolDiscoveryThresholdBytes = int.MaxValue
@@ -427,7 +429,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
         var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
         var toolName = GetFirstAvailableNamespace();
-        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
         {
             ["learn"] = true
         });
@@ -448,7 +450,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     {
         // Arrange - size-based fallback triggered (threshold=1); individual command learn must still
         // return the full input schema for the specific command, just like the explicit switch.
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             ThreeStepToolDiscovery = false,
             ThreeStepToolDiscoveryThresholdBytes = 1
@@ -456,8 +458,10 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
         var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
         var toolName = GetFirstAvailableNamespace();
-        var commandName = loader.GetChildToolList(CreateCallToolRequest(toolName, []), toolName).First().Name;
-        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        var commandName = loader.GetChildToolList(
+            McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>()),
+            toolName).First().Name;
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
         {
             ["learn"] = true,
             ["command"] = commandName
