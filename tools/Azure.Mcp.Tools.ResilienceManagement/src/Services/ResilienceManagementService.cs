@@ -10,6 +10,7 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.ResilienceManagement;
 using Azure.ResourceManager.ResilienceManagement.Models;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Services;
@@ -17,7 +18,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Services;
 public sealed class ResilienceManagementService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IResilienceManagementService
 {
-    private static readonly TimeSpan ReadinessJobPollingInterval = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan RecoveryPlanPollingInterval = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan RecoveryPlanOperationTimeout = TimeSpan.FromMinutes(10);
 
     public async Task<IEnumerable<ResourceSummary>> ListGoalTemplatesAsync(string serviceGroup, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
@@ -428,7 +429,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             recoveryPlan,
             data,
             cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
+        await WaitForRecoveryPlanLroCompletionAsync(operation, cancellationToken);
 
         return CreateRecoveryPlanInfo(operation.Value.Data);
     }
@@ -486,7 +487,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         try
         {
             var operation = await existingPlan.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
-            await WaitForLroCompletionAsync(operation, cancellationToken);
+            await WaitForRecoveryPlanLroCompletionAsync(operation, cancellationToken);
             return true;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
@@ -515,7 +516,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             Guid.NewGuid().ToString(),
             content,
             cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
+        await WaitForRecoveryPlanLroCompletionAsync(operation, cancellationToken);
 
         return CreateRecoveryPlanUpdateResourcesResult(operation.Value.FailedResources);
     }
@@ -556,7 +557,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             operationId,
             content,
             cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
+        await WaitForRecoveryPlanLroCompletionAsync(operation, cancellationToken);
 
         return CreateRecoveryPlanValidateForFailoverResult(
             operationId,
@@ -788,7 +789,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         HashSet<string> existingRecoveryJobIds = await GetRecoveryJobIdsAsync(recoveryJobs, cancellationToken);
         string operationId = Guid.NewGuid().ToString();
         ArmOperation operation = await recoveryPlanResource.CheckReadinessAsync(WaitUntil.Started, operationId, cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
+        await WaitForRecoveryPlanLroCompletionAsync(operation, cancellationToken);
         ResourceIdentifier recoveryJobResourceId = TryGetRecoveryJobResourceId(
                 operation.GetRawResponse().Content,
                 serviceGroup,
@@ -853,6 +854,28 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         catch (OperationCanceledException) when (timeoutCancellation.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
         {
             throw new TimeoutException($"The {operationDescription} did not complete within {timeout.TotalMinutes} minutes.");
+        }
+    }
+
+    private static async Task WaitForRecoveryPlanLroCompletionAsync(Operation operation, CancellationToken cancellationToken)
+    {
+#if DEBUG
+        if (EnvironmentHelpers.IsPlaybackTesting())
+        {
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+            return;
+        }
+#endif
+
+        while (true)
+        {
+            _ = await operation.UpdateStatusAsync(cancellationToken);
+            if (operation.HasCompleted)
+            {
+                return;
+            }
+
+            await Task.Delay(RecoveryPlanPollingInterval, cancellationToken);
         }
     }
 
@@ -932,7 +955,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
                 throw new InvalidOperationException("Multiple recovery jobs were created by concurrent readiness operations.");
             }
 
-            await Task.Delay(ReadinessJobPollingInterval, cancellationToken);
+            await Task.Delay(RecoveryPlanPollingInterval, cancellationToken);
         }
     }
 
@@ -953,7 +976,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             token => GetRecoveryJobIfAvailableAsync(recoveryJob, token),
             job => IsTerminalJobStatus(GetRequiredProperties(job.Data.Properties, "recovery job").Status?.ToString() ?? string.Empty),
             $"readiness recovery job '{recoveryJobId}'",
-            ReadinessJobPollingInterval,
+            RecoveryPlanPollingInterval,
             RecoveryPlanOperationTimeout,
             cancellationToken);
     }
