@@ -25,6 +25,7 @@ public class EventGridSetup : IAreaSetup
         services.AddSingleton<EventGridPublishCommand>();
     }
 
+    // Validate comment
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Event Grid top-level group
