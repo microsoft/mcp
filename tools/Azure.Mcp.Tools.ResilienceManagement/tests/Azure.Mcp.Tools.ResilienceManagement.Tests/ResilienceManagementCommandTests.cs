@@ -144,6 +144,23 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
+    public async Task Should_delete_drill()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DELETEDRILLNAME");
+
+        var result = await CallToolAsync(
+            "resilience_drill_delete",
+            new()
+            {
+                { "service-group", serviceGroup },
+                { "drill", drillName }
+            });
+
+        Assert.True(result.AssertProperty("success").GetBoolean());
+    }
+
+    [Fact]
     public async Task Should_list_drill_resources()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
