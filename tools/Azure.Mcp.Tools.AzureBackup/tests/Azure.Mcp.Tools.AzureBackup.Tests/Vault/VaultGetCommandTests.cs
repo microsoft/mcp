@@ -234,5 +234,81 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
         Assert.Contains(options, o => o.Name == "--resource-group");
         Assert.Contains(options, o => o.Name == "--vault");
         Assert.Contains(options, o => o.Name == "--vault-type");
+        Assert.Contains(options, o => o.Name == "--expand");
+    }
+
+    [Theory]
+    [InlineData("bogus")]
+    [InlineData("security,foobar")]
+    [InlineData("mua,invalid")]
+    [InlineData("network")]
+    [InlineData("monitoring")]
+    public async Task ExecuteAsync_RejectsInvalidExpandValue(string expand)
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123", "--expand", expand);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--expand", response.Message);
+    }
+
+    [Theory]
+    [InlineData("security")]
+    [InlineData("mua")]
+    [InlineData("all")]
+    [InlineData("security,mua")]
+    [InlineData(" SECURITY , Mua ")]
+    public async Task ExecuteAsync_AcceptsValidExpandValues_AndForwardsToService(string expand)
+    {
+        var subscription = "sub123";
+        Service.ListVaultsAsync(
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>(),
+            Arg.Is<VaultExpand>(e => e != VaultExpand.None))
+            .Returns([]);
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription, "--expand", expand);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListVaultsAsync(
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>(),
+            Arg.Is<VaultExpand>(e => e != VaultExpand.None));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OmittingExpand_PassesNoneToService()
+    {
+        var subscription = "sub123";
+        Service.ListVaultsAsync(
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>(),
+            Arg.Is(VaultExpand.None))
+            .Returns([]);
+
+        var response = await ExecuteCommandAsync("--subscription", subscription);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListVaultsAsync(
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>(),
+            Arg.Is(VaultExpand.None));
     }
 }

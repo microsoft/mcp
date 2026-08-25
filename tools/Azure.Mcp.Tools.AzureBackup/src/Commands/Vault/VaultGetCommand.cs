@@ -55,6 +55,18 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
         {
             validationResult.Errors.Add("--vault-type must be 'rsv' (Recovery Services vault) or 'dpp' (Backup vault).");
         }
+
+        if (!string.IsNullOrEmpty(options.Expand))
+        {
+            try
+            {
+                _ = VaultExpandParser.Parse(options.Expand);
+            }
+            catch (ArgumentException ex)
+            {
+                validationResult.Errors.Add(ex.Message);
+            }
+        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VaultGetOptions options, CancellationToken cancellationToken)
@@ -65,6 +77,12 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
 
         try
         {
+            var expand = VaultExpandParser.Parse(options.Expand);
+            if (expand != VaultExpand.None)
+            {
+                context.Activity?.AddTag(AzureBackupTelemetryTags.VaultExpand, expand.ToString());
+            }
+
             if (!string.IsNullOrEmpty(options.Vault))
             {
                 var vault = await _azureBackupService.GetVaultAsync(
@@ -74,7 +92,8 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
                     options.VaultType,
                     options.Tenant,
                     options.RetryPolicy,
-                    cancellationToken);
+                    cancellationToken,
+                    expand);
 
                 context.Response.Results = ResponseResult.Create(
                     new([vault]),
@@ -88,7 +107,8 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
                     options.VaultType,
                     options.Tenant,
                     options.RetryPolicy,
-                    cancellationToken);
+                    cancellationToken,
+                    expand);
 
                 context.Response.Results = ResponseResult.Create(
                     new(vaults),

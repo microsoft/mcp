@@ -11,31 +11,31 @@ using Xunit;
 
 namespace Fabric.Mcp.Tools.Docs.Tests.Commands;
 
-public class ListWorkloadCommandTests : CommandUnitTestsBase<ListWorkloadsCommand, IFabricPublicApiService>
+public class ListItemTypesCommandTests : CommandUnitTestsBase<ListItemTypesCommand, IFabricPublicApiService>
 {
     [Fact]
-    public void ListWorkloadsCommand_HasCorrectProperties()
+    public void ListItemTypesCommand_HasCorrectProperties()
     {
-        Assert.Equal("workloads", Command.Name);
+        Assert.Equal("list-item-types", Command.Name);
         Assert.NotEmpty(Command.Description);
-        Assert.Equal("Available Fabric Workloads", Command.Title);
+        Assert.Equal("Available Fabric Item Types", Command.Title);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.ReadOnly);
     }
 
     [Fact]
-    public void ListWorkloadsCommand_GetCommand_ReturnsValidCommand()
+    public void ListItemTypesCommand_GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("workloads", CommandDefinition.Name);
+        Assert.Equal("list-item-types", CommandDefinition.Name);
     }
 
     [Fact]
-    public async Task ListWorkloadsCommand_ExecuteAsync_ReturnsWorkloads()
+    public async Task ListItemTypesCommand_ExecuteAsync_ReturnsItemTypes()
     {
         // Arrange
-        var expectedWorkloads = new[] { "notebook", "report", "platform" };
+        var expectedItemTypes = new[] { "notebook", "report", "platform" };
 
-        Service.ListWorkloadsAsync(Arg.Any<CancellationToken>()).Returns(expectedWorkloads);
+        Service.ListItemTypesAsync(Arg.Any<CancellationToken>()).Returns(expectedItemTypes);
 
         // Act
         var result = await ExecuteCommandAsync([]);
@@ -43,14 +43,14 @@ public class ListWorkloadCommandTests : CommandUnitTestsBase<ListWorkloadsComman
         // Assert
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
-        await Service.Received(1).ListWorkloadsAsync(Arg.Any<CancellationToken>());
+        await Service.Received(1).ListItemTypesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task ListWorkloadsCommand_ExecuteAsync_HandlesException()
+    public async Task ListItemTypesCommand_ExecuteAsync_HandlesException()
     {
         // Arrange
-        Service.ListWorkloadsAsync(Arg.Any<CancellationToken>()).ThrowsAsync(new InvalidOperationException("Service error"));
+        Service.ListItemTypesAsync(Arg.Any<CancellationToken>()).ThrowsAsync(new InvalidOperationException("Service error"));
 
         // Act
         var result = await ExecuteCommandAsync([]);
