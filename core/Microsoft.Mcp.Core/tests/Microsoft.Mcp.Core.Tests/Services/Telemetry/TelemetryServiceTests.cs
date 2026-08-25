@@ -139,13 +139,13 @@ public class TelemetryServiceTests
         // Arrange
         _testConfiguration.IsTelemetryEnabled = false;
 
-        var serviceStartOptions = new ServerStartOptions
+        var serverStartOptions = new ServerStartOptions
         {
             Mode = "test-mode",
             Debug = true,
             Transport = TransportTypes.StdIo
         };
-        _mockServiceOptions.Value.Returns(serviceStartOptions);
+        _mockServiceOptions.Value.Returns(serverStartOptions);
 
         // Act
         var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger, _mockCloudConfiguration);
@@ -263,13 +263,13 @@ public class TelemetryServiceTests
     public async Task StartActivity_ReturnsActivityWhenEnabled()
     {
         // Arrange
-        var serviceStartOptions = new ServerStartOptions
+        var serverStartOptions = new ServerStartOptions
         {
             Mode = "test-mode",
             Debug = true,
             Transport = TransportTypes.StdIo
         };
-        _mockServiceOptions.Value.Returns(serviceStartOptions);
+        _mockServiceOptions.Value.Returns(serverStartOptions);
 
         var configuration = new McpServerConfiguration
         {
@@ -300,7 +300,7 @@ public class TelemetryServiceTests
             Assert.Equal(operationName, activity.OperationName);
         }
 
-        AssertDefaultTags(defaultTags, configuration, serviceStartOptions);
+        AssertDefaultTags(defaultTags, configuration, serverStartOptions);
     }
 
     [Fact]
@@ -342,17 +342,17 @@ public class TelemetryServiceTests
     [InlineData("AzureUSGovernment", AzureCloud.AzureUSGovernmentCloud)]
     [InlineData("USGovernment", AzureCloud.AzureUSGovernmentCloud)]
     [InlineData("USGov", AzureCloud.AzureUSGovernmentCloud)]
-    public async Task StartActivity_HasCloudBasedOnServiceStartOptions(string? cloud, AzureCloud expectedCloud)
+    public async Task StartActivity_HasCloudBasedOnServerStartOptions(string? cloud, AzureCloud expectedCloud)
     {
         // Arrange
-        var serviceStartOptions = new ServerStartOptions
+        var serverStartOptions = new ServerStartOptions
         {
             Mode = "test-mode",
             Debug = true,
             Transport = TransportTypes.StdIo,
             Cloud = cloud
         };
-        _mockServiceOptions.Value.Returns(serviceStartOptions);
+        _mockServiceOptions.Value.Returns(serverStartOptions);
 
         var configuration = new McpServerConfiguration
         {
@@ -381,7 +381,7 @@ public class TelemetryServiceTests
         if (activity != null)
         {
             Assert.Equal(operationName, activity.OperationName);
-            AssertDefaultTags(activity.Tags, configuration, serviceStartOptions,
+            AssertDefaultTags(activity.Tags, configuration, serverStartOptions,
                 tags => AssertTag(tags, TagName.Cloud, expectedCloud.ToString()));
         }
     }
@@ -391,13 +391,13 @@ public class TelemetryServiceTests
     public async Task StartActivity_HasCloudBasedOnConfiguration(string configName, string? cloud, AzureCloud expectedCloud)
     {
         // Arrange
-        var serviceStartOptions = new ServerStartOptions
+        var serverStartOptions = new ServerStartOptions
         {
             Mode = "test-mode",
             Debug = true,
             Transport = TransportTypes.StdIo
         };
-        _mockServiceOptions.Value.Returns(serviceStartOptions);
+        _mockServiceOptions.Value.Returns(serverStartOptions);
 
         var configuration = new McpServerConfiguration
         {
@@ -428,7 +428,7 @@ public class TelemetryServiceTests
         if (activity != null)
         {
             Assert.Equal(operationName, activity.OperationName);
-            AssertDefaultTags(activity.Tags, configuration, serviceStartOptions,
+            AssertDefaultTags(activity.Tags, configuration, serverStartOptions,
                 tags => AssertTag(tags, TagName.Cloud, expectedCloud.ToString()));
         }
     }
@@ -457,13 +457,13 @@ public class TelemetryServiceTests
     public async Task StartActivity_NoCloudWhenAzureCloudConfigurationIsNull()
     {
         // Arrange
-        var serviceStartOptions = new ServerStartOptions
+        var serverStartOptions = new ServerStartOptions
         {
             Mode = "test-mode",
             Debug = true,
             Transport = TransportTypes.StdIo
         };
-        _mockServiceOptions.Value.Returns(serviceStartOptions);
+        _mockServiceOptions.Value.Returns(serverStartOptions);
 
         var configuration = new McpServerConfiguration
         {
@@ -490,7 +490,7 @@ public class TelemetryServiceTests
         if (activity != null)
         {
             Assert.Equal(operationName, activity.OperationName);
-            AssertDefaultTags(activity.Tags, configuration, serviceStartOptions,
+            AssertDefaultTags(activity.Tags, configuration, serverStartOptions,
                 tags => Assert.False(tags.ContainsKey(TagName.Cloud)));
         }
     }
