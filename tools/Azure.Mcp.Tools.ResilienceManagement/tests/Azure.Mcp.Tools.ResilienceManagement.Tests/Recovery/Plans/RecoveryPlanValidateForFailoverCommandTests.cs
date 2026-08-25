@@ -154,4 +154,30 @@ public sealed class RecoveryPlanValidateForFailoverCommandTests : CommandUnitTes
         Assert.Contains(expectedMessage, response.Message, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(providerDetails, response.Message);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_MapsTimeoutExceptionToGatewayTimeout()
+    {
+        const string internalDetails = "Internal polling timeout details";
+        Service.ValidateRecoveryPlanForFailoverAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<IReadOnlyList<string>>(),
+            Arg.Any<IReadOnlyList<string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new TimeoutException(internalDetails));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recovery-plan", "plan1",
+            "--source-locations", "eastus");
+
+        Assert.Equal(HttpStatusCode.GatewayTimeout, response.Status);
+        Assert.Contains("timed out", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Retry", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(internalDetails, response.Message);
+    }
 }

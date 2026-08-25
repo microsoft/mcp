@@ -18,7 +18,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IResilienceManagementService
 {
     private static readonly TimeSpan ReadinessJobPollingInterval = TimeSpan.FromSeconds(30);
-    private static readonly TimeSpan ReadinessTimeout = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan RecoveryPlanOperationTimeout = TimeSpan.FromMinutes(10);
 
     public async Task<IEnumerable<ResourceSummary>> ListGoalTemplatesAsync(string serviceGroup, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
@@ -520,7 +520,16 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return CreateRecoveryPlanUpdateResourcesResult(operation.Value.FailedResources);
     }
 
-    public async Task<RecoveryPlanValidateForFailoverResult> ValidateRecoveryPlanForFailoverAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string> sourceLocations, IReadOnlyList<string>? selectedResourceIds = null, string? userConsent = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    public Task<RecoveryPlanValidateForFailoverResult> ValidateRecoveryPlanForFailoverAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string> sourceLocations, IReadOnlyList<string>? selectedResourceIds = null, string? userConsent = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        return ExecuteWithTimeoutAsync(
+            token => ValidateRecoveryPlanForFailoverCoreAsync(serviceGroup, recoveryPlan, sourceLocations, selectedResourceIds, userConsent, tenant, retryPolicy, token),
+            "recovery plan failover validation",
+            RecoveryPlanOperationTimeout,
+            cancellationToken);
+    }
+
+    private async Task<RecoveryPlanValidateForFailoverResult> ValidateRecoveryPlanForFailoverCoreAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string> sourceLocations, IReadOnlyList<string>? selectedResourceIds, string? userConsent, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
@@ -543,10 +552,11 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         };
         string operationId = Guid.NewGuid().ToString();
         ArmOperation<ValidateForRecoveryOperationBaseResult> operation = await recoveryPlanResource.ValidateForFailoverAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             operationId,
             content,
             cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return CreateRecoveryPlanValidateForFailoverResult(
             operationId,
@@ -667,7 +677,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return ExecuteWithTimeoutAsync(
             token => CheckRecoveryPlanReadinessCoreAsync(serviceGroup, recoveryPlan, tenant, retryPolicy, token),
             "recovery plan readiness check",
-            ReadinessTimeout,
+            RecoveryPlanOperationTimeout,
             cancellationToken);
     }
 
@@ -847,7 +857,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             job => IsTerminalJobStatus(GetRequiredProperties(job.Data.Properties, "recovery job").Status?.ToString() ?? string.Empty),
             $"readiness recovery job '{recoveryJobId}'",
             ReadinessJobPollingInterval,
-            ReadinessTimeout,
+            RecoveryPlanOperationTimeout,
             cancellationToken);
     }
 
