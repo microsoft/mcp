@@ -68,7 +68,7 @@ public class AzureBackupPrivateEndpointCommandTests(
         var vaultName = $"{Settings.ResourceBaseName}-rsv-pe";
 
         var result = await CallToolAsync(
-            "azurebackup_vault_private-endpoint_get",
+            "azurebackup_vault_privateendpoint_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -77,7 +77,7 @@ public class AzureBackupPrivateEndpointCommandTests(
                 { "vault-type", "rsv" }
             });
 
-        Assert.True(result.HasValue, "Expected a response from private-endpoint get.");
+        Assert.True(result.HasValue, "Expected a response from privateendpoint get.");
         var connections = result.Value.AssertProperty("connections");
         Assert.Equal(JsonValueKind.Array, connections.ValueKind);
     }
@@ -91,7 +91,7 @@ public class AzureBackupPrivateEndpointCommandTests(
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
 
         var result = await CallToolAsync(
-            "azurebackup_vault_private-endpoint_get",
+            "azurebackup_vault_privateendpoint_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -118,7 +118,7 @@ public class AzureBackupPrivateEndpointCommandTests(
 
         // 1. Create the PE on the vault. Do not auto-approve so we exercise Approve explicitly.
         var createResult = await CallToolAsync(
-            "azurebackup_vault_private-endpoint_create",
+            "azurebackup_vault_privateendpoint_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -131,7 +131,7 @@ public class AzureBackupPrivateEndpointCommandTests(
                 { "auto-approve", "false" }
             });
 
-        Assert.True(createResult.HasValue, "Expected a response from private-endpoint create.");
+        Assert.True(createResult.HasValue, "Expected a response from privateendpoint create.");
         var created = createResult.Value.AssertProperty("connection");
         var pecName = created.AssertProperty("name").GetString();
         Assert.False(string.IsNullOrEmpty(pecName), "Expected created PEC name to be non-empty.");
@@ -139,7 +139,7 @@ public class AzureBackupPrivateEndpointCommandTests(
 
         // 2. Approve the connection.
         var approveResult = await CallToolAsync(
-            "azurebackup_vault_private-endpoint_approve",
+            "azurebackup_vault_privateendpoint_approve-reject",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -150,13 +150,13 @@ public class AzureBackupPrivateEndpointCommandTests(
                 { "description", "Approved by MCP lifecycle test" }
             });
 
-        Assert.True(approveResult.HasValue, "Expected a response from private-endpoint approve.");
+        Assert.True(approveResult.HasValue, "Expected a response from privateendpoint approve.");
         var approved = approveResult.Value.AssertProperty("connection");
         Assert.Equal("Approved", approved.AssertProperty("connectionStatus").GetString(), ignoreCase: true);
 
         // 3. Get returns the approved connection with the expected group id.
         var getResult = await CallToolAsync(
-            "azurebackup_vault_private-endpoint_get",
+            "azurebackup_vault_privateendpoint_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -166,7 +166,7 @@ public class AzureBackupPrivateEndpointCommandTests(
                 { "private-endpoint-name", pecName! }
             });
 
-        Assert.True(getResult.HasValue, "Expected a response from private-endpoint get.");
+        Assert.True(getResult.HasValue, "Expected a response from privateendpoint get.");
         var got = getResult.Value.AssertProperty("connections");
         Assert.Equal(JsonValueKind.Array, got.ValueKind);
         Assert.Equal(1, got.GetArrayLength());
@@ -178,7 +178,7 @@ public class AzureBackupPrivateEndpointCommandTests(
 
         // 4. Delete the vault-side PEC and confirm success.
         var deleteResult = await CallToolAsync(
-            "azurebackup_vault_private-endpoint_delete",
+            "azurebackup_vault_privateendpoint_delete",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -188,7 +188,7 @@ public class AzureBackupPrivateEndpointCommandTests(
                 { "private-endpoint-name", pecName! }
             });
 
-        Assert.True(deleteResult.HasValue, "Expected a response from private-endpoint delete.");
+        Assert.True(deleteResult.HasValue, "Expected a response from privateendpoint delete.");
         var deleteStatus = deleteResult.Value.AssertProperty("result").AssertProperty("status").GetString();
         Assert.Equal("Succeeded", deleteStatus, ignoreCase: true);
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: PrivateEndpoint lifecycle");

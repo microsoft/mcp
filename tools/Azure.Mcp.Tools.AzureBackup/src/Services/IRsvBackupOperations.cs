@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureBackup.Models;
+using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
@@ -279,21 +280,12 @@ public interface IRsvBackupOperations
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
-    Task<PrivateEndpointConnectionInfo> ApprovePrivateEndpointAsync(
+    Task<PrivateEndpointConnectionInfo> SetPrivateEndpointConnectionStateAsync(
         string vaultName,
         string resourceGroup,
         string subscription,
         string privateEndpointConnectionName,
-        string? description,
-        string? tenant,
-        RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken);
-
-    Task<PrivateEndpointConnectionInfo> RejectPrivateEndpointAsync(
-        string vaultName,
-        string resourceGroup,
-        string subscription,
-        string privateEndpointConnectionName,
+        PrivateEndpointConnectionStatus targetStatus,
         string? description,
         string? tenant,
         RetryPolicyOptions? retryPolicy,

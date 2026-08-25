@@ -387,7 +387,7 @@ output resourceGroupLocation string = location
 
 // ─── Private Endpoint Test Resources (PR 4) ───
 // Dedicated VNet + PE-compatible subnet and a fresh RSV with no protected items,
-// no CRR. Required by the `azurebackup vault private-endpoint` command group
+// no CRR. Required by the `azurebackup vault privateendpoint` command group
 // because RSV rejects PE creation on a vault that has protected items.
 resource peVnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
   name: '${baseName}-pe-vnet'

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.RegularExpressions;
 using Azure.Core;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.ResourceManager;
@@ -20,16 +19,9 @@ namespace Azure.Mcp.Tools.AzureBackup.Services;
 // See azurebackup-rsv-mcp-improvements-plan.md §PR 4.
 public sealed partial class RsvBackupOperations
 {
-    /// <summary>Maximum number of Private Endpoints attached to a single RSV.</summary>
-    private const int MaxPrivateEndpointsPerVault = 12;
-
     /// <summary>Sub-resource ("group") IDs supported by RSV. Primary region is <c>AzureBackup</c>;
     /// <c>AzureBackup_secondary</c> is used only for Cross-Region Restore.</summary>
     private static readonly string[] s_allowedGroupIds = ["AzureBackup", "AzureBackup_secondary"];
-
-    private static readonly Regex s_subnetIdRegex = new(
-        @"^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\.Network/virtualNetworks/[^/]+/subnets/[^/]+$",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     public async Task<PrivateEndpointConnectionInfo> CreatePrivateEndpointAsync(
         string vaultName, string resourceGroup, string subscription,
@@ -47,7 +39,7 @@ public sealed partial class RsvBackupOperations
             (nameof(groupId), groupId));
 
         ValidateGroupId(groupId);
-        ValidateSubnetId(vnetSubnetId);
+        var subnetResourceId = ParseSubnetId(vnetSubnetId);
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -55,9 +47,10 @@ public sealed partial class RsvBackupOperations
         var vault = await vaultResource.GetAsync(cancellationToken);
         var vaultLocation = vault.Value.Data.Location;
 
-        // Enforce v2 experience blockers: max 12 PEs and no protected items.
+        // Server-side enforces the maximum PE count; we only pre-flight the "no protected items" rule
+        // to give the caller a clearer error before creating the PE resource.
         await ValidatePrivateEndpointPreconditionsAsync(
-            armClient, subscription, resourceGroup, vaultName, vault.Value, cancellationToken);
+            armClient, subscription, resourceGroup, vaultName, cancellationToken);
 
         var peLocation = string.IsNullOrWhiteSpace(location) ? vaultLocation.Name : location!;
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
@@ -74,7 +67,7 @@ public sealed partial class RsvBackupOperations
         var peData = new PrivateEndpointData
         {
             Location = new AzureLocation(peLocation),
-            Subnet = new SubnetData { Id = new ResourceIdentifier(vnetSubnetId) },
+            Subnet = new SubnetData { Id = subnetResourceId },
             CustomNetworkInterfaceName = privateEndpointName + "-nic",
         };
         peData.PrivateLinkServiceConnections.Add(connection);
@@ -84,15 +77,17 @@ public sealed partial class RsvBackupOperations
 
         // Refetch the vault to find the auto-created PEC that now points at our PE.
         vault = await vaultResource.GetAsync(cancellationToken);
-        var pec = FindPrivateEndpointConnectionForPe(vault.Value, privateEndpointName)
+        var expectedPeId = PrivateEndpointResource.CreateResourceIdentifier(subscription, resourceGroup, privateEndpointName);
+        var pec = FindPrivateEndpointConnectionForPe(vault.Value, expectedPeId)
             ?? throw new InvalidOperationException(
-                $"Private Endpoint '{privateEndpointName}' was created in resource group '{resourceGroup}', but no matching Private Endpoint Connection appeared on vault '{vaultName}'. This can happen if the ARM propagation is delayed; retry 'azurebackup vault private-endpoint get' shortly.");
+                $"Private Endpoint '{privateEndpointName}' was created in resource group '{resourceGroup}', but no matching Private Endpoint Connection appeared on vault '{vaultName}'. This can happen if the ARM propagation is delayed; retry 'azurebackup vault privateendpoint get' shortly.");
 
         if (autoApprove && string.Equals(pec.Properties?.PrivateLinkServiceConnectionState?.Status?.ToString(), "Pending", StringComparison.OrdinalIgnoreCase))
         {
-            return await ApprovePrivateEndpointAsync(
+            return await SetPrivateEndpointConnectionStateAsync(
                 vaultName, resourceGroup, subscription, ExtractPecName(pec.Id!),
-                description: "Auto-approved by MCP tool",
+                PrivateEndpointConnectionStatus.Approved,
+                description: "Auto-approved by Azure MCP tool",
                 tenant, retryPolicy, cancellationToken);
         }
 
@@ -168,25 +163,7 @@ public sealed partial class RsvBackupOperations
             $"Private Endpoint Connection '{privateEndpointConnectionName}' deleted from vault '{vaultName}'. The underlying Private Endpoint (Microsoft.Network/privateEndpoints) must be deleted separately if it is no longer needed.");
     }
 
-    public async Task<PrivateEndpointConnectionInfo> ApprovePrivateEndpointAsync(
-        string vaultName, string resourceGroup, string subscription,
-        string privateEndpointConnectionName, string? description,
-        string? tenant, RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken)
-        => await SetPrivateEndpointConnectionStateAsync(
-            vaultName, resourceGroup, subscription, privateEndpointConnectionName,
-            PrivateEndpointConnectionStatus.Approved, description, tenant, retryPolicy, cancellationToken);
-
-    public async Task<PrivateEndpointConnectionInfo> RejectPrivateEndpointAsync(
-        string vaultName, string resourceGroup, string subscription,
-        string privateEndpointConnectionName, string? description,
-        string? tenant, RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken)
-        => await SetPrivateEndpointConnectionStateAsync(
-            vaultName, resourceGroup, subscription, privateEndpointConnectionName,
-            PrivateEndpointConnectionStatus.Rejected, description, tenant, retryPolicy, cancellationToken);
-
-    private async Task<PrivateEndpointConnectionInfo> SetPrivateEndpointConnectionStateAsync(
+    public async Task<PrivateEndpointConnectionInfo> SetPrivateEndpointConnectionStateAsync(
         string vaultName, string resourceGroup, string subscription,
         string privateEndpointConnectionName, PrivateEndpointConnectionStatus targetStatus,
         string? description, string? tenant, RetryPolicyOptions? retryPolicy,
@@ -248,33 +225,39 @@ public sealed partial class RsvBackupOperations
         }
     }
 
-    private static void ValidateSubnetId(string subnetId)
+    private static ResourceIdentifier ParseSubnetId(string subnetId)
     {
-        if (!s_subnetIdRegex.IsMatch(subnetId))
+        ResourceIdentifier parsed;
+        try
+        {
+            parsed = new ResourceIdentifier(subnetId);
+        }
+        catch (Exception ex) when (ex is FormatException or ArgumentException)
         {
             throw new ArgumentException(
-                "Invalid --vnet-subnet-id. Expected an ARM resource ID of the form '/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}'.");
+                "Invalid --vnet-subnet-id. Expected an ARM resource ID of the form '/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}'.", ex);
         }
+
+        if (parsed.ResourceType != "Microsoft.Network/virtualNetworks/subnets")
+        {
+            throw new ArgumentException(
+                $"Invalid --vnet-subnet-id: resource type '{parsed.ResourceType}' is not 'Microsoft.Network/virtualNetworks/subnets'. Expected an ARM resource ID of the form '/subscriptions/{{sub}}/resourceGroups/{{rg}}/providers/Microsoft.Network/virtualNetworks/{{vnet}}/subnets/{{subnet}}'.");
+        }
+
+        return parsed;
     }
 
     private static async Task ValidatePrivateEndpointPreconditionsAsync(
         ArmClient armClient, string subscription, string resourceGroup, string vaultName,
-        RecoveryServicesVaultResource vault, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        var existing = vault.Data.Properties?.PrivateEndpointConnections?.Count ?? 0;
-        if (existing >= MaxPrivateEndpointsPerVault)
-        {
-            throw new InvalidOperationException(
-                $"Vault '{vaultName}' already has {existing} Private Endpoint Connections. RSV supports a maximum of {MaxPrivateEndpointsPerVault} Private Endpoints per vault. Delete an unused connection before creating a new one.");
-        }
-
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
 
         await foreach (var item in rgResource.GetBackupProtectedItemsAsync(vaultName, cancellationToken: cancellationToken))
         {
             throw new InvalidOperationException(
-                $"Vault '{vaultName}' already has protected items. A Private Endpoint can only be added to a vault with no protected items. Stop protection on existing items (retaining data if needed), then re-run 'azurebackup vault private-endpoint create'.");
+                $"Vault '{vaultName}' already has protected items. A Private Endpoint can only be added to a vault with no protected items. Stop protection on existing items (retaining data if needed), then re-run 'azurebackup vault privateendpoint create'.");
         }
     }
 
@@ -311,7 +294,7 @@ public sealed partial class RsvBackupOperations
     }
 
     private static RecoveryServicesPrivateEndpointConnectionVaultProperties? FindPrivateEndpointConnectionForPe(
-        RecoveryServicesVaultResource vault, string privateEndpointName)
+        RecoveryServicesVaultResource vault, ResourceIdentifier expectedPrivateEndpointId)
     {
         var pecs = vault.Data.Properties?.PrivateEndpointConnections;
         if (pecs is null)
@@ -319,10 +302,11 @@ public sealed partial class RsvBackupOperations
             return null;
         }
 
+        var expectedId = expectedPrivateEndpointId.ToString();
         foreach (var pec in pecs)
         {
             var peId = pec.Properties?.PrivateEndpointId?.ToString();
-            if (!string.IsNullOrEmpty(peId) && peId.EndsWith("/" + privateEndpointName, StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(peId) && StringComparer.OrdinalIgnoreCase.Equals(peId, expectedId))
             {
                 return pec;
             }

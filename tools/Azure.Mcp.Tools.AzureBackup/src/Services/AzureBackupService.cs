@@ -929,30 +929,20 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             tenant, retryPolicy, cancellationToken);
     }
 
-    public async Task<PrivateEndpointConnectionInfo> ApprovePrivateEndpointAsync(
+    public async Task<PrivateEndpointConnectionInfo> SetPrivateEndpointConnectionStateAsync(
         string vaultName, string resourceGroup, string subscription,
-        string privateEndpointConnectionName, string? description,
-        string? vaultType, string? tenant,
+        string privateEndpointConnectionName, PrivateEndpointConnectionAction action,
+        string? description, string? vaultType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
         EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken));
-        return await rsvOps.ApprovePrivateEndpointAsync(
+        var targetStatus = action == PrivateEndpointConnectionAction.Approve
+            ? PrivateEndpointConnectionStatus.Approved
+            : PrivateEndpointConnectionStatus.Rejected;
+        return await rsvOps.SetPrivateEndpointConnectionStateAsync(
             vaultName, resourceGroup, subscription, privateEndpointConnectionName,
-            description, tenant, retryPolicy, cancellationToken);
-    }
-
-    public async Task<PrivateEndpointConnectionInfo> RejectPrivateEndpointAsync(
-        string vaultName, string resourceGroup, string subscription,
-        string privateEndpointConnectionName, string? description,
-        string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
-    {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken));
-        return await rsvOps.RejectPrivateEndpointAsync(
-            vaultName, resourceGroup, subscription, privateEndpointConnectionName,
-            description, tenant, retryPolicy, cancellationToken);
+            targetStatus, description, tenant, retryPolicy, cancellationToken);
     }
 
     private static void EnsurePrivateEndpointVaultType(string resolvedVaultType)

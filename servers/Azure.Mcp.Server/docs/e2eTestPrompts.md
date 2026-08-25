@@ -219,21 +219,18 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_vault_get | Get vault <vault_name> in resource group <resource_group> and include all extended posture fields | none |
 | azurebackup_vault_update | Update Azure Backup vault <vault_name> in resource group <resource_group> to enable soft delete | investigation-required |
 | azurebackup_vault_update | Change the identity type of Azure Backup vault <vault_name> in resource group <resource_group> to SystemAssigned | none |
-| azurebackup_vault_private-endpoint_create | Create a Private Endpoint named <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> using subnet <subnet_id> and auto-approve it | none |
-| azurebackup_vault_private-endpoint_create | Provision a Private Endpoint <pe_name> for vault <vault_name> in <resource_group> connected to subnet <subnet_id> with group-id AzureBackup | none |
-| azurebackup_vault_private-endpoint_create | Set up private connectivity for Recovery Services vault <vault_name> in <resource_group> by creating Private Endpoint <pe_name> in subnet <subnet_id> | none |
-| azurebackup_vault_private-endpoint_get | List all Private Endpoint Connections on Recovery Services vault <vault_name> in resource group <resource_group> | none |
-| azurebackup_vault_private-endpoint_get | Get Private Endpoint Connection <pe_name> on vault <vault_name> in resource group <resource_group> | none |
-| azurebackup_vault_private-endpoint_get | Show me the Private Endpoints attached to Recovery Services vault <vault_name> in <resource_group> | none |
-| azurebackup_vault_private-endpoint_delete | Delete Private Endpoint Connection <pe_name> from Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_vault_private-endpoint_delete | Remove the vault-side private endpoint connection <pe_name> on vault <vault_name> in <resource_group> | investigation-required |
-| azurebackup_vault_private-endpoint_delete | Detach Private Endpoint <pe_name> from Recovery Services vault <vault_name> in <resource_group> | investigation-required |
-| azurebackup_vault_private-endpoint_approve | Approve pending Private Endpoint Connection <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> | none |
-| azurebackup_vault_private-endpoint_approve | Accept the Private Endpoint Connection <pe_name> on vault <vault_name> in <resource_group> with description "Approved for prod" | none |
-| azurebackup_vault_private-endpoint_approve | Grant approval for the pending private link connection <pe_name> on Recovery Services vault <vault_name> in <resource_group> | none |
-| azurebackup_vault_private-endpoint_reject | Reject Private Endpoint Connection <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_vault_private-endpoint_reject | Deny the Private Endpoint Connection <pe_name> on vault <vault_name> in <resource_group> with description "Not authorized" | investigation-required |
-| azurebackup_vault_private-endpoint_reject | Decline the pending private link connection <pe_name> on Recovery Services vault <vault_name> in <resource_group> | investigation-required |
+| azurebackup_vault_privateendpoint_create | Create a Private Endpoint named <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> using subnet <subnet_id> and auto-approve it | none |
+| azurebackup_vault_privateendpoint_create | Provision a Private Endpoint <pe_name> for vault <vault_name> in <resource_group> connected to subnet <subnet_id> with group-id AzureBackup | none |
+| azurebackup_vault_privateendpoint_create | Set up private connectivity for Recovery Services vault <vault_name> in <resource_group> by creating Private Endpoint <pe_name> in subnet <subnet_id> | none |
+| azurebackup_vault_privateendpoint_get | List all Private Endpoint Connections on Recovery Services vault <vault_name> in resource group <resource_group> | none |
+| azurebackup_vault_privateendpoint_get | Get Private Endpoint Connection <pe_name> on vault <vault_name> in resource group <resource_group> | none |
+| azurebackup_vault_privateendpoint_get | Show me the Private Endpoints attached to Recovery Services vault <vault_name> in <resource_group> | none |
+| azurebackup_vault_privateendpoint_delete | Delete Private Endpoint Connection <pe_name> from Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_vault_privateendpoint_delete | Remove the vault-side private endpoint connection <pe_name> on vault <vault_name> in <resource_group> | investigation-required |
+| azurebackup_vault_privateendpoint_delete | Detach Private Endpoint <pe_name> from Recovery Services vault <vault_name> in <resource_group> | investigation-required |
+| azurebackup_vault_privateendpoint_approve-reject | Approve pending Private Endpoint Connection <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> with action approve | none |
+| azurebackup_vault_privateendpoint_approve-reject | Reject Private Endpoint Connection <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> with action reject and description "Not authorized" | investigation-required |
+| azurebackup_vault_privateendpoint_approve-reject | Respond to the pending private link connection <pe_name> on Recovery Services vault <vault_name> in <resource_group> by approving it | none |
 
 ## Azure CLI
 

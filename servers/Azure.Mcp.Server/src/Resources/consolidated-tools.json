@@ -4019,7 +4019,7 @@
         "azurebackup_job_get",
         "azurebackup_recoverypoint_get",
         "azurebackup_governance_find-unprotected",
-        "azurebackup_vault_private-endpoint_get"
+        "azurebackup_vault_privateendpoint_get"
       ]
     },
     {
@@ -4055,7 +4055,7 @@
         "azurebackup_vault_create",
         "azurebackup_policy_create",
         "azurebackup_protecteditem_protect",
-        "azurebackup_vault_private-endpoint_create"
+        "azurebackup_vault_privateendpoint_create"
       ]
     },
     {
@@ -4096,9 +4096,8 @@
         "azurebackup_protecteditem_undelete",
         "azurebackup_security_configure-encryption",
         "azurebackup_security_configure-mua",
-        "azurebackup_vault_private-endpoint_delete",
-        "azurebackup_vault_private-endpoint_approve",
-        "azurebackup_vault_private-endpoint_reject"
+        "azurebackup_vault_privateendpoint_delete",
+        "azurebackup_vault_privateendpoint_approve-reject"
       ]
     },
     {

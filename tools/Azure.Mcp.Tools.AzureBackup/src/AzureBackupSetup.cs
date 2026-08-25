@@ -63,8 +63,7 @@ public sealed class AzureBackupSetup : IAreaSetup
         services.AddSingleton<PrivateEndpointCreateCommand>();
         services.AddSingleton<PrivateEndpointGetCommand>();
         services.AddSingleton<PrivateEndpointDeleteCommand>();
-        services.AddSingleton<PrivateEndpointApproveCommand>();
-        services.AddSingleton<PrivateEndpointRejectCommand>();
+        services.AddSingleton<PrivateEndpointApproveRejectCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -84,14 +83,13 @@ public sealed class AzureBackupSetup : IAreaSetup
         vault.AddCommand<VaultCreateCommand>(serviceProvider);
         vault.AddCommand<VaultUpdateCommand>(serviceProvider);
 
-        var privateEndpoint = new CommandGroup("private-endpoint",
+        var privateEndpoint = new CommandGroup("privateendpoint",
             "Private Endpoint operations - Manage Private Endpoints (v2) on Recovery Services vaults: create, list/get, delete, approve, and reject Private Endpoint Connections. Backup vaults (DPP) are not supported.");
         vault.AddSubGroup(privateEndpoint);
         privateEndpoint.AddCommand<PrivateEndpointCreateCommand>(serviceProvider);
         privateEndpoint.AddCommand<PrivateEndpointGetCommand>(serviceProvider);
         privateEndpoint.AddCommand<PrivateEndpointDeleteCommand>(serviceProvider);
-        privateEndpoint.AddCommand<PrivateEndpointApproveCommand>(serviceProvider);
-        privateEndpoint.AddCommand<PrivateEndpointRejectCommand>(serviceProvider);
+        privateEndpoint.AddCommand<PrivateEndpointApproveRejectCommand>(serviceProvider);
 
         var policy = new CommandGroup("policy", "Backup policy operations - Get policy details or list all policies, create, and update policies.");
         azureBackup.AddSubGroup(policy);
