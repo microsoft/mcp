@@ -3745,8 +3745,8 @@ azmcp resilience recoveryplan create --service-group <service-group> \
 # Additional group objects may contain preActions and postActions arrays. Default group actions use the dedicated options above.
 # Before adding an action, collect and explain each value to the customer:
 # 1. type: ManualAction pauses for a person to complete a step; CustomRunbook runs an Azure Automation runbook.
-# 2. name: a non-empty customer-facing action name.
-# 3. description: optional text explaining what the action does.
+# 2. name: a 3 to 24 character customer-facing action name containing only letters, numbers, or hyphens.
+# 3. description: optional action instructions up to 100 characters; an empty value is allowed.
 # 4. timeoutInMinutes: a positive whole number defining how long the action may run.
 # 5. actionResourceId: required only for CustomRunbook; use the full Microsoft.Automation/automationAccounts/runbooks resource ID.
 # 6. parameters: optional for CustomRunbook; use a JSON object whose values are strings.

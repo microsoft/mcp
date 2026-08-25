@@ -399,6 +399,25 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public void CreateRecoveryGroupsSetting_RejectsProvidedIdMatchingIdPreservedByOrder()
+    {
+        const string existingAdditionalGroupId = "ddcfddaf-d15d-44fe-8472-0f3ee9f0179d";
+        var existingDefaultGroup = CreateGroup("7f35c9f5-bec2-455d-8161-c904b2532e5d", 0, "Existing default group");
+        var existingGroups = new RecoveryGroupsSetting(existingDefaultGroup);
+        existingGroups.AdditionalGroups.Add(CreateGroup(existingAdditionalGroupId, 1, "Existing additional group"));
+        RecoveryPlanGroupInput[] additionalGroups =
+        [
+            new(null, 1, "Preserve existing group by order", null, null),
+            new(existingAdditionalGroupId, 2, "Reuse existing group by ID", null, null)
+        ];
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(() =>
+            ResilienceManagementService.CreateRecoveryGroupsSetting(existingGroups, null, additionalGroups));
+
+        Assert.Contains("groupUniqueId values must be unique", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void ResolveRecoveryPlanDescription_ForUpdate_PreservesExistingDescription()
     {
         string result = ResilienceManagementService.ResolveRecoveryPlanDescription(null, "Existing description");

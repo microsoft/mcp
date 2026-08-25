@@ -118,10 +118,10 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
                 options.DefaultGroupDescription,
                 options.Tenant,
                 options.RetryPolicy,
-                cancellationToken,
-                additionalGroups,
-                defaultGroupPreActions,
-                defaultGroupPostActions);
+                additionalGroups: additionalGroups,
+                defaultGroupPreActions: defaultGroupPreActions,
+                defaultGroupPostActions: defaultGroupPostActions,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new RecoveryPlanCreateCommandResult(recoveryPlan),
@@ -371,17 +371,14 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
 
     private static void ValidateRunbookResourceId(string actionResourceId, string fieldName)
     {
-        try
+        if (!ResourceIdentifier.TryParse(actionResourceId, out ResourceIdentifier? resourceId) || resourceId is null)
         {
-            var resourceId = new ResourceIdentifier(actionResourceId);
-            if (!string.Equals(resourceId.ResourceType.ToString(), "Microsoft.Automation/automationAccounts/runbooks", StringComparison.OrdinalIgnoreCase))
-            {
-                throw new ArgumentException($"Each CustomRunbook {fieldName} actionResourceId must identify a Microsoft.Automation/automationAccounts/runbooks resource.");
-            }
+            throw new ArgumentException($"Each CustomRunbook {fieldName} actionResourceId must be a valid Azure resource ID.");
         }
-        catch (ArgumentException ex) when (!ex.Message.Contains("must identify", StringComparison.Ordinal))
+
+        if (!string.Equals(resourceId.ResourceType.ToString(), "Microsoft.Automation/automationAccounts/runbooks", StringComparison.OrdinalIgnoreCase))
         {
-            throw new ArgumentException($"Each CustomRunbook {fieldName} actionResourceId must be a valid Azure resource ID.", ex);
+            throw new ArgumentException($"Each CustomRunbook {fieldName} actionResourceId must identify a Microsoft.Automation/automationAccounts/runbooks resource.");
         }
     }
 

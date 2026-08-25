@@ -51,7 +51,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+                cancellationToken: Arg.Any<CancellationToken>())
                 .Returns(Element("plan1"));
         }
 
@@ -85,7 +85,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -115,7 +115,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -141,7 +141,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -159,7 +159,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(Element(recoveryPlan));
 
         var response = await ExecuteCommandAsync(
@@ -204,7 +204,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
         var response = await ExecuteCommandAsync(
@@ -250,7 +250,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             defaultGroupDescription,
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
         var response = await ExecuteCommandAsync(
@@ -288,7 +288,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
+            cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -304,7 +304,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "default",
             null,
             null,
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
         var response = await ExecuteCommandAsync(ValidArgs);
@@ -321,7 +321,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "default",
             null,
             null,
-            Arg.Any<CancellationToken>());
+            cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -337,7 +337,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             null,
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
         var response = await ExecuteCommandAsync(
@@ -359,7 +359,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             null,
-            Arg.Any<CancellationToken>());
+            cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -375,13 +375,15 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             null,
-            Arg.Any<CancellationToken>(),
             Arg.Is<IReadOnlyList<RecoveryPlanGroupInput>?>(groups =>
                 groups != null &&
                 groups.Count == 1 &&
                 groups[0].GroupUniqueId == null &&
                 groups[0].OrderId == 1 &&
-                groups[0].Description == "Second recovery group"))
+                groups[0].Description == "Second recovery group"),
+            null,
+            null,
+            Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
         var response = await ExecuteCommandAsync(
@@ -403,8 +405,10 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             null,
-            Arg.Any<CancellationToken>(),
-            Arg.Is<IReadOnlyList<RecoveryPlanGroupInput>?>(groups => groups != null && groups.Count == 1));
+            Arg.Is<IReadOnlyList<RecoveryPlanGroupInput>?>(groups => groups != null && groups.Count == 1),
+            null,
+            null,
+            Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -442,7 +446,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             null,
-            Arg.Any<CancellationToken>(),
             Arg.Is<IReadOnlyList<RecoveryPlanGroupInput>?>(groups =>
                 groups != null &&
                 groups[0].PreActions != null &&
@@ -450,7 +453,8 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions =>
                 actions != null &&
                 actions[0].Type == RecoveryPlanGroupActionKind.ManualAction),
-            Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions => actions != null && actions.Count == 0))
+            Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions => actions != null && actions.Count == 0),
+            Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
         var response = await ExecuteCommandAsync(
@@ -473,6 +477,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
     [InlineData("[{\"type\":\"ManualAction\",\"name\":\"Invalid name\",\"timeoutInMinutes\":10}]", "only letters, numbers, or hyphens")]
     [InlineData("[{\"type\":\"ManualAction\",\"name\":\"Action\",\"timeoutInMinutes\":0}]", "positive integer")]
     [InlineData("[{\"type\":\"CustomRunbook\",\"name\":\"Action\",\"timeoutInMinutes\":10}]", "requires actionResourceId")]
+    [InlineData("[{\"type\":\"CustomRunbook\",\"name\":\"Action\",\"timeoutInMinutes\":10,\"actionResourceId\":\"not-a-resource-id\"}]", "valid Azure resource ID")]
     [InlineData("[{\"type\":\"CustomRunbook\",\"name\":\"Action\",\"timeoutInMinutes\":10,\"actionResourceId\":\"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/account\"}]", "automationAccounts/runbooks")]
     public async Task ExecuteAsync_RejectsInvalidDefaultGroupActions(string actions, string expectedMessage)
     {
@@ -501,9 +506,10 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             null,
-            Arg.Any<CancellationToken>(),
             null,
-            Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions => actions != null && actions[0].Description == string.Empty))
+            Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions => actions != null && actions[0].Description == string.Empty),
+            null,
+            Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
         var response = await ExecuteCommandAsync(
@@ -531,9 +537,10 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             null,
-            Arg.Any<CancellationToken>(),
             null,
-            Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions => actions != null && actions[0].Parameters == null))
+            Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions => actions != null && actions[0].Parameters == null),
+            null,
+            Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
         var response = await ExecuteCommandAsync(
@@ -599,7 +606,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -615,7 +622,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             null,
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
         var response = await ExecuteCommandAsync(
@@ -636,7 +643,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             null,
-            Arg.Any<CancellationToken>());
+            cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -652,7 +659,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             null,
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
         var response = await ExecuteCommandAsync(
@@ -674,7 +681,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             null,
-            Arg.Any<CancellationToken>());
+            cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -737,7 +744,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var response = await ExecuteCommandAsync(ValidArgs);
@@ -769,7 +776,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, message));
     }
 }

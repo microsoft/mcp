@@ -399,7 +399,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return document.RootElement.Clone();
     }
 
-    public async Task<RecoveryPlanInfo> CreateRecoveryPlanAsync(string serviceGroup, string recoveryPlan, RecoveryPlanKind planType, string? planDescription, RecoveryPlanIdentityKind identityType, string? userAssignedIdentity = null, string? defaultGroupDescription = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default, IReadOnlyList<RecoveryPlanGroupInput>? additionalGroups = null, IReadOnlyList<RecoveryPlanGroupActionInput>? defaultGroupPreActions = null, IReadOnlyList<RecoveryPlanGroupActionInput>? defaultGroupPostActions = null)
+    public async Task<RecoveryPlanInfo> CreateRecoveryPlanAsync(string serviceGroup, string recoveryPlan, RecoveryPlanKind planType, string? planDescription, RecoveryPlanIdentityKind identityType, string? userAssignedIdentity = null, string? defaultGroupDescription = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, IReadOnlyList<RecoveryPlanGroupInput>? additionalGroups = null, IReadOnlyList<RecoveryPlanGroupActionInput>? defaultGroupPreActions = null, IReadOnlyList<RecoveryPlanGroupActionInput>? defaultGroupPostActions = null, CancellationToken cancellationToken = default)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
@@ -944,6 +944,9 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             recoveryGroups = new RecoveryGroupsSetting(defaultGroup);
         }
 
+        ApplyRecoveryGroupActions(recoveryGroups.DefaultGroup.Properties!.PreActions, defaultGroupPreActions);
+        ApplyRecoveryGroupActions(recoveryGroups.DefaultGroup.Properties.PostActions, defaultGroupPostActions);
+
         if (additionalGroups is null)
         {
             return recoveryGroups;
@@ -983,10 +986,19 @@ public sealed class ResilienceManagementService(IAzureService azureService)
     private static void ValidateRecoveryGroupIdentifiers(RecoveryGroupsSetting recoveryGroups)
     {
         string defaultGroupUniqueId = recoveryGroups.DefaultGroup.Properties!.GroupUniqueId;
-        if (recoveryGroups.AdditionalGroups.Any(group =>
-            string.Equals(group.Properties?.GroupUniqueId, defaultGroupUniqueId, StringComparison.OrdinalIgnoreCase)))
+        var additionalGroupUniqueIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (RecoveryGroup additionalGroup in recoveryGroups.AdditionalGroups)
         {
-            throw new ArgumentException("An additional recovery group groupUniqueId cannot match the default recovery group groupUniqueId.");
+            string? additionalGroupUniqueId = additionalGroup.Properties?.GroupUniqueId;
+            if (string.Equals(additionalGroupUniqueId, defaultGroupUniqueId, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("An additional recovery group groupUniqueId cannot match the default recovery group groupUniqueId.");
+            }
+
+            if (additionalGroupUniqueId is not null && !additionalGroupUniqueIds.Add(additionalGroupUniqueId))
+            {
+                throw new ArgumentException("Additional recovery group groupUniqueId values must be unique.");
+            }
         }
     }
 
