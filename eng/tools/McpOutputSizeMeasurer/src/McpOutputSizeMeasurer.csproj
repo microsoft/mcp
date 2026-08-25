@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" />
     <ProjectReference Include="..\..\McpToolEvaluator.Core\src\McpToolEvaluator.Core.csproj" />
   </ItemGroup>
 

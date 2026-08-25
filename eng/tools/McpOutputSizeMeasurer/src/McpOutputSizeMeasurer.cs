@@ -1,15 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
+using ModelContextProtocol;
+using ModelContextProtocol.Client;
+using ModelContextProtocol.Protocol;
 
 namespace McpOutputSizeMeasurer;
 
 /// <summary>
 /// Measures MCP responses from a client perspective for a server's exposed tool surfaces.
-/// Starts the given azmcp-compatible executable over stdio, walks tool discovery
+/// Starts the given azmcp-compatible executable using the MCP SDK's stdio transport, walks tool discovery
 /// (tools/list, paginated), calls every tool's learn-mode response, and re-queries every
 /// inner command a tool's learn response advertises. Learn-response sizes measure the decoded
 /// command-array JSON used by the server's discovery threshold, not its JSON-RPC wire encoding.
@@ -43,6 +45,7 @@ public sealed class McpOutputSizeMeasurer(
         return new
         {
             transport = "stdio",
+            protocolClient = "ModelContextProtocol SDK",
             learnSizeBasis = "decoded command-array JSON; responses without command JSON are reported separately",
             generatedAtUtc = DateTimeOffset.UtcNow,
             reportPath,
@@ -63,79 +66,64 @@ public sealed class McpOutputSizeMeasurer(
                 executablePath);
         }
 
-        using var process = Process.Start(new ProcessStartInfo
+        var transport = new StdioClientTransport(new StdioClientTransportOptions
         {
-            FileName = executablePath,
-            Arguments = $"server start --mode {mode}",
-            UseShellExecute = false,
-            RedirectStandardInput = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = false,
-            CreateNoWindow = true
-        }) ?? throw new InvalidOperationException($"Failed to start process for {executablePath}.");
+            Name = $"MCP output size measurer ({mode})",
+            Command = executablePath,
+            Arguments = ["server", "start", "--mode", mode],
+            StandardErrorLines = line => _logger?.Invoke($"[MCP Server] {line}")
+        });
+        var client = await WaitForResponseAsync(
+            token => McpClient.CreateAsync(
+                transport,
+                new McpClientOptions { InitializationTimeout = _requestTimeout },
+                cancellationToken: token),
+            _requestTimeout,
+            "MCP client connection",
+            cancellationToken);
 
-        try
+        await using (client)
         {
-            await Task.Delay(500, cancellationToken);
-
-            var initializeResponse = await SendRequestAsync(
-                process,
-                """
-                {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"mcp-output-size-measurer","version":"1.0"}}}
-                """,
-                "initialize",
-                cancellationToken);
-
-            await SendNotificationAsync(
-                process,
-                """{"jsonrpc":"2.0","method":"notifications/initialized"}""",
-                cancellationToken);
+            var serverMetadataPayload = JsonSerializer.Serialize(
+                new
+                {
+                    client.ServerInfo,
+                    client.ServerCapabilities,
+                    client.ServerInstructions
+                },
+                McpJsonUtilities.DefaultOptions);
 
             var discoveryResponses = new List<object>();
             var discoveryTexts = new List<string>();
             var tools = new List<string>();
             var discoveryTotalUtf8Bytes = 0;
             string? cursor = null;
-            var requestId = 2;
 
             do
             {
-                var request = cursor is null
-                    ? JsonSerializer.Serialize(new
-                    {
-                        jsonrpc = "2.0",
-                        id = requestId,
-                        method = "tools/list",
-                        @params = new { }
-                    })
-                    : JsonSerializer.Serialize(new
-                    {
-                        jsonrpc = "2.0",
-                        id = requestId,
-                        method = "tools/list",
-                        @params = new { cursor }
-                    });
-                var response = await SendRequestAsync(process, request, "tools/list", cancellationToken);
+                var result = await WaitForResponseAsync<ListToolsResult>(
+                    token => client.ListToolsAsync(
+                        new ListToolsRequestParams { Cursor = cursor },
+                        token).AsTask(),
+                    _requestTimeout,
+                    "tools/list",
+                    cancellationToken);
+                var response = SerializeProtocolPayload(result);
                 discoveryTexts.Add(response);
-                using var document = JsonDocument.Parse(response);
-                var result = document.RootElement.GetProperty("result");
-                foreach (var tool in result.GetProperty("tools").EnumerateArray())
+                foreach (var tool in result.Tools)
                 {
-                    tools.Add(tool.GetProperty("name").GetString()!);
+                    tools.Add(tool.Name);
                 }
 
-                cursor = result.TryGetProperty("nextCursor", out var nextCursor)
-                    ? nextCursor.GetString()
-                    : null;
+                cursor = result.NextCursor;
                 discoveryTotalUtf8Bytes += GetUtf8ByteCount(response);
                 discoveryResponses.Add(new
                 {
                     messageNumber = discoveryResponses.Count + 1,
                     utf8Bytes = GetUtf8ByteCount(response),
                     characterCount = response.Length,
-                    toolCount = result.GetProperty("tools").GetArrayLength()
+                    toolCount = result.Tools.Count
                 });
-                requestId++;
             }
             while (cursor is not null);
 
@@ -158,47 +146,39 @@ public sealed class McpOutputSizeMeasurer(
             Directory.CreateDirectory(learnDirectory);
 
             var learnResponses = new List<object>(tools.Count);
-            var learnResponseTextByTool = new Dictionary<string, string>(tools.Count, StringComparer.Ordinal);
+            var learnResponseByTool = new Dictionary<string, CallToolResult>(tools.Count, StringComparer.Ordinal);
             var learnTotalUtf8Bytes = 0;
-            var learnWireTotalUtf8Bytes = 0;
+            var learnResponsePayloadTotalUtf8Bytes = 0;
             var learnResponsesWithoutCommandJson = 0;
             foreach (var tool in tools)
             {
-                var request = JsonSerializer.Serialize(new
-                {
-                    jsonrpc = "2.0",
-                    id = requestId,
-                    method = "tools/call",
-                    @params = new
-                    {
-                        name = tool,
-                        arguments = new
+                var result = await WaitForResponseAsync<CallToolResult>(
+                    token => client.CallToolAsync(
+                        tool,
+                        new Dictionary<string, object?>
                         {
-                            intent = "Measure available commands",
-                            learn = true
-                        }
-                    }
-                });
-                var response = await SendRequestAsync(
-                    process,
-                    request,
+                            ["intent"] = "Measure available commands",
+                            ["learn"] = true
+                        },
+                        cancellationToken: token).AsTask(),
+                    _requestTimeout,
                     $"tools/call ({tool})",
                     cancellationToken);
-                using var document = JsonDocument.Parse(response);
-                if (!document.RootElement.TryGetProperty("result", out _))
+                if (result.Content.Count == 0)
                 {
-                    throw new InvalidOperationException($"The learn response for '{tool}' did not contain a result.");
+                    throw new InvalidOperationException($"The learn response for '{tool}' did not contain any content.");
                 }
 
-                var learnPayload = MeasureLearnPayload(response);
+                var response = SerializeProtocolPayload(result);
+                var learnPayload = MeasureLearnPayload(result);
                 var responseUtf8Bytes = GetUtf8ByteCount(response);
                 learnTotalUtf8Bytes += learnPayload.Utf8Bytes ?? 0;
-                learnWireTotalUtf8Bytes += responseUtf8Bytes;
+                learnResponsePayloadTotalUtf8Bytes += responseUtf8Bytes;
                 if (learnPayload.Utf8Bytes is null)
                 {
                     learnResponsesWithoutCommandJson++;
                 }
-                learnResponseTextByTool[tool] = response;
+                learnResponseByTool[tool] = result;
 
                 var learnResponseFile = Path.Combine(
                     learnDirectory,
@@ -212,10 +192,9 @@ public sealed class McpOutputSizeMeasurer(
                     characterCount = learnPayload.CharacterCount,
                     sizeBasis = learnPayload.SizeBasis,
                     decodedContentUtf8Bytes = learnPayload.DecodedContentUtf8Bytes,
-                    wireUtf8Bytes = responseUtf8Bytes,
+                    responsePayloadUtf8Bytes = responseUtf8Bytes,
                     learnResponseFile
                 });
-                requestId++;
             }
 
             // Verify that per-command learn requests also return details, mirroring the
@@ -225,41 +204,29 @@ public sealed class McpOutputSizeMeasurer(
             var commandLearnTotalUtf8Bytes = 0;
             foreach (var tool in tools)
             {
-                foreach (var command in GetInnerCommandNames(learnResponseTextByTool[tool]))
+                foreach (var command in GetInnerCommandNames(learnResponseByTool[tool]))
                 {
-                    var request = JsonSerializer.Serialize(new
-                    {
-                        jsonrpc = "2.0",
-                        id = requestId,
-                        method = "tools/call",
-                        @params = new
-                        {
-                            name = tool,
-                            arguments = new
+                    var result = await WaitForResponseAsync<CallToolResult>(
+                        token => client.CallToolAsync(
+                            tool,
+                            new Dictionary<string, object?>
                             {
-                                intent = "Measure command details",
-                                command,
-                                learn = true,
-                                parameters = new { }
-                            }
-                        }
-                    });
-                    var response = await SendRequestAsync(
-                        process,
-                        request,
+                                ["intent"] = "Measure command details",
+                                ["command"] = command,
+                                ["learn"] = true,
+                                ["parameters"] = new Dictionary<string, object?>()
+                            },
+                            cancellationToken: token).AsTask(),
+                        _requestTimeout,
                         $"tools/call ({tool}.{command})",
                         cancellationToken);
-                    using var document = JsonDocument.Parse(response);
-                    if (!document.RootElement.TryGetProperty("result", out var commandResult))
+                    if (result.Content.Count == 0)
                     {
-                        throw new InvalidOperationException($"The learn response for '{tool}.{command}' did not contain a result.");
-                    }
-                    if (!commandResult.TryGetProperty("content", out var commandContent) ||
-                        commandContent.GetArrayLength() == 0)
-                    {
-                        throw new InvalidOperationException($"The learn response for '{tool}.{command}' did not contain any content.");
+                        throw new InvalidOperationException(
+                            $"The learn response for '{tool}.{command}' did not contain any content.");
                     }
 
+                    var response = SerializeProtocolPayload(result);
                     commandLearnTotalUtf8Bytes += GetUtf8ByteCount(response);
                     commandLearnResponses.Add(new
                     {
@@ -268,7 +235,6 @@ public sealed class McpOutputSizeMeasurer(
                         utf8Bytes = GetUtf8ByteCount(response),
                         characterCount = response.Length
                     });
-                    requestId++;
                 }
             }
 
@@ -285,61 +251,44 @@ public sealed class McpOutputSizeMeasurer(
             {
                 mode,
                 toolCount = tools.Count,
-                initialGreetingResponse = MeasureMessage(initializeResponse),
+                initialServerMetadata = MeasureMessage(serverMetadataPayload),
                 discoveryTextFile = discoveryTextPath,
                 discoveryResponses,
                 discoveryTotalUtf8Bytes,
                 learnResponses,
                 learnTotalUtf8Bytes,
-                learnWireTotalUtf8Bytes,
+                learnResponsePayloadTotalUtf8Bytes,
                 learnResponsesWithoutCommandJson,
                 commandLearnCount = commandLearnResponses.Count,
                 commandLearnTotalUtf8Bytes,
                 commandLearnResponses,
-                totalResponseWireUtf8Bytes = GetUtf8ByteCount(initializeResponse) +
+                totalMeasuredPayloadUtf8Bytes = GetUtf8ByteCount(serverMetadataPayload) +
                     discoveryTotalUtf8Bytes +
-                    learnWireTotalUtf8Bytes +
+                    learnResponsePayloadTotalUtf8Bytes +
                     commandLearnTotalUtf8Bytes
             };
         }
-        finally
-        {
-            if (!process.HasExited)
-            {
-                process.Kill();
-            }
-        }
     }
 
-    private async Task<string> SendRequestAsync(
-        Process process,
-        string request,
-        string requestDescription,
-        CancellationToken cancellationToken)
-    {
-        _logger?.Invoke($"--> {request}");
-        await process.StandardInput.WriteLineAsync(request);
-        await process.StandardInput.FlushAsync(cancellationToken);
-
-        var response = await WaitForResponseAsync(
-            process.StandardOutput.ReadLineAsync(cancellationToken).AsTask(),
-            _requestTimeout,
-            requestDescription,
-            cancellationToken);
-        _logger?.Invoke($"<-- {response}");
-        return response;
-    }
-
-    internal static async Task<string> WaitForResponseAsync(
-        Task<string?> responseTask,
+    internal static async Task<T> WaitForResponseAsync<T>(
+        Func<CancellationToken, Task<T>> request,
         TimeSpan timeout,
         string requestDescription,
         CancellationToken cancellationToken)
     {
+        using var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCancellation.CancelAfter(timeout);
+
         try
         {
-            return await responseTask.WaitAsync(timeout, cancellationToken)
-                ?? throw new InvalidOperationException("The server closed its output stream before responding.");
+            return await request(timeoutCancellation.Token).WaitAsync(timeoutCancellation.Token);
+        }
+        catch (OperationCanceledException ex)
+            when (!cancellationToken.IsCancellationRequested && timeoutCancellation.IsCancellationRequested)
+        {
+            throw new TimeoutException(
+                $"The MCP server did not respond to '{requestDescription}' within {timeout.TotalSeconds:N0} seconds.",
+                ex);
         }
         catch (TimeoutException ex)
         {
@@ -349,11 +298,8 @@ public sealed class McpOutputSizeMeasurer(
         }
     }
 
-    private static async Task SendNotificationAsync(Process process, string notification, CancellationToken cancellationToken)
-    {
-        await process.StandardInput.WriteLineAsync(notification);
-        await process.StandardInput.FlushAsync(cancellationToken);
-    }
+    private static string SerializeProtocolPayload<T>(T payload)
+        => JsonSerializer.Serialize(payload, McpJsonUtilities.DefaultOptions);
 
     private static object MeasureMessage(string message) => new
     {
@@ -379,25 +325,18 @@ public sealed class McpOutputSizeMeasurer(
     /// Extracts the decoded command array from a tool's learn response. This is the same internal
     /// JSON payload used by the server when deciding whether to switch discovery strategies.
     /// </summary>
-    internal static string? GetInnerCommandsJson(string learnResponse)
+    internal static string? GetInnerCommandsJson(CallToolResult learnResponse)
     {
-        using var document = JsonDocument.Parse(learnResponse);
-        if (!document.RootElement.TryGetProperty("result", out var result) ||
-            !result.TryGetProperty("content", out var content))
+        foreach (var block in learnResponse.Content)
         {
-            return null;
-        }
-
-        foreach (var block in content.EnumerateArray())
-        {
-            if (!block.TryGetProperty("text", out var textElement))
+            if (block is not TextContentBlock textBlock)
             {
                 continue;
             }
 
-            var text = textElement.GetString();
-            var start = text?.IndexOf('[') ?? -1;
-            if (text is null || start < 0)
+            var text = textBlock.Text;
+            var start = text.IndexOf('[');
+            if (start < 0)
             {
                 continue;
             }
@@ -424,22 +363,14 @@ public sealed class McpOutputSizeMeasurer(
         return null;
     }
 
-    internal static string? GetDecodedContentText(string learnResponse)
+    internal static string? GetDecodedContentText(CallToolResult learnResponse)
     {
-        using var document = JsonDocument.Parse(learnResponse);
-        if (!document.RootElement.TryGetProperty("result", out var result) ||
-            !result.TryGetProperty("content", out var content))
-        {
-            return null;
-        }
-
         var textBlocks = new List<string>();
-        foreach (var block in content.EnumerateArray())
+        foreach (var block in learnResponse.Content)
         {
-            if (block.TryGetProperty("text", out var textElement) &&
-                textElement.GetString() is { } text)
+            if (block is TextContentBlock textBlock)
             {
-                textBlocks.Add(text);
+                textBlocks.Add(textBlock.Text);
             }
         }
 
@@ -452,7 +383,7 @@ public sealed class McpOutputSizeMeasurer(
         int? Utf8Bytes,
         int? CharacterCount,
         string SizeBasis,
-        int? DecodedContentUtf8Bytes) MeasureLearnPayload(string learnResponse)
+        int? DecodedContentUtf8Bytes) MeasureLearnPayload(CallToolResult learnResponse)
     {
         var innerCommandsJson = GetInnerCommandsJson(learnResponse);
         if (innerCommandsJson is not null)
@@ -477,7 +408,7 @@ public sealed class McpOutputSizeMeasurer(
     /// <summary>
     /// Parses the inner command names from a tool's decoded command array.
     /// </summary>
-    internal static List<string> GetInnerCommandNames(string learnResponse)
+    internal static List<string> GetInnerCommandNames(CallToolResult learnResponse)
     {
         var commands = new List<string>();
         var innerCommandsJson = GetInnerCommandsJson(learnResponse);

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using ModelContextProtocol.Protocol;
 using Xunit;
 
 namespace McpOutputSizeMeasurer.Tests;
@@ -10,12 +11,12 @@ public class McpOutputSizeMeasurerTests
     [Fact]
     public async Task WaitForResponseAsync_ReturnsResponse()
     {
-        const string response = """{"jsonrpc":"2.0","id":1,"result":{}}""";
+        const string response = "response";
 
         var result = await McpOutputSizeMeasurer.WaitForResponseAsync(
-            Task.FromResult<string?>(response),
+            _ => Task.FromResult(response),
             TimeSpan.FromSeconds(1),
-            "initialize",
+            "tools/list",
             TestContext.Current.CancellationToken);
 
         Assert.Equal(response, result);
@@ -24,42 +25,44 @@ public class McpOutputSizeMeasurerTests
     [Fact]
     public async Task WaitForResponseAsync_IdentifiesTimedOutRequest()
     {
-        var pendingResponse = new TaskCompletionSource<string?>(
+        var pendingResponse = new TaskCompletionSource<string>(
             TaskCreationOptions.RunContinuationsAsynchronously);
 
         var exception = await Assert.ThrowsAsync<TimeoutException>(() =>
             McpOutputSizeMeasurer.WaitForResponseAsync(
-                pendingResponse.Task,
+                _ => pendingResponse.Task,
                 TimeSpan.FromMilliseconds(1),
-                "initialize",
+                "tools/list",
                 TestContext.Current.CancellationToken));
 
-        Assert.Contains("'initialize'", exception.Message);
+        Assert.Contains("'tools/list'", exception.Message);
         Assert.Contains("0 seconds", exception.Message);
     }
 
     [Fact]
     public async Task WaitForResponseAsync_PreservesCallerCancellation()
     {
-        var pendingResponse = new TaskCompletionSource<string?>(
+        var pendingResponse = new TaskCompletionSource<string>(
             TaskCreationOptions.RunContinuationsAsynchronously);
         using var cancellation = new CancellationTokenSource();
         await cancellation.CancelAsync();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
             McpOutputSizeMeasurer.WaitForResponseAsync(
-                pendingResponse.Task,
+                _ => pendingResponse.Task,
                 TimeSpan.FromSeconds(1),
-                "initialize",
+                "tools/list",
                 cancellation.Token));
     }
 
     [Fact]
     public void GetInnerCommandsJson_ReturnsDecodedCommandArray()
     {
-        const string learnResponse = """
-            {"jsonrpc":"2.0","id":5,"result":{"content":[{"type":"text","text":"Preamble text.\n[{\"command\":\"group_subcommand\",\"description\":\"Uses café.\"}]"}]}}
-            """;
+        var learnResponse = CreateLearnResponse(
+            """
+            Preamble text.
+            [{"command":"group_subcommand","description":"Uses café."}]
+            """);
 
         var commandsJson = McpOutputSizeMeasurer.GetInnerCommandsJson(learnResponse);
 
@@ -71,21 +74,27 @@ public class McpOutputSizeMeasurerTests
     [Fact]
     public void GetDecodedContentText_ReturnsUnescapedText()
     {
-        const string learnResponse = """
-            {"jsonrpc":"2.0","id":5,"result":{"content":[{"type":"text","text":"Failed to initialize \"azd\".\nInstall it first."}]}}
-            """;
+        var learnResponse = CreateLearnResponse(
+            """
+            Failed to initialize "azd".
+            Install it first.
+            """);
 
         var contentText = McpOutputSizeMeasurer.GetDecodedContentText(learnResponse);
 
-        Assert.Equal("Failed to initialize \"azd\".\nInstall it first.", contentText);
+        Assert.Equal(
+            $"Failed to initialize \"azd\".{Environment.NewLine}Install it first.",
+            contentText);
     }
 
     [Fact]
     public void MeasureLearnPayload_MeasuresCommandJson()
     {
-        const string learnResponse = """
-            {"jsonrpc":"2.0","id":5,"result":{"content":[{"type":"text","text":"Preamble.\n[{\"command\":\"group_subcommand\",\"description\":\"Uses café.\"}]"}]}}
-            """;
+        var learnResponse = CreateLearnResponse(
+            """
+            Preamble.
+            [{"command":"group_subcommand","description":"Uses café."}]
+            """);
 
         var measurement = McpOutputSizeMeasurer.MeasureLearnPayload(learnResponse);
 
@@ -98,9 +107,7 @@ public class McpOutputSizeMeasurerTests
     [Fact]
     public void MeasureLearnPayload_SeparatesContentWithoutCommandJson()
     {
-        const string learnResponse = """
-            {"jsonrpc":"2.0","id":5,"result":{"content":[{"type":"text","text":"Request rejected due to unknown arguments: intent"}]}}
-            """;
+        var learnResponse = CreateLearnResponse("Request rejected due to unknown arguments: intent");
 
         var measurement = McpOutputSizeMeasurer.MeasureLearnPayload(learnResponse);
 
@@ -113,9 +120,11 @@ public class McpOutputSizeMeasurerTests
     [Fact]
     public void GetInnerCommandNames_ParsesCommandArrayFromLearnResponse()
     {
-        const string learnResponse = """
-            {"jsonrpc":"2.0","id":5,"result":{"content":[{"type":"text","text":"Preamble text describing the tool.\n[{\"command\":\"group_subcommand-one\",\"description\":\"first\"},{\"command\":\"group_subcommand-two\",\"description\":\"second\"}]"}]}}
-            """;
+        var learnResponse = CreateLearnResponse(
+            """
+            Preamble text describing the tool.
+            [{"command":"group_subcommand-one","description":"first"},{"command":"group_subcommand-two","description":"second"}]
+            """);
 
         var commands = McpOutputSizeMeasurer.GetInnerCommandNames(learnResponse);
 
@@ -123,9 +132,9 @@ public class McpOutputSizeMeasurerTests
     }
 
     [Fact]
-    public void GetInnerCommandNames_ReturnsEmpty_WhenResponseHasNoResult()
+    public void GetInnerCommandNames_ReturnsEmpty_WhenResponseHasNoContent()
     {
-        const string learnResponse = """{"jsonrpc":"2.0","id":5,"error":{"code":-32601,"message":"not found"}}""";
+        var learnResponse = new CallToolResult { Content = [] };
 
         var commands = McpOutputSizeMeasurer.GetInnerCommandNames(learnResponse);
 
@@ -135,12 +144,16 @@ public class McpOutputSizeMeasurerTests
     [Fact]
     public void GetInnerCommandNames_ReturnsEmpty_WhenTextHasNoJsonArray()
     {
-        const string learnResponse = """
-            {"jsonrpc":"2.0","id":5,"result":{"content":[{"type":"text","text":"No inner commands here."}]}}
-            """;
+        var learnResponse = CreateLearnResponse("No inner commands here.");
 
         var commands = McpOutputSizeMeasurer.GetInnerCommandNames(learnResponse);
 
         Assert.Empty(commands);
     }
+
+    private static CallToolResult CreateLearnResponse(params string[] text)
+        => new()
+        {
+            Content = [.. text.Select(static value => new TextContentBlock { Text = value })]
+        };
 }

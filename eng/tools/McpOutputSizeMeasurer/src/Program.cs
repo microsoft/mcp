@@ -10,7 +10,7 @@ namespace McpOutputSizeMeasurer;
 /// <summary>
 /// Standalone console application that measures the server's exposed MCP tool surfaces.
 /// Starts the azmcp executable over stdio in both
-/// consolidated and namespace modes and measures the initialize greeting, tools/list
+/// consolidated and namespace modes and measures negotiated server metadata, tools/list
 /// discovery, and decoded learn-mode command JSON (including inner commands) for every tool,
 /// writing a JSON report that Measure-McpOutputSizes.ps1 summarizes.
 /// </summary>
@@ -119,7 +119,7 @@ internal static class Program
         Console.WriteLine("""
             MCP Output Size Measurer
 
-            Measures the server's exposed MCP tool surfaces: the initialize greeting,
+            Measures the server's exposed MCP tool surfaces: negotiated server metadata,
             tools/list discovery, and decoded learn-mode command JSON (including inner
             commands) for every tool, in one or more server modes.
 
@@ -133,7 +133,7 @@ internal static class Program
                                    Defaults to TestResults/mcp-output-size.json.
               --mode <name>        Server mode to measure (repeatable). Defaults to
                                    "consolidated" and "namespace".
-              --verbose            Log every JSON-RPC request/response to stderr.
+              --verbose            Log MCP server stderr output.
               --help, -h           Show this help.
             """);
     }

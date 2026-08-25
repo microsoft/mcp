@@ -10,7 +10,7 @@
 
     1. Builds the Azure.Mcp.Server project and the standalone McpOutputSizeMeasurer tool.
     2. Runs McpOutputSizeMeasurer, which starts the MCP server over stdio in both
-       consolidated and namespace modes and measures the initialize greeting,
+       consolidated and namespace modes and measures the negotiated server metadata,
        tools/list discovery, and decoded learn-mode command JSON (including inner
        commands) for every tool.
     3. Summarizes the report to produce console, JSON, and Markdown summaries,
@@ -140,14 +140,14 @@ function Get-ModeSummary($mode) {
     return [ordered]@{
         mode = $mode.mode
         toolCount = $mode.toolCount
-        greetingUtf8Bytes = $mode.initialGreetingResponse.utf8Bytes
+        serverMetadataUtf8Bytes = $mode.initialServerMetadata.utf8Bytes
         discoveryMessageCount = $discoveryCount
         discoveryUtf8Bytes = $mode.discoveryTotalUtf8Bytes
         learnMessageCount = $learnCount
         learnResponsesWithoutCommandJson = $mode.learnResponsesWithoutCommandJson
         learnUtf8Bytes = $mode.learnTotalUtf8Bytes
         averageLearnUtf8Bytes = $averageLearnBytes
-        totalResponseWireUtf8Bytes = $mode.totalResponseWireUtf8Bytes
+        totalMeasuredPayloadUtf8Bytes = $mode.totalMeasuredPayloadUtf8Bytes
     }
 }
 function Save-LearnResponseText($entries) {
@@ -158,7 +158,7 @@ function Save-LearnResponseText($entries) {
 
         $learnJson = Get-Content -LiteralPath $entry.learnResponseFile -Raw | ConvertFrom-Json
         $textParts = @(
-            $learnJson.result.content |
+            $learnJson.content |
                 Where-Object { $_.type -eq 'text' -and $null -ne $_.text } |
                 ForEach-Object { $_.text }
         )
@@ -292,14 +292,14 @@ function Invoke-McpOutputSizeSummary {
 
     $comparisonMetrics = @(
         'toolCount',
-        'greetingUtf8Bytes',
+        'serverMetadataUtf8Bytes',
         'discoveryMessageCount',
         'discoveryUtf8Bytes',
         'learnMessageCount',
         'learnResponsesWithoutCommandJson',
         'learnUtf8Bytes',
         'averageLearnUtf8Bytes',
-        'totalResponseWireUtf8Bytes'
+        'totalMeasuredPayloadUtf8Bytes'
     )
 
     $comparison = [ordered]@{}
@@ -342,6 +342,7 @@ function Invoke-McpOutputSizeSummary {
         sourceReport = (Resolve-Path -LiteralPath $InputPath).Path
         generatedAtUtc = [DateTimeOffset]::UtcNow
         transport = $report.transport
+        protocolClient = $report.protocolClient
         learnSizeBasis = $report.learnSizeBasis
         learnResponseThresholdUtf8Bytes = $LearnResponseThresholdUtf8Bytes
         modes = @($consolidated, $namespace)
@@ -356,14 +357,14 @@ function Invoke-McpOutputSizeSummary {
         [pscustomobject]@{
             mode = $_['mode']
             toolCount = $_['toolCount']
-            greetingUtf8Bytes = $_['greetingUtf8Bytes']
+            serverMetadataUtf8Bytes = $_['serverMetadataUtf8Bytes']
             discoveryUtf8Bytes = $_['discoveryUtf8Bytes']
             learnUtf8Bytes = $_['learnUtf8Bytes']
-            totalResponseWireUtf8Bytes = $_['totalResponseWireUtf8Bytes']
+            totalMeasuredPayloadUtf8Bytes = $_['totalMeasuredPayloadUtf8Bytes']
         }
     }
     $consoleRows |
-        Format-Table mode, toolCount, greetingUtf8Bytes, discoveryUtf8Bytes, learnUtf8Bytes, totalResponseWireUtf8Bytes |
+        Format-Table mode, toolCount, serverMetadataUtf8Bytes, discoveryUtf8Bytes, learnUtf8Bytes, totalMeasuredPayloadUtf8Bytes |
         Out-Host
 
     Write-Host "Consolidated relative to namespace:"
@@ -422,19 +423,20 @@ function Invoke-McpOutputSizeSummary {
     $markdownLines.Add('')
     $markdownLines.Add('- **Source report:** `' + $summary.sourceReport + '`')
     $markdownLines.Add("- **Transport:** $($summary.transport)")
+    $markdownLines.Add("- **Protocol client:** $($summary.protocolClient)")
     $markdownLines.Add("- **Learn size basis:** $($summary.learnSizeBasis)")
     $markdownLines.Add("- **Generated:** $($summary.generatedAtUtc)")
     $markdownLines.Add("- **Large learn response threshold:** $($summary.learnResponseThresholdUtf8Bytes) UTF-8 bytes")
     $markdownLines.Add('')
     $markdownLines.Add('## Mode Summary')
     $markdownLines.Add('')
-    $markdownLines.Add('| Mode | Tools | Learn command arrays | Learn responses without command JSON | Greeting wire (bytes) | Discovery wire (bytes) | Learn decoded (bytes) | Total response wire (bytes) |')
+    $markdownLines.Add('| Mode | Tools | Learn command arrays | Learn responses without command JSON | Server metadata (bytes) | Discovery payloads (bytes) | Learn decoded (bytes) | Total measured payloads (bytes) |')
     $markdownLines.Add('| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |')
     foreach ($mode in $summary.modes) {
         $markdownLines.Add(
             "| $($mode.mode) | $($mode.toolCount) | $($mode.learnMessageCount) | " +
-            "$($mode.learnResponsesWithoutCommandJson) | $($mode.greetingUtf8Bytes) | " +
-            "$($mode.discoveryUtf8Bytes) | $($mode.learnUtf8Bytes) | $($mode.totalResponseWireUtf8Bytes) |")
+            "$($mode.learnResponsesWithoutCommandJson) | $($mode.serverMetadataUtf8Bytes) | " +
+            "$($mode.discoveryUtf8Bytes) | $($mode.learnUtf8Bytes) | $($mode.totalMeasuredPayloadUtf8Bytes) |")
     }
 
     $markdownLines.Add('')
