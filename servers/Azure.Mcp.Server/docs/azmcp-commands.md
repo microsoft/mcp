@@ -2769,7 +2769,7 @@ azmcp iothub hub get --subscription <subscription> \
                      --hub-name <iot-hub-name>
 
 # Show a device identity from an IoT Hub device registry
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp iothub device show --subscription <subscription> \
                          --resource-group <resource-group> \
                          --hub-name <iot-hub-name> \

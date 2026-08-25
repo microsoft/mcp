@@ -21,7 +21,7 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
         Device names/IDs are case-sensitive and must match exactly.
         """,
     Destructive = false,
-    Idempotent = true,
+    Idempotent = false,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
