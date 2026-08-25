@@ -76,7 +76,7 @@ public class CosmosServiceTests : IAsyncDisposable
     [Fact]
     public async Task ListDatabases_CredentialAuthFails_DoesNotFallBackToKeyAuth()
     {
-        // Arrange: HTTP handler returns 401 so credential-based CosmosClient validation fails
+        // Arrange: HTTP handler returns 401 so the credential-based database operation fails
         var handler = new MockHttpHandler(HttpStatusCode.Unauthorized);
         _azureService.GetClient().Returns(new HttpClient(handler));
 
@@ -98,7 +98,7 @@ public class CosmosServiceTests : IAsyncDisposable
     [Fact]
     public async Task ListDatabases_CredentialAuthFailsWith403_DoesNotFallBackToKeyAuth()
     {
-        // Arrange: HTTP handler returns 403 so credential-based CosmosClient validation fails
+        // Arrange: HTTP handler returns 403 so the credential-based database operation fails
         var handler = new MockHttpHandler(HttpStatusCode.Forbidden);
         _azureService.GetClient().Returns(new HttpClient(handler));
 
@@ -128,7 +128,7 @@ public class CosmosServiceTests : IAsyncDisposable
         _cacheService.GetAsync<List<string>>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
             .Returns(default(List<string>));
 
-        // Act: client creation fails, but cache lookup has already happened
+        // Act: the database operation fails, but the client cache lookup has already happened
         await Assert.ThrowsAnyAsync<Exception>(() =>
             _service.ListDatabases("myaccount", "sub123", AuthMethod.Credential, cancellationToken: TestContext.Current.CancellationToken));
 
@@ -156,7 +156,7 @@ public class CosmosServiceTests : IAsyncDisposable
         _cacheService.GetAsync<List<string>>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
             .Returns(default(List<string>));
 
-        // Act: client creation fails after the cache miss, but cache lookup has already happened
+        // Act: key authentication setup fails after the cache miss, but cache lookup has already happened
         await Assert.ThrowsAnyAsync<Exception>(() =>
             _service.ListDatabases("myaccount", "sub123", AuthMethod.Key, cancellationToken: TestContext.Current.CancellationToken));
 
