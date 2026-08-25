@@ -74,6 +74,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | search_index_get | List all indexes in the Cognitive Search service \<service-name> | none |
 | search_index_get | Show me the indexes in the Cognitive Search service \<service-name> | none |
 | search_index_query | Search for instances of \<search_term> in the index \<index-name> in Cognitive Search service \<service-name> | none |
+| search_index_query | Search the index \<index-name> in Cognitive Search service \<service-name> for \<search_term> using the simple query syntax | none |
+| search_index_query | Run a semantic query for \<search_term> against the index \<index-name> in Cognitive Search service \<service-name> | none |
+| search_index_query | Run a semantic query for \<search_term> against index \<index-name> in Cognitive Search service \<service-name> using semantic configuration \<semantic-configuration> | none |
 | search_service_list | List all Cognitive Search services in my subscription | none |
 | search_service_list | Show me the Cognitive Search services in my subscription | none |
 | search_service_list | Show me my Cognitive Search services | none |
@@ -900,8 +903,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 ## Azure Resilience Management
 
-| Tool Name | Test Prompt |
-|:----------|:----------|
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
 | resilience_drill_get | List all resilience drills in service group <service_group> | none |
 | resilience_drill_get | Get the details of resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_resource_get | List all drill resources for resilience drill <drill_name> in service group <service_group> | none |
@@ -910,6 +913,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_drill_resource_get | Get the complete details of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_resource_get | Get drill target <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_resource_get | Retrieve the ARM properties of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_run_get | List all runs of drill <drill_name> in service group <service_group> | none |
+| resilience_drill_run_get | Get drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
+| resilience_drill_run_resource_get | List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
+| resilience_drill_run_resource_get | Get resource <resource_name> from drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resilience_goal_assignment_get | List all resilience goal assignments in service group <service_group> | none |
 | resilience_goal_assignment_get | Get the details of goal assignment <goal_assignment_name> in service group <service_group> | none |
 | resilience_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> | none |
