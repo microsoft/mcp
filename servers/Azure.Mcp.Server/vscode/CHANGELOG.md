@@ -15,7 +15,7 @@
 - Added the `azmcp resilience drill run get` command to list runs of a resilience drill or get a specific drill run. [[#3318](https://github.com/microsoft/mcp/pull/3318)]
 - Added the `azmcp resilience drill run resource get` command to list resources of a resilience drill run or get a specific drill run resource. [[#3318](https://github.com/microsoft/mcp/pull/3318)]
 - Added the `azmcp resilience recoveryplan checkreadiness` command to discover and assess whether a recovery plan and its protected resources are ready for recovery operations. The command waits for the readiness job and returns its status, errors, failed tasks, and failed resources. [[#3268](https://github.com/microsoft/mcp/pull/3268)]
-- The `azmcp search index query` command now uses the full Lucene query syntax by default and supports a new optional '--query-type' option to select between 'simple', 'full' and 'semantic' queries. [[#3251](https://github.com/microsoft/mcp/pull/3251)]
+- The `azmcp search index query` command now uses the full Lucene query syntax by default and supports a new optional `--query-type` option to select between `simple`, `full`, and `semantic` queries. [[#3251](https://github.com/microsoft/mcp/pull/3251)]
 
 ### Changed
 
