@@ -6,6 +6,7 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Topic;
 using Azure.Mcp.Tools.EventGrid.Services;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -20,6 +21,12 @@ public class TopicListCommandTests : SubscriptionCommandUnitTestsBase<TopicListC
     public void Constructor_Description_DoesNotMentionAccessKeys()
     {
         Assert.DoesNotContain("access key", CommandDefinition.Description, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Command_OperationPlane_IsControl()
+    {
+        Assert.Equal(ToolOperationPlane.Control, Command.Metadata.OperationPlane);
     }
 
     [Fact]

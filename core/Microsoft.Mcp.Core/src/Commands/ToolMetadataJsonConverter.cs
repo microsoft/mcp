@@ -28,7 +28,20 @@ public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
                 ?? new MetadataDefinition { Value = defaultValue, Description = string.Empty };
             return meta;
         }
+
+        OperationPlaneMetadataDefinition GetOperationPlaneMetadata()
+        {
+            if (!root.TryGetProperty("operationPlane", out var property))
+            {
+                return new OperationPlaneMetadataDefinition { Value = ToolOperationPlane.Unspecified };
+            }
+
+            return JsonSerializer.Deserialize(property.GetRawText(), CoreJsonContext.Default.OperationPlaneMetadataDefinition)
+                ?? new OperationPlaneMetadataDefinition { Value = ToolOperationPlane.Unspecified };
+        }
+
         return new ToolMetadata(
+            GetOperationPlaneMetadata(),
             GetMetadata("destructive", true),
             GetMetadata("idempotent", false),
             GetMetadata("openWorld", true),
@@ -48,6 +61,8 @@ public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
             JsonSerializer.Serialize(writer, def, CoreJsonContext.Default.MetadataDefinition);
         }
 
+        writer.WritePropertyName("operationPlane");
+        JsonSerializer.Serialize(writer, value.OperationPlaneProperty, CoreJsonContext.Default.OperationPlaneMetadataDefinition);
         WriteMetadata("destructive", value.DestructiveProperty);
         WriteMetadata("idempotent", value.IdempotentProperty);
         WriteMetadata("openWorld", value.OpenWorldProperty);

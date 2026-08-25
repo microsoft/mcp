@@ -14,6 +14,26 @@ namespace Microsoft.Mcp.Core.Commands;
 public sealed class ToolMetadata
 {
     /// <summary>
+    /// Gets or sets the Azure API plane used by the tool.
+    /// </summary>
+    [JsonIgnore]
+    public ToolOperationPlane OperationPlane { get; init; } = ToolOperationPlane.Unspecified;
+
+    [JsonPropertyName("operationPlane")]
+    public OperationPlaneMetadataDefinition OperationPlaneProperty => field ??= new OperationPlaneMetadataDefinition
+    {
+        Value = OperationPlane,
+        Description = OperationPlane switch
+        {
+            ToolOperationPlane.Data => "This tool operates against an Azure service data-plane API.",
+            ToolOperationPlane.Control => "This tool operates against an Azure management or control-plane API.",
+            ToolOperationPlane.Both => "This tool operates against both Azure control-plane and data-plane APIs.",
+            ToolOperationPlane.NotApplicable => "This tool does not perform an Azure service-plane operation.",
+            _ => "This tool's Azure operation plane has not been classified."
+        }
+    };
+
+    /// <summary>
     /// Gets or sets whether the tool may perform destructive updates to its environment.
     /// </summary>
     /// <remarks>
@@ -184,6 +204,7 @@ public sealed class ToolMetadata
 
     [JsonConstructor]
     public ToolMetadata(
+        OperationPlaneMetadataDefinition? operationPlane,
         MetadataDefinition destructive,
         MetadataDefinition idempotent,
         MetadataDefinition openWorld,
@@ -191,6 +212,7 @@ public sealed class ToolMetadata
         MetadataDefinition secret,
         MetadataDefinition localRequired)
     {
+        OperationPlane = operationPlane?.Value ?? ToolOperationPlane.Unspecified;
         Destructive = destructive?.Value ?? true;
         Idempotent = idempotent?.Value ?? false;
         OpenWorld = openWorld?.Value ?? true;

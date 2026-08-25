@@ -10,6 +10,7 @@ namespace Azure.Mcp.Core.Areas.Server;
 [JsonSerializable(typeof(ExceptionResult))]
 [JsonSerializable(typeof(ToolMetadata))]
 [JsonSerializable(typeof(MetadataDefinition))]
+[JsonSerializable(typeof(OperationPlaneMetadataDefinition))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull

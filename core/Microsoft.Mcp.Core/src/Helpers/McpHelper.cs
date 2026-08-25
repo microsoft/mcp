@@ -18,6 +18,7 @@ public static class McpHelper
     public const string SecretHintMetaKey = "SecretHint";
     public const string LocalRequiredHintMetaKey = "LocalRequiredHint";
     public const string ToolIdMetaKey = "MicrosoftMcpToolId";
+    public const string OperationPlaneMetaKey = "azure.com/operation-plane";
 
     // In the MCP 2026-07-28 stateless protocol there is no initialize handshake, so
     // request.Server.ClientInfo is null for every request. Clients that support the new
@@ -36,6 +37,23 @@ public static class McpHelper
             && hintNode is JsonValue hintValue
             && hintValue.TryGetValue<bool>(out var hint)
             && hint;
+
+    public static void AddOperationPlaneMetadata(JsonObject metadata, ToolOperationPlane operationPlane)
+        => metadata[OperationPlaneMetaKey] = operationPlane.ToJsonValue();
+
+    public static ToolOperationPlane GetOperationPlane(Tool tool)
+    {
+        if (tool.Meta != null &&
+            tool.Meta.TryGetPropertyValue(OperationPlaneMetaKey, out var operationPlaneNode) &&
+            operationPlaneNode is JsonValue operationPlaneValue &&
+            operationPlaneValue.TryGetValue<string>(out var operationPlane) &&
+            ToolOperationPlaneExtensions.TryParseJsonValue(operationPlane, out var parsedOperationPlane))
+        {
+            return parsedOperationPlane;
+        }
+
+        return ToolOperationPlane.Unspecified;
+    }
 
     /// <summary>
     /// Injects the tool ID into the metadata of a CallToolResult for better traceability in MCP interactions.
@@ -98,6 +116,7 @@ public static class McpHelper
         ["readonly"] = tool.Annotations?.ReadOnlyHint ?? false,
         ["secret"] = HasHint(tool, SecretHintMetaKey),
         ["localrequired"] = HasHint(tool, LocalRequiredHintMetaKey),
+        ["operationplane"] = GetOperationPlane(tool).ToJsonValue(),
     }.ToJsonString();
 
     /// <summary>
@@ -113,5 +132,6 @@ public static class McpHelper
         ["readonly"] = command.Metadata.ReadOnly,
         ["secret"] = command.Metadata.Secret,
         ["localrequired"] = command.Metadata.LocalRequired,
+        ["operationplane"] = command.Metadata.OperationPlane.ToJsonValue(),
     }.ToJsonString();
 }

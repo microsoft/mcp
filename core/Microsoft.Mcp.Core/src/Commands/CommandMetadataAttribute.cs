@@ -31,6 +31,9 @@ public sealed class CommandMetadataAttribute : Attribute
     /// </summary>
     public required string Title { get; init; }
 
+    /// <summary>The Azure API plane used by the tool. Default: unspecified.</summary>
+    public ToolOperationPlane OperationPlane { get; init; } = ToolOperationPlane.Unspecified;
+
     /// <summary>Whether the tool may perform destructive updates. Default: true.</summary>
     public bool Destructive { get; init; } = true;
 
@@ -56,6 +59,7 @@ public sealed class CommandMetadataAttribute : Attribute
 
     internal ToolMetadata ToToolMetadata() => new()
     {
+        OperationPlane = OperationPlane,
         Destructive = Destructive,
         Idempotent = Idempotent,
         OpenWorld = OpenWorld,

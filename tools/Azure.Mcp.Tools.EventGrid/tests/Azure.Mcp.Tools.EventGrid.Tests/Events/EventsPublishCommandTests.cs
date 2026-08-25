@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Events;
 using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Mcp.Tools.EventGrid.Services;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -30,6 +31,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
     public void Command_Metadata_IsCorrect()
     {
         var metadata = Command.Metadata;
+        Assert.Equal(ToolOperationPlane.Both, metadata.OperationPlane);
         Assert.False(metadata.Destructive);
         Assert.False(metadata.Idempotent);
         Assert.False(metadata.OpenWorld);
