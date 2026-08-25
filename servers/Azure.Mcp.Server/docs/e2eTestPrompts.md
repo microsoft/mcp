@@ -163,7 +163,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| applicationinsights_recommendation_list | Use applicationinsights_recommendation_list to list code optimization recommendations across my Application Insights components | none |
+| applicationinsights_recommendation_list | List code optimization recommendations across my Application Insights components | none |
 | applicationinsights_recommendation_list | Show me code optimization recommendations for all Application Insights resources in my subscription | none |
 | applicationinsights_recommendation_list | List profiler recommendations for Application Insights in resource group <resource_group_name> | none |
 | applicationinsights_recommendation_list | List Application Insights code optimization recommendations for improving application performance | none |
@@ -176,10 +176,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_backup_status | What is the backup status of <resource_id> in location <location> in my subscription? | none |
 | azurebackup_disasterrecovery_enable-crr | Enable cross-region restore on vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> | none |
-| azurebackup_governance_find-unprotected | Use azurebackup_governance_find-unprotected to find unprotected resources of type <resource_type> in my subscription | none |
+| azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription | none |
 | azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> | none |
 | azurebackup_governance_find-unprotected | Find unprotected SQL databases and file shares discovered by backup vaults in my subscription | none |
-| azurebackup_governance_find-unprotected | Use azurebackup_governance_find-unprotected to find resources and sub-resources in resource group <resource_group> not protected by Azure Backup | none |
+| azurebackup_governance_find-unprotected | Find all resources and sub-resources in resource group <resource_group> that are not protected by Azure Backup | none |
 | azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> | clarification-required |
 | azurebackup_governance_immutability | Set immutability to Enabled on vault <vault_name> in resource group <resource_group> | none |
 | azurebackup_governance_soft-delete | Configure soft delete on Azure Backup vault <vault_name> in resource group <resource_group> | clarification-required |
@@ -215,6 +215,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_vault_create | Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp' | none |
 | azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> | none |
 | azurebackup_vault_get | Show me information about Azure Backup vault <vault_name> in resource group <resource_group> | none |
+| azurebackup_vault_get | Show the full security posture of vault <vault_name> in resource group <resource_group> including soft delete, immutability, encryption, and MUA | none |
+| azurebackup_vault_get | Get vault <vault_name> in resource group <resource_group> and include all extended posture fields | none |
 | azurebackup_vault_update | Update Azure Backup vault <vault_name> in resource group <resource_group> to enable soft delete | investigation-required |
 | azurebackup_vault_update | Change the identity type of Azure Backup vault <vault_name> in resource group <resource_group> to SystemAssigned | none |
 
@@ -325,7 +327,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vmss_get | Show me instance <instance-id> of VMSS <vmss-name> in resource group <resource-group-name> | none |
 | compute_vmss_get | What is the status of instance <instance-id> in scale set <vmss-name>? | none |
 | compute_vmss_update | Update the capacity of scale set <vmss-name> to 10 | none |
-| compute_vmss_update | Use compute_vmss_update to enable automatic OS upgrades on VMSS <vmss-name> | none |
+| compute_vmss_update | Enable automatic OS upgrades on VMSS <vmss-name> | none |
 | compute_vmss_update | Change upgrade policy to Rolling for <vmss-name> | none |
 | compute_vmss_update | Add tags to scale set <vmss-name> in resource group <resource-group-name> | clarification-required |
 | compute_vmss_delete | Delete scale set <vmss-name> in resource group <resource-group-name> | none |
@@ -404,7 +406,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | cosmos_database_container_item_get | Get the document with id <document_id> from container <container_name> in database <database_name> of the cosmosdb account <account_name> | none |
 | cosmos_database_container_item_get | Find the document <document_id> in container <container_name> from database <database_name> of the cosmosdb account <account_name> using partition key <partition_key> | none |
 | cosmos_database_container_item_list-recent | Show me the 15 most recent documents in container <container_name> of database <database_name> in cosmosdb account <account_name> | none |
-| cosmos_database_container_item_list-recent | Use cosmos_database_container_item_list-recent to get the latest documents from <container_name> in <database_name> for cosmosdb account <account_name> | none |
+| cosmos_database_container_item_list-recent | Get the latest documents from <container_name> in <database_name> for cosmosdb account <account_name> | none |
 | cosmos_database_container_item_text-search | Search documents in container <container_name> from database <database_name> of the cosmosdb account <account_name> where <search_property> contains "<search_phrase>" | none |
 | cosmos_database_container_item_text-search | Run a full-text search for the word "<search_phrase>" against property <search_property> in container <container_name> of database <database_name> for cosmosdb account <account_name> | none |
 | cosmos_database_container_item_vector-search | Find documents similar to "<text_to_search>" in container <container_name> of database <database_name> in cosmosdb account <account_name> using vector property <vector_property> with Azure OpenAI endpoint <endpoint> and deployment <deployment> | context-required |
@@ -535,9 +537,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_get | Show me the file shares in resource group <resource_group_name> | none |
 | fileshares_fileshare_get | Get details of file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_get | Show me the file share <file_share_name> in resource group <resource_group_name> | none |
-| fileshares_fileshare_get | Use fileshares_fileshare_get to get file share details in resource group <resource_group_name> | none |
-| fileshares_limits | Use fileshares_limits to get file share limits for subscription <subscription> in location <location> | none |
-| fileshares_limits | Use fileshares_limits to get Azure Files share service limits in my subscription for location <location> | none |
+| fileshares_fileshare_get | What file shares exist in resource group <resource_group_name>? | none |
+| fileshares_limits | Get the file share limits for subscription <subscription> in location <location> | none |
+| fileshares_limits | Get the Azure Files share service limits in my subscription for location <location> | none |
 | fileshares_limits | Show me the file share service limits in location <location> | none |
 | fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in <location> in subscription <subscription> | none |
 | fileshares_fileshare_check-name-availability | Is the file share name <file_share_name> available in <location>? | none |
@@ -566,9 +568,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_update | Update file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_update | Update the provisioned storage for file share <file_share_name> to 200 GB | none |
 | fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings | clarification-required |
-| fileshares_usage | Use fileshares_usage to get Azure Files usage data for file share <file_share_name> in resource group <resource_group_name> | none |
+| fileshares_usage | Get Azure Files usage data for file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_usage | Show me the usage statistics for file share <file_share_name> | none |
-| fileshares_usage | Use fileshares_usage to get the current Azure Files usage for file share <file_share_name> | none |
+| fileshares_usage | Get the current Azure Files usage for file share <file_share_name> | none |
 
 ## Azure Function App
 
@@ -667,7 +669,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | keyvault_certificate_get | Show certificate names in the key vault <key_vault_account_name> | none |
 | keyvault_key_create | Create a new key called <key_name> with the RSA type in the key vault <key_vault_account_name> | none |
 | keyvault_key_create | Generate a key <key_name> with type <key_type> in vault <key_vault_account_name> | none |
-| keyvault_key_create | Use keyvault_key_create to create an oct key in the vault <key_vault_account_name> | none |
+| keyvault_key_create | Create an oct key in the vault <key_vault_account_name> | none |
 | keyvault_key_create | Create an RSA key in the vault <key_vault_account_name> with name <key_name> | none |
 | keyvault_key_create | Create an EC key with name <key_name> in the vault <key_vault_account_name> | none |
 | keyvault_key_get | Show me the key <key_name> in the key vault <key_vault_account_name> | none |
@@ -832,7 +834,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_instrumentation_get-learning-resource | What learning resources are available for Azure Monitor instrumentation onboarding? | none |
 | monitor_instrumentation_orchestrator-next | After completing the previous Azure Monitor instrumentation step, get the next action for session <session_id> with completion note <completion_note> | none |
 | monitor_instrumentation_orchestrator-next | Get the next Azure Monitor instrumentation onboarding action for session <session_id> after I completed <completion_note> | none |
-| monitor_instrumentation_orchestrator-next | Use monitor_instrumentation_orchestrator-next to return the next Azure Monitor instrumentation step for session <session_id> with note <completion_note> | none |
+| monitor_instrumentation_orchestrator-next | I finished the previous instrumentation step; return the next step for session <session_id> with note <completion_note> | none |
 | monitor_instrumentation_orchestrator-start | Start Azure Monitor instrumentation orchestration for workspace <workspace_path> | none |
 | monitor_instrumentation_orchestrator-start | Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step | none |
 | monitor_instrumentation_orchestrator-start | Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one | none |
@@ -845,12 +847,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace | none |
 | monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> | none |
 | monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> | none |
-| monitor_metrics_query | Use monitor_metrics_query to analyze performance trends and response times for Application Insights resource <resource_name> over the last <time_period> | none |
+| monitor_metrics_query | Analyze the performance trends and response times for Application Insights resource <resource_name> over the last <time_period> | none |
 | monitor_metrics_query | Check the availability metrics for my Application Insights resource <resource_name> for the last <time_period> | none |
 | monitor_metrics_query | Get the <aggregation_type> <metric_name> metric for <resource_type> <resource_name> over the last <time_period> with intervals | none |
 | monitor_metrics_query | Investigate error rates and failed requests for Application Insights resource <resource_name> for the last <time_period> | investigation-required |
 | monitor_metrics_query | Query the <metric_name> metric for <resource_type> <resource_name> for the last <time_period> | none |
-| monitor_metrics_query | Use monitor_metrics_query to get the request per second rate for my Application Insights resource <resource_name> over the last <time_period> | none |
+| monitor_metrics_query | What's the request per second rate for my Application Insights resource <resource_name> over the last <time_period> | none |
 | monitor_resource_log_query | Show me the logs for the past hour for the resource <resource_name> in the Log Analytics workspace <workspace_name> | none |
 | monitor_table_list | List all tables in the Log Analytics workspace <workspace_name> | none |
 | monitor_table_list | Show me the tables in the Log Analytics workspace <workspace_name> | none |
@@ -924,14 +926,30 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_goal_resource_get | Get the goal resource <resource_name> for goal assignment <goal_assignment_name> in service group <service_group> | none |
 | resilience_goal_template_get | List all resilience goal templates in service group <service_group> | none |
 | resilience_goal_template_get | Get the details of goal template <goal_template_name> in service group <service_group> | none |
-| resilience_recovery_job_get | List all recovery jobs of recovery plan <recovery_plan_name> in service group <service_group> | none |
-| resilience_recovery_job_get | Get the details of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> | none |
-| resilience_recovery_job_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> | none |
-| resilience_recovery_job_resource_get | Get the recovery job resource <resource_name> for recovery job <recovery_job_name> of recovery plan <recovery_plan_name> in service group <service_group> | none |
-| resilience_recovery_plan_get | List all resilience recovery plans in service group <service_group> | none |
-| resilience_recovery_plan_get | Get the details of recovery plan <recovery_plan_name> in service group <service_group> | none |
-| resilience_recovery_plan_resource_get | List all resources (members) of recovery plan <recovery_plan_name> in service group <service_group> | none |
-| resilience_recovery_plan_resource_get | Get the recovery resource <resource_name> for recovery plan <recovery_plan_name> in service group <service_group> | none |
+| resilience_recoveryjob_get | List all recovery jobs of recovery plan <recovery_plan_name> in service group <service_group> | none |
+| resilience_recoveryjob_get | Get the details of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> | none |
+| resilience_recoveryjob_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group> | none |
+| resilience_recoveryjob_resource_get | Get the recovery job resource <resource_name> for recovery job <recovery_job_name> of recovery plan <recovery_plan_name> in service group <service_group> | none |
+| resilience_recoveryplan_create | Create a Zonal recovery plan named <recovery_plan_name> in service group <service_group> | clarification-required |
+| resilience_recoveryplan_create | Set up a Zonal recovery plan named <recovery_plan_name> in service group <service_group>. Use a system-assigned managed identity, description <plan_description>, and default recovery group description <default_group_description> | none |
+| resilience_recoveryplan_create | Create Zonal recovery plan <recovery_plan_name> in service group <service_group> and attach user-assigned managed identity <user_assigned_identity_resource_id>. Use <plan_description> for the plan description and <default_group_description> for the default recovery group | none |
+| resilience_recoveryplan_create | Change recovery plan <recovery_plan_name> in service group <service_group> to a system-assigned managed identity and description <plan_description>. Keep its Zonal plan type and existing recovery groups | none |
+| resilience_recoveryplan_create | Change a system-assigned recovery plan <recovery_plan_name> in service group <service_group> to use a user-assigned managed identity | clarification-required |
+| resilience_recoveryplan_create | Update recovery plan <recovery_plan_name> in service group <service_group> to use both its system-assigned identity and user-assigned managed identity <user_assigned_identity_resource_id>. Preserve its existing plan settings | none |
+| resilience_recoveryplan_checkreadiness | Check whether recovery plan <recovery_plan_name> and its protected resources are ready for recovery operations in service group <service_group> | none |
+| resilience_recoveryplan_checkreadiness | Discover readiness issues for the resources in recovery plan <recovery_plan_name> in service group <service_group> | none |
+| resilience_recoveryplan_delete | Delete the entire recovery plan <recovery_plan_name> from service group <service_group> | none |
+| resilience_recoveryplan_delete | Recovery plan <recovery_plan_name> is no longer needed. Delete it from resilience service group <service_group> | none |
+| resilience_recoveryplan_get | List all resilience recovery plans in service group <service_group> | none |
+| resilience_recoveryplan_get | Get the details of recovery plan <recovery_plan_name> in service group <service_group> | none |
+| resilience_recoveryplan_resource_update | Include and configure recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group> with selected protection solution type <protection_solution_type> and settings <protection_settings_json> | none |
+| resilience_recoveryplan_resource_update | Add recovery resource <recovery_resource_id> to recovery plan <recovery_plan_name> in service group <service_group>. Protect it with CustomRunbook using failover runbook <failover_runbook_resource_id> and reprotect runbook <reprotect_runbook_resource_id> | none |
+| resilience_recoveryplan_resource_update | Include virtual machine recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group> using AzureSiteRecovery protection settings <protection_settings_json> with disk reprotection, staging storage, and a test failover virtual network | none |
+| resilience_recoveryplan_resource_update | Include recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group>, but I have not chosen CustomRunbook or AzureSiteRecovery protection settings | clarification-required |
+| resilience_recoveryplan_resource_update | Keep recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group>, but exclude it from recovery operations | none |
+| resilience_recoveryplan_resource_update | Update recovery plan <recovery_plan_name> in service group <service_group> by removing recovery resource <recovery_resource_id> from its resource membership while retaining the recovery plan and its other recovery resources | none |
+| resilience_recoveryplan_resource_get | List all resources (members) of recovery plan <recovery_plan_name> in service group <service_group> | none |
+| resilience_recoveryplan_resource_get | Get the recovery resource <resource_name> for recovery plan <recovery_plan_name> in service group <service_group> | none |
 | resilience_usageplan_create | Create a resilience usage plan <usage_plan_name> with plan type Basic in resource group <resource_group_name> | none |
 | resilience_usageplan_create | Set up a Basic resilience usage plan named <usage_plan_name> in resource group <resource_group_name> | none |
 | resilience_usageplan_create | Update resilience usage plan <usage_plan_name> in resource group <resource_group_name> to use the Basic plan type | none |
@@ -1248,7 +1266,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | wellarchitectedframework_serviceguide_get | List all services with Well-Architected Framework guidance | none |
-| wellarchitectedframework_serviceguide_get | Use the Well-Architected Framework service guide tool to list services with architectural guidance | none |
+| wellarchitectedframework_serviceguide_get | What services have architectural guidance? | none |
 | wellarchitectedframework_serviceguide_get | Get Well-Architected Framework guidance for App Service | none |
 | wellarchitectedframework_serviceguide_get | What's the waf guidance for a VM? | none |
 | wellarchitectedframework_serviceguide_get | What's the architectural guidance for Azure Cosmos DB | none |
