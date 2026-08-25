@@ -69,7 +69,7 @@ $vallyAgentsFile = "$RepoRoot/eng/tools/VallyEvaluator/src/Resources/eval.instru
 $agentsFile = Join-Path $WorkDirectory "AGENTS.md"
 $temporaryAgentsFile = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
 $copilotInstructionsFile = Join-Path $RepoRoot ".github" "copilot-instructions.md"
-$temporaryCopilotInstrauctionsFile = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
+$temporaryCopilotInstructionsFile = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
 
 if (!$EvalsDirectory) {
     $EvalsDirectory = Join-Path $vallyArtifactsDirectory "evals"
@@ -146,8 +146,8 @@ $expression += " $commandArg"
 Write-Host "Moving existing AGENTS.md to temporary file location... $temporaryAgentsFile" -ForegroundColor Cyan
 Move-Item $agentsFile $temporaryAgentsFile
 
-Write-Host "Moving existing copilot instructions file to temporary file location... $temporaryCopilotInstrauctionsFile" -ForegroundColor Cyan
-Move-Item $copilotInstructionsFile $temporaryCopilotInstrauctionsFile
+Write-Host "Moving existing copilot instructions file to temporary file location... $temporaryCopilotInstructionsFile" -ForegroundColor Cyan
+Move-Item $copilotInstructionsFile $temporaryCopilotInstructionsFile
 
 Write-Host "Replacing AGENTS.md with vally's AGENTS.md file" -ForegroundColor Cyan
 Copy-Item $vallyAgentsFile $agentsFile
@@ -160,5 +160,5 @@ try {
     Move-Item $temporaryAgentsFile $agentsFile -Force
 
     Write-Host "Moving original copilot instructions file back." -ForegroundColor Cyan
-    Move-Item $temporaryCopilotInstrauctionsFile $copilotInstructionsFile -Force
+    Move-Item $temporaryCopilotInstructionsFile $copilotInstructionsFile -Force
 }
