@@ -217,6 +217,17 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     [Fact]
     public async Task Should_import_certificate()
     {
+        if (string.Equals(Environment.GetEnvironmentVariable("MCP_TEST_TRANSPORT"), "http", StringComparison.OrdinalIgnoreCase))
+        {
+            var unavailableResult = await Client.CallToolAsync(
+                "keyvault_certificate_import",
+                new Dictionary<string, object?>(),
+                cancellationToken: TestContext.Current.CancellationToken);
+            Assert.True(unavailableResult.IsError);
+            Assert.Contains("not found", McpTestUtilities.GetFirstText(unavailableResult.Content), StringComparison.OrdinalIgnoreCase);
+            return;
+        }
+
         var fakePassword = _importCertificateAssets.Password;
         var tempPath = _importCertificateAssets.CreateTempCopy();
 

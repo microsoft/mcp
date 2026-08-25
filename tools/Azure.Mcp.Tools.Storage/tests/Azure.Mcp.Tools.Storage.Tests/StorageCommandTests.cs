@@ -264,6 +264,17 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact]
     public async Task Should_upload_blob()
     {
+        if (string.Equals(Environment.GetEnvironmentVariable("MCP_TEST_TRANSPORT"), "http", StringComparison.OrdinalIgnoreCase))
+        {
+            var unavailableResult = await Client.CallToolAsync(
+                "storage_blob_upload",
+                new Dictionary<string, object?>(),
+                cancellationToken: TestContext.Current.CancellationToken);
+            Assert.True(unavailableResult.IsError);
+            Assert.Contains("not found", McpTestUtilities.GetFirstText(unavailableResult.Content), StringComparison.OrdinalIgnoreCase);
+            return;
+        }
+
         // Create a temporary file to upload
         var tempFileName = RegisterOrRetrieveVariable("blobName", $"test-upload-{DateTime.UtcNow.Ticks}.txt");
         var tempFilePath = Path.Combine(Path.GetTempPath(), tempFileName);
