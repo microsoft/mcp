@@ -281,7 +281,8 @@ public class ServerToolLoaderTests
             .AddServer(serverName, serverName, $"{serverName} description", clientBuilder)
             .Build();
 
-        return CreateToolLoader(discoveryStrategy, configuration);;
+        return CreateToolLoader(discoveryStrategy, configuration);
+        ;
     }
 
     private static RequestContext<CallToolRequestParams> CreateCallToolRequestWithCommand(
