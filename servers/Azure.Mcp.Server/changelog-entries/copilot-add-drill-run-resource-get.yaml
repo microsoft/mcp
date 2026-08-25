@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added the 'azmcp resilience drill run resource get' command to list resources of a resilience drill run or get a specific drill run resource."
