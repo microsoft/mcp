@@ -11,8 +11,8 @@ namespace McpOutputSizeMeasurer;
 /// Measures MCP responses from a client perspective for a server's exposed tool surfaces.
 /// Starts the given azmcp-compatible executable over stdio, walks tool discovery
 /// (tools/list, paginated), calls every tool's learn-mode response, and re-queries every
-/// inner command a tool's learn response advertises. All requests/responses are exchanged
-/// as raw JSON-RPC text so that UTF-8 byte counts reflect exactly what crosses the wire.
+/// inner command a tool's learn response advertises. Learn-response sizes measure the decoded
+/// command-array JSON used by the server's discovery threshold, not its JSON-RPC wire encoding.
 /// </summary>
 public sealed class McpOutputSizeMeasurer(
     Action<string>? logger = null,
@@ -43,6 +43,7 @@ public sealed class McpOutputSizeMeasurer(
         return new
         {
             transport = "stdio",
+            learnSizeBasis = "decoded command-array JSON; decoded content text when no command array is available",
             generatedAtUtc = DateTimeOffset.UtcNow,
             reportPath,
             modes = measurements
@@ -187,7 +188,12 @@ public sealed class McpOutputSizeMeasurer(
                     throw new InvalidOperationException($"The learn response for '{tool}' did not contain a result.");
                 }
 
-                learnTotalUtf8Bytes += GetUtf8ByteCount(response);
+                var innerCommandsJson = GetInnerCommandsJson(response);
+                var learnPayload = innerCommandsJson ?? GetDecodedContentText(response)
+                    ?? throw new InvalidOperationException(
+                        $"The learn response for '{tool}' did not contain decoded text content.");
+                var learnPayloadUtf8Bytes = GetUtf8ByteCount(learnPayload);
+                learnTotalUtf8Bytes += learnPayloadUtf8Bytes;
                 learnResponseTextByTool[tool] = response;
 
                 var learnResponseFile = Path.Combine(
@@ -198,8 +204,9 @@ public sealed class McpOutputSizeMeasurer(
                 learnResponses.Add(new
                 {
                     tool,
-                    utf8Bytes = GetUtf8ByteCount(response),
-                    characterCount = response.Length,
+                    utf8Bytes = learnPayloadUtf8Bytes,
+                    characterCount = learnPayload.Length,
+                    sizeBasis = innerCommandsJson is null ? "decodedContentText" : "decodedCommandJson",
                     learnResponseFile
                 });
                 requestId++;
@@ -360,18 +367,16 @@ public sealed class McpOutputSizeMeasurer(
     }
 
     /// <summary>
-    /// Parses the inner command names from a tool's learn response. The learn text is a short
-    /// preamble followed by a JSON array of command descriptors.
+    /// Extracts the decoded command array from a tool's learn response. This is the same internal
+    /// JSON payload used by the server when deciding whether to switch discovery strategies.
     /// </summary>
-    internal static List<string> GetInnerCommandNames(string learnResponse)
+    internal static string? GetInnerCommandsJson(string learnResponse)
     {
-        var commands = new List<string>();
-
         using var document = JsonDocument.Parse(learnResponse);
         if (!document.RootElement.TryGetProperty("result", out var result) ||
             !result.TryGetProperty("content", out var content))
         {
-            return commands;
+            return null;
         }
 
         foreach (var block in content.EnumerateArray())
@@ -400,19 +405,59 @@ public sealed class McpOutputSizeMeasurer(
 
             using (commandDocument)
             {
-                if (commandDocument.RootElement.ValueKind != JsonValueKind.Array)
+                if (commandDocument.RootElement.ValueKind == JsonValueKind.Array)
                 {
-                    continue;
+                    return text[start..];
                 }
+            }
+        }
 
-                foreach (var command in commandDocument.RootElement.EnumerateArray())
-                {
-                    if (command.TryGetProperty("command", out var name) &&
-                        name.GetString() is { Length: > 0 } commandName)
-                    {
-                        commands.Add(commandName);
-                    }
-                }
+        return null;
+    }
+
+    internal static string? GetDecodedContentText(string learnResponse)
+    {
+        using var document = JsonDocument.Parse(learnResponse);
+        if (!document.RootElement.TryGetProperty("result", out var result) ||
+            !result.TryGetProperty("content", out var content))
+        {
+            return null;
+        }
+
+        var textBlocks = new List<string>();
+        foreach (var block in content.EnumerateArray())
+        {
+            if (block.TryGetProperty("text", out var textElement) &&
+                textElement.GetString() is { } text)
+            {
+                textBlocks.Add(text);
+            }
+        }
+
+        return textBlocks.Count == 0
+            ? null
+            : string.Join(Environment.NewLine + Environment.NewLine, textBlocks);
+    }
+
+    /// <summary>
+    /// Parses the inner command names from a tool's decoded command array.
+    /// </summary>
+    internal static List<string> GetInnerCommandNames(string learnResponse)
+    {
+        var commands = new List<string>();
+        var innerCommandsJson = GetInnerCommandsJson(learnResponse);
+        if (innerCommandsJson is null)
+        {
+            return commands;
+        }
+
+        using var commandDocument = JsonDocument.Parse(innerCommandsJson);
+        foreach (var command in commandDocument.RootElement.EnumerateArray())
+        {
+            if (command.TryGetProperty("command", out var name) &&
+                name.GetString() is { Length: > 0 } commandName)
+            {
+                commands.Add(commandName);
             }
         }
 

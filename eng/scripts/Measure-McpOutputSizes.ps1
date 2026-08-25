@@ -11,8 +11,8 @@
     1. Builds the Azure.Mcp.Server project and the standalone McpOutputSizeMeasurer tool.
     2. Runs McpOutputSizeMeasurer, which starts the MCP server over stdio in both
        consolidated and namespace modes and measures the initialize greeting,
-       tools/list discovery, and learn-mode responses (including inner commands) for
-       every tool.
+       tools/list discovery, and decoded learn-mode command JSON (including inner
+       commands) for every tool.
     3. Summarizes the report to produce console, JSON, and Markdown summaries,
        extract readable description text, and split each top tool's inner commands
        into individual files.
@@ -35,7 +35,7 @@
 
 .PARAMETER LearnResponseThresholdUtf8Bytes
     Include every learn response over this UTF-8 byte threshold in the summary.
-    Defaults to 45000.
+    Defaults to 28000.
 
 .PARAMETER ServerExecutable
     Path to an already-built or published azmcp server executable to measure, instead of
@@ -89,7 +89,7 @@ param(
     [string]$Configuration = 'Debug',
     [switch]$SkipBuild,
     [switch]$Clean,
-    [int]$LearnResponseThresholdUtf8Bytes = 45000,
+    [int]$LearnResponseThresholdUtf8Bytes = 28000,
     [string]$ServerExecutable,
     [string]$ReleaseTag,
     [string]$GitHubRepository = 'microsoft/mcp'
@@ -118,7 +118,7 @@ function Invoke-McpOutputSizeSummary {
 
         [string] $MarkdownPath,
 
-        [int] $LearnResponseThresholdUtf8Bytes = 45000
+        [int] $LearnResponseThresholdUtf8Bytes = 28000
     )
 
     if (!(Test-Path -LiteralPath $InputPath -PathType Leaf)) {
@@ -209,7 +209,7 @@ function Invoke-McpOutputSizeSummary {
             }
 
             $textPath = [IO.Path]::ChangeExtension($entry.learnResponseFile, '.txt')
-            Set-Content -LiteralPath $textPath -Value ($textParts -join "`r`n`r`n") -Encoding utf8NoBOM
+            Set-Content -LiteralPath $textPath -Value ($textParts -join "`r`n`r`n") -Encoding utf8NoBOM -NoNewline
             $entry | Add-Member -NotePropertyName learnResponseTextFile -NotePropertyValue $textPath -Force
         }
     }
@@ -320,6 +320,7 @@ function Invoke-McpOutputSizeSummary {
         sourceReport = (Resolve-Path -LiteralPath $InputPath).Path
         generatedAtUtc = [DateTimeOffset]::UtcNow
         transport = $report.transport
+        learnSizeBasis = $report.learnSizeBasis
         learnResponseThresholdUtf8Bytes = $LearnResponseThresholdUtf8Bytes
         modes = @($consolidated, $namespace)
         comparison = $comparison
@@ -327,7 +328,7 @@ function Invoke-McpOutputSizeSummary {
         largeLearnResponses = $largeLearnByMode
     }
 
-    Write-Host "MCP output size summary ($($report.transport))"
+    Write-Host "MCP output size summary ($($report.transport); learn sizes use decoded command JSON)"
     Write-Host ""
     $consoleRows = @($consolidated, $namespace) | ForEach-Object {
         [pscustomobject]@{
@@ -356,7 +357,7 @@ function Invoke-McpOutputSizeSummary {
 
     foreach ($modeName in @('consolidated', 'namespace')) {
         Write-Host ""
-        Write-Host "Top 10 largest learn responses ($modeName):"
+        Write-Host "Top 10 largest decoded learn command arrays ($modeName):"
         $topLearnByMode[$modeName] | ForEach-Object {
             [pscustomobject]@{
                 tool = $_.tool
@@ -365,7 +366,7 @@ function Invoke-McpOutputSizeSummary {
             }
         } | Format-Table tool, utf8Bytes, innerCommands | Out-Host
 
-        Write-Host "Learn responses over $LearnResponseThresholdUtf8Bytes UTF-8 bytes ($modeName):"
+        Write-Host "Decoded learn command arrays over $LearnResponseThresholdUtf8Bytes UTF-8 bytes ($modeName):"
         $largeLearnByMode[$modeName] | ForEach-Object {
             [pscustomobject]@{
                 tool = $_.tool
@@ -399,6 +400,7 @@ function Invoke-McpOutputSizeSummary {
     $markdownLines.Add('')
     $markdownLines.Add('- **Source report:** `' + $summary.sourceReport + '`')
     $markdownLines.Add("- **Transport:** $($summary.transport)")
+    $markdownLines.Add("- **Learn size basis:** $($summary.learnSizeBasis)")
     $markdownLines.Add("- **Generated:** $($summary.generatedAtUtc)")
     $markdownLines.Add("- **Large learn response threshold:** $($summary.learnResponseThresholdUtf8Bytes) UTF-8 bytes")
     $markdownLines.Add('')
@@ -437,7 +439,7 @@ function Invoke-McpOutputSizeSummary {
 
     foreach ($modeName in @('consolidated', 'namespace')) {
         $markdownLines.Add('')
-        $markdownLines.Add("## Top 10 Largest Learn Responses ($modeName)")
+        $markdownLines.Add("## Top 10 Largest Decoded Learn Command Arrays ($modeName)")
         $markdownLines.Add('')
         $markdownLines.Add('| Rank | Tool | Bytes | Inner Commands | Saved Response File | Description Text File |')
         $markdownLines.Add('| ---: | --- | ---: | ---: | --- | --- |')
@@ -450,7 +452,7 @@ function Invoke-McpOutputSizeSummary {
         }
 
         $markdownLines.Add('')
-        $markdownLines.Add("## Learn Responses Over $LearnResponseThresholdUtf8Bytes UTF-8 Bytes ($modeName)")
+        $markdownLines.Add("## Decoded Learn Command Arrays Over $LearnResponseThresholdUtf8Bytes UTF-8 Bytes ($modeName)")
         $markdownLines.Add('')
         $markdownLines.Add('| Tool | Bytes | Character Count | Saved Response File | Description Text File |')
         $markdownLines.Add('| --- | ---: | ---: | --- | --- |')

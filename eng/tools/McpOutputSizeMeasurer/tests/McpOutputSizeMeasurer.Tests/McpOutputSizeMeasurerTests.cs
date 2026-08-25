@@ -55,6 +55,32 @@ public class McpOutputSizeMeasurerTests
     }
 
     [Fact]
+    public void GetInnerCommandsJson_ReturnsDecodedCommandArray()
+    {
+        const string learnResponse = """
+            {"jsonrpc":"2.0","id":5,"result":{"content":[{"type":"text","text":"Preamble text.\n[{\"command\":\"group_subcommand\",\"description\":\"Uses café.\"}]"}]}}
+            """;
+
+        var commandsJson = McpOutputSizeMeasurer.GetInnerCommandsJson(learnResponse);
+
+        Assert.Equal(
+            """[{"command":"group_subcommand","description":"Uses café."}]""",
+            commandsJson);
+    }
+
+    [Fact]
+    public void GetDecodedContentText_ReturnsUnescapedText()
+    {
+        const string learnResponse = """
+            {"jsonrpc":"2.0","id":5,"result":{"content":[{"type":"text","text":"Failed to initialize \"azd\".\nInstall it first."}]}}
+            """;
+
+        var contentText = McpOutputSizeMeasurer.GetDecodedContentText(learnResponse);
+
+        Assert.Equal("Failed to initialize \"azd\".\nInstall it first.", contentText);
+    }
+
+    [Fact]
     public void GetInnerCommandNames_ParsesCommandArrayFromLearnResponse()
     {
         const string learnResponse = """

@@ -8,11 +8,11 @@ using McpToolEvaluator.Core;
 namespace McpOutputSizeMeasurer;
 
 /// <summary>
-/// Standalone console application that measures MCP responses from a client perspective for
-/// the server's exposed tool surfaces. Starts the azmcp executable over stdio in both
+/// Standalone console application that measures the server's exposed MCP tool surfaces.
+/// Starts the azmcp executable over stdio in both
 /// consolidated and namespace modes and measures the initialize greeting, tools/list
-/// discovery, and learn-mode responses (including inner commands) for every tool, writing a
-/// JSON report that Measure-McpOutputSizes.ps1 summarizes.
+/// discovery, and decoded learn-mode command JSON (including inner commands) for every tool,
+/// writing a JSON report that Measure-McpOutputSizes.ps1 summarizes.
 /// </summary>
 internal static class Program
 {
@@ -119,9 +119,9 @@ internal static class Program
         Console.WriteLine("""
             MCP Output Size Measurer
 
-            Measures MCP responses from a client perspective for the server's exposed tool
-            surfaces: the initialize greeting, tools/list discovery, and learn-mode responses
-            (including inner commands) for every tool, in one or more server modes.
+            Measures the server's exposed MCP tool surfaces: the initialize greeting,
+            tools/list discovery, and decoded learn-mode command JSON (including inner
+            commands) for every tool, in one or more server modes.
 
             Usage:
               McpOutputSizeMeasurer [options]
