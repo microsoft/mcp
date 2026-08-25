@@ -346,8 +346,7 @@ public class CommandFactory : ICommandFactory
                     response.Results = ResponseResult.Create([], JsonSourceGenerationContext.Default.ListString);
                 }
 
-                var isServiceStartCommand = implementation is ServerStartCommand;
-                if (!isServiceStartCommand)
+                if (implementation is not ServerStartCommand)
                 {
                     Console.WriteLine(JsonSerializer.Serialize(response, _srcGenWithOptions.CommandResponse));
                 }

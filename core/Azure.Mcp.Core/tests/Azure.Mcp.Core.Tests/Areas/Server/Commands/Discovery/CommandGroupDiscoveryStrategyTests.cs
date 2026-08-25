@@ -382,7 +382,7 @@ public class CommandGroupDiscoveryStrategyTests
     }
 
     [Fact]
-    public async Task DiscoverServersAsync_RespectsServiceStartOptionsValues()
+    public async Task DiscoverServersAsync_RespectsServerStartOptionsValues()
     {
         // Arrange
         var options = new ServerStartOptions

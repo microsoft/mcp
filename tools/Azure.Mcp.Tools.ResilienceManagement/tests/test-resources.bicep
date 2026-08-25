@@ -1,8 +1,10 @@
 targetScope = 'resourceGroup'
 
+param baseName string = resourceGroup().name
+
 // Deterministic, schema-valid names.
 // Usage plan and enrollment names must match ^[a-zA-Z0-9-]{3,24}$.
-var uniqueSuffix = uniqueString(resourceGroup().id)
+var uniqueSuffix = uniqueString(resourceGroup().id, baseName)
 var usagePlanName = take('up${uniqueSuffix}', 24)
 var enrollmentName = take('en${uniqueSuffix}', 24)
 var serviceGroupName = 'sgr${uniqueSuffix}'
@@ -64,3 +66,5 @@ output recoveryPlanName string = recoveryPlanName
 output drillName string = drillName
 output deleteDrillName string = deleteDrillName
 output storageAccountName string = storageAccountName
+output storageAccountId string = storageAccount.id
+output location string = resourceGroup().location
