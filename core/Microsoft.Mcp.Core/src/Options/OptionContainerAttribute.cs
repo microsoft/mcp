@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Microsoft.Mcp.Core.Options;
 
 /// <summary>
@@ -10,8 +12,12 @@ namespace Microsoft.Mcp.Core.Options;
 /// </para>
 /// </summary>
 [AttributeUsage(AttributeTargets.Property, Inherited = true, AllowMultiple = false)]
-public sealed class OptionContainerAttribute : Attribute
+public abstract class OptionContainerAttribute : Attribute
 {
+    internal const DynamicallyAccessedMemberTypes ContainerMembers =
+        DynamicallyAccessedMemberTypes.PublicProperties |
+        DynamicallyAccessedMemberTypes.PublicParameterlessConstructor;
+
     /// <summary>
     /// The prefix to use for the options in the container.
     /// If null, the property name (in kebab-case) is used as the prefix.
@@ -21,4 +27,7 @@ public sealed class OptionContainerAttribute : Attribute
     /// </para>
     /// </summary>
     public string? Prefix { get; init; }
+
+    [DynamicallyAccessedMembers(ContainerMembers)]
+    internal abstract Type ContainerType { get; }
 }

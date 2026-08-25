@@ -50,7 +50,7 @@ public class BlobUploadOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
+    [OptionContainer<RetryPolicyOptions>(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
@@ -112,7 +112,7 @@ Replace the options class hierarchy with a single flat POCO that implements `ISu
 - **Required**: Driven by the `required` keyword (`RequiredMemberAttribute`). Use `required` on required options; use nullable types (`?`) for optional options.
 - **Description**: Always required, passed using attribute properties: `[Option(Description = "description")]`.
 - **Shared descriptions**: Use constants from `OptionDescriptions` (e.g., `OptionDescriptions.Subscription`, `OptionDescriptions.Tenant`).
-- **Nested objects**: Use `[OptionContainer(Prefix = "prefix")]` on a property of a complex type. Its child properties become `--prefix-child-name`. Example: `RetryPolicyOptions` with `[OptionContainer(Prefix = "retry")]` produces `--retry-delay`, `--retry-max-retries`, etc.
+- **Nested objects**: Use `[OptionContainer<TContainer>(Prefix = "prefix")]` on a property of a complex type. Its child properties become `--prefix-child-name`. Example: `RetryPolicyOptions` with `[OptionContainer<RetryPolicyOptions>(Prefix = "retry")]` produces `--retry-delay`, `--retry-max-retries`, etc.
 - **Property ordering**: List command-specific options first, then sink common/infrastructure options to the bottom in this order: `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`, `RetryPolicy`. This keeps the most relevant options visible at a glance.
 
 **Before (hierarchy of 6 classes):**
@@ -147,7 +147,7 @@ public class BlobUploadOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
+    [OptionContainer<RetryPolicyOptions>(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
@@ -297,7 +297,7 @@ public class BlobUploadOptions : ISubscriptionOption, IBlobOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
+    [OptionContainer<RetryPolicyOptions>(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```

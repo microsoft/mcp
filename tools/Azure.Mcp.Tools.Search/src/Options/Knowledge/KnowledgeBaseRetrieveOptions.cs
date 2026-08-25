@@ -19,6 +19,6 @@ public sealed class KnowledgeBaseRetrieveOptions
     [Option(Description = SearchOptionDescriptions.Service)]
     public required string Service { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
+    [OptionContainer<RetryPolicyOptions>(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }

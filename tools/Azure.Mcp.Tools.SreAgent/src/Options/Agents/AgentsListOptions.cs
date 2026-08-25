@@ -17,6 +17,6 @@ public sealed class AgentsListOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
+    [OptionContainer<RetryPolicyOptions>(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }

@@ -26,6 +26,6 @@ public sealed class VaultGetOptions : ISubscriptionOption
     [Option(Description = AzureBackupOptionDefinitions.VaultExpand)]
     public string? Expand { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
+    [OptionContainer<RetryPolicyOptions>(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }

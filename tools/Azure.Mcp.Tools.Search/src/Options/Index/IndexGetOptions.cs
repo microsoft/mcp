@@ -13,6 +13,6 @@ public sealed class IndexGetOptions
     [Option(Description = SearchOptionDescriptions.Index)]
     public string? Index { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
+    [OptionContainer<RetryPolicyOptions>(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }

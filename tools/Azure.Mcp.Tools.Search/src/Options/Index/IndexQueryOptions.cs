@@ -22,6 +22,6 @@ public sealed class IndexQueryOptions
     [Option(Description = SearchOptionDescriptions.SemanticConfiguration)]
     public string? SemanticConfiguration { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
+    [OptionContainer<RetryPolicyOptions>(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }

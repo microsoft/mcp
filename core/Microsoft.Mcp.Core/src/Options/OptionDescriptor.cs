@@ -19,23 +19,24 @@ public class OptionDescriptor
     public required PropertyInfo TargetProperty { get; init; }
     public required Type Type { get; init; }
     public PropertyInfo? ParentProperty { get; init; }
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+    public Type? ParentType { get; init; }
 
     public static OptionDescriptor[] FromType<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] T>() where T : class
     {
         List<OptionDescriptor> optionDescriptors = [];
-        CollectDescriptors(typeof(T), null, optionDescriptors, new(), true, null);
+        CollectDescriptors(typeof(T), null, optionDescriptors, new(), true, null, null);
         return [.. optionDescriptors];
     }
 
-    [UnconditionalSuppressMessage("Trimming", "IL2070:UnrecognizedReflectionPattern",
-        Justification = "Nested option types are rooted by the application.")]
     private static void CollectDescriptors(
-        Type type,
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] Type type,
         string? prefix,
         List<OptionDescriptor> descriptors,
         NullabilityInfoContext nullabilityContext,
         bool parentRequired,
-        PropertyInfo? parentProperty)
+        PropertyInfo? parentProperty,
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type? parentType)
     {
         PropertyInfo[] allProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
@@ -100,7 +101,8 @@ public class OptionDescriptor
                     DefaultValue = optionAttribute.DefaultValue,
                     AllowEmptyOrWhiteSpaceString = optionAttribute.AllowEmptyOrWhiteSpaceString,
                     TargetProperty = property,
-                    ParentProperty = parentProperty
+                    ParentProperty = parentProperty,
+                    ParentType = parentType
                 });
             }
 
@@ -110,8 +112,24 @@ public class OptionDescriptor
                 {
                     throw new InvalidOperationException("Non-complex properties cannot use [OptionContainer] attribute. Use [Option] instead.");
                 }
+
+                var containerType = optionContainerAttribute.ContainerType;
+                var declaredContainerType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+                if (containerType != declaredContainerType)
+                {
+                    throw new InvalidOperationException(
+                        $"Option container type '{containerType.Name}' does not match property type '{declaredContainerType.Name}'.");
+                }
+
                 // Flatten nested complex types with a prefix.
-                CollectDescriptors(property.PropertyType, GetNameOrPrefix(optionContainerAttribute.Prefix, prefix, property.Name), descriptors, nullabilityContext, required, property);
+                CollectDescriptors(
+                    containerType,
+                    GetNameOrPrefix(optionContainerAttribute.Prefix, prefix, property.Name),
+                    descriptors,
+                    nullabilityContext,
+                    required,
+                    property,
+                    containerType);
             }
         }
     }

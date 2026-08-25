@@ -10,6 +10,6 @@ public abstract class BaseSpeechOptions
     [Option(Description = "The Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/).")]
     public required string Endpoint { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
+    [OptionContainer<RetryPolicyOptions>(Prefix = "retry")]
     public RetryPolicyOptions? RetryPolicy { get; set; }
 }

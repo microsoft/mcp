@@ -123,9 +123,9 @@ public sealed class OptionBinderTests
     {
         [Option(Description = "The name of the item.")]
         public string? Name { get; set; }
-        [OptionContainer]
+        [OptionContainer<NetworkSettings>]
         public NetworkSettings? Optional { get; set; }
-        [OptionContainer]
+        [OptionContainer<NetworkSettings>]
         public required NetworkSettings Required { get; set; }
     }
 
@@ -133,7 +133,7 @@ public sealed class OptionBinderTests
     {
         [Option(Description = "The name of the item.")]
         public string? Name { get; set; }
-        [OptionContainer]
+        [OptionContainer<RequiredNetworkSettings>]
         public required RequiredNetworkSettings Required { get; set; }
     }
 
@@ -168,7 +168,7 @@ public sealed class OptionBinderTests
     private sealed class InvalidAttributesCombinationOptions
     {
         [Option(Description = "Invalid attribute combination.")]
-        [OptionContainer]
+        [OptionContainer<NetworkSettings>]
         public NetworkSettings? Invalid { get; set; }
     }
 
@@ -180,8 +180,14 @@ public sealed class OptionBinderTests
 
     private sealed class InvalidOptionContainerAttributeOptions
     {
-        [OptionContainer]
+        [OptionContainer<string>]
         public string? Invalid { get; set; }
+    }
+
+    private sealed class MismatchedOptionContainerOptions
+    {
+        [OptionContainer<NetworkSettings>]
+        public RequiredNetworkSettings? Invalid { get; set; }
     }
 
     #endregion
@@ -298,6 +304,17 @@ public sealed class OptionBinderTests
             () => OptionBinder.RegisterOptions<InvalidOptionContainerAttributeOptions>(command));
 
         Assert.Contains("Non-complex properties cannot use [OptionContainer] attribute. Use [Option] instead.", ex.Message);
+    }
+
+    [Fact]
+    public void RegisterOptions_MismatchedOptionContainerType_Throws()
+    {
+        var command = new Command("test");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => OptionBinder.RegisterOptions<MismatchedOptionContainerOptions>(command));
+
+        Assert.Contains("does not match property type", ex.Message);
     }
 
     #endregion
@@ -737,6 +754,14 @@ public sealed class OptionBinderTests
 
         Assert.True(annotations.HasFlag(DynamicallyAccessedMemberTypes.PublicProperties));
         Assert.True(annotations.HasFlag(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor));
+    }
+
+    [Fact]
+    public void OptionContainerAttribute_GenericType_PreservesBindingMembers()
+    {
+        var containerType = typeof(OptionContainerAttribute<>).GetGenericArguments()[0];
+
+        AssertHasRequiredMemberAnnotations(containerType);
     }
 
     private static void AssertHasRequiredMemberAnnotations(MemberInfo member)
