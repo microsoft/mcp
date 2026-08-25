@@ -34,7 +34,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "McpOutputSizeMeasurer", "Mc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McpOutputSizeMeasurer", "McpOutputSizeMeasurer\src\McpOutputSizeMeasurer.csproj", "{B2C3D4E5-2222-4B3C-8D4E-5F6071829314}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McpOutputSizeMeasurer.Tests", "McpOutputSizeMeasurer\tests\McpOutputSizeMeasurer.Tests.csproj", "{C3D4E5F6-3333-4C4D-9E5F-607182930415}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McpOutputSizeMeasurer.Tests", "McpOutputSizeMeasurer\tests\McpOutputSizeMeasurer.Tests\McpOutputSizeMeasurer.Tests.csproj", "{C3D4E5F6-3333-4C4D-9E5F-607182930415}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

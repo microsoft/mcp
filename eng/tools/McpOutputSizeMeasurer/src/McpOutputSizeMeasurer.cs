@@ -43,7 +43,7 @@ public sealed class McpOutputSizeMeasurer(
         return new
         {
             transport = "stdio",
-            learnSizeBasis = "decoded command-array JSON; decoded content text when no command array is available",
+            learnSizeBasis = "decoded command-array JSON; responses without command JSON are reported separately",
             generatedAtUtc = DateTimeOffset.UtcNow,
             reportPath,
             modes = measurements
@@ -160,6 +160,8 @@ public sealed class McpOutputSizeMeasurer(
             var learnResponses = new List<object>(tools.Count);
             var learnResponseTextByTool = new Dictionary<string, string>(tools.Count, StringComparer.Ordinal);
             var learnTotalUtf8Bytes = 0;
+            var learnWireTotalUtf8Bytes = 0;
+            var learnResponsesWithoutCommandJson = 0;
             foreach (var tool in tools)
             {
                 var request = JsonSerializer.Serialize(new
@@ -188,12 +190,14 @@ public sealed class McpOutputSizeMeasurer(
                     throw new InvalidOperationException($"The learn response for '{tool}' did not contain a result.");
                 }
 
-                var innerCommandsJson = GetInnerCommandsJson(response);
-                var learnPayload = innerCommandsJson ?? GetDecodedContentText(response)
-                    ?? throw new InvalidOperationException(
-                        $"The learn response for '{tool}' did not contain decoded text content.");
-                var learnPayloadUtf8Bytes = GetUtf8ByteCount(learnPayload);
-                learnTotalUtf8Bytes += learnPayloadUtf8Bytes;
+                var learnPayload = MeasureLearnPayload(response);
+                var responseUtf8Bytes = GetUtf8ByteCount(response);
+                learnTotalUtf8Bytes += learnPayload.Utf8Bytes ?? 0;
+                learnWireTotalUtf8Bytes += responseUtf8Bytes;
+                if (learnPayload.Utf8Bytes is null)
+                {
+                    learnResponsesWithoutCommandJson++;
+                }
                 learnResponseTextByTool[tool] = response;
 
                 var learnResponseFile = Path.Combine(
@@ -204,9 +208,11 @@ public sealed class McpOutputSizeMeasurer(
                 learnResponses.Add(new
                 {
                     tool,
-                    utf8Bytes = learnPayloadUtf8Bytes,
-                    characterCount = learnPayload.Length,
-                    sizeBasis = innerCommandsJson is null ? "decodedContentText" : "decodedCommandJson",
+                    utf8Bytes = learnPayload.Utf8Bytes,
+                    characterCount = learnPayload.CharacterCount,
+                    sizeBasis = learnPayload.SizeBasis,
+                    decodedContentUtf8Bytes = learnPayload.DecodedContentUtf8Bytes,
+                    wireUtf8Bytes = responseUtf8Bytes,
                     learnResponseFile
                 });
                 requestId++;
@@ -285,12 +291,15 @@ public sealed class McpOutputSizeMeasurer(
                 discoveryTotalUtf8Bytes,
                 learnResponses,
                 learnTotalUtf8Bytes,
+                learnWireTotalUtf8Bytes,
+                learnResponsesWithoutCommandJson,
                 commandLearnCount = commandLearnResponses.Count,
                 commandLearnTotalUtf8Bytes,
                 commandLearnResponses,
-                totalUtf8Bytes = GetUtf8ByteCount(initializeResponse) +
+                totalResponseWireUtf8Bytes = GetUtf8ByteCount(initializeResponse) +
                     discoveryTotalUtf8Bytes +
-                    learnTotalUtf8Bytes
+                    learnWireTotalUtf8Bytes +
+                    commandLearnTotalUtf8Bytes
             };
         }
         finally
@@ -437,6 +446,32 @@ public sealed class McpOutputSizeMeasurer(
         return textBlocks.Count == 0
             ? null
             : string.Join(Environment.NewLine + Environment.NewLine, textBlocks);
+    }
+
+    internal static (
+        int? Utf8Bytes,
+        int? CharacterCount,
+        string SizeBasis,
+        int? DecodedContentUtf8Bytes) MeasureLearnPayload(string learnResponse)
+    {
+        var innerCommandsJson = GetInnerCommandsJson(learnResponse);
+        if (innerCommandsJson is not null)
+        {
+            return (
+                GetUtf8ByteCount(innerCommandsJson),
+                innerCommandsJson.Length,
+                "decodedCommandJson",
+                null);
+        }
+
+        var decodedContentText = GetDecodedContentText(learnResponse)
+            ?? throw new InvalidOperationException(
+                "The learn response did not contain decoded text content.");
+        return (
+            null,
+            null,
+            "decodedContentTextOnly",
+            GetUtf8ByteCount(decodedContentText));
     }
 
     /// <summary>

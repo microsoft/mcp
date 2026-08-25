@@ -108,6 +108,155 @@ $repoRoot = $RepoRoot.Path
 
 $serverProject = Join-Path $repoRoot 'servers/Azure.Mcp.Server/src'
 $measurerProject = Join-Path $repoRoot 'eng/tools/McpOutputSizeMeasurer/src'
+$measurerBuildInfoPath = Join-Path $repoRoot 'eng/tools/McpOutputSizeMeasurer/build-info.json'
+$measurerBuildOutput = Join-Path $repoRoot '.work/mcp-output-size-measurer'
+$serverBuildOutput = Join-Path $repoRoot '.work/mcp-output-size-server'
+$measurerArchitecture = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant()
+$measurerOperatingSystem = if ($IsWindows) { 'windows' } elseif ($IsLinux) { 'linux' } else { 'macos' }
+$measurerDotnetOs = if ($IsWindows) { 'win' } elseif ($IsLinux) { 'linux' } else { 'osx' }
+$measurerPlatform = "$measurerOperatingSystem-$measurerArchitecture"
+$measurerRuntime = "$measurerDotnetOs-$measurerArchitecture"
+$measurerExecutable = Join-Path $measurerBuildOutput "$measurerRuntime/McpOutputSizeMeasurer$(if ($IsWindows) { '.exe' } else { '' })"
+$localServerExecutable = Join-Path $serverBuildOutput "Azure.Mcp.Server/$measurerPlatform/azmcp$(if ($IsWindows) { '.exe' } else { '' })"
+
+function Get-PercentDifference([double] $value, [double] $baseline) {
+    if ($baseline -eq 0) {
+        return $null
+    }
+
+    return [math]::Round((($value - $baseline) / $baseline) * 100, 2)
+}
+
+function Get-ModeSummary($mode) {
+    $learnCount = @(
+        $mode.learnResponses |
+            Where-Object { $_.sizeBasis -eq 'decodedCommandJson' }
+    ).Count
+    $discoveryCount = @($mode.discoveryResponses).Count
+    $averageLearnBytes = if ($learnCount -eq 0) { 0 } else {
+        [math]::Round($mode.learnTotalUtf8Bytes / $learnCount, 2)
+    }
+
+    return [ordered]@{
+        mode = $mode.mode
+        toolCount = $mode.toolCount
+        greetingUtf8Bytes = $mode.initialGreetingResponse.utf8Bytes
+        discoveryMessageCount = $discoveryCount
+        discoveryUtf8Bytes = $mode.discoveryTotalUtf8Bytes
+        learnMessageCount = $learnCount
+        learnResponsesWithoutCommandJson = $mode.learnResponsesWithoutCommandJson
+        learnUtf8Bytes = $mode.learnTotalUtf8Bytes
+        averageLearnUtf8Bytes = $averageLearnBytes
+        totalResponseWireUtf8Bytes = $mode.totalResponseWireUtf8Bytes
+    }
+}
+function Save-LearnResponseText($entries) {
+    foreach ($entry in $entries) {
+        if (!$entry.learnResponseFile -or !(Test-Path -LiteralPath $entry.learnResponseFile -PathType Leaf)) {
+            continue
+        }
+
+        $learnJson = Get-Content -LiteralPath $entry.learnResponseFile -Raw | ConvertFrom-Json
+        $textParts = @(
+            $learnJson.result.content |
+                Where-Object { $_.type -eq 'text' -and $null -ne $_.text } |
+                ForEach-Object { $_.text }
+        )
+
+        if ($textParts.Count -eq 0) {
+            continue
+        }
+
+        $textPath = [IO.Path]::ChangeExtension($entry.learnResponseFile, '.txt')
+        Set-Content -LiteralPath $textPath -Value ($textParts -join "`r`n`r`n") -Encoding utf8NoBOM -NoNewline
+        $entry | Add-Member -NotePropertyName learnResponseTextFile -NotePropertyValue $textPath -Force
+    }
+}
+
+function Save-InnerCommands($entries) {
+    foreach ($entry in $entries) {
+        $entry | Add-Member -NotePropertyName innerCommandCount -NotePropertyValue 0 -Force
+        $entry | Add-Member -NotePropertyName innerCommandDirectory -NotePropertyValue $null -Force
+
+        if (!$entry.learnResponseTextFile -or !(Test-Path -LiteralPath $entry.learnResponseTextFile -PathType Leaf)) {
+            continue
+        }
+
+        $text = Get-Content -LiteralPath $entry.learnResponseTextFile -Raw
+        $start = $text.IndexOf('[')
+        if ($start -lt 0) {
+            continue
+        }
+
+        try {
+            $commands = @($text.Substring($start) | ConvertFrom-Json)
+        } catch {
+            Write-Warning "Could not parse inner commands for '$($entry.tool)': $_"
+            continue
+        }
+
+        if ($commands.Count -eq 0) {
+            continue
+        }
+
+        $toolDirectory = [IO.Path]::Combine(
+            [IO.Path]::GetDirectoryName($entry.learnResponseTextFile),
+            [IO.Path]::GetFileNameWithoutExtension($entry.learnResponseTextFile) + '-commands')
+        New-Item -ItemType Directory -Path $toolDirectory -Force | Out-Null
+
+        foreach ($command in $commands) {
+            $commandName = if ($command.command) { $command.command } else { 'unnamed' }
+            foreach ($invalid in [IO.Path]::GetInvalidFileNameChars()) {
+                $commandName = $commandName.Replace($invalid, '-')
+            }
+
+            $commandPath = [IO.Path]::Combine($toolDirectory, "$commandName.json")
+            Set-Content -LiteralPath $commandPath -Value ($command | ConvertTo-Json -Depth 30) -Encoding utf8NoBOM
+        }
+
+        $entry.innerCommandCount = $commands.Count
+        $entry.innerCommandDirectory = $toolDirectory
+    }
+}
+function Get-TopLearnResponses($entries) {
+    return @($entries) |
+        Where-Object { $_.sizeBasis -eq 'decodedCommandJson' } |
+        Sort-Object -Property utf8Bytes -Descending |
+        Select-Object -First 10 |
+        ForEach-Object {
+            [ordered]@{
+                tool = $_.tool
+                utf8Bytes = $_.utf8Bytes
+                characterCount = $_.characterCount
+                sizeBasis = $_.sizeBasis
+                learnResponseFile = $_.learnResponseFile
+                learnResponseTextFile = $_.learnResponseTextFile
+                innerCommandCount = $_.innerCommandCount
+                innerCommandDirectory = $_.innerCommandDirectory
+            }
+        }
+}
+
+function Get-LargeLearnResponses($entries) {
+    return @($entries) |
+        Where-Object {
+            $_.sizeBasis -eq 'decodedCommandJson' -and
+            $_.utf8Bytes -gt $LearnResponseThresholdUtf8Bytes
+        } |
+        Sort-Object -Property utf8Bytes -Descending |
+        ForEach-Object {
+            [ordered]@{
+                tool = $_.tool
+                utf8Bytes = $_.utf8Bytes
+                characterCount = $_.characterCount
+                sizeBasis = $_.sizeBasis
+                learnResponseFile = $_.learnResponseFile
+                learnResponseTextFile = $_.learnResponseTextFile
+                innerCommandCount = $_.innerCommandCount
+                innerCommandDirectory = $_.innerCommandDirectory
+            }
+        }
+}
 
 function Invoke-McpOutputSizeSummary {
     param(
@@ -137,33 +286,6 @@ function Invoke-McpOutputSizeSummary {
         }
     }
 
-    function Get-PercentDifference([double] $value, [double] $baseline) {
-        if ($baseline -eq 0) {
-            return $null
-        }
-
-        return [math]::Round((($value - $baseline) / $baseline) * 100, 2)
-    }
-
-    function Get-ModeSummary($mode) {
-        $learnCount = @($mode.learnResponses).Count
-        $discoveryCount = @($mode.discoveryResponses).Count
-        $averageLearnBytes = if ($learnCount -eq 0) { 0 } else {
-            [math]::Round($mode.learnTotalUtf8Bytes / $learnCount, 2)
-        }
-
-        return [ordered]@{
-            mode = $mode.mode
-            toolCount = $mode.toolCount
-            greetingUtf8Bytes = $mode.initialGreetingResponse.utf8Bytes
-            discoveryMessageCount = $discoveryCount
-            discoveryUtf8Bytes = $mode.discoveryTotalUtf8Bytes
-            learnMessageCount = $learnCount
-            learnUtf8Bytes = $mode.learnTotalUtf8Bytes
-            averageLearnUtf8Bytes = $averageLearnBytes
-            totalUtf8Bytes = $mode.totalUtf8Bytes
-        }
-    }
 
     $consolidated = Get-ModeSummary $modeResults['consolidated']
     $namespace = Get-ModeSummary $modeResults['namespace']
@@ -174,9 +296,10 @@ function Invoke-McpOutputSizeSummary {
         'discoveryMessageCount',
         'discoveryUtf8Bytes',
         'learnMessageCount',
+        'learnResponsesWithoutCommandJson',
         'learnUtf8Bytes',
         'averageLearnUtf8Bytes',
-        'totalUtf8Bytes'
+        'totalResponseWireUtf8Bytes'
     )
 
     $comparison = [ordered]@{}
@@ -191,74 +314,6 @@ function Invoke-McpOutputSizeSummary {
         }
     }
 
-    function Save-LearnResponseText($entries) {
-        foreach ($entry in $entries) {
-            if (!$entry.learnResponseFile -or !(Test-Path -LiteralPath $entry.learnResponseFile -PathType Leaf)) {
-                continue
-            }
-
-            $learnJson = Get-Content -LiteralPath $entry.learnResponseFile -Raw | ConvertFrom-Json
-            $textParts = @(
-                $learnJson.result.content |
-                    Where-Object { $_.type -eq 'text' -and $null -ne $_.text } |
-                    ForEach-Object { $_.text }
-            )
-
-            if ($textParts.Count -eq 0) {
-                continue
-            }
-
-            $textPath = [IO.Path]::ChangeExtension($entry.learnResponseFile, '.txt')
-            Set-Content -LiteralPath $textPath -Value ($textParts -join "`r`n`r`n") -Encoding utf8NoBOM -NoNewline
-            $entry | Add-Member -NotePropertyName learnResponseTextFile -NotePropertyValue $textPath -Force
-        }
-    }
-
-    function Save-InnerCommands($entries) {
-        foreach ($entry in $entries) {
-            $entry | Add-Member -NotePropertyName innerCommandCount -NotePropertyValue 0 -Force
-            $entry | Add-Member -NotePropertyName innerCommandDirectory -NotePropertyValue $null -Force
-
-            if (!$entry.learnResponseTextFile -or !(Test-Path -LiteralPath $entry.learnResponseTextFile -PathType Leaf)) {
-                continue
-            }
-
-            $text = Get-Content -LiteralPath $entry.learnResponseTextFile -Raw
-            $start = $text.IndexOf('[')
-            if ($start -lt 0) {
-                continue
-            }
-
-            try {
-                $commands = @($text.Substring($start) | ConvertFrom-Json)
-            } catch {
-                Write-Warning "Could not parse inner commands for '$($entry.tool)': $_"
-                continue
-            }
-
-            if ($commands.Count -eq 0) {
-                continue
-            }
-
-            $toolDirectory = [IO.Path]::Combine(
-                [IO.Path]::GetDirectoryName($entry.learnResponseTextFile),
-                [IO.Path]::GetFileNameWithoutExtension($entry.learnResponseTextFile) + '-commands')
-            New-Item -ItemType Directory -Path $toolDirectory -Force | Out-Null
-
-            foreach ($command in $commands) {
-                $commandName = if ($command.command) { $command.command } else { 'unnamed' }
-                foreach ($invalid in [IO.Path]::GetInvalidFileNameChars()) {
-                    $commandName = $commandName.Replace($invalid, '-')
-                }
-
-                $commandPath = [IO.Path]::Combine($toolDirectory, "$commandName.json")
-                Set-Content -LiteralPath $commandPath -Value ($command | ConvertTo-Json -Depth 30) -Encoding utf8NoBOM
-            }
-
-            $entry.innerCommandCount = $commands.Count
-            $entry.innerCommandDirectory = $toolDirectory
-        }
-    }
 
     $allEntriesByMode = [ordered]@{
         consolidated = @($modeResults['consolidated'].learnResponses)
@@ -272,39 +327,6 @@ function Invoke-McpOutputSizeSummary {
         Save-InnerCommands $allEntriesByMode[$modeName]
     }
 
-    function Get-TopLearnResponses($entries) {
-        return @($entries) |
-            Sort-Object -Property utf8Bytes -Descending |
-            Select-Object -First 10 |
-            ForEach-Object {
-                [ordered]@{
-                    tool = $_.tool
-                    utf8Bytes = $_.utf8Bytes
-                    characterCount = $_.characterCount
-                    learnResponseFile = $_.learnResponseFile
-                    learnResponseTextFile = $_.learnResponseTextFile
-                    innerCommandCount = $_.innerCommandCount
-                    innerCommandDirectory = $_.innerCommandDirectory
-                }
-            }
-    }
-
-    function Get-LargeLearnResponses($entries) {
-        return @($entries) |
-            Where-Object { $_.utf8Bytes -gt $LearnResponseThresholdUtf8Bytes } |
-            Sort-Object -Property utf8Bytes -Descending |
-            ForEach-Object {
-                [ordered]@{
-                    tool = $_.tool
-                    utf8Bytes = $_.utf8Bytes
-                    characterCount = $_.characterCount
-                    learnResponseFile = $_.learnResponseFile
-                    learnResponseTextFile = $_.learnResponseTextFile
-                    innerCommandCount = $_.innerCommandCount
-                    innerCommandDirectory = $_.innerCommandDirectory
-                }
-            }
-    }
 
     $topLearnByMode = [ordered]@{
         consolidated = Get-TopLearnResponses $allEntriesByMode['consolidated']
@@ -337,11 +359,11 @@ function Invoke-McpOutputSizeSummary {
             greetingUtf8Bytes = $_['greetingUtf8Bytes']
             discoveryUtf8Bytes = $_['discoveryUtf8Bytes']
             learnUtf8Bytes = $_['learnUtf8Bytes']
-            totalUtf8Bytes = $_['totalUtf8Bytes']
+            totalResponseWireUtf8Bytes = $_['totalResponseWireUtf8Bytes']
         }
     }
     $consoleRows |
-        Format-Table mode, toolCount, greetingUtf8Bytes, discoveryUtf8Bytes, learnUtf8Bytes, totalUtf8Bytes |
+        Format-Table mode, toolCount, greetingUtf8Bytes, discoveryUtf8Bytes, learnUtf8Bytes, totalResponseWireUtf8Bytes |
         Out-Host
 
     Write-Host "Consolidated relative to namespace:"
@@ -406,12 +428,13 @@ function Invoke-McpOutputSizeSummary {
     $markdownLines.Add('')
     $markdownLines.Add('## Mode Summary')
     $markdownLines.Add('')
-    $markdownLines.Add('| Mode | Tools | Greeting (bytes) | Discovery (bytes) | Learn (bytes) | Total (bytes) |')
-    $markdownLines.Add('| --- | ---: | ---: | ---: | ---: | ---: |')
+    $markdownLines.Add('| Mode | Tools | Learn command arrays | Learn responses without command JSON | Greeting wire (bytes) | Discovery wire (bytes) | Learn decoded (bytes) | Total response wire (bytes) |')
+    $markdownLines.Add('| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |')
     foreach ($mode in $summary.modes) {
         $markdownLines.Add(
-            "| $($mode.mode) | $($mode.toolCount) | $($mode.greetingUtf8Bytes) | " +
-            "$($mode.discoveryUtf8Bytes) | $($mode.learnUtf8Bytes) | $($mode.totalUtf8Bytes) |")
+            "| $($mode.mode) | $($mode.toolCount) | $($mode.learnMessageCount) | " +
+            "$($mode.learnResponsesWithoutCommandJson) | $($mode.greetingUtf8Bytes) | " +
+            "$($mode.discoveryUtf8Bytes) | $($mode.learnUtf8Bytes) | $($mode.totalResponseWireUtf8Bytes) |")
     }
 
     $markdownLines.Add('')
@@ -556,16 +579,26 @@ if ($SkipBuild) {
     if ($usingExternalServerBinary) {
         Write-Host "Using pre-built server executable $resolvedServerExecutable; skipping local server build."
     } else {
-        Write-Host "Building $serverProject ($Configuration)..."
-        dotnet build $serverProject --configuration $Configuration
+        Write-Host "Building $serverProject ($Configuration) with Build-Code.ps1..."
+        & "$PSScriptRoot/Build-Code.ps1" `
+            -ServerName 'Azure.Mcp.Server' `
+            -OperatingSystems $measurerOperatingSystem `
+            -Architectures $measurerArchitecture `
+            -OutputPath $serverBuildOutput `
+            -Trimmed `
+            -ReleaseBuild:($Configuration -eq 'Release')
         if ($LASTEXITCODE -ne 0) {
             Write-Error "Build failed with exit code $LASTEXITCODE."
             exit $LASTEXITCODE
         }
     }
 
-    Write-Host "Building $measurerProject ($Configuration)..."
-    dotnet build $measurerProject --configuration $Configuration
+    Write-Host "Building $measurerProject ($Configuration) with Build-Code.ps1..."
+    & "$PSScriptRoot/Build-Code.ps1" `
+        -BuildInfoPath $measurerBuildInfoPath `
+        -PlatformName $measurerRuntime `
+        -OutputPath $measurerBuildOutput `
+        -ReleaseBuild:($Configuration -eq 'Release')
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Build failed with exit code $LASTEXITCODE."
         exit $LASTEXITCODE
@@ -575,14 +608,13 @@ if ($SkipBuild) {
 if ($usingExternalServerBinary) {
     $serverExecutablePath = $resolvedServerExecutable
 } else {
-    $serverExecutablePath = Join-Path $serverProject "bin/$Configuration/net10.0/azmcp$(if ($IsWindows) { '.exe' } else { '' })"
+    $serverExecutablePath = $localServerExecutable
     if (!(Test-Path -LiteralPath $serverExecutablePath -PathType Leaf)) {
         Write-Error "Server executable not found at $serverExecutablePath. Run without -SkipBuild to build it first."
         exit 1
     }
 }
 
-$measurerExecutable = Join-Path $measurerProject "bin/$Configuration/net10.0/McpOutputSizeMeasurer$(if ($IsWindows) { '.exe' } else { '' })"
 if (!(Test-Path -LiteralPath $measurerExecutable -PathType Leaf)) {
     Write-Error "Measurer executable not found at $measurerExecutable. Run without -SkipBuild to build it first."
     exit 1

@@ -81,6 +81,36 @@ public class McpOutputSizeMeasurerTests
     }
 
     [Fact]
+    public void MeasureLearnPayload_MeasuresCommandJson()
+    {
+        const string learnResponse = """
+            {"jsonrpc":"2.0","id":5,"result":{"content":[{"type":"text","text":"Preamble.\n[{\"command\":\"group_subcommand\",\"description\":\"Uses café.\"}]"}]}}
+            """;
+
+        var measurement = McpOutputSizeMeasurer.MeasureLearnPayload(learnResponse);
+
+        Assert.Equal(60, measurement.Utf8Bytes);
+        Assert.Equal(59, measurement.CharacterCount);
+        Assert.Equal("decodedCommandJson", measurement.SizeBasis);
+        Assert.Null(measurement.DecodedContentUtf8Bytes);
+    }
+
+    [Fact]
+    public void MeasureLearnPayload_SeparatesContentWithoutCommandJson()
+    {
+        const string learnResponse = """
+            {"jsonrpc":"2.0","id":5,"result":{"content":[{"type":"text","text":"Request rejected due to unknown arguments: intent"}]}}
+            """;
+
+        var measurement = McpOutputSizeMeasurer.MeasureLearnPayload(learnResponse);
+
+        Assert.Null(measurement.Utf8Bytes);
+        Assert.Null(measurement.CharacterCount);
+        Assert.Equal("decodedContentTextOnly", measurement.SizeBasis);
+        Assert.Equal(49, measurement.DecodedContentUtf8Bytes);
+    }
+
+    [Fact]
     public void GetInnerCommandNames_ParsesCommandArrayFromLearnResponse()
     {
         const string learnResponse = """
