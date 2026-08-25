@@ -637,7 +637,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | iothub_query_run | Run the query "SELECT * FROM devices WHERE status = 'enabled'" against IoT Hub <hub_name> | none |
 | iothub_query_run | Query all devices in IoT Hub <hub_name> in resource group <resource_group_name> | none |
 | iothub_query_run | Find devices in IoT Hub <hub_name> where reported batteryLevel is less than 20 | none |
-| iothub_query_run | Discover the queryable device twin fields in IoT Hub <hub_name> | none |
+| iothub_query_run | Find devices in IoT Hub <hub_name> where tag environment equals 'production' | none |
 
 ## Azure Key Vault
 
