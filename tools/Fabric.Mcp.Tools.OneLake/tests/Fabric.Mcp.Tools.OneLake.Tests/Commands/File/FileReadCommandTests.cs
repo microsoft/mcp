@@ -17,13 +17,13 @@ namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.File;
 
 public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLakeService>
 {
-    private readonly IOptions<ServerStartOptions> _serviceStartOptions;
+    private readonly IOptions<ServerStartOptions> _serverStartOptions;
 
     public FileReadCommandTests()
     {
-        _serviceStartOptions = Substitute.For<IOptions<ServerStartOptions>>();
-        _serviceStartOptions.Value.Returns(new ServerStartOptions { Transport = TransportTypes.StdIo });
-        Services.AddSingleton(_serviceStartOptions);
+        _serverStartOptions = Substitute.For<IOptions<ServerStartOptions>>();
+        _serverStartOptions.Value.Returns(new ServerStartOptions { Transport = TransportTypes.StdIo });
+        Services.AddSingleton(_serverStartOptions);
     }
 
     [Fact]
@@ -50,17 +50,17 @@ public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLa
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenLoggerIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(null!, Service, _serviceStartOptions));
+        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(null!, Service, _serverStartOptions));
     }
 
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenOneLakeServiceIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, null!, _serviceStartOptions));
+        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, null!, _serverStartOptions));
     }
 
     [Fact]
-    public void Constructor_ThrowsArgumentNullException_WhenServiceStartOptionsIsNull()
+    public void Constructor_ThrowsArgumentNullException_WhenServerStartOptionsIsNull()
     {
         Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, Service, null!));
     }

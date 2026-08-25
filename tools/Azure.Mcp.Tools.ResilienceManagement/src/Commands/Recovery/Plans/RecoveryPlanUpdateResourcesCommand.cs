@@ -3,6 +3,7 @@
 
 using System.ClientModel.Primitives;
 using System.Net;
+using System.Text;
 using System.Text.Json;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
@@ -91,7 +92,8 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
             throw new ArgumentException("Specify at least one of --resources-to-update or --resources-to-remove.");
         }
 
-        if (options.ResourcesToUpdate?.Length > MaxPayloadLength || options.ResourcesToRemove?.Length > MaxPayloadLength)
+        if ((options.ResourcesToUpdate is { } updatesJson && Encoding.UTF8.GetByteCount(updatesJson) > MaxPayloadLength) ||
+            (options.ResourcesToRemove is { } removalsJson && Encoding.UTF8.GetByteCount(removalsJson) > MaxPayloadLength))
         {
             throw new ArgumentException("Each recovery resource JSON payload must not exceed 1 MB.");
         }

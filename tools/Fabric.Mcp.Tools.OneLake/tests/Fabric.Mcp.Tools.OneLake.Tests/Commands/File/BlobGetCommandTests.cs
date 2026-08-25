@@ -19,12 +19,12 @@ namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.File;
 
 public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IOneLakeService>
 {
-    private readonly IOptions<ServerStartOptions> _serviceStartOptions = Substitute.For<IOptions<ServerStartOptions>>();
+    private readonly IOptions<ServerStartOptions> _serverStartOptions = Substitute.For<IOptions<ServerStartOptions>>();
 
     public BlobGetCommandTests()
     {
-        _serviceStartOptions.Value.Returns(new ServerStartOptions { Transport = TransportTypes.StdIo });
-        Services.AddSingleton(_serviceStartOptions);
+        _serverStartOptions.Value.Returns(new ServerStartOptions { Transport = TransportTypes.StdIo });
+        Services.AddSingleton(_serverStartOptions);
     }
 
     [Fact]
@@ -230,7 +230,7 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IOneLake
     [Fact]
     public async Task ExecuteAsync_RejectsDownloadPath_WhenTransportIsHttp()
     {
-        _serviceStartOptions.Value.Returns(new ServerStartOptions { Transport = TransportTypes.Http });
+        _serverStartOptions.Value.Returns(new ServerStartOptions { Transport = TransportTypes.Http });
 
         var response = await ExecuteCommandAsync(
             "--workspace-id", "workspace",

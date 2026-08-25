@@ -58,7 +58,7 @@ public sealed class ExtensionSetup : IAreaSetup
     /// risk: processes run under the server's host identity (not the caller's context), and malicious or
     /// excessive requests could exhaust resources leading to denial-of-service.
     /// </summary>
-    /// <param name="serviceProvider">The service provider to resolve ServiceStartOptions from.</param>
+    /// <param name="serviceProvider">The service provider to resolve ServerStartOptions from.</param>
     /// <returns>True if external process commands should be exposed; false otherwise.</returns>
     private static bool ShouldExposeExternalProcessCommands(IServiceProvider serviceProvider)
     {
@@ -67,7 +67,7 @@ public sealed class ExtensionSetup : IAreaSetup
             return !startOptions.IsHttpMode;
         }
 
-        // ServiceStartOptions is unavailable in the first DI container (CLI routing), where all commands
+        // ServerStartOptions is unavailable in the first DI container (CLI routing), where all commands
         // are exposed. See: ConfigureServices method in https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/src/Program.cs
         return true;
     }
