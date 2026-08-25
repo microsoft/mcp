@@ -307,7 +307,6 @@ public sealed class PluginTelemetryCommand(
     /// Creates a host for STDIO transport with full MCP server services.
     /// The host is configured with logging (including debug and support logging if enabled),
     /// authentication services, custom services from ConfigureServices, and the full Azure MCP server stack.
-    /// PluginTelemetryOptions inherits from ServiceStartOptions to enable complete service registration.
     /// </summary>
     /// <param name="options">The plugin telemetry configuration options including debug and support logging settings.</param>
     /// <returns>An IHost instance configured for telemetry publishing with all required services registered.</returns>

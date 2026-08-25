@@ -38,10 +38,10 @@ public class ServerToolLoaderTests
     public async Task CallToolHandler_WithoutListToolsFirst_ShouldSucceed()
     {
         // Arrange - use real RegistryDiscoveryStrategy since ServerToolLoader depends on it
-        var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
+        var serverStartOptions = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
         var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var discoveryLogger = Substitute.For<ILogger<RegistryDiscoveryStrategy>>();
-        var discoveryStrategy = RegistryDiscoveryStrategyHelper.CreateStrategy(serviceStartOptions.Value, discoveryLogger);
+        var discoveryStrategy = RegistryDiscoveryStrategyHelper.CreateStrategy(serverStartOptions.Value, discoveryLogger);
         var logger = Substitute.For<ILogger<ServerToolLoader>>();
 
         var toolLoader = new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger);
@@ -85,10 +85,10 @@ public class ServerToolLoaderTests
     public async Task ListToolsHandler_WithRealRegistryDiscovery_ReturnsExpectedStructure()
     {
         // Arrange - use real RegistryDiscoveryStrategy
-        var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
+        var serverStartOptions = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
         var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var discoveryLogger = Substitute.For<ILogger<RegistryDiscoveryStrategy>>();
-        var discoveryStrategy = RegistryDiscoveryStrategyHelper.CreateStrategy(serviceStartOptions.Value, discoveryLogger);
+        var discoveryStrategy = RegistryDiscoveryStrategyHelper.CreateStrategy(serverStartOptions.Value, discoveryLogger);
         var logger = Substitute.For<ILogger<ServerToolLoader>>();
 
         var toolLoader = new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger);
