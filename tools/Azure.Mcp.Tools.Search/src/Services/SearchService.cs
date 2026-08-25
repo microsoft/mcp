@@ -396,19 +396,6 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
                         ?? indexDefinition.SemanticSearch?.Configurations?.FirstOrDefault()?.Name
                     : semanticConfiguration;
 
-                _ = semanticConfigurationName
-                    ?? throw new InvalidOperationException(
-                        $"Index '{indexDefinition.Name}' doesn't have a semantic configuration, semantic queries cannot be used against it.");
-
-                var semanticConfigurationExists = indexDefinition.SemanticSearch?.Configurations?.Any(c =>
-                    string.Equals(c.Name, semanticConfigurationName, StringComparison.OrdinalIgnoreCase)) == true;
-
-                if (!string.IsNullOrWhiteSpace(semanticConfiguration) && !semanticConfigurationExists)
-                {
-                    throw new InvalidOperationException(
-                        $"Semantic configuration '{semanticConfigurationName}' was not found on index '{indexDefinition.Name}'.");
-                }
-
                 options.QueryType = SearchQueryType.Semantic;
                 options.SemanticSearch = new SemanticSearchOptions
                 {

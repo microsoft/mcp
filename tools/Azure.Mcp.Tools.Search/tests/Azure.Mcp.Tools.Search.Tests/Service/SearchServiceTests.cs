@@ -377,28 +377,29 @@ public class SearchServiceTests
     }
 
     [Fact]
-    public void ConfigureQueryType_Throws_WhenProvidedSemanticConfigurationDoesNotExist()
+    public void ConfigureQueryType_UsesProvidedSemanticConfiguration_WhenConfigurationDoesNotExist()
     {
         var index = CreateIndex();
         index.SemanticSearch = new SemanticSearch();
         index.SemanticSearch.Configurations.Add(new SemanticConfiguration("default-config", new SemanticPrioritizedFields()));
         var options = new SearchOptions();
 
-        var exception = Assert.Throws<InvalidOperationException>(
-            () => SearchService.ConfigureQueryType(options, index, IndexQueryType.Semantic, "unknown-config"));
+        SearchService.ConfigureQueryType(options, index, IndexQueryType.Semantic, "unknown-config");
 
-        Assert.Contains("not found", exception.Message);
+        Assert.Equal(SearchQueryType.Semantic, options.QueryType);
+        Assert.Equal("unknown-config", options.SemanticSearch?.SemanticConfigurationName);
     }
 
     [Fact]
-    public void ConfigureQueryType_Throws_WhenSemanticRequestedWithoutConfiguration()
+    public void ConfigureQueryType_DoesNotThrow_WhenSemanticRequestedWithoutConfiguration()
     {
         var options = new SearchOptions();
 
-        var exception = Assert.Throws<InvalidOperationException>(
-            () => SearchService.ConfigureQueryType(options, CreateIndex(), IndexQueryType.Semantic));
+        SearchService.ConfigureQueryType(options, CreateIndex(), IndexQueryType.Semantic);
 
-        Assert.Contains("semantic configuration", exception.Message);
+        Assert.Equal(SearchQueryType.Semantic, options.QueryType);
+        Assert.NotNull(options.SemanticSearch);
+        Assert.Null(options.SemanticSearch.SemanticConfigurationName);
     }
 
     private static SearchIndex CreateIndex() => new("test-index");
