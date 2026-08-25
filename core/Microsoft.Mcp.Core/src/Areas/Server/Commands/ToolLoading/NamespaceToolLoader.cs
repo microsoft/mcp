@@ -4,6 +4,7 @@
 using System.CommandLine;
 using System.Diagnostics;
 using System.Net;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
@@ -129,15 +130,25 @@ public sealed class NamespaceToolLoader(
                 continue;
             }
 
-            var tool = new Tool
-            {
-                Name = namespaceName,
-                Description = group.Description + """
+            var toolRouterDescription = _configuration.Value.ThreeStepToolDiscovery
+                ? """
+                    This tool is a hierarchical MCP command router.
+                    Sub commands are routed to MCP servers that require specific fields inside the "parameters" object.
+                    To invoke a command, set "command" to the exact command name (e.g. "appconfig_account_list") and wrap its args in "parameters".
+                    Do not guess a "command" name from natural language. First call this tool with "learn=true" and no "command" to get the exact list of command names and descriptions.
+                    Then call again with "learn=true" and the matching "command" from that list to get its full input schema before invoking it.
+                    """
+                : """
                     This tool is a hierarchical MCP command router.
                     Sub commands are routed to MCP servers that require specific fields inside the "parameters" object.
                     To invoke a command, set "command" and wrap its args in "parameters".
                     Set "learn=true" to discover available sub commands.
-                    """,
+                    """;
+
+            var tool = new Tool
+            {
+                Name = namespaceName,
+                Description = group.Description + toolRouterDescription,
                 InputSchema = s_toolSchema,
                 Annotations = new ToolAnnotations()
                 {
@@ -224,6 +235,11 @@ public sealed class NamespaceToolLoader(
 
             if (learn)
             {
+                if (!string.IsNullOrWhiteSpace(command) && IsThreeStepDiscoveryEnabled(request, tool, out _, out _))
+                {
+                    return await InvokeCommandLearn(request, tool, command, cancellationToken);
+                }
+
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }
             else if (!string.IsNullOrEmpty(tool) && !string.IsNullOrEmpty(command))
@@ -540,14 +556,94 @@ public sealed class NamespaceToolLoader(
         }
     }
 
+    /// <summary>
+    /// Determines whether three-step (metadata-only) learn behavior should be used for the given namespace,
+    /// either because <see cref="ServerRuntimeConfiguration.ThreeStepToolDiscovery"/> is explicitly enabled, or because
+    /// automatic fallback is enabled and the namespace's full-schema (two-step) learn response would exceed
+    /// <see cref="ServerRuntimeConfiguration.ThreeStepToolDiscoveryThresholdBytes"/>.
+    /// </summary>
+    /// <param name="availableToolsForSizeCheck">
+    /// Set to the namespace's tool list when it was computed as part of the size check, so callers can reuse it
+    /// instead of recomputing. Left <see langword="null"/> when the explicit switch already made the size check unnecessary.
+    /// </param>
+    /// <param name="defaultLearnToolsJson">
+    /// Set to the serialized full-schema learn response computed as part of the size check, so callers can reuse
+    /// it instead of re-serializing. Left <see langword="null"/> when the explicit switch already made the size check unnecessary.
+    /// </param>
+    private bool IsThreeStepDiscoveryEnabled(RequestContext<CallToolRequestParams> request, string namespaceName, out List<Tool>? availableToolsForSizeCheck, out string? defaultLearnToolsJson)
+    {
+        availableToolsForSizeCheck = null;
+        defaultLearnToolsJson = null;
+
+        if (_configuration.Value.ThreeStepToolDiscovery)
+        {
+            return true;
+        }
+
+        if (_configuration.Value.DisableAutomaticThreeStepToolDiscovery)
+        {
+            return false;
+        }
+
+        // The explicit switch is off, but a namespace's full-schema learn response can still be
+        // large enough to overwhelm smaller-context models. Compute the would-be two-step response
+        // size and automatically fall back to three-step (metadata-only) behavior when it exceeds
+        // the configured threshold. This only changes behavior when the switch is off.
+        availableToolsForSizeCheck = GetChildToolList(request, namespaceName);
+        var defaultLearnTools = availableToolsForSizeCheck.Select(t => new ToolCommandInfo(t));
+        defaultLearnToolsJson = JsonSerializer.Serialize(defaultLearnTools, ServerJsonContext.Default.IEnumerableToolCommandInfo);
+
+        return Encoding.UTF8.GetByteCount(defaultLearnToolsJson) > _configuration.Value.ThreeStepToolDiscoveryThresholdBytes;
+    }
+
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string namespaceName, CancellationToken cancellationToken)
     {
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
             .SetTag(TagName.IsLearn, true);
-        var learnTools = GetChildToolList(request, namespaceName).Select(t => new ToolCommandInfo(t));
-        var learnToolsJson = JsonSerializer.Serialize(learnTools, ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
-        var learnResponse = new CallToolResult
+        var useThreeStepDiscovery = IsThreeStepDiscoveryEnabled(request, namespaceName, out var availableToolsForSizeCheck, out var defaultLearnToolsJson);
+
+        if (useThreeStepDiscovery)
+        {
+            var availableTools = availableToolsForSizeCheck ?? GetChildToolList(request, namespaceName);
+            var learnTools = availableTools.Select(t => new ToolCommandInfo(t, includeSchema: false));
+            var learnToolsJson = JsonSerializer.Serialize(learnTools, ServerJsonContext.Default.IEnumerableToolCommandInfo);
+
+            var learnResponse = new CallToolResult
+            {
+                Content =
+                [
+                    new TextContentBlock
+                    {
+                        Text = $"""
+                            Here are the available commands for '{namespaceName}' tool.
+                            The "tool" field of each entry below is the exact "command" value to use -- do not guess or invent a
+                            different name. Pick the entry matching your task, then run again with "learn=true" and "command" set
+                            to that exact "tool" value to get its full input schema.
+
+                            {learnToolsJson}
+                            """
+                    }
+                ],
+                IsError = false
+            };
+
+            if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
+            {
+                (string? commandName, _) = await GetCommandAndParametersFromIntentAsync(request, intent, namespaceName, availableTools, cancellationToken);
+                if (!string.IsNullOrWhiteSpace(commandName))
+                {
+                    return await InvokeCommandLearn(request, namespaceName, commandName, cancellationToken);
+                }
+            }
+
+            return learnResponse;
+        }
+
+        var defaultLearnTools = (availableToolsForSizeCheck ?? GetChildToolList(request, namespaceName)).Select(t => new ToolCommandInfo(t));
+        defaultLearnToolsJson ??= JsonSerializer.Serialize(defaultLearnTools, ServerJsonContext.Default.IEnumerableToolCommandInfo);
+
+        var defaultLearnResponse = new CallToolResult
         {
             Content =
             [
@@ -558,16 +654,16 @@ public sealed class NamespaceToolLoader(
                         If you do not find a suitable "command", run again with the "learn=true" to get a list of available commands and their parameters.
                         Next, identify the command you want to execute and run again with the "command" and "parameters" arguments, respecting "required" parameters if present.
 
-                        {learnToolsJson}
+                        {defaultLearnToolsJson}
                         """
                 }
             ],
             IsError = false
         };
-        var response = learnResponse;
+        var response = defaultLearnResponse;
         if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
         {
-            var availableTools = GetChildToolList(request, namespaceName);
+            var availableTools = availableToolsForSizeCheck ?? GetChildToolList(request, namespaceName);
             (string? commandName, IDictionary<string, JsonElement> parameters) = await GetCommandAndParametersFromIntentAsync(request, intent, namespaceName, availableTools, cancellationToken);
             if (commandName != null)
             {
@@ -575,6 +671,56 @@ public sealed class NamespaceToolLoader(
             }
         }
         return response;
+    }
+
+    private Task<CallToolResult> InvokeCommandLearn(RequestContext<CallToolRequestParams> request, string namespaceName, string commandName, CancellationToken cancellationToken)
+    {
+        // We intentionally do not invoke the command here; learn mode should return details for the selected command.
+        var availableTools = GetChildToolList(request, namespaceName);
+        var matchedTool = availableTools.FirstOrDefault(tool => string.Equals(tool.Name, commandName, StringComparison.OrdinalIgnoreCase));
+        if (matchedTool is null)
+        {
+            var knownCommandNames = availableTools.Select(t => t.Name);
+            var knownCommandNamesJson = JsonSerializer.Serialize(knownCommandNames, ServerJsonContext.Default.IEnumerableString);
+
+            return Task.FromResult(new CallToolResult
+            {
+                Content =
+                [
+                    new TextContentBlock
+                    {
+                        Text = $"""
+                            Command '{commandName}' was not found in namespace '{namespaceName}'. "command" must be one of the exact
+                            names below, not a guessed or natural-language name. Call again with "learn=true" and one of these
+                            "command" values:
+
+                            {knownCommandNamesJson}
+                            """
+                    }
+                ],
+                IsError = true
+            });
+        }
+
+        var commandInfo = new ToolCommandInfo(matchedTool);
+        var commandInfoJson = JsonSerializer.Serialize(commandInfo, ServerJsonContext.Default.ToolCommandInfo);
+
+        return Task.FromResult(new CallToolResult
+        {
+            Content =
+            [
+                new TextContentBlock
+                {
+                    Text = $"""
+                        Here is the full command definition for '{namespaceName}/{commandName}'.
+                        This includes its input schema and required parameters.
+
+                        {commandInfoJson}
+                        """
+                }
+            ],
+            IsError = false
+        });
     }
 
     /// <summary>

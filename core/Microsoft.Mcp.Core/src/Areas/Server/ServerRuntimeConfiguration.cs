@@ -32,6 +32,21 @@ public sealed class ServerRuntimeConfiguration
     public string[]? Tool { get; set; }
 
     /// <summary>
+    /// Indicates whether three-step tool discovery is explicitly enabled.
+    /// </summary>
+    public bool ThreeStepToolDiscovery { get; set; }
+
+    /// <summary>
+    /// The UTF-8 byte size threshold above which namespace discovery automatically uses three-step behavior.
+    /// </summary>
+    public int ThreeStepToolDiscoveryThresholdBytes { get; set; } = 45000;
+
+    /// <summary>
+    /// Indicates whether automatic size-based fallback to three-step discovery is disabled.
+    /// </summary>
+    public bool DisableAutomaticThreeStepToolDiscovery { get; set; }
+
+    /// <summary>
     /// Indicates whether the server is running in read-only mode, which restricts clients from performing write operations.
     /// </summary>
     public bool ReadOnly { get; set; } = false;

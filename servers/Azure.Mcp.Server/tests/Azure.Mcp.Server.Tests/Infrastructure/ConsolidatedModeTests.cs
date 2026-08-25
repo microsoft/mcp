@@ -60,7 +60,7 @@ public class ConsolidatedModeTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = azmcpPath,
-            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            Arguments = ServerTestOptions.GetServerStartArguments("server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth"),
             UseShellExecute = false,
             RedirectStandardInput = false,
             RedirectStandardOutput = false,
@@ -116,7 +116,7 @@ public class ConsolidatedModeTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = azmcpPath,
-            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            Arguments = ServerTestOptions.GetServerStartArguments("server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth"),
             UseShellExecute = false,
             RedirectStandardInput = false,
             RedirectStandardOutput = false,
@@ -176,7 +176,7 @@ public class ConsolidatedModeTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = azmcpPath,
-            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            Arguments = ServerTestOptions.GetServerStartArguments("server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth"),
             UseShellExecute = false,
             RedirectStandardInput = false,
             RedirectStandardOutput = false,
@@ -231,7 +231,7 @@ public class ConsolidatedModeTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = azmcpPath,
-            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            Arguments = ServerTestOptions.GetServerStartArguments("server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth"),
             UseShellExecute = false,
             RedirectStandardInput = false,
             RedirectStandardOutput = false,
@@ -306,7 +306,7 @@ public class ConsolidatedModeTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = azmcpPath,
-            Arguments = "server start --mode consolidated",
+            Arguments = ServerTestOptions.GetServerStartArguments("server start --mode consolidated"),
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
@@ -360,7 +360,7 @@ public class ConsolidatedModeTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = azmcpPath,
-            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            Arguments = ServerTestOptions.GetServerStartArguments("server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth"),
             UseShellExecute = false,
             RedirectStandardInput = false,
             RedirectStandardOutput = false,
@@ -421,7 +421,7 @@ public class ConsolidatedModeTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = azmcpPath,
-            Arguments = "server start --mode consolidated",
+            Arguments = ServerTestOptions.GetServerStartArguments("server start --mode consolidated"),
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
@@ -500,7 +500,7 @@ public class ConsolidatedModeTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = azmcpPath,
-            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            Arguments = ServerTestOptions.GetServerStartArguments("server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth"),
             UseShellExecute = false,
             CreateNoWindow = true
         };
@@ -551,7 +551,7 @@ public class ConsolidatedModeTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = azmcpPath,
-            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            Arguments = ServerTestOptions.GetServerStartArguments("server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth"),
             UseShellExecute = false,
             CreateNoWindow = true
         };
@@ -602,7 +602,7 @@ public class ConsolidatedModeTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = azmcpPath,
-            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            Arguments = ServerTestOptions.GetServerStartArguments("server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth"),
             UseShellExecute = false,
             CreateNoWindow = true
         };
@@ -652,7 +652,7 @@ public class ConsolidatedModeTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = azmcpPath,
-            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            Arguments = ServerTestOptions.GetServerStartArguments("server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth"),
             UseShellExecute = false,
             CreateNoWindow = true
         };
@@ -704,7 +704,7 @@ public class ConsolidatedModeTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = azmcpPath,
-            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            Arguments = ServerTestOptions.GetServerStartArguments("server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth"),
             UseShellExecute = false,
             CreateNoWindow = true
         };
@@ -756,7 +756,7 @@ public class ConsolidatedModeTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = azmcpPath,
-            Arguments = "server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth",
+            Arguments = ServerTestOptions.GetServerStartArguments("server start --mode consolidated --transport http --dangerously-disable-http-incoming-auth"),
             UseShellExecute = false,
             CreateNoWindow = true
         };
