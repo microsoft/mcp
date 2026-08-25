@@ -34,8 +34,8 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
     [InlineData("--service-group sg1 --rbac-setup-mode Manual", false)]
     [InlineData("--service-group sg1 --drill drill1", false)]
     [InlineData("--service-group sg1 --drill drill1 --subscription sub", false)]
-    [InlineData("")]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed = false)
+    [InlineData("", false)]
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
         {

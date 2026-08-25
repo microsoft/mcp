@@ -512,17 +512,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         ResilienceManagementDrillCollection drills = armClient.GetResilienceManagementDrills(serviceGroupId);
         Response<ResilienceManagementDrillResource> response = await drills.GetAsync(drill, cancellationToken);
 
-        using JsonDocument document = JsonDocument.Parse(response.GetRawResponse().Content.ToMemory());
-        JsonElement root = document.RootElement;
-
-        return new DrillInfo(
-            Id: root.TryGetProperty("id", out JsonElement idElement) ? idElement.GetString() ?? string.Empty : string.Empty,
-            Name: root.TryGetProperty("name", out JsonElement nameElement) ? nameElement.GetString() ?? string.Empty : string.Empty,
-            ResourceType: root.TryGetProperty("type", out JsonElement typeElement) ? typeElement.GetString() : null,
-            Location: root.TryGetProperty("location", out JsonElement locationElement) ? locationElement.GetString() : null,
-            Tags: GetTagsOrNull(root),
-            Properties: root.TryGetProperty("properties", out JsonElement propertiesElement) ? propertiesElement.Clone() : default,
-            SystemData: root.TryGetProperty("systemData", out JsonElement systemDataElement) ? systemDataElement.Clone() : default);
+        return MapDrill(response);
     }
 
     public async Task<DrillInfo> UpdateDrillAsync(string serviceGroup, string drill, string? subscription = null, string? region = null, DrillRbacSetupMode? rbacSetupMode = null, string? recoveryPlan = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
@@ -565,17 +555,8 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
         Response<ResilienceManagementDrillResource> response = await drillResource.GetAsync(cancellationToken);
-        using JsonDocument document = JsonDocument.Parse(response.GetRawResponse().Content.ToMemory());
-        JsonElement root = document.RootElement;
 
-        return new DrillInfo(
-            Id: root.TryGetProperty("id", out JsonElement idElement) ? idElement.GetString() ?? string.Empty : string.Empty,
-            Name: root.TryGetProperty("name", out JsonElement nameElement) ? nameElement.GetString() ?? string.Empty : string.Empty,
-            ResourceType: root.TryGetProperty("type", out JsonElement typeElement) ? typeElement.GetString() : null,
-            Location: root.TryGetProperty("location", out JsonElement locationElement) ? locationElement.GetString() : null,
-            Tags: GetTagsOrNull(root),
-            Properties: root.TryGetProperty("properties", out JsonElement propertiesElement) ? propertiesElement.Clone() : default,
-            SystemData: root.TryGetProperty("systemData", out JsonElement systemDataElement) ? systemDataElement.Clone() : default);
+        return MapDrill(response);
     }
 
     public async Task<IEnumerable<ResourceSummary>> ListDrillResourcesAsync(string serviceGroup, string drill, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
@@ -610,6 +591,21 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         JsonElement root = document.RootElement;
 
         return new DrillResourceInfo(
+            Id: root.TryGetProperty("id", out JsonElement idElement) ? idElement.GetString() ?? string.Empty : string.Empty,
+            Name: root.TryGetProperty("name", out JsonElement nameElement) ? nameElement.GetString() ?? string.Empty : string.Empty,
+            ResourceType: root.TryGetProperty("type", out JsonElement typeElement) ? typeElement.GetString() : null,
+            Location: root.TryGetProperty("location", out JsonElement locationElement) ? locationElement.GetString() : null,
+            Tags: GetTagsOrNull(root),
+            Properties: root.TryGetProperty("properties", out JsonElement propertiesElement) ? propertiesElement.Clone() : default,
+            SystemData: root.TryGetProperty("systemData", out JsonElement systemDataElement) ? systemDataElement.Clone() : default);
+    }
+
+    private static DrillInfo MapDrill(Response<ResilienceManagementDrillResource> response)
+    {
+        using JsonDocument document = JsonDocument.Parse(response.GetRawResponse().Content.ToMemory());
+        JsonElement root = document.RootElement;
+
+        return new DrillInfo(
             Id: root.TryGetProperty("id", out JsonElement idElement) ? idElement.GetString() ?? string.Empty : string.Empty,
             Name: root.TryGetProperty("name", out JsonElement nameElement) ? nameElement.GetString() ?? string.Empty : string.Empty,
             ResourceType: root.TryGetProperty("type", out JsonElement typeElement) ? typeElement.GetString() : null,

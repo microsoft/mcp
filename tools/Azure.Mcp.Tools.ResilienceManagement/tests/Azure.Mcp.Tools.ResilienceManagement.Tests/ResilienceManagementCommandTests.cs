@@ -145,7 +145,10 @@ public class ResilienceManagementCommandTests(ITestOutputHelper output, TestProx
             });
 
         var drill = result.AssertProperty("drill");
-        Assert.False(string.IsNullOrEmpty(drill.AssertProperty("name").GetString()));
+        Assert.EndsWith(drillName, drill.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
+        var properties = drill.AssertProperty("properties");
+        Assert.Equal("Succeeded", properties.AssertProperty("provisioningState").GetString());
+        Assert.Equal("AutomatedBuiltinRoles", properties.AssertProperty("rbacSetupMode").GetString());
     }
 
     [Fact]

@@ -17,11 +17,13 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Title = "Update Resilience Drill",
     Description = """
         Updates an existing resilience drill in an Azure service group. Use for requests such as "Update
-        resilience drill <drill_name> in service group <service_group> to use manual RBAC setup" and
+        resilience drill <drill_name> in service group <service_group> to use manual RBAC setup",
         "Associate recovery plan <recovery_plan_name> with resilience drill <drill_name> in service group
-        <service_group>". Changes the drill's RBAC setup mode, associates or links a recovery plan with the
-        drill, or changes the supporting-resource subscription and region together. This tool modifies the drill;
-        it does not get drill details or get a recovery plan. Only supplied properties are changed.
+        <service_group>", and "Move the supporting resources of resilience drill <drill_name> in service
+        group <service_group> to subscription <subscription> and region <region>". Changes the drill's RBAC
+        setup mode, associates or links a recovery plan with the drill, or moves the drill's supporting
+        resources by changing their subscription and region together. This tool modifies the drill; it does
+        not get drill details or get a recovery plan. Only supplied properties are changed.
         """,
     Destructive = true,
     Idempotent = true,

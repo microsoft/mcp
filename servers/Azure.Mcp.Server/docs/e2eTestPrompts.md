@@ -904,6 +904,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_drill_get | Get the details of resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_update | Update resilience drill <drill_name> in service group <service_group> to use manual RBAC setup | none |
 | resilience_drill_update | Associate recovery plan <recovery_plan_name> with resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_update | Move the supporting resources of resilience drill <drill_name> in service group <service_group> to subscription <subscription> and region <region> | none |
 | resilience_drill_resource_get | List all drill resources for resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_resource_get | List all drill targets for resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_resource_get | Show the resources targeted by resilience drill <drill_name> in service group <service_group> | none |
