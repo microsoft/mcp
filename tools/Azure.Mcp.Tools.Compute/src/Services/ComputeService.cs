@@ -13,7 +13,7 @@ using Azure.ResourceManager.Network.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
@@ -22,11 +22,11 @@ namespace Azure.Mcp.Tools.Compute.Services;
 public class ComputeService(
     IAzureService azureService,
     ILogger<ComputeService> logger,
-    IOptions<ServerStartOptions> serviceStartOptions)
+    IOptions<ServerRuntimeConfiguration> configuration)
     : BaseAzureResourceService(azureService), IComputeService
 {
     private readonly ILogger<ComputeService> _logger = logger;
-    private readonly IOptions<ServerStartOptions> _serviceStartOptions = serviceStartOptions;
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration;
 
     // Default VM size (D-series v5, approximately 2 vCPU and 8 GB RAM)
     private const string DefaultVmSize = "Standard_D2s_v5";
@@ -1880,7 +1880,7 @@ public class ComputeService(
 
     private string ResolveSshPublicKey(string sshPublicKey)
     {
-        if (!_serviceStartOptions.Value.IsHttpMode)
+        if (!_configuration.Value.IsHttpMode)
         {
             // In stdio mode, allow resolving file paths for convenience
             if (File.Exists(sshPublicKey))

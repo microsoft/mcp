@@ -11,8 +11,10 @@ using Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 using Azure.Mcp.Tools.AzureBackup.Commands.ProtectableItem;
 using Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 using Azure.Mcp.Tools.AzureBackup.Commands.RecoveryPoint;
+using Azure.Mcp.Tools.AzureBackup.Commands.ResourceGuard;
 using Azure.Mcp.Tools.AzureBackup.Commands.Security;
 using Azure.Mcp.Tools.AzureBackup.Commands.Vault;
+using Azure.Mcp.Tools.AzureBackup.Commands.Vault.PrivateEndpoint;
 using Azure.Mcp.Tools.AzureBackup.Models;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands;
@@ -34,14 +36,25 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands;
 [JsonSerializable(typeof(GovernanceImmutabilityCommand.GovernanceImmutabilityCommandResult))]
 [JsonSerializable(typeof(GovernanceSoftDeleteCommand.GovernanceSoftDeleteCommandResult))]
 [JsonSerializable(typeof(DisasterRecoveryEnableCrrCommand.DisasterRecoveryEnableCrrCommandResult))]
-[JsonSerializable(typeof(SecurityConfigureMuaCommand.SecurityConfigureMuaCommandResult))]
+[JsonSerializable(typeof(SecurityEnableMuaCommand.SecurityEnableMuaCommandResult))]
+[JsonSerializable(typeof(SecurityDisableMuaCommand.SecurityDisableMuaCommandResult))]
 [JsonSerializable(typeof(SecurityConfigureEncryptionCommand.SecurityConfigureEncryptionCommandResult))]
+[JsonSerializable(typeof(ResourceGuardCreateCommand.ResourceGuardCreateCommandResult))]
+[JsonSerializable(typeof(ResourceGuardGetCommand.ResourceGuardGetCommandResult))]
+[JsonSerializable(typeof(ResourceGuardDeleteCommand.ResourceGuardDeleteCommandResult))]
+[JsonSerializable(typeof(PrivateEndpointCreateCommand.PrivateEndpointCreateCommandResult))]
+[JsonSerializable(typeof(PrivateEndpointGetCommand.PrivateEndpointGetCommandResult))]
+[JsonSerializable(typeof(PrivateEndpointDeleteCommand.PrivateEndpointDeleteCommandResult))]
+[JsonSerializable(typeof(PrivateEndpointApproveRejectCommand.PrivateEndpointApproveRejectCommandResult))]
+[JsonSerializable(typeof(PrivateEndpointConnectionInfo))]
 [JsonSerializable(typeof(BackupVaultInfo))]
 [JsonSerializable(typeof(ProtectedItemInfo))]
 [JsonSerializable(typeof(BackupPolicyInfo))]
 [JsonSerializable(typeof(BackupJobInfo))]
 [JsonSerializable(typeof(RecoveryPointInfo))]
 [JsonSerializable(typeof(ProtectableItemInfo))]
+[JsonSerializable(typeof(ResourceGuardInfo))]
+[JsonSerializable(typeof(List<ResourceGuardInfo>))]
 [JsonSerializable(typeof(VaultCreateResult))]
 [JsonSerializable(typeof(ProtectResult))]
 [JsonSerializable(typeof(OperationResult))]

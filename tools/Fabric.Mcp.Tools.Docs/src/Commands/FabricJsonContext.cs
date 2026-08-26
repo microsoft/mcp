@@ -9,8 +9,8 @@ using Fabric.Mcp.Tools.Docs.Models;
 namespace Fabric.Mcp.Tools.Docs.Commands;
 
 
-[JsonSerializable(typeof(FabricWorkloadPublicApi))]
-[JsonSerializable(typeof(ListWorkloadsCommand.ItemListCommandResult))]
+[JsonSerializable(typeof(FabricPublicApi))]
+[JsonSerializable(typeof(ListItemTypesCommand.ItemTypeListCommandResult))]
 [JsonSerializable(typeof(GetExamplesCommand.ExampleFileResult))]
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(IEnumerable<string>))]

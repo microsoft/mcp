@@ -2,9 +2,15 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Reflection;
+using System.Text.Json;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
+using NSubstitute;
 using Xunit;
 
 namespace Microsoft.Mcp.Tests.Client.Helpers;
@@ -200,9 +206,9 @@ public static class McpTestUtilities
     /// <returns>An available port number.</returns>
     private static int GetAvailablePort()
     {
-        using var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        using var listener = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
         listener.Start();
-        var port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
         listener.Stop();
         return port;
     }
@@ -266,29 +272,24 @@ public static class McpTestUtilities
                 var request = new
                 {
                     jsonrpc = "2.0",
-                    method = "tools/list",
+                    method = RequestMethods.ToolsList,
                     @params = new { },
                     id = Guid.NewGuid().ToString()
                 };
 
-                var content = new System.Net.Http.StringContent(
-                    System.Text.Json.JsonSerializer.Serialize(request),
-                    System.Text.Encoding.UTF8,
-                    "application/json");
+                var content = JsonContent.Create(request, MediaTypeHeaderValue.Parse("application/json"));
                 using var requestMessage = new HttpRequestMessage(HttpMethod.Post, serverUrl)
                 {
                     Content = content
                 };
-                requestMessage.Headers.Accept.Add(
-                    new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-                requestMessage.Headers.Accept.Add(
-                    new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("text/event-stream"));
+                requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
                 using var resp = await httpClient.SendAsync(requestMessage);
 
                 // If authentication is enabled, 401 Unauthorized means server is ready
                 // If authentication is disabled, we need a success status code
                 if (resp.IsSuccessStatusCode || (authenticationEnabled &&
-                    (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized || resp.StatusCode == System.Net.HttpStatusCode.Forbidden)))
+                    (resp.StatusCode == HttpStatusCode.Unauthorized || resp.StatusCode == HttpStatusCode.Forbidden)))
                 {
                     return;
                 }
@@ -378,4 +379,54 @@ public static class McpTestUtilities
 
         return process;
     }
+
+    /// <summary>
+    /// Creates a RequestContext for a tools/list request, which can be used in tests to simulate a client request to the MCP server.
+    /// </summary>
+    /// <returns>The mocked tools/list request.</returns>
+    public static RequestContext<ListToolsRequestParams> CreateToolListRequest() =>
+        new(Substitute.For<McpServer>(), new JsonRpcRequest() { Method = RequestMethods.ToolsList }, new ListToolsRequestParams());
+
+    /// <summary>
+    /// Creates a RequestContext for a tools/call request, which can be used in tests to simulate a client request to the MCP server.
+    /// </summary>
+    /// <param name="toolName">The name of the tool being called.</param>
+    /// <returns>The mocked tools/call request.</returns>
+    public static RequestContext<CallToolRequestParams> CreateToolCallRequest(string toolName) =>
+        CreateToolCallRequest(toolName, Substitute.For<McpServer>());
+
+    /// <summary>
+    /// Creates a RequestContext for a tools/call request, which can be used in tests to simulate a client request to the MCP server.
+    /// </summary>
+    /// <param name="toolName">The name of the tool being called.</param>
+    /// <param name="server">An McpServer associated with the tools/call request.</param>
+    /// <returns>The mocked tools/call request.</returns>
+    public static RequestContext<CallToolRequestParams> CreateToolCallRequest(string toolName, McpServer server) =>
+        CreateToolCallRequest(new CallToolRequestParams()
+        {
+            Name = toolName,
+            Arguments = new Dictionary<string, JsonElement>()
+        }, server);
+
+    /// <summary>
+    /// Creates a RequestContext for a tools/call request, which can be used in tests to simulate a client request to the MCP server.
+    /// </summary>
+    /// <param name="toolName">The name of the tool being called.</param>
+    /// <param name="arguments">The arguments for the tool being called.</param>
+    /// <returns>The mocked tools/call request.</returns>
+    public static RequestContext<CallToolRequestParams> CreateToolCallRequest(string toolName, IDictionary<string, object?> arguments) =>
+        CreateToolCallRequest(new CallToolRequestParams()
+        {
+            Name = toolName,
+            Arguments = arguments.ToDictionary(kvp => kvp.Key, kvp => JsonDocument.Parse(JsonSerializer.Serialize(kvp.Value)).RootElement)
+        }, Substitute.For<McpServer>());
+
+    /// <summary>
+    /// Creates a RequestContext for a tools/call request, which can be used in tests to simulate a client request to the MCP server.
+    /// </summary>
+    /// <param name="callToolRequestParams">The full tools/call request parameters.</param>
+    /// <param name="server">The McpServer associated with the tools/call request.</param>
+    /// <returns>The mocked tools/call request.</returns>
+    public static RequestContext<CallToolRequestParams> CreateToolCallRequest(CallToolRequestParams callToolRequestParams, McpServer server) =>
+        new(server, new JsonRpcRequest() { Method = RequestMethods.ToolsCall }, callToolRequestParams);
 }

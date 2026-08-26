@@ -1,5 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added the 'azmcp resilience drill get' command to list or retrieve drill details for a service group."
-  - section: "Features Added"
-    description: "Added the 'azmcp resilience drill resource get' command to list or retrieve resources associated with a drill."

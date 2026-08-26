@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
-using Microsoft.Mcp.Core.Areas.Server.Options;
-using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Tests.Client.Helpers;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.Discovery;
@@ -12,14 +13,13 @@ namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.Discovery;
 public class CommandGroupDiscoveryStrategyTests
 {
     private static CommandGroupDiscoveryStrategy CreateStrategy(
-        ICommandFactory? commandFactory = null,
-        ServerStartOptions? options = null,
+        ServerRuntimeConfiguration? configuration = null,
         string? entryPoint = null)
     {
-        var factory = commandFactory ?? CommandFactoryHelpers.CreateCommandFactory();
-        var startOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServerStartOptions());
-        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
-        var strategy = new CommandGroupDiscoveryStrategy(factory, startOptions, logger);
+        var factory = CommandFactoryHelpers.CreateCommandFactory();
+        var runtimeConfiguration = Microsoft.Extensions.Options.Options.Create(configuration ?? new ServerRuntimeConfiguration());
+        var logger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
+        var strategy = new CommandGroupDiscoveryStrategy(factory, runtimeConfiguration, logger);
         if (entryPoint != null)
         {
             strategy.EntryPoint = entryPoint;
@@ -31,12 +31,12 @@ public class CommandGroupDiscoveryStrategyTests
     public void Constructor_WithNullCommandFactory_DoesNotThrow()
     {
         // Arrange
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
-        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
+        var logger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
 
         // Act & Assert
         // Primary constructor syntax doesn't automatically validate null parameters
-        var strategy = new CommandGroupDiscoveryStrategy(null!, options, logger);
+        var strategy = new CommandGroupDiscoveryStrategy(null!, configuration, logger);
         Assert.NotNull(strategy);
     }
 
@@ -45,7 +45,7 @@ public class CommandGroupDiscoveryStrategyTests
     {
         // Arrange
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
-        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
+        var logger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
 
         // Act & Assert
         // Primary constructor syntax doesn't automatically validate null parameters
@@ -56,27 +56,12 @@ public class CommandGroupDiscoveryStrategyTests
     [Fact]
     public void Constructor_WithValidParameters_InitializesCorrectly()
     {
-        // Arrange
-        var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
-        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
-
-        // Act
-        var strategy = new CommandGroupDiscoveryStrategy(commandFactory, options, logger);
+        // Arrange & Act
+        var strategy = CreateStrategy();
 
         // Assert
         Assert.NotNull(strategy);
         Assert.Null(strategy.EntryPoint); // Default should be null
-    }
-
-    [Fact]
-    public void EntryPoint_DefaultsToNull()
-    {
-        // Arrange
-        var strategy = CreateStrategy();
-
-        // Act & Assert
-        Assert.Null(strategy.EntryPoint);
     }
 
     [Fact]
@@ -142,8 +127,8 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithReadOnlyFalse_CreatesNonReadOnlyProviders()
     {
         // Arrange
-        var options = new ServerStartOptions { ReadOnly = false };
-        var strategy = CreateStrategy(options: options);
+        var configuration = new ServerRuntimeConfiguration { ReadOnly = false };
+        var strategy = CreateStrategy(configuration: configuration);
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -157,8 +142,8 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithReadOnlyTrue_CreatesReadOnlyProviders()
     {
         // Arrange
-        var options = new ServerStartOptions { ReadOnly = true };
-        var strategy = CreateStrategy(options: options);
+        var configuration = new ServerRuntimeConfiguration { ReadOnly = true };
+        var strategy = CreateStrategy(configuration: configuration);
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -166,21 +151,6 @@ public class CommandGroupDiscoveryStrategyTests
         // Assert
         Assert.NotEmpty(result);
         Assert.All(result, provider => Assert.True(((CommandGroupServerProvider)provider).ReadOnly));
-    }
-
-    [Fact]
-    public async Task DiscoverServersAsync_WithNullReadOnlyOption_DefaultsToFalse()
-    {
-        // Arrange
-        var options = new ServerStartOptions { ReadOnly = null };
-        var strategy = CreateStrategy(options: options);
-
-        // Act
-        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotEmpty(result);
-        Assert.All(result, provider => Assert.False(((CommandGroupServerProvider)provider).ReadOnly));
     }
 
     [Fact]
@@ -382,15 +352,15 @@ public class CommandGroupDiscoveryStrategyTests
     }
 
     [Fact]
-    public async Task DiscoverServersAsync_RespectsServiceStartOptionsValues()
+    public async Task DiscoverServersAsync_RespectsServerStartOptionsValues()
     {
         // Arrange
-        var options = new ServerStartOptions
+        var configuration = new ServerRuntimeConfiguration
         {
             ReadOnly = true,
         };
         var azmcpEntryPoint = McpTestUtilities.GetAzMcpExecutablePath();
-        var strategy = CreateStrategy(options: options, entryPoint: azmcpEntryPoint);
+        var strategy = CreateStrategy(configuration: configuration, entryPoint: azmcpEntryPoint);
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -445,10 +415,7 @@ public class CommandGroupDiscoveryStrategyTests
     [Fact]
     public async Task ShouldDiscoverServers()
     {
-        var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
-        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
-        var strategy = new CommandGroupDiscoveryStrategy(commandFactory, options, logger);
+        var strategy = CreateStrategy();
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
     }
@@ -456,14 +423,9 @@ public class CommandGroupDiscoveryStrategyTests
     [Fact]
     public async Task ShouldDiscoverServers_ExcludesIgnoredGroupsAndSetsProperties()
     {
-        var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { ReadOnly = true });
+        var configuration = new ServerRuntimeConfiguration { ReadOnly = true };
         var azmcpEntryPoint = McpTestUtilities.GetAzMcpExecutablePath();
-        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
-        var strategy = new CommandGroupDiscoveryStrategy(commandFactory, options, logger)
-        {
-            EntryPoint = azmcpEntryPoint
-        };
+        var strategy = CreateStrategy(configuration: configuration, entryPoint: azmcpEntryPoint);
         var result = (await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken)).ToList();
         Assert.NotEmpty(result);
         // Should not include ignored groups
@@ -512,11 +474,11 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithNamespaceFilter_ReturnsOnlySpecifiedNamespaces()
     {
         // Arrange
-        var options = new ServerStartOptions
+        var configuration = new ServerRuntimeConfiguration
         {
             Namespace = ["storage", "keyvault"]
         };
-        var strategy = CreateStrategy(options: options);
+        var strategy = CreateStrategy(configuration: configuration);
 
         // Act
         var servers = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -537,11 +499,11 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithEmptyNamespaceFilter_ReturnsAllNamespaces()
     {
         // Arrange
-        var options = new ServerStartOptions
+        var configuration = new ServerRuntimeConfiguration
         {
             Namespace = []
         };
-        var strategy = CreateStrategy(options: options);
+        var strategy = CreateStrategy(configuration: configuration);
 
         // Act
         var servers = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -564,11 +526,11 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithNullNamespaceFilter_ReturnsAllNamespaces()
     {
         // Arrange
-        var options = new ServerStartOptions
+        var configuration = new ServerRuntimeConfiguration
         {
             Namespace = null
         };
-        var strategy = CreateStrategy(options: options);
+        var strategy = CreateStrategy(configuration: configuration);
 
         // Act
         var servers = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);

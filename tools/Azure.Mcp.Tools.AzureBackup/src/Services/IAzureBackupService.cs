@@ -10,8 +10,8 @@ public interface IAzureBackupService
 {
     // Vault operations
     Task<VaultCreateResult> CreateVaultAsync(string vaultName, string resourceGroup, string subscription, string vaultType, string location, string? sku = null, string? storageType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
-    Task<BackupVaultInfo> GetVaultAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
-    Task<List<BackupVaultInfo>> ListVaultsAsync(string subscription, string? resourceGroup = null, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<BackupVaultInfo> GetVaultAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default, VaultExpand expand = VaultExpand.None);
+    Task<List<BackupVaultInfo>> ListVaultsAsync(string subscription, string? resourceGroup = null, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default, VaultExpand expand = VaultExpand.None);
     Task<OperationResult> UpdateVaultAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? redundancy = null, string? softDelete = null, string? softDeleteRetentionDays = null, string? immutabilityState = null, string? identityType = null, string? tags = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
     // Policy operations
@@ -51,4 +51,16 @@ public interface IAzureBackupService
     Task<OperationResult> DisableMultiUserAuthorizationAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> ConfigureEncryptionAsync(string vaultName, string resourceGroup, string subscription, string keyVaultUri, string keyName, string identityType, string? keyVersion = null, string? userAssignedIdentityId = null, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
+    // Resource Guard (Microsoft.DataProtection/resourceGuards) — protects RSV and DPP vaults via MUA.
+    Task<ResourceGuardInfo> CreateResourceGuardAsync(string resourceGuardName, string resourceGroup, string subscription, string location, IReadOnlyList<string>? excludedOperations = null, IReadOnlyDictionary<string, string>? tags = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<ResourceGuardInfo> GetResourceGuardAsync(string resourceGuardName, string resourceGroup, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<List<ResourceGuardInfo>> ListResourceGuardsAsync(string subscription, string? resourceGroup = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<OperationResult> DeleteResourceGuardAsync(string resourceGuardName, string resourceGroup, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+
+    // Private endpoint operations (RSV only; DPP returns NotSupportedException)
+    Task<PrivateEndpointConnectionInfo> CreatePrivateEndpointAsync(string vaultName, string resourceGroup, string subscription, string privateEndpointName, string vnetSubnetId, string groupId, string? location = null, bool autoApprove = false, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<PrivateEndpointConnectionInfo> GetPrivateEndpointAsync(string vaultName, string resourceGroup, string subscription, string privateEndpointConnectionName, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<List<PrivateEndpointConnectionInfo>> ListPrivateEndpointsAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<OperationResult> DeletePrivateEndpointAsync(string vaultName, string resourceGroup, string subscription, string privateEndpointConnectionName, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<PrivateEndpointConnectionInfo> SetPrivateEndpointConnectionStateAsync(string vaultName, string resourceGroup, string subscription, string privateEndpointConnectionName, PrivateEndpointConnectionAction action, string? description = null, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 }

@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Models;
-using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Services.Telemetry;
@@ -17,21 +16,21 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 /// This strategy converts Azure CLI command groups into MCP servers, allowing them to be accessed via the MCP protocol.
 /// </summary>
 /// <param name="commandFactory">The command factory used to access available command groups.</param>
-/// <param name="options">Options for configuring the service behavior.</param>
+/// <param name="configuration">Runtime configuration for the server.</param>
 /// <param name="configurationOptions">Configuration options for the Azure MCP server.</param>
 /// <param name="logger">Logger instance for this discovery strategy.</param>
 public sealed class ConsolidatedToolDiscoveryStrategy(
     ICommandFactory commandFactory,
     IServiceProvider serviceProvider,
     IConsolidatedToolDefinitionProvider definitionProvider,
-    IOptions<ServerStartOptions> options,
+    IOptions<ServerRuntimeConfiguration> configuration,
     IOptions<McpServerConfiguration> configurationOptions,
     ILogger<ConsolidatedToolDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
 {
     private readonly ICommandFactory _commandFactory = commandFactory;
     private readonly IServiceProvider _serviceProvider = serviceProvider;
     private readonly IConsolidatedToolDefinitionProvider _definitionProvider = definitionProvider;
-    private readonly IOptions<ServerStartOptions> _options = options;
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration;
     private readonly IOptions<McpServerConfiguration> _configurationOptions = configurationOptions;
     private ICommandFactory? _consolidatedCommandFactory;
 
@@ -82,7 +81,7 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
 
 #if DEBUG
             // In debug mode, validate that all tools in MappedToolList found a match when conditions are met
-            if (_options.Value.ReadOnly == false && (_options.Value.Namespace == null || _options.Value.Namespace.Length == 0))
+            if (!_configuration.Value.ReadOnly && (_configuration.Value.Namespace == null || _configuration.Value.Namespace.Length == 0))
             {
                 if (consolidatedTool.MappedToolList != null)
                 {
@@ -175,17 +174,17 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
                 var serviceArea = _commandFactory.GetServiceArea(kvp.Key);
                 return serviceArea == null || !IgnoredCommandGroups.Contains(serviceArea, StringComparer.OrdinalIgnoreCase);
             })
-            .Where(kvp => _options.Value.ReadOnly == false || kvp.Value.Metadata.ReadOnly == true)
-            .Where(kvp => !_options.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
+            .Where(kvp => !_configuration.Value.ReadOnly || kvp.Value.Metadata.ReadOnly == true)
+            .Where(kvp => !_configuration.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
             .Where(kvp =>
             {
                 // Filter by namespace if specified
-                if (_options.Value.Namespace == null || _options.Value.Namespace.Length == 0)
+                if (_configuration.Value.Namespace == null || _configuration.Value.Namespace.Length == 0)
                 {
                     return true;
                 }
                 var serviceArea = _commandFactory.GetServiceArea(kvp.Key);
-                return serviceArea != null && _options.Value.Namespace.Contains(serviceArea, StringComparer.OrdinalIgnoreCase);
+                return serviceArea != null && _configuration.Value.Namespace.Contains(serviceArea, StringComparer.OrdinalIgnoreCase);
             })
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     }
