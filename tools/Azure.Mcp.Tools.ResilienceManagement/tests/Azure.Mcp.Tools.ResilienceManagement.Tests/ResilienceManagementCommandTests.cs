@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:ignore LIFECYCLESERVICEGROUPNAME
+// cspell:ignore LIFECYCLESERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -449,7 +449,7 @@ public class ResilienceManagementCommandTests(
     [CustomMatcher(compareBody: false)]
     public async Task Should_create_update_and_delete_recovery_plan()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("lifecycleServiceGroupName", "LIFECYCLESERVICEGROUPNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("planLifecycleServiceGroupName", "PLANLIFECYCLESERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveVariable("lifecycleRecoveryPlanName", $"mcp-lifecycle-{Guid.NewGuid().ToString("N")[..8]}");
         bool recoveryPlanExists = false;
 

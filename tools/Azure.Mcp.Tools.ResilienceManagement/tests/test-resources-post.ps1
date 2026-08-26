@@ -40,6 +40,8 @@ $usagePlanName = $DeploymentOutputs['USAGEPLANNAME']
 $enrollmentName = $DeploymentOutputs['ENROLLMENTNAME']
 $lifecycleEnrollmentName = $DeploymentOutputs['LIFECYCLEENROLLMENTNAME']
 $lifecycleServiceGroupName = $DeploymentOutputs['LIFECYCLESERVICEGROUPNAME']
+$planLifecycleEnrollmentName = $DeploymentOutputs['PLANLIFECYCLEENROLLMENTNAME']
+$planLifecycleServiceGroupName = $DeploymentOutputs['PLANLIFECYCLESERVICEGROUPNAME']
 $goalTemplateName = $DeploymentOutputs['GOALTEMPLATENAME']
 $goalAssignmentName = $DeploymentOutputs['GOALASSIGNMENTNAME']
 $recoveryPlanName = $DeploymentOutputs['RECOVERYPLANNAME']
@@ -56,6 +58,7 @@ $serviceGroupId = "/providers/Microsoft.Management/serviceGroups/$serviceGroupNa
 $serviceGroupResilienceBase = "$serviceGroupId/providers/Microsoft.AzureResilienceManagement"
 $lifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$lifecycleServiceGroupName"
 $lifecycleServiceGroupResilienceBase = "$lifecycleServiceGroupId/providers/Microsoft.AzureResilienceManagement"
+$planLifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$planLifecycleServiceGroupName"
 
 function Invoke-ResilienceRestPut {
     param(
@@ -198,8 +201,22 @@ Invoke-ResilienceRestPut -Path $lifecycleServiceGroupPath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $lifecycleServiceGroupPath -WaitForAuthorization
 
+# Recovery-plan lifecycle tests use a separate service group because only one plan of each
+# type can exist in a service group and the drill delete fixture reserves the lifecycle group.
+$planLifecycleServiceGroupPath = "$planLifecycleServiceGroupId`?api-version=$serviceGroupApiVersion"
+Invoke-ResilienceRestPut -Path $planLifecycleServiceGroupPath -Body @{
+    properties = @{
+        displayName = $planLifecycleServiceGroupName
+        parent      = @{
+            resourceId = "/providers/Microsoft.Management/serviceGroups/$tenantId"
+        }
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $planLifecycleServiceGroupPath -WaitForAuthorization
+
 Add-RecoveryContributorRole -Scope $serviceGroupId
 Add-RecoveryContributorRole -Scope $lifecycleServiceGroupId
+Add-RecoveryContributorRole -Scope $planLifecycleServiceGroupId
 
 # 2) Add the resource group as a member of the service group so its resources
 #    (e.g. the storage account) surface as goal/recovery resource targets.
@@ -214,6 +231,13 @@ $lifecycleMembershipPath = "/subscriptions/$subscriptionId/resourceGroups/$Resou
 Invoke-ResilienceRestPut -Path $lifecycleMembershipPath -Body @{
     properties = @{
         targetId = $lifecycleServiceGroupId
+    }
+} | Out-Null
+
+$planLifecycleMembershipPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/rhub-plan-lifecycle-rg-member`?api-version=$membershipApiVersion"
+Invoke-ResilienceRestPut -Path $planLifecycleMembershipPath -Body @{
+    properties = @{
+        targetId = $planLifecycleServiceGroupId
     }
 } | Out-Null
 
@@ -233,6 +257,14 @@ Invoke-ResilienceRestPut -Path $lifecycleEnrollmentPath -Body @{
     }
 } | Out-Null
 Wait-ResilienceProvisioning -Path $lifecycleEnrollmentPath
+
+$planLifecycleEnrollmentPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName/enrollments/$planLifecycleEnrollmentName`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPut -Path $planLifecycleEnrollmentPath -Body @{
+    properties = @{
+        serviceGroupId = $planLifecycleServiceGroupId
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $planLifecycleEnrollmentPath
 
 # 4) Create a goal template on the service group.
 $goalTemplatePath = "$serviceGroupResilienceBase/goalTemplates/$goalTemplateName`?api-version=$resilienceApiVersion"
