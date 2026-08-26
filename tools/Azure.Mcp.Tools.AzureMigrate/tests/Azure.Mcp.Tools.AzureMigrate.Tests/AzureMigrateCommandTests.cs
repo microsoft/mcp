@@ -31,7 +31,7 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
     [Fact]
     public async Task Should_check_platform_landing_zone_exists()
     {
-        if (await AssertLocalToolIsUnavailableInHttpMode())
+        if (await AssertLocalToolIsUnavailableInHttpMode("azuremigrate_platformlandingzone_request"))
         {
             return;
         }
@@ -59,7 +59,7 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
     [Fact]
     public async Task Should_update_platform_landing_zone_parameters()
     {
-        if (await AssertLocalToolIsUnavailableInHttpMode())
+        if (await AssertLocalToolIsUnavailableInHttpMode("azuremigrate_platformlandingzone_request"))
         {
             return;
         }
@@ -94,7 +94,7 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
     [Fact]
     public async Task Should_get_parameter_status()
     {
-        if (await AssertLocalToolIsUnavailableInHttpMode())
+        if (await AssertLocalToolIsUnavailableInHttpMode("azuremigrate_platformlandingzone_request"))
         {
             return;
         }
@@ -119,7 +119,7 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
     [Fact]
     public async Task Should_handle_invalid_action()
     {
-        if (await AssertLocalToolIsUnavailableInHttpMode())
+        if (await AssertLocalToolIsUnavailableInHttpMode("azuremigrate_platformlandingzone_request"))
         {
             return;
         }
@@ -144,16 +144,4 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
         }
     }
 
-    private async Task<bool> AssertLocalToolIsUnavailableInHttpMode()
-    {
-        if (!string.Equals(Environment.GetEnvironmentVariable("MCP_TEST_TRANSPORT"), "http", StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        var result = await Client.CallToolAsync("azuremigrate_platformlandingzone_request", new Dictionary<string, object?>());
-        Assert.True(result.IsError);
-        Assert.Contains("not found", McpTestUtilities.GetFirstText(result.Content), StringComparison.OrdinalIgnoreCase);
-        return true;
-    }
 }

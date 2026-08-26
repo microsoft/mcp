@@ -1566,6 +1566,17 @@ Azure service commands requiring test resource deployment must add a bicep templ
 
 All live tests **must** be recorded for playback using `RecordedCommandTestsBase`. See [`/docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md) for the full recording workflow, sanitizer configuration, and migration guide.
 
+Tools marked `LocalRequired = true` are not exposed by the remote HTTP server. In every test for such a tool in a class extending `RecordedCommandTestsBase`, call the inherited helper before exercising the tool and return early when it reports HTTP mode:
+
+```csharp
+if (await AssertLocalToolIsUnavailableInHttpMode("{toolset}_{resource}_{operation}"))
+{
+    return;
+}
+```
+
+The helper asserts that the tool is unavailable in HTTP mode. Use it instead of repeating environment detection and unavailable-tool assertions in each toolset.
+
 #### Live Test Resource Infrastructure
 
 **1. Create Toolset Bicep Template (`/tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`)**

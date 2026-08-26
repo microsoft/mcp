@@ -323,6 +323,8 @@ Command unit tests should extend `SubscriptionCommandUnitTestsBase<TCommand, TSe
 ### Live Testing Requirements
 Azure service commands require live tests to validate functionality against actual Azure resources. Live tests must be recorded for playback using `RecordedCommandTestsBase`. See `/docs/recorded-tests.md` for the full recording workflow, sanitizer configuration, and migration guide.
 
+Tests for tools marked `LocalRequired = true` need special handling in classes extending `RecordedCommandTestsBase`. Start each such test with `AssertLocalToolIsUnavailableInHttpMode(toolName)` and return early when it returns `true`; the helper verifies that the tool is unavailable in remote HTTP mode before local-only behavior is tested in other transports.
+
 ### Live Test Infrastructure
 Azure service commands require Bicep templates for test resources:
 ```powershell
