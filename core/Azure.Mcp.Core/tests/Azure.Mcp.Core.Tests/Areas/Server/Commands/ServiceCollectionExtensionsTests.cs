@@ -122,6 +122,15 @@ public class ServiceCollectionExtensionsTests
         // Verify CompositeToolLoader contains ServerToolLoader
         // In namespace mode, we use ServerToolLoader for external MCP servers
         Assert.Contains(compositeToolLoader._toolLoaders, tl => tl is ServerToolLoader);
+
+        // Verify discovery strategy is registered
+        // In namespace mode, we only use RegistryDiscoveryStrategy (for external MCP servers)
+        Assert.NotNull(provider.GetService<IMcpDiscoveryStrategy>());
+        Assert.IsType<RegistryDiscoveryStrategy>(provider.GetService<IMcpDiscoveryStrategy>());
+
+        // An omitted namespace must remain unfiltered for NamespaceToolLoader. Extension commands
+        // use a separate loader configuration and must not replace this runtime selection.
+        Assert.Null(provider.GetRequiredService<ServerRuntimeConfiguration>().Namespace);
     }
 
     [Fact]

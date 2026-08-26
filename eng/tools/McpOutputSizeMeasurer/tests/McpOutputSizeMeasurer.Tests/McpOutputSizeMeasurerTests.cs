@@ -101,7 +101,7 @@ public class McpOutputSizeMeasurerTests
         Assert.Equal(60, measurement.Utf8Bytes);
         Assert.Equal(59, measurement.CharacterCount);
         Assert.Equal("decodedCommandJson", measurement.SizeBasis);
-        Assert.Null(measurement.DecodedContentUtf8Bytes);
+        Assert.Equal(71, measurement.DecodedContentUtf8Bytes);
     }
 
     [Fact]

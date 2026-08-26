@@ -11,7 +11,7 @@ namespace McpOutputSizeMeasurer;
 /// Standalone console application that measures the server's exposed MCP tool surfaces.
 /// Starts the azmcp executable over stdio in both
 /// consolidated and namespace modes and measures negotiated server metadata, tools/list
-/// discovery, and decoded learn-mode command JSON (including inner commands) for every tool,
+/// discovery, and learn-mode payload sizes (including inner commands) for every tool,
 /// writing a JSON report that Measure-McpOutputSizes.ps1 summarizes.
 /// </summary>
 internal static class Program
@@ -120,8 +120,8 @@ internal static class Program
             MCP Output Size Measurer
 
             Measures the server's exposed MCP tool surfaces: negotiated server metadata,
-            tools/list discovery, and decoded learn-mode command JSON (including inner
-            commands) for every tool, in one or more server modes.
+            tools/list discovery, decoded learn-mode content and command JSON, and serialized
+            learn response payloads (including inner commands) for every tool.
 
             Usage:
               McpOutputSizeMeasurer [options]

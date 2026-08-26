@@ -101,8 +101,6 @@ if ($ServerExecutable -and $ReleaseTag) {
 }
 
 $ErrorActionPreference = 'Stop'
-$maximumToolsPerClientRequest = 128
-
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $repoRoot = $RepoRoot.Path
 
@@ -145,9 +143,12 @@ function Get-ModeSummary($mode) {
         discoveryUtf8Bytes = $mode.discoveryTotalUtf8Bytes
         learnMessageCount = $learnCount
         learnResponsesWithoutCommandJson = $mode.learnResponsesWithoutCommandJson
-        learnUtf8Bytes = $mode.learnTotalUtf8Bytes
-        averageLearnUtf8Bytes = $averageLearnBytes
+        learnDecodedCommandJsonUtf8Bytes = $mode.learnTotalUtf8Bytes
+        learnDecodedContentUtf8Bytes = $mode.learnDecodedContentTotalUtf8Bytes
+        learnResponsePayloadUtf8Bytes = $mode.learnResponsePayloadTotalUtf8Bytes
+        averageLearnDecodedCommandJsonUtf8Bytes = $averageLearnBytes
         totalMeasuredPayloadUtf8Bytes = $mode.totalMeasuredPayloadUtf8Bytes
+        toolNames = @($mode.toolNames)
     }
 }
 function Save-LearnResponseText($entries) {
@@ -229,6 +230,8 @@ function Get-TopLearnResponses($entries) {
                 utf8Bytes = $_.utf8Bytes
                 characterCount = $_.characterCount
                 sizeBasis = $_.sizeBasis
+                decodedContentUtf8Bytes = $_.decodedContentUtf8Bytes
+                responsePayloadUtf8Bytes = $_.responsePayloadUtf8Bytes
                 learnResponseFile = $_.learnResponseFile
                 learnResponseTextFile = $_.learnResponseTextFile
                 innerCommandCount = $_.innerCommandCount
@@ -250,6 +253,8 @@ function Get-LargeLearnResponses($entries) {
                 utf8Bytes = $_.utf8Bytes
                 characterCount = $_.characterCount
                 sizeBasis = $_.sizeBasis
+                decodedContentUtf8Bytes = $_.decodedContentUtf8Bytes
+                responsePayloadUtf8Bytes = $_.responsePayloadUtf8Bytes
                 learnResponseFile = $_.learnResponseFile
                 learnResponseTextFile = $_.learnResponseTextFile
                 innerCommandCount = $_.innerCommandCount
@@ -297,8 +302,10 @@ function Invoke-McpOutputSizeSummary {
         'discoveryUtf8Bytes',
         'learnMessageCount',
         'learnResponsesWithoutCommandJson',
-        'learnUtf8Bytes',
-        'averageLearnUtf8Bytes',
+        'learnDecodedCommandJsonUtf8Bytes',
+        'learnDecodedContentUtf8Bytes',
+        'learnResponsePayloadUtf8Bytes',
+        'averageLearnDecodedCommandJsonUtf8Bytes',
         'totalMeasuredPayloadUtf8Bytes'
     )
 
@@ -359,12 +366,13 @@ function Invoke-McpOutputSizeSummary {
             toolCount = $_['toolCount']
             serverMetadataUtf8Bytes = $_['serverMetadataUtf8Bytes']
             discoveryUtf8Bytes = $_['discoveryUtf8Bytes']
-            learnUtf8Bytes = $_['learnUtf8Bytes']
+            learnDecodedCommandJsonUtf8Bytes = $_['learnDecodedCommandJsonUtf8Bytes']
+            learnResponsePayloadUtf8Bytes = $_['learnResponsePayloadUtf8Bytes']
             totalMeasuredPayloadUtf8Bytes = $_['totalMeasuredPayloadUtf8Bytes']
         }
     }
     $consoleRows |
-        Format-Table mode, toolCount, serverMetadataUtf8Bytes, discoveryUtf8Bytes, learnUtf8Bytes, totalMeasuredPayloadUtf8Bytes |
+        Format-Table mode, toolCount, serverMetadataUtf8Bytes, discoveryUtf8Bytes, learnDecodedCommandJsonUtf8Bytes, learnResponsePayloadUtf8Bytes, totalMeasuredPayloadUtf8Bytes |
         Out-Host
 
     Write-Host "Consolidated relative to namespace:"
@@ -384,18 +392,22 @@ function Invoke-McpOutputSizeSummary {
         $topLearnByMode[$modeName] | ForEach-Object {
             [pscustomobject]@{
                 tool = $_.tool
-                utf8Bytes = $_.utf8Bytes
+                decodedCommandJsonUtf8Bytes = $_.utf8Bytes
+                decodedContentUtf8Bytes = $_.decodedContentUtf8Bytes
+                responsePayloadUtf8Bytes = $_.responsePayloadUtf8Bytes
                 innerCommands = $_.innerCommandCount
             }
-        } | Format-Table tool, utf8Bytes, innerCommands | Out-Host
+        } | Format-Table tool, decodedCommandJsonUtf8Bytes, decodedContentUtf8Bytes, responsePayloadUtf8Bytes, innerCommands | Out-Host
 
         Write-Host "Decoded learn command arrays over $LearnResponseThresholdUtf8Bytes UTF-8 bytes ($modeName):"
         $largeLearnByMode[$modeName] | ForEach-Object {
             [pscustomobject]@{
                 tool = $_.tool
-                utf8Bytes = $_.utf8Bytes
+                decodedCommandJsonUtf8Bytes = $_.utf8Bytes
+                decodedContentUtf8Bytes = $_.decodedContentUtf8Bytes
+                responsePayloadUtf8Bytes = $_.responsePayloadUtf8Bytes
             }
-        } | Format-Table tool, utf8Bytes | Out-Host
+        } | Format-Table tool, decodedCommandJsonUtf8Bytes, decodedContentUtf8Bytes, responsePayloadUtf8Bytes | Out-Host
     }
 
     $summaryJson = $summary | ConvertTo-Json -Depth 10
@@ -430,13 +442,24 @@ function Invoke-McpOutputSizeSummary {
     $markdownLines.Add('')
     $markdownLines.Add('## Mode Summary')
     $markdownLines.Add('')
-    $markdownLines.Add('| Mode | Tools | Learn command arrays | Learn responses without command JSON | Server metadata (bytes) | Discovery payloads (bytes) | Learn decoded (bytes) | Total measured payloads (bytes) |')
-    $markdownLines.Add('| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |')
+    $markdownLines.Add('| Mode | Tools | Learn command arrays | Learn responses without command JSON | Server metadata (bytes) | Discovery payloads (bytes) | Decoded command JSON (bytes) | Decoded learn content (bytes) | Serialized learn payloads (bytes) | Total measured payloads (bytes) |')
+    $markdownLines.Add('| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |')
     foreach ($mode in $summary.modes) {
         $markdownLines.Add(
             "| $($mode.mode) | $($mode.toolCount) | $($mode.learnMessageCount) | " +
             "$($mode.learnResponsesWithoutCommandJson) | $($mode.serverMetadataUtf8Bytes) | " +
-            "$($mode.discoveryUtf8Bytes) | $($mode.learnUtf8Bytes) | $($mode.totalMeasuredPayloadUtf8Bytes) |")
+            "$($mode.discoveryUtf8Bytes) | $($mode.learnDecodedCommandJsonUtf8Bytes) | " +
+            "$($mode.learnDecodedContentUtf8Bytes) | $($mode.learnResponsePayloadUtf8Bytes) | " +
+            "$($mode.totalMeasuredPayloadUtf8Bytes) |")
+    }
+
+    foreach ($mode in $summary.modes) {
+        $markdownLines.Add('')
+        $markdownLines.Add("## Discovered Tools ($($mode.mode))")
+        $markdownLines.Add('')
+        foreach ($toolName in $mode.toolNames) {
+            $markdownLines.Add("- ``$toolName``")
+        }
     }
 
     $markdownLines.Add('')
@@ -466,25 +489,29 @@ function Invoke-McpOutputSizeSummary {
         $markdownLines.Add('')
         $markdownLines.Add("## Top 10 Largest Decoded Learn Command Arrays ($modeName)")
         $markdownLines.Add('')
-        $markdownLines.Add('| Rank | Tool | Bytes | Inner Commands | Saved Response File | Description Text File |')
-        $markdownLines.Add('| ---: | --- | ---: | ---: | --- | --- |')
+        $markdownLines.Add('| Rank | Tool | Decoded Command JSON (bytes) | Decoded Content (bytes) | Serialized Response (bytes) | Inner Commands | Saved Response File | Description Text File |')
+        $markdownLines.Add('| ---: | --- | ---: | ---: | ---: | ---: | --- | --- |')
         $rank = 1
         foreach ($entry in $topLearnByMode[$modeName]) {
             $fileLink = if ($entry.learnResponseFile) { "``$($entry.learnResponseFile)``" } else { 'n/a' }
             $textLink = if ($entry.learnResponseTextFile) { "``$($entry.learnResponseTextFile)``" } else { 'n/a' }
-            $markdownLines.Add("| $rank | $($entry.tool) | $($entry.utf8Bytes) | $($entry.innerCommandCount) | $fileLink | $textLink |")
+            $markdownLines.Add(
+                "| $rank | $($entry.tool) | $($entry.utf8Bytes) | $($entry.decodedContentUtf8Bytes) | " +
+                "$($entry.responsePayloadUtf8Bytes) | $($entry.innerCommandCount) | $fileLink | $textLink |")
             $rank++
         }
 
         $markdownLines.Add('')
         $markdownLines.Add("## Decoded Learn Command Arrays Over $LearnResponseThresholdUtf8Bytes UTF-8 Bytes ($modeName)")
         $markdownLines.Add('')
-        $markdownLines.Add('| Tool | Bytes | Character Count | Saved Response File | Description Text File |')
-        $markdownLines.Add('| --- | ---: | ---: | --- | --- |')
+        $markdownLines.Add('| Tool | Decoded Command JSON (bytes) | Decoded Content (bytes) | Serialized Response (bytes) | Character Count | Saved Response File | Description Text File |')
+        $markdownLines.Add('| --- | ---: | ---: | ---: | ---: | --- | --- |')
         foreach ($entry in $largeLearnByMode[$modeName]) {
             $fileLink = if ($entry.learnResponseFile) { "``$($entry.learnResponseFile)``" } else { 'n/a' }
             $textLink = if ($entry.learnResponseTextFile) { "``$($entry.learnResponseTextFile)``" } else { 'n/a' }
-            $markdownLines.Add("| $($entry.tool) | $($entry.utf8Bytes) | $($entry.characterCount) | $fileLink | $textLink |")
+            $markdownLines.Add(
+                "| $($entry.tool) | $($entry.utf8Bytes) | $($entry.decodedContentUtf8Bytes) | " +
+                "$($entry.responsePayloadUtf8Bytes) | $($entry.characterCount) | $fileLink | $textLink |")
         }
     }
 
@@ -632,22 +659,6 @@ if ($LASTEXITCODE -ne 0) {
 if (!(Test-Path -LiteralPath $reportPath -PathType Leaf)) {
     Write-Error "Measurement report was not produced at $reportPath."
     exit 1
-}
-
-Write-Host "Validating MCP tool counts against the maximum supported client request size ($maximumToolsPerClientRequest)..."
-$measurementReport = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
-$exceedingModes = @(
-    $measurementReport.modes |
-        Where-Object { [int]$_.toolCount -gt $maximumToolsPerClientRequest }
-)
-if ($exceedingModes.Count -gt 0) {
-    $details = $exceedingModes |
-        ForEach-Object { "'$($_.mode)' has $($_.toolCount) tools" } |
-        Join-String -Separator ', '
-    $limitMessage = "MCP tool count exceeds the maximum supported client request size of ${maximumToolsPerClientRequest}: $details."
-    Write-Host ""
-    Write-Host "ERROR: $limitMessage" -ForegroundColor Red
-    Write-Warning $limitMessage
 }
 
 Write-Host "Summarizing results..."

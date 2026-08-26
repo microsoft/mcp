@@ -13,8 +13,9 @@ namespace McpOutputSizeMeasurer;
 /// Measures MCP responses from a client perspective for a server's exposed tool surfaces.
 /// Starts the given azmcp-compatible executable using the MCP SDK's stdio transport, walks tool discovery
 /// (tools/list, paginated), calls every tool's learn-mode response, and re-queries every
-/// inner command a tool's learn response advertises. Learn-response sizes measure the decoded
-/// command-array JSON used by the server's discovery threshold, not its JSON-RPC wire encoding.
+/// inner command a tool's learn response advertises. Learn-response measurements distinguish the
+/// decoded command-array JSON used by the server's discovery threshold, decoded content text, and
+/// the serialized protocol response payload.
 /// </summary>
 public sealed class McpOutputSizeMeasurer(
     Action<string>? logger = null,
@@ -148,6 +149,7 @@ public sealed class McpOutputSizeMeasurer(
             var learnResponses = new List<object>(tools.Count);
             var learnResponseByTool = new Dictionary<string, CallToolResult>(tools.Count, StringComparer.Ordinal);
             var learnTotalUtf8Bytes = 0;
+            var learnDecodedContentTotalUtf8Bytes = 0;
             var learnResponsePayloadTotalUtf8Bytes = 0;
             var learnResponsesWithoutCommandJson = 0;
             foreach (var tool in tools)
@@ -173,6 +175,7 @@ public sealed class McpOutputSizeMeasurer(
                 var learnPayload = MeasureLearnPayload(result);
                 var responseUtf8Bytes = GetUtf8ByteCount(response);
                 learnTotalUtf8Bytes += learnPayload.Utf8Bytes ?? 0;
+                learnDecodedContentTotalUtf8Bytes += learnPayload.DecodedContentUtf8Bytes;
                 learnResponsePayloadTotalUtf8Bytes += responseUtf8Bytes;
                 if (learnPayload.Utf8Bytes is null)
                 {
@@ -195,6 +198,12 @@ public sealed class McpOutputSizeMeasurer(
                     responsePayloadUtf8Bytes = responseUtf8Bytes,
                     learnResponseFile
                 });
+            }
+
+            if (mode == "namespace" && learnResponsesWithoutCommandJson == tools.Count)
+            {
+                throw new InvalidOperationException(
+                    "Namespace mode did not expose any namespace router tools with decoded command JSON.");
             }
 
             // Verify that per-command learn requests also return details, mirroring the
@@ -251,12 +260,14 @@ public sealed class McpOutputSizeMeasurer(
             {
                 mode,
                 toolCount = tools.Count,
+                toolNames = tools,
                 initialServerMetadata = MeasureMessage(serverMetadataPayload),
                 discoveryTextFile = discoveryTextPath,
                 discoveryResponses,
                 discoveryTotalUtf8Bytes,
                 learnResponses,
                 learnTotalUtf8Bytes,
+                learnDecodedContentTotalUtf8Bytes,
                 learnResponsePayloadTotalUtf8Bytes,
                 learnResponsesWithoutCommandJson,
                 commandLearnCount = commandLearnResponses.Count,
@@ -383,8 +394,12 @@ public sealed class McpOutputSizeMeasurer(
         int? Utf8Bytes,
         int? CharacterCount,
         string SizeBasis,
-        int? DecodedContentUtf8Bytes) MeasureLearnPayload(CallToolResult learnResponse)
+        int DecodedContentUtf8Bytes) MeasureLearnPayload(CallToolResult learnResponse)
     {
+        var decodedContentText = GetDecodedContentText(learnResponse)
+            ?? throw new InvalidOperationException(
+                "The learn response did not contain decoded text content.");
+        var decodedContentUtf8Bytes = GetUtf8ByteCount(decodedContentText);
         var innerCommandsJson = GetInnerCommandsJson(learnResponse);
         if (innerCommandsJson is not null)
         {
@@ -392,17 +407,14 @@ public sealed class McpOutputSizeMeasurer(
                 GetUtf8ByteCount(innerCommandsJson),
                 innerCommandsJson.Length,
                 "decodedCommandJson",
-                null);
+                decodedContentUtf8Bytes);
         }
 
-        var decodedContentText = GetDecodedContentText(learnResponse)
-            ?? throw new InvalidOperationException(
-                "The learn response did not contain decoded text content.");
         return (
             null,
             null,
             "decodedContentTextOnly",
-            GetUtf8ByteCount(decodedContentText));
+            decodedContentUtf8Bytes);
     }
 
     /// <summary>

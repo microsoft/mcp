@@ -113,18 +113,9 @@ public static partial class ServiceCollectionExtensions
 
                 // Always add utility commands (subscription, group) in namespace mode
                 // so they are available regardless of which namespaces are loaded
-                var additionalIncludedTools = new List<string>(DiscoveryConstants.UtilityNamespaces);
-
-                // Append extension commands when no other namespaces are specified.
-                // Extension commands aren't included in the NamespaceToolLoader.
-                if (serverStartOptions.Namespace == null || serverStartOptions.Namespace.Length == 0)
+                var utilityServerRuntimeConfiguration = new ServerRuntimeConfiguration
                 {
-                    additionalIncludedTools.Add("extension");
-                }
-
-                var additionalToolsServerRuntimeConfiguration = new ServerRuntimeConfiguration
-                {
-                    Namespace = [.. additionalIncludedTools],
+                    Namespace = DiscoveryConstants.UtilityNamespaces,
                     ReadOnly = serverRuntimeConfiguration.ReadOnly,
                     DangerouslyDisableElicitation = serverRuntimeConfiguration.DangerouslyDisableElicitation,
                     Tool = serverRuntimeConfiguration.Tool,
@@ -135,8 +126,30 @@ public static partial class ServiceCollectionExtensions
 
                 toolLoaders.Add(new CommandFactoryToolLoader(
                     sp.GetRequiredService<ICommandFactory>(),
-                    Options.Create(additionalToolsServerRuntimeConfiguration),
+                    Options.Create(utilityServerRuntimeConfiguration),
                     loggerFactory.CreateLogger<CommandFactoryToolLoader>()));
+
+                // Append extension commands when no other namespaces are specified.
+                if (serverRuntimeConfiguration.Namespace == null ||
+                    serverRuntimeConfiguration.Namespace.Length == 0 ||
+                    serverRuntimeConfiguration.Namespace.SequenceEqual(["extension"]))
+                {
+                    var extensionServerRuntimeConfiguration = new ServerRuntimeConfiguration
+                    {
+                        Namespace = ["extension"],
+                        ReadOnly = serverRuntimeConfiguration.ReadOnly,
+                        DangerouslyDisableElicitation = serverRuntimeConfiguration.DangerouslyDisableElicitation,
+                        Tool = serverRuntimeConfiguration.Tool,
+                        Transport = serverRuntimeConfiguration.Transport,
+                        Mode = serverRuntimeConfiguration.Mode,
+                        Cloud = serverRuntimeConfiguration.Cloud
+                    };
+
+                    toolLoaders.Add(new CommandFactoryToolLoader(
+                        sp.GetRequiredService<ICommandFactory>(),
+                        Options.Create(extensionServerRuntimeConfiguration),
+                        loggerFactory.CreateLogger<CommandFactoryToolLoader>()));
+                }
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });
