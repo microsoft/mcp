@@ -9,7 +9,8 @@ param(
     [string] $ServerName,
     [switch] $IncludeNative,
     [switch] $TestPipeline,
-    [switch] $CI
+    [switch] $CI,
+    [bool] $CommonCodeBuildsAll = $true
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
@@ -262,9 +263,9 @@ function Get-PathsToTest {
         # If we're in a pull request, use the set of changed files to narrow down the set of paths to test.
         $changedFiles = Get-ChangedFiles
         # Track whether engineering, the Core libraries, or shared build changed. If so, build everything.
-        $coreChanged = ($changedFiles | Where-Object { $_ -match '^core/(Azure|Fabric|Microsoft).Mcp.Core/src/' }).Count -gt 0
-        $engChanged = ($changedFiles | Where-Object { $_ -match '^eng/' }).Count -gt 0
-        $sharedBuildChanged = ($changedFiles | Where-Object { $_ -match '^Directory.(Build|Packages).props' }).Count -gt 0
+        $coreChanged = $CommonCodeBuildsAll -and ($changedFiles | Where-Object { $_ -match '^core/(Azure|Fabric|Microsoft).Mcp.Core/src/' }).Count -gt 0
+        $engChanged = $CommonCodeBuildsAll -and  ($changedFiles | Where-Object { $_ -match '^eng/' }).Count -gt 0
+        $sharedBuildChanged = $CommonCodeBuildsAll -and  ($changedFiles | Where-Object { $_ -match '^Directory.(Build|Packages).props' }).Count -gt 0
         if ($coreChanged -or $engChanged -or $sharedBuildChanged) {
             Write-Host "Core, engineering, or shared build changes detected. Building everything." -ForegroundColor Yellow
             $pathsToTest = @()
