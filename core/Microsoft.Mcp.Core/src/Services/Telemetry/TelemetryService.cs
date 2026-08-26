@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Helpers;
@@ -40,7 +40,7 @@ internal class TelemetryService : ITelemetryService
 
     public TelemetryService(IMachineInformationProvider informationProvider,
         IOptions<McpServerConfiguration> options,
-        IOptions<ServerStartOptions> serverOptions,
+        IOptions<ServerRuntimeConfiguration> configuration,
         ILogger<TelemetryService> logger,
         IAzureCloudConfiguration? cloudConfiguration = null)
     {
@@ -49,8 +49,8 @@ internal class TelemetryService : ITelemetryService
         [
             new(TagName.McpServerVersion, options.Value.Version),
             new(TagName.McpServerName, options.Value.Name),
-            new(TagName.ServerMode, serverOptions.Value.Mode),
-            new(TagName.Transport, serverOptions.Value.Transport),
+            new(TagName.ServerMode, configuration.Value.Mode),
+            new(TagName.Transport, configuration.Value.Transport),
             new(TagName.Host, RuntimeInformation.OSDescription),
             new(TagName.ProcessorArchitecture, RuntimeInformation.ProcessArchitecture.ToString())
         ];

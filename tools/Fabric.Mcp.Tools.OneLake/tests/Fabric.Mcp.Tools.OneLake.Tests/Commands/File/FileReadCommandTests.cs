@@ -7,6 +7,7 @@ using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
@@ -17,13 +18,13 @@ namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.File;
 
 public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLakeService>
 {
-    private readonly IOptions<ServerStartOptions> _serverStartOptions;
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration;
 
     public FileReadCommandTests()
     {
-        _serverStartOptions = Substitute.For<IOptions<ServerStartOptions>>();
-        _serverStartOptions.Value.Returns(new ServerStartOptions { Transport = TransportTypes.StdIo });
-        Services.AddSingleton(_serverStartOptions);
+        _configuration = Substitute.For<IOptions<ServerRuntimeConfiguration>>();
+        _configuration.Value.Returns(new ServerRuntimeConfiguration { Transport = TransportTypes.StdIo });
+        Services.AddSingleton(_configuration);
     }
 
     [Fact]
@@ -50,13 +51,13 @@ public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLa
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenLoggerIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(null!, Service, _serverStartOptions));
+        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(null!, Service, _configuration));
     }
 
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenOneLakeServiceIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, null!, _serverStartOptions));
+        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, null!, _configuration));
     }
 
     [Fact]

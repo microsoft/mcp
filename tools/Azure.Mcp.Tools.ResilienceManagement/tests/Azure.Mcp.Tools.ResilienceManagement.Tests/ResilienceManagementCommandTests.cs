@@ -164,6 +164,20 @@ public class ResilienceManagementCommandTests(
         var properties = drill.AssertProperty("properties");
         Assert.Equal("Succeeded", properties.AssertProperty("provisioningState").GetString());
         Assert.Equal("AutomatedBuiltinRoles", properties.AssertProperty("rbacSetupMode").GetString());
+    public async Task Should_delete_drill()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DELETEDRILLNAME");
+
+        var result = await CallToolAsync(
+            "resilience_drill_delete",
+            new()
+            {
+                { "service-group", serviceGroup },
+                { "drill", drillName }
+            });
+
+        Assert.True(result.AssertProperty("success").GetBoolean());
     }
 
     [Fact]
