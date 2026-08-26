@@ -61,7 +61,9 @@ public class OptionDescriptor
             }
 
             var optionAttribute = property.GetCustomAttribute<OptionAttribute>();
-            var optionContainerAttribute = property.GetCustomAttribute<OptionContainerAttribute>();
+            var optionContainerAttribute = property.GetCustomAttributes()
+                .OfType<IOptionContainerMetadata>()
+                .SingleOrDefault();
             // Only include properties with [Option] or [OptionContainer]
             if (optionAttribute == null && optionContainerAttribute == null)
             {
