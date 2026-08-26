@@ -311,42 +311,17 @@ public sealed class FileSystemItem
 public static class OneLakeEndpoints
 {
     public const string FabricApiBaseUrl = "https://api.fabric.microsoft.com/v1";
+    public const string FabricScope = "https://api.fabric.microsoft.com/.default";
     public const string StorageScope = "https://storage.azure.com/.default";
 
-    public static string GetFabricApiBaseUrl() => Endpoints.FabricApiBaseUrl;
+    public const string OneLakeDataPlaneBaseUrl = "https://api.onelake.fabric.microsoft.com";
+    public const string OneLakeDataPlaneDfsBaseUrl = "https://onelake.dfs.fabric.microsoft.com";
+    public const string OneLakeDataPlaneBlobBaseUrl = "https://onelake.blob.fabric.microsoft.com";
+    public const string OneLakeTableApiBaseUrl = "https://onelake.table.fabric.microsoft.com";
 
-    public static string GetFabricScope() => Endpoints.FabricScope;
+    public static readonly string[] FabricScopes = [FabricScope];
 
-    public static readonly string[] FabricScopes =
-    [
-        "https://api.fabric.microsoft.com/.default"
-    ];
+    public static string GetFabricApiBaseUrl() => FabricApiBaseUrl;
 
-    private static readonly OneLakeEnvironmentEndpoints Endpoints = new()
-    {
-        OneLakeDataPlaneBaseUrl = "https://api.onelake.fabric.microsoft.com",
-        OneLakeDataPlaneDfsBaseUrl = "https://onelake.dfs.fabric.microsoft.com",
-        OneLakeDataPlaneBlobBaseUrl = "https://onelake.blob.fabric.microsoft.com",
-        OneLakeTableApiBaseUrl = "https://onelake.table.fabric.microsoft.com",
-        FabricApiBaseUrl = "https://api.fabric.microsoft.com/v1",
-        FabricScope = "https://api.fabric.microsoft.com/.default"
-    };
-
-    public static string OneLakeDataPlaneBaseUrl => Endpoints.OneLakeDataPlaneBaseUrl;
-
-    public static string OneLakeDataPlaneDfsBaseUrl => Endpoints.OneLakeDataPlaneDfsBaseUrl;
-
-    public static string OneLakeDataPlaneBlobBaseUrl => Endpoints.OneLakeDataPlaneBlobBaseUrl;
-
-    public static string OneLakeTableApiBaseUrl => Endpoints.OneLakeTableApiBaseUrl;
-}
-
-public sealed class OneLakeEnvironmentEndpoints
-{
-    public string OneLakeDataPlaneBaseUrl { get; set; } = string.Empty;
-    public string OneLakeDataPlaneDfsBaseUrl { get; set; } = string.Empty;
-    public string OneLakeDataPlaneBlobBaseUrl { get; set; } = string.Empty;
-    public string OneLakeTableApiBaseUrl { get; set; } = string.Empty;
-    public string FabricApiBaseUrl { get; set; } = string.Empty;
-    public string FabricScope { get; set; } = string.Empty;
+    public static string GetFabricScope() => FabricScope;
 }

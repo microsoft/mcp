@@ -134,21 +134,12 @@ public class CatalogWorkspace
 /// </summary>
 public static class FabricEndpoints
 {
-    private static readonly FabricEnvironmentEndpoints Endpoints = new()
-    {
-        FabricApiBaseUrl = "https://api.fabric.microsoft.com/v1",
-        FabricScope = "https://api.fabric.microsoft.com/.default"
-    };
+    public const string FabricApiBaseUrl = "https://api.fabric.microsoft.com/v1";
+    public const string FabricScope = "https://api.fabric.microsoft.com/.default";
 
-    public static string GetFabricApiBaseUrl() => Endpoints.FabricApiBaseUrl;
+    public static readonly string[] FabricScopes = [FabricScope];
 
-    public static string GetFabricScope() => Endpoints.FabricScope;
+    public static string GetFabricApiBaseUrl() => FabricApiBaseUrl;
 
-    public static readonly string[] FabricScopes = ["https://api.fabric.microsoft.com/.default"];
-}
-
-public class FabricEnvironmentEndpoints
-{
-    public string FabricApiBaseUrl { get; set; } = string.Empty;
-    public string FabricScope { get; set; } = string.Empty;
+    public static string GetFabricScope() => FabricScope;
 }
