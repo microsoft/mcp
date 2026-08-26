@@ -108,6 +108,100 @@ public class CustomChainedCredentialTests
         Assert.IsAssignableFrom<TokenCredential>(credential);
     }
 
+    [Theory]
+    [InlineData("AzurePipelinesCredential")]
+    [InlineData("azurepipelinescredential")]
+    public void SpecificCredential_AzurePipelines_WithCompleteConfiguration_CreatesCredentialSuccessfully(string credentialType)
+    {
+        using var env = CreateAzurePipelinesEnvironmentScope();
+        SetAzurePipelinesEnvironmentVariables();
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", credentialType);
+
+        IReadOnlyList<TokenCredential> credentials = CustomChainedCredential.CreateDefaultCredentialChain(null);
+
+        var credential = Assert.Single(credentials);
+        Assert.Equal("AzurePipelinesCredential", Assert.IsType<SafeTokenCredential>(credential).CredentialName);
+    }
+
+    [Fact]
+    public void SpecificCredential_AzurePipelines_WithIncompleteConfiguration_ReportsMissingVariableNamesWithoutValues()
+    {
+        using var env = CreateAzurePipelinesEnvironmentScope();
+        const string tenantId = "tenant-value-must-not-leak";
+        const string clientId = "client-value-must-not-leak";
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "AzurePipelinesCredential");
+        Environment.SetEnvironmentVariable(AzurePipelinesCredentialFactory.TenantIdEnvVarName, tenantId);
+        Environment.SetEnvironmentVariable(AzurePipelinesCredentialFactory.ClientIdEnvVarName, clientId);
+
+        var exception = Assert.Throws<CredentialUnavailableException>(
+            () => CustomChainedCredential.CreateDefaultCredentialChain(null));
+
+        Assert.Contains(AzurePipelinesCredentialFactory.ServiceConnectionIdEnvVarName, exception.Message);
+        Assert.Contains(AzurePipelinesCredentialFactory.SystemAccessTokenEnvVarName, exception.Message);
+        Assert.DoesNotContain(tenantId, exception.ToString());
+        Assert.DoesNotContain(clientId, exception.ToString());
+    }
+
+    [Fact]
+    public void SpecificCredential_AzurePipelines_WithWhitespaceConfiguration_ReportsVariableAsMissing()
+    {
+        using var env = CreateAzurePipelinesEnvironmentScope();
+        SetAzurePipelinesEnvironmentVariables();
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "AzurePipelinesCredential");
+        Environment.SetEnvironmentVariable(AzurePipelinesCredentialFactory.SystemAccessTokenEnvVarName, "   ");
+
+        var exception = Assert.Throws<CredentialUnavailableException>(
+            () => CustomChainedCredential.CreateDefaultCredentialChain(null));
+
+        Assert.Contains(AzurePipelinesCredentialFactory.SystemAccessTokenEnvVarName, exception.Message);
+    }
+
+    [Fact]
+    public void ProdMode_WithCompleteAzurePipelinesConfiguration_IncludesCredentialInExpectedOrder()
+    {
+        using var env = CreateAzurePipelinesEnvironmentScope();
+        SetAzurePipelinesEnvironmentVariables();
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "prod");
+
+        IReadOnlyList<TokenCredential> credentials = CustomChainedCredential.CreateDefaultCredentialChain(null);
+
+        Assert.Equal(
+            ["EnvironmentCredential", "AzurePipelinesCredential", "WorkloadIdentityCredential", "ManagedIdentityCredential"],
+            credentials.Select(GetCredentialName));
+    }
+
+    [Fact]
+    public void ProdMode_WithIncompleteAzurePipelinesConfiguration_OmitsCredential()
+    {
+        using var env = CreateAzurePipelinesEnvironmentScope();
+        SetAzurePipelinesEnvironmentVariables();
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "prod");
+        Environment.SetEnvironmentVariable(AzurePipelinesCredentialFactory.SystemAccessTokenEnvVarName, null);
+
+        IReadOnlyList<TokenCredential> credentials = CustomChainedCredential.CreateDefaultCredentialChain(null);
+
+        Assert.Equal(
+            ["EnvironmentCredential", "WorkloadIdentityCredential", "ManagedIdentityCredential"],
+            credentials.Select(GetCredentialName));
+    }
+
+    [Fact]
+    public void AzurePipelinesCredential_RuntimeFailure_DoesNotExposeInnerExceptionMessage()
+    {
+        const string sensitiveValue = "system-access-token-value-must-not-leak";
+        var credential = new SafeTokenCredential(
+            new ThrowingTokenCredential(sensitiveValue),
+            "AzurePipelinesCredential",
+            includeExceptionMessage: false);
+
+        var exception = Assert.Throws<CredentialUnavailableException>(() =>
+            credential.GetToken(new TokenRequestContext(["https://management.azure.com/.default"]), CancellationToken.None));
+
+        Assert.Equal("AzurePipelinesCredential is not available.", exception.Message);
+        Assert.DoesNotContain(sensitiveValue, exception.ToString());
+        Assert.Null(exception.InnerException);
+    }
+
     /// <summary>
     /// Tests that explicit InteractiveBrowserCredential request creates successfully.
     /// Expected: Uses InteractiveBrowserCredential when explicitly requested.
@@ -516,6 +610,25 @@ public class CustomChainedCredentialTests
 
     private static void SetActiveTransport(string value) => CustomChainedCredential.ActiveTransport = value;
 
+    private static string GetCredentialName(TokenCredential credential) =>
+        Assert.IsType<SafeTokenCredential>(credential).CredentialName;
+
+    private static EnvironmentScope CreateAzurePipelinesEnvironmentScope() =>
+        new(
+            "AZURE_TOKEN_CREDENTIALS",
+            AzurePipelinesCredentialFactory.TenantIdEnvVarName,
+            AzurePipelinesCredentialFactory.ClientIdEnvVarName,
+            AzurePipelinesCredentialFactory.ServiceConnectionIdEnvVarName,
+            AzurePipelinesCredentialFactory.SystemAccessTokenEnvVarName);
+
+    private static void SetAzurePipelinesEnvironmentVariables()
+    {
+        Environment.SetEnvironmentVariable(AzurePipelinesCredentialFactory.TenantIdEnvVarName, "00000000-0000-0000-0000-000000000001");
+        Environment.SetEnvironmentVariable(AzurePipelinesCredentialFactory.ClientIdEnvVarName, "00000000-0000-0000-0000-000000000002");
+        Environment.SetEnvironmentVariable(AzurePipelinesCredentialFactory.ServiceConnectionIdEnvVarName, "00000000-0000-0000-0000-000000000003");
+        Environment.SetEnvironmentVariable(AzurePipelinesCredentialFactory.SystemAccessTokenEnvVarName, "system-access-token-value-must-not-leak");
+    }
+
     /// <summary>
     /// Saves the current values of the specified environment variables and restores them on disposal.
     /// Use with <c>using var</c> to guarantee restoration even when a test throws.
@@ -532,6 +645,15 @@ public class CustomChainedCredentialTests
                 Environment.SetEnvironmentVariable(name, value);
             }
         }
+    }
+
+    private sealed class ThrowingTokenCredential(string exceptionMessage) : TokenCredential
+    {
+        public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException(exceptionMessage);
+
+        public override ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException(exceptionMessage);
     }
 
     /// <summary>
