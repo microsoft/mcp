@@ -8,7 +8,6 @@ using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Services;
 
@@ -20,25 +19,21 @@ public sealed class RemediationService(IAzureService azureService)
     private const string ApiVersion = "2025-01-01-preview";
 
     public async Task<RemediationPackage> GetRemediationAsync(
-        string recommendationId,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
+        string recommendationTypeId,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(recommendationId), recommendationId));
+        ValidateRequiredParameters((nameof(recommendationTypeId), recommendationTypeId));
 
         var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
-        var url = BuildRemediationUrl(managementEndpoint, recommendationId);
+        var url = BuildRemediationUrl(managementEndpoint, recommendationTypeId);
 
         using var httpClient = AzureService.GetClient();
-        var clientOptions = ConfigureRetryPolicy(
-            AddDefaultPolicies(new RemediationClientOptions()),
-            retryPolicy);
+        var clientOptions = AddDefaultPolicies(new RemediationClientOptions());
         clientOptions.Transport = new HttpClientTransport(httpClient);
 
         var pipeline = HttpPipelineBuilder.Build(clientOptions);
 
-        var armToken = await GetArmAccessTokenAsync(tenant, cancellationToken);
+        var armToken = await GetArmAccessTokenAsync(null, cancellationToken);
         var accessToken = armToken.Token;
         ValidateRequiredParameters((nameof(accessToken), accessToken));
 
@@ -63,9 +58,9 @@ public sealed class RemediationService(IAzureService azureService)
             (HttpStatusCode)response.Status);
     }
 
-    private static string BuildRemediationUrl(string managementEndpoint, string recommendationId)
+    private static string BuildRemediationUrl(string managementEndpoint, string recommendationTypeId)
     {
         var queryString = $"api-version={ApiVersion}";
-        return $"{managementEndpoint}/providers/Microsoft.Advisor/remediationTypes/{Uri.EscapeDataString(recommendationId)}?{queryString}";
+        return $"{managementEndpoint}/providers/Microsoft.Advisor/remediationTypes/{Uri.EscapeDataString(recommendationTypeId)}?{queryString}";
     }
 }

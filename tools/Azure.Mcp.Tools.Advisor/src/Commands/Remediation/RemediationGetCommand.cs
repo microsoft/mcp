@@ -35,11 +35,11 @@ public sealed class RemediationGetCommand(ILogger<RemediationGetCommand> logger,
     {
         base.ValidateOptions(options, validationResult);
 
-        if (string.IsNullOrEmpty(options.RecommendationId) ||
-            options.RecommendationId.Length != 36 ||
-            !Guid.TryParseExact(options.RecommendationId, "D", out _))
+        if (string.IsNullOrEmpty(options.RecommendationTypeId) ||
+            options.RecommendationTypeId.Length != 36 ||
+            !Guid.TryParseExact(options.RecommendationTypeId, "D", out _))
         {
-            validationResult.Errors.Add("--recommendation-id must be a 36-character GUID in the form xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.");
+            validationResult.Errors.Add("--recommendation-type-id must be a 36-character GUID in the form xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.");
         }
     }
 
@@ -48,8 +48,8 @@ public sealed class RemediationGetCommand(ILogger<RemediationGetCommand> logger,
         try
         {
             var remediation = await _remediationService.GetRemediationAsync(
-                options.RecommendationId,
-                cancellationToken: cancellationToken);
+                options.RecommendationTypeId,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new RemediationGetResult(remediation),
@@ -58,8 +58,8 @@ public sealed class RemediationGetCommand(ILogger<RemediationGetCommand> logger,
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting Advisor remediation. RecommendationId: {RecommendationId}.",
-                options.RecommendationId);
+                "Error getting Advisor remediation. RecommendationTypeId: {RecommendationTypeId}.",
+                options.RecommendationTypeId);
             HandleException(context, ex);
         }
 
@@ -69,9 +69,9 @@ public sealed class RemediationGetCommand(ILogger<RemediationGetCommand> logger,
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         HttpRequestException httpEx when httpEx.StatusCode == HttpStatusCode.NotFound =>
-            "No remediation was found for the specified recommendation type. Verify the recommendation id.",
+            "No remediation was found for the specified recommendation type. Verify the recommendation type id.",
         HttpRequestException httpEx when httpEx.StatusCode == HttpStatusCode.Unauthorized =>
-            $"Authentication failed accessing the Advisor remediation API. Please run 'az login' and try again. Details: {httpEx.Message}",
+            $"Authentication failed accessing the Advisor remediation API. Ensure you are signed in to Azure (for local/stdio, run 'az login'). Details: {httpEx.Message}",
         _ => base.GetErrorMessage(ex)
     };
 

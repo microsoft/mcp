@@ -380,7 +380,7 @@ azmcp advisor metadata get --recommendation-type-id <recommendation-type-id> \
 # remediation steps plus ready-to-run artifacts (CLI, PowerShell, Bicep, ARM) that fix the flagged
 # resource.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor remediation get --recommendation-id <recommendation-id>
+azmcp advisor remediation get --recommendation-type-id <recommendation-type-id>
 ```
 
 ### Azure AI Search Operations

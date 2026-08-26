@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Commands.Remediation;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -74,15 +73,13 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
     }
 
     [Theory]
-    [InlineData("--recommendation-id 18745007-438b-4c68-bfa3-b6576d85a831", true)]
-    [InlineData("--recommendation-id not-a-guid", false)]
+    [InlineData("--recommendation-type-id 18745007-438b-4c68-bfa3-b6576d85a831", true)]
+    [InlineData("--recommendation-type-id not-a-guid", false)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         Service.GetRemediationAsync(
             Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(CreateSamplePackage());
 
@@ -101,12 +98,10 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
     {
         Service.GetRemediationAsync(
             Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(CreateSamplePackage());
 
-        var response = await ExecuteCommandAsync("--recommendation-id", RecommendationId);
+        var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationId);
 
         var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RemediationGetResult);
 
@@ -115,7 +110,8 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
         Assert.Equal("Microsoft.Advisor/remediationTypes", result.Remediation.Type);
         Assert.NotNull(result.Remediation.Properties);
         Assert.Equal("executable", result.Remediation.Properties!.OutputType);
-        Assert.False(result.Remediation.Properties.Destructive);
+        Assert.NotNull(result.Remediation.Properties.Destructive);
+        Assert.False(result.Remediation.Properties.Destructive!.Value);
 
         var artifact = Assert.Single(result.Remediation.Properties.Artifacts!);
         Assert.Equal("cli", artifact.ArtifactType);
@@ -127,21 +123,17 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
     }
 
     [Fact]
-    public async Task ExecuteAsync_PassesRecommendationIdToService()
+    public async Task ExecuteAsync_PassesRecommendationTypeIdToService()
     {
         Service.GetRemediationAsync(
             Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(CreateSamplePackage());
 
-        await ExecuteCommandAsync("--recommendation-id", RecommendationId);
+        await ExecuteCommandAsync("--recommendation-type-id", RecommendationId);
 
         await Service.Received(1).GetRemediationAsync(
             RecommendationId,
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -151,15 +143,13 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
     [InlineData("18745007-438b-4c68-bfa3-b6576d85a831z")]
     public async Task ExecuteAsync_InvalidRecommendationId_ReturnsBadRequest(string recommendationId)
     {
-        var response = await ExecuteCommandAsync("--recommendation-id", recommendationId);
+        var response = await ExecuteCommandAsync("--recommendation-type-id", recommendationId);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("36-character GUID", response.Message);
 
         await Service.DidNotReceive().GetRemediationAsync(
             Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -172,8 +162,6 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
 
         await Service.DidNotReceive().GetRemediationAsync(
             Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -182,12 +170,10 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
     {
         Service.GetRemediationAsync(
             Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Not found", null, HttpStatusCode.NotFound));
 
-        var response = await ExecuteCommandAsync("--recommendation-id", RecommendationId);
+        var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationId);
 
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("No remediation was found", response.Message);
@@ -198,12 +184,10 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
     {
         Service.GetRemediationAsync(
             Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Unauthorized", null, HttpStatusCode.Unauthorized));
 
-        var response = await ExecuteCommandAsync("--recommendation-id", RecommendationId);
+        var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationId);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
         Assert.Contains("Authentication failed", response.Message);
@@ -214,12 +198,10 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
     {
         Service.GetRemediationAsync(
             Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var response = await ExecuteCommandAsync("--recommendation-id", RecommendationId);
+        var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationId);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
