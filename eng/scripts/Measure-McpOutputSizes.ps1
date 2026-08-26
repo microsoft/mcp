@@ -35,7 +35,7 @@
 
 .PARAMETER LearnResponseThresholdUtf8Bytes
     Include every learn response over this UTF-8 byte threshold in the summary.
-    Defaults to 28000.
+    Defaults to 20000.
 
 .PARAMETER ServerExecutable
     Path to an already-built or published azmcp server executable to measure, instead of
@@ -89,7 +89,7 @@ param(
     [string]$Configuration = 'Debug',
     [switch]$SkipBuild,
     [switch]$Clean,
-    [int]$LearnResponseThresholdUtf8Bytes = 28000,
+    [int]$LearnResponseThresholdUtf8Bytes = 20000,
     [string]$ServerExecutable,
     [string]$ReleaseTag,
     [string]$GitHubRepository = 'microsoft/mcp'
@@ -272,7 +272,7 @@ function Invoke-McpOutputSizeSummary {
 
         [string] $MarkdownPath,
 
-        [int] $LearnResponseThresholdUtf8Bytes = 28000
+        [int] $LearnResponseThresholdUtf8Bytes = 20000
     )
 
     if (!(Test-Path -LiteralPath $InputPath -PathType Leaf)) {
