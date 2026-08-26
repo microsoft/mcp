@@ -1,5 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added the 'azmcp resilience recoveryplan checkreadiness' command to discover and assess whether a recovery plan and its protected resources are ready for recovery operations. The command waits for the readiness job and returns its status, errors, failed tasks, and failed resources."
-  - section: "Breaking Changes"
-    description: "Renamed the recovery plan command group from 'azmcp resilience recovery plan' to 'azmcp resilience recoveryplan' and the recovery job command group from 'azmcp resilience recovery job' to 'azmcp resilience recoveryjob'. Existing get commands now use the corresponding single-word resource group names."
