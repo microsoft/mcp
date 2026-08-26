@@ -61,16 +61,14 @@ public class OptionDescriptor
             }
 
             var optionAttribute = property.GetCustomAttribute<OptionAttribute>();
-            var optionContainerAttribute = property.GetCustomAttributes()
-                .OfType<IOptionContainerMetadata>()
-                .SingleOrDefault();
+            var optionContainerAttribute = GetOptionContainerMetadata(property);
             // Only include properties with [Option] or [OptionContainer]
-            if (optionAttribute == null && optionContainerAttribute == null)
+            if (optionAttribute == null && optionContainerAttribute is null)
             {
                 continue;
             }
 
-            if (optionAttribute != null && optionContainerAttribute != null)
+            if (optionAttribute != null && optionContainerAttribute is not null)
             {
                 throw new InvalidOperationException("Properties can only be attributed with [Option] or [OptionContainer], not both.");
             }
@@ -108,14 +106,14 @@ public class OptionDescriptor
                 });
             }
 
-            if (optionContainerAttribute != null)
+            if (optionContainerAttribute is not null)
             {
                 if (!complex)
                 {
                     throw new InvalidOperationException("Non-complex properties cannot use [OptionContainer] attribute. Use [Option] instead.");
                 }
 
-                var containerType = optionContainerAttribute.ContainerType;
+                var containerType = optionContainerAttribute.Value.ContainerType;
                 var declaredContainerType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
                 if (containerType != declaredContainerType)
                 {
@@ -126,7 +124,7 @@ public class OptionDescriptor
                 // Flatten nested complex types with a prefix.
                 CollectDescriptors(
                     containerType,
-                    GetNameOrPrefix(optionContainerAttribute.Prefix, prefix, property.Name),
+                    GetNameOrPrefix(optionContainerAttribute.Value.Prefix, prefix, property.Name),
                     descriptors,
                     nullabilityContext,
                     required,
@@ -185,6 +183,29 @@ public class OptionDescriptor
                underlying == typeof(DateTimeOffset) ||
                underlying == typeof(TimeSpan) ||
                underlying == typeof(Guid);
+    }
+
+    private static (string? Prefix, [DynamicallyAccessedMembers(
+        DynamicallyAccessedMemberTypes.PublicProperties |
+        DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type ContainerType)?
+        GetOptionContainerMetadata(PropertyInfo property)
+    {
+        var optionContainerAttribute = property.CustomAttributes.SingleOrDefault(attribute =>
+            attribute.AttributeType.IsGenericType &&
+            attribute.AttributeType.GetGenericTypeDefinition() == typeof(OptionContainerAttribute<>));
+
+        if (optionContainerAttribute is null)
+        {
+            return null;
+        }
+
+        var prefix = optionContainerAttribute.NamedArguments
+            .SingleOrDefault(argument => argument.MemberName == nameof(OptionContainerAttribute<object>.Prefix))
+            .TypedValue.Value as string;
+
+        var containerType = optionContainerAttribute.AttributeType.GetGenericArguments().Single();
+
+        return (prefix, containerType);
     }
 
     [UnconditionalSuppressMessage("Trimming", "IL2070:UnrecognizedReflectionPattern",

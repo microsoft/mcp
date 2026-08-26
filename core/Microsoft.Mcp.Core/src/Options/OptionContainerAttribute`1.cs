@@ -11,7 +11,7 @@ namespace Microsoft.Mcp.Core.Options;
 /// <typeparam name="TContainer">The type of the option container.</typeparam>
 [AttributeUsage(AttributeTargets.Property, Inherited = true, AllowMultiple = false)]
 public sealed class OptionContainerAttribute<
-    [DynamicallyAccessedMembers(ContainerMembers)] TContainer> : Attribute, IOptionContainerMetadata
+    [DynamicallyAccessedMembers(ContainerMembers)] TContainer> : Attribute
 {
     private const DynamicallyAccessedMemberTypes ContainerMembers =
         DynamicallyAccessedMemberTypes.PublicProperties |
@@ -24,5 +24,5 @@ public sealed class OptionContainerAttribute<
     public string? Prefix { get; init; }
 
     [DynamicallyAccessedMembers(ContainerMembers)]
-    Type IOptionContainerMetadata.ContainerType => typeof(TContainer);
+    public Type ContainerType => typeof(TContainer);
 }
