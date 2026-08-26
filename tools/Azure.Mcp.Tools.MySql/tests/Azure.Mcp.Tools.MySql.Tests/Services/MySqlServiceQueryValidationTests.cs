@@ -25,42 +25,19 @@ public class MySqlServiceQueryValidationTests
     [InlineData("SELECT preset FROM config")]
     [InlineData("SELECT * FROM committees")]
     [InlineData("SELECT VARCHAR(col) FROM t")]
-    public void ValidateQuerySafety_WithSafeQueries_ShouldNotThrow(string query)
-    {
-        // Act & Assert - Should not throw any exception
-        MySqlService.ValidateQuerySafety(query);
-    }
-
-    [Theory]
-    [InlineData("DROP TABLE users")]
-    [InlineData("DELETE FROM users")]
-    [InlineData("INSERT INTO users")]
-    [InlineData("UPDATE users SET")]
-    [InlineData("CREATE TABLE test")]
-    [InlineData("GRANT ALL PRIVILEGES")]
-    [InlineData("LOAD DATA INFILE")]
-    [InlineData("SELECT * INTO OUTFILE")]
-    public void ValidateQuerySafety_WithDangerousQueries_ShouldThrowInvalidOperationException(string query)
-    {
-        // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => MySqlService.ValidateQuerySafety(query));
-
-        Assert.True(
-            exception.Message.Contains("dangerous keyword") ||
-            exception.Message.Contains("dangerous patterns"),
-            $"Expected error message to contain either 'dangerous keyword' or 'dangerous patterns', but got: {exception.Message}");
-    }
-
-    [Theory]
+    [InlineData("SELECT HEX('abc') FROM users")]
+    [InlineData("SELECT 1 UNION SELECT user FROM mysql.user")]
     [InlineData("SHOW DATABASES")]
     [InlineData("DESCRIBE users")]
     [InlineData("EXPLAIN SELECT * FROM users")]
-    public void ValidateQuerySafety_WithDisallowedStatements_ShouldThrowInvalidOperationException(string query)
+    [InlineData("INSERT INTO users (id) VALUES (1)")]
+    [InlineData("UPDATE users SET name = 'x' WHERE id = 1")]
+    [InlineData("DELETE FROM users WHERE id = 1")]
+    [InlineData("DROP TABLE users")]
+    public void ValidateQuerySafety_WithAcceptedQueries_ShouldNotThrow(string query)
     {
-        // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => MySqlService.ValidateQuerySafety(query));
-
-        Assert.Contains("Only SELECT statements are allowed", exception.Message);
+        // Act & Assert - Should not throw any exception
+        MySqlService.ValidateQuerySafety(query);
     }
 
     [Theory]
@@ -103,22 +80,7 @@ public class MySqlServiceQueryValidationTests
         // Act & Assert
         var exception = Assert.Throws<InvalidOperationException>(() => MySqlService.ValidateQuerySafety(query));
 
-        Assert.Contains("Multiple SQL statements are not allowed. Use only a single SELECT statement.", exception.Message);
-    }
-
-    [Theory]
-    [InlineData("SELECT HEX('abc') FROM users")]
-    [InlineData("SELECT UNHEX('616263') FROM users")]
-    [InlineData("SELECT CONV('a',16,2) FROM users")]
-    public void ValidateQuerySafety_WithObfuscationFunctions_ShouldThrowInvalidOperationException(string query)
-    {
-        // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => MySqlService.ValidateQuerySafety(query));
-
-        Assert.True(
-            exception.Message.Contains("Character conversion and obfuscation functions") ||
-            exception.Message.Contains("dangerous keyword"),
-            $"Expected obfuscation or keyword validation error, but got: {exception.Message}");
+        Assert.Contains("Multiple SQL statements are not allowed. Use only a single statement.", exception.Message);
     }
 
     [Theory]
@@ -132,50 +94,5 @@ public class MySqlServiceQueryValidationTests
         var exception = Assert.Throws<InvalidOperationException>(() => MySqlService.ValidateQuerySafety(query));
 
         Assert.Contains("SQL comments are not allowed for security reasons", exception.Message);
-    }
-
-    [Theory]
-    [InlineData("SELECT 1 UNION SELECT user FROM mysql.user")]
-    [InlineData("SELECT 1 INTERSECT SELECT 2")]
-    [InlineData("SELECT 1 EXCEPT SELECT 2")]
-    public void ValidateQuerySafety_WithSetOperations_ShouldThrowInvalidOperationException(string query)
-    {
-        // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => MySqlService.ValidateQuerySafety(query));
-
-        Assert.Contains("dangerous keyword", exception.Message);
-    }
-
-    [Theory]
-    [InlineData("SELECT N'test' FROM users")]  // National string with benign content
-    [InlineData("SELECT N'it\\'s a test' FROM t")]  // National string with escaped quote
-    [InlineData("SELECT N'line\\nbreak' FROM t")]  // National string with escape sequence (benign)
-    public void ValidateQuerySafety_WithNationalStringsInBenignContext_ShouldNotThrow(string query)
-    {
-        // Act & Assert - National strings that don't contain dangerous keywords should pass
-        MySqlService.ValidateQuerySafety(query);
-    }
-
-    [Theory]
-    [InlineData("SELECT X'48656C6C6F' FROM users")]  // X'...' hex format = 'Hello' (benign)
-    [InlineData("SELECT 0x61626364 FROM t")]  // 0xXXXX hex format = 'abcd' (benign)
-    public void ValidateQuerySafety_WithHexLiteralsInBenignContext_ShouldNotThrow(string query)
-    {
-        // Act & Assert - Hex literals for benign data should not throw
-        MySqlService.ValidateQuerySafety(query);
-    }
-
-    [Theory]
-    [InlineData("SELECT LOAD_FILE('/etc/passwd') FROM t")]  // Direct dangerous function call
-    [InlineData("SELECT CHAR(112, 103, 95, 115, 108, 101, 101, 112) FROM t")]  // CHAR() encoding dangerous function (blocked as obfuscation)
-    public void ValidateQuerySafety_WithDangerousFunctionCalls_ShouldThrowInvalidOperationException(string query)
-    {
-        // Act & Assert - Dangerous functions should be blocked regardless of escaping
-        var exception = Assert.Throws<InvalidOperationException>(() => MySqlService.ValidateQuerySafety(query));
-
-        Assert.True(
-            exception.Message.Contains("dangerous") ||
-            exception.Message.Contains("not allowed"),
-            $"Expected error for dangerous function, but got: {exception.Message}");
     }
 }

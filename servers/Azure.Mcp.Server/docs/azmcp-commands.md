@@ -2260,8 +2260,8 @@ azmcp mysql list --subscription <subscription> \
                  [--server <server>] \
                  [--database <database>]
 
-# Executes a SELECT query on a MySQL Database. The query must start with SELECT and cannot contain any destructive SQL operations for security reasons.
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# Executes a SQL statement on a MySQL database. Only a single statement is executed per call; SQL comments and stacked statements are rejected. The signed-in user's database permissions determine what the statement may do.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql database query --subscription <subscription> \
                            --resource-group <resource-group> \
                            --user <user> \
@@ -2320,8 +2320,8 @@ azmcp postgres list --subscription <subscription> \
                     [--database <database>] \
                     [--schema <schema>]
 
-# Execute a query on a PostgreSQL database
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# Execute a query on a PostgreSQL database. Only a single statement is executed per call; SQL comments and stacked statements are rejected. The signed-in user's database permissions determine what the statement may do.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres database query --user <user> \
                               --server <server> \
                               --database <database> \

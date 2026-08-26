@@ -27,62 +27,9 @@ public sealed class MySqlService(IResourceGroupService resourceGroupService, ISu
     // Maximum allowed query length in characters to prevent oversized inputs
     private const int MaxQueryLengthChars = 10_000;
 
-    // Static arrays for security validation - initialized once per class
-    private static readonly string[] DangerousKeywords =
-    [
-        // Data manipulation that could be harmful
-        "DROP", "DELETE", "TRUNCATE", "ALTER", "CREATE", "INSERT", "UPDATE",
-        // Set operations that can be used for data exfiltration
-        "UNION", "INTERSECT", "EXCEPT",
-        // Administrative operations
-        "GRANT", "REVOKE", "SET", "RESET", "KILL", "SHUTDOWN", "RESTART",
-        // Information disclosure
-        "SHOW MASTER", "SHOW SLAVE", "SHOW BINARY", "SHOW BINLOG",
-        // System operations
-        "LOAD DATA", "OUTFILE", "DUMPFILE", "LOAD_FILE", "INTO OUTFILE",
-        // User/privilege management
-        "CREATE USER", "DROP USER", "ALTER USER", "RENAME USER",
-        // Database structure changes
-        "CREATE DATABASE", "DROP DATABASE", "CREATE SCHEMA", "DROP SCHEMA",
-        // Stored procedures and functions
-        "CREATE PROCEDURE", "DROP PROCEDURE", "CREATE FUNCTION", "DROP FUNCTION",
-        // Triggers and events
-        "CREATE TRIGGER", "DROP TRIGGER", "CREATE EVENT", "DROP EVENT",
-        // Views that could modify data
-        "CREATE VIEW", "DROP VIEW",
-        // Index operations
-        "CREATE INDEX", "DROP INDEX",
-        // Table operations
-        "CREATE TABLE", "DROP TABLE", "RENAME TABLE",
-        // Lock operations
-        "LOCK TABLES", "UNLOCK TABLES",
-        // Transaction control in unsafe contexts
-        "START TRANSACTION", "BEGIN", "COMMIT", "ROLLBACK",
-        // System variables
-        "SET GLOBAL", "SET SESSION", "SET SQL_MODE"
-    ];
-
-    private static readonly string[] ObfuscationFunctions =
-    [
-        "CHAR", "CHR", "ASCII", "ORD", "HEX", "UNHEX", "CONV",
-        "CONVERT", "CAST", "BINARY", "CONCAT_WS", "MAKE_SET",
-        "ELT", "FIELD", "FIND_IN_SET", "EXPORT_SET", "LOAD_FILE",
-        "FROM_BASE64", "TO_BASE64", "COMPRESS", "UNCOMPRESS",
-        "AES_ENCRYPT", "AES_DECRYPT", "DES_ENCRYPT", "DES_DECRYPT",
-        "ENCODE", "DECODE", "PASSWORD", "OLD_PASSWORD"
-    ];
-
-    // Pre-compiled regex patterns for word-boundary keyword matching
+    // Pre-compiled regex used to detect multiple / stacked statements
     private static readonly Regex s_multipleStatementsPattern =
         RegexHelper.CreateRegex(@";\s*\w", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-    private static readonly Regex DangerousKeywordsPattern = RegexHelper.CreateRegex(
-        @"\b(" + string.Join("|", DangerousKeywords.Select(Regex.Escape)) + @")\b",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-    private static readonly Regex ObfuscationFunctionsPattern = RegexHelper.CreateRegex(
-        @"\b(" + string.Join("|", ObfuscationFunctions.Select(Regex.Escape)) + @")\s*\(",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
@@ -160,6 +107,11 @@ public sealed class MySqlService(IResourceGroupService resourceGroupService, ISu
         return builder.ConnectionString;
     }
 
+    /// <summary>
+    /// Performs lightweight structural validation of a query. This does not restrict which SQL verbs may be
+    /// executed; the caller's database permissions are the authority on what is allowed. Validation is limited
+    /// to rejecting empty or oversized input, SQL comments, and multiple / stacked statements.
+    /// </summary>
     internal static void ValidateQuerySafety(string query)
     {
         if (string.IsNullOrWhiteSpace(query))
@@ -173,19 +125,11 @@ public sealed class MySqlService(IResourceGroupService resourceGroupService, ISu
             throw new InvalidOperationException($"Query length exceeds the maximum allowed limit of {MaxQueryLengthChars:N0} characters to prevent potential DoS attacks.");
         }
 
-        // Decode escape sequences in National/Unicode strings (N'...') to detect obfuscated function names.
-        // Example attack vectors this prevents:
-        // - N'pg_sl\0065ep' with escape sequences → pg_sleep
-        // - SELECT N'CHAR(0x...) encoded function names' → binary-encoded dangerous functions
-        var decodedQuery = DecodeNationalStringEscapes(query);
-
-        // Strip string literals and hex literals before checking for comment markers to avoid
+        // Strip string literals before checking for comment markers to avoid
         // false positives (e.g., 'C#Developer' or 'foo--bar' are not comments).
-        // The pattern handles:
-        // - Standard quoted strings: 'text' with doubled quotes ('') and backslash escaping (\')
-        // - National/Unicode strings: N'text' (MySQL's Unicode support)
-        // - Hex literals: 0xHHHH or X'HHHH' (binary function name encoding)
-        var queryWithoutStrings = Regex.Replace(decodedQuery, "[nN]'([^'\\\\]|\\\\.|'')*'|'([^'\\\\]|\\\\.|'')*'|0x[0-9A-Fa-f]+|[xX]'[0-9A-Fa-f]*'", "'str'", RegexOptions.None, RegexHelper.DefaultRegexTimeout);
+        // The pattern handles both SQL-standard doubled quotes ('') and
+        // MySQL's default backslash escaping (\') inside string literals.
+        var queryWithoutStrings = Regex.Replace(query, "'([^'\\\\]|\\\\.|'')*'", "'str'", RegexOptions.None, RegexHelper.DefaultRegexTimeout);
 
         // Reject queries containing SQL comments to prevent bypass attacks
         // (e.g., MySQL version-specific comments /*!50000 ... */ that are executed as code)
@@ -205,75 +149,8 @@ public sealed class MySqlService(IResourceGroupService resourceGroupService, ISu
 
         if (s_multipleStatementsPattern.IsMatch(cleanedQuery))
         {
-            throw new InvalidOperationException("Multiple SQL statements are not allowed. Use only a single SELECT statement.");
+            throw new InvalidOperationException("Multiple SQL statements are not allowed. Use only a single statement.");
         }
-
-        // List of dangerous SQL keywords that should be blocked (word-boundary matching)
-        var keywordMatch = DangerousKeywordsPattern.Match(cleanedQuery);
-        if (keywordMatch.Success)
-        {
-            throw new InvalidOperationException($"Query contains dangerous keyword '{keywordMatch.Value.ToUpperInvariant()}' which is not allowed for security reasons.");
-        }
-
-        // Check for character conversion functions that may be used for obfuscation
-        var funcMatch = ObfuscationFunctionsPattern.Match(cleanedQuery);
-        if (funcMatch.Success)
-        {
-            throw new InvalidOperationException($"Character conversion and obfuscation functions like '{funcMatch.Groups[1].Value.ToUpperInvariant()}' are not allowed for security reasons.");
-        }
-
-        // Additional validation: Only allow SELECT statements
-        var trimmedQuery = cleanedQuery.Trim();
-        var allowedStartPatterns = new[]
-        {
-            "SELECT"
-        };
-
-        bool isAllowed = allowedStartPatterns.Any(pattern => trimmedQuery.StartsWith(pattern, StringComparison.OrdinalIgnoreCase));
-
-        if (!isAllowed)
-        {
-            throw new InvalidOperationException("Only SELECT statements are allowed for security reasons.");
-        }
-    }
-
-    /// <summary>
-    /// Decodes MySQL National/Unicode escape sequences in N'...' strings to detect obfuscated function names.
-    /// MySQL National strings support backslash escapes: \\ (backslash), \' (quote), \" (double quote), etc.
-    /// Examples:
-    /// - N'pg_sl\065ep' with char code 065 → pg_sleep (via CHAR conversion)
-    /// - N'CHAR(0x70,0x67,...)' → binary-encoded function names
-    /// </summary>
-    private static string DecodeNationalStringEscapes(string input)
-    {
-        if (string.IsNullOrEmpty(input))
-        {
-            return input;
-        }
-
-        // Decode common single-character escapes in N'...' strings
-        // These are: \\ (backslash), \' (single quote), \" (double quote), \n, \r, \t, etc.
-        return Regex.Replace(
-            input,
-            @"[nN]'((?:[^'\\]|\\.)*)'",
-            match =>
-            {
-                var content = match.Groups[1].Value;
-                // Decode backslash escape sequences
-                var decoded = content
-                    .Replace("\\\\", "\x00")  // Temp marker for backslash
-                    .Replace("\\'", "'")
-                    .Replace("\\\"", "\"")
-                    .Replace("\\n", "\n")
-                    .Replace("\\r", "\r")
-                    .Replace("\\t", "\t")
-                    .Replace("\\b", "\b")
-                    .Replace("\\f", "\f")
-                    .Replace("\\0", "\0")
-                    .Replace("\x00", "\\");   // Restore backslash
-                return $"N'{decoded}'";
-            },
-            RegexOptions.Compiled);
     }
 
     internal static (string Query, List<(string Name, string Value)> Parameters) ParameterizeStringLiterals(string query) =>

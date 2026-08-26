@@ -31,8 +31,8 @@ public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogg
     {
         try
         {
-            // Validate the query early to avoid sending unsafe SQL to the server.
-            SqlQueryValidator.EnsureReadOnlySelect(options.Query);
+            // Validate the query early to reject malformed or stacked statements.
+            SqlQueryValidator.ValidateQuery(options.Query);
             List<string> queryResult = await _postgresService.ExecuteQueryAsync(
                 options.AuthType,
                 options.User,

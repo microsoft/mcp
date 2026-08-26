@@ -33,10 +33,12 @@ public class MySqlServiceExecutionTests
 
     [Theory]
     [InlineData("SELECT * FROM users; DROP TABLE users")]
-    [InlineData("DROP TABLE users")]
-    public void ValidateQuerySafety_WithDangerousQuery_ShouldThrowInvalidOperationException(string query)
+    [InlineData("SELECT * FROM users; SELECT 1")]
+    public void ValidateQuerySafety_WithStackedStatements_ShouldThrowInvalidOperationException(string query)
     {
         var exception = Assert.Throws<InvalidOperationException>(() => MySqlService.ValidateQuerySafety(query));
+
+        Assert.Contains("Multiple SQL statements are not allowed", exception.Message);
     }
 
     [Fact]
