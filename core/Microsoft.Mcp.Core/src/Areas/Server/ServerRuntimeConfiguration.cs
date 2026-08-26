@@ -39,7 +39,7 @@ public sealed class ServerRuntimeConfiguration
     /// <summary>
     /// The UTF-8 byte size threshold above which namespace discovery automatically uses three-step behavior.
     /// </summary>
-    public int ThreeStepToolDiscoveryThresholdBytes { get; set; } = 45000;
+    public int ThreeStepToolDiscoveryThresholdBytes { get; set; } = ServerStartOptions.DefaultThreeStepToolDiscoveryThresholdBytes;
 
     /// <summary>
     /// Indicates whether automatic size-based fallback to three-step discovery is disabled.

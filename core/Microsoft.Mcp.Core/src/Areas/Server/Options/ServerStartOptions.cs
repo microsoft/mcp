@@ -11,6 +11,8 @@ namespace Microsoft.Mcp.Core.Areas.Server.Options;
 /// </summary>
 public sealed class ServerStartOptions
 {
+    internal const int DefaultThreeStepToolDiscoveryThresholdBytes = 20_000;
+
     /// <summary>
     /// Gets or sets the transport mechanism for the server.
     /// Defaults to standard I/O (stdio).
@@ -52,8 +54,8 @@ public sealed class ServerStartOptions
     /// falls back to three-step (metadata-only) discovery, even when <see cref="ThreeStepToolDiscovery"/> is false.
     /// This does not change behavior when <see cref="ThreeStepToolDiscovery"/> is already true.
     /// </summary>
-    [Option(Description = "The UTF-8 byte size threshold for a top-level learn response above which the server automatically falls back to three-step (metadata-only) discovery, even when --three-step-tool-discovery is not set. Has no effect when --three-step-tool-discovery is already enabled.", DefaultValue = 45000)]
-    public int ThreeStepToolDiscoveryThresholdBytes { get; set; } = 45000;
+    [Option(Description = "The UTF-8 byte size threshold for a top-level learn response above which the server automatically falls back to three-step (metadata-only) discovery, even when --three-step-tool-discovery is not set. Has no effect when --three-step-tool-discovery is already enabled.", DefaultValue = DefaultThreeStepToolDiscoveryThresholdBytes)]
+    public int ThreeStepToolDiscoveryThresholdBytes { get; set; } = DefaultThreeStepToolDiscoveryThresholdBytes;
 
     /// <summary>
     /// Gets or sets whether automatic size-based fallback to three-step discovery is disabled.

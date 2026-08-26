@@ -72,6 +72,21 @@ public class ServiceCollectionExtensionsTests
     }
 
     [Fact]
+    public void AddAzureMcpServer_UsesDefaultThreeStepToolDiscoveryThreshold()
+    {
+        // Arrange
+        var services = SetupBaseServices();
+
+        // Act
+        services.AddAzureMcpServer(new ServerStartOptions());
+
+        // Assert
+        var provider = services.BuildServiceProvider();
+        var runtimeConfiguration = provider.GetRequiredService<IOptions<ServerRuntimeConfiguration>>().Value;
+        Assert.Equal(20_000, runtimeConfiguration.ThreeStepToolDiscoveryThresholdBytes);
+    }
+
+    [Fact]
     public void AddAzureMcpServer_WithSingleProxy_RegistersSingleProxyToolLoader()
     {
         // Arrange
