@@ -17,6 +17,7 @@ public class EventGridSetup : IAreaSetup
 
     public string Title => "Azure Event Grid";
 
+    // Test changes
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IEventGridService, EventGridService>();
