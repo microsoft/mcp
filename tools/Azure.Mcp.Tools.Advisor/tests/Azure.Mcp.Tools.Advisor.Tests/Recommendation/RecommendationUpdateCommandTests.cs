@@ -51,7 +51,7 @@ public class RecommendationUpdateCommandTests
     [InlineData("--subscription sub1 --recommendation-id rec-1 --recommendation-status New", true)]
     [InlineData("--subscription sub1 --recommendation-id rec-1 --recommendation-status Completed", true)]
     [InlineData("--subscription sub1 --recommendation-id rec-1 --recommendation-status Dismissed --recommendation-dismiss-reason Other", true)]
-    [InlineData("--subscription sub1 --recommendation-id rec-1 --recommendation-status Dismissed", false)]
+    [InlineData("--subscription sub1 --recommendation-id rec-1 --recommendation-status Dismissed", true)]
     [InlineData("--subscription sub1 --recommendation-status Completed", false)]
     [InlineData("--subscription sub1 --recommendation-id rec-1", false)]
     [InlineData("--recommendation-id rec-1 --recommendation-status Completed", false)]
@@ -210,18 +210,25 @@ public class RecommendationUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_DismissedWithoutReason_ListsSupportedReasons()
+    public async Task ExecuteAsync_DismissedWithoutReason_DefaultsToOther()
     {
+        ConfigureSuccessfulUpdate();
+
         var response = await ExecuteCommandAsync(
             "--subscription", "sub1",
             "--recommendation-id", "rec-1",
             "--recommendation-status", "Dismissed");
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        foreach (var reason in Enum.GetNames<RecommendationDismissReason>())
-        {
-            Assert.Contains(reason, response.Message);
-        }
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).UpdateRecommendationAsync(
+            "sub1",
+            "rec-1",
+            RecommendationStatus.Dismissed,
+            null,
+            RecommendationDismissReason.Other,
+            null,
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     private void ConfigureSuccessfulUpdate()

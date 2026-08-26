@@ -18,11 +18,11 @@ public sealed class RecommendationUpdateOptions : ISubscriptionOption
     [Option(Description = "The date and time until which the recommendation is postponed, in ISO 8601 format with a timezone offset. Required when --recommendation-status is Postponed and must represent a future instant.")]
     public DateTimeOffset? PostponedUntilDateTime { get; set; }
 
-    [Option(Description = "The explicit reason for dismissing the recommendation. Required when --recommendation-status is Dismissed. " +
+    [Option(Description = "The reason for dismissing the recommendation. " +
         "Map natural-language intent as follows: cost investment is too high to ExcessiveCostInvestmentRequired; unclear steps to ImplementationStepsAreUnclear; " +
         "incompatible configuration to IncompatibleWithTheCurrentConfiguration; acceptable risk to RiskIsAcceptable; too complex or impractical to TooComplexOrImpracticalToImplement; " +
         "an existing alternative to AnAlternativeSolutionIsAlreadyInPlace; and a clearly stated reason outside these choices to Other. " +
-        "If the user only asks to dismiss without giving a reason, ask them to choose a reason instead of defaulting to Other.")]
+        "When dismissing, omit this option or use Other if no reason was supplied or the natural-language intent cannot be mapped to a supported value; an omitted reason defaults to Other.")]
     public RecommendationDismissReason? RecommendationDismissReason { get; set; }
 
     [Option(Description = OptionDescriptions.Subscription)]

@@ -7,14 +7,9 @@ namespace Azure.Mcp.Tools.Advisor.Validation;
 
 internal static class RecommendationStateUpdateValidator
 {
-    internal static readonly string DismissReasonRequiredMessage =
-        "--recommendation-dismiss-reason is required when --recommendation-status is Dismissed. " +
-        $"Choose one of: {string.Join(", ", Enum.GetNames<RecommendationDismissReason>())}.";
-
     public static void AddValidationErrors(
         RecommendationStatus recommendationStatus,
         DateTimeOffset? postponedUntilDateTime,
-        RecommendationDismissReason? recommendationDismissReason,
         ICollection<string> errors)
     {
         ArgumentNullException.ThrowIfNull(errors);
@@ -30,24 +25,16 @@ internal static class RecommendationStateUpdateValidator
                 errors.Add("--postponed-until-date-time must be in the future.");
             }
         }
-
-        if (recommendationStatus == RecommendationStatus.Dismissed &&
-            recommendationDismissReason is null)
-        {
-            errors.Add(DismissReasonRequiredMessage);
-        }
     }
 
     public static void Validate(
         RecommendationStatus recommendationStatus,
-        DateTimeOffset? postponedUntilDateTime,
-        RecommendationDismissReason? recommendationDismissReason)
+        DateTimeOffset? postponedUntilDateTime)
     {
         var errors = new List<string>();
         AddValidationErrors(
             recommendationStatus,
             postponedUntilDateTime,
-            recommendationDismissReason,
             errors);
 
         if (errors.Count > 0)
@@ -55,4 +42,11 @@ internal static class RecommendationStateUpdateValidator
             throw new ArgumentException(string.Join(" ", errors));
         }
     }
+
+    public static RecommendationDismissReason? ResolveDismissReason(
+        RecommendationStatus recommendationStatus,
+        RecommendationDismissReason? recommendationDismissReason) =>
+        recommendationStatus == RecommendationStatus.Dismissed
+            ? recommendationDismissReason ?? RecommendationDismissReason.Other
+            : recommendationDismissReason;
 }

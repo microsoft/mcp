@@ -86,7 +86,9 @@ public class AdvisorService(IAzureService azureService)
             (nameof(recommendationId), recommendationId));
         RecommendationStateUpdateValidator.Validate(
             recommendationStatus,
-            postponedUntilDateTime,
+            postponedUntilDateTime);
+        recommendationDismissReason = RecommendationStateUpdateValidator.ResolveDismissReason(
+            recommendationStatus,
             recommendationDismissReason);
 
         var subscriptionResource = await AzureService.GetSubscription(

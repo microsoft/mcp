@@ -143,14 +143,41 @@ public class AdvisorRecommendationUpdateServiceTests
         Assert.False(properties.TryGetProperty("postponedUntilDateTime", out _));
     }
 
-    [Theory]
-    [InlineData(RecommendationStatus.Postponed, null, null, "--postponed-until-date-time is required")]
-    [InlineData(RecommendationStatus.Dismissed, null, null, "--recommendation-dismiss-reason is required")]
-    public async Task UpdateRecommendationAsync_MissingStateRequirement_ThrowsArgumentException(
-        RecommendationStatus status,
-        DateTimeOffset? postponedUntil,
-        RecommendationDismissReason? dismissReason,
-        string expectedMessage)
+    [Fact]
+    public async Task UpdateRecommendationAsync_DismissedWithoutReason_UsesOther()
+    {
+        var handler = ConfigureService(
+            ArmEnvironment.AzurePublicCloud,
+            """
+            {
+              "name": "rec-1",
+              "properties": {
+                "category": "Cost",
+                "recommendationStatus": "Dismissed",
+                "recommendationDismissReason": "Other",
+                "shortDescription": { "problem": "Right-size a resource" }
+              }
+            }
+            """);
+        var service = new AdvisorService(_azureService);
+
+        await service.UpdateRecommendationAsync(
+            SubscriptionId,
+            "rec-1",
+            RecommendationStatus.Dismissed,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        using var request = JsonDocument.Parse(handler.RequestBody!);
+        Assert.Equal(
+            "Other",
+            request.RootElement
+                .GetProperty("properties")
+                .GetProperty("recommendationDismissReason")
+                .GetString());
+    }
+
+    [Fact]
+    public async Task UpdateRecommendationAsync_MissingPostponementDate_ThrowsArgumentException()
     {
         var service = new AdvisorService(_azureService);
 
@@ -158,12 +185,10 @@ public class AdvisorRecommendationUpdateServiceTests
             service.UpdateRecommendationAsync(
                 SubscriptionId,
                 "rec-1",
-                status,
-                postponedUntil,
-                dismissReason,
+                RecommendationStatus.Postponed,
                 cancellationToken: TestContext.Current.CancellationToken));
 
-        Assert.Contains(expectedMessage, exception.Message);
+        Assert.Contains("--postponed-until-date-time is required", exception.Message);
         _azureService.DidNotReceive().GetClient(Arg.Any<string?>());
     }
 

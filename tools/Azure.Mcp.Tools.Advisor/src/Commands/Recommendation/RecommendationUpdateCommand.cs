@@ -23,8 +23,8 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         Mark an Advisor recommendation as Completed. Dismiss an Advisor recommendation because the risk is acceptable by using RiskIsAcceptable, or select another explicit dismissal reason.
         Postpone an Advisor recommendation until a requested future date and time. Reactivate a postponed or dismissed recommendation by setting it to New.
         Requires subscription context from --subscription, which accepts an Azure subscription ID or name, or from the configured default subscription. Requires --recommendation-id, which is the recommendation's stable ID.
-        If the user asks to dismiss without providing a reason, ask them to choose one rather than assuming Other.
-        State changes are rejected for Security category recommendations, recommendations whose customer state is Undefined, and recommendations already resolved by the Advisor platform.
+        If no dismissal reason is supplied or the user's intent cannot be mapped to a supported reason, uses Other.
+        State changes are rejected for Security category recommendations, and recommendations already marked as resolved by the Advisor platform.
         Returns a concise shared recommendation object containing the updated lifecycle state and identifying recommendation and resource details.
         """,
     Destructive = true,
@@ -54,7 +54,6 @@ public sealed class RecommendationUpdateCommand(
         RecommendationStateUpdateValidator.AddValidationErrors(
             options.RecommendationStatus,
             options.PostponedUntilDateTime,
-            options.RecommendationDismissReason,
             validationResult.Errors);
     }
 
@@ -65,12 +64,15 @@ public sealed class RecommendationUpdateCommand(
     {
         try
         {
+            var recommendationDismissReason = RecommendationStateUpdateValidator.ResolveDismissReason(
+                options.RecommendationStatus,
+                options.RecommendationDismissReason);
             var recommendation = await _advisorService.UpdateRecommendationAsync(
                 options.Subscription!,
                 options.RecommendationId.Trim(),
                 options.RecommendationStatus,
                 options.PostponedUntilDateTime,
-                options.RecommendationDismissReason,
+                recommendationDismissReason,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
