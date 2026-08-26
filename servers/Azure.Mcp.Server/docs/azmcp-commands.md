@@ -1170,14 +1170,24 @@ azmcp azurebackup disasterrecovery enable-crr --subscription <subscription> \
 #### Security
 
 ```bash
-# Configures Multi-User Authorization (MUA) on a vault by linking or unlinking a Resource Guard.
-# Provide --resource-guard-id to enable MUA. Omit to disable MUA (protected operation).
+# Enables Multi-User Authorization (MUA) on a vault by linking a Resource Guard.
+# --resource-guard-id is required. To disable MUA, use 'security disable-mua'.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp azurebackup security configure-mua --subscription <subscription> \
-                                         --resource-group <resource-group> \
-                                         --vault <vault> \
-                                         [--vault-type <vault-type>] \
-                                         [--resource-guard-id <resource-guard-id>]
+azmcp azurebackup security enable-mua --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --vault <vault> \
+                                      --resource-guard-id <resource-guard-id> \
+                                      [--vault-type <vault-type>]
+```
+
+```bash
+# Disables Multi-User Authorization (MUA) on a vault by unlinking the Resource Guard.
+# Critical operations will no longer require approval after this call.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup security disable-mua --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --vault <vault> \
+                                       [--vault-type <vault-type>]
 ```
 
 ```bash
@@ -1193,6 +1203,38 @@ azmcp azurebackup security configure-encryption --subscription <subscription> \
                                                 [--vault-type <vault-type>] \
                                                 [--key-version <key-version>] \
                                                 [--user-assigned-identity-id <user-assigned-identity-id>]
+```
+
+#### Resource Guard
+
+```bash
+# Creates a Resource Guard for Multi-User Authorization (MUA). Once a vault is linked to this
+# Resource Guard, protected operations (disable soft delete, remove immutability, stop protection,
+# disable MUA) will require approval from a security admin with Backup MUA Admin role on the guard.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup resourceguard create --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-guard <resource-guard> \
+                                       --location <location> \
+                                       [--excluded-operations <excluded-operations>] \
+                                       [--tags <tags>]
+```
+
+```bash
+# Gets a Resource Guard by name, or lists Resource Guards in a resource group or subscription.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup resourceguard get --subscription <subscription> \
+                                    [--resource-group <resource-group>] \
+                                    [--resource-guard <resource-guard>]
+```
+
+```bash
+# Deletes a Resource Guard. Any vaults still linked to this guard will no longer be protected
+# by MUA after deletion.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup resourceguard delete --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-guard <resource-guard>
 ```
 
 ### Azure CLI Operations
@@ -3842,6 +3884,17 @@ azmcp resilience recoveryjob resource get --subscription <subscription> \
                                           --recovery-plan <recovery-plan> \
                                           --recovery-job <recovery-job> \
                                           [--name <name>]
+
+# Create or update a resilience drill in a service group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill create --service-group <service-group> \
+                              --drill <drill> \
+                              --subscription <subscription> \
+                              --region <region> \
+                              --drill-type <drill-type> \
+                              --rbac-setup-mode <rbac-setup-mode> \
+                              [--resource-group <resource-group>] \
+                              [--recovery-plan <recovery-plan>]
 
 # Get a resilience drill, or list all drills in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
