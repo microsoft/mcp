@@ -58,7 +58,7 @@ public sealed class RemediationService(IAzureService azureService)
             (HttpStatusCode)response.Status);
     }
 
-    private static string BuildRemediationUrl(string managementEndpoint, string recommendationTypeId)
+    internal static string BuildRemediationUrl(string managementEndpoint, string recommendationTypeId)
     {
         var queryString = $"api-version={ApiVersion}";
         return $"{managementEndpoint}/providers/Microsoft.Advisor/remediationTypes/{Uri.EscapeDataString(recommendationTypeId)}?{queryString}";

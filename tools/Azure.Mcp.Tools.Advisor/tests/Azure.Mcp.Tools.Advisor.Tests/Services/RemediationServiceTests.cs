@@ -24,7 +24,7 @@ public class RemediationServiceTests
         var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, MinimalPackageJson));
         var service = CreateService(handler);
 
-        await service.GetRemediationAsync(RecommendationTypeId);
+        await service.GetRemediationAsync(RecommendationTypeId, TestContext.Current.CancellationToken);
 
         Assert.NotNull(handler.LastRequest);
         Assert.Equal(HttpMethod.Get, handler.LastRequest!.Method);
@@ -34,17 +34,13 @@ public class RemediationServiceTests
     }
 
     [Fact]
-    public async Task GetRemediationAsync_EscapesRecommendationTypeId()
+    public void BuildRemediationUrl_IncludesApiVersionAndEscapesId()
     {
-        var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, MinimalPackageJson));
-        var service = CreateService(handler);
+        var url = RemediationService.BuildRemediationUrl("https://management.azure.com", "a b/c");
 
-        await service.GetRemediationAsync("a b/c");
-
-        Assert.NotNull(handler.LastRequest);
-        Assert.Contains(
-            "/remediationTypes/a%20b%2Fc?api-version=2025-01-01-preview",
-            handler.LastRequest!.RequestUri!.ToString());
+        Assert.Equal(
+            "https://management.azure.com/providers/Microsoft.Advisor/remediationTypes/a%20b%2Fc?api-version=2025-01-01-preview",
+            url);
     }
 
     [Fact]
@@ -53,7 +49,7 @@ public class RemediationServiceTests
         var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, MinimalPackageJson));
         var service = CreateService(handler);
 
-        await service.GetRemediationAsync(RecommendationTypeId);
+        await service.GetRemediationAsync(RecommendationTypeId, TestContext.Current.CancellationToken);
 
         Assert.NotNull(handler.LastRequest);
         Assert.True(handler.LastRequest!.Headers.TryGetValues("Authorization", out var authValues));
@@ -66,7 +62,7 @@ public class RemediationServiceTests
         var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, FullPackageJson));
         var service = CreateService(handler);
 
-        var package = await service.GetRemediationAsync(RecommendationTypeId);
+        var package = await service.GetRemediationAsync(RecommendationTypeId, TestContext.Current.CancellationToken);
 
         Assert.Equal(RecommendationTypeId, package.Name);
         Assert.Equal("Microsoft.Advisor/remediationTypes", package.Type);
@@ -94,7 +90,7 @@ public class RemediationServiceTests
         var service = CreateService(handler);
 
         var exception = await Assert.ThrowsAsync<HttpRequestException>(
-            () => service.GetRemediationAsync(RecommendationTypeId));
+            () => service.GetRemediationAsync(RecommendationTypeId, TestContext.Current.CancellationToken));
 
         Assert.Equal(status, exception.StatusCode);
     }
