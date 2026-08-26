@@ -70,8 +70,6 @@ public sealed class RemediationGetCommand(ILogger<RemediationGetCommand> logger,
     {
         HttpRequestException httpEx when httpEx.StatusCode == HttpStatusCode.NotFound =>
             "No remediation was found for the specified recommendation type. Verify the recommendation type id.",
-        HttpRequestException httpEx when httpEx.StatusCode == HttpStatusCode.Unauthorized =>
-            $"Authentication failed accessing the Advisor remediation API. Ensure you are signed in to Azure (for local/stdio, run 'az login'). Details: {httpEx.Message}",
         _ => base.GetErrorMessage(ex)
     };
 

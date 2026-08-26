@@ -190,7 +190,7 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
         var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationId);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
-        Assert.Contains("Authentication failed", response.Message);
+        Assert.Contains("Service unavailable or network connectivity issues", response.Message);
     }
 
     [Fact]
