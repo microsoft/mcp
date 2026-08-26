@@ -79,34 +79,6 @@ jobs:
       pwsh: true
       workingDirectory: $(Build.SourcesDirectory)
 
-  # Some services (e.g. Azure Backup) have resources with dependency chains that
-  # block resource group deletion. Toolsets can drop a 'remove-test-resources-pre.ps1'
-  # script next to their test-resources.bicep to perform ordered cleanup before
-  # Remove-TestResources.ps1 deletes the resource group.
-  - task: AzurePowerShell@5
-    displayName: "Pre-cleanup test resources (stdio)"
-    condition: and(succeededOrFailed(), eq(variables['CI_HAS_DEPLOYED_RESOURCES'], 'true'), ne(variables['Skip.RemoveTestResources'], 'true'))
-    continueOnError: true
-    inputs:
-      azureSubscription: azure-sdk-tests-public
-      azurePowerShellVersion: LatestVersion
-      pwsh: true
-      scriptType: InlineScript
-      Inline: |
-        $preCleanupScript = Join-Path '$(Build.SourcesDirectory)' '$(TestResourcesPath)' 'remove-test-resources-pre.ps1'
-        if (-not (Test-Path $preCleanupScript)) {
-          Write-Host "No pre-cleanup script at '$preCleanupScript'. Skipping."
-          exit 0
-        }
-        if ([string]::IsNullOrWhiteSpace($env:RESOURCE_GROUP)) {
-          Write-Host "RESOURCE_GROUP environment variable is empty. Skipping pre-cleanup."
-          exit 0
-        }
-        eng/common/scripts/Import-AzModules.ps1
-        Write-Host "Invoking pre-cleanup script '$preCleanupScript' for resource group '$env:RESOURCE_GROUP'."
-        & $preCleanupScript -ResourceGroupName $env:RESOURCE_GROUP
-    workingDirectory: $(Build.SourcesDirectory)
-
   - template: /eng/common/TestResources/remove-test-resources.yml
     parameters:
       ServiceConnection: azure-sdk-tests-public
@@ -146,30 +118,6 @@ jobs:
       testRunTitle: "live - $(PathToTest)"
       testResultsFormat: "VSTest"
       mergeTestResults: true
-
-  - task: AzurePowerShell@5
-    displayName: "Pre-cleanup test resources (http)"
-    condition: and(succeededOrFailed(), eq(variables['CI_HAS_DEPLOYED_RESOURCES'], 'true'), ne(variables['Skip.RemoveTestResources'], 'true'))
-    continueOnError: true
-    inputs:
-      azureSubscription: azure-sdk-tests-public
-      azurePowerShellVersion: LatestVersion
-      pwsh: true
-      scriptType: InlineScript
-      Inline: |
-        $preCleanupScript = Join-Path '$(Build.SourcesDirectory)' '$(TestResourcesPath)' 'remove-test-resources-pre.ps1'
-        if (-not (Test-Path $preCleanupScript)) {
-          Write-Host "No pre-cleanup script at '$preCleanupScript'. Skipping."
-          exit 0
-        }
-        if ([string]::IsNullOrWhiteSpace($env:RESOURCE_GROUP)) {
-          Write-Host "RESOURCE_GROUP environment variable is empty. Skipping pre-cleanup."
-          exit 0
-        }
-        eng/common/scripts/Import-AzModules.ps1
-        Write-Host "Invoking pre-cleanup script '$preCleanupScript' for resource group '$env:RESOURCE_GROUP'."
-        & $preCleanupScript -ResourceGroupName $env:RESOURCE_GROUP
-    workingDirectory: $(Build.SourcesDirectory)
 
   - template: /eng/common/TestResources/remove-test-resources.yml
     parameters:
