@@ -199,7 +199,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_policy_update | Modify the daily retention to 60 days for backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
-| azurebackup_protectableitem_list | List protectable items in vault <vault_name> in resource group <resource_group> |investigation-required |
+| azurebackup_protectableitem_list | List protectable items in vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_protectableitem_list | Show me all items that can be backed up in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_get | Get protected item details for <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_get | Show backup status of protected item <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
@@ -209,12 +209,25 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_protecteditem_undelete | Undelete the accidentally deleted backup for VM <datasource_id> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_recoverypoint_get | Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_recoverypoint_get | List available recovery points for <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_resourceguard_create | Create a Resource Guard named <resource_guard> in resource group <resource_group> in region <location> | investigation-required |
+| azurebackup_resourceguard_create | Set up a new MUA Resource Guard called <resource_guard> in <location> under resource group <resource_group> excluding operations deleteProtection,updatePolicy | investigation-required |
+| azurebackup_resourceguard_create | Create Resource Guard <resource_guard> in <location> under resource group <resource_group> with tags env=prod,team=backup | investigation-required |
+| azurebackup_resourceguard_delete | Delete Resource Guard <resource_guard> from resource group <resource_group> | investigation-required |
+| azurebackup_resourceguard_delete | Remove the Resource Guard <resource_guard> in <resource_group> | investigation-required |
+| azurebackup_resourceguard_delete | Delete the MUA Resource Guard <resource_guard> from resource group <resource_group> | investigation-required |
+| azurebackup_resourceguard_get | Get Resource Guard <resource_guard> in resource group <resource_group> | investigation-required |
+| azurebackup_resourceguard_get | List all Resource Guards in resource group <resource_group> | investigation-required |
+| azurebackup_resourceguard_get | Show me every MUA Resource Guard in my subscription | investigation-required |
 | azurebackup_security_configure-encryption | Configure customer-managed key encryption on vault <vault_name> in resource group <resource_group> using key <key_name> from key vault <key_vault_uri> with system-assigned identity | investigation-required |
 | azurebackup_security_configure-encryption | Enable CMK encryption on vault <vault_name> using user-assigned identity <identity_id> and key <key_name> from <key_vault_uri> | investigation-required |
 | azurebackup_security_configure-encryption | Set up customer-managed encryption for backup vault <vault_name> in <resource_group> | investigation-required |
-| azurebackup_security_configure-mua | Enable multi-user authorization on vault <vault_name> in resource group <resource_group> with resource guard <resource_guard_id> | investigation-required |
-| azurebackup_security_configure-mua | Disable MUA on vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv' | investigation-required|
+| azurebackup_security_enable-mua | Enable multi-user authorization on vault <vault_name> in resource group <resource_group> with resource guard <resource_guard_id> | investigation-required |
+| azurebackup_security_enable-mua | Link Resource Guard <resource_guard_id> to backup vault <vault_name> in <resource_group> to enable MUA | investigation-required |
+| azurebackup_security_enable-mua | Turn on MUA for DPP backup vault <vault_name> in <resource_group> using Resource Guard <resource_guard_id> | investigation-required |
+| azurebackup_security_disable-mua | Disable multi-user authorization on vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_security_disable-mua | Turn off MUA on backup vault <vault_name> in <resource_group> | investigation-required |
+| azurebackup_security_disable-mua | Unlink the Resource Guard from vault <vault_name> in <resource_group> and disable MUA | investigation-required |
+| azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv' | investigation-required |
 | azurebackup_vault_create | Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp' | investigation-required |
 | azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_get | Show me information about Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
@@ -222,6 +235,18 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_vault_get | Get vault <vault_name> in resource group <resource_group> and include all extended posture fields | investigation-required |
 | azurebackup_vault_update | Update Azure Backup vault <vault_name> in resource group <resource_group> to enable soft delete | investigation-required |
 | azurebackup_vault_update | Change the identity type of Azure Backup vault <vault_name> in resource group <resource_group> to SystemAssigned | investigation-required |
+| azurebackup_vault_privateendpoint_create | Create a Private Endpoint named <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> using subnet <subnet_id> and auto-approve it | investigation-required |
+| azurebackup_vault_privateendpoint_create | Provision a Private Endpoint <pe_name> for vault <vault_name> in <resource_group> connected to subnet <subnet_id> with group-id AzureBackup | investigation-required |
+| azurebackup_vault_privateendpoint_create | Set up private connectivity for Recovery Services vault <vault_name> in <resource_group> by creating Private Endpoint <pe_name> in subnet <subnet_id> | investigation-required |
+| azurebackup_vault_privateendpoint_get | List all Private Endpoint Connections on Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_vault_privateendpoint_get | Get Private Endpoint Connection <pe_name> on vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_vault_privateendpoint_get | Show me the Private Endpoints attached to Recovery Services vault <vault_name> in <resource_group> | investigation-required |
+| azurebackup_vault_privateendpoint_delete | Delete Private Endpoint Connection <pe_name> from Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_vault_privateendpoint_delete | Remove the vault-side private endpoint connection <pe_name> on vault <vault_name> in <resource_group> | investigation-required |
+| azurebackup_vault_privateendpoint_delete | Detach Private Endpoint <pe_name> from Recovery Services vault <vault_name> in <resource_group> | investigation-required |
+| azurebackup_vault_privateendpoint_approve-reject | Approve pending Private Endpoint Connection <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> with action approve | investigation-required |
+| azurebackup_vault_privateendpoint_approve-reject | Reject Private Endpoint Connection <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> with action reject and description "Not authorized" | investigation-required |
+| azurebackup_vault_privateendpoint_approve-reject | Respond to the pending private link connection <pe_name> on Recovery Services vault <vault_name> in <resource_group> by approving it | investigation-required |
 
 ## Azure CLI
 
@@ -904,7 +929,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 ## Azure Resilience Management
 
 | Tool Name | Test Prompt | Interaction |
-|:----------|:------------|:------------|
+|:----------|:----------|:----------|
+| resilience_drill_create | Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, resource group <resource_group>, automated built-in roles, and recovery plan <recovery_plan_name> | none |
+| resilience_drill_create | Create a regional resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, and manual RBAC setup | none |
+| resilience_drill_create | Create a resilience drill for service group <service_group> | clarification-required |
 | resilience_drill_delete | Delete resilience drill <drill_name> from service group <service_group> | none |
 | resilience_drill_delete | Permanently remove drill <drill_name> in service group <service_group> | none |
 | resilience_drill_get | List all resilience drills in service group <service_group> | none |

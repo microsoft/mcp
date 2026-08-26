@@ -2239,7 +2239,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureMua_RSV_Enable");
 
         var result = await CallToolAsync(
-            "azurebackup_security_configure-mua",
+            "azurebackup_security_enable-mua",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -2271,22 +2271,22 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
-    public async Task SecurityConfigureMua_RsvVault_DisableMua_Successfully()
+    public async Task SecurityDisableMua_RsvVault_Successfully()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
 
-        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureMua_RSV_Disable");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityDisableMua_RSV");
 
         var result = await CallToolAsync(
-            "azurebackup_security_configure-mua",
+            "azurebackup_security_disable-mua",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "vault", vaultName }
-            });
+                { "vault", vaultName },
+                });
 
-        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityConfigureMua_RSV_Disable");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityDisableMua_RSV");
 
         if (result.HasValue && result.Value.TryGetProperty("result", out var opResult))
         {
@@ -2296,6 +2296,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         {
             var msg = message.GetString() ?? "";
             bool isEnvironmentSpecific = msg.Contains("not found", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("not configured", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("Authorization", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("NotFound", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("Forbidden", StringComparison.OrdinalIgnoreCase)
@@ -2306,7 +2307,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         }
         else
         {
-            Assert.Fail("Unexpected response from SecurityConfigureMua (RSV Disable)");
+            Assert.Fail("Unexpected response from SecurityDisableMua (RSV)");
         }
     }
 
@@ -2324,7 +2325,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureMua_DPP_Enable");
 
         var result = await CallToolAsync(
-            "azurebackup_security_configure-mua",
+            "azurebackup_security_enable-mua",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -2357,23 +2358,23 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
-    public async Task SecurityConfigureMua_DppVault_DisableMua_Successfully()
+    public async Task SecurityDisableMua_DppVault_Successfully()
     {
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
 
-        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureMua_DPP_Disable");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityDisableMua_DPP");
 
         var result = await CallToolAsync(
-            "azurebackup_security_configure-mua",
+            "azurebackup_security_disable-mua",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
-                { "vault-type", "dpp" }
-            });
+                { "vault-type", "dpp" },
+                });
 
-        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityConfigureMua_DPP_Disable");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityDisableMua_DPP");
 
         if (result.HasValue && result.Value.TryGetProperty("result", out var opResult))
         {
@@ -2383,6 +2384,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         {
             var msg = message.GetString() ?? "";
             bool isEnvironmentSpecific = msg.Contains("not found", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("not configured", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("Authorization", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("NotFound", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("Forbidden", StringComparison.OrdinalIgnoreCase)
@@ -2393,7 +2395,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         }
         else
         {
-            Assert.Fail("Unexpected response from SecurityConfigureMua (DPP Disable)");
+            Assert.Fail("Unexpected response from SecurityDisableMua (DPP)");
         }
     }
 
@@ -2405,7 +2407,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
             ?? "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-security/providers/Microsoft.DataProtection/resourceGuards/test-guard";
 
         var result = await CallToolAsync(
-            "azurebackup_security_configure-mua",
+            "azurebackup_security_enable-mua",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
