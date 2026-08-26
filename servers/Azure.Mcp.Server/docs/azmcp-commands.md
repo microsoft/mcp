@@ -3797,6 +3797,34 @@ azmcp resilience drill run get --service-group <service-group> \
                                --drill <drill> \
                                [--name <name>]
 
+# Add notes to a drill run
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run add-notes --service-group <service-group> \
+                                     --drill <drill> \
+                                     --drill-run <drill-run> \
+                                     --notes <notes>
+
+# Start failover for a drill run. Repeat source locations and selected resource IDs as needed.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run failover --service-group <service-group> \
+                                    --drill <drill> \
+                                    --drill-run <drill-run> \
+                                    --source-locations <source-location> \
+                                    [--selected-resource-ids <selected-resource-id>] \
+                                    [--auto-failover <true|false>]
+
+# Resume a failover drill run paused after fault injection
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run resume --service-group <service-group> \
+                                  --drill <drill> \
+                                  --drill-run <drill-run>
+
+# Reprotect failed-over resources in a drill run
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run reprotect --service-group <service-group> \
+                                     --drill <drill> \
+                                     --drill-run <drill-run>
+
 # Get a resource (target) of a drill run, or list all resources of the run (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill run resource get --service-group <service-group> \

@@ -1207,6 +1207,63 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return document.RootElement.Clone();
     }
 
+    public async Task AddDrillRunNotesAsync(string serviceGroup, string drill, string drillRun, string notes, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
+        DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
+        var content = new DrillRunAddNotesContent
+        {
+            Notes = notes
+        };
+
+        await drillRunResource.AddNotesAsync(WaitUntil.Started, Guid.NewGuid().ToString(), content, cancellationToken);
+    }
+
+    public async Task FailoverDrillRunAsync(string serviceGroup, string drill, string drillRun, IEnumerable<string> sourceLocations, IEnumerable<string>? selectedResourceIds = null, bool autoFailover = false, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var requestProperties = new FailoverRequestProperties(sourceLocations);
+        foreach (string resourceId in selectedResourceIds ?? [])
+        {
+            requestProperties.SelectedResourceIds.Add(new ResourceIdentifier(resourceId));
+        }
+
+        var failoverProperties = new ResilienceManagementFailoverContent(FailoverDirectionTypes.FromSpecificLocations)
+        {
+            FailoverRequestProperties = requestProperties
+        };
+        var content = new DrillRunFailoverContent(
+            autoFailover ? AutoFailover.Enable : AutoFailover.Disable,
+            failoverProperties);
+        var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
+        DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
+
+        await drillRunResource.FailOverAsync(WaitUntil.Started, Guid.NewGuid().ToString(), content, cancellationToken);
+    }
+
+    public async Task ResumeDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
+        DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
+
+        await drillRunResource.ResumeAsync(WaitUntil.Started, Guid.NewGuid().ToString(), cancellationToken);
+    }
+
+    public async Task ReprotectDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
+        DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
+
+        await drillRunResource.ReprotectAsync(WaitUntil.Started, Guid.NewGuid().ToString(), cancellationToken);
+    }
+
     public async Task<IEnumerable<ResourceSummary>> ListDrillRunResourcesAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);

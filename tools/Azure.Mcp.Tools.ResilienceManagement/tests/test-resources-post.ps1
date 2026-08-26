@@ -448,6 +448,7 @@ if (-not $drillRun) {
 }
 
 $DeploymentOutputs['DRILLRUNNAME'] = $drillRun.name
+$DeploymentOutputs['DRILLRUNSOURCELOCATION'] = "$location-az1"
 
 # Capture a run target for the drill run resource live tests.
 $drillRunResourcesPath = "$serviceGroupResilienceBase/drills/$drillName/drillRuns/$($drillRun.name)/drillRunTargets`?api-version=$resilienceApiVersion"

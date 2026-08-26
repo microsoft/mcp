@@ -237,6 +237,144 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
+    public async Task Should_add_notes_to_drill_run()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+        var drillRun = RegisterOrRetrieveDeploymentOutputVariable("drillRunName", "DRILLRUNNAME");
+
+        var result = await CallToolAsync(
+            "resilience_drill_run_add-notes",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "drill-run", drillRun },
+                { "notes", "Recorded MCP add-notes validation." }
+            });
+
+        Assert.True(result.AssertProperty("accepted").GetBoolean());
+        Assert.Equal(drillRun, result.AssertProperty("drillRun").GetString());
+    }
+
+    [Fact]
+    public async Task Should_start_resume_and_reprotect_drill_run_failover()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+        var drillRun = RegisterOrRetrieveDeploymentOutputVariable("drillRunName", "DRILLRUNNAME");
+        var sourceLocation = RegisterOrRetrieveDeploymentOutputVariable("drillRunSourceLocation", "DRILLRUNSOURCELOCATION");
+
+        var result = await CallToolAsync(
+            "resilience_drill_run_failover",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "drill-run", drillRun },
+                { "source-locations", new[] { sourceLocation } },
+                { "auto-failover", false }
+            });
+
+        Assert.True(result.AssertProperty("accepted").GetBoolean());
+        Assert.Equal(drillRun, result.AssertProperty("drillRun").GetString());
+
+        bool canResume = false;
+        for (int attempt = 0; attempt < 60 && !canResume; attempt++)
+        {
+            var getResult = await CallToolAsync(
+                "resilience_drill_run_get",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "drill", drill },
+                    { "name", drillRun }
+                });
+
+            var supportedStages = getResult
+                .AssertProperty("drillRun")
+                .AssertProperty("properties")
+                .AssertProperty("supportedVerbsForStage")
+                .EnumerateArray();
+            bool canStartFailover = supportedStages.Any(stage =>
+                stage.AssertProperty("drillRunStage").GetString() == "Failover" &&
+                stage.AssertProperty("supportedVerbs").EnumerateArray().Any(verb => verb.GetString() == "Start"));
+            bool canMarkFaultInjectionComplete = supportedStages.Any(stage =>
+                stage.AssertProperty("drillRunStage").GetString() == "FaultInjection" &&
+                stage.AssertProperty("supportedVerbs").EnumerateArray().Any(verb => verb.GetString() == "MarkAsComplete"));
+            canResume = canStartFailover && !canMarkFaultInjectionComplete;
+
+            if (!canResume && TestMode != Microsoft.Mcp.Tests.Helpers.TestMode.Playback)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            }
+        }
+
+        Assert.True(canResume, "The drill run did not reach a resumable state within the timeout.");
+
+        result = await CallToolAsync(
+            "resilience_drill_run_resume",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "drill-run", drillRun }
+            });
+
+        Assert.True(result.AssertProperty("accepted").GetBoolean());
+        Assert.Equal(drillRun, result.AssertProperty("drillRun").GetString());
+
+        bool canReprotect = false;
+        for (int attempt = 0; attempt < 60 && !canReprotect; attempt++)
+        {
+            var getResult = await CallToolAsync(
+                "resilience_drill_run_get",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "drill", drill },
+                    { "name", drillRun }
+                });
+
+            canReprotect = getResult
+                .AssertProperty("drillRun")
+                .AssertProperty("properties")
+                .AssertProperty("supportedVerbsForStage")
+                .EnumerateArray()
+                .Any(stage =>
+                    (stage.AssertProperty("drillRunStage").GetString() == "Reprotect" ||
+                     stage.AssertProperty("drillRunStage").GetString() == "ReprotectReverse") &&
+                    stage.AssertProperty("supportedVerbs").EnumerateArray().Any(verb =>
+                        verb.GetString() == "Start" || verb.GetString() == "Retry"));
+
+            if (!canReprotect && TestMode != Microsoft.Mcp.Tests.Helpers.TestMode.Playback)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            }
+        }
+
+        Assert.True(canReprotect, "The drill run did not reach a reprotectable state within the timeout.");
+
+        result = await CallToolAsync(
+            "resilience_drill_run_reprotect",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "drill-run", drillRun }
+            });
+
+        Assert.True(result.AssertProperty("accepted").GetBoolean());
+        Assert.Equal(drillRun, result.AssertProperty("drillRun").GetString());
+    }
+
+    [Fact]
     public async Task Should_list_drill_run_resources()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
