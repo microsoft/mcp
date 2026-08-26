@@ -72,4 +72,13 @@ public static class AzureBackupOptionDefinitions
     public const string PitrRetentionDaysName = "pitr-retention-days";
     // RSV policy-level tags
     public const string PolicyTagsName = "policy-tags";
+
+    // vault privateendpoint  -  RSV private endpoint (v2 experience) options
+    internal const string PrivateEndpointName = "Name of the Private Endpoint (or Private Endpoint Connection) resource.";
+    internal const string PrivateEndpointVnetSubnetId = "ARM resource ID of the VNet subnet where the Private Endpoint will be created (must be Microsoft.Network/virtualNetworks/subnets and have privateEndpointNetworkPolicies=Disabled).";
+    internal const string PrivateEndpointGroupId = "Target sub-resource group ID. Allowed: 'AzureBackup' (primary region, default) or 'AzureBackup_secondary' (paired region, used for Cross-Region Restore).";
+    internal const string PrivateEndpointLocation = "Azure region for the Private Endpoint resource. Defaults to the vault region.";
+    internal const string PrivateEndpointAutoApprove = "When true, auto-approve the Private Endpoint Connection after creation (requires Microsoft.RecoveryServices/vaults/privateEndpointConnectionsApproval/action).";
+    internal const string PrivateEndpointDescription = "Optional description passed to the vault owner when approving or rejecting the connection.";
+    internal const string PrivateEndpointAction = "Decision to apply to the pending Private Endpoint Connection: 'approve' or 'reject'.";
 }
