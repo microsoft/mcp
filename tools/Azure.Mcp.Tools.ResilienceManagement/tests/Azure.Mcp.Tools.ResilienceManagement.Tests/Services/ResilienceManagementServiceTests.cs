@@ -660,6 +660,25 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public void ValidateRecoveryResourceUpdate_ExclusionPreservesExistingProtectionConfiguration()
+    {
+        ResourceCustomProtectionSetting existingSetting = CreateCustomRunbookSetting();
+        RecoveryMembersData requested = CreateRecoveryResource(ResourceInclusionState.Excluded);
+        RecoveryMembersData existing = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.CustomRunbook,
+            existingSetting);
+
+        ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing);
+
+        Assert.Equal(ResourceInclusionState.Included, existing.Properties!.InclusionState);
+        Assert.Equal(ResourceProtectionSolutionType.CustomRunbook, existing.Properties.SelectedProtectionSolutionType);
+        Assert.Same(existingSetting, existing.Properties.SelectedProtectionSolutionSetting);
+        Assert.Null(requested.Properties!.SelectedProtectionSolutionType);
+        Assert.Null(requested.Properties.SelectedProtectionSolutionSetting);
+    }
+
+    [Fact]
     public void ValidateRecoveryResourceUpdate_DelegatesExcludedResourcePropertyValidationToService()
     {
         RecoveryMembersData requested = CreateRecoveryResource(
