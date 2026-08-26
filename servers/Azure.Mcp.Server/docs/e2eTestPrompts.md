@@ -183,7 +183,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> | investigation-required |
 | azurebackup_governance_find-unprotected | Find unprotected SQL databases and file shares discovered by backup vaults in my subscription | investigation-required |
 | azurebackup_governance_find-unprotected | Find all resources and sub-resources in resource group <resource_group> that are not protected by Azure Backup | investigation-required |
-| azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> | clarification-required |
+| azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_governance_immutability | Set immutability to Enabled on vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_governance_soft-delete | Configure soft delete on Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_governance_soft-delete | Set soft delete state to AlwaysOn for vault <vault_name> in resource group <resource_group> | investigation-required |
