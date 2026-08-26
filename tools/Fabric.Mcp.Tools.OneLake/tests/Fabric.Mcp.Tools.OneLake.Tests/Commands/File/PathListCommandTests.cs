@@ -13,7 +13,7 @@ public class PathListCommandTests : CommandUnitTestsBase<PathListCommand, IOneLa
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("list_files", Command.Name);
+        Assert.Equal("list-files", Command.Name);
         Assert.Equal("List OneLake Path Structure", Command.Title);
         Assert.True(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
@@ -25,7 +25,7 @@ public class PathListCommandTests : CommandUnitTestsBase<PathListCommand, IOneLa
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("list_files", CommandDefinition.Name);
+        Assert.Equal("list-files", CommandDefinition.Name);
         Assert.NotEmpty(CommandDefinition.Options);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);

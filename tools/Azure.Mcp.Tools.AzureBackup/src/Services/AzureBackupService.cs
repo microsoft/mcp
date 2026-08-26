@@ -111,25 +111,27 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     public async Task<BackupVaultInfo> GetVaultAsync(
         string vaultName, string resourceGroup, string subscription,
         string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
         if (VaultTypeResolver.IsVaultTypeSpecified(vaultType))
         {
             return VaultTypeResolver.IsRsv(vaultType)
-                ? await rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken)
-                : await dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+                ? await rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken, expand)
+                : await dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken, expand);
         }
 
         return await AutoDetectAndExecuteAsync(
-            () => rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken),
-            () => dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken),
+            () => rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken, expand),
+            () => dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken, expand),
             vaultName);
     }
 
     public async Task<List<BackupVaultInfo>> ListVaultsAsync(
         string subscription, string? resourceGroup, string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
         List<BackupVaultInfo> FilterByResourceGroup(List<BackupVaultInfo> vaults) =>
@@ -139,16 +141,16 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
         if (VaultTypeResolver.IsRsv(vaultType))
         {
-            return FilterByResourceGroup(await rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken));
+            return FilterByResourceGroup(await rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken, expand));
         }
 
         if (VaultTypeResolver.IsDpp(vaultType))
         {
-            return FilterByResourceGroup(await dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken));
+            return FilterByResourceGroup(await dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken, expand));
         }
 
-        var rsvTask = rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var dppTask = dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var rsvTask = rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken, expand);
+        var dppTask = dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken, expand);
 
         try
         {
@@ -871,6 +873,85 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         return VaultTypeResolver.IsRsv(resolved)
             ? await rsvOps.ConfigureEncryptionAsync(vaultName, resourceGroup, subscription, keyVaultUri, keyName, identityType, keyVersion, userAssignedIdentityId, tenant, retryPolicy, cancellationToken)
             : await dppOps.ConfigureEncryptionAsync(vaultName, resourceGroup, subscription, keyVaultUri, keyName, identityType, keyVersion, userAssignedIdentityId, tenant, retryPolicy, cancellationToken);
+    }
+
+    // Private endpoint operations. RSV-only in the v2 experience described in
+    // azurebackup-rsv-mcp-improvements-plan.md §PR 4. For DPP (Backup vaults) we surface a
+    // clear NotSupportedException instead of silently routing to a non-existent code path.
+
+    public async Task<PrivateEndpointConnectionInfo> CreatePrivateEndpointAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string privateEndpointName, string vnetSubnetId, string groupId,
+        string? location, bool autoApprove,
+        string? vaultType, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
+        EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken));
+        return await rsvOps.CreatePrivateEndpointAsync(
+            vaultName, resourceGroup, subscription, privateEndpointName, vnetSubnetId,
+            string.IsNullOrWhiteSpace(groupId) ? "AzureBackup" : groupId,
+            location, autoApprove, tenant, retryPolicy, cancellationToken);
+    }
+
+    public async Task<PrivateEndpointConnectionInfo> GetPrivateEndpointAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string privateEndpointConnectionName, string? vaultType, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
+        EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken));
+        return await rsvOps.GetPrivateEndpointAsync(
+            vaultName, resourceGroup, subscription, privateEndpointConnectionName,
+            tenant, retryPolicy, cancellationToken);
+    }
+
+    public async Task<List<PrivateEndpointConnectionInfo>> ListPrivateEndpointsAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? vaultType, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
+        EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken));
+        return await rsvOps.ListPrivateEndpointsAsync(
+            vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+    }
+
+    public async Task<OperationResult> DeletePrivateEndpointAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string privateEndpointConnectionName, string? vaultType, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
+        EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken));
+        return await rsvOps.DeletePrivateEndpointAsync(
+            vaultName, resourceGroup, subscription, privateEndpointConnectionName,
+            tenant, retryPolicy, cancellationToken);
+    }
+
+    public async Task<PrivateEndpointConnectionInfo> SetPrivateEndpointConnectionStateAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string privateEndpointConnectionName, PrivateEndpointConnectionAction action,
+        string? description, string? vaultType, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
+        EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken));
+        var targetStatus = action == PrivateEndpointConnectionAction.Approve
+            ? PrivateEndpointConnectionStatus.Approved
+            : PrivateEndpointConnectionStatus.Rejected;
+        return await rsvOps.SetPrivateEndpointConnectionStateAsync(
+            vaultName, resourceGroup, subscription, privateEndpointConnectionName,
+            targetStatus, description, tenant, retryPolicy, cancellationToken);
+    }
+
+    private static void EnsurePrivateEndpointVaultType(string resolvedVaultType)
+    {
+        if (!VaultTypeResolver.IsRsv(resolvedVaultType))
+        {
+            throw new NotSupportedException(
+                "Private Endpoints are not supported for Backup vaults (DPP). Only Recovery Services vaults (RSV) expose Private Endpoint Connections. Use --vault-type rsv, or run this command against an RSV.");
+        }
     }
 
 

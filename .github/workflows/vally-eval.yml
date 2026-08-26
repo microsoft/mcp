@@ -32,12 +32,19 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+          fetch-tags: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
 
       - name: Install .NET SDK
-        uses: actions/setup-dotnet@v5.4.0
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
 
       - run: npm install -g @microsoft/vally-cli@0.13.0
 
@@ -81,10 +88,10 @@ jobs:
           Write-Host "Current RID: $rid"
           Write-Host "Using build platform: $platformName"
 
-          ./eng/scripts/Build-Code.ps1 -BuildInfoPath "${{ github.workspace }}/.work/build_info.json" -PlatformName $platformName
+          ./eng/scripts/Build-Code.ps1 -BuildInfoPath "${{ github.workspace }}/.work/build_info.json" -PlatformName $platformName -ReleaseBuild
 
       - name: Create vally evaluations
-        run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/src/VallyEvaluator.csproj' -- --buildInfo '${{ github.workspace }}/.work/build_info.json'
+        run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/src/VallyEvaluator.csproj' -- --buildInfo '${{ github.workspace }}/.work/build_info.json' --serverName Azure.Mcp.Server
 
       - name: Run vally
         run: |
@@ -97,8 +104,6 @@ jobs:
           $outputPath = "$baseVallyDirectory/vally-results"
 
           $workingDirectory = "${{ github.workspace }}"
-          
-          Copy-Item ./eng/tools/VallyEvaluator/src/Resources/eval.instructions.md "$workingDirectory/AGENTS.md" -Force
 
           ./eng/scripts/Invoke-VallyEvalTests.ps1 -BuildInfoPath $buildInfo -WorkDirectory $workingDirectory -EvalsDirectory $evalsDirectory -OutputPath $outputPath -NumberOfRuns $numberOfRuns -IsDebug:$isDebug
         shell: pwsh
@@ -107,7 +112,7 @@ jobs:
 
       - name: Upload vally results
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: vally-results
           path: ${{ github.workspace }}/.work/vally/vally-results

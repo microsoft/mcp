@@ -65,6 +65,11 @@ if (!$WorkDirectory) {
 
 $workArtifactsDirectory = Join-Path $WorkDirectory ".work"
 $vallyArtifactsDirectory = Join-Path $workArtifactsDirectory "vally"
+$vallyAgentsFile = "$RepoRoot/eng/tools/VallyEvaluator/src/Resources/eval.instructions.md"
+$agentsFile = Join-Path $WorkDirectory "AGENTS.md"
+$temporaryAgentsFile = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
+$copilotInstructionsFile = Join-Path $RepoRoot ".github" "copilot-instructions.md"
+$temporaryCopilotInstructionsFile = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
 
 if (!$EvalsDirectory) {
     $EvalsDirectory = Join-Path $vallyArtifactsDirectory "evals"
@@ -124,6 +129,11 @@ $results | ForEach-Object { $commandArg += "--eval-spec '$($_)' " }
 Write-Host "Getting eval paths from VallyEvaluator"
 $(Get-ChildItem "$EvalsDirectory/**/eval.yaml") | ForEach-Object { $commandArg += "--eval-spec '$($_.FullName)' " }
 
+if ([string]::IsNullOrEmpty($commandArg)) {
+    Write-Host "No eval.yaml files found to execute vally from."
+    exit 0
+}
+
 $expression = "vally eval --work-dir '$WorkDirectory' --output-dir '$OutputPath' --runs $NumberOfRuns --param ENVIRONMENT=$environment"
 
 if ($IsDebug) {
@@ -132,5 +142,23 @@ if ($IsDebug) {
 
 $expression += " $commandArg"
 
-Write-Host "Running command: $expression"
-Invoke-Expression $expression
+
+Write-Host "Moving existing AGENTS.md to temporary file location... $temporaryAgentsFile" -ForegroundColor Cyan
+Move-Item $agentsFile $temporaryAgentsFile
+
+Write-Host "Moving existing copilot instructions file to temporary file location... $temporaryCopilotInstructionsFile" -ForegroundColor Cyan
+Move-Item $copilotInstructionsFile $temporaryCopilotInstructionsFile
+
+Write-Host "Replacing AGENTS.md with vally's AGENTS.md file" -ForegroundColor Cyan
+Copy-Item $vallyAgentsFile $agentsFile
+
+try {
+    Write-Host "Running command: $expression"
+    Invoke-Expression $expression
+} finally {
+    Write-Host "Moving original AGENTS.md file back." -ForegroundColor Cyan
+    Move-Item $temporaryAgentsFile $agentsFile -Force
+
+    Write-Host "Moving original copilot instructions file back." -ForegroundColor Cyan
+    Move-Item $temporaryCopilotInstructionsFile $copilotInstructionsFile -Force
+}

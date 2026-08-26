@@ -1,16 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -21,7 +25,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 {
     private readonly ServiceProvider _serviceProvider;
     private readonly ICommandFactory _commandFactory;
-    private readonly IOptions<ServerStartOptions> _options;
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration;
     private readonly ILogger<NamespaceToolLoader> _logger;
 
     public NamespaceToolLoaderTests()
@@ -29,21 +33,21 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         _serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider() as ServiceProvider
             ?? throw new InvalidOperationException("Failed to create service provider");
         _commandFactory = CommandFactoryHelpers.CreateCommandFactory(_serviceProvider);
-        _options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
-        _logger = NullLogger<NamespaceToolLoader>.Instance;
+        _configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
+        _logger = Substitute.For<ILogger<NamespaceToolLoader>>();
     }
 
     [Fact]
     public void Constructor_InitializesSuccessfully()
     {
-        Assert.NotNull(new NamespaceToolLoader(_commandFactory, _options, _logger));
+        Assert.NotNull(new NamespaceToolLoader(_commandFactory, _configuration, _logger));
     }
 
     [Fact]
     public void Constructor_ThrowsOnNullCommandFactory()
     {
         // Arrange & Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new NamespaceToolLoader(null!, _options, _logger));
+        Assert.Throws<ArgumentNullException>(() => new NamespaceToolLoader(null!, _configuration, _logger));
     }
 
     [Fact]
@@ -57,8 +61,8 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task ListToolsHandler_ReturnsNamespaceTools()
     {
         // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
-        var request = CreateListToolsRequest();
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var request = McpTestUtilities.CreateToolListRequest();
 
         // Act
         var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -77,11 +81,11 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
             // Verify hierarchical schema structure
             var schema = tool.InputSchema;
-            Assert.True(schema.TryGetProperty("properties", out var properties));
-            Assert.True(properties.TryGetProperty("intent", out _));
-            Assert.True(properties.TryGetProperty("command", out _));
-            Assert.True(properties.TryGetProperty("parameters", out _));
-            Assert.True(properties.TryGetProperty("learn", out _));
+            var properties = schema.AssertProperty("properties");
+            properties.AssertProperty("intent");
+            properties.AssertProperty("command");
+            properties.AssertProperty("parameters");
+            properties.AssertProperty("learn");
         }
     }
 
@@ -89,8 +93,8 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task ListToolsHandler_CachesResults()
     {
         // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
-        var request = CreateListToolsRequest();
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var request = McpTestUtilities.CreateToolListRequest();
 
         // Act - Call twice
         var result1 = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -104,13 +108,13 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task ListToolsHandler_FiltersNamespacesWhenConfigured()
     {
         // Arrange
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             Namespace = ["storage", "keyvault"]
         });
 
-        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
-        var request = CreateListToolsRequest();
+        var loader = new NamespaceToolLoader(_commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolListRequest();
 
         // Act
         var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -134,17 +138,17 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var keyvaultGroup = new CommandGroup("keyvault", "Key Vault commands");
         var keyvaultCommand = Substitute.For<IBaseCommand>();
         keyvaultCommand.Metadata.Returns(new ToolMetadata() { ReadOnly = false });
-        keyvaultGroup.AddCommand("notreadonly", keyvaultCommand);
+        keyvaultGroup.AddCommand("not-readonly", keyvaultCommand);
         rootGroup.SubGroup.AddRange([storageGroup, keyvaultGroup]);
         commandFactory.RootGroup.Returns(rootGroup);
 
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             ReadOnly = true
         });
 
-        var loader = new NamespaceToolLoader(commandFactory, options, _logger);
-        var request = CreateListToolsRequest();
+        var loader = new NamespaceToolLoader(commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolListRequest();
 
         // Act
         var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -167,17 +171,17 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var keyvaultGroup = new CommandGroup("keyvault", "Key Vault commands");
         var keyvaultCommand = Substitute.For<IBaseCommand>();
         keyvaultCommand.Metadata.Returns(new ToolMetadata() { LocalRequired = false });
-        keyvaultGroup.AddCommand("notlocalrequired", keyvaultCommand);
+        keyvaultGroup.AddCommand("not-localrequired", keyvaultCommand);
         rootGroup.SubGroup.AddRange([storageGroup, keyvaultGroup]);
         commandFactory.RootGroup.Returns(rootGroup);
 
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             Transport = TransportTypes.Http
         });
 
-        var loader = new NamespaceToolLoader(commandFactory, options, _logger);
-        var request = CreateListToolsRequest();
+        var loader = new NamespaceToolLoader(commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolListRequest();
 
         // Act
         var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -191,9 +195,9 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task CallToolHandler_WithLearnTrue_ReturnsAvailableCommands()
     {
         // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
         var toolName = GetFirstAvailableNamespace();
-        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
         {
             ["learn"] = true,
             ["intent"] = "list resources"
@@ -217,9 +221,9 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task CallToolHandler_WithLearnTrue_CachesCommandList()
     {
         // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
         var toolName = GetFirstAvailableNamespace();
-        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
         {
             ["learn"] = true,
             ["intent"] = "list resources"
@@ -242,9 +246,9 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task CallToolHandler_WithIntentButNoCommand_AutoEnablesLearn()
     {
         // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
         var toolName = GetFirstAvailableNamespace();
-        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
         {
             ["intent"] = "list resources"
             // No command specified, should auto-enable learn
@@ -266,8 +270,8 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task CallToolHandler_WithInvalidNamespace_ReturnsError()
     {
         // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
-        var request = CreateCallToolRequest("nonexistent-namespace", new Dictionary<string, object?>
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("nonexistent-namespace", new Dictionary<string, object?>
         {
             ["learn"] = true
         });
@@ -288,8 +292,8 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task CallToolHandler_WithNullToolName_ThrowsArgumentException()
     {
         // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
-        var request = CreateCallToolRequest(null!, []);
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest(null!);
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -300,9 +304,9 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task CallToolHandler_WithoutCommandOrLearn_ReturnsHelpMessage()
     {
         // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
         var toolName = GetFirstAvailableNamespace();
-        var request = CreateCallToolRequest(toolName, []);
+        var request = McpTestUtilities.CreateToolCallRequest(toolName);
 
         // Act
         var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -321,18 +325,18 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task CallToolHandler_ParsesHierarchicalStructure()
     {
         // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
         var toolName = GetFirstAvailableNamespace();
 
-        var arguments = new Dictionary<string, JsonElement>
+        var arguments = new Dictionary<string, object?>
         {
-            ["intent"] = JsonDocument.Parse("\"list resources\"").RootElement,
-            ["command"] = JsonDocument.Parse("\"list\"").RootElement,
-            ["parameters"] = JsonDocument.Parse("""{"subscription":"test-sub"}""").RootElement,
-            ["learn"] = JsonDocument.Parse("false").RootElement
+            ["intent"] = "list resources",
+            ["command"] = "list",
+            ["parameters"] = new Dictionary<string, string>() { ["subscription"] = "test-sub" },
+            ["learn"] = false
         };
 
-        var request = CreateCallToolRequestWithJsonElements(toolName, arguments);
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, arguments);
 
         // Act
         var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -346,7 +350,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task CallToolHandler_ConvertsObjectDictionaryToJsonElements()
     {
         // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
         var toolName = GetFirstAvailableNamespace();
 
         var arguments = new Dictionary<string, object?>
@@ -357,7 +361,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             ["learn"] = false
         };
 
-        var request = CreateCallToolRequest(toolName, arguments);
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, arguments);
 
         // Act
         var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -371,10 +375,10 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task CallToolHandler_HandlesCommandNotFoundGracefully()
     {
         // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
         var toolName = GetFirstAvailableNamespace();
 
-        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
         {
             ["intent"] = "do something",
             ["command"] = "nonexistent-command",
@@ -395,10 +399,10 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task CallToolHandler_LazyLoadsCommandsPerNamespace()
     {
         // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
 
         // Get two different namespaces
-        var listRequest = CreateListToolsRequest();
+        var listRequest = McpTestUtilities.CreateToolListRequest();
         var tools = await loader.ListToolsHandler(listRequest, TestContext.Current.CancellationToken);
 
         if (tools.Tools.Count < 2)
@@ -411,7 +415,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var namespace2 = tools.Tools[1].Name;
 
         // Act - Access only first namespace
-        var request1 = CreateCallToolRequest(namespace1, new Dictionary<string, object?>
+        var request1 = McpTestUtilities.CreateToolCallRequest(namespace1, new Dictionary<string, object?>
         {
             ["learn"] = true,
             ["intent"] = "test"
@@ -420,7 +424,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         await loader.CallToolHandler(request1, TestContext.Current.CancellationToken);
 
         // Now access second namespace
-        var request2 = CreateCallToolRequest(namespace2, new Dictionary<string, object?>
+        var request2 = McpTestUtilities.CreateToolCallRequest(namespace2, new Dictionary<string, object?>
         {
             ["learn"] = true,
             ["intent"] = "test"
@@ -437,13 +441,13 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task CallToolHandler_ThreadSafeLazyLoading()
     {
         // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
         var toolName = GetFirstAvailableNamespace();
 
         // Act - Simulate concurrent access
         var tasks = Enumerable.Range(0, 10).Select(async _ =>
         {
-            var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+            var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
             {
                 ["learn"] = true,
                 ["intent"] = "concurrent test"
@@ -474,11 +478,11 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task DisposeAsync_ClearsCaches()
     {
         // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
         var toolName = GetFirstAvailableNamespace();
 
         // Populate cache
-        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
         {
             ["learn"] = true,
             ["intent"] = "test"
@@ -497,11 +501,11 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task CallToolHandler_WithInvalidCommand_ReturnsErrorWithGuidance()
     {
         // Arrange - Test error handling and guidance message structure
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
         var toolName = GetFirstAvailableNamespace();
 
         // Create request with invalid command that doesn't exist
-        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
         {
             ["command"] = "nonexistent_invalid_command_xyz",
             ["parameters"] = new Dictionary<string, object?>()
@@ -521,120 +525,6 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         // When command doesn't exist or encounters issues, should provide guidance
         // This validates the error handling path preserves informative messages
         Assert.True(textContent.Text.Length > 0);
-    }
-
-    // Elicitation Handler Tests (ported from BaseToolLoaderTests)
-
-    [Fact]
-    public void CreateClientOptions_WithElicitationCapability_ReturnsOptionsWithElicitationHandler()
-    {
-        // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var capabilities = new ClientCapabilities
-        {
-            Elicitation = new ElicitationCapability()
-        };
-        mockServer.ClientCapabilities.Returns(capabilities);
-
-        // Act
-        var options = CallCreateClientOptions(loader, mockServer);
-
-        // Assert
-        Assert.NotNull(options);
-        Assert.NotNull(options.Handlers);
-        Assert.NotNull(options.Handlers.ElicitationHandler);
-    }
-
-    [Fact]
-    public void CreateClientOptions_WithNoElicitationCapability_ReturnsOptionsWithoutElicitationHandler()
-    {
-        // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        mockServer.ClientCapabilities.Returns(new ClientCapabilities());
-
-        // Act
-        var options = CallCreateClientOptions(loader, mockServer);
-
-        // Assert
-        Assert.NotNull(options);
-        Assert.NotNull(options.Handlers);
-        Assert.Null(options.Handlers.ElicitationHandler);
-    }
-
-    [Fact]
-    public async Task CreateClientOptions_ElicitationHandler_DelegatesToServerSendRequestAsync()
-    {
-        // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var capabilities = new ClientCapabilities
-        {
-            Elicitation = new ElicitationCapability()
-            {
-                Form = new(),
-            }
-        };
-        mockServer.ClientCapabilities.Returns(capabilities);
-
-        var elicitationRequest = new ElicitRequestParams
-        {
-            Message = "Please enter your password:",
-            RequestedSchema = new()
-            {
-                Properties = new Dictionary<string, ElicitRequestParams.PrimitiveSchemaDefinition>()
-                {
-                    ["password"] = new ElicitRequestParams.StringSchema
-                    {
-                        Title = "password",
-                        Description = "The user's password.",
-                    }
-                },
-                Required = ["password"],
-            }
-        };
-
-        var mockResponse = new JsonRpcResponse
-        {
-            Id = new RequestId(1),
-            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "accept" })
-        };
-
-        mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
-                  .Returns(Task.FromResult(mockResponse));
-
-        // Act
-        var options = CallCreateClientOptions(loader, mockServer);
-        Assert.NotNull(options.Handlers.ElicitationHandler);
-
-        await options.Handlers.ElicitationHandler(elicitationRequest, TestContext.Current.CancellationToken);
-
-        // Assert - verify SendRequestAsync was called with elicitation method
-        await mockServer.Received(1).SendRequestAsync(
-            Arg.Is<JsonRpcRequest>(req => req.Method == "elicitation/create"),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task CreateClientOptions_ElicitationHandler_ValidatesRequestAndThrowsOnNull()
-    {
-        // Arrange
-        var loader = new NamespaceToolLoader(_commandFactory, _options, _logger);
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        var capabilities = new ClientCapabilities
-        {
-            Elicitation = new ElicitationCapability()
-        };
-        mockServer.ClientCapabilities.Returns(capabilities);
-
-        // Act
-        var options = CallCreateClientOptions(loader, mockServer);
-        Assert.NotNull(options.Handlers.ElicitationHandler);
-
-        // Assert - verify handler validates null request
-        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-            await options.Handlers.ElicitationHandler.Invoke(null, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -661,10 +551,10 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         commandFactory.GroupCommands(Arg.Any<string[]>())
             .Returns(new Dictionary<string, IBaseCommand> { ["write-cmd"] = writeCmd });
 
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { ReadOnly = true });
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { ReadOnly = true });
 
-        var loader = new NamespaceToolLoader(commandFactory, options, _logger);
-        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        var loader = new NamespaceToolLoader(commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("storage", new Dictionary<string, object?>
         {
             ["command"] = "write-cmd",
             ["parameters"] = new Dictionary<string, object?>()
@@ -701,10 +591,10 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         commandFactory.GroupCommands(Arg.Any<string[]>())
             .Returns(new Dictionary<string, IBaseCommand> { ["read-cmd"] = readCmd });
 
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { ReadOnly = true });
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { ReadOnly = true });
 
-        var loader = new NamespaceToolLoader(commandFactory, options, _logger);
-        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        var loader = new NamespaceToolLoader(commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("storage", new Dictionary<string, object?>
         {
             ["command"] = "read-cmd",
             ["parameters"] = new Dictionary<string, object?>()
@@ -715,6 +605,46 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
         // Assert - read-only command should have been executed
         Assert.True(executed, "Read-only command should be executed in read-only mode");
+    }
+
+    [Fact]
+    public async Task CallToolHandler_UnknownParameters_RejectsToolCall()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+
+        var readCmd = Substitute.For<IBaseCommand>();
+        readCmd.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
+        readCmd.GetCommand().Returns(new System.CommandLine.Command("read-cmd", "A read command"));
+        storageGroup.AddCommand("read-cmd", readCmd);
+
+        rootGroup.SubGroup.Add(storageGroup);
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["read-cmd"] = readCmd });
+
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { ReadOnly = true });
+
+        var loader = new NamespaceToolLoader(commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("storage", new Dictionary<string, object?>
+        {
+            ["command"] = "read-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+            {
+                { "unknown-param", "some-value" }
+            }
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should reject the tool call due to unknown parameter
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        var errorText = ((TextContentBlock)result.Content.First()).Text;
+        Assert.Contains("unknown-param", errorText);
     }
 
     [Fact]
@@ -741,10 +671,10 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         commandFactory.GroupCommands(Arg.Any<string[]>())
             .Returns(new Dictionary<string, IBaseCommand> { ["local-cmd"] = localCmd });
 
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { Transport = TransportTypes.Http });
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Transport = TransportTypes.Http });
 
-        var loader = new NamespaceToolLoader(commandFactory, options, _logger);
-        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        var loader = new NamespaceToolLoader(commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("storage", new Dictionary<string, object?>
         {
             ["command"] = "local-cmd",
             ["parameters"] = new Dictionary<string, object?>()
@@ -781,10 +711,10 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         commandFactory.GroupCommands(Arg.Any<string[]>())
             .Returns(new Dictionary<string, IBaseCommand> { ["remote-cmd"] = remoteCmd });
 
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { Transport = TransportTypes.Http });
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Transport = TransportTypes.Http });
 
-        var loader = new NamespaceToolLoader(commandFactory, options, _logger);
-        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        var loader = new NamespaceToolLoader(commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("storage", new Dictionary<string, object?>
         {
             ["command"] = "remote-cmd",
             ["parameters"] = new Dictionary<string, object?>()
@@ -801,13 +731,13 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task GetChildToolList_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
     {
         // Arrange
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             ReadOnly = true
         });
 
-        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
-        var request = CreateCallToolRequest("storage", []);
+        var loader = new NamespaceToolLoader(_commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("storage");
 
         // Act
         var tools = loader.GetChildToolList(request, "storage");
@@ -821,13 +751,13 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     public async Task GetChildToolList_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
     {
         // Arrange
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
             Transport = TransportTypes.Http
         });
 
-        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
-        var request = CreateCallToolRequest("storage", []);
+        var loader = new NamespaceToolLoader(_commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("storage");
 
         // Act
         var tools = loader.GetChildToolList(request, "storage");
@@ -841,6 +771,105 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         });
     }
 
+    // Telemetry tests
+
+    [Fact]
+    public async Task NamespaceToolLoader_HasNamespaceToolParameters_WhenToolDoesNotGetCalled()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var toolName = GetFirstAvailableNamespace();
+
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
+        {
+            ["intent"] = "do something",
+            ["command"] = "nonexistent-command",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        // Should fallback to learn mode or return error
+        var textContent = result.Content[0] as TextContentBlock;
+        Assert.NotNull(textContent);
+        activity.AssertTagEquals(TagName.ToolParameters, toolParameters =>
+        {
+            var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
+            Assert.NotNull(parametersList);
+            Assert.Equal(3, parametersList.Count);
+            Assert.Contains("intent", parametersList);
+            Assert.Contains("command", parametersList);
+            Assert.Contains("parameters", parametersList);
+        });
+    }
+
+    [Fact]
+    public async Task NamespaceToolLoader_HasNoToolParameters_WhenToolCallHasNoParameters()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+
+        var arguments = new Dictionary<string, object?>
+        {
+            ["intent"] = "get storage accounts",
+            ["command"] = "storage_account_get",
+            ["parameters"] = new Dictionary<string, object?>(),
+            ["learn"] = false
+        };
+
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
+        var request = McpTestUtilities.CreateToolCallRequest("storage", arguments);
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+
+        activity.AssertTagDoesNotExist(TagName.ToolParameters);
+    }
+
+    [Fact]
+    public async Task NamespaceToolLoader_CollectsToolParameters_WhenToolCallHasParameters()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+
+        var arguments = new Dictionary<string, object?>
+        {
+            ["intent"] = "get storage accounts",
+            ["command"] = "storage_account_get",
+            ["parameters"] = new Dictionary<string, object?> { ["subscription"] = "test-sub" },
+            ["learn"] = false
+        };
+
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
+        var request = McpTestUtilities.CreateToolCallRequest("storage", arguments);
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        activity.AssertTagEquals(TagName.ToolParameters, toolParameters =>
+        {
+            var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
+            Assert.NotNull(parametersList);
+            Assert.Single(parametersList);
+            Assert.Contains("subscription", parametersList);
+        });
+    }
+
     // Helper methods
 
     private string GetFirstAvailableNamespace()
@@ -851,58 +880,6 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             .ToList();
 
         return namespaces.FirstOrDefault() ?? "storage";
-    }
-
-    private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateListToolsRequest()
-    {
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsList }, new ListToolsRequestParams());
-    }
-
-    private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequest(
-        string toolName,
-        Dictionary<string, object?> arguments)
-    {
-        var jsonArguments = arguments.ToDictionary(
-            kvp => kvp.Key,
-            kvp => JsonSerializer.SerializeToElement(kvp.Value));
-
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
-        {
-            Name = toolName,
-            Arguments = jsonArguments
-        });
-    }
-
-    private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequestWithJsonElements(
-        string toolName,
-        Dictionary<string, JsonElement> arguments)
-    {
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
-        {
-            Name = toolName,
-            Arguments = arguments
-        });
-    }
-
-    private static ModelContextProtocol.Client.McpClientOptions CallCreateClientOptions(
-        NamespaceToolLoader loader,
-        ModelContextProtocol.Server.McpServer server)
-    {
-        // Use reflection to call the protected CreateClientOptions method
-        var method = typeof(BaseToolLoader).GetMethod(
-            "CreateClientOptions",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-        if (method == null)
-        {
-            throw new InvalidOperationException("CreateClientOptions method not found on BaseToolLoader");
-        }
-
-        var result = method.Invoke(loader, [server]);
-        return (ModelContextProtocol.Client.McpClientOptions)result!;
     }
 
     public async ValueTask DisposeAsync()
