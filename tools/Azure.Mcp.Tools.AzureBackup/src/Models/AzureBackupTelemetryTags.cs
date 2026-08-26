@@ -16,6 +16,7 @@ public static class AzureBackupTelemetryTags
     public static readonly string VaultExpand = AddPrefix("VaultExpand");
     public static readonly string MuaAction = AddPrefix("MuaAction");
     public static readonly string ResourceGuardOperation = AddPrefix("ResourceGuardOperation");
+    public static readonly string PrivateEndpointAction = AddPrefix("PrivateEndpointAction");
 
     // Unprefixed tag name shared with Microsoft.Mcp.Core's AzureTagName.SubscriptionGuid.
     // Duplicated here as a string literal because AzureTagName is internal to that assembly.

@@ -391,7 +391,9 @@ azmcp search index get --service <service> \
 azmcp search index query --subscription <subscription> \
                          --service <service> \
                          --index <index> \
-                         --query <query>
+                         --query <query> \
+                         [--query-type <simple|full|semantic>] \
+                         [--semantic-configuration <semantic-configuration>]
 
 # Get AI Search knowledge bases (all or a specific one)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -902,6 +904,58 @@ azmcp azurebackup vault update --subscription <subscription> \
                                [--redundancy <redundancy>]
 ```
 
+#### Private Endpoint (RSV only)
+
+```bash
+# Creates a Private Endpoint (v2 experience) for a Recovery Services vault in a customer VNet subnet.
+# Provisions the Microsoft.Network/privateEndpoints resource and, when --auto-approve is true, approves
+# the resulting Private Endpoint Connection on the vault. Backup vaults (DPP) are not supported. The
+# vault must have no protected items. --group-id must be 'AzureBackup' (primary region) or
+# 'AzureBackup_secondary' (paired region / CRR).
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault privateendpoint create --subscription <subscription> \
+                                               --resource-group <resource-group> \
+                                               --vault <vault> \
+                                               --private-endpoint-name <private-endpoint-name> \
+                                               --vnet-subnet-id <vnet-subnet-id> \
+                                               [--vault-type <vault-type>] \
+                                               [--group-id <AzureBackup|AzureBackup_secondary>] \
+                                               [--location <location>] \
+                                               [--auto-approve <true|false>]
+
+# Retrieves Private Endpoint Connections on a Recovery Services vault. When --private-endpoint-name is
+# specified, returns that single connection; when omitted, lists every PEC on the vault. Backup vaults
+# (DPP) are not supported.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault privateendpoint get --subscription <subscription> \
+                                            --resource-group <resource-group> \
+                                            --vault <vault> \
+                                            [--vault-type <vault-type>] \
+                                            [--private-endpoint-name <private-endpoint-name>]
+
+# Deletes a Private Endpoint Connection from a Recovery Services vault. This removes the vault-side
+# connection object only; the Microsoft.Network/privateEndpoints resource must be deleted separately.
+# Backup vaults (DPP) are not supported.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault privateendpoint delete --subscription <subscription> \
+                                               --resource-group <resource-group> \
+                                               --vault <vault> \
+                                               --private-endpoint-name <private-endpoint-name> \
+                                               [--vault-type <vault-type>]
+
+# Approves or rejects a pending Private Endpoint Connection on a Recovery Services vault. If the
+# connection is already in the target state, returns it unchanged. Approve requires
+# Microsoft.RecoveryServices/vaults/privateEndpointConnectionsApproval/action on the vault.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault privateendpoint approve-reject --subscription <subscription> \
+                                                       --resource-group <resource-group> \
+                                                       --vault <vault> \
+                                                       --private-endpoint-name <private-endpoint-name> \
+                                                       --action <approve|reject> \
+                                                       [--vault-type <vault-type>] \
+                                                       [--description <description>]
+```
+
 #### Policy
 
 ```bash
@@ -1118,7 +1172,6 @@ azmcp azurebackup disasterrecovery enable-crr --subscription <subscription> \
 ```bash
 # Enables Multi-User Authorization (MUA) on a vault by linking a Resource Guard.
 # --resource-guard-id is required. To disable MUA, use 'security disable-mua'.
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup security enable-mua --subscription <subscription> \
                                       --resource-group <resource-group> \
                                       --vault <vault> \
@@ -1129,7 +1182,6 @@ azmcp azurebackup security enable-mua --subscription <subscription> \
 ```bash
 # Disables Multi-User Authorization (MUA) on a vault by unlinking the Resource Guard.
 # Critical operations will no longer require approval after this call.
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup security disable-mua --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --vault <vault> \
@@ -1157,7 +1209,6 @@ azmcp azurebackup security configure-encryption --subscription <subscription> \
 # Creates a Resource Guard for Multi-User Authorization (MUA). Once a vault is linked to this
 # Resource Guard, protected operations (disable soft delete, remove immutability, stop protection,
 # disable MUA) will require approval from a security admin with Backup MUA Admin role on the guard.
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup resourceguard create --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --resource-guard <resource-guard> \
@@ -1168,7 +1219,6 @@ azmcp azurebackup resourceguard create --subscription <subscription> \
 
 ```bash
 # Gets a Resource Guard by name, or lists Resource Guards in a resource group or subscription.
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup resourceguard get --subscription <subscription> \
                                     [--resource-group <resource-group>] \
                                     [--resource-guard <resource-guard>]
@@ -1177,7 +1227,6 @@ azmcp azurebackup resourceguard get --subscription <subscription> \
 ```bash
 # Deletes a Resource Guard. Any vaults still linked to this guard will no longer be protected
 # by MUA after deletion.
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup resourceguard delete --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --resource-guard <resource-guard>
@@ -3763,14 +3812,12 @@ azmcp resilience usageplan enrollment create --subscription <subscription> \
                                              --service-group <service-group>
 
 # Get a resilience recovery plan, or list all recovery plans in a service group (omit --name)
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recovery plan get --subscription <subscription> \
+azmcp resilience recoveryplan get --subscription <subscription> \
                                    --service-group <service-group> \
                                    [--name <name>]
 
 # Create or fully update a Zonal resilience recovery plan. Ask the customer to select an identity type; do not assume SystemAssigned or another default. Identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description must be 5 to 50 characters and is required on create; it is preserved when omitted on update.
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recovery plan create --service-group <service-group> \
+azmcp resilience recoveryplan create --service-group <service-group> \
                                       --recovery-plan <recovery-plan> \
                                       --plan-type Zonal \
                                       [--plan-description <plan-description>] \
@@ -3782,53 +3829,65 @@ azmcp resilience recovery plan create --service-group <service-group> \
 # Directly replacing one user-assigned identity with another is not currently supported.
 
 # Delete a resilience recovery plan. Returns deleted=false when the plan does not exist.
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recovery plan delete --service-group <service-group> \
+azmcp resilience recoveryplan delete --service-group <service-group> \
                                       --recovery-plan <recovery-plan>
 
 # Configure recovery-plan resource inclusions, exclusions, removals, recovery groups, identities, and protection settings. At least one JSON array is required.
 # First inclusion requires matching protection type and settings. CustomRunbook requires failover and reprotect runbook resource IDs.
 # AzureSiteRecovery is supported for virtual machines and requires disk reprotect details. Existing configuration is preserved on sparse updates.
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recovery plan resource update --service-group <service-group> \
+azmcp resilience recoveryplan resource update --service-group <service-group> \
                                                 --recovery-plan <recovery-plan> \
                                                 [--resources-to-update '<json-array>'] \
                                                 [--resources-to-remove '<json-array>']
 
+# Discover and assess whether a recovery plan and its protected resources are ready for recovery operations. Waits for the readiness job to finish and returns its status, errors, failed tasks, and failed resources.
+azmcp resilience recoveryplan checkreadiness --service-group <service-group> \
+                                              --recovery-plan <recovery-plan>
+
 # Get a resource (member) of a recovery plan, or list all resources of the plan (omit --name)
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recovery plan resource get --subscription <subscription> \
+azmcp resilience recoveryplan resource get --subscription <subscription> \
                                             --service-group <service-group> \
                                             --recovery-plan <recovery-plan> \
                                             [--name <name>]
 
 # Get a recovery job, or list all recovery jobs of a recovery plan (omit --name)
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recovery job get --subscription <subscription> \
-                                  --service-group <service-group> \
-                                  --recovery-plan <recovery-plan> \
-                                  [--name <name>]
+azmcp resilience recoveryjob get --subscription <subscription> \
+                                 --service-group <service-group> \
+                                 --recovery-plan <recovery-plan> \
+                                 [--name <name>]
 
 # Get a resource (target) of a recovery job, or list all resources of the job (omit --name)
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recovery job resource get --subscription <subscription> \
-                                           --service-group <service-group> \
-                                           --recovery-plan <recovery-plan> \
-                                           --recovery-job <recovery-job> \
-                                           [--name <name>]
+azmcp resilience recoveryjob resource get --subscription <subscription> \
+                                          --service-group <service-group> \
+                                          --recovery-plan <recovery-plan> \
+                                          --recovery-job <recovery-job> \
+                                          [--name <name>]
 
 # Get a resilience drill, or list all drills in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience drill get --subscription <subscription> \
-                           --service-group <service-group> \
+azmcp resilience drill get --service-group <service-group> \
                            [--name <name>]
+
+# Delete a resilience drill from a service group
+azmcp resilience drill delete --service-group <service-group> \
+                              --drill <drill>
 
 # Get a resource (target) of a drill, or list all resources of the drill (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience drill resource get --subscription <subscription> \
-                                    --service-group <service-group> \
+azmcp resilience drill resource get --service-group <service-group> \
                                     --drill <drill> \
                                     [--name <name>]
+
+# Get a run of a drill, or list all runs of the drill (omit --name)
+azmcp resilience drill run get --service-group <service-group> \
+                               --drill <drill> \
+                               [--name <name>]
+
+# Get a resource (target) of a drill run, or list all resources of the run (omit --name)
+azmcp resilience drill run resource get --service-group <service-group> \
+                                        --drill <drill> \
+                                        --drill-run <drill-run> \
+                                        [--name <name>]
 ```
 
 ### Azure Resource Group Operations

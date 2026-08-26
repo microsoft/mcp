@@ -14,6 +14,7 @@ using Azure.Mcp.Tools.AzureBackup.Commands.RecoveryPoint;
 using Azure.Mcp.Tools.AzureBackup.Commands.ResourceGuard;
 using Azure.Mcp.Tools.AzureBackup.Commands.Security;
 using Azure.Mcp.Tools.AzureBackup.Commands.Vault;
+using Azure.Mcp.Tools.AzureBackup.Commands.Vault.PrivateEndpoint;
 using Azure.Mcp.Tools.AzureBackup.Models;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands;
@@ -41,6 +42,11 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands;
 [JsonSerializable(typeof(ResourceGuardCreateCommand.ResourceGuardCreateCommandResult))]
 [JsonSerializable(typeof(ResourceGuardGetCommand.ResourceGuardGetCommandResult))]
 [JsonSerializable(typeof(ResourceGuardDeleteCommand.ResourceGuardDeleteCommandResult))]
+[JsonSerializable(typeof(PrivateEndpointCreateCommand.PrivateEndpointCreateCommandResult))]
+[JsonSerializable(typeof(PrivateEndpointGetCommand.PrivateEndpointGetCommandResult))]
+[JsonSerializable(typeof(PrivateEndpointDeleteCommand.PrivateEndpointDeleteCommandResult))]
+[JsonSerializable(typeof(PrivateEndpointApproveRejectCommand.PrivateEndpointApproveRejectCommandResult))]
+[JsonSerializable(typeof(PrivateEndpointConnectionInfo))]
 [JsonSerializable(typeof(BackupVaultInfo))]
 [JsonSerializable(typeof(ProtectedItemInfo))]
 [JsonSerializable(typeof(BackupPolicyInfo))]

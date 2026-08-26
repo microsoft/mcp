@@ -21,11 +21,11 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 public sealed class SingleProxyToolLoader(
     IMcpDiscoveryStrategy discoveryStrategy,
     ILogger<SingleProxyToolLoader> logger,
-    IOptions<ToolLoaderOptions> options,
+    IOptions<ServerRuntimeConfiguration> configuration,
     IOptions<McpServerConfiguration> serverConfiguration) : BaseToolLoader(logger)
 {
     private readonly IMcpDiscoveryStrategy _discoveryStrategy = discoveryStrategy ?? throw new ArgumentNullException(nameof(discoveryStrategy));
-    private readonly IOptions<ToolLoaderOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     private readonly string _toolName = serverConfiguration?.Value.ShortName ?? throw new ArgumentNullException(nameof(serverConfiguration));
     private readonly string _toolDescription = serverConfiguration.Value.Description;
     private readonly string _displayName = serverConfiguration.Value.DisplayName;
@@ -249,8 +249,8 @@ public sealed class SingleProxyToolLoader(
     {
         var allTools = await GetAllToolsAsync(request, tool, cancellationToken);
         return allTools
-            .Where(t => !_options.Value.ReadOnly || (t.ProtocolTool.Annotations?.ReadOnlyHint == true))
-            .Where(t => !_options.Value.IsHttpMode || !McpHelper.HasHint(t.ProtocolTool, McpHelper.LocalRequiredHintMetaKey))
+            .Where(t => !_configuration.Value.ReadOnly || (t.ProtocolTool.Annotations?.ReadOnlyHint == true))
+            .Where(t => !_configuration.Value.IsHttpMode || !McpHelper.HasHint(t.ProtocolTool, McpHelper.LocalRequiredHintMetaKey))
             .ToArray();
     }
 
@@ -353,7 +353,7 @@ public sealed class SingleProxyToolLoader(
             .SetTag(TagName.ToolName, command);
 
         // Enforce mode restrictions at execution time: look up the actual tool and check its properties.
-        if (_options.Value.ReadOnly || _options.Value.IsHttpMode)
+        if (_configuration.Value.ReadOnly || _configuration.Value.IsHttpMode)
         {
             var allTools = await GetAllToolsAsync(request, tool, cancellationToken);
             var resolvedTool = allTools.FirstOrDefault(t => string.Equals(t.ProtocolTool.Name, command, StringComparison.OrdinalIgnoreCase));
@@ -364,7 +364,7 @@ public sealed class SingleProxyToolLoader(
                 Activity.Current?.SetTag(TagName.ToolId, toolId)
                     .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(resolvedTool.ProtocolTool));
 
-                if (_options.Value.ReadOnly && resolvedTool.ProtocolTool.Annotations?.ReadOnlyHint != true)
+                if (_configuration.Value.ReadOnly && resolvedTool.ProtocolTool.Annotations?.ReadOnlyHint != true)
                 {
                     return McpHelper.InjectToolIdMetadata(new CallToolResult
                     {
@@ -379,7 +379,7 @@ public sealed class SingleProxyToolLoader(
                     }, toolId);
                 }
 
-                if (_options.Value.IsHttpMode && McpHelper.HasHint(resolvedTool.ProtocolTool, McpHelper.LocalRequiredHintMetaKey))
+                if (_configuration.Value.IsHttpMode && McpHelper.HasHint(resolvedTool.ProtocolTool, McpHelper.LocalRequiredHintMetaKey))
                 {
                     return McpHelper.InjectToolIdMetadata(new CallToolResult
                     {
@@ -423,13 +423,6 @@ public sealed class SingleProxyToolLoader(
                 ]
             };
         }
-    }
-
-    private static bool SupportsSampling(McpServer server)
-    {
-#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
-        return server?.ClientCapabilities?.Sampling != null;
-#pragma warning restore MCP9005
     }
 
     private static async Task NotifyProgressAsync(RequestContext<CallToolRequestParams> request, string message, CancellationToken cancellationToken)

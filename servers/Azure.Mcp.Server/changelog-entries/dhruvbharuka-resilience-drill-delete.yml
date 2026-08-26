@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the `azmcp resilience drill delete` command to delete a resilience drill from an Azure service group."

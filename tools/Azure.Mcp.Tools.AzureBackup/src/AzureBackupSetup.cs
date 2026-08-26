@@ -12,6 +12,7 @@ using Azure.Mcp.Tools.AzureBackup.Commands.RecoveryPoint;
 using Azure.Mcp.Tools.AzureBackup.Commands.ResourceGuard;
 using Azure.Mcp.Tools.AzureBackup.Commands.Security;
 using Azure.Mcp.Tools.AzureBackup.Commands.Vault;
+using Azure.Mcp.Tools.AzureBackup.Commands.Vault.PrivateEndpoint;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -64,6 +65,11 @@ public sealed class AzureBackupSetup : IAreaSetup
         services.AddSingleton<ResourceGuardCreateCommand>();
         services.AddSingleton<ResourceGuardGetCommand>();
         services.AddSingleton<ResourceGuardDeleteCommand>();
+
+        services.AddSingleton<PrivateEndpointCreateCommand>();
+        services.AddSingleton<PrivateEndpointGetCommand>();
+        services.AddSingleton<PrivateEndpointDeleteCommand>();
+        services.AddSingleton<PrivateEndpointApproveRejectCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -82,6 +88,14 @@ public sealed class AzureBackupSetup : IAreaSetup
         vault.AddCommand<VaultGetCommand>(serviceProvider);
         vault.AddCommand<VaultCreateCommand>(serviceProvider);
         vault.AddCommand<VaultUpdateCommand>(serviceProvider);
+
+        var privateEndpoint = new CommandGroup("privateendpoint",
+            "Private Endpoint operations - Manage Private Endpoints (v2) on Recovery Services vaults: create, list/get, delete, approve, and reject Private Endpoint Connections. Backup vaults (DPP) are not supported.");
+        vault.AddSubGroup(privateEndpoint);
+        privateEndpoint.AddCommand<PrivateEndpointCreateCommand>(serviceProvider);
+        privateEndpoint.AddCommand<PrivateEndpointGetCommand>(serviceProvider);
+        privateEndpoint.AddCommand<PrivateEndpointDeleteCommand>(serviceProvider);
+        privateEndpoint.AddCommand<PrivateEndpointApproveRejectCommand>(serviceProvider);
 
         var policy = new CommandGroup("policy", "Backup policy operations - Get policy details or list all policies, create, and update policies.");
         azureBackup.AddSubGroup(policy);
