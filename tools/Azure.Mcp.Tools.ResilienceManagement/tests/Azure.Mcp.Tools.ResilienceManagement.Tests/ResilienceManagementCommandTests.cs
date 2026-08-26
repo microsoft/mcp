@@ -146,7 +146,7 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_delete_drill()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("lifecycleServiceGroupName", "LIFECYCLESERVICEGROUPNAME");
         var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DELETEDRILLNAME");
 
         var result = await CallToolAsync(

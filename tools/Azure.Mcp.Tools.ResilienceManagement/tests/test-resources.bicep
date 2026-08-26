@@ -16,6 +16,7 @@ var recoveryPlanName = take('rp${uniqueSuffix}', 24)
 var drillName = take('dr${uniqueSuffix}', 24)
 var deleteDrillName = take('dd${uniqueSuffix}', 24)
 var storageAccountName = toLower(take('st${uniqueSuffix}', 24))
+var managedDiskName = take('md${uniqueSuffix}', 80)
 
 // The test identity is automatically granted access to this resource group by the
 // test harness (New-TestResources.ps1), so no explicit role assignment is created here.
@@ -43,6 +44,23 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
     minimumTlsVersion: 'TLS1_2'
     supportsHttpsTrafficOnly: true
     accessTier: 'Hot'
+  }
+}
+
+resource managedDisk 'Microsoft.Compute/disks@2024-03-02' = {
+  name: managedDiskName
+  location: resourceGroup().location
+  zones: [
+    '1'
+  ]
+  sku: {
+    name: 'Standard_LRS'
+  }
+  properties: {
+    creationData: {
+      createOption: 'Empty'
+    }
+    diskSizeGB: 4
   }
 }
 
