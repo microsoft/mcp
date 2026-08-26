@@ -1,0 +1,9 @@
+changes:
+  - section: "Features Added"
+    description: "Added `azurebackup resourceguard` command group with `create`, `get`, and `delete` operations for managing Multi-User Authorization Resource Guards."
+  - section: "Features Added"
+    description: "Added `azurebackup security disable-mua` command to explicitly disable Multi-User Authorization on a vault."
+  - section: "Breaking Changes"
+    description: "Renamed `azurebackup security configure-mua` to `azurebackup security enable-mua`."
+  - section: "Bugs Fixed"
+    description: "Fixed `azurebackup security configure-mua` (now `enable-mua`) silently disabling MUA when `--resource-guard-id` was omitted. The parameter is now required for enabling MUA; use the new `azurebackup security disable-mua` command to disable."
