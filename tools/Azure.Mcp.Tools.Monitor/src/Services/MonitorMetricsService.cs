@@ -3,14 +3,19 @@
 
 using System.Globalization;
 using System.Xml;
+using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Monitor.Models;
+using Azure.Monitor.Query.Metrics;
 using Azure.ResourceManager.Monitor;
 using Azure.ResourceManager.Monitor.Models;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using MetricDefinition = Azure.Mcp.Tools.Monitor.Models.MetricDefinition;
 using MetricNamespace = Azure.Mcp.Tools.Monitor.Models.MetricNamespace;
 using MetricResult = Azure.Mcp.Tools.Monitor.Models.MetricResult;
+using SdkMetricResult = Azure.Monitor.Query.Metrics.Models.MetricResult;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -321,6 +326,202 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
 
         return results;
     }
+
+    private const int MaxBatchResources = 50;
+
+    public async Task<List<ResourceMetricsResult>> QueryMetricsBatchAsync(
+        string subscription,
+        string? resourceGroup,
+        string? resourceType,
+        IEnumerable<string> resources,
+        string metricNamespace,
+        IEnumerable<string> metricNames,
+        string? startTime = null,
+        string? endTime = null,
+        string? interval = null,
+        string? aggregation = null,
+        string? filter = null,
+        string? orderBy = null,
+        int? top = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(metricNamespace), metricNamespace));
+        ArgumentNullException.ThrowIfNull(resources);
+        ArgumentNullException.ThrowIfNull(metricNames);
+
+        var resourceNames = resources.Select(r => r.Trim()).Where(r => r.Length > 0).ToList();
+        if (resourceNames.Count == 0)
+        {
+            throw new ArgumentException("At least one resource must be specified.", nameof(resources));
+        }
+
+        if (resourceNames.Count > MaxBatchResources)
+        {
+            throw new ArgumentException($"A maximum of {MaxBatchResources} resources can be queried in a single batch request. Provided: {resourceNames.Count}.", nameof(resources));
+        }
+
+        // Resolve each resource name (or already-valid resource ID) to a full resource identifier.
+        var resourceIds = new List<ResourceIdentifier>(resourceNames.Count);
+        foreach (var resourceName in resourceNames)
+        {
+            var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
+            resourceIds.Add(resourceId);
+        }
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+
+        // The batch metrics endpoint is regional and requires all resources to share the same region, so resolve
+        // the region from the first resource and let the service validate the rest.
+        var firstResource = await armClient.GetGenericResource(resourceIds[0]).GetAsync(cancellationToken);
+        var region = firstResource.Value.Data.Location.Name;
+
+        var credential = await GetCredential(tenant, cancellationToken);
+        var metricsClientOptions = AddDefaultPolicies(new MetricsClientOptions());
+        metricsClientOptions.Audience = GetMetricsClientAudience();
+        ConfigureRetryPolicy(metricsClientOptions, retryPolicy);
+        metricsClientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
+
+        var metricsClient = new MetricsClient(new Uri($"https://{region}.{GetMetricsEndpointHostSuffix()}"), credential, metricsClientOptions);
+
+        var queryOptions = new MetricsQueryResourcesOptions
+        {
+            Filter = filter,
+            OrderBy = orderBy,
+            Size = top
+        };
+
+        if (!string.IsNullOrEmpty(startTime))
+        {
+            if (!DateTimeOffset.TryParse(startTime, out var start))
+            {
+                throw new ArgumentException($"Invalid start time format: {startTime}");
+            }
+            queryOptions.StartTime = start;
+        }
+
+        if (!string.IsNullOrEmpty(endTime))
+        {
+            if (!DateTimeOffset.TryParse(endTime, out var end))
+            {
+                throw new ArgumentException($"Invalid end time format: {endTime}");
+            }
+            queryOptions.EndTime = end;
+        }
+
+        if (!string.IsNullOrEmpty(interval))
+        {
+            try
+            {
+                queryOptions.Granularity = XmlConvert.ToTimeSpan(interval);
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException($"Invalid interval format: {ex}.", ex);
+            }
+        }
+
+        if (!string.IsNullOrEmpty(aggregation))
+        {
+            foreach (var agg in aggregation.Split(',').Select(a => a.Trim()).Where(a => a.Length > 0))
+            {
+                queryOptions.Aggregations.Add(agg);
+            }
+        }
+
+        var response = await metricsClient.QueryResourcesAsync(resourceIds, metricNames, metricNamespace, queryOptions, cancellationToken);
+
+        // The response values are returned in the same order as the requested resource IDs.
+        var values = response.Value.Values;
+        var results = new List<ResourceMetricsResult>(values.Count);
+        for (int i = 0; i < values.Count; i++)
+        {
+            var resourceResult = values[i];
+            var compactResource = new ResourceMetricsResult
+            {
+                ResourceId = i < resourceIds.Count ? resourceIds[i].ToString() : string.Empty,
+                Metrics = []
+            };
+
+            foreach (var metric in resourceResult.Metrics)
+            {
+                compactResource.Metrics.Add(ConvertToCompactMetricResult(metric, interval));
+            }
+
+            results.Add(compactResource);
+        }
+
+        return results;
+    }
+
+    private static MetricResult ConvertToCompactMetricResult(SdkMetricResult metric, string? interval)
+    {
+        var compactResult = new MetricResult
+        {
+            Name = metric.Name,
+            Unit = metric.Unit.ToString(),
+            TimeSeries = []
+        };
+
+        foreach (var timeSeries in metric.TimeSeries)
+        {
+            if (timeSeries.Values.Count == 0)
+            {
+                continue;
+            }
+
+            var compactTimeSeries = new MetricTimeSeries
+            {
+                Metadata = new Dictionary<string, string>(timeSeries.Metadata),
+                Start = timeSeries.Values[0].TimeStamp.UtcDateTime,
+                End = timeSeries.Values[^1].TimeStamp.UtcDateTime,
+                Interval = interval ?? "PT1M"
+            };
+
+            var avgValues = timeSeries.Values.Where(v => v.Average.HasValue).Select(v => v.Average!.Value).ToArray();
+            if (avgValues.Length > 0)
+                compactTimeSeries.AvgBuckets = avgValues;
+
+            var minValues = timeSeries.Values.Where(v => v.Minimum.HasValue).Select(v => v.Minimum!.Value).ToArray();
+            if (minValues.Length > 0)
+                compactTimeSeries.MinBuckets = minValues;
+
+            var maxValues = timeSeries.Values.Where(v => v.Maximum.HasValue).Select(v => v.Maximum!.Value).ToArray();
+            if (maxValues.Length > 0)
+                compactTimeSeries.MaxBuckets = maxValues;
+
+            var totalValues = timeSeries.Values.Where(v => v.Total.HasValue).Select(v => v.Total!.Value).ToArray();
+            if (totalValues.Length > 0)
+                compactTimeSeries.TotalBuckets = totalValues;
+
+            var countValues = timeSeries.Values.Where(v => v.Count.HasValue).Select(v => v.Count!.Value).ToArray();
+            if (countValues.Length > 0)
+                compactTimeSeries.CountBuckets = countValues;
+
+            compactResult.TimeSeries.Add(compactTimeSeries);
+        }
+
+        return compactResult;
+    }
+
+    private MetricsClientAudience GetMetricsClientAudience() =>
+        AzureService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => MetricsClientAudience.AzurePublicCloud,
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => MetricsClientAudience.AzureChina,
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => MetricsClientAudience.AzureGovernment,
+            _ => MetricsClientAudience.AzurePublicCloud
+        };
+
+    private string GetMetricsEndpointHostSuffix() =>
+        AzureService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "metrics.monitor.azure.com",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "metrics.monitor.azure.cn",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "metrics.monitor.azure.us",
+            _ => "metrics.monitor.azure.com"
+        };
 
     private static string ToIsoString(DateTimeOffset dto)
     {

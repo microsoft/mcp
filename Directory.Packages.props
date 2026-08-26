@@ -22,6 +22,7 @@
     <PackageVersion Include="Azure.Monitor.Ingestion" Version="1.2.0" />
     <PackageVersion Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.6.0" />
     <PackageVersion Include="Azure.Monitor.Query.Logs" Version="1.0.0" />
+    <PackageVersion Include="Azure.Monitor.Query.Metrics" Version="1.0.0" />
     <PackageVersion Include="Azure.ResourceManager" Version="1.14.0" />
     <PackageVersion Include="Azure.ResourceManager.ApplicationInsights" Version="1.1.0" />
     <PackageVersion Include="Azure.ResourceManager.AppContainers" Version="1.5.0" />
