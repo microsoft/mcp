@@ -124,7 +124,7 @@ public class AdvisorService(IAzureService azureService)
 
         using var document = JsonDocument.Parse(response.Content.ToStream());
 
-        return ConvertToAdvisorRecommendationModel(document.RootElement);
+        return ConvertToUpdatedAdvisorRecommendationModel(document.RootElement);
     }
 
     private static async Task<Response> SendRecommendationUpdateAsync(
@@ -553,7 +553,15 @@ public class AdvisorService(IAzureService azureService)
 
     private static string SanitizeForKql(string value) => EscapeKqlString(value.Replace("|", string.Empty));
 
-    internal static Recommendation ConvertToAdvisorRecommendationModel(JsonElement item)
+    internal static Recommendation ConvertToAdvisorRecommendationModel(JsonElement item) =>
+        ConvertToAdvisorRecommendationModel(item, includeLifecycleState: false);
+
+    internal static Recommendation ConvertToUpdatedAdvisorRecommendationModel(JsonElement item) =>
+        ConvertToAdvisorRecommendationModel(item, includeLifecycleState: true);
+
+    private static Recommendation ConvertToAdvisorRecommendationModel(
+        JsonElement item,
+        bool includeLifecycleState)
     {
         var advisorRecommendation = Models.RecommendationData.FromJson(item)
             ?? throw new InvalidOperationException("Failed to parse Advisor recommendation data");
@@ -566,17 +574,11 @@ public class AdvisorService(IAzureService azureService)
             RecommendationText: properties?.ShortDescription?.Problem ?? "Unknown",
             Category: properties?.Category ?? "Unknown",
             Impact: properties?.Impact,
-            ImpactedResourceType: properties?.ImpactedField ?? ParseImpactedResourceType(resourceId),
-            RecommendationId: advisorRecommendation.ResourceName,
-            Solution: properties?.ShortDescription?.Solution,
-            SubCategory: properties?.Control,
-            ImpactedResource: properties?.ImpactedValue,
-            RecommendationStatus: properties?.RecommendationStatus,
-            RecommendationDismissReason: properties?.RecommendationDismissReason,
-            PostponedUntilDateTime: properties?.PostponedUntilDateTime,
-            LastUpdated: properties?.LastUpdated,
-            RecommendationTypeId: properties?.RecommendationTypeId,
-            CompletionType: properties?.CompletionType);
+            ImpactedResourceType: ParseImpactedResourceType(resourceId),
+            RecommendationId: includeLifecycleState ? advisorRecommendation.ResourceName : null,
+            RecommendationStatus: includeLifecycleState ? properties?.RecommendationStatus : null,
+            RecommendationDismissReason: includeLifecycleState ? properties?.RecommendationDismissReason : null,
+            PostponedUntilDateTime: includeLifecycleState ? properties?.PostponedUntilDateTime : null);
     }
 
     private static RequestFailedException CreateRecommendationUpdateException(Response response)
@@ -599,7 +601,7 @@ public class AdvisorService(IAzureService azureService)
                 if (error.TryGetProperty("message", out var messageElement) &&
                     messageElement.ValueKind == JsonValueKind.String)
                 {
-                    errorMessage = TruncateErrorMessage(messageElement.GetString());
+                    errorMessage = messageElement.GetString()?.Trim();
                 }
             }
         }
@@ -623,15 +625,6 @@ public class AdvisorService(IAzureService azureService)
             message,
             errorCode,
             null);
-    }
-
-    private static string? TruncateErrorMessage(string? message)
-    {
-        const int maximumLength = 2048;
-        var trimmed = message?.Trim();
-        return trimmed?.Length > maximumLength
-            ? trimmed[..maximumLength]
-            : trimmed;
     }
 
     internal static string? ParseImpactedResourceType(string? resourceId)

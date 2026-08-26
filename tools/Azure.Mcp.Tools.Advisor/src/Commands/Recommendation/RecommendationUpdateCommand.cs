@@ -96,11 +96,11 @@ public sealed class RecommendationUpdateCommand(
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException { ErrorCode: "SecurityRecommendationStateChangeBlocked" } =>
-            "Advisor recommendation state cannot be updated because state changes are not allowed for Security category recommendations.",
+            "Advisor recommendation state cannot be updated because state changes are not allowed for Security category recommendations",
         RequestFailedException { ErrorCode: "UndefinedRecommendationStateChangeBlocked" } =>
-            "Advisor recommendation state cannot be updated because its customer state is Undefined.",
+            "Advisor recommendation state cannot be updated because state changes are not allowed for recommendations with an Undefined customer state",
         RequestFailedException { ErrorCode: "ResolvedRecommendationStateChangeBlocked" } =>
-            "Advisor recommendation state cannot be updated because the recommendation has already been resolved by the Advisor platform.",
+            "Advisor recommendation state cannot be updated because the recommendation has already been marked as resolved by the Advisor platform",
         RequestFailedException { ErrorCode: "InvalidRequestPayload" } reqEx =>
             $"Advisor rejected the recommendation state update. {reqEx.Message}",
         RequestFailedException { ErrorCode: "InvalidSubscriptionId" } reqEx =>
@@ -108,17 +108,17 @@ public sealed class RecommendationUpdateCommand(
         RequestFailedException { ErrorCode: "InvalidRecommendationId" } reqEx =>
             $"Advisor rejected the recommendation ID. {reqEx.Message}",
         RequestFailedException { ErrorCode: "RecommendationNotFound" } =>
-            "Advisor recommendation not found. Verify --subscription and --recommendation-id; the recommendation may also have expired beyond its retention period.",
+            "Advisor recommendation not found. Verify --subscription and --recommendation-id",
         RequestFailedException { ErrorCode: "ConcurrentModification" } =>
-            "The Advisor recommendation was modified concurrently. Retrieve the latest recommendation and retry the update.",
+            "The Advisor recommendation was modified concurrently. Retrieve the latest recommendation and retry the update",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Advisor recommendation not found. Verify --subscription and --recommendation-id; the recommendation may also have expired beyond its retention period.",
+            "Advisor recommendation not found. Verify --subscription and --recommendation-id",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            "Authorization failed updating the Advisor recommendation. Verify you have permission to update recommendation state.",
+            "Authorization failed updating the Advisor recommendation. Verify you have permission to update recommendation state",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
             $"Advisor rejected the recommendation state update. {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
-            "The Advisor recommendation was modified concurrently. Retrieve the latest recommendation and retry.",
+            "The Advisor recommendation was modified concurrently. Retrieve the latest recommendation and retry",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };

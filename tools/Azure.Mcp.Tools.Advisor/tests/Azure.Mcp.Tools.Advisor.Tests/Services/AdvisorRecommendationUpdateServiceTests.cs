@@ -72,7 +72,6 @@ public class AdvisorRecommendationUpdateServiceTests
 
         Assert.Equal("rec-1", result.RecommendationId);
         Assert.Equal("Completed", result.RecommendationStatus);
-        Assert.Equal("Deploy across zones", result.Solution);
         Assert.Equal("Microsoft.Compute/virtualMachines", result.ImpactedResourceType);
     }
 

@@ -7,11 +7,9 @@ namespace Azure.Mcp.Tools.Advisor.Validation;
 
 internal static class RecommendationStateUpdateValidator
 {
-    internal const string DismissReasonRequiredMessage =
+    internal static readonly string DismissReasonRequiredMessage =
         "--recommendation-dismiss-reason is required when --recommendation-status is Dismissed. " +
-        "Choose one of: ExcessiveCostInvestmentRequired, ImplementationStepsAreUnclear, " +
-        "IncompatibleWithTheCurrentConfiguration, RiskIsAcceptable, TooComplexOrImpracticalToImplement, " +
-        "AnAlternativeSolutionIsAlreadyInPlace, or Other.";
+        $"Choose one of: {string.Join(", ", Enum.GetNames<RecommendationDismissReason>())}.";
 
     public static void AddValidationErrors(
         RecommendationStatus recommendationStatus,

@@ -69,6 +69,10 @@ public class AdvisorServiceConversionTests
         Assert.Equal("Security", result.Category);
         Assert.Equal("High", result.Impact);
         Assert.Equal("Microsoft.Storage/storageAccounts", result.ImpactedResourceType);
+        Assert.Null(result.RecommendationId);
+        Assert.Null(result.RecommendationStatus);
+        Assert.Null(result.RecommendationDismissReason);
+        Assert.Null(result.PostponedUntilDateTime);
     }
 
     [Fact]
@@ -120,7 +124,7 @@ public class AdvisorServiceConversionTests
     }
 
     [Fact]
-    public void ConvertToAdvisorRecommendationModel_PopulatesConciseSharedResponseFields()
+    public void ConvertToAdvisorRecommendationModel_UpdateResponsePopulatesLifecycleFields()
     {
         const string json = """
             {
@@ -160,18 +164,12 @@ public class AdvisorServiceConversionTests
             """;
 
         using var doc = JsonDocument.Parse(json);
-        var result = AdvisorService.ConvertToAdvisorRecommendationModel(doc.RootElement);
+        var result = AdvisorService.ConvertToUpdatedAdvisorRecommendationModel(doc.RootElement);
 
         Assert.Equal("rec4", result.RecommendationId);
-        Assert.Equal("Deploy across zones.", result.Solution);
-        Assert.Equal("ZoneResiliency", result.SubCategory);
-        Assert.Equal("vm1", result.ImpactedResource);
         Assert.Equal("Dismissed", result.RecommendationStatus);
         Assert.Equal("RiskIsAcceptable", result.RecommendationDismissReason);
         Assert.Equal(DateTimeOffset.Parse("2027-01-02T03:04:05Z"), result.PostponedUntilDateTime);
-        Assert.Equal(DateTimeOffset.Parse("2026-02-03T04:05:06Z"), result.LastUpdated);
-        Assert.Equal("type-1", result.RecommendationTypeId);
-        Assert.Equal("ManuallyCompleted", result.CompletionType);
     }
 
     [Fact]
@@ -192,7 +190,7 @@ public class AdvisorServiceConversionTests
             """;
 
         using var doc = JsonDocument.Parse(json);
-        var result = AdvisorService.ConvertToAdvisorRecommendationModel(doc.RootElement);
+        var result = AdvisorService.ConvertToUpdatedAdvisorRecommendationModel(doc.RootElement);
 
         Assert.Equal("InProgress", result.RecommendationStatus);
         Assert.Equal("NotRelevant", result.RecommendationDismissReason);

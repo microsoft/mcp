@@ -218,8 +218,10 @@ public class RecommendationUpdateCommandTests
             "--recommendation-status", "Dismissed");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("RiskIsAcceptable", response.Message);
-        Assert.Contains("Other", response.Message);
+        foreach (var reason in Enum.GetNames<RecommendationDismissReason>())
+        {
+            Assert.Contains(reason, response.Message);
+        }
     }
 
     private void ConfigureSuccessfulUpdate()
