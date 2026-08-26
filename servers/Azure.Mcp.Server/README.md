@@ -958,6 +958,7 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 * "Show Advisor service retirements on or after March 31, 2026"
 * "Get Advisor metadata for a recommendation type id"
+* "Get the remediation package with fix scripts for an Advisor recommendation type id"
 
 ### 🔎 Azure AI Search
 
