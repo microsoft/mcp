@@ -43,7 +43,7 @@ public sealed class AvmModuleListCommand(ILogger<AvmModuleListCommand> logger, I
 
             context.Response.Results = ResponseResult.Create(new(modules), AzureTerraformJsonContext.Default.AvmModuleListResult);
 
-            context.Activity?.AddTag(AzureTerraformTelemetryTags.ToolArea, "avm");
+            context.AddTelemetryTag(AzureTerraformTelemetryTags.ToolArea, "avm");
         }
         catch (Exception ex)
         {

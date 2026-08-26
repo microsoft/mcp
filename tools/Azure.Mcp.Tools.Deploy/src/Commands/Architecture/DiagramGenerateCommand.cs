@@ -53,10 +53,9 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
             AppTopology appTopology = JsonSerializer.Deserialize(rawMcpToolInput, DeployJsonContext.Default.AppTopology)
                 ?? throw new ArgumentException("Failed to deserialize app topology.", nameof(rawMcpToolInput));
 
-            context.Activity?
-                .AddTag(DeployTelemetryTags.ServiceCount, appTopology.Services.Length)
-                .AddTag(DeployTelemetryTags.ComputeHostResources, string.Join(", ", appTopology.Services.Select(s => s.AzureComputeHost)))
-                .AddTag(DeployTelemetryTags.BackingServiceResources, string.Join(", ", appTopology.Services.SelectMany(s => s.Dependencies).Select(d => d.ServiceType)));
+            context.AddTelemetryTag(DeployTelemetryTags.ServiceCount, appTopology.Services.Length)
+                .AddTelemetryTag(DeployTelemetryTags.ComputeHostResources, string.Join(", ", appTopology.Services.Select(s => s.AzureComputeHost)))
+                .AddTelemetryTag(DeployTelemetryTags.BackingServiceResources, string.Join(", ", appTopology.Services.SelectMany(s => s.Dependencies).Select(d => d.ServiceType)));
 
             _logger.LogInformation("Successfully parsed app topology with {ServiceCount} services", appTopology.Services.Length);
 

@@ -71,9 +71,9 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VaultGetOptions options, CancellationToken cancellationToken)
     {
-        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
-        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
-        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, string.IsNullOrEmpty(options.Vault) ? "list" : "single");
+        AzureBackupTelemetryTags.AddSubscriptionTag(context, options.Subscription);
+        AzureBackupTelemetryTags.AddVaultTags(context, options.VaultType);
+        context.AddTelemetryTag(AzureBackupTelemetryTags.OperationScope, string.IsNullOrEmpty(options.Vault) ? "list" : "single");
 
         try
         {

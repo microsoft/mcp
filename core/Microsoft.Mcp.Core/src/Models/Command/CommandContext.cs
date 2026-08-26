@@ -21,7 +21,7 @@ public class CommandContext
     /// <summary>
     /// Current telemetry context if there is one available.
     /// </summary>
-    public Activity? Activity { get; }
+    private Activity? _activity { get; }
 
     /// <summary>
     /// The MCP server handling the current tool call. Used by commands that need to send
@@ -49,11 +49,47 @@ public class CommandContext
     /// </summary>
     public CommandContext(Activity? activity = default)
     {
-        Activity = activity;
+        _activity = activity;
         Response = new CommandResponse
         {
             Status = HttpStatusCode.OK,
             Message = "Success"
         };
+    }
+
+    /// <summary>
+    /// Adds a telemetry tag to the current activity if one is available. This is a no-op if there is no current activity.
+    /// </summary>
+    /// <para>
+    /// Equivalent to <see cref="Activity.AddTag(string, object?)" />.
+    /// </para>
+    /// <param name="key">The telemetry tag name.</param>
+    /// <param name="value">The telemetry tag value to add.</param>
+    /// <returns>The CommandContext</returns>
+    public CommandContext AddTelemetryTag(string key, object? value)
+    {
+        _activity?.AddTag(key, value);
+        return this;
+    }
+
+    /// <summary>
+    /// Set a telemetry tag to the current activity if one is available. This is a no-op if there is no current activity.
+    /// </summary>
+    /// <para>
+    /// Equivalent to <see cref="Activity.SetTag(string, object?)" />.
+    /// </para>
+    /// <param name="key">The telemetry tag name.</param>
+    /// <param name="value">The telemetry tag value to set.</param>
+    /// <returns>The CommandContext</returns>
+    public CommandContext SetTelemetryTag(string key, object? value)
+    {
+        _activity?.SetTag(key, value);
+        return this;
+    }
+
+    internal CommandContext SetTelemetryStatus(ActivityStatusCode status)
+    {
+        _activity?.SetStatus(status);
+        return this;
     }
 }

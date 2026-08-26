@@ -35,7 +35,7 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
         ServiceGuideGetOptions options,
         CancellationToken cancellationToken)
     {
-        context.Activity?.AddTag("WellArchitectedFramework_Service", options.Service);
+        context.AddTelemetryTag("WellArchitectedFramework_Service", options.Service);
 
         try
         {

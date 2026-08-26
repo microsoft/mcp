@@ -80,8 +80,8 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
             context.Response.Results = ResponseResult.Create([bestPractices], AzureBestPracticesJsonContext.Default.ListString);
             context.Response.Message = string.Empty;
 
-            context.Activity?.AddTag("BestPractices_Resource", options.Resource);
-            context.Activity?.AddTag("BestPractices_Action", options.Action);
+            context.AddTelemetryTag("BestPractices_Resource", options.Resource);
+            context.AddTelemetryTag("BestPractices_Action", options.Action);
         }
         catch (Exception ex)
         {

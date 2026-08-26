@@ -215,11 +215,7 @@ public sealed class CommandFactoryToolLoader(
 
         _logger.LogTrace("Invoking '{Tool}'.", realCommand.Name);
 
-        if (commandContext.Activity != null)
-        {
-            var serviceArea = _commandFactory.GetServiceArea(toolName);
-            commandContext.Activity.SetTag(TagName.ToolArea, serviceArea);
-        }
+        commandContext.SetTelemetryTag(TagName.ToolArea, _commandFactory.GetServiceArea(toolName));
 
         try
         {

@@ -58,7 +58,7 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger, IComputeSer
     {
         try
         {
-            context.Activity?.AddTag("subscription", options.Subscription);
+            context.AddTelemetryTag("subscription", options.Subscription);
 
             var result = await _computeService.UpdateVmAsync(
                 options.VmName!,

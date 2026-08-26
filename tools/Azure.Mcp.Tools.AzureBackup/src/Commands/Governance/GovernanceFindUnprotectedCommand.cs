@@ -56,8 +56,8 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, GovernanceFindUnprotectedOptions options, CancellationToken cancellationToken)
     {
-        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
-        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, "scan");
+        AzureBackupTelemetryTags.AddSubscriptionTag(context, options.Subscription);
+        context.AddTelemetryTag(AzureBackupTelemetryTags.OperationScope, "scan");
 
         try
         {

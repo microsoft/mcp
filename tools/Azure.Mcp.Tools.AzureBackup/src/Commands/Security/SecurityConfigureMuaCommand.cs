@@ -48,8 +48,8 @@ public sealed class SecurityConfigureMuaCommand(ILogger<SecurityConfigureMuaComm
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SecurityConfigureMuaOptions options, CancellationToken cancellationToken)
     {
-        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
-        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+        AzureBackupTelemetryTags.AddSubscriptionTag(context, options.Subscription);
+        AzureBackupTelemetryTags.AddVaultTags(context, options.VaultType);
 
         try
         {

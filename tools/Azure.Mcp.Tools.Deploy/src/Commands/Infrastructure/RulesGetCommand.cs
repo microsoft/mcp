@@ -29,10 +29,9 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger) : BaseComma
     {
         try
         {
-            context.Activity?
-                .AddTag(DeployTelemetryTags.DeploymentTool, options.DeploymentTool)
-                .AddTag(DeployTelemetryTags.IacType, options.IacType)
-                .AddTag(DeployTelemetryTags.ComputeHostResources, options.ResourceTypes);
+            context.AddTelemetryTag(DeployTelemetryTags.DeploymentTool, options.DeploymentTool)
+                .AddTelemetryTag(DeployTelemetryTags.IacType, options.IacType)
+                .AddTelemetryTag(DeployTelemetryTags.ComputeHostResources, options.ResourceTypes);
 
             var resourceTypes = options.ResourceTypes?.Split(',')
                 .Select(rt => rt.Trim().ToLowerInvariant())

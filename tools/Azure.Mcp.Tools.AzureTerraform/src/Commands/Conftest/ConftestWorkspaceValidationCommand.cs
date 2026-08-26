@@ -61,9 +61,8 @@ public sealed class ConftestWorkspaceValidationCommand(
 
             context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.ConftestCommandResult);
 
-            context.Activity
-                ?.AddTag(AzureTerraformTelemetryTags.ToolArea, "conftest")
-                .AddTag(AzureTerraformTelemetryTags.PolicySet, options.PolicySet ?? "all");
+            context.AddTelemetryTag(AzureTerraformTelemetryTags.ToolArea, "conftest")
+                .AddTelemetryTag(AzureTerraformTelemetryTags.PolicySet, options.PolicySet ?? "all");
         }
         catch (Exception ex)
         {

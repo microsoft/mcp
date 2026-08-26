@@ -63,9 +63,8 @@ public sealed class AztfexportResourceCommand(
 
             context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AztfexportCommandResult);
 
-            context.Activity
-                ?.AddTag(AzureTerraformTelemetryTags.ToolArea, "aztfexport")
-                .AddTag(AzureTerraformTelemetryTags.Provider, options.Provider ?? "azurerm");
+            context.AddTelemetryTag(AzureTerraformTelemetryTags.ToolArea, "aztfexport")
+                .AddTelemetryTag(AzureTerraformTelemetryTags.Provider, options.Provider ?? "azurerm");
         }
         catch (Exception ex)
         {

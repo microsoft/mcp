@@ -38,7 +38,7 @@ public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger, IAp
     {
         try
         {
-            context.Activity?.AddTag("subscription", options.Subscription);
+            context.AddTelemetryTag("subscription", options.Subscription);
 
             var detectors = await _appServiceService.ListDetectorsAsync(
                 options.Subscription!,
