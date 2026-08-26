@@ -61,8 +61,8 @@ public class OptionDescriptor
             }
 
             var optionAttribute = property.GetCustomAttribute<OptionAttribute>();
-            var optionContainerAttribute = GetOptionContainerMetadata(property);
-            // Only include properties with [Option] or [OptionContainer]
+            var optionContainerAttribute = GetOptionContainerAttribute(property);
+            // Only include properties with [Option] or [OptionContainer<TContainer>]
             if (optionAttribute == null && optionContainerAttribute is null)
             {
                 continue;
@@ -70,7 +70,7 @@ public class OptionDescriptor
 
             if (optionAttribute != null && optionContainerAttribute is not null)
             {
-                throw new InvalidOperationException("Properties can only be attributed with [Option] or [OptionContainer], not both.");
+                throw new InvalidOperationException("Properties can only be attributed with [Option] or [OptionContainer<TContainer>], not both.");
             }
 
             var required = Attribute.IsDefined(property, typeof(RequiredMemberAttribute));
@@ -79,7 +79,7 @@ public class OptionDescriptor
             {
                 if (complex)
                 {
-                    throw new InvalidOperationException("Complex properties cannot use [Option] attribute. Use [OptionContainer] instead.");
+                    throw new InvalidOperationException("Complex properties cannot use [Option] attribute. Use [OptionContainer<TContainer>] instead.");
                 }
                 if (!parentRequired && required)
                 {
@@ -110,10 +110,10 @@ public class OptionDescriptor
             {
                 if (!complex)
                 {
-                    throw new InvalidOperationException("Non-complex properties cannot use [OptionContainer] attribute. Use [Option] instead.");
+                    throw new InvalidOperationException("Non-complex properties cannot use [OptionContainer<TContainer>] attribute. Use [Option] instead.");
                 }
 
-                var containerType = optionContainerAttribute.Value.ContainerType;
+                var containerType = GetOptionContainerType(optionContainerAttribute);
                 var declaredContainerType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
                 if (containerType != declaredContainerType)
                 {
@@ -124,7 +124,7 @@ public class OptionDescriptor
                 // Flatten nested complex types with a prefix.
                 CollectDescriptors(
                     containerType,
-                    GetNameOrPrefix(optionContainerAttribute.Value.Prefix, prefix, property.Name),
+                    GetNameOrPrefix(GetOptionContainerPrefix(optionContainerAttribute), prefix, property.Name),
                     descriptors,
                     nullabilityContext,
                     required,
@@ -185,28 +185,27 @@ public class OptionDescriptor
                underlying == typeof(Guid);
     }
 
-    private static (string? Prefix, [DynamicallyAccessedMembers(
-        DynamicallyAccessedMemberTypes.PublicProperties |
-        DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type ContainerType)?
-        GetOptionContainerMetadata(PropertyInfo property)
-    {
-        var optionContainerAttribute = property.CustomAttributes.SingleOrDefault(attribute =>
+    private static CustomAttributeData? GetOptionContainerAttribute(PropertyInfo property) =>
+        property.CustomAttributes.SingleOrDefault(attribute =>
             attribute.AttributeType.IsGenericType &&
             attribute.AttributeType.GetGenericTypeDefinition() == typeof(OptionContainerAttribute<>));
 
-        if (optionContainerAttribute is null)
-        {
-            return null;
-        }
-
-        var prefix = optionContainerAttribute.NamedArguments
+    private static string? GetOptionContainerPrefix(CustomAttributeData attribute) =>
+        attribute.NamedArguments
             .SingleOrDefault(argument => argument.MemberName == nameof(OptionContainerAttribute<object>.Prefix))
             .TypedValue.Value as string;
 
-        var containerType = optionContainerAttribute.AttributeType.GetGenericArguments().Single();
-
-        return (prefix, containerType);
-    }
+    // The container type is recovered from the attribute's type argument, so the trimmer cannot see the
+    // annotation flow here. Preservation is guaranteed instead by the [DynamicallyAccessedMembers] annotation
+    // on OptionContainerAttribute<TContainer>, which the trimmer applies at every [OptionContainer<T>] usage.
+    [UnconditionalSuppressMessage("Trimming", "IL2063:UnrecognizedReflectionPattern",
+        Justification = "OptionContainerAttribute<TContainer> annotates TContainer with PublicProperties and " +
+            "PublicParameterlessConstructor, so those members are preserved for every option container.")]
+    [return: DynamicallyAccessedMembers(
+        DynamicallyAccessedMemberTypes.PublicProperties |
+        DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+    private static Type GetOptionContainerType(CustomAttributeData attribute) =>
+        attribute.AttributeType.GetGenericArguments()[0];
 
     [UnconditionalSuppressMessage("Trimming", "IL2070:UnrecognizedReflectionPattern",
         Justification = "Collection types used in option properties are rooted by the application.")]

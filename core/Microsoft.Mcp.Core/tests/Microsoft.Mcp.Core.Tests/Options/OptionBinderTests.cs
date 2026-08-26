@@ -281,7 +281,7 @@ public sealed class OptionBinderTests
         var ex = Assert.Throws<InvalidOperationException>(
             () => OptionBinder.RegisterOptions<InvalidAttributesCombinationOptions>(command));
 
-        Assert.Contains("Properties can only be attributed with [Option] or [OptionContainer], not both.", ex.Message);
+        Assert.Contains("Properties can only be attributed with [Option] or [OptionContainer<TContainer>], not both.", ex.Message);
     }
 
     [Fact]
@@ -292,7 +292,7 @@ public sealed class OptionBinderTests
         var ex = Assert.Throws<InvalidOperationException>(
             () => OptionBinder.RegisterOptions<InvalidOptionAttributeOptions>(command));
 
-        Assert.Contains("Complex properties cannot use [Option] attribute. Use [OptionContainer] instead.", ex.Message);
+        Assert.Contains("Complex properties cannot use [Option] attribute. Use [OptionContainer<TContainer>] instead.", ex.Message);
     }
 
     [Fact]
@@ -303,7 +303,7 @@ public sealed class OptionBinderTests
         var ex = Assert.Throws<InvalidOperationException>(
             () => OptionBinder.RegisterOptions<InvalidOptionContainerAttributeOptions>(command));
 
-        Assert.Contains("Non-complex properties cannot use [OptionContainer] attribute. Use [Option] instead.", ex.Message);
+        Assert.Contains("Non-complex properties cannot use [OptionContainer<TContainer>] attribute. Use [Option] instead.", ex.Message);
     }
 
     [Fact]

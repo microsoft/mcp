@@ -10,6 +10,11 @@ namespace Microsoft.Mcp.Core.Tests.Options;
 
 public sealed class OptionBinderTrimmedTests
 {
+    // Restoring a runtime pack and running the trimmer is slow, but it must stay bounded so a stalled
+    // restore fails this test instead of hanging the whole unit test run.
+    private static readonly TimeSpan PublishTimeout = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan ExecutionTimeout = TimeSpan.FromMinutes(2);
+
     [Fact]
     public async Task TrimmedPublish_PreservesNestedOptionContainerProperties()
     {
@@ -33,7 +38,8 @@ public sealed class OptionBinderTrimmedTests
                     "--self-contained", "true",
                     "--output", publishPath,
                     "/p:PublishTrimmed=true"
-                ]);
+                ],
+                PublishTimeout);
 
             Assert.True(
                 publishResult.ExitCode == 0,
@@ -43,7 +49,7 @@ public sealed class OptionBinderTrimmedTests
                 ? "TrimmedOptionContainerApp.exe"
                 : "TrimmedOptionContainerApp";
             var executablePath = Path.Combine(publishPath, executableName);
-            var executionResult = await RunProcessAsync(executablePath, []);
+            var executionResult = await RunProcessAsync(executablePath, [], ExecutionTimeout);
 
             Assert.True(
                 executionResult.ExitCode == 0,
@@ -61,7 +67,8 @@ public sealed class OptionBinderTrimmedTests
 
     private static async Task<(int ExitCode, string StandardOutput, string StandardError)> RunProcessAsync(
         string fileName,
-        string[] arguments)
+        string[] arguments,
+        TimeSpan timeout)
     {
         var startInfo = new ProcessStartInfo
         {
@@ -77,12 +84,39 @@ public sealed class OptionBinderTrimmedTests
             startInfo.ArgumentList.Add(argument);
         }
 
+        using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        timeoutSource.CancelAfter(timeout);
+
         using var process = Process.Start(startInfo)
             ?? throw new InvalidOperationException($"Failed to start '{fileName}'.");
-        var standardOutput = process.StandardOutput.ReadToEndAsync();
-        var standardError = process.StandardError.ReadToEndAsync();
+        var standardOutput = process.StandardOutput.ReadToEndAsync(timeoutSource.Token);
+        var standardError = process.StandardError.ReadToEndAsync(timeoutSource.Token);
 
-        await process.WaitForExitAsync(TestContext.Current.CancellationToken);
+        try
+        {
+            await process.WaitForExitAsync(timeoutSource.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Dispose only releases the wrapper, so the spawned tree has to be terminated explicitly.
+            KillProcessTree(process);
+
+            TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
+            throw new TimeoutException($"'{fileName}' did not exit within {timeout}.");
+        }
+
         return (process.ExitCode, await standardOutput, await standardError);
+    }
+
+    private static void KillProcessTree(Process process)
+    {
+        try
+        {
+            process.Kill(entireProcessTree: true);
+        }
+        catch (InvalidOperationException)
+        {
+            // The process exited between the cancellation and this call.
+        }
     }
 }
