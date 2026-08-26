@@ -13,6 +13,7 @@ using Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 using Azure.Mcp.Tools.AzureBackup.Commands.RecoveryPoint;
 using Azure.Mcp.Tools.AzureBackup.Commands.Security;
 using Azure.Mcp.Tools.AzureBackup.Commands.Vault;
+using Azure.Mcp.Tools.AzureBackup.Commands.Vault.PrivateEndpoint;
 using Azure.Mcp.Tools.AzureBackup.Models;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands;
@@ -36,6 +37,11 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands;
 [JsonSerializable(typeof(DisasterRecoveryEnableCrrCommand.DisasterRecoveryEnableCrrCommandResult))]
 [JsonSerializable(typeof(SecurityConfigureMuaCommand.SecurityConfigureMuaCommandResult))]
 [JsonSerializable(typeof(SecurityConfigureEncryptionCommand.SecurityConfigureEncryptionCommandResult))]
+[JsonSerializable(typeof(PrivateEndpointCreateCommand.PrivateEndpointCreateCommandResult))]
+[JsonSerializable(typeof(PrivateEndpointGetCommand.PrivateEndpointGetCommandResult))]
+[JsonSerializable(typeof(PrivateEndpointDeleteCommand.PrivateEndpointDeleteCommandResult))]
+[JsonSerializable(typeof(PrivateEndpointApproveRejectCommand.PrivateEndpointApproveRejectCommandResult))]
+[JsonSerializable(typeof(PrivateEndpointConnectionInfo))]
 [JsonSerializable(typeof(BackupVaultInfo))]
 [JsonSerializable(typeof(ProtectedItemInfo))]
 [JsonSerializable(typeof(BackupPolicyInfo))]

@@ -44,6 +44,7 @@ $goalTemplateName = $DeploymentOutputs['GOALTEMPLATENAME']
 $goalAssignmentName = $DeploymentOutputs['GOALASSIGNMENTNAME']
 $recoveryPlanName = $DeploymentOutputs['RECOVERYPLANNAME']
 $drillName = $DeploymentOutputs['DRILLNAME']
+$deleteDrillName = $DeploymentOutputs['DELETEDRILLNAME']
 $storageAccountId = $DeploymentOutputs['STORAGEACCOUNTID']
 $location = $DeploymentOutputs['LOCATION']
 
@@ -370,6 +371,38 @@ elseif ($existingDrill.StatusCode -eq 200) {
 }
 else {
     throw "GET $drillPath failed with status $($existingDrill.StatusCode): $($existingDrill.Content)"
+}
+
+# 8b) Create an isolated drill used exclusively by the delete live test.
+$deleteDrillPath = "$serviceGroupResilienceBase/drills/$deleteDrillName`?api-version=$resilienceApiVersion"
+if ((Invoke-AzRestMethod -Method GET -Path $deleteDrillPath).StatusCode -eq 404) {
+    Invoke-ResilienceRestPut -Path $deleteDrillPath -Body @{
+        identity   = @{
+            type = 'SystemAssigned'
+        }
+        properties = @{
+            drillType               = 'Zonal'
+            rbacSetupMode           = 'AutomatedBuiltinRoles'
+            metricsProperties       = @{
+                identity       = @{ type = 'SystemAssigned' }
+                metricsToTrack = @()
+            }
+            recoveryPlanProperties  = @{
+                recoveryPlanId = $recoveryPlanId
+                identity       = @{ type = 'SystemAssigned' }
+            }
+            drillAssetProperties    = @{
+                subscription  = $subscriptionId
+                region        = $location
+                resourceGroup = $ResourceGroupName
+            }
+            chaosResourceProperties = @{
+                identity                       = @{ type = 'SystemAssigned' }
+                chaosResourceIdentityForFaults = @{ type = 'SystemAssigned' }
+            }
+        }
+    } | Out-Null
+    Wait-ResilienceProvisioning -Path $deleteDrillPath
 }
 
 # Wait for the drill resource created from the storage-account service-group member.
