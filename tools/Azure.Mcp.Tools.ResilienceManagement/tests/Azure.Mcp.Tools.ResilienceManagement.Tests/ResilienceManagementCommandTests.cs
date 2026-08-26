@@ -178,7 +178,7 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_delete_drill()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("lifecycleServiceGroupName", "LIFECYCLESERVICEGROUPNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "LIFECYCLESERVICEGROUPNAME");
         var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DELETEDRILLNAME");
 
         var result = await CallToolAsync(
@@ -449,7 +449,7 @@ public class ResilienceManagementCommandTests(
     [CustomMatcher(compareBody: false)]
     public async Task Should_create_update_and_delete_recovery_plan()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("planLifecycleServiceGroupName", "PLANLIFECYCLESERVICEGROUPNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("lifecycleServiceGroupName", "PLANLIFECYCLESERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveVariable("lifecycleRecoveryPlanName", $"mcp-lifecycle-{Guid.NewGuid().ToString("N")[..8]}");
         bool recoveryPlanExists = false;
 
