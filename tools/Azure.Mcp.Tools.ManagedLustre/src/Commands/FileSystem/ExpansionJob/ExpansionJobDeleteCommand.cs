@@ -40,7 +40,6 @@ public sealed class ExpansionJobDeleteCommand(IManagedLustreService service, ILo
                 options.FilesystemName,
                 options.ExpansionJobName,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             var message = deleted
