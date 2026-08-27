@@ -796,7 +796,12 @@ public class ConsolidatedModeTests
 
     private static async Task<HttpResponseMessage> SendWithRetryAsync(HttpClient client, HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var deadline = DateTime.UtcNow.AddSeconds(10);
+        // Consolidated mode registers every tool across every Azure service toolset, so cold
+        // process startup (DI container + schema generation for 100+ tools) can take
+        // considerably longer on loaded/cold CI agents than on a local dev machine. A short
+        // deadline here manifests as a flaky "Connection refused" failure in the pipeline even
+        // though the server would have come up successfully given a bit more time.
+        var deadline = DateTime.UtcNow.AddSeconds(30);
         Exception? lastException = null;
 
         while (DateTime.UtcNow < deadline)
