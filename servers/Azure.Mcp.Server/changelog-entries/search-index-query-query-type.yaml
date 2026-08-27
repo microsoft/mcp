@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "The 'azmcp search index query' command now uses the full Lucene query syntax by default and supports a new optional '--query-type' option to select between 'simple', 'full' and 'semantic' queries."

@@ -951,7 +951,7 @@ dotnet test tools/Azure.Mcp.Tools.{Toolset}/tests
 .\eng\common\spelling\Invoke-Cspell.ps1
 
 # 5. Full verification
-./eng/scripts/Build-Local.ps1 -UsePaths -VerifyNpx
+./eng/scripts/Build-Local.ps1 -VerifyNpx
 
 # 6. AOT/Native build (required for AOT-compatible toolsets)
 ./eng/scripts/Build-Local.ps1 -BuildNative

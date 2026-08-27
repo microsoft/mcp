@@ -41,6 +41,13 @@
   <Folder Name="/eng/tools/CopilotCliTester/tests/">
     <Project Path="eng/tools/CopilotCliTester/tests/CopilotCliTester.Tests.csproj" />
   </Folder>
+  <Folder Name="/eng/tools/McpOutputSizeMeasurer/" />
+  <Folder Name="/eng/tools/McpOutputSizeMeasurer/src/">
+    <Project Path="eng/tools/McpOutputSizeMeasurer/src/McpOutputSizeMeasurer.csproj" />
+  </Folder>
+  <Folder Name="/eng/tools/McpOutputSizeMeasurer/tests/">
+    <Project Path="eng/tools/McpOutputSizeMeasurer/tests/McpOutputSizeMeasurer.Tests/McpOutputSizeMeasurer.Tests.csproj" />
+  </Folder>
   <Folder Name="/eng/tools/McpToolEvaluator.Core/" />
   <Folder Name="/eng/tools/McpToolEvaluator.Core/src/">
     <Project Path="eng/tools/McpToolEvaluator.Core/src/McpToolEvaluator.Core.csproj" />
