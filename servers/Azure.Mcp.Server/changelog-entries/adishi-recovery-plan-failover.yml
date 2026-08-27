@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the resilience recovery plan failover tool to start qualified failover operations and return an operation ID for tracking."

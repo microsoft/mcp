@@ -3840,6 +3840,28 @@ azmcp resilience recoveryplan create --service-group <service-group> \
 azmcp resilience recoveryplan delete --service-group <service-group> \
                                       --recovery-plan <recovery-plan>
 
+# Finalize a configured editable recovery plan and return an operation ID for tracking.
+# This validates configuration and transitions the plan toward ready; it is not failover commit and does not execute failover.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan finalize --service-group <service-group> \
+                                        --recovery-plan <recovery-plan>
+
+# Start failover for qualified recovery-plan resources and return an operation ID for tracking.
+# Provide source locations, selected full recovery-resource IDs, or both. This executes failover; it does not validate eligibility.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan failover --service-group <service-group> \
+                                        --recovery-plan <recovery-plan> \
+                                        [--source-locations <source-location> [<source-location> ...]] \
+                                        [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
+                                        [--user-consent <Unspecified|Allowed>]
+
+# Start reprotection after failover for explicitly selected recovery-plan resources and return an operation ID for tracking.
+# This executes reprotect and changes recovery protection state; it does not validate qualification.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan reprotect --service-group <service-group> \
+                                         --recovery-plan <recovery-plan> \
+                                         --selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]
+
 # Validate which recovery-plan resources are qualified for failover from the specified source locations.
 # Optionally limit validation to selected full recovery-resource IDs and provide execution consent.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired

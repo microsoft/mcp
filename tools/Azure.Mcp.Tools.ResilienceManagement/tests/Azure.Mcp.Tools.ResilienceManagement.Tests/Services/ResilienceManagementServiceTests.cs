@@ -355,6 +355,37 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public void CreateFailoverRequestContent_MapsSelectorsAndConsent()
+    {
+        const string resourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/12345678-9012-3456-7890-123456789012";
+
+        ResilienceManagementFailoverContent result = ResilienceManagementService.CreateFailoverRequestContent(
+            ["eastus", "westus2-az3"],
+            [resourceId],
+            "Allowed");
+
+        Assert.Equal(FailoverDirectionTypes.FromSpecificLocations, result.FailoverDirection);
+        Assert.NotNull(result.FailoverRequestProperties);
+        Assert.Equal(["eastus", "westus2-az3"], result.FailoverRequestProperties.SourceLocations);
+        Assert.Equal(resourceId, Assert.Single(result.FailoverRequestProperties.SelectedResourceIds).ToString());
+        Assert.Equal("Allowed", result.FailoverRequestProperties.ExecutionConfigurationsUserConsent?.ToString());
+    }
+
+    [Fact]
+    public void CreateReprotectRequestContent_MapsSelectedResources()
+    {
+        const string firstResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/12345678-9012-3456-7890-123456789012";
+        const string secondResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/23456789-0123-4567-8901-234567890123";
+
+        ReprotectContent result = ResilienceManagementService.CreateReprotectRequestContent(
+            [firstResourceId, secondResourceId]);
+
+        Assert.Equal(
+            [firstResourceId, secondResourceId],
+            result.ReprotectRequestSelectedResourceIds.Select(resourceId => resourceId.ToString()));
+    }
+
+    [Fact]
     public void CreateRecoveryPlanValidateForFailoverResult_MapsQualificationDetails()
     {
         ValidateForRecoveryOperationBaseResult sdkResult = ModelReaderWriter.Read<ValidateForRecoveryOperationBaseResult>(BinaryData.FromObjectAsJson(new

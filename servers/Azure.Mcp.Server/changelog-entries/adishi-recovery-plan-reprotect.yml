@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the resilience recovery plan reprotect tool to start reprotection for explicitly selected resources and return an operation ID for tracking."

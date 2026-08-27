@@ -531,6 +531,18 @@ public class ResilienceManagementCommandTests(
             Assert.Equal(defaultGroupId, updatedDefaultGroup.AssertProperty("groupUniqueId").GetString());
             Assert.Equal("Lifecycle default group", updatedDefaultGroup.AssertProperty("description").GetString());
 
+            var finalizeResult = await CallToolAsync(
+                "resilience_recoveryplan_finalize",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "recovery-plan", recoveryPlan }
+                });
+            Assert.True(Guid.TryParse(finalizeResult.AssertProperty("operationId").GetString(), out _));
+
+            await WaitForRecoveryPlanFinalizationAsync(serviceGroup, recoveryPlan);
+
             var deleteResult = await CallToolAsync(
                 "resilience_recoveryplan_delete",
                 new()
@@ -567,6 +579,33 @@ public class ResilienceManagementCommandTests(
                     });
             }
         }
+    }
+
+    private async Task WaitForRecoveryPlanFinalizationAsync(string serviceGroup, string recoveryPlan)
+    {
+        for (int attempt = 0; attempt < 20; attempt++)
+        {
+            var result = await CallToolAsync(
+                "resilience_recoveryplan_get",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "name", recoveryPlan }
+                });
+            var plan = result.AssertProperty("recoveryPlan");
+            string? provisioningState = plan.AssertProperty("provisioningState").GetString();
+            string? planState = plan.AssertProperty("planState").GetString();
+            if (string.Equals(provisioningState, "Succeeded", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(planState, "Editable", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            await Task.Delay(PollInterval(15_000));
+        }
+
+        throw new TimeoutException($"Recovery plan '{recoveryPlan}' did not finalize within the expected time.");
     }
 
     [Fact]
