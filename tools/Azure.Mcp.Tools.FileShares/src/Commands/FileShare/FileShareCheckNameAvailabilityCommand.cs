@@ -42,7 +42,6 @@ public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheck
                 options.Name,
                 options.Location,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

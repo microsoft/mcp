@@ -4,7 +4,6 @@
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -45,7 +44,6 @@ public class ConsumerGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(consumerGroup);
         }
@@ -89,7 +87,6 @@ public class ConsumerGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<
             "test-subscription",
             "custom-metadata",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedConsumerGroup);
 
@@ -114,7 +111,6 @@ public class ConsumerGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string>(),
             "custom-metadata",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -141,7 +137,6 @@ public class ConsumerGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<
             "test-subscription",
             null,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedConsumerGroup);
 
@@ -165,7 +160,6 @@ public class ConsumerGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string>(),
             null,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -181,7 +175,6 @@ public class ConsumerGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Event Hub 'test-eventhub' could not be found"));
 
@@ -210,7 +203,6 @@ public class ConsumerGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("The current user does not have access to subscription 'unauthorized-sub'"));
 
