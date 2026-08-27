@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:ignore LIFECYCLESERVICEGROUPNAME
+// cspell:ignore LIFECYCLESERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -141,6 +141,78 @@ public class ResilienceManagementCommandTests(
         Assert.Contains(drills.EnumerateArray(), drill =>
             drill.TryGetProperty("id", out var id) &&
             (id.GetString()?.EndsWith(drillName, StringComparison.OrdinalIgnoreCase) ?? false));
+    }
+
+    [Fact]
+    public async Task Should_update_drill()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+
+        var result = await CallToolAsync(
+            "resilience_drill_update",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drillName },
+                { "rbac-setup-mode", "AutomatedBuiltinRoles" }
+            });
+
+        var drill = result.AssertProperty("drill");
+        Assert.EndsWith(drillName, drill.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
+        var properties = drill.AssertProperty("properties");
+        Assert.Equal("Succeeded", properties.AssertProperty("provisioningState").GetString());
+        Assert.Equal("AutomatedBuiltinRoles", properties.AssertProperty("rbacSetupMode").GetString());
+    }
+
+    [Fact]
+    public async Task Should_create_drill()
+    {
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+
+        var result = await CallToolAsync(
+            "resilience_drill_create",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drillName },
+                { "subscription", Settings.SubscriptionId },
+                { "region", "westus2" },
+                { "resource-group", resourceGroupName },
+                { "drill-type", "Zonal" },
+                { "rbac-setup-mode", "AutomatedBuiltinRoles" },
+                { "recovery-plan", recoveryPlan }
+            });
+
+        var drill = result.AssertProperty("drill");
+        Assert.EndsWith(drillName, drill.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
+        var properties = drill.AssertProperty("properties");
+        Assert.Equal("Succeeded", properties.AssertProperty("provisioningState").GetString());
+        Assert.Equal("Zonal", properties.AssertProperty("drillType").GetString());
+        var recoveryPlanId = properties.AssertProperty("recoveryPlanProperties").AssertProperty("recoveryPlanId").GetString();
+        Assert.EndsWith($"/recoveryPlans/{recoveryPlan}", recoveryPlanId, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Should_delete_drill()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "LIFECYCLESERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DELETEDRILLNAME");
+
+        var result = await CallToolAsync(
+            "resilience_drill_delete",
+            new()
+            {
+                { "service-group", serviceGroup },
+                { "drill", drillName }
+            });
+
+        Assert.True(result.AssertProperty("success").GetBoolean());
     }
 
     [Fact]
@@ -400,7 +472,7 @@ public class ResilienceManagementCommandTests(
     [CustomMatcher(compareBody: false)]
     public async Task Should_create_update_and_delete_recoveryplan()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("lifecycleServiceGroupName", "LIFECYCLESERVICEGROUPNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("lifecycleServiceGroupName", "PLANLIFECYCLESERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveVariable("lifecycleRecoveryPlanName", $"mcp-lifecycle-{Guid.NewGuid().ToString("N")[..8]}");
         bool recoveryPlanExists = false;
 
@@ -589,7 +661,7 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_validate_recoveryplan_for_failover()
+    public async Task Should_validate_recovery_plan_for_failover()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureBackup.Models;
+using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
@@ -235,6 +236,57 @@ public interface IRsvBackupOperations
         string identityType,
         string? keyVersion,
         string? userAssignedIdentityId,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    // Private endpoint operations
+    Task<PrivateEndpointConnectionInfo> CreatePrivateEndpointAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string privateEndpointName,
+        string vnetSubnetId,
+        string groupId,
+        string? location,
+        bool autoApprove,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    Task<List<PrivateEndpointConnectionInfo>> ListPrivateEndpointsAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    Task<PrivateEndpointConnectionInfo> GetPrivateEndpointAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string privateEndpointConnectionName,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    Task<OperationResult> DeletePrivateEndpointAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string privateEndpointConnectionName,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    Task<PrivateEndpointConnectionInfo> SetPrivateEndpointConnectionStateAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string privateEndpointConnectionName,
+        PrivateEndpointConnectionStatus targetStatus,
+        string? description,
         string? tenant,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);

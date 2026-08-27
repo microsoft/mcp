@@ -66,6 +66,12 @@ public interface IResilienceManagementService
 
     Task<DrillInfo> GetDrillAsync(string serviceGroup, string drill, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
+    Task<DrillInfo> UpdateDrillAsync(string serviceGroup, string drill, string? subscription = null, string? region = null, DrillRbacSetupMode? rbacSetupMode = null, string? recoveryPlan = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+
+    Task<DrillInfo> CreateDrillAsync(string serviceGroup, string drill, string subscription, string region, string? resourceGroup, DrillKind drillType, DrillRbacSetupMode rbacSetupMode, string? recoveryPlan = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+
+    Task DeleteDrillAsync(string serviceGroup, string drill, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+
     Task<IEnumerable<ResourceSummary>> ListDrillResourcesAsync(string serviceGroup, string drill, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
     Task<DrillResourceInfo> GetDrillResourceAsync(string serviceGroup, string drill, string drillResource, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
