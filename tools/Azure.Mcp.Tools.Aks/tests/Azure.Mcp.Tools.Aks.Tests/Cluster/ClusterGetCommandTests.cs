@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Aks.Commands;
 using Azure.Mcp.Tools.Aks.Commands.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -39,7 +38,6 @@ public class ClusterGetCommandTests : SubscriptionCommandUnitTestsBase<ClusterGe
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns([]);
         }
@@ -75,7 +73,6 @@ public class ClusterGetCommandTests : SubscriptionCommandUnitTestsBase<ClusterGe
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedClusters);
 
@@ -96,7 +93,6 @@ public class ClusterGetCommandTests : SubscriptionCommandUnitTestsBase<ClusterGe
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -181,7 +177,6 @@ public class ClusterGetCommandTests : SubscriptionCommandUnitTestsBase<ClusterGe
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([enriched]);
 
@@ -212,7 +207,6 @@ public class ClusterGetCommandTests : SubscriptionCommandUnitTestsBase<ClusterGe
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -234,7 +228,6 @@ public class ClusterGetCommandTests : SubscriptionCommandUnitTestsBase<ClusterGe
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -270,7 +263,7 @@ public class ClusterGetCommandTests : SubscriptionCommandUnitTestsBase<ClusterGe
             AgentPoolProfiles = [new() { Name = "systempool", Count = 3 }]
         };
 
-        Service.GetClusters("test-subscription", "test-cluster", "test-rg", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetClusters("test-subscription", "test-cluster", "test-rg", null, Arg.Any<CancellationToken>())
             .Returns([expectedCluster]);
 
         // Act
@@ -295,7 +288,6 @@ public class ClusterGetCommandTests : SubscriptionCommandUnitTestsBase<ClusterGe
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
@@ -320,7 +312,6 @@ public class ClusterGetCommandTests : SubscriptionCommandUnitTestsBase<ClusterGe
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 
