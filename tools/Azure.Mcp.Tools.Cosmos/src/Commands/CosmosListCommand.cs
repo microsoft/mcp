@@ -53,7 +53,6 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
                     options.AuthMethod ?? AuthMethod.Credential,
                     options.Tenant,
                     options.ResourceGroup,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -69,7 +68,6 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
                     options.AuthMethod ?? AuthMethod.Credential,
                     options.Tenant,
                     options.ResourceGroup,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -83,7 +81,6 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
