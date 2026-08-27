@@ -44,7 +44,6 @@ public sealed class RecoveryJobGetCommand(ILogger<RecoveryJobGetCommand> logger,
                     options.ServiceGroup,
                     options.RecoveryPlan,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new RecoveryJobGetCommandResult(RecoveryJobs: recoveryJobs.ToList());
             }
@@ -55,7 +54,6 @@ public sealed class RecoveryJobGetCommand(ILogger<RecoveryJobGetCommand> logger,
                     options.RecoveryPlan,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new RecoveryJobGetCommandResult(RecoveryJob: recoveryJob);
             }

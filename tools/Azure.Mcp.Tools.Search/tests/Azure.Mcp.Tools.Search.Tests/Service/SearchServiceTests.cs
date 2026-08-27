@@ -10,7 +10,6 @@ using Azure.Search.Documents;
 using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.KnowledgeBases.Models;
 using Azure.Search.Documents.Models;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 using NSubstitute;
@@ -52,7 +51,7 @@ public class SearchServiceCacheTests
 
         // Assert: result comes from cache and no ARM call is made
         Assert.Equal(cached, result);
-        await _azureService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await _azureService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), null, Arg.Any<CancellationToken>());
     }
 
     [Fact]

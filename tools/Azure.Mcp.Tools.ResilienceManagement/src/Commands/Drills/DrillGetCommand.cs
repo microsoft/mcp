@@ -42,7 +42,6 @@ public sealed class DrillGetCommand(ILogger<DrillGetCommand> logger, IResilience
                 var drills = await _resilienceManagementService.ListDrillsAsync(
                     options.ServiceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new DrillGetCommandResult(Drills: drills.ToList());
             }
@@ -52,7 +51,6 @@ public sealed class DrillGetCommand(ILogger<DrillGetCommand> logger, IResilience
                     options.ServiceGroup,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new DrillGetCommandResult(Drill: drill);
             }

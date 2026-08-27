@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -67,7 +66,6 @@ public sealed class RecoveryPlanValidateForFailoverCommandTests : CommandUnitTes
             Arg.Is<IReadOnlyList<string>>(resourceIds => resourceIds.SequenceEqual(new[] { RecoveryResourceId })),
             null,
             null,
-            null,
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -107,7 +105,6 @@ public sealed class RecoveryPlanValidateForFailoverCommandTests : CommandUnitTes
             Arg.Is<IReadOnlyList<string>>(resourceIds => resourceIds.SequenceEqual(new[] { RecoveryResourceId })),
             "Allowed",
             null,
-            null,
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -141,7 +138,6 @@ public sealed class RecoveryPlanValidateForFailoverCommandTests : CommandUnitTes
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
@@ -166,7 +162,6 @@ public sealed class RecoveryPlanValidateForFailoverCommandTests : CommandUnitTes
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new TimeoutException(internalDetails));
 
