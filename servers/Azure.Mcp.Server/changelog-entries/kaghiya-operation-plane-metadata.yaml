@@ -1,3 +1,3 @@
 changes:
   - section: "Features Added"
-    description: "Added Azure operation-plane metadata to distinguish data-plane, control-plane, mixed, and non-Azure MCP tools in generated tool metadata."
+    description: "Added Azure operation-plane metadata that distinguishes data-plane, control-plane, mixed, and non-Azure tools in `azmcp tools list` output."

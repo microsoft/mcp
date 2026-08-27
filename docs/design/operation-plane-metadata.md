@@ -66,42 +66,33 @@ Defaulting existing commands to `Data` would silently misclassify ARM-based comm
 
 ## JSON representation
 
-The `tools list` and `--learn` output uses the existing descriptive metadata shape:
+The `tools list` and `--learn` output reports the plane as a string on the existing `metadata` object:
 
 ```json
 {
   "metadata": {
-    "operationPlane": {
-      "value": "control",
-      "description": "This tool operates against an Azure management or control-plane API."
-    }
+    "operationPlane": "control",
+    "destructive": { "value": false, "description": "..." },
+    "readOnly": { "value": true, "description": "..." }
   }
 }
 ```
 
-Stable serialized values are `unspecified`, `data`, `control`, `both`, and `notApplicable`.
+The behavioral flags use a `{ value, description }` shape because `"destructive": true` needs explanation. `"operationPlane": "control"` is self-describing, so it is emitted as a plain string rather than carrying a description that is a fixed function of the value.
 
-Older metadata without `operationPlane` deserializes as `Unspecified`.
+Stable serialized values are `unspecified`, `data`, `control`, `both`, and `notApplicable`. Unrecognized values, including any added by a future version, deserialize as `Unspecified` so older binaries keep reading newer metadata.
 
-## MCP representation
+Metadata without `operationPlane` also deserializes as `Unspecified`.
 
-Operation plane is not a standard MCP `ToolAnnotations` hint. It must not be mapped to an unrelated standard hint.
+## Scope
 
-MCP tools expose the value through namespaced custom metadata:
+This change adds the annotation and surfaces it per command in the CLI output JSON, which is what documentation generation consumes.
 
-```json
-{
-  "_meta": {
-    "azure.com/operation-plane": "control"
-  }
-}
-```
+It deliberately does not add the plane to MCP tool definitions. Operation plane is not a standard MCP `ToolAnnotations` hint, and no MCP client consumes it today. If a runtime consumer appears, the value can be published later under a namespaced `_meta` key such as `azure.com/operation-plane`, which keeps clients from interpreting it as part of the MCP specification.
 
-The namespace prevents clients from interpreting the value as part of the MCP specification.
+## Aggregating a tool family
 
-## Tool-family aggregation
-
-Namespace and consolidated MCP tools derive their plane from their child commands. Documentation generators can apply the same rules to the individual commands returned by `tools list`:
+Tool families are not aggregated at runtime. A documentation generator holding the per-command values applies these rules itself:
 
 | Child classifications | Aggregate |
 |---|---|
@@ -114,21 +105,21 @@ Namespace and consolidated MCP tools derive their plane from their child command
 
 `NotApplicable` does not change an otherwise applicable aggregate. For example, `Data` plus `NotApplicable` aggregates to `Data`.
 
-Operation-plane aggregation is intentionally separate from consolidated behavioral-metadata equality. A consolidated tool may validly contain a mixture of control-plane and data-plane commands.
+Keeping aggregation in the consumer avoids duplicating the rule across the namespace, consolidated, proxy, and single-tool loading paths for a value none of them currently expose.
 
 ## Initial rollout
 
-1. Add the enum, metadata model, JSON serialization, and MCP custom metadata.
-2. Classify Event Grid commands to validate data-, control-, and mixed-family behavior.
+1. Add the enum, the attribute property, and the CLI JSON serialization.
+2. Classify Event Grid commands to validate data-, control-, and mixed-plane commands.
 3. Classify remaining Azure commands incrementally with service-owner review.
 4. Add repository validation requiring a non-`Unspecified` classification after migration.
-5. Update documentation generation to display the individual classification and derive tool-family coverage.
+5. Update documentation generation to display the classification and derive tool-family coverage.
 
 ## Compatibility
 
 - Command syntax and option binding do not change.
 - The CLI JSON change is additive.
 - Consumers that ignore unknown JSON properties continue to work.
-- Older serialized metadata remains readable.
-- Standard MCP tool annotations remain unchanged.
+- Older serialized metadata remains readable, and unknown future values degrade to `Unspecified`.
+- MCP tool definitions and standard tool annotations are unchanged.
 - Serialization uses source-generated `System.Text.Json` metadata and is AOT-safe.

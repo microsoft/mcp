@@ -18,11 +18,32 @@ public sealed class ToolMetadataSerializationTests
         var json = JsonSerializer.Serialize(metadata, ModelsJsonContext.Default.ToolMetadata);
 
         using var document = JsonDocument.Parse(json);
-        var operationPlane = document.RootElement.GetProperty("operationPlane");
-        Assert.Equal("control", operationPlane.GetProperty("value").GetString());
-        Assert.Equal(
-            "This tool operates against an Azure management or control-plane API.",
-            operationPlane.GetProperty("description").GetString());
+        Assert.Equal("control", document.RootElement.GetProperty("operationPlane").GetString());
+    }
+
+    [Theory]
+    [InlineData(ToolOperationPlane.Unspecified, "unspecified")]
+    [InlineData(ToolOperationPlane.Data, "data")]
+    [InlineData(ToolOperationPlane.Control, "control")]
+    [InlineData(ToolOperationPlane.Both, "both")]
+    [InlineData(ToolOperationPlane.NotApplicable, "notApplicable")]
+    public void Serialize_UsesStableOperationPlaneValues(ToolOperationPlane operationPlane, string expected)
+    {
+        var json = JsonSerializer.Serialize(new ToolMetadata { OperationPlane = operationPlane }, ModelsJsonContext.Default.ToolMetadata);
+
+        using var document = JsonDocument.Parse(json);
+        Assert.Equal(expected, document.RootElement.GetProperty("operationPlane").GetString());
+    }
+
+    [Fact]
+    public void Deserialize_UnknownOperationPlane_FallsBackToUnspecified()
+    {
+        const string Json = """{ "operationPlane": "someFuturePlane" }""";
+
+        var metadata = JsonSerializer.Deserialize(Json, ModelsJsonContext.Default.ToolMetadata);
+
+        Assert.NotNull(metadata);
+        Assert.Equal(ToolOperationPlane.Unspecified, metadata.OperationPlane);
     }
 
     [Fact]

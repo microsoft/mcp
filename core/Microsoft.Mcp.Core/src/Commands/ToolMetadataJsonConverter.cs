@@ -14,6 +14,28 @@ namespace Microsoft.Mcp.Core.Commands;
 /// </summary>
 public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
 {
+    /// <summary>
+    /// Stable serialized values for <see cref="ToolOperationPlane"/>. Unknown values read as
+    /// <see cref="ToolOperationPlane.Unspecified"/> so newer metadata remains readable.
+    /// </summary>
+    private static string ToJsonValue(ToolOperationPlane operationPlane) => operationPlane switch
+    {
+        ToolOperationPlane.Data => "data",
+        ToolOperationPlane.Control => "control",
+        ToolOperationPlane.Both => "both",
+        ToolOperationPlane.NotApplicable => "notApplicable",
+        _ => "unspecified"
+    };
+
+    private static ToolOperationPlane FromJsonValue(string? value) => value switch
+    {
+        "data" => ToolOperationPlane.Data,
+        "control" => ToolOperationPlane.Control,
+        "both" => ToolOperationPlane.Both,
+        "notApplicable" => ToolOperationPlane.NotApplicable,
+        _ => ToolOperationPlane.Unspecified
+    };
+
     public override ToolMetadata Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         using var jsonDoc = JsonDocument.ParseValue(ref reader);
@@ -29,19 +51,13 @@ public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
             return meta;
         }
 
-        OperationPlaneMetadataDefinition GetOperationPlaneMetadata()
-        {
-            if (!root.TryGetProperty("operationPlane", out var property))
-            {
-                return new OperationPlaneMetadataDefinition { Value = ToolOperationPlane.Unspecified };
-            }
-
-            return JsonSerializer.Deserialize(property.GetRawText(), CoreJsonContext.Default.OperationPlaneMetadataDefinition)
-                ?? new OperationPlaneMetadataDefinition { Value = ToolOperationPlane.Unspecified };
-        }
+        ToolOperationPlane GetOperationPlane()
+            => root.TryGetProperty("operationPlane", out var property) && property.ValueKind == JsonValueKind.String
+                ? FromJsonValue(property.GetString())
+                : ToolOperationPlane.Unspecified;
 
         return new ToolMetadata(
-            GetOperationPlaneMetadata(),
+            GetOperationPlane(),
             GetMetadata("destructive", true),
             GetMetadata("idempotent", false),
             GetMetadata("openWorld", true),
@@ -61,8 +77,7 @@ public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
             JsonSerializer.Serialize(writer, def, CoreJsonContext.Default.MetadataDefinition);
         }
 
-        writer.WritePropertyName("operationPlane");
-        JsonSerializer.Serialize(writer, value.OperationPlaneProperty, CoreJsonContext.Default.OperationPlaneMetadataDefinition);
+        writer.WriteString("operationPlane", ToJsonValue(value.OperationPlane));
         WriteMetadata("destructive", value.DestructiveProperty);
         WriteMetadata("idempotent", value.IdempotentProperty);
         WriteMetadata("openWorld", value.OpenWorldProperty);

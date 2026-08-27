@@ -150,15 +150,6 @@ public sealed class NamespaceToolLoader(
                 },
             };
 
-            JsonObject metadata = [];
-            McpHelper.AddOperationPlaneMetadata(
-                metadata,
-                ToolOperationPlaneExtensions.Aggregate(
-                    group,
-                    commandMetadata =>
-                        (_options.Value.ReadOnly != true || commandMetadata.ReadOnly) &&
-                        (!_options.Value.IsHttpMode || !commandMetadata.LocalRequired)));
-            tool.Meta = metadata;
             allToolsResponse.Tools.Add(tool);
         }
 
@@ -652,7 +643,6 @@ public sealed class NamespaceToolLoader(
         };
 
         JsonObject meta = [new(McpHelper.ToolIdMetaKey, command.Id)];
-        McpHelper.AddOperationPlaneMetadata(meta, metadata.OperationPlane);
         // Add Secret metadata to tool.Meta if the property exists
         if (metadata.Secret)
         {

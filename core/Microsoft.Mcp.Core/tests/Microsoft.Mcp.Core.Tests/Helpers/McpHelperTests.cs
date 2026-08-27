@@ -3,7 +3,6 @@
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Protocol;
 using Xunit;
@@ -12,29 +11,6 @@ namespace Microsoft.Mcp.Core.Tests.Helpers;
 
 public class McpHelperTests
 {
-    [Theory]
-    [InlineData(ToolOperationPlane.Unspecified, "unspecified")]
-    [InlineData(ToolOperationPlane.Data, "data")]
-    [InlineData(ToolOperationPlane.Control, "control")]
-    [InlineData(ToolOperationPlane.Both, "both")]
-    [InlineData(ToolOperationPlane.NotApplicable, "notApplicable")]
-    public void AddOperationPlaneMetadata_AddsNamespacedValue(ToolOperationPlane operationPlane, string expected)
-    {
-        JsonObject metadata = [];
-
-        McpHelper.AddOperationPlaneMetadata(metadata, operationPlane);
-
-        Assert.Equal(expected, metadata[McpHelper.OperationPlaneMetaKey]!.GetValue<string>());
-    }
-
-    [Fact]
-    public void GetOperationPlane_ReturnsUnspecified_WhenMetadataIsAbsent()
-    {
-        var tool = new Tool { Name = "TestTool" };
-
-        Assert.Equal(ToolOperationPlane.Unspecified, McpHelper.GetOperationPlane(tool));
-    }
-
     [Theory]
     [InlineData(McpHelper.SecretHintMetaKey, null, false)]
     [InlineData(McpHelper.SecretHintMetaKey, "wrong-type", false)]

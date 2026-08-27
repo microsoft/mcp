@@ -278,7 +278,6 @@ public sealed class CommandFactoryToolLoader(
         };
 
         JsonObject meta = [new(McpHelper.ToolIdMetaKey, command.Id)];
-        McpHelper.AddOperationPlaneMetadata(meta, metadata.OperationPlane);
         // Add Secret metadata to tool.Meta if the property exists
         if (metadata.Secret)
         {

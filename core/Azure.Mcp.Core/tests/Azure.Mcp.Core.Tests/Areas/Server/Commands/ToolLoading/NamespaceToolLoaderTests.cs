@@ -89,69 +89,6 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task ListToolsHandler_AggregatesOperationPlaneMetadata()
-    {
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var rootGroup = new CommandGroup("root", "Root command group");
-        var eventGridGroup = new CommandGroup("eventgrid", "Event Grid commands");
-        var dataCommand = Substitute.For<IBaseCommand>();
-        dataCommand.Metadata.Returns(new ToolMetadata { OperationPlane = ToolOperationPlane.Data });
-        var controlCommand = Substitute.For<IBaseCommand>();
-        controlCommand.Metadata.Returns(new ToolMetadata { OperationPlane = ToolOperationPlane.Control });
-        eventGridGroup.AddCommand("publish", dataCommand);
-        eventGridGroup.AddCommand("list", controlCommand);
-        rootGroup.SubGroup.Add(eventGridGroup);
-        commandFactory.RootGroup.Returns(rootGroup);
-
-        var loader = new NamespaceToolLoader(commandFactory, _options, _logger);
-        var request = McpTestUtilities.CreateToolListRequest();
-
-        var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
-
-        var tool = Assert.Single(result.Tools);
-        Assert.NotNull(tool.Meta);
-        Assert.Equal(
-            "both",
-            tool.Meta[McpHelper.OperationPlaneMetaKey]!.GetValue<string>());
-    }
-
-    [Fact]
-    public async Task ListToolsHandler_AggregatesOnlyCommandsAvailableInReadOnlyMode()
-    {
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var rootGroup = new CommandGroup("root", "Root command group");
-        var eventGridGroup = new CommandGroup("eventgrid", "Event Grid commands");
-        var dataCommand = Substitute.For<IBaseCommand>();
-        dataCommand.Metadata.Returns(new ToolMetadata
-        {
-            OperationPlane = ToolOperationPlane.Data,
-            ReadOnly = false
-        });
-        var controlCommand = Substitute.For<IBaseCommand>();
-        controlCommand.Metadata.Returns(new ToolMetadata
-        {
-            OperationPlane = ToolOperationPlane.Control,
-            ReadOnly = true
-        });
-        eventGridGroup.AddCommand("publish", dataCommand);
-        eventGridGroup.AddCommand("list", controlCommand);
-        rootGroup.SubGroup.Add(eventGridGroup);
-        commandFactory.RootGroup.Returns(rootGroup);
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { ReadOnly = true });
-
-        var loader = new NamespaceToolLoader(commandFactory, options, _logger);
-        var request = McpTestUtilities.CreateToolListRequest();
-
-        var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
-
-        var tool = Assert.Single(result.Tools);
-        Assert.NotNull(tool.Meta);
-        Assert.Equal(
-            "control",
-            tool.Meta[McpHelper.OperationPlaneMetaKey]!.GetValue<string>());
-    }
-
-    [Fact]
     public async Task ListToolsHandler_CachesResults()
     {
         // Arrange

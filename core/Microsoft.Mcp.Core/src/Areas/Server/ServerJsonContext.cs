@@ -23,7 +23,6 @@ namespace Microsoft.Mcp.Core.Areas.Server;
 [JsonSerializable(typeof(IEnumerable<ToolCommandInfo>))]
 [JsonSerializable(typeof(ToolMetadata))]
 [JsonSerializable(typeof(MetadataDefinition))]
-[JsonSerializable(typeof(OperationPlaneMetadataDefinition))]
 [JsonSerializable(typeof(ConsolidatedToolDefinition))]
 [JsonSerializable(typeof(List<ConsolidatedToolDefinition>))]
 [JsonSourceGenerationOptions(

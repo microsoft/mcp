@@ -6,7 +6,6 @@ namespace Microsoft.Mcp.Core.Commands;
 /// <summary>
 /// Identifies the Azure API plane used by a tool.
 /// </summary>
-[System.Text.Json.Serialization.JsonConverter(typeof(ToolOperationPlaneJsonConverter))]
 public enum ToolOperationPlane
 {
     /// <summary>The tool has not yet been classified.</summary>
