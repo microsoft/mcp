@@ -67,7 +67,7 @@ jobs:
             Write-Host "Run type: manual run"
           }
 
-          ./eng/scripts/New-BuildInfo.ps1 -ServerName Azure.Mcp.Server
+          ./eng/scripts/New-BuildInfo.ps1 -ServerName Azure.Mcp.Server -CommonCodeBuildsAll $false
 
       - name: Build server code
         shell: pwsh

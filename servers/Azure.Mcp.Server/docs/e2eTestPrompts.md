@@ -175,78 +175,78 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| azurebackup_backup_status | Check backup status for resource <resource_id> in location <location> | none |
-| azurebackup_backup_status | What is the backup status of <resource_id> in location <location> in my subscription? | none |
+| azurebackup_backup_status | Check backup status for resource <resource_id> in location <location> | investigation-required |
+| azurebackup_backup_status | What is the backup status of <resource_id> in location <location> in my subscription? | investigation-required |
 | azurebackup_disasterrecovery_enable-crr | Enable cross-region restore on vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> | none |
-| azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription | none |
-| azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> | none |
-| azurebackup_governance_find-unprotected | Find unprotected SQL databases and file shares discovered by backup vaults in my subscription | none |
-| azurebackup_governance_find-unprotected | Find all resources and sub-resources in resource group <resource_group> that are not protected by Azure Backup | none |
-| azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> | clarification-required |
-| azurebackup_governance_immutability | Set immutability to Enabled on vault <vault_name> in resource group <resource_group> | none |
-| azurebackup_governance_soft-delete | Configure soft delete on Azure Backup vault <vault_name> in resource group <resource_group> | clarification-required |
-| azurebackup_governance_soft-delete | Set soft delete state to AlwaysOn for vault <vault_name> in resource group <resource_group> | none |
-| azurebackup_job_get | Get backup job <job_id> from vault <vault_name> in resource group <resource_group> | none |
-| azurebackup_job_get | Show me the status of backup job <job_id> in vault <vault_name> under resource group <resource_group> | none |
-| azurebackup_policy_create | Create a backup policy named <policy_name> for AzureIaasVM in vault <vault_name> in resource group <resource_group> | none |
-| azurebackup_policy_create | Set up a new backup policy called <policy_name> for AzureFileShare workload in vault <vault_name> under resource group <resource_group> | none |
-| azurebackup_policy_create | Create an Enhanced VM backup policy <policy_name> with hourly schedule every 4 hours starting 08:00 for 12 hours in vault <vault_name> under resource group <resource_group> | none |
-| azurebackup_policy_create | Create a weekly VM policy <policy_name> on Mondays at 03:00 with 8 weekly, 12 monthly, 5 yearly retention and archive after 90 days in vault <vault_name> under resource group <resource_group> | none |
-| azurebackup_policy_create | Create a SQL backup policy <policy_name> with daily full at 02:00, differential on Wednesdays, and 60-minute log frequency in vault <vault_name> under resource group <resource_group> | none |
-| azurebackup_policy_create | Create an Azure Disk backup policy <policy_name> with daily, weekly, and monthly retention tiers and vault tier copy enabled in vault <vault_name> under resource group <resource_group> | none |
-| azurebackup_policy_update | Update backup policy <policy_name> in vault <vault_name> in resource group <resource_group> to change the schedule time to 04:00 | none |
-| azurebackup_policy_update | Modify the daily retention to 60 days for backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | none |
-| azurebackup_policy_get | Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group> | none |
-| azurebackup_policy_get | Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | none |
-| azurebackup_protectableitem_list | List protectable items in vault <vault_name> in resource group <resource_group> |none |
-| azurebackup_protectableitem_list | Show me all items that can be backed up in vault <vault_name> under resource group <resource_group> | none |
-| azurebackup_protecteditem_get | Get protected item details for <item_name> in vault <vault_name> and resource group <resource_group> | none |
+| azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription | investigation-required |
+| azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> | investigation-required |
+| azurebackup_governance_find-unprotected | Find unprotected SQL databases and file shares discovered by backup vaults in my subscription | investigation-required |
+| azurebackup_governance_find-unprotected | Find all resources and sub-resources in resource group <resource_group> that are not protected by Azure Backup | investigation-required |
+| azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_governance_immutability | Set immutability to Enabled on vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_governance_soft-delete | Configure soft delete on Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_governance_soft-delete | Set soft delete state to AlwaysOn for vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_job_get | Get backup job <job_id> from vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_job_get | Show me the status of backup job <job_id> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_create | Create a backup policy named <policy_name> for AzureIaasVM in vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_policy_create | Set up a new backup policy called <policy_name> for AzureFileShare workload in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_create | Create an Enhanced VM backup policy <policy_name> with hourly schedule every 4 hours starting 08:00 for 12 hours in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_create | Create a weekly VM policy <policy_name> on Mondays at 03:00 with 8 weekly, 12 monthly, 5 yearly retention and archive after 90 days in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_create | Create a SQL backup policy <policy_name> with daily full at 02:00, differential on Wednesdays, and 60-minute log frequency in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_create | Create an Azure Disk backup policy <policy_name> with daily, weekly, and monthly retention tiers and vault tier copy enabled in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_update | Update backup policy <policy_name> in vault <vault_name> in resource group <resource_group> to change the schedule time to 04:00 | investigation-required |
+| azurebackup_policy_update | Modify the daily retention to 60 days for backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_get | Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_policy_get | Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_protectableitem_list | List protectable items in vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_protectableitem_list | Show me all items that can be backed up in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_protecteditem_get | Get protected item details for <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_get | Show backup status of protected item <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
-| azurebackup_protecteditem_protect | Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group> | none |
-| azurebackup_protecteditem_protect | Start protecting my Azure VM by enabling backup on <item_name> in vault <vault_name> under resource group <resource_group> | none |
-| azurebackup_protecteditem_undelete | Restore a soft-deleted backup item for datasource <datasource_id> in vault <vault_name> and resource group <resource_group> | none |
-| azurebackup_protecteditem_undelete | Undelete the accidentally deleted backup for VM <datasource_id> in vault <vault_name> under resource group <resource_group> | none |
-| azurebackup_recoverypoint_get | Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group> | none |
-| azurebackup_recoverypoint_get | List available recovery points for <item_name> in vault <vault_name> under resource group <resource_group> | none |
-| azurebackup_resourceguard_create | Create a Resource Guard named <resource_guard> in resource group <resource_group> in region <location> | none |
-| azurebackup_resourceguard_create | Set up a new MUA Resource Guard called <resource_guard> in <location> under resource group <resource_group> excluding operations deleteProtection,updatePolicy | none |
-| azurebackup_resourceguard_create | Create Resource Guard <resource_guard> in <location> under resource group <resource_group> with tags env=prod,team=backup | none |
-| azurebackup_resourceguard_delete | Delete Resource Guard <resource_guard> from resource group <resource_group> | none |
-| azurebackup_resourceguard_delete | Remove the Resource Guard <resource_guard> in <resource_group> | none |
-| azurebackup_resourceguard_delete | Delete the MUA Resource Guard <resource_guard> from resource group <resource_group> | none |
-| azurebackup_resourceguard_get | Get Resource Guard <resource_guard> in resource group <resource_group> | none |
-| azurebackup_resourceguard_get | List all Resource Guards in resource group <resource_group> | none |
-| azurebackup_resourceguard_get | Show me every MUA Resource Guard in my subscription | none |
-| azurebackup_security_configure-encryption | Configure customer-managed key encryption on vault <vault_name> in resource group <resource_group> using key <key_name> from key vault <key_vault_uri> with system-assigned identity | none |
-| azurebackup_security_configure-encryption | Enable CMK encryption on vault <vault_name> using user-assigned identity <identity_id> and key <key_name> from <key_vault_uri> | none |
-| azurebackup_security_configure-encryption | Set up customer-managed encryption for backup vault <vault_name> in <resource_group> | none |
-| azurebackup_security_enable-mua | Enable multi-user authorization on vault <vault_name> in resource group <resource_group> with resource guard <resource_guard_id> | none |
-| azurebackup_security_enable-mua | Link Resource Guard <resource_guard_id> to backup vault <vault_name> in <resource_group> to enable MUA | none |
-| azurebackup_security_enable-mua | Turn on MUA for DPP backup vault <vault_name> in <resource_group> using Resource Guard <resource_guard_id> | none |
+| azurebackup_protecteditem_protect | Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
+| azurebackup_protecteditem_protect | Start protecting my Azure VM by enabling backup on <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_protecteditem_undelete | Restore a soft-deleted backup item for datasource <datasource_id> in vault <vault_name> and resource group <resource_group> | investigation-required |
+| azurebackup_protecteditem_undelete | Undelete the accidentally deleted backup for VM <datasource_id> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_recoverypoint_get | Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
+| azurebackup_recoverypoint_get | List available recovery points for <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_resourceguard_create | Create a Resource Guard named <resource_guard> in resource group <resource_group> in region <location> | investigation-required |
+| azurebackup_resourceguard_create | Set up a new MUA Resource Guard called <resource_guard> in <location> under resource group <resource_group> excluding operations deleteProtection,updatePolicy | investigation-required |
+| azurebackup_resourceguard_create | Create Resource Guard <resource_guard> in <location> under resource group <resource_group> with tags env=prod,team=backup | investigation-required |
+| azurebackup_resourceguard_delete | Delete Resource Guard <resource_guard> from resource group <resource_group> | investigation-required |
+| azurebackup_resourceguard_delete | Remove the Resource Guard <resource_guard> in <resource_group> | investigation-required |
+| azurebackup_resourceguard_delete | Delete the MUA Resource Guard <resource_guard> from resource group <resource_group> | investigation-required |
+| azurebackup_resourceguard_get | Get Resource Guard <resource_guard> in resource group <resource_group> | investigation-required |
+| azurebackup_resourceguard_get | List all Resource Guards in resource group <resource_group> | investigation-required |
+| azurebackup_resourceguard_get | Show me every MUA Resource Guard in my subscription | investigation-required |
+| azurebackup_security_configure-encryption | Configure customer-managed key encryption on vault <vault_name> in resource group <resource_group> using key <key_name> from key vault <key_vault_uri> with system-assigned identity | investigation-required |
+| azurebackup_security_configure-encryption | Enable CMK encryption on vault <vault_name> using user-assigned identity <identity_id> and key <key_name> from <key_vault_uri> | investigation-required |
+| azurebackup_security_configure-encryption | Set up customer-managed encryption for backup vault <vault_name> in <resource_group> | investigation-required |
+| azurebackup_security_enable-mua | Enable multi-user authorization on vault <vault_name> in resource group <resource_group> with resource guard <resource_guard_id> | investigation-required |
+| azurebackup_security_enable-mua | Link Resource Guard <resource_guard_id> to backup vault <vault_name> in <resource_group> to enable MUA | investigation-required |
+| azurebackup_security_enable-mua | Turn on MUA for DPP backup vault <vault_name> in <resource_group> using Resource Guard <resource_guard_id> | investigation-required |
 | azurebackup_security_disable-mua | Disable multi-user authorization on vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_security_disable-mua | Turn off MUA on backup vault <vault_name> in <resource_group> | investigation-required |
 | azurebackup_security_disable-mua | Unlink the Resource Guard from vault <vault_name> in <resource_group> and disable MUA | investigation-required |
-| azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv' | none |
-| azurebackup_vault_create | Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp' | none |
-| azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> | none |
-| azurebackup_vault_get | Show me information about Azure Backup vault <vault_name> in resource group <resource_group> | none |
-| azurebackup_vault_get | Show the full security posture of vault <vault_name> in resource group <resource_group> including soft delete, immutability, encryption, and MUA | none |
-| azurebackup_vault_get | Get vault <vault_name> in resource group <resource_group> and include all extended posture fields | none |
+| azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv' | investigation-required |
+| azurebackup_vault_create | Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp' | investigation-required |
+| azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_vault_get | Show me information about Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_vault_get | Show the full security posture of vault <vault_name> in resource group <resource_group> including soft delete, immutability, encryption, and MUA | investigation-required |
+| azurebackup_vault_get | Get vault <vault_name> in resource group <resource_group> and include all extended posture fields | investigation-required |
 | azurebackup_vault_update | Update Azure Backup vault <vault_name> in resource group <resource_group> to enable soft delete | investigation-required |
-| azurebackup_vault_update | Change the identity type of Azure Backup vault <vault_name> in resource group <resource_group> to SystemAssigned | none |
-| azurebackup_vault_privateendpoint_create | Create a Private Endpoint named <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> using subnet <subnet_id> and auto-approve it | none |
-| azurebackup_vault_privateendpoint_create | Provision a Private Endpoint <pe_name> for vault <vault_name> in <resource_group> connected to subnet <subnet_id> with group-id AzureBackup | none |
-| azurebackup_vault_privateendpoint_create | Set up private connectivity for Recovery Services vault <vault_name> in <resource_group> by creating Private Endpoint <pe_name> in subnet <subnet_id> | none |
-| azurebackup_vault_privateendpoint_get | List all Private Endpoint Connections on Recovery Services vault <vault_name> in resource group <resource_group> | none |
-| azurebackup_vault_privateendpoint_get | Get Private Endpoint Connection <pe_name> on vault <vault_name> in resource group <resource_group> | none |
-| azurebackup_vault_privateendpoint_get | Show me the Private Endpoints attached to Recovery Services vault <vault_name> in <resource_group> | none |
+| azurebackup_vault_update | Change the identity type of Azure Backup vault <vault_name> in resource group <resource_group> to SystemAssigned | investigation-required |
+| azurebackup_vault_privateendpoint_create | Create a Private Endpoint named <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> using subnet <subnet_id> and auto-approve it | investigation-required |
+| azurebackup_vault_privateendpoint_create | Provision a Private Endpoint <pe_name> for vault <vault_name> in <resource_group> connected to subnet <subnet_id> with group-id AzureBackup | investigation-required |
+| azurebackup_vault_privateendpoint_create | Set up private connectivity for Recovery Services vault <vault_name> in <resource_group> by creating Private Endpoint <pe_name> in subnet <subnet_id> | investigation-required |
+| azurebackup_vault_privateendpoint_get | List all Private Endpoint Connections on Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_vault_privateendpoint_get | Get Private Endpoint Connection <pe_name> on vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_vault_privateendpoint_get | Show me the Private Endpoints attached to Recovery Services vault <vault_name> in <resource_group> | investigation-required |
 | azurebackup_vault_privateendpoint_delete | Delete Private Endpoint Connection <pe_name> from Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_privateendpoint_delete | Remove the vault-side private endpoint connection <pe_name> on vault <vault_name> in <resource_group> | investigation-required |
 | azurebackup_vault_privateendpoint_delete | Detach Private Endpoint <pe_name> from Recovery Services vault <vault_name> in <resource_group> | investigation-required |
-| azurebackup_vault_privateendpoint_approve-reject | Approve pending Private Endpoint Connection <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> with action approve | none |
+| azurebackup_vault_privateendpoint_approve-reject | Approve pending Private Endpoint Connection <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> with action approve | investigation-required |
 | azurebackup_vault_privateendpoint_approve-reject | Reject Private Endpoint Connection <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> with action reject and description "Not authorized" | investigation-required |
-| azurebackup_vault_privateendpoint_approve-reject | Respond to the pending private link connection <pe_name> on Recovery Services vault <vault_name> in <resource_group> by approving it | none |
+| azurebackup_vault_privateendpoint_approve-reject | Respond to the pending private link connection <pe_name> on Recovery Services vault <vault_name> in <resource_group> by approving it | investigation-required |
 
 ## Azure CLI
 
@@ -972,6 +972,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_recoveryplan_delete | Recovery plan <recovery_plan_name> is no longer needed. Delete it from resilience service group <service_group> | none |
 | resilience_recoveryplan_get | List all resilience recovery plans in service group <service_group> | none |
 | resilience_recoveryplan_get | Get the details of recovery plan <recovery_plan_name> in service group <service_group> | none |
+| resilience_recoveryplan_validateforfailover | Validate recovery plan <recovery_plan_name> for failover in service group <service_group>, but I have not specified a source location or selected recovery-resource ID | clarification-required |
+| resilience_recoveryplan_validateforfailover | Validate which resources in recovery plan <recovery_plan_name> in service group <service_group> can fail over from <source_location> and report blocking reasons | none |
+| resilience_recoveryplan_validateforfailover | Check whether recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> is qualified for failover without requiring a source location or executing failover | none |
+| resilience_recoveryplan_validateforfailover | Validate recovery plan <recovery_plan_name> for failover from <source_location>, supply required user consent, and return per-resource qualification results without updating resources | none |
 | resilience_recoveryplan_resource_update | Include and configure recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group> with selected protection solution type <protection_solution_type> and settings <protection_settings_json> | none |
 | resilience_recoveryplan_resource_update | Add recovery resource <recovery_resource_id> to recovery plan <recovery_plan_name> in service group <service_group>. Protect it with CustomRunbook using failover runbook <failover_runbook_resource_id> and reprotect runbook <reprotect_runbook_resource_id> | none |
 | resilience_recoveryplan_resource_update | Include virtual machine recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group> using AzureSiteRecovery protection settings <protection_settings_json> with disk reprotection, staging storage, and a test failover virtual network | none |

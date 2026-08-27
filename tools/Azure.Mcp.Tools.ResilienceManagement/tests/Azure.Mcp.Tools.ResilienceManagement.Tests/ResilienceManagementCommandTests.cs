@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:ignore LIFECYCLESERVICEGROUPNAME
+// cspell:ignore LIFECYCLESERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -201,7 +201,7 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_delete_drill()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "LIFECYCLESERVICEGROUPNAME");
         var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DELETEDRILLNAME");
 
         var result = await CallToolAsync(
@@ -472,7 +472,7 @@ public class ResilienceManagementCommandTests(
     [CustomMatcher(compareBody: false)]
     public async Task Should_create_update_and_delete_recovery_plan()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("lifecycleServiceGroupName", "LIFECYCLESERVICEGROUPNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("lifecycleServiceGroupName", "PLANLIFECYCLESERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveVariable("lifecycleRecoveryPlanName", $"mcp-lifecycle-{Guid.NewGuid().ToString("N")[..8]}");
         bool recoveryPlanExists = false;
 
@@ -658,6 +658,67 @@ public class ResilienceManagementCommandTests(
             .AssertProperty("inclusionState")
             .GetString();
         Assert.Equal("Excluded", inclusionState);
+    }
+
+    [Fact]
+    public async Task Should_validate_recovery_plan_for_failover()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+        var listedResources = await CallToolAsync(
+            "resilience_recoveryplan_resource_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan }
+            });
+        string? resourceId = null;
+        string? sourceLocation = null;
+        foreach (JsonElement resource in listedResources.AssertProperty("recoveryResources").EnumerateArray())
+        {
+            string candidateResourceId = resource.AssertProperty("id").GetString()!;
+            var resourceResult = await CallToolAsync(
+                "resilience_recoveryplan_resource_get",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "recovery-plan", recoveryPlan },
+                    { "name", candidateResourceId.Split('/').Last() }
+                });
+            JsonElement physicalZones = resourceResult
+                .AssertProperty("recoveryResource")
+                .AssertProperty("properties")
+                .AssertProperty("resourcePhysicalZones");
+            sourceLocation = physicalZones.ValueKind == JsonValueKind.Array
+                ? physicalZones.EnumerateArray().Select(zone => zone.GetString()).FirstOrDefault(zone => !string.IsNullOrWhiteSpace(zone))
+                : null;
+            if (sourceLocation is not null)
+            {
+                resourceId = candidateResourceId;
+                break;
+            }
+        }
+
+        Assert.False(string.IsNullOrEmpty(resourceId), "The Zonal recovery plan must contain a resource with a physical zone.");
+        Assert.False(string.IsNullOrEmpty(sourceLocation), "A physical source zone is required for Zonal failover validation.");
+
+        var result = await CallToolAsync(
+            "resilience_recoveryplan_validateforfailover",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan },
+                { "source-locations", new[] { sourceLocation } },
+                { "selected-resource-ids", new[] { resourceId } }
+            });
+
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
+        JsonElement qualifications = result.AssertProperty("recoveryResourceQualifications");
+        Assert.Equal(JsonValueKind.Array, qualifications.ValueKind);
+        Assert.NotEmpty(qualifications.EnumerateArray());
     }
 
     [Fact]
