@@ -10,6 +10,7 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.ResilienceManagement;
 using Azure.ResourceManager.ResilienceManagement.Models;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Services;
@@ -17,8 +18,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Services;
 public sealed class ResilienceManagementService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IResilienceManagementService
 {
-    private static readonly TimeSpan ReadinessJobPollingInterval = TimeSpan.FromSeconds(30);
-    private static readonly TimeSpan ReadinessTimeout = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan RecoveryPlanPollingInterval = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan RecoveryPlanOperationTimeout = TimeSpan.FromMinutes(10);
 
     public async Task<IEnumerable<ResourceSummary>> ListGoalTemplatesAsync(string serviceGroup, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
@@ -428,7 +429,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             recoveryPlan,
             data,
             cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
+        await WaitForRecoveryPlanLroCompletionAsync(operation, cancellationToken);
 
         return CreateRecoveryPlanInfo(operation.Value.Data);
     }
@@ -486,7 +487,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         try
         {
             var operation = await existingPlan.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
-            await WaitForLroCompletionAsync(operation, cancellationToken);
+            await WaitForRecoveryPlanLroCompletionAsync(operation, cancellationToken);
             return true;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
@@ -515,9 +516,161 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             Guid.NewGuid().ToString(),
             content,
             cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
+        await WaitForRecoveryPlanLroCompletionAsync(operation, cancellationToken);
 
         return CreateRecoveryPlanUpdateResourcesResult(operation.Value.FailedResources);
+    }
+
+    public Task<RecoveryPlanValidateForFailoverResult> ValidateRecoveryPlanForFailoverAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string> sourceLocations, IReadOnlyList<string>? selectedResourceIds = null, string? userConsent = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        return ExecuteWithTimeoutAsync(
+            token => ValidateRecoveryPlanForFailoverCoreAsync(serviceGroup, recoveryPlan, sourceLocations, selectedResourceIds, userConsent, tenant, retryPolicy, token),
+            "recovery plan failover validation",
+            RecoveryPlanOperationTimeout,
+            cancellationToken);
+    }
+
+    private async Task<RecoveryPlanValidateForFailoverResult> ValidateRecoveryPlanForFailoverCoreAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string> sourceLocations, IReadOnlyList<string>? selectedResourceIds, string? userConsent, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var recoveryPlanId = RecoveryPlanResource.CreateResourceIdentifier(serviceGroup, recoveryPlan);
+        RecoveryPlanResource recoveryPlanResource = await armClient.GetRecoveryPlanResource(recoveryPlanId).GetAsync(cancellationToken);
+        var properties = new FailoverRequestProperties(sourceLocations);
+        foreach (string selectedResourceId in selectedResourceIds ?? [])
+        {
+            properties.SelectedResourceIds.Add(new ResourceIdentifier(selectedResourceId));
+        }
+
+        if (userConsent is not null)
+        {
+            properties.ExecutionConfigurationsUserConsent = new UserConsent(userConsent);
+        }
+
+        var content = new ResilienceManagementFailoverContent(FailoverDirectionTypes.FromSpecificLocations)
+        {
+            FailoverRequestProperties = properties
+        };
+        string operationId = Guid.NewGuid().ToString();
+        ArmOperation<ValidateForRecoveryOperationBaseResult> operation = await recoveryPlanResource.ValidateForFailoverAsync(
+            WaitUntil.Started,
+            operationId,
+            content,
+            cancellationToken);
+        await WaitForRecoveryPlanLroCompletionAsync(operation, cancellationToken);
+
+        return CreateRecoveryPlanValidateForFailoverResult(
+            operationId,
+            operation.GetRawResponse().Content,
+            operation.Value.RecoveryResourceQualifications);
+    }
+
+    internal static RecoveryPlanValidateForFailoverResult CreateRecoveryPlanValidateForFailoverResult(
+        string operationId,
+        BinaryData operationResponse,
+        IEnumerable<RecoveryResourceQualification>? fallbackQualifications)
+    {
+        using JsonDocument document = JsonDocument.Parse(operationResponse);
+        if (!document.RootElement.TryGetProperty("properties", out JsonElement properties))
+        {
+            return CreateRecoveryPlanValidateForFailoverResult(operationId, fallbackQualifications);
+        }
+
+        string resultJson = properties.ValueKind switch
+        {
+            JsonValueKind.String => properties.GetString() ?? string.Empty,
+            JsonValueKind.Object => properties.GetRawText(),
+            _ => throw new JsonException("The ValidateForFailover operation result has an invalid properties value.")
+        };
+
+        using JsonDocument resultDocument = JsonDocument.Parse(resultJson);
+        if (!resultDocument.RootElement.TryGetProperty("recoveryResourceQualifications", out JsonElement qualifications))
+        {
+            return CreateRecoveryPlanValidateForFailoverResult(operationId, fallbackQualifications);
+        }
+
+        List<RecoveryPlanFailoverQualification> mappedQualifications = qualifications
+            .EnumerateArray()
+            .Select(qualification =>
+            {
+                JsonElement resource = GetOptionalObject(qualification, "recoveryResource");
+                JsonElement resourceProperties = GetOptionalObject(resource, "properties");
+                JsonElement details = GetOptionalObject(qualification, "operationQualificationDetails");
+                return new RecoveryPlanFailoverQualification(
+                    GetOptionalString(resource, "id") ?? string.Empty,
+                    GetOptionalString(resourceProperties, "recoveryResourceUniqueId") ?? GetOptionalString(resource, "name") ?? string.Empty,
+                    GetOptionalString(resourceProperties, "resourceId"),
+                    GetOptionalString(resourceProperties, "resourceLocation"),
+                    GetOptionalString(details, "qualificationState") ?? "Unknown",
+                    GetStringList(details, "notQualifiedReasons"),
+                    GetStringList(resourceProperties, "resourcePhysicalZones"),
+                    GetOptionalString(resourceProperties, "inclusionState"),
+                    GetOptionalString(resourceProperties, "protectionStatus"),
+                    GetOptionalBoolean(resourceProperties, "needsAttention"),
+                    GetStringList(resourceProperties, "attentionReasons"));
+            })
+            .ToList();
+
+        return new RecoveryPlanValidateForFailoverResult(operationId, mappedQualifications);
+    }
+
+    private static JsonElement GetOptionalObject(JsonElement element, string propertyName) =>
+        element.ValueKind == JsonValueKind.Object &&
+        element.TryGetProperty(propertyName, out JsonElement property) &&
+        property.ValueKind == JsonValueKind.Object
+            ? property
+            : default;
+
+    private static string? GetOptionalString(JsonElement element, string propertyName) =>
+        element.ValueKind == JsonValueKind.Object &&
+        element.TryGetProperty(propertyName, out JsonElement property) &&
+        property.ValueKind == JsonValueKind.String
+            ? property.GetString()
+            : null;
+
+    private static bool? GetOptionalBoolean(JsonElement element, string propertyName) =>
+        element.ValueKind == JsonValueKind.Object &&
+        element.TryGetProperty(propertyName, out JsonElement property) &&
+        property.ValueKind is JsonValueKind.True or JsonValueKind.False
+            ? property.GetBoolean()
+            : null;
+
+    private static IReadOnlyList<string> GetStringList(JsonElement element, string propertyName) =>
+        element.ValueKind == JsonValueKind.Object &&
+        element.TryGetProperty(propertyName, out JsonElement property) &&
+        property.ValueKind == JsonValueKind.Array
+            ? property.EnumerateArray()
+                .Where(item => item.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(item.GetString()))
+                .Select(item => item.GetString()!)
+                .ToList()
+            : [];
+
+    internal static RecoveryPlanValidateForFailoverResult CreateRecoveryPlanValidateForFailoverResult(
+        string operationId,
+        IEnumerable<RecoveryResourceQualification>? recoveryResourceQualifications)
+    {
+        List<RecoveryPlanFailoverQualification> qualifications = (recoveryResourceQualifications ?? [])
+            .Select(qualification =>
+            {
+                RecoveryMembersData? resource = qualification?.RecoveryResource;
+                RecoveryResourceProperties? resourceProperties = resource?.Properties;
+                OperationQualificationDetails? details = qualification?.OperationQualificationDetails;
+                return new RecoveryPlanFailoverQualification(
+                    resource?.Id?.ToString() ?? string.Empty,
+                    resourceProperties?.RecoveryResourceUniqueId ?? resource?.Name ?? string.Empty,
+                    resourceProperties?.ResourceId?.ToString(),
+                    resourceProperties?.ResourceLocation?.ToString(),
+                    details?.QualificationState.ToString() ?? "Unknown",
+                    details?.NotQualifiedReasons?.Where(reason => !string.IsNullOrWhiteSpace(reason)).ToList() ?? [],
+                    resourceProperties?.ResourcePhysicalZones?.Where(zone => !string.IsNullOrWhiteSpace(zone)).ToList() ?? [],
+                    resourceProperties?.InclusionState?.ToString(),
+                    resourceProperties?.ProtectionStatus?.ToString(),
+                    resourceProperties?.IsAttentionRequired,
+                    resourceProperties?.AttentionReasons?.Where(reason => !string.IsNullOrWhiteSpace(reason)).ToList() ?? []);
+            })
+            .ToList();
+
+        return new RecoveryPlanValidateForFailoverResult(operationId, qualifications);
     }
 
     public Task<RecoveryPlanReadinessResult> CheckRecoveryPlanReadinessAsync(string serviceGroup, string recoveryPlan, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
@@ -525,7 +678,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return ExecuteWithTimeoutAsync(
             token => CheckRecoveryPlanReadinessCoreAsync(serviceGroup, recoveryPlan, tenant, retryPolicy, token),
             "recovery plan readiness check",
-            ReadinessTimeout,
+            RecoveryPlanOperationTimeout,
             cancellationToken);
     }
 
@@ -539,7 +692,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         HashSet<string> existingRecoveryJobIds = await GetRecoveryJobIdsAsync(recoveryJobs, cancellationToken);
         string operationId = Guid.NewGuid().ToString();
         ArmOperation operation = await recoveryPlanResource.CheckReadinessAsync(WaitUntil.Started, operationId, cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
+        await WaitForRecoveryPlanLroCompletionAsync(operation, cancellationToken);
         ResourceIdentifier recoveryJobResourceId = TryGetRecoveryJobResourceId(
                 operation.GetRawResponse().Content,
                 serviceGroup,
@@ -604,6 +757,28 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         catch (OperationCanceledException) when (timeoutCancellation.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
         {
             throw new TimeoutException($"The {operationDescription} did not complete within {timeout.TotalMinutes} minutes.");
+        }
+    }
+
+    private static async Task WaitForRecoveryPlanLroCompletionAsync(Operation operation, CancellationToken cancellationToken)
+    {
+#if DEBUG
+        if (EnvironmentHelpers.IsPlaybackTesting())
+        {
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+            return;
+        }
+#endif
+
+        while (true)
+        {
+            _ = await operation.UpdateStatusAsync(cancellationToken);
+            if (operation.HasCompleted)
+            {
+                return;
+            }
+
+            await Task.Delay(RecoveryPlanPollingInterval, cancellationToken);
         }
     }
 
@@ -683,7 +858,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
                 throw new InvalidOperationException("Multiple recovery jobs were created by concurrent readiness operations.");
             }
 
-            await Task.Delay(ReadinessJobPollingInterval, cancellationToken);
+            await Task.Delay(RecoveryPlanPollingInterval, cancellationToken);
         }
     }
 
@@ -704,8 +879,8 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             token => GetRecoveryJobIfAvailableAsync(recoveryJob, token),
             job => IsTerminalJobStatus(GetRequiredProperties(job.Data.Properties, "recovery job").Status?.ToString() ?? string.Empty),
             $"readiness recovery job '{recoveryJobId}'",
-            ReadinessJobPollingInterval,
-            ReadinessTimeout,
+            RecoveryPlanPollingInterval,
+            RecoveryPlanOperationTimeout,
             cancellationToken);
     }
 

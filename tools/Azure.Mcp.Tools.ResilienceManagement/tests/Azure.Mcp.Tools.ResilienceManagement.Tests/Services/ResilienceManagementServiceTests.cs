@@ -465,6 +465,138 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public void CreateReadinessError_DefaultsMissingRecommendationsToEmptyList()
+    {
+        JobErrorInfo providerError = ModelReaderWriter.Read<JobErrorInfo>(BinaryData.FromObjectAsJson(new
+        {
+            errorCode = "NotReady",
+            errorMessage = "The recovery plan is not ready."
+        }))!;
+
+        RecoveryPlanReadinessError? result = ResilienceManagementService.CreateReadinessError(providerError);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Recommendations);
+    }
+
+    [Fact]
+    public void CreateRecoveryPlanValidateForFailoverResult_MapsQualificationDetails()
+    {
+        ValidateForRecoveryOperationBaseResult sdkResult = ModelReaderWriter.Read<ValidateForRecoveryOperationBaseResult>(BinaryData.FromObjectAsJson(new
+        {
+            recoveryResourceQualifications = new[]
+            {
+                new
+                {
+                    recoveryResource = new
+                    {
+                        id = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/12345678-9012-3456-7890-123456789012",
+                        name = "12345678-9012-3456-7890-123456789012",
+                        type = "Microsoft.AzureResilienceManagement/recoveryPlans/recoveryResources",
+                        properties = new
+                        {
+                            recoveryResourceUniqueId = "12345678-9012-3456-7890-123456789012",
+                            resourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm",
+                            resourceLocation = "eastus",
+                            resourcePhysicalZones = new[] { "eastus-az1" },
+                            inclusionState = "Included",
+                            protectionStatus = "Protected",
+                            needsAttention = true,
+                            attentionReasons = new[] { "Replication lag" }
+                        }
+                    },
+                    operationQualificationDetails = new
+                    {
+                        qualificationState = "NotQualified",
+                        notQualifiedReasons = new[] { "ProtectionNotComplete" }
+                    }
+                }
+            }
+        }))!;
+
+        RecoveryPlanValidateForFailoverResult result = ResilienceManagementService.CreateRecoveryPlanValidateForFailoverResult(
+            "11111111-1111-1111-1111-111111111111",
+            sdkResult.RecoveryResourceQualifications);
+
+        Assert.Equal("11111111-1111-1111-1111-111111111111", result.OperationId);
+        RecoveryPlanFailoverQualification qualification = Assert.Single(result.RecoveryResourceQualifications);
+        Assert.Equal("12345678-9012-3456-7890-123456789012", qualification.RecoveryResourceUniqueId);
+        Assert.Equal("eastus", qualification.AzureResourceLocation);
+        Assert.Equal("NotQualified", qualification.QualificationState);
+        Assert.Equal(["ProtectionNotComplete"], qualification.NotQualifiedReasons);
+        Assert.Equal(["eastus-az1"], qualification.ResourcePhysicalZones);
+        Assert.Equal("Included", qualification.InclusionState);
+        Assert.Equal("Protected", qualification.ProtectionStatus);
+        Assert.True(qualification.IsAttentionRequired);
+        Assert.Equal(["Replication lag"], qualification.AttentionReasons);
+    }
+
+    [Fact]
+    public void CreateRecoveryPlanValidateForFailoverResult_ParsesOperationStatusProperties()
+    {
+        BinaryData operationResponse = BinaryData.FromObjectAsJson(new
+        {
+            status = "Succeeded",
+            properties = """
+                {"recoveryResourceQualifications":[{"recoveryResource":{"id":"/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/resource1","name":"resource1","properties":{"recoveryResourceUniqueId":"resource1"}},"operationQualificationDetails":{"qualificationState":"Qualified","notQualifiedReasons":[]}}]}
+                """
+        });
+
+        RecoveryPlanValidateForFailoverResult result = ResilienceManagementService.CreateRecoveryPlanValidateForFailoverResult(
+            "11111111-1111-1111-1111-111111111111",
+            operationResponse,
+            []);
+
+        RecoveryPlanFailoverQualification qualification = Assert.Single(result.RecoveryResourceQualifications);
+        Assert.Equal("resource1", qualification.RecoveryResourceUniqueId);
+        Assert.Equal("Qualified", qualification.QualificationState);
+    }
+
+    [Fact]
+    public void CreateRecoveryPlanValidateForFailoverResult_HandlesMissingQualifications()
+    {
+        RecoveryPlanValidateForFailoverResult result = ResilienceManagementService.CreateRecoveryPlanValidateForFailoverResult(
+            "11111111-1111-1111-1111-111111111111",
+            null);
+
+        Assert.Empty(result.RecoveryResourceQualifications);
+    }
+
+    [Fact]
+    public void CreateRecoveryPlanValidateForFailoverResult_HandlesMissingQualificationDetails()
+    {
+        ValidateForRecoveryOperationBaseResult sdkResult = ModelReaderWriter.Read<ValidateForRecoveryOperationBaseResult>(BinaryData.FromObjectAsJson(new
+        {
+            recoveryResourceQualifications = new[]
+            {
+                new
+                {
+                    recoveryResource = new
+                    {
+                        id = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/12345678-9012-3456-7890-123456789012",
+                        name = "12345678-9012-3456-7890-123456789012",
+                        type = "Microsoft.AzureResilienceManagement/recoveryPlans/recoveryResources",
+                        properties = new
+                        {
+                            recoveryResourceUniqueId = "12345678-9012-3456-7890-123456789012"
+                        }
+                    }
+                }
+            }
+        }))!;
+
+        RecoveryPlanValidateForFailoverResult result = ResilienceManagementService.CreateRecoveryPlanValidateForFailoverResult(
+            "11111111-1111-1111-1111-111111111111",
+            sdkResult.RecoveryResourceQualifications);
+
+        RecoveryPlanFailoverQualification qualification = Assert.Single(result.RecoveryResourceQualifications);
+        Assert.Equal("Unknown", qualification.QualificationState);
+        Assert.Empty(qualification.NotQualifiedReasons);
+        Assert.Empty(qualification.ResourcePhysicalZones);
+        Assert.Empty(qualification.AttentionReasons);
+    }
+
+    [Fact]
     public void CreateRecoveryPlanInfo_MapsSupportedPlanFields()
     {
         RecoveryPlanData recoveryPlan = ModelReaderWriter.Read<RecoveryPlanData>(BinaryData.FromObjectAsJson(new

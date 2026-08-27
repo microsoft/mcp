@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the resilience recovery plan validate-for-failover tool to report per-resource failover qualification and blocking reasons."
