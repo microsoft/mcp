@@ -39,7 +39,6 @@ public sealed class TableListCommand(
                     options.ClusterUri!,
                     options.Database,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else
@@ -49,7 +48,6 @@ public sealed class TableListCommand(
                     options.Cluster!,
                     options.Database,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
 
