@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ExpansionJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -37,7 +36,6 @@ public class ExpansionJobDeleteCommandTests : SubscriptionCommandUnitTestsBase<E
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -61,7 +59,6 @@ public class ExpansionJobDeleteCommandTests : SubscriptionCommandUnitTestsBase<E
             Arg.Is(_fileSystemName),
             Arg.Is(_jobName),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -93,7 +90,6 @@ public class ExpansionJobDeleteCommandTests : SubscriptionCommandUnitTestsBase<E
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(false);
 
@@ -122,7 +118,6 @@ public class ExpansionJobDeleteCommandTests : SubscriptionCommandUnitTestsBase<E
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("boom"));
 
@@ -148,7 +143,6 @@ public class ExpansionJobDeleteCommandTests : SubscriptionCommandUnitTestsBase<E
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -167,7 +161,6 @@ public class ExpansionJobDeleteCommandTests : SubscriptionCommandUnitTestsBase<E
             Arg.Is(_fileSystemName),
             Arg.Is(_jobName),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 }
