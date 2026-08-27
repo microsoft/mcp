@@ -182,8 +182,8 @@ public sealed partial class InsightsGetCommand(
             IProgress<string> progress = new Progress<string>(msg => _ = NotifyProgressAsync(context, msg, cancellationToken));
 
             var aggregation = scope == InsightsOptionDefinitions.ScopeTenant
-                ? await _insightsService.AggregateTenantAsync(options.Tenant, options.RetryPolicy, cancellationToken, progress, options.NoCache)
-                : await _insightsService.AggregateSubscriptionAsync(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken, progress, options.NoCache);
+                ? await _insightsService.AggregateTenantAsync(options.Tenant, cancellationToken, progress, options.NoCache)
+                : await _insightsService.AggregateSubscriptionAsync(options.Subscription!, options.Tenant, cancellationToken, progress, options.NoCache);
 
             // Return empty list if no resources are found
             if (aggregation.ResourceTypes.Count == 0)
