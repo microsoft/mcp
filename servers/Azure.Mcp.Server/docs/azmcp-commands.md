@@ -3429,6 +3429,28 @@ azmcp managedlustre fs subnetsize validate --subscription <subscription> \
 azmcp managedlustre fs sku get --subscription <subscription> \
                                             --location <location>
 
+# Create an expansion job to increase the storage capacity of an Azure Managed Lustre filesystem
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs expansion create --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --filesystem-name <filesystem-name> \
+                                        --new-size <new-size-tib> \
+                                        [--expansion-job-name <expansion-job-name>]
+
+# Get expansion job details for an Azure Managed Lustre filesystem. Returns a specific job if expansion-job-name is provided, otherwise lists all expansion jobs.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs expansion get --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --filesystem-name <filesystem-name> \
+                                     [--expansion-job-name <expansion-job-name>]
+
+# Delete an expansion job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs expansion delete --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --filesystem-name <filesystem-name> \
+                                        --expansion-job-name <expansion-job-name>
+
 # Create an autoexport job for an Azure Managed Lustre filesystem
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre fs blob autoexport create --subscription <subscription> \
@@ -3822,7 +3844,7 @@ azmcp resilience recoveryplan get --subscription <subscription> \
                                    --service-group <service-group> \
                                    [--name <name>]
 
-# Create or fully update a Zonal resilience recovery plan. Ask the customer to select an identity type; do not assume SystemAssigned or another default. Identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description must be 5 to 50 characters and is required on create; it is preserved when omitted on update.
+# Create or update a Zonal resilience recovery plan's identity, recovery group structure, and recovery group pre/post actions. Use recoveryplan resource update instead for recovery resource membership and protection settings. Ask the customer to select an identity type; do not assume SystemAssigned or another default. Identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description must be 5 to 50 characters and is required on create; it is preserved when omitted on update. Additional groups and group actions are preserved when omitted and replaced when supplied.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan create --service-group <service-group> \
                                       --recovery-plan <recovery-plan> \
@@ -3830,10 +3852,25 @@ azmcp resilience recoveryplan create --service-group <service-group> \
                                       [--plan-description <plan-description>] \
                                       --identity-type <SystemAssigned|UserAssigned|SystemAndUserAssigned> \
                                       [--user-assigned-identity <user-assigned-identity-resource-id>] \
-                                      [--default-group-description <default-group-description>]
+                                      [--default-group-description <default-group-description>] \
+                                      [--default-group-pre-actions '<json-array>'] \
+                                      [--default-group-post-actions '<json-array>'] \
+                                      [--additional-groups '<json-array>']
 
 # Provide --user-assigned-identity when --identity-type is UserAssigned or SystemAndUserAssigned.
 # Directly replacing one user-assigned identity with another is not currently supported.
+# Additional group orderId values must be unique and sequential starting at 1. groupUniqueId is optional.
+# Additional group objects may contain preActions and postActions arrays. Default group actions use the dedicated options above.
+# Before adding an action, collect and explain each value to the customer:
+# 1. type: ManualAction pauses for a person to complete a step; CustomRunbook runs an Azure Automation runbook.
+# 2. name: a 3 to 24 character customer-facing action name containing only letters, numbers, or hyphens.
+# 3. description: optional action instructions up to 100 characters; an empty value is allowed.
+# 4. timeoutInMinutes: a positive whole number defining how long the action may run.
+# 5. actionResourceId: required only for CustomRunbook; use the full Microsoft.Automation/automationAccounts/runbooks resource ID.
+# 6. parameters: optional for CustomRunbook; use a JSON object whose values are strings.
+# ManualAction example: [{"type":"ManualAction","name":"Confirm-dependencies","description":"Verify dependencies are ready","timeoutInMinutes":30}]
+# CustomRunbook example: [{"type":"CustomRunbook","name":"Start-dependencies","description":"Start application dependencies","timeoutInMinutes":30,"actionResourceId":"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Automation/automationAccounts/{account}/runbooks/{runbook}","parameters":{"environment":"production"}}]
+# Omit an action option or property to preserve existing actions. Specify [] to clear that action list.
 
 # Delete a resilience recovery plan. Returns deleted=false when the plan does not exist.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired

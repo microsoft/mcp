@@ -1,0 +1,5 @@
+changes:
+  - section: "Features Added"
+    description: "Added support for creating, replacing, and removing additional recovery groups and their manual or Custom Runbook pre/post actions through the 'azmcp resilience recoveryplan create' command."
+  - section: "Bugs Fixed"
+    description: "Aligned resilience recovery group and action input validation with the service API contract."

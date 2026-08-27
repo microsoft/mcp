@@ -11012,7 +11012,7 @@
     "/workspaces/{workspaceId}/encryption": {
       "get": {
         "summary": "Gets the workspace Customer-Managed Key (CMK) encryption settings.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nReturns the CMK encryption settings and status for the specified workspace. \n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "Returns the CMK encryption settings and status for the specified workspace. \n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Workspaces"
         ],
@@ -11070,7 +11070,7 @@
     "/workspaces/{workspaceId}/encryption/assign": {
       "post": {
         "summary": "Assigns a Customer-Managed Key (CMK) to a workspace.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nEnables CMK encryption for the workspace or rotates the encryption key for the workspace. \n\n## Permissions\n\nThe caller must have an *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "Enables CMK encryption for the workspace or rotates the encryption key for the workspace. \n\n## Permissions\n\nThe caller must have an *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Workspaces"
         ],
@@ -11131,7 +11131,7 @@
     "/workspaces/{workspaceId}/encryption/reset": {
       "post": {
         "summary": "Resets the workspace encryption by removing the Customer-Managed Key (CMK) encryption configuration.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nAfter reset, the workspace data remains encrypted using Fabric's default Microsoft-managed keys. \n\n## Permissions\n\nThe caller must have an *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "After reset, the workspace data remains encrypted using Fabric's default Microsoft-managed keys. \n\n## Permissions\n\nThe caller must have an *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Workspaces"
         ],
@@ -11430,6 +11430,236 @@
         "x-ms-examples": {
           "Get upstream relations example": {
             "$ref": "./examples/platform/GetUpstreamRelations.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/recoverableItems": {
+      "get": {
+        "summary": "Lists recoverable items in a workspace.",
+        "description": "## Permissions\n\nThe caller must have a *viewer* workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "RecoverableItems"
+        ],
+        "operationId": "RecoverableItems_ListRecoverableItems",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "description": "The recoverable item's type.",
+            "type": "string",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "recoverableByMe",
+            "description": "When set to true, only items that can be immediately recovered by the caller are returned.",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/RecoverableItems"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InsufficientWorkspaceRole - User doesn't have sufficient workspace role.\n\n* InvalidItemType - Item type is invalid.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List recoverable items in workspace example": {
+            "$ref": "./examples/platform/ListRecoverableItemsInWorkspace.json"
+          },
+          "List recoverable items in workspace by type query parameter example": {
+            "$ref": "./examples/platform/ListRecoverableItemsInWorkspaceByType.json"
+          },
+          "List recoverable items in workspace with continuation example": {
+            "$ref": "./examples/platform/ListRecoverableItemsInWorkspaceWithContinuation.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/recoverableItems/{itemId}": {
+      "delete": {
+        "summary": "Permanently deletes a recoverable item.",
+        "description": "## Permissions\n\nThe caller must have *write* permissions for the workspace.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "RecoverableItems"
+        ],
+        "operationId": "RecoverableItems_DeleteRecoverableItem",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "description": "The recoverable item ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InsufficientWorkspaceRole - User doesn't have sufficient workspace role.\n\n* ItemNotFound - The requested item was not found.\n\n* InvalidTargetItemStateForSoftDeletion - The item is in invalid states for soft deletion.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete recoverable item example": {
+            "$ref": "./examples/platform/DeleteRecoverableItem.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/recoverableItems/{itemId}/recover": {
+      "post": {
+        "summary": "Recovers a soft-deleted item in the specified workspace.",
+        "description": "Recovers a soft-deleted Fabric item to the Active provision state in the specified workspace. If the item has child items, all of them are recovered as well.\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\nThe caller must have one of the workspace roles: *Admin*, *Member* or *Contributor*.\n\n## Required Delegated Scopes\n\nFor item APIs use these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\nFor more information about scopes, see [scopes article](/rest/api/fabric/articles/scopes).\n\n> [!NOTE]\n> - This operation supports partial success. If, during the recovery operation, a child item fails to be recovered, that child item and all its descendants won't be recovered and will stay in the soft-deleted state. The other items that are not descendants of this failed child item will be recovered regardless.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | When the item type in the call is supported. Check the corresponding API for the item type you're calling, to see if your call is supported. For example, semantic models are supported. |\n\n## Interface",
+        "tags": [
+          "RecoverableItems"
+        ],
+        "operationId": "RecoverableItems_RecoverItem",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "description": "The recoverable item ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully recovered the soft-deleted item",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/Items"
+            }
+          },
+          "202": {
+            "description": "Request accepted, item recovery in progress",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status which tracks the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InsufficientWorkspaceRole - User doesn't have sufficient workspace role.\n\n* ItemNotFound - The requested item was not found.\n\n* UnsupportedCapacitySKU - The item is not supported on the current capacity of the workspace.\n\n* WorkspaceHasNoCapacityAssigned - The workspace has no capacity assigned.\n\n* ItemDisplayNameAlreadyInUse - Item display name is already in use.\n\n* InvalidParentItemStateForRecovery - The item's parent item is not in Active state.\n\n* InvalidTargetItemStateForRecovery - The item's state is not valid for recovery.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Recover a soft-deleted item example": {
+            "$ref": "./examples/platform/RecoverItem.json"
           }
         }
       }
