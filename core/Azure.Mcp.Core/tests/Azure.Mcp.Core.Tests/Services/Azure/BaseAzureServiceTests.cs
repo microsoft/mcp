@@ -3,6 +3,7 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Helpers;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Options;
@@ -301,6 +302,6 @@ public class BaseAzureServiceTests
         public string GetUserAgent() => UserAgent;
 
         public static T ConfigureRetryPolicyPublic<T>(T clientOptions, RetryPolicyOptions? retryPolicy) where T : ClientOptions =>
-            ConfigureRetryPolicy(clientOptions, retryPolicy);
+            AzureHelper.ConfigureRetryPolicy(clientOptions, retryPolicy);
     }
 }

@@ -16,4 +16,9 @@ public sealed class IndexQueryOptions
     [Option(Description = SearchOptionDescriptions.Index)]
     public required string Index { get; set; }
 
+    [Option(Description = SearchOptionDescriptions.QueryType)]
+    public IndexQueryType? QueryType { get; set; }
+
+    [Option(Description = SearchOptionDescriptions.SemanticConfiguration)]
+    public string? SemanticConfiguration { get; set; }
 }

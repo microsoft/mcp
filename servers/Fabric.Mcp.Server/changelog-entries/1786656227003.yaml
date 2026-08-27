@@ -1,3 +1,0 @@
-changes:
-  - section: "Breaking Changes"
-    description: "Tool calls with unknown parameters are now explicitly rejected."

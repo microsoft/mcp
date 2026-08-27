@@ -12,8 +12,6 @@ using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.AppConfig.Services;
 
-using ETag = Microsoft.Mcp.Core.Models.ETag;
-
 public sealed class AppConfigService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IAppConfigService
 {
@@ -193,7 +191,7 @@ public sealed class AppConfigService(IAzureService azureService)
 
         httpClient.BaseAddress = endpointUri;
         options.Transport = new HttpClientTransport(httpClient);
-        ConfigureRetryPolicy(AddDefaultPolicies(options), null);
+        AddDefaultPolicies(options);
 
         return options;
     }

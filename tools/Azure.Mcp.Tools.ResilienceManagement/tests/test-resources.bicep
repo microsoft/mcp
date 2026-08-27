@@ -10,11 +10,15 @@ var enrollmentName = take('en${uniqueSuffix}', 24)
 var serviceGroupName = 'sgr${uniqueSuffix}'
 var lifecycleEnrollmentName = take('el${uniqueSuffix}', 24)
 var lifecycleServiceGroupName = take('sgl${uniqueSuffix}', 24)
+var planLifecycleEnrollmentName = take('ep${uniqueSuffix}', 24)
+var planLifecycleServiceGroupName = take('sgp${uniqueSuffix}', 24)
 var goalTemplateName = take('gt${uniqueSuffix}', 24)
 var goalAssignmentName = take('ga${uniqueSuffix}', 24)
 var recoveryPlanName = take('rp${uniqueSuffix}', 24)
 var drillName = take('dr${uniqueSuffix}', 24)
+var deleteDrillName = take('dd${uniqueSuffix}', 24)
 var storageAccountName = toLower(take('st${uniqueSuffix}', 24))
+var managedDiskName = take('md${uniqueSuffix}', 80)
 
 // The test identity is automatically granted access to this resource group by the
 // test harness (New-TestResources.ps1), so no explicit role assignment is created here.
@@ -45,6 +49,23 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   }
 }
 
+resource managedDisk 'Microsoft.Compute/disks@2024-03-02' = {
+  name: managedDiskName
+  location: resourceGroup().location
+  zones: [
+    '1'
+  ]
+  sku: {
+    name: 'Standard_LRS'
+  }
+  properties: {
+    creationData: {
+      createOption: 'Empty'
+    }
+    diskSizeGB: 4
+  }
+}
+
 // Usage plan (resource-group scoped). This resource type is only available in the 'global' location.
 resource usagePlan 'Microsoft.AzureResilienceManagement/usagePlans@2026-04-01-preview' = {
   name: usagePlanName
@@ -59,10 +80,13 @@ output enrollmentName string = enrollmentName
 output serviceGroupName string = serviceGroupName
 output lifecycleEnrollmentName string = lifecycleEnrollmentName
 output lifecycleServiceGroupName string = lifecycleServiceGroupName
+output planLifecycleEnrollmentName string = planLifecycleEnrollmentName
+output planLifecycleServiceGroupName string = planLifecycleServiceGroupName
 output goalTemplateName string = goalTemplateName
 output goalAssignmentName string = goalAssignmentName
 output recoveryPlanName string = recoveryPlanName
 output drillName string = drillName
+output deleteDrillName string = deleteDrillName
 output storageAccountName string = storageAccountName
 output storageAccountId string = storageAccount.id
 output location string = resourceGroup().location

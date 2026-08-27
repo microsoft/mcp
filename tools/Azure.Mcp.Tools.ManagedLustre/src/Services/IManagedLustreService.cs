@@ -204,5 +204,37 @@ public interface IManagedLustreService
         string jobName,
         string? tenant = null,
         CancellationToken cancellationToken = default);
-}
 
+    // Expansion jobs
+    Task<string> CreateExpansionJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        float newSizeTiB,
+        string? jobName = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
+    Task<ExpansionJob> GetExpansionJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
+    Task<List<ExpansionJob>> ListExpansionJobsAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteExpansionJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+}

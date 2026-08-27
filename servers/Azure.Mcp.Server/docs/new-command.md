@@ -1020,8 +1020,8 @@ Example:
 Service.GetResourceAsync(
     Arg.Any<string>(),
     Arg.Any<string>(),
-    Arg.Any<string>(),
-    Arg.Any<RetryPolicyOptions>(),
+    Arg.Any<string?>(),
+    Arg.Any<string?>(),
     Arg.Any<CancellationToken>())
     .Returns(mockResource);
 
@@ -1030,7 +1030,7 @@ var result = await Service.GetResourceAsync(
     "test-resource",
     "test-subscription",
     "test-rg",
-    null,
+    "test-tenant",
     TestContext.Current.CancellationToken);
 ```
 
@@ -1156,7 +1156,6 @@ public class {Resource}{Operation}CommandTests : SubscriptionCommandUnitTestsBas
             Service.{Operation}(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns([]);
         }
@@ -1184,7 +1183,6 @@ public class {Resource}{Operation}CommandTests : SubscriptionCommandUnitTestsBas
         Service.{Operation}(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -1207,7 +1205,6 @@ public class {Resource}{Operation}CommandTests : SubscriptionCommandUnitTestsBas
         Service.{Operation}(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

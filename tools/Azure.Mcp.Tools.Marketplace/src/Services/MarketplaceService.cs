@@ -8,7 +8,6 @@ using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Marketplace.Commands;
 using Azure.Mcp.Tools.Marketplace.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Marketplace.Services;
 
@@ -206,9 +205,7 @@ public class MarketplaceService(IAzureService azureService)
     {
         // Use Azure Core pipeline approach consistently
         using var httpClient = AzureService.GetClient();
-        var clientOptions = ConfigureRetryPolicy(
-            AddDefaultPolicies(new MarketplaceClientOptions()),
-            null);
+        var clientOptions = AddDefaultPolicies(new MarketplaceClientOptions());
         clientOptions.Transport = new HttpClientTransport(httpClient);
 
         var pipeline = HttpPipelineBuilder.Build(clientOptions);

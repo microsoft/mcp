@@ -44,30 +44,20 @@ public static partial class ServiceCollectionExtensions
         // Register HTTP client services
         services.AddHttpClientServices();
 
-        // Register options for server start
-        services.AddSingleton(serverStartOptions);
-        services.AddSingleton(Options.Create(serverStartOptions));
-
-        // Register default tool loader options from server start options
-        var defaultToolLoaderOptions = new ToolLoaderOptions
+        // Register ServerRuntimeConfiguration
+        var serverRuntimeConfiguration = new ServerRuntimeConfiguration()
         {
+            Transport = serverStartOptions.Transport,
+            Mode = serverStartOptions.Mode ?? ModeTypes.Default,
             Namespace = serverStartOptions.Namespace,
+            Tool = serverStartOptions.Tool,
             ReadOnly = serverStartOptions.ReadOnly ?? false,
             DangerouslyDisableElicitation = serverStartOptions.DangerouslyDisableElicitation,
-            Tool = serverStartOptions.Tool,
-            IsHttpMode = serverStartOptions.IsHttpMode
+            Cloud = serverStartOptions.Cloud
         };
 
-        if (serverStartOptions.Mode == ModeTypes.NamespaceProxy)
-        {
-            if (defaultToolLoaderOptions.Namespace == null || defaultToolLoaderOptions.Namespace.Length == 0)
-            {
-                defaultToolLoaderOptions = defaultToolLoaderOptions with { Namespace = ["extension"] };
-            }
-        }
-
-        services.AddSingleton(defaultToolLoaderOptions);
-        services.AddSingleton(Options.Create(defaultToolLoaderOptions));
+        services.AddSingleton(serverRuntimeConfiguration);
+        services.AddSingleton(Options.Create(serverRuntimeConfiguration));
 
         // Register tool loader strategies
         services.AddSingleton<CommandFactoryToolLoader>();
@@ -136,7 +126,7 @@ public static partial class ServiceCollectionExtensions
                     // ServerToolLoader with RegistryDiscoveryStrategy creates proxy tools for external MCP servers.
                     new ServerToolLoader(
                         sp.GetRequiredService<RegistryDiscoveryStrategy>(),
-                        sp.GetRequiredService<IOptions<ToolLoaderOptions>>(),
+                        sp.GetRequiredService<IOptions<ServerRuntimeConfiguration>>(),
                         loggerFactory.CreateLogger<ServerToolLoader>()
                     ),
                     // NamespaceToolLoader enables direct in-process execution for tools in Azure namespaces
@@ -145,25 +135,31 @@ public static partial class ServiceCollectionExtensions
 
                 // Always add utility commands (subscription, group) in namespace mode
                 // so they are available regardless of which namespaces are loaded
-                var utilityToolLoaderOptions = new ToolLoaderOptions(
-                    Namespace: DiscoveryConstants.UtilityNamespaces,
-                    ReadOnly: defaultToolLoaderOptions.ReadOnly,
-                    DangerouslyDisableElicitation: defaultToolLoaderOptions.DangerouslyDisableElicitation,
-                    Tool: defaultToolLoaderOptions.Tool,
-                    IsHttpMode: defaultToolLoaderOptions.IsHttpMode
-                );
+                var additionalIncludedTools = new List<string>(DiscoveryConstants.UtilityNamespaces);
+
+                // Append extension commands when no other namespaces are specified.
+                // Extension commands aren't included in the NamespaceToolLoader.
+                if (serverStartOptions.Namespace == null || serverStartOptions.Namespace.Length == 0)
+                {
+                    additionalIncludedTools.Add("extension");
+                }
+
+                var additionalToolsServerRuntimeConfiguration = new ServerRuntimeConfiguration
+                {
+                    Namespace = [.. additionalIncludedTools],
+                    ReadOnly = serverRuntimeConfiguration.ReadOnly,
+                    DangerouslyDisableElicitation = serverRuntimeConfiguration.DangerouslyDisableElicitation,
+                    Tool = serverRuntimeConfiguration.Tool,
+                    Transport = serverRuntimeConfiguration.Transport,
+                    Mode = serverRuntimeConfiguration.Mode,
+                    Cloud = serverRuntimeConfiguration.Cloud
+                };
 
                 toolLoaders.Add(new CommandFactoryToolLoader(
                     sp.GetRequiredService<ICommandFactory>(),
-                    Options.Create(utilityToolLoaderOptions),
+                    Options.Create(additionalToolsServerRuntimeConfiguration),
                     loggerFactory.CreateLogger<CommandFactoryToolLoader>()
                 ));
-
-                // Append extension commands when no other namespaces are specified.
-                if (defaultToolLoaderOptions.Namespace?.SequenceEqual(["extension"]) == true)
-                {
-                    toolLoaders.Add(sp.GetRequiredService<CommandFactoryToolLoader>());
-                }
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });
@@ -183,13 +179,13 @@ public static partial class ServiceCollectionExtensions
                     // ServerToolLoader with RegistryDiscoveryStrategy creates proxy tools for external MCP servers.
                     new ServerToolLoader(
                         sp.GetRequiredService<RegistryDiscoveryStrategy>(),
-                        sp.GetRequiredService<IOptions<ToolLoaderOptions>>(),
+                        sp.GetRequiredService<IOptions<ServerRuntimeConfiguration>>(),
                         loggerFactory.CreateLogger<ServerToolLoader>()
                     ),
                     // NamespaceToolLoader enables direct in-process execution for consolidated tools
                     new NamespaceToolLoader(
                         consolidatedCommandFactory,
-                        sp.GetRequiredService<IOptions<ServerStartOptions>>(),
+                        sp.GetRequiredService<IOptions<ServerRuntimeConfiguration>>(),
                         loggerFactory.CreateLogger<NamespaceToolLoader>(),
                         false
                     ),

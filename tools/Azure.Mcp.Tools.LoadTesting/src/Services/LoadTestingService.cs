@@ -329,7 +329,7 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
 
     private LoadTestingClientOptions CreateLoadTestingClientOptions()
     {
-        var clientOptions = ConfigureRetryPolicy(AddDefaultPolicies(new LoadTestingClientOptions()), null);
+        var clientOptions = AddDefaultPolicies(new LoadTestingClientOptions());
         clientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
         return clientOptions;
     }

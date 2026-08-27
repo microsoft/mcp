@@ -12,7 +12,7 @@
 
 ## Engineering System
 
-- Use `./eng/scripts/Build-Local.ps1 -UsePaths -VerifyNpx` to verify changes to powershell, c# project files and npm packages
+- Use `./eng/scripts/Build-Local.ps1 -VerifyNpx` to verify changes to powershell, c# project files and npm packages
 - Don't run local builds to check pipeline YAML files (e.g., files in `eng/pipelines/` with `.yml` extension)
 
 ## Pull Request Guidelines

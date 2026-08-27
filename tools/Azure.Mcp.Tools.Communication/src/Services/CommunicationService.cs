@@ -46,7 +46,7 @@ public class CommunicationService(IAzureService azureService, ILogger<Communicat
             // Create SMS client using Azure credential from base class and endpoint
             var credential = await GetCredential(tenantId, cancellationToken);
 
-            var smsClientOptions = ConfigureRetryPolicy(AddDefaultPolicies(new SmsClientOptions()), null);
+            var smsClientOptions = AddDefaultPolicies(new SmsClientOptions());
             smsClientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
 
             var smsClient = new SmsClient(new Uri(endpoint), credential, smsClientOptions);
@@ -129,7 +129,7 @@ public class CommunicationService(IAzureService azureService, ILogger<Communicat
             // Create email client with credential from base class
             var credential = await GetCredential(tenantId, cancellationToken);
 
-            var emailClientOptions = ConfigureRetryPolicy(AddDefaultPolicies(new EmailClientOptions()), null);
+            var emailClientOptions = AddDefaultPolicies(new EmailClientOptions());
             emailClientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
 
             var emailClient = new EmailClient(new(endpoint), credential, emailClientOptions);

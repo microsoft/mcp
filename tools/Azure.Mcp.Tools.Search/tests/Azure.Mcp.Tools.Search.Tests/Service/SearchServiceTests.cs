@@ -3,9 +3,13 @@
 
 using System.Text;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.Mcp.Tools.Search.Services;
 using Azure.ResourceManager;
+using Azure.Search.Documents;
+using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.KnowledgeBases.Models;
+using Azure.Search.Documents.Models;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 using NSubstitute;
@@ -295,6 +299,109 @@ public class SearchServiceTests
         var content = Assert.IsType<KnowledgeBaseMessageTextContent>(message.Content.Single());
         Assert.Equal("Explain search", content.Text);
     }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(IndexQueryType.Full)]
+    public void ConfigureQueryType_UsesFullLuceneSyntax_ByDefault(IndexQueryType? queryType)
+    {
+        var options = new SearchOptions();
+
+        SearchService.ConfigureQueryType(options, CreateIndex(), queryType);
+
+        Assert.Equal(SearchQueryType.Full, options.QueryType);
+        Assert.Null(options.SemanticSearch);
+    }
+
+    [Fact]
+    public void ConfigureQueryType_UsesSimpleSyntax_WhenRequested()
+    {
+        var options = new SearchOptions();
+
+        SearchService.ConfigureQueryType(options, CreateIndex(), IndexQueryType.Simple);
+
+        Assert.Equal(SearchQueryType.Simple, options.QueryType);
+        Assert.Null(options.SemanticSearch);
+    }
+
+    [Fact]
+    public void ConfigureQueryType_UsesDefaultSemanticConfiguration_WhenSemanticRequested()
+    {
+        var index = CreateIndex();
+        index.SemanticSearch = new SemanticSearch
+        {
+            DefaultConfigurationName = "default-config"
+        };
+        index.SemanticSearch.Configurations.Add(new SemanticConfiguration("default-config", new SemanticPrioritizedFields()));
+        var options = new SearchOptions();
+
+        SearchService.ConfigureQueryType(options, index, IndexQueryType.Semantic);
+
+        Assert.Equal(SearchQueryType.Semantic, options.QueryType);
+        Assert.Equal("default-config", options.SemanticSearch?.SemanticConfigurationName);
+        Assert.NotNull(options.SemanticSearch?.QueryCaption);
+        Assert.NotNull(options.SemanticSearch?.QueryAnswer);
+    }
+
+    [Fact]
+    public void ConfigureQueryType_UsesFirstSemanticConfiguration_WhenNoDefaultConfigured()
+    {
+        var index = CreateIndex();
+        index.SemanticSearch = new SemanticSearch();
+        index.SemanticSearch.Configurations.Add(new SemanticConfiguration("only-config", new SemanticPrioritizedFields()));
+        var options = new SearchOptions();
+
+        SearchService.ConfigureQueryType(options, index, IndexQueryType.Semantic);
+
+        Assert.Equal(SearchQueryType.Semantic, options.QueryType);
+        Assert.Equal("only-config", options.SemanticSearch?.SemanticConfigurationName);
+    }
+
+    [Fact]
+    public void ConfigureQueryType_UsesProvidedSemanticConfiguration_WhenSemanticRequested()
+    {
+        var index = CreateIndex();
+        index.SemanticSearch = new SemanticSearch
+        {
+            DefaultConfigurationName = "default-config"
+        };
+        index.SemanticSearch.Configurations.Add(new SemanticConfiguration("default-config", new SemanticPrioritizedFields()));
+        index.SemanticSearch.Configurations.Add(new SemanticConfiguration("food-config", new SemanticPrioritizedFields()));
+        var options = new SearchOptions();
+
+        SearchService.ConfigureQueryType(options, index, IndexQueryType.Semantic, "food-config");
+
+        Assert.Equal(SearchQueryType.Semantic, options.QueryType);
+        Assert.Equal("food-config", options.SemanticSearch?.SemanticConfigurationName);
+    }
+
+    [Fact]
+    public void ConfigureQueryType_UsesProvidedSemanticConfiguration_WhenConfigurationDoesNotExist()
+    {
+        var index = CreateIndex();
+        index.SemanticSearch = new SemanticSearch();
+        index.SemanticSearch.Configurations.Add(new SemanticConfiguration("default-config", new SemanticPrioritizedFields()));
+        var options = new SearchOptions();
+
+        SearchService.ConfigureQueryType(options, index, IndexQueryType.Semantic, "unknown-config");
+
+        Assert.Equal(SearchQueryType.Semantic, options.QueryType);
+        Assert.Equal("unknown-config", options.SemanticSearch?.SemanticConfigurationName);
+    }
+
+    [Fact]
+    public void ConfigureQueryType_DoesNotThrow_WhenSemanticRequestedWithoutConfiguration()
+    {
+        var options = new SearchOptions();
+
+        SearchService.ConfigureQueryType(options, CreateIndex(), IndexQueryType.Semantic);
+
+        Assert.Equal(SearchQueryType.Semantic, options.QueryType);
+        Assert.NotNull(options.SemanticSearch);
+        Assert.Null(options.SemanticSearch.SemanticConfigurationName);
+    }
+
+    private static SearchIndex CreateIndex() => new("test-index");
 
     private static async Task<string> InvokeProcessRetrieveResponse(string json)
     {
