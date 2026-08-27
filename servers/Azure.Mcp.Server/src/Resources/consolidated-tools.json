@@ -75,6 +75,7 @@
         }
       },
       "mappedToolList": [
+        "resilience_drill_update",
         "resilience_drill_create",
         "resilience_usageplan_create",
         "resilience_usageplan_enrollment_create",

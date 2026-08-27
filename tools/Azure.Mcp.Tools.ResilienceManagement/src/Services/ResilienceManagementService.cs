@@ -1368,6 +1368,50 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return MapDrill(completedDrill.Value.Data);
     }
 
+    public async Task<DrillInfo> UpdateDrillAsync(string serviceGroup, string drill, string? subscription = null, string? region = null, DrillRbacSetupMode? rbacSetupMode = null, string? recoveryPlan = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        var subscriptionId = subscription is null || AzureService.IsSubscriptionId(subscription)
+            ? subscription
+            : (await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+
+        var drillId = ResilienceManagementDrillResource.CreateResourceIdentifier(serviceGroup, drill);
+        ResilienceManagementDrillResource drillResource = armClient.GetResilienceManagementDrillResource(drillId);
+        var properties = new DrillUpdateProperties();
+        var associatedIdentity = new ResilienceManagementAssociatedIdentity(ManagedServiceIdentityType.SystemAssigned);
+
+        if (subscriptionId is not null && region is not null)
+        {
+            properties.DrillAssetProperties = new AssetPropertiesOfDrill(subscriptionId, region);
+        }
+
+        if (rbacSetupMode is not null)
+        {
+            properties.RbacSetupMode = new ResilienceManagementRbacSetupMode(rbacSetupMode.Value.ToString());
+        }
+
+        if (recoveryPlan is not null)
+        {
+            properties.RecoveryPlanProperties = ArmResilienceManagementModelFactory.RecoveryPlanPropertiesOfDrill(
+                associatedIdentity,
+                RecoveryPlanResource.CreateResourceIdentifier(serviceGroup, recoveryPlan),
+                recoveryPlanResourceExcludedCount: null);
+        }
+
+        var patch = new ResilienceManagementDrillPatch
+        {
+            Properties = properties
+        };
+
+        ArmOperation operation = await drillResource.UpdateAsync(WaitUntil.Started, patch, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        Response<ResilienceManagementDrillResource> response = await drillResource.GetAsync(cancellationToken);
+
+        return MapDrill(response.Value.Data);
+    }
+
     public async Task DeleteDrillAsync(string serviceGroup, string drill, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);

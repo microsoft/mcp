@@ -49,6 +49,7 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<RecoveryJobResourceGetCommand>();
         services.AddSingleton<DrillCreateCommand>();
         services.AddSingleton<DrillGetCommand>();
+        services.AddSingleton<DrillUpdateCommand>();
         services.AddSingleton<DrillDeleteCommand>();
         services.AddSingleton<DrillResourceGetCommand>();
         services.AddSingleton<DrillRunGetCommand>();
@@ -136,6 +137,7 @@ public class ResilienceManagementSetup : IAreaSetup
 
         drills.AddCommand<DrillCreateCommand>(serviceProvider);
         drills.AddCommand<DrillGetCommand>(serviceProvider);
+        drills.AddCommand<DrillUpdateCommand>(serviceProvider);
         drills.AddCommand<DrillDeleteCommand>(serviceProvider);
 
         // Create resource subgroup under drill
