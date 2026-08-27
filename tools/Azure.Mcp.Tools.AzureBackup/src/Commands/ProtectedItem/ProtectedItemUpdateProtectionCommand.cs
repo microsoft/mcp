@@ -27,7 +27,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
         See https://learn.microsoft.com/azure/backup/selective-disk-backup-restore for
         selective disk semantics.
         """,
-    Destructive = false,
+    Destructive = true,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = false,

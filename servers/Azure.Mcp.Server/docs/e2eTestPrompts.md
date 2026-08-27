@@ -206,7 +206,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_protecteditem_protect | Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Start protecting my Azure VM by enabling backup on <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Protect VM <item_name> in vault <vault_name> under resource group <resource_group> using policy <policy_name> and back up only data disks with LUNs 0,1 | investigation-required |
-| azurebackup_protecteditem_protect | Enable selective disk backup on VM <item_name> in vault <vault_name> under resource group <resource_group> to back up only the OS disk (exclude all data disks) | investigation-required |
+| azurebackup_protecteditem_protect | Enable selective disk backup on VM <item_name> in vault <vault_name> under resource group <resource_group> excluding all attached data disks so only the OS disk is protected | investigation-required |
 | azurebackup_protecteditem_update-protection | Change the backup policy attached to VM <item_name> in vault <vault_name> under resource group <resource_group> to <policy_name> | investigation-required |
 | azurebackup_protecteditem_update-protection | Update the selective disk configuration on VM <item_name> in vault <vault_name> under resource group <resource_group> to exclude LUNs 0,2 | investigation-required |
 | azurebackup_protecteditem_update-protection | Reset the disk exclusion settings for the protected VM <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |

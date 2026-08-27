@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ClientModel.Primitives;
+using System.Text.Json;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
@@ -77,6 +79,32 @@ public class RsvBackupOperationsSelectiveDiskTests
     }
 
     [Fact]
+    public void ApplyDiskExclusionToProtectedItem_ExcludeAllDataDisks_SerializesEmptyDiskLunList()
+    {
+        // Regression guard for the ChangeTrackingList<int> quirk: `DiskLunList` is a
+        // ChangeTrackingList and is OMITTED from the JSON payload if the list has never been
+        // touched. On the --exclude-all-data-disks path we must force materialization so the
+        // wire body carries `"diskLunList": []`. The RSV service rejects a payload with
+        // {isInclusionList:true} but no diskLunList, so removing the workaround silently
+        // breaks the "back up only the OS disk" contract.
+        var vm = new IaasComputeVmProtectedItem();
+        var spec = new DiskExclusionSpec(Setting: null, DiskLunsCsv: null, ExcludeAllDataDisks: true);
+
+        RsvBackupOperations.ApplyDiskExclusionToProtectedItem(vm, spec);
+
+        var props = vm.ExtendedProperties!.DiskExclusionProperties!;
+        var payload = ((IJsonModel<DiskExclusionProperties>)props).Write(ModelReaderWriterOptions.Json).ToString();
+
+        using var doc = JsonDocument.Parse(payload);
+        Assert.True(
+            doc.RootElement.TryGetProperty("diskLunList", out var diskLunList),
+            $"diskLunList must be emitted on the wire for --exclude-all-data-disks; payload was: {payload}");
+        Assert.Equal(JsonValueKind.Array, diskLunList.ValueKind);
+        Assert.Equal(0, diskLunList.GetArrayLength());
+        Assert.True(doc.RootElement.GetProperty("isInclusionList").GetBoolean());
+    }
+
+    [Fact]
     public void ApplyDiskExclusionToProtectedItem_ExcludeAllOverridesSettingAndLuns()
     {
         // Contract: --exclude-all-data-disks is a stronger switch than --disks-list. If both are
@@ -129,7 +157,7 @@ public class RsvBackupOperationsSelectiveDiskTests
     [Fact]
     public void ApplyDiskExclusionToProtectedItem_SettingIsCaseInsensitive()
     {
-        // The command layer already normalises casing, but the translation helper is used by
+        // The command layer already normalizes casing, but the translation helper is used by
         // both 'protect' and 'update-protection' and must also tolerate the raw casing.
         var vm = new IaasComputeVmProtectedItem();
         var spec = new DiskExclusionSpec(

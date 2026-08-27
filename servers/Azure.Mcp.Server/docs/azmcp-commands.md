@@ -1070,7 +1070,7 @@ azmcp azurebackup protecteditem protect --subscription <subscription> \
                                         [--exclude-all-data-disks]
 
 # Updates the backup configuration of an already-protected RSV IaaS VM. Supports changing the attached backup policy and/or the selective disk backup configuration. Only supported for RSV IaaS VM protected items. At least one of --policy, --disk-list-setting, --disks-list, or --exclude-all-data-disks must be provided.
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup protecteditem update-protection --subscription <subscription> \
                                                   --resource-group <resource-group> \
                                                   --vault <vault> \

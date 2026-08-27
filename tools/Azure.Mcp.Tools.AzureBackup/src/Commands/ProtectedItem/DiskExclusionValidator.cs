@@ -88,13 +88,22 @@ internal static class DiskExclusionValidator
 
         if (hasList)
         {
-            foreach (var raw in disksList!.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            var tokens = disksList!.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (tokens.Length == 0)
             {
-                if (!int.TryParse(raw, out var lun) || lun < 0)
+                validationResult.Errors.Add(
+                    "--disks-list must contain at least one non-negative data disk LUN (e.g. '0,1,3').");
+            }
+            else
+            {
+                foreach (var raw in tokens)
                 {
-                    validationResult.Errors.Add(
-                        $"Invalid disk LUN '{raw}' in --disks-list. LUNs must be non-negative integers (e.g. '0,1,3').");
-                    break;
+                    if (!int.TryParse(raw, out var lun) || lun < 0)
+                    {
+                        validationResult.Errors.Add(
+                            $"Invalid disk LUN '{raw}' in --disks-list. LUNs must be non-negative integers (e.g. '0,1,3').");
+                        break;
+                    }
                 }
             }
         }
