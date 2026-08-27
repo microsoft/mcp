@@ -261,7 +261,7 @@ Choose the appropriate base class for your service based on the operations neede
            string? tenant = null,
            CancellationToken cancellationToken)
        {
-           var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
+           var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
            // Use subscriptionResource for Azure Resource write operations
        }
    }
@@ -943,7 +943,7 @@ Task<List<string>> GetStorageAccounts(
     CancellationToken cancellationToken = default);
 
 // Incorrect formatting - all parameters on single line
-Task<List<string>> GetStorageAccounts(string subscription, string? tenant = null, CancellationToken? cancellationToken = default);
+Task<List<string>> GetStorageAccounts(string subscription, string? tenant = null, CancellationToken cancellationToken = default);
 
 // Incorrect - missing CancellationToken parameter
 Task<List<string>> GetStorageAccounts(
@@ -1099,7 +1099,7 @@ public class {Toolset}Service(IAzureService azureService)
         CancellationToken cancellationToken)
     {
         // Always use Azure service for resolution
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 
         var resourceGroupResource = await subscriptionResource
             .GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -1950,7 +1950,7 @@ Task<List<ResourceModel>> GetResources(
 - **Pattern**:
 ```csharp
 // Correct pattern
-var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, cancellationToken);
+var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 ```
 
 ### Command Option Patterns
@@ -2214,7 +2214,7 @@ catch (Exception ex)
 - **Pattern**:
 ```csharp
 // Correct - use service
-var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, cancellationToken);
+var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 
 // Wrong - manual creation
 var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);

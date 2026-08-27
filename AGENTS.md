@@ -468,7 +468,7 @@ public class StorageService(IAzureService azureService)
     public async Task<ResourceQueryResults<StorageAccount>> ListAccountsAsync(
         string subscription,
         string? resourceGroup,
-        CancellationToken? cancellationToken = default)
+        CancellationToken cancellationToken = default)
     {
         return await ExecuteResourceQueryAsync(
             "Microsoft.Storage/storageAccounts",
@@ -495,9 +495,9 @@ public class StorageService(IAzureService azureService)
         string? accessTier = null,
         bool? enableHierarchicalNamespace = null,
         string? tenant = null,
-        CancellationToken? cancellationToken = default)
+        CancellationToken cancellationToken = default)
     {
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         // Use subscriptionResource for write operations
     }
 }
