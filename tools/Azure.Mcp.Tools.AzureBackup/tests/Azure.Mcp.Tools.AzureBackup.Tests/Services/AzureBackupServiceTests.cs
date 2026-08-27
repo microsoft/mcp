@@ -582,4 +582,159 @@ public class AzureBackupServiceTests
     }
 
     #endregion
+
+    #region Selective Disk Backup - IaaS-VM-only routing enforcement
+
+    // Selective disk backup (--disk-list-setting, --disks-list, --exclude-all-data-disks) applies
+    // ONLY to RSV IaaS VM protected items. It must NOT apply to:
+    //   - DPP (Backup vault) workloads (AzureDisk, AzureBlob, AKS, PostgreSQL Flexible, etc.)
+    //   - RSV in-guest workloads (SQL in IaaS VM, SAP HANA in IaaS VM, SAP ASE in IaaS VM)
+    //   - RSV Azure File Share
+    // The RSV in-guest workload rejection is enforced deeper in RsvBackupOperations.ProtectItemAsync
+    // (verified there via RsvDatasourceRegistry); the DPP rejection is enforced at this routing layer.
+    // See https://learn.microsoft.com/azure/backup/selective-disk-backup-restore.
+
+    private const string SelectiveSub = "33333333-3333-3333-3333-333333333333";
+    private const string SelectiveVmId = "/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm1";
+
+    [Fact]
+    public async Task ProtectItemAsync_DppVault_WithDiskExclusion_ThrowsAndDoesNotCallOps()
+    {
+        // Selective disk backup is a Recovery Services vault (RSV) IaaS VM concept only. If the
+        // caller supplies disk-exclusion options against a DPP (Backup vault) datasource we must
+        // fail fast at the routing layer BEFORE hitting DPP ops.
+        var spec = new DiskExclusionSpec("exclude", "1,2", ExcludeAllDataDisks: false);
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.ProtectItemAsync(
+                "vault", "rg", SelectiveSub, SelectiveVmId, "policy",
+                vaultType: "DPP",
+                containerName: null, datasourceType: "AzureDisk",
+                aksIncludedNamespaces: null, aksExcludedNamespaces: null,
+                aksLabelSelectors: null, aksIncludeClusterScopeResources: null,
+                aksSnapshotResourceGroup: null,
+                diskExclusion: spec, tenant: null, retryPolicy: null,
+                cancellationToken: CancellationToken.None));
+
+        Assert.Contains("Selective disk backup", ex.Message);
+        Assert.Contains("RSV", ex.Message);
+        await _rsvOps.DidNotReceiveWithAnyArgs().ProtectItemAsync(
+            default!, default!, default!, default!, default!, default, default, default, default, default, Arg.Any<CancellationToken>());
+        await _dppOps.DidNotReceiveWithAnyArgs().ProtectItemAsync(
+            default!, default!, default!, default!, default!, default, default, default, default, default, default, default, default, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProtectItemAsync_DppVault_NoDiskExclusion_RoutesToDppOps()
+    {
+        // Baseline: DPP without disk-exclusion must NOT be affected by the new guard - it should
+        // still route to the DPP ops implementation as before.
+        var expected = new ProtectResult("Succeeded", "vm1", null, "Protected", "ProtectionConfigured", null);
+        _dppOps.ProtectItemAsync(
+            "vault", "rg", SelectiveSub, SelectiveVmId, "policy",
+            "AzureDisk", null, null, null, null, null, null, null,
+            Arg.Any<CancellationToken>())
+            .Returns(expected);
+
+        var result = await _service.ProtectItemAsync(
+            "vault", "rg", SelectiveSub, SelectiveVmId, "policy",
+            vaultType: "DPP",
+            containerName: null, datasourceType: "AzureDisk",
+            aksIncludedNamespaces: null, aksExcludedNamespaces: null,
+            aksLabelSelectors: null, aksIncludeClusterScopeResources: null,
+            aksSnapshotResourceGroup: null,
+            diskExclusion: null, tenant: null, retryPolicy: null,
+            cancellationToken: CancellationToken.None);
+
+        Assert.Equal("Succeeded", result.Status);
+        await _rsvOps.DidNotReceiveWithAnyArgs().ProtectItemAsync(
+            default!, default!, default!, default!, default!, default, default, default, default, default, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProtectItemAsync_RsvVault_WithDiskExclusion_RoutesToRsvOpsAndPassesSpecThrough()
+    {
+        // RSV routing should hand the DiskExclusionSpec through untouched to the RSV ops layer.
+        // The workload-type gating (IaaS VM vs SQL/SAPHANA/SAPASE/AzureFileShare) is enforced
+        // inside RsvBackupOperations.ProtectItemAsync using RsvDatasourceRegistry - covered by
+        // build-time defense in depth, plus the RsvDatasourceRegistryTests coverage of aliases.
+        DiskExclusionSpec? capturedSpec = null;
+        var expected = new ProtectResult("Completed", "vm1", "job-1", "Protected");
+        _rsvOps.ProtectItemAsync(
+            "vault", "rg", SelectiveSub, SelectiveVmId, "policy",
+            Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Do<DiskExclusionSpec?>(s => capturedSpec = s),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(expected);
+
+        var spec = new DiskExclusionSpec("include", "0,1", ExcludeAllDataDisks: false);
+
+        var result = await _service.ProtectItemAsync(
+            "vault", "rg", SelectiveSub, SelectiveVmId, "policy",
+            vaultType: "RSV",
+            containerName: null, datasourceType: "AzureVM",
+            aksIncludedNamespaces: null, aksExcludedNamespaces: null,
+            aksLabelSelectors: null, aksIncludeClusterScopeResources: null,
+            aksSnapshotResourceGroup: null,
+            diskExclusion: spec, tenant: null, retryPolicy: null,
+            cancellationToken: CancellationToken.None);
+
+        Assert.Equal("Completed", result.Status);
+        Assert.NotNull(capturedSpec);
+        Assert.Equal("include", capturedSpec!.Setting);
+        Assert.Equal("0,1", capturedSpec.DiskLunsCsv);
+        Assert.False(capturedSpec.ExcludeAllDataDisks);
+        await _dppOps.DidNotReceiveWithAnyArgs().ProtectItemAsync(
+            default!, default!, default!, default!, default!, default, default, default, default, default, default, default, default, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateProtectionAsync_DppVault_ThrowsNotSupportedAndDoesNotCallOps()
+    {
+        // 'update-protection' is a VM-only operation. DPP backup instances are immutable in this
+        // respect - callers must delete and recreate. Reject at the routing layer.
+        var spec = new DiskExclusionSpec("include", "0", ExcludeAllDataDisks: false);
+
+        var ex = await Assert.ThrowsAsync<NotSupportedException>(() =>
+            _service.UpdateProtectionAsync(
+                "vault", "rg", SelectiveSub, SelectiveVmId,
+                policyName: null, diskExclusion: spec,
+                vaultType: "DPP", containerName: null, tenant: null,
+                retryPolicy: null, cancellationToken: CancellationToken.None));
+
+        Assert.Contains("update-protection", ex.Message);
+        Assert.Contains("RSV", ex.Message);
+        await _rsvOps.DidNotReceiveWithAnyArgs().UpdateProtectionAsync(
+            default!, default!, default!, default!, default, default, default, default, default, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateProtectionAsync_RsvVault_RoutesToRsvOpsWithPolicyAndSpec()
+    {
+        DiskExclusionSpec? capturedSpec = null;
+        string? capturedPolicy = null;
+        var expected = new ProtectResult("Completed", "vm1", "job-2", "Updated");
+        _rsvOps.UpdateProtectionAsync(
+            "vault", "rg", SelectiveSub, SelectiveVmId,
+            Arg.Do<string?>(p => capturedPolicy = p),
+            Arg.Do<DiskExclusionSpec?>(s => capturedSpec = s),
+            Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(expected);
+
+        var spec = new DiskExclusionSpec("resetexclusionsettings", null, ExcludeAllDataDisks: false);
+
+        var result = await _service.UpdateProtectionAsync(
+            "vault", "rg", SelectiveSub, SelectiveVmId,
+            policyName: "new-policy", diskExclusion: spec,
+            vaultType: "RSV", containerName: null, tenant: null,
+            retryPolicy: null, cancellationToken: CancellationToken.None);
+
+        Assert.Equal("Completed", result.Status);
+        Assert.Equal("new-policy", capturedPolicy);
+        Assert.NotNull(capturedSpec);
+        Assert.Equal("resetexclusionsettings", capturedSpec!.Setting);
+    }
+
+    #endregion
 }

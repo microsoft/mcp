@@ -123,7 +123,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<ProtectResult> ProtectItemAsync(
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string policyName, string? containerName,
-        string? datasourceType, string? tenant,
+        string? datasourceType, DiskExclusionSpec? diskExclusion, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -144,6 +144,16 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             subscription, resourceGroup, vaultName, policyName);
 
         var profile = RsvDatasourceRegistry.ResolveOrDefault(datasourceType);
+
+        // Selective disk backup is only meaningful for IaaS VM protected items.
+        var hasDiskExclusion = diskExclusion is not null && diskExclusion.HasAnyValue;
+        if (hasDiskExclusion && profile.ProtectedItemType != RsvProtectedItemType.IaasVm)
+        {
+            throw new ArgumentException(
+                "Selective disk backup (--disk-list-setting, --disks-list, --exclude-all-data-disks) is only supported for RSV IaaS VM protected items. " +
+                $"The specified datasource resolved to '{profile.FriendlyName}'. " +
+                "See https://learn.microsoft.com/azure/backup/selective-disk-backup-restore for details.");
+        }
 
         if (profile.IsWorkloadType)
         {
@@ -239,13 +249,17 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var vmProtectedItemId = BackupProtectedItemResource.CreateResourceIdentifier(
             subscription, resourceGroup, vaultName, FabricName, container, vmProtectedItemName);
 
+        var vmProtectedItem = new IaasComputeVmProtectedItem
+        {
+            PolicyId = policyArmId,
+            SourceResourceId = new ResourceIdentifier(datasourceId)
+        };
+
+        ApplyDiskExclusionToProtectedItem(vmProtectedItem, diskExclusion);
+
         var vmProtectedItemData = new BackupProtectedItemData(vaultLocation)
         {
-            Properties = new IaasComputeVmProtectedItem
-            {
-                PolicyId = policyArmId,
-                SourceResourceId = new ResourceIdentifier(datasourceId)
-            }
+            Properties = vmProtectedItem
         };
 
         var vmProtectedItemResource = armClient.GetBackupProtectedItemResource(vmProtectedItemId);
