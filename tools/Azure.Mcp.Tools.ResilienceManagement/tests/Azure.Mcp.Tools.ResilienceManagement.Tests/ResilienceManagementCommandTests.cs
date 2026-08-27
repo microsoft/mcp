@@ -601,8 +601,9 @@ public class ResilienceManagementCommandTests(
                     { "name", recoveryPlan }
                 });
             var plan = result.AssertProperty("recoveryPlan");
-            string? provisioningState = plan.AssertProperty("provisioningState").GetString();
-            string? planState = plan.AssertProperty("planState").GetString();
+            var properties = plan.AssertProperty("properties");
+            string? provisioningState = properties.AssertProperty("provisioningState").GetString();
+            string? planState = properties.AssertProperty("planState").GetString();
             if (string.Equals(provisioningState, "Succeeded", StringComparison.OrdinalIgnoreCase) &&
                 !string.Equals(planState, "Editable", StringComparison.OrdinalIgnoreCase))
             {
