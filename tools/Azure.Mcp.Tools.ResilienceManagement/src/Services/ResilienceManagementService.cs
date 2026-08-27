@@ -673,7 +673,16 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return new RecoveryPlanValidateForFailoverResult(operationId, qualifications);
     }
 
-    public async Task<RecoveryPlanValidateForReprotectResult> ValidateRecoveryPlanForReprotectAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string>? selectedResourceIds = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    public Task<RecoveryPlanValidateForReprotectResult> ValidateRecoveryPlanForReprotectAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string>? selectedResourceIds = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        return ExecuteWithTimeoutAsync(
+            token => ValidateRecoveryPlanForReprotectCoreAsync(serviceGroup, recoveryPlan, selectedResourceIds, tenant, retryPolicy, token),
+            "recovery plan reprotect validation",
+            RecoveryPlanOperationTimeout,
+            cancellationToken);
+    }
+
+    private async Task<RecoveryPlanValidateForReprotectResult> ValidateRecoveryPlanForReprotectCoreAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string>? selectedResourceIds, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
@@ -687,10 +696,11 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
         string operationId = Guid.NewGuid().ToString();
         ArmOperation<ValidateForRecoveryOperationBaseResult> operation = await recoveryPlanResource.ValidateForReprotectAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             operationId,
             content,
             cancellationToken);
+        await WaitForRecoveryPlanLroCompletionAsync(operation, cancellationToken);
 
         RecoveryPlanValidateForFailoverResult result = CreateRecoveryPlanValidateForFailoverResult(
             operationId,
@@ -701,7 +711,16 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             result.RecoveryResourceQualifications);
     }
 
-    public async Task<RecoveryPlanValidateForOperationResult> ValidateRecoveryPlanForOperationAsync(string serviceGroup, string recoveryPlan, RecoveryOperationNames operationName, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    public Task<RecoveryPlanValidateForOperationResult> ValidateRecoveryPlanForOperationAsync(string serviceGroup, string recoveryPlan, RecoveryOperationNames operationName, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        return ExecuteWithTimeoutAsync(
+            token => ValidateRecoveryPlanForOperationCoreAsync(serviceGroup, recoveryPlan, operationName, tenant, retryPolicy, token),
+            "recovery plan operation validation",
+            RecoveryPlanOperationTimeout,
+            cancellationToken);
+    }
+
+    private async Task<RecoveryPlanValidateForOperationResult> ValidateRecoveryPlanForOperationCoreAsync(string serviceGroup, string recoveryPlan, RecoveryOperationNames operationName, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
 
@@ -710,10 +729,11 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         var content = new ValidateForOperationContent(operationName);
         string operationId = Guid.NewGuid().ToString();
         ArmOperation<ArmResponseErrorResponseResult> operation = await recoveryPlanResource.ValidateForOperationAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             operationId,
             content,
             cancellationToken);
+        await WaitForRecoveryPlanLroCompletionAsync(operation, cancellationToken);
 
         return CreateRecoveryPlanValidateForOperationResult(
             operationId,

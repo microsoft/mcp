@@ -109,6 +109,8 @@ public sealed class RecoveryPlanValidateForOperationCommand(
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        TimeoutException =>
+            "The recovery plan operation validation timed out before it completed. Retry the operation.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             "Authorization failed validating the recovery plan operation. Verify you have access to the recovery plan and service group.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
@@ -116,5 +118,11 @@ public sealed class RecoveryPlanValidateForOperationCommand(
         RequestFailedException =>
             "The recovery plan operation validation request failed. Verify the recovery plan, operation name, and request parameters, then try again.",
         _ => base.GetErrorMessage(ex)
+    };
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        TimeoutException => HttpStatusCode.GatewayTimeout,
+        _ => base.GetStatusCode(ex)
     };
 }

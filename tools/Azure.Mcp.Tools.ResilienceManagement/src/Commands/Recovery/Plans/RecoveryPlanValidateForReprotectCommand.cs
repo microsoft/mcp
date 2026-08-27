@@ -71,6 +71,8 @@ public sealed class RecoveryPlanValidateForReprotectCommand(
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        TimeoutException =>
+            "The recovery plan reprotect validation timed out before it completed. Retry the operation.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             "Authorization failed validating the recovery plan for reprotect. Verify you have access to the recovery plan and service group.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
@@ -78,5 +80,11 @@ public sealed class RecoveryPlanValidateForReprotectCommand(
         RequestFailedException =>
             "The reprotect validation request failed. Verify the recovery plan, selected resources, and request parameters, then try again.",
         _ => base.GetErrorMessage(ex)
+    };
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        TimeoutException => HttpStatusCode.GatewayTimeout,
+        _ => base.GetStatusCode(ex)
     };
 }
