@@ -385,9 +385,6 @@ public class AccountGetOptions : ISubscriptionOption
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
-
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 
 // Commands use two-generic base: SubscriptionCommand<TOptions, TResult>
@@ -446,7 +443,7 @@ protected override int GetStatusCode(Exception ex) => ex switch
 try
 {
     // Command execution logic
-    var results = await service.GetResourcesAsync(options.Subscription!, options.RetryPolicy);
+    var results = await service.GetResourcesAsync(options.Subscription!, cancellationToken);
     context.Response.Results = ResponseResult.Create(new(results ?? []), ServiceJsonContext.Default.CommandResult);
 }
 catch (Exception ex)
@@ -468,13 +465,16 @@ Choose the appropriate base class based on operations:
 public class StorageService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IStorageService
 {
-    public async Task<ResourceQueryResults<StorageAccount>> ListAccountsAsync(string subscription, string? resourceGroup, RetryPolicyOptions? retryPolicy)
+    public async Task<ResourceQueryResults<StorageAccount>> ListAccountsAsync(
+        string subscription,
+        string? resourceGroup,
+        CancellationToken cancellationToken = default)
     {
         return await ExecuteResourceQueryAsync(
             "Microsoft.Storage/storageAccounts",
             resourceGroup,
             subscription,
-            retryPolicy,
+            null,
             ConvertToStorageAccountModel,
             cancellationToken: cancellationToken);
     }
@@ -495,9 +495,9 @@ public class StorageService(IAzureService azureService)
         string? accessTier = null,
         bool? enableHierarchicalNamespace = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        CancellationToken cancellationToken = default)
     {
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         // Use subscriptionResource for write operations
     }
 }
@@ -633,7 +633,6 @@ All new toolsets must be AOT-compatible or excluded from native builds:
 ### Caching and Performance
 - Use `ICacheService` for expensive Azure operations
 - Implement `BaseAzureResourceService` for efficient Resource Graph queries
-- Follow retry policy patterns with `RetryPolicyOptions`
 
 ## Remote MCP Server Architecture
 
