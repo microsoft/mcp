@@ -10,7 +10,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Models;
-using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
@@ -28,12 +27,12 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// </summary>
 public sealed class NamespaceToolLoader(
     ICommandFactory commandFactory,
-    IOptions<ServerStartOptions> options,
+    IOptions<ServerRuntimeConfiguration> configuration,
     ILogger<NamespaceToolLoader> logger,
     bool applyFilter = true) : BaseToolLoader(logger)
 {
     private readonly ICommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
-    private readonly IOptions<ServerStartOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
     private readonly Lazy<IReadOnlyList<string>> _availableNamespaces = new(() =>
     {
@@ -43,9 +42,9 @@ public sealed class NamespaceToolLoader(
         {
             allSubGroups = allSubGroups
                 .Where(group => !DiscoveryConstants.IgnoredCommandGroups.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
-                .Where(group => options.Value.Namespace == null ||
-                               options.Value.Namespace.Length == 0 ||
-                               options.Value.Namespace.Contains(group.Name, StringComparer.OrdinalIgnoreCase));
+                .Where(group => configuration.Value.Namespace == null ||
+                               configuration.Value.Namespace.Length == 0 ||
+                               configuration.Value.Namespace.Contains(group.Name, StringComparer.OrdinalIgnoreCase));
         }
 
         return [.. allSubGroups.Select(group => group.Name)];
@@ -118,13 +117,13 @@ public sealed class NamespaceToolLoader(
             var group = _commandFactory.RootGroup.SubGroup
                 .First(g => string.Equals(g.Name, namespaceName, StringComparison.OrdinalIgnoreCase));
 
-            if (_options.Value.ReadOnly == true && AllToolsInGroupMatch(meta => !meta.ReadOnly, group))
+            if (_configuration.Value.ReadOnly && AllToolsInGroupMatch(meta => !meta.ReadOnly, group))
             {
                 // If ReadOnly mode is enabled and all commands in the group are not read-only, skip exposing this namespace as a tool.
                 continue;
             }
 
-            if (_options.Value.IsHttpMode && AllToolsInGroupMatch(meta => meta.LocalRequired, group))
+            if (_configuration.Value.IsHttpMode && AllToolsInGroupMatch(meta => meta.LocalRequired, group))
             {
                 // If HTTP mode is enabled and all commands in the group are local-required, skip exposing this namespace as a tool.
                 continue;
@@ -181,20 +180,22 @@ public sealed class NamespaceToolLoader(
 
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         if (string.IsNullOrWhiteSpace(request.Params?.Name))
         {
             throw new ArgumentNullException(nameof(request.Params.Name), "Tool name cannot be null or empty.");
         }
 
         string tool = request.Params.Name;
-        var args = request.Params?.Arguments;
+        var args = request.Params.Arguments;
         string? intent = null;
         string? command = null;
         bool learn = false;
 
         // In namespace mode, the name of the tool is also its IAreaSetup name.
-        Activity.Current?.SetTag(TagName.ToolArea, tool);
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            // At this point the tool parameters is the namespace tool schema
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params.Arguments?.Keys))
+            .SetTag(TagName.ToolArea, tool);
 
         if (args != null)
         {
@@ -359,6 +360,9 @@ public sealed class NamespaceToolLoader(
                 parameters = samplingResult.parameters;
             }
 
+            // Here the parameters are now those for the tool call, instead of being the namespace parameters.
+            Activity.Current?.SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(parameters.Keys));
+
             await NotifyProgressAsync(request, $"Calling {namespaceName} {command}...", cancellationToken);
 
             if (!namespaceCommands.TryGetValue(command, out var cmd))
@@ -367,8 +371,10 @@ public sealed class NamespaceToolLoader(
                 return await InvokeToolLearn(request, intent, namespaceName, cancellationToken);
             }
 
+            Activity.Current?.SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(cmd));
+
             // Enforce read-only mode at execution time
-            if ((_options.Value.ReadOnly ?? false) && !cmd.Metadata.ReadOnly)
+            if (_configuration.Value.ReadOnly && !cmd.Metadata.ReadOnly)
             {
                 return new CallToolResult
                 {
@@ -385,7 +391,7 @@ public sealed class NamespaceToolLoader(
             }
 
             // Enforce HTTP mode restrictions at execution time
-            if (_options.Value.IsHttpMode && cmd.Metadata.LocalRequired)
+            if (_configuration.Value.IsHttpMode && cmd.Metadata.LocalRequired)
             {
                 return new CallToolResult
                 {
@@ -406,7 +412,7 @@ public sealed class NamespaceToolLoader(
                 request,
                 $"{namespaceName} {command}",
                 cmd,
-                _options.Value.DangerouslyDisableElicitation,
+                _configuration.Value.DangerouslyDisableElicitation,
                 _logger,
                 cancellationToken);
 
@@ -423,7 +429,7 @@ public sealed class NamespaceToolLoader(
             };
             var realCommand = cmd.GetCommand();
 
-            ParseResult commandOptions;
+            ParseResult? commandOptions;
             var effectiveOptions = realCommand.Options
                 .Where(o => !CommandFactory.IsLearnOption(o))
                 .ToList();
@@ -434,7 +440,21 @@ public sealed class NamespaceToolLoader(
             }
             else
             {
-                commandOptions = realCommand.ParseFromDictionary(parameters);
+                if (!realCommand.TryParseFromDictionary(parameters, out commandOptions, out var parseErrors))
+                {
+                    return new CallToolResult
+                    {
+                        Content =
+                        [
+                            new TextContentBlock
+                            {
+                                Text = parseErrors!,
+                            }
+                        ],
+                        IsError = true,
+                        Meta = new([new(McpHelper.ToolIdMetaKey, cmd.Id)])
+                    };
+                }
             }
 
             _logger.LogTrace("Executing namespace command '{Namespace} {Command}'", namespaceName, command);
@@ -444,9 +464,10 @@ public sealed class NamespaceToolLoader(
             // this case, which will be executed.
             currentActivity?.SetTag(TagName.ToolName, command)
                 .SetTag(TagName.ToolId, cmd.Id)
+                .SetTag(TagName.ToolSource, "internal")
                 .SetTag(TagName.IsServerCommandInvoked, true);
 
-            var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions, cancellationToken);
+            var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
@@ -521,7 +542,8 @@ public sealed class NamespaceToolLoader(
 
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string namespaceName, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.IsLearn, true);
         var learnTools = GetChildToolList(request, namespaceName).Select(t => new ToolCommandInfo(t));
         var learnToolsJson = JsonSerializer.Serialize(learnTools, ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
@@ -586,8 +608,8 @@ public sealed class NamespaceToolLoader(
         }
 
         var list = namespaceCommands
-            .Where(kvp => !(_options.Value.ReadOnly ?? false) || kvp.Value.Metadata.ReadOnly)
-            .Where(kvp => !_options.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
+            .Where(kvp => !_configuration.Value.ReadOnly || kvp.Value.Metadata.ReadOnly)
+            .Where(kvp => !_configuration.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
             .Select(kvp => CreateToolFromCommand(kvp.Key, kvp.Value))
             .ToList();
 
@@ -669,13 +691,6 @@ public sealed class NamespaceToolLoader(
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
         return flatParams;
-    }
-
-    private static bool SupportsSampling(McpServer server)
-    {
-#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
-        return server?.ClientCapabilities?.Sampling != null;
-#pragma warning restore MCP9005
     }
 
     private static async Task NotifyProgressAsync(RequestContext<CallToolRequestParams> request, string message, CancellationToken cancellationToken)

@@ -1,14 +1,12 @@
-#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
 #pragma warning disable MCP9005 // Deprecated Sampling/Logging APIs - backward compat during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Commands;
-using ModelContextProtocol.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using NSubstitute;
@@ -22,12 +20,11 @@ public class BaseToolLoaderTests
     public void CreateClientOptions_WithNoCapabilities_ReturnsOptionsWithNoCapabilities()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         mockServer.ClientCapabilities.Returns((ClientCapabilities?)null);
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
 
         // Assert
         Assert.NotNull(options);
@@ -40,12 +37,11 @@ public class BaseToolLoaderTests
     public void CreateClientOptions_WithEmptyCapabilities_ReturnsOptionsWithNoCapabilities()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         mockServer.ClientCapabilities.Returns(new ClientCapabilities());
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
 
         // Assert
         Assert.NotNull(options);
@@ -58,7 +54,6 @@ public class BaseToolLoaderTests
     public void CreateClientOptions_WithSamplingCapability_ReturnsOptionsWithSamplingOnly()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
@@ -67,7 +62,7 @@ public class BaseToolLoaderTests
         mockServer.ClientCapabilities.Returns(capabilities);
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
 
         // Assert
         Assert.NotNull(options);
@@ -80,7 +75,6 @@ public class BaseToolLoaderTests
     public void CreateClientOptions_WithElicitationCapability_ReturnsOptionsWithElicitationOnly()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
@@ -89,7 +83,7 @@ public class BaseToolLoaderTests
         mockServer.ClientCapabilities.Returns(capabilities);
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
 
         // Assert
         Assert.NotNull(options);
@@ -102,7 +96,6 @@ public class BaseToolLoaderTests
     public void CreateClientOptions_WithBothCapabilities_ReturnsOptionsWithBothCapabilities()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
@@ -112,7 +105,7 @@ public class BaseToolLoaderTests
         mockServer.ClientCapabilities.Returns(capabilities);
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
 
         // Assert
         Assert.NotNull(options);
@@ -125,7 +118,6 @@ public class BaseToolLoaderTests
     public void CreateClientOptions_WithServerClientInfo_CopiesClientInfoToOptions()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         var clientInfo = new Implementation
         {
@@ -136,7 +128,7 @@ public class BaseToolLoaderTests
         mockServer.ClientCapabilities.Returns(new ClientCapabilities());
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
 
         // Assert
         Assert.NotNull(options);
@@ -147,13 +139,12 @@ public class BaseToolLoaderTests
     public void CreateClientOptions_WithNullServerClientInfo_HandlesGracefully()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         mockServer.ClientInfo.Returns((Implementation?)null);
         mockServer.ClientCapabilities.Returns(new ClientCapabilities());
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
 
         // Assert
         Assert.NotNull(options);
@@ -164,7 +155,6 @@ public class BaseToolLoaderTests
     public async Task CreateClientOptions_SamplingHandler_ValidatesRequestAndThrowsOnNull()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
@@ -173,7 +163,7 @@ public class BaseToolLoaderTests
         mockServer.ClientCapabilities.Returns(capabilities);
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
         Assert.NotNull(options.Handlers.SamplingHandler);
 
         // Assert - verify handler validates null request
@@ -185,7 +175,6 @@ public class BaseToolLoaderTests
     public async Task CreateClientOptions_SamplingHandler_DelegatesToServerSendRequestAsync()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
@@ -218,10 +207,10 @@ public class BaseToolLoaderTests
         };
 
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
-                  .Returns(Task.FromResult(mockResponse));
+            .Returns(mockResponse);
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
         Assert.NotNull(options.Handlers.SamplingHandler);
 
         await options.Handlers.SamplingHandler(samplingRequest, default!, TestContext.Current.CancellationToken);
@@ -236,7 +225,6 @@ public class BaseToolLoaderTests
     public async Task CreateClientOptions_ElicitationHandler_DelegatesToServerSendRequestAsync()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
@@ -271,10 +259,10 @@ public class BaseToolLoaderTests
         };
 
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
-                  .Returns(Task.FromResult(mockResponse));
+            .Returns(mockResponse);
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
         Assert.NotNull(options.Handlers.ElicitationHandler);
 
         await options.Handlers.ElicitationHandler(elicitationRequest, TestContext.Current.CancellationToken);
@@ -289,7 +277,6 @@ public class BaseToolLoaderTests
     public async Task CreateClientOptions_ElicitationHandler_ValidatesRequestAndThrowsOnNull()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
@@ -298,7 +285,7 @@ public class BaseToolLoaderTests
         mockServer.ClientCapabilities.Returns(capabilities);
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
         Assert.NotNull(options.Handlers.ElicitationHandler);
 
         // Assert - verify handler validates null request
@@ -310,18 +297,14 @@ public class BaseToolLoaderTests
     public async Task HandleSecretElicitation_WhenElicitationDisabled_ProceedsWithoutConsent()
     {
         // Arrange
-        var mockServer = Substitute.For<McpServer>();
-        var jsonRpcRequest = new JsonRpcRequest
-        {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
-        };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool");
         var logger = Substitute.For<ILogger>();
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { Secret = true });
 
         // Act
-        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
-            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: true, logger, CancellationToken.None);
+        var result = await BaseToolLoader.HandleElicitationAsync(
+            request, "test-tool", baseCommand, true, logger, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Null(result); // Should proceed
@@ -339,17 +322,14 @@ public class BaseToolLoaderTests
         // Arrange
         var mockServer = Substitute.For<McpServer>();
         mockServer.ClientCapabilities.Returns((ClientCapabilities?)null); // No elicitation support
-        var jsonRpcRequest = new JsonRpcRequest
-        {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
-        };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool", mockServer);
         var logger = Substitute.For<ILogger>();
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { Secret = true });
 
         // Act
-        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
-            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+        var result = await BaseToolLoader.HandleElicitationAsync(
+            request, "test-tool", baseCommand, false, logger, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -369,19 +349,17 @@ public class BaseToolLoaderTests
             Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "accept" })
         };
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
-                  .Returns(Task.FromResult(mockResponse));
+            .Returns(mockResponse);
 
-        var jsonRpcRequest = new JsonRpcRequest
-        {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
-        };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool", mockServer);
         var logger = Substitute.For<ILogger>();
 
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { Secret = true });
+
         // Act
-        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
-            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+        var result = await BaseToolLoader.HandleElicitationAsync(
+            request, "test-tool", baseCommand, false, logger, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Null(result); // Should proceed
@@ -402,19 +380,17 @@ public class BaseToolLoaderTests
             Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "decline" })
         };
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
-                  .Returns(Task.FromResult(mockResponse));
+            .Returns(mockResponse);
 
-        var jsonRpcRequest = new JsonRpcRequest
-        {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
-        };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool", mockServer);
         var logger = Substitute.For<ILogger>();
 
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { Secret = true });
+
         // Act
-        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
-            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+        var result = await BaseToolLoader.HandleElicitationAsync(
+            request, "test-tool", baseCommand, false, logger, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -437,23 +413,21 @@ public class BaseToolLoaderTests
         };
 
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
-                  .Returns(callInfo =>
-                  {
-                      capturedRequest = callInfo.Arg<JsonRpcRequest>();
-                      return Task.FromResult(mockResponse);
-                  });
+            .Returns(callInfo =>
+            {
+                capturedRequest = callInfo.Arg<JsonRpcRequest>();
+                return mockResponse;
+            });
 
-        var jsonRpcRequest = new JsonRpcRequest
-        {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
-        };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool", mockServer);
         var logger = Substitute.For<ILogger>();
 
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { Secret = true });
+
         // Act
-        await TestableBaseToolLoader.HandleElicitationAsyncPublic(
-            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+        await BaseToolLoader.HandleElicitationAsync(
+            request, "test-tool", baseCommand, false, logger, TestContext.Current.CancellationToken);
 
         // Assert - verify the schema has a decision single-select enum property with approve/reject
         Assert.NotNull(capturedRequest);
@@ -487,66 +461,19 @@ public class BaseToolLoaderTests
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
                   .Returns<JsonRpcResponse>(_ => throw new InvalidOperationException("Elicitation failed"));
 
-        var jsonRpcRequest = new JsonRpcRequest
-        {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
-        };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool", mockServer);
         var logger = Substitute.For<ILogger>();
 
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { Secret = true });
+
         // Act
-        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
-            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+        var result = await BaseToolLoader.HandleElicitationAsync(
+            request, "test-tool", baseCommand, false, logger, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
         Assert.True(result.IsError);
         Assert.Contains("Elicitation failed", ((TextContentBlock)result.Content[0]).Text);
-    }
-
-    internal sealed class TestableBaseToolLoader : BaseToolLoader
-    {
-        public TestableBaseToolLoader(ILogger logger)
-            : base(logger)
-        {
-        }
-
-        public McpClientOptions CreateClientOptionsPublic(McpServer server)
-        {
-            return CreateClientOptions(server);
-        }
-
-        public static Task<CallToolResult?> HandleElicitationAsyncPublic(
-            RequestContext<CallToolRequestParams> request,
-            string toolName,
-            ToolMetadata metadata,
-            bool dangerouslyDisableElicitation,
-            ILogger logger,
-            CancellationToken cancellationToken)
-        {
-            var baseCommand = Substitute.For<IBaseCommand>();
-            baseCommand.Metadata.Returns(metadata);
-            return HandleElicitationAsync(request, toolName, baseCommand, dangerouslyDisableElicitation, logger, cancellationToken);
-        }
-
-        public override ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
-        {
-            var result = new ListToolsResult
-            {
-                Tools = []
-            };
-            return ValueTask.FromResult(result);
-        }
-
-        public override ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
-        {
-            var result = new CallToolResult
-            {
-                Content = [],
-                IsError = false
-            };
-            return ValueTask.FromResult(result);
-        }
     }
 }

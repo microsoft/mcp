@@ -10,6 +10,7 @@ namespace Microsoft.Mcp.Core.Models;
 
 [JsonSerializable(typeof(List<CommandInfo>))]
 [JsonSerializable(typeof(List<string>))]
+[JsonSerializable(typeof(Dictionary<string, bool>))]
 [JsonSerializable(typeof(CommandResponse))]
 [JsonSerializable(typeof(ETag), TypeInfoPropertyName = "McpETag")]
 [JsonSerializable(typeof(ToolMetadata))]

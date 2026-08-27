@@ -6,6 +6,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.File;
 
@@ -14,7 +15,7 @@ public class DirectoryDeleteCommandTests : CommandUnitTestsBase<DirectoryDeleteC
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("delete_directory", Command.Name);
+        Assert.Equal("delete-directory", Command.Name);
         Assert.Equal("Delete OneLake Directory", Command.Title);
         Assert.False(Command.Metadata.ReadOnly);
         Assert.True(Command.Metadata.Destructive);
@@ -26,7 +27,7 @@ public class DirectoryDeleteCommandTests : CommandUnitTestsBase<DirectoryDeleteC
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("delete_directory", CommandDefinition.Name);
+        Assert.Equal("delete-directory", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);
     }

@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the resilience drill update tool for changing supporting resource placement, RBAC setup mode, and recovery plan association."

@@ -3,7 +3,7 @@
 
 using System.Security;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ServiceBus.Services;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.ServiceBus.Tests.Services;
 
 public class ServiceBusServiceNamespaceValidationTests
 {
-    private readonly ITenantService _tenantService = Substitute.For<ITenantService>();
+    private readonly IAzureService _azureService = Substitute.For<IAzureService>();
     private readonly ServiceBusService _service;
 
     public ServiceBusServiceNamespaceValidationTests()
@@ -22,12 +22,12 @@ public class ServiceBusServiceNamespaceValidationTests
         var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
         cloudConfig.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
         cloudConfig.AuthorityHost.Returns(new Uri("https://login.microsoftonline.com"));
-        _tenantService.CloudConfiguration.Returns(cloudConfig);
-        _tenantService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
+        _azureService.CloudConfiguration.Returns(cloudConfig);
+        _azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Substitute.For<TokenCredential>());
-        _tenantService.GetClient().Returns(_ => new HttpClient(new HttpClientHandler()));
+        _azureService.GetClient().Returns(_ => new HttpClient(new HttpClientHandler()));
 
-        _service = new ServiceBusService(_tenantService);
+        _service = new ServiceBusService(_azureService);
     }
 
     [Theory]

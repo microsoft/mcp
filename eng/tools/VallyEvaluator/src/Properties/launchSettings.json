@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "Default": {
+      "commandName": "Project"
+    },
+    "All": {
+      "commandName": "Project",
+      "commandLineArgs": "--serverName=Azure.Mcp.Server"
+    },
+    "Demo": {
+      "commandName": "Project",
+      "commandLineArgs": "--serverName=Azure.Mcp.Server --namespaces=\"storage,appconfig\""
+    }
+  }
+}

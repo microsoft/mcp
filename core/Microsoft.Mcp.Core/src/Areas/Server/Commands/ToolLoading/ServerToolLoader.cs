@@ -17,7 +17,10 @@ using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
-public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrategy, IOptions<ToolLoaderOptions> options, ILogger<ServerToolLoader> logger) : BaseToolLoader(logger)
+public sealed class ServerToolLoader(
+    IMcpDiscoveryStrategy serverDiscoveryStrategy,
+    IOptions<ServerRuntimeConfiguration> configuration,
+    ILogger<ServerToolLoader> logger) : BaseToolLoader(logger)
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = serverDiscoveryStrategy ?? throw new ArgumentNullException(nameof(serverDiscoveryStrategy));
     private readonly ConcurrentDictionary<string, List<Tool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
@@ -110,14 +113,17 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         if (string.IsNullOrWhiteSpace(request.Params?.Name))
         {
             throw new ArgumentNullException(nameof(request.Params.Name), "Tool name cannot be null or empty.");
         }
 
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            // At this point the tool parameters is the server tool schema
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params.Arguments?.Keys));
+
         string tool = request.Params.Name;
-        var args = request.Params?.Arguments;
+        var args = request.Params.Arguments;
         string? intent = null;
         string? command = null;
         bool learn = false;
@@ -236,6 +242,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
         try
         {
+            Activity.Current?.SetTag(TagName.ToolSource, "external." + client.ServerInfo.Name);
             var availableTools = await GetChildToolListAsync(request, tool, cancellationToken);
 
             // When the specified command is not available, we try to learn about the tool's capabilities
@@ -258,6 +265,9 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                 parameters = samplingResult.parameters;
             }
 
+            // Here the parameters are now those for the tool call, instead of being the server parameters.
+            Activity.Current?.SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(parameters.Keys));
+
             // Verify the resolved command (which may have been updated by sampling)
             // exists and is permitted under current mode restrictions.
             var allTools = await GetAllChildToolsAsync(request, tool, cancellationToken);
@@ -269,7 +279,11 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                 return await InvokeToolLearn(request, intent, tool, cancellationToken);
             }
 
-            if ((options?.Value?.ReadOnly ?? false) && resolvedTool.Annotations?.ReadOnlyHint != true)
+            var toolId = McpHelper.GetToolIdFromMeta(resolvedTool.Meta);
+            Activity.Current?.SetTag(TagName.ToolId, toolId)
+                .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(resolvedTool));
+
+            if (configuration.Value.ReadOnly && resolvedTool.Annotations?.ReadOnlyHint != true)
             {
                 return McpHelper.InjectToolIdMetadata(new CallToolResult
                 {
@@ -281,10 +295,10 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                         }
                     ],
                     IsError = true,
-                }, resolvedTool.Meta);
+                }, toolId);
             }
 
-            if ((options?.Value?.IsHttpMode ?? false) && McpHelper.HasHint(resolvedTool, McpHelper.LocalRequiredHintMetaKey))
+            if (configuration.Value.IsHttpMode && McpHelper.HasHint(resolvedTool, McpHelper.LocalRequiredHintMetaKey))
             {
                 return McpHelper.InjectToolIdMetadata(new CallToolResult
                 {
@@ -296,7 +310,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                         }
                     ],
                     IsError = true,
-                }, resolvedTool.Meta);
+                }, toolId);
             }
 
             // At this point we should always have a valid command (child tool) call to invoke.
@@ -350,7 +364,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                         finalResponse.Content.Add(contentBlock);
                     }
 
-                    return McpHelper.InjectToolIdMetadata(finalResponse, resolvedTool.Meta);
+                    return McpHelper.InjectToolIdMetadata(finalResponse, toolId);
                 }
             }
 
@@ -381,7 +395,8 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string tool, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.IsLearn, true);
         var tools = await GetChildToolListAsync(request, tool, cancellationToken);
         var toolsJson = JsonSerializer.Serialize(tools.Select(t => new ToolCommandInfo(t)), ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
@@ -452,8 +467,8 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     {
         var allTools = await GetAllChildToolsAsync(request, tool, cancellationToken);
         return allTools
-            .Where(t => !(options?.Value?.ReadOnly ?? false) || (t.Annotations?.ReadOnlyHint == true))
-            .Where(t => !(options?.Value?.IsHttpMode ?? false) || !McpHelper.HasHint(t, McpHelper.LocalRequiredHintMetaKey))
+            .Where(t => !configuration.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true))
+            .Where(t => !configuration.Value.IsHttpMode || !McpHelper.HasHint(t, McpHelper.LocalRequiredHintMetaKey))
             .ToList();
     }
 
@@ -461,13 +476,6 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     {
         var tools = await GetChildToolListAsync(request, toolName, cancellationToken);
         return tools.First(t => string.Equals(t.Name, commandName, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static bool SupportsSampling(McpServer server)
-    {
-#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
-        return server?.ClientCapabilities?.Sampling != null;
-#pragma warning restore MCP9005
     }
 
     private static async Task NotifyProgressAsync(RequestContext<CallToolRequestParams> request, string message, CancellationToken cancellationToken)

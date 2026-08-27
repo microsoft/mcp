@@ -11,7 +11,7 @@
 
 ## Engineering System
 
-- Use `./eng/scripts/Build-Local.ps1 -UsePaths -VerifyNpx` to verify changes to powershell, c# project files and npm packages
+- Use `./eng/scripts/Build-Local.ps1 -VerifyNpx` to verify changes to powershell, c# project files and npm packages
 - Don't run local builds to check pipeline YAML files (e.g., files in `eng/pipelines/` with `.yml` extension)
 
 ## Pull Request Guidelines
@@ -46,6 +46,8 @@
 - Copilot should utilize the [recorded test documentation](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md) in `docs/recorded-tests.md` for more details on how to convert and validate recorded tests.
 
 ## Code Review Guidelines
+
+When reviewing a pull request, use the `mcp-code-reviewer` skill. In interactive IDE and CLI sessions, return draft findings for human approval before posting them. In GitHub Copilot Code Review, post qualified inline comments directly as a comment-only review. Keep the review read-only: never modify code or the branch, approve or request changes, resolve threads, or invoke an agent to implement changes.
 
 When reviewing PRs that add or modify MCP tools, cross-reference the [pre-merge checklist](PULL_REQUEST_TEMPLATE.md) and check the following repository-specific completeness requirements:
 

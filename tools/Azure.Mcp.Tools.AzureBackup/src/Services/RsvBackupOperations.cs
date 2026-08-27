@@ -3,7 +3,6 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.ResourceManager;
 using Azure.ResourceManager.RecoveryServices;
@@ -15,7 +14,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
-public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzureService(tenantService), IRsvBackupOperations
+public sealed partial class RsvBackupOperations(IAzureService azureService) : BaseAzureService(azureService), IRsvBackupOperations
 {
     private const string VaultType = VaultTypeResolver.Rsv;
     private const string FabricName = "Azure";
@@ -46,7 +45,8 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             }
         };
 
-        var result = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vaultName, vaultData, cancellationToken);
+        var result = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, vaultData, cancellationToken);
+        await WaitForLroCompletionAsync(result, cancellationToken);
 
         return new VaultCreateResult(
             result.Value.Id?.ToString(),
@@ -58,7 +58,8 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
     public async Task<BackupVaultInfo> GetVaultAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -70,12 +71,17 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
 
-        return MapToVaultInfo(vault.Value.Data, resourceGroup);
+        var mua = (expand & VaultExpand.Mua) != 0
+            ? await GetMuaProxyAsync(armClient, subscription, resourceGroup, vaultName, cancellationToken)
+            : default;
+
+        return MapToVaultInfo(vault.Value.Data, resourceGroup, expand, mua.state, mua.resourceGuardId);
     }
 
     public async Task<List<BackupVaultInfo>> ListVaultsAsync(
         string subscription, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
@@ -87,10 +93,31 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         await foreach (var vault in subResource.GetRecoveryServicesVaultsAsync(cancellationToken))
         {
             var rg = vault.Id?.ResourceGroupName;
-            vaults.Add(MapToVaultInfo(vault.Data, rg));
+            var mua = (expand & VaultExpand.Mua) != 0 && rg is not null
+                ? await GetMuaProxyAsync(armClient, subscription, rg, vault.Data.Name, cancellationToken)
+                : default;
+            vaults.Add(MapToVaultInfo(vault.Data, rg, expand, mua.state, mua.resourceGuardId));
         }
 
         return vaults;
+    }
+
+    private static async Task<(string? state, string? resourceGuardId)> GetMuaProxyAsync(
+        ArmClient armClient, string subscription, string resourceGroup, string vaultName,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+            var rgResource = armClient.GetResourceGroupResource(rgId);
+            var proxyResponse = await rgResource.GetResourceGuardProxyAsync(vaultName, "VaultProxy", cancellationToken);
+            var proxyId = proxyResponse.Value.Data.Properties?.ResourceGuardResourceId?.ToString();
+            return ("Enabled", proxyId);
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            return ("Disabled", null);
+        }
     }
 
     public async Task<ProtectResult> ProtectItemAsync(
@@ -536,7 +563,8 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             }
         }
 
-        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         // RSV storage redundancy is managed via the BackupResourceStorageConfig API,
         // not the vault patch endpoint.
@@ -574,7 +602,8 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var collection = rgResource.GetBackupResourceConfigs();
-        await collection.CreateOrUpdateAsync(WaitUntil.Completed, vaultName, data, cancellationToken);
+        var operation = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, data, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
     }
 
     public async Task<OperationResult> CreatePolicyAsync(
@@ -614,7 +643,8 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         // --policy-tags maps to ARM resource tags on the policy (RSV only).
         ApplyPolicyTags(policyData.Tags, request.PolicyTags);
 
-        await policyCollection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
+        var operation = await policyCollection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' created in vault '{vaultName}'.");
     }
@@ -692,7 +722,8 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
         UpdatePolicyScheduleAndRetention(policyProperties, newScheduleTime, newRetentionDays);
 
-        await policyCollection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
+        var operation = await policyCollection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' updated in vault '{vaultName}'.");
     }
@@ -837,7 +868,8 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                 }
             }
         };
-        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Immutability set to '{immutabilityState}' for vault '{vaultName}'");
     }
@@ -887,7 +919,8 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             }
         };
 
-        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'");
     }
@@ -933,7 +966,8 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
             var rgResource = armClient.GetResourceGroupResource(rgId);
             var collection = rgResource.GetBackupResourceConfigs();
-            await collection.CreateOrUpdateAsync(WaitUntil.Completed, vaultName, data, cancellationToken);
+            var operation = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, data, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
         }
         catch (RequestFailedException ex) when (ex.ErrorCode == "BMSUserErrorRedundancySettingsUseVaultApi")
         {
@@ -949,7 +983,8 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                 }
             };
 
-            await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+            var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
         }
 
         return new OperationResult("Succeeded", null, $"Cross-Region Restore enabled for vault '{vaultName}'.");
@@ -980,11 +1015,12 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             }
         };
 
-        await proxyCollection.CreateOrUpdateAsync(
-            WaitUntil.Completed,
+        var operation = await proxyCollection.CreateOrUpdateAsync(
+            WaitUntil.Started,
             "VaultProxy",
             proxyData,
             cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Multi-User Authorization enabled on vault '{vaultName}' with Resource Guard '{resourceGuardId}'.");
     }
@@ -1005,7 +1041,8 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         var rgResource = armClient.GetResourceGroupResource(rgId);
 
         var proxyResponse = await rgResource.GetResourceGuardProxyAsync(vaultName, "VaultProxy", cancellationToken);
-        await proxyResponse.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        var operation = await proxyResponse.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Multi-User Authorization disabled on vault '{vaultName}'.");
     }
@@ -1076,7 +1113,8 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             }
         };
 
-        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null,
             $"Customer-Managed Key encryption configured on vault '{vaultName}' using key '{keyName}' from '{kvUri}'.");
@@ -1095,11 +1133,38 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         };
 
     private static BackupVaultInfo MapToVaultInfo(RecoveryServicesVaultData data, string? resourceGroup)
+        => MapToVaultInfo(data, resourceGroup, VaultExpand.None, muaState: null, muaResourceGuardId: null);
+
+    private static BackupVaultInfo MapToVaultInfo(
+        RecoveryServicesVaultData data,
+        string? resourceGroup,
+        VaultExpand expand,
+        string? muaState,
+        string? muaResourceGuardId)
     {
-        var securitySettings = data.Properties?.SecuritySettings;
+        var properties = data.Properties;
+        var securitySettings = properties?.SecuritySettings;
         var softDeleteSettings = securitySettings?.SoftDeleteSettings;
         var immutabilityState = securitySettings?.ImmutabilityState?.ToString();
         var identityType = data.Identity?.ManagedServiceIdentityType.ToString();
+
+        string? crossRegionRestoreState = null;
+        // NOTE: RSV encryption state is intentionally left null. The RSV vault GET API
+        // (VaultPropertiesEncryption) does not return a first-class encryption state field —
+        // only the CMK URI (when configured) and infrastructure encryption flag. We surface
+        // encryptionKeyUri as returned by the service and skip the state field rather than
+        // inferring a synthetic value. DPP vaults populate encryptionState authoritatively
+        // from SecuritySettings.EncryptionSettings.State in DppBackupOperations.
+        string? encryptionState = null;
+        string? encryptionKeyUri = null;
+
+        if ((expand & VaultExpand.Security) != 0)
+        {
+            encryptionKeyUri = properties?.Encryption?.KeyUri?.ToString();
+
+            // CrossRegionRestore comes from RedundancySettings and is part of the security posture.
+            crossRegionRestoreState = properties?.RedundancySettings?.CrossRegionRestore?.ToString();
+        }
 
         return new BackupVaultInfo(
             data.Id?.ToString(),
@@ -1107,15 +1172,20 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             VaultType,
             data.Location.Name,
             resourceGroup,
-            data.Properties?.ProvisioningState,
+            properties?.ProvisioningState,
             data.Sku?.Name.ToString(),
             null,
-            data.Properties?.RedundancySettings?.StandardTierStorageRedundancy?.ToString(),
+            properties?.RedundancySettings?.StandardTierStorageRedundancy?.ToString(),
             softDeleteSettings?.SoftDeleteState?.ToString(),
             softDeleteSettings?.SoftDeleteRetentionPeriodInDays,
             immutabilityState,
             identityType,
-            data.Tags?.ToDictionary(t => t.Key, t => t.Value));
+            data.Tags?.ToDictionary(t => t.Key, t => t.Value),
+            MuaState: muaState,
+            MuaResourceGuardId: muaResourceGuardId,
+            CrossRegionRestoreState: crossRegionRestoreState,
+            EncryptionState: encryptionState,
+            EncryptionKeyUri: encryptionKeyUri);
     }
 
     private static ProtectedItemInfo MapToProtectedItemInfo(BackupProtectedItemData data)

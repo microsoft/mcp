@@ -6,10 +6,7 @@ using System.Security;
 using System.Text.Json.Nodes;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
-using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.ResourceManager;
 using Azure.ResourceManager.CognitiveServices;
@@ -20,16 +17,10 @@ using OpenAI.Chat;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Services;
 
-public class FoundryExtensionsService(
-    IHttpClientFactory httpClientFactory,
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), IFoundryExtensionsService
+public class FoundryExtensionsService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IFoundryExtensionsService
 {
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-
-    private ArmEnvironment GetArmEnvironment() => TenantService.CloudConfiguration.ArmEnvironment;
+    private ArmEnvironment GetArmEnvironment() => AzureService.CloudConfiguration.ArmEnvironment;
 
     /// <summary>
     /// Validates that the endpoint value satisfies the pattern of a Foundry project endpoint.
@@ -124,17 +115,16 @@ public class FoundryExtensionsService(
         ValidateProjectEndpoint(endpoint);
 
         var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
-        var indexesClient = projectClient.GetIndexesClient();
 
         var indexes = new List<KnowledgeIndexInformation>();
-        await foreach (var index in indexesClient.GetIndicesAsync(cancellationToken))
+        await foreach (var index in projectClient.Indexes.GetIndexesAsync(cancellationToken))
         {
             // Determine the type based on the actual type of the index
             string indexType = index switch
             {
                 AzureAISearchIndex => "AzureAISearchIndex",
                 ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
-                CosmosDBIndex => "CosmosDBIndex",
+                AIProjectCosmosDBIndex => "CosmosDBIndex",
                 _ => index.GetType().Name
             };
 
@@ -165,10 +155,9 @@ public class FoundryExtensionsService(
         ValidateProjectEndpoint(endpoint);
 
         var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
-        var indexesClient = projectClient.GetIndexesClient();
 
         // Find the index by name using async enumerable
-        var index = await indexesClient.GetIndicesAsync(cancellationToken: cancellationToken)
+        var index = await projectClient.Indexes.GetIndexesAsync(cancellationToken: cancellationToken)
             .Where(i => string.Equals(i.Name, indexName, StringComparisons.ResourceName))
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
 
@@ -182,7 +171,7 @@ public class FoundryExtensionsService(
         {
             AzureAISearchIndex => "AzureAISearchIndex",
             ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
-            CosmosDBIndex => "CosmosDBIndex",
+            AIProjectCosmosDBIndex => "CosmosDBIndex",
             _ => index.GetType().Name
         };
 
@@ -217,7 +206,7 @@ public class FoundryExtensionsService(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
 
         // Get the Cognitive Services account
@@ -293,7 +282,7 @@ public class FoundryExtensionsService(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
 
         // Get the Cognitive Services account
@@ -344,7 +333,7 @@ public class FoundryExtensionsService(
     {
         ValidateRequiredParameters((nameof(resourceName), resourceName), (nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
 
         // Get the Cognitive Services account
@@ -434,7 +423,7 @@ public class FoundryExtensionsService(
             throw new ArgumentException("Messages array cannot be null or empty", nameof(messages));
         }
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
 
         // Get the Cognitive Services account
@@ -567,7 +556,7 @@ public class FoundryExtensionsService(
         CancellationToken cancellationToken = default)
     {
         // Configure AzureOpenAIClientOptions with HttpClient transport for test proxy support
-        var httpClient = _httpClientFactory.CreateClient();
+        var httpClient = AzureService.GetClient();
         var clientOptions = new AzureOpenAIClientOptions
         {
             Transport = new HttpClientPipelineTransport(httpClient)
@@ -610,7 +599,7 @@ public class FoundryExtensionsService(
         return new(new(endpoint), credential, clientOptions);
     }
 
-    private HttpClientTransport CreateTransport() => new(_httpClientFactory.CreateClient());
+    private HttpClientPipelineTransport CreateTransport() => new(AzureService.GetClient());
 
     public async Task<List<AiResourceInformation>> ListAiResourcesAsync(
         string subscription,
@@ -621,7 +610,7 @@ public class FoundryExtensionsService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
         var resources = new List<AiResourceInformation>();
 
@@ -667,7 +656,7 @@ public class FoundryExtensionsService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(resourceName), resourceName));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
 
         if (rgResource?.Value == null)

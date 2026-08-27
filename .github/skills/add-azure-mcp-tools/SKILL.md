@@ -66,7 +66,7 @@ return $"Request failed: {requestFailedException.Message}"; // may include auth 
 ### Safe Downstream Interactions
 - **Never concatenate user input directly without prior validation** into URLs, shell commands, resource identifiers, query strings, etc.
 - Use `EndpointValidator` from `Microsoft.Mcp.Core.Helpers` to guard all endpoint usage — choose the method that matches your scenario:
-  - **Azure service data-plane endpoint** (endpoint derived from a resource name, e.g. storage account, ACR, App Config): call `EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, TenantService.CloudConfiguration.ArmEnvironment)` before constructing the client. This enforces the correct per-cloud domain suffix (e.g. `.blob.core.windows.net` / `.blob.core.chinacloudapi.cn`) and HTTPS.
+  - **Azure service data-plane endpoint** (endpoint derived from a resource name, e.g. storage account, ACR, App Config): call `EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, AzureService.CloudConfiguration.ArmEnvironment)` before constructing the client. This enforces the correct per-cloud domain suffix (e.g. `.blob.core.windows.net` / `.blob.core.chinacloudapi.cn`) and HTTPS.
   - **User-supplied URL to a known external service** (e.g. a GitHub URL the user provides): call `EndpointValidator.ValidateExternalUrl(url, allowedHosts)` with an explicit allowlist of permitted hosts.
   - **User-supplied target URL with no known domain** (e.g. a load-test target the user controls): call `EndpointValidator.ValidatePublicTargetUrl(url)`, which enforces HTTPS/HTTP-only schemes, rejects private/reserved IP ranges, rejects reserved hostnames, and resolves DNS to catch hostnames that map to internal IPs.
 - For services that *construct* the endpoint internally (not from user input), use the cloud-type switch pattern (see [Phase 1c: Service Implementation](#1c-service-interface-and-implementation)) — `EndpointValidator` is not required in that case but `ValidateAzureServiceEndpoint` can be added as a defense-in-depth layer.
@@ -81,7 +81,7 @@ return $"Request failed: {requestFailedException.Message}"; // may include auth 
 | Input abuse (oversized/malformed names) | Override `ValidateOptions` with resource-specific length and format checks using deterministic validation first (length bounds, allowed-value sets, character/category checks). For query inputs, use a dedicated validator class — see `CosmosQueryValidator.EnsureReadOnlySelect` (`tools/Azure.Mcp.Tools.Cosmos/src/Validation/CosmosQueryValidator.cs`) as a reference for length cap, keyword blocking, and injection pattern detection. |
 | Injection into downstream systems | For user-supplied queries: use a validator class that enforces a single read-only statement, caps length, strips/blocks dangerous tokens, and detects tautology patterns. Do not interpolate user input into query strings directly — prefer parameterized APIs where available. For blob/resource URIs: call `EndpointValidator.ValidateAzureServiceEndpoint` before constructing any client (see `tools/Azure.Mcp.Tools.Compute/src/Services/ComputeService.cs` blob URI handling as a reference). |
 | Secret leakage via logs or error responses | Log only individually named, non-sensitive fields: `options.Subscription`, `options.ResourceGroup`, `Name`. Never use `{@Options}` or log connection strings, keys, or endpoint values. Override `GetErrorMessage` to return actionable but non-revealing messages — strip raw `RequestFailedException` bodies that may contain tokens or account metadata. |
-| Cross-tenant/resource confusion | `SubscriptionCommand` base class enforces that `--subscription` is always present and resolved via `ISubscriptionResolver` before `ExecuteAsync` is called. Pass `options.Tenant` to all service calls so `ITenantService` can validate tenant context per-request. Fail explicitly if tenant context is ambiguous — do not fall back silently. |
+| Cross-tenant/resource confusion | `SubscriptionCommand` base class enforces that `--subscription` is always present and resolved via `ISubscriptionResolver` before `ExecuteAsync` is called. Pass `options.Tenant` to all service calls so `IAzureService` can validate tenant context per-request. Fail explicitly if tenant context is ambiguous — do not fall back silently. |
 | SSRF-like endpoint misuse | Use `EndpointValidator` from `Microsoft.Mcp.Core.Helpers`: `ValidateAzureServiceEndpoint(endpoint, serviceType, armEnvironment)` for Azure data-plane endpoints, `ValidateExternalUrl(url, allowedHosts)` for user-supplied URLs to known hosts, `ValidatePublicTargetUrl(url)` for arbitrary user-controlled targets (DNS-resolves and blocks private/reserved IPs). |
 
 ### Using AI to Generate Tool Code
@@ -246,8 +246,8 @@ Choose base class:
  > need ARG querying functionality.
 
 ```csharp
-public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), I{Toolset}Service
+public class {Toolset}Service(IAzureService azureService)
+    : BaseAzureResourceService(azureService), I{Toolset}Service
 {
     public async Task<ResourceQueryResults<MyModel>> GetResourcesAsync(
         string? myOption,
@@ -282,12 +282,9 @@ public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantS
 
 For **write operations** (using direct ARM clients):
 ```csharp
-public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureService(tenantService), I{Toolset}Service
+public class {Toolset}Service(IAzureService azureService)
+    : BaseAzureService(azureService), I{Toolset}Service
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService
-        ?? throw new ArgumentNullException(nameof(subscriptionService));
-
     public async Task<MyResource> CreateResourceAsync(
         string resourceName,
         string resourceGroup,
@@ -296,7 +293,7 @@ public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantS
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy);
 
         // CRITICAL: Use GetResourceGroupAsync with await
         var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -310,13 +307,13 @@ public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantS
 
 Sovereign cloud rules:
 - ARM/Resource Graph operations: cloud-aware automatically, no extra work
-- Data plane endpoints: use `TenantService.CloudConfiguration.CloudType` switch — never hardcode URLs
+- Data plane endpoints: use `AzureService.CloudConfiguration.CloudType` switch — never hardcode URLs
 
 **Data plane endpoint pattern** (required for services like Storage, Cosmos, Search):
 
 ```csharp
-public class MyService(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), IMyService
+public class MyService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IMyService
 {
 
     private async Task<MyDataPlaneClient> CreateDataPlaneClientAsync(
@@ -327,7 +324,7 @@ public class MyService(ISubscriptionService subscriptionService, ITenantService 
     {
         var endpoint = GetResourceEndpoint(resourceName);
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new MyClientOptions()), retryPolicy);
-        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new MyDataPlaneClient(
             new Uri(endpoint),
             await GetCredential(tenant, cancellationToken),
@@ -336,7 +333,7 @@ public class MyService(ISubscriptionService subscriptionService, ITenantService 
 
     private string GetResourceEndpoint(string resourceName)
     {
-        return TenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
                 $"https://{resourceName}.service.core.windows.net",
@@ -954,7 +951,7 @@ dotnet test tools/Azure.Mcp.Tools.{Toolset}/tests
 .\eng\common\spelling\Invoke-Cspell.ps1
 
 # 5. Full verification
-./eng/scripts/Build-Local.ps1 -UsePaths -VerifyNpx
+./eng/scripts/Build-Local.ps1 -VerifyNpx
 
 # 6. AOT/Native build (required for AOT-compatible toolsets)
 ./eng/scripts/Build-Local.ps1 -BuildNative
@@ -1148,7 +1145,7 @@ Before creating the PR, verify all of these:
 - [ ] Resource access patterns use collections (e.g., `.GetSqlServers().GetAsync()`)
 - [ ] `CancellationToken` passed to all async SDK calls
 - [ ] Subscription resolution uses `ISubscriptionResolver` (injected in constructor)
-- [ ] Service constructor includes `ISubscriptionService` injection
+- [ ] Service constructor includes `IAzureService` injection
 
 ### Documentation
 - [ ] `azmcp-commands.md` updated with command documentation
@@ -1404,8 +1401,8 @@ var vms = await vmssResource.Value
 ### Subscription Resolution
 
 ```csharp
-// ✅ Correct: use ISubscriptionService
-var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+// ✅ Correct: use IAzureService
+var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, retryPolicy);
 
 // ❌ Wrong: manual ARM client creation
 var armClient = await CreateArmClientAsync(tenant, retryPolicy);
@@ -2009,7 +2006,7 @@ public async Task<List<Resource>> GetResourcesAsync(
     string subscription, string? tenant, RetryPolicyOptions? retryPolicy,
     CancellationToken cancellationToken)
 {
-    // ITenantService handles tenant resolution for all modes:
+    // IAzureService handles tenant resolution for all modes:
     // - OBO mode: Validates tenant matches user's token
     // - Hosting environment: Uses provided tenant or default
     // - Stdio mode: Uses Azure CLI/VS Code default tenant

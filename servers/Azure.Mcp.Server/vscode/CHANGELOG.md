@@ -1,6 +1,90 @@
 # Release History
 
 
+
+
+
+
+
+
+
+## 3.0.38 (2026-08-25) (pre-release)
+
+### Added
+
+- Added the `azmcp resilience drill run get` command to list runs of a resilience drill or get a specific drill run. [[#3318](https://github.com/microsoft/mcp/pull/3318)]
+- Added the `azmcp resilience drill run resource get` command to list resources of a resilience drill run or get a specific drill run resource. [[#3318](https://github.com/microsoft/mcp/pull/3318)]
+- Added the `azmcp resilience recoveryplan checkreadiness` command to discover and assess whether a recovery plan and its protected resources are ready for recovery operations. The command waits for the readiness job and returns its status, errors, failed tasks, and failed resources. [[#3268](https://github.com/microsoft/mcp/pull/3268)]
+- The `azmcp search index query` command now uses the full Lucene query syntax by default and supports a new optional `--query-type` option to select between `simple`, `full`, and `semantic` queries. [[#3251](https://github.com/microsoft/mcp/pull/3251)]
+
+### Changed
+
+- **Breaking:** Renamed the recovery plan command group from `azmcp resilience recovery plan` to `azmcp resilience recoveryplan` and the recovery job command group from `azmcp resilience recovery job` to `azmcp resilience recoveryjob`. Existing get commands now use the corresponding single-word resource group names. [[#3268](https://github.com/microsoft/mcp/pull/3268)]
+
+## 3.0.37 (2026-08-20) (pre-release)
+
+### Added
+
+- `azurebackup vault get` now accepts an optional `--expand` parameter (comma-separated: `security`, `mua`, `all`) to include extended vault posture fields (encryption key URI, cross-region restore state, MUA resource guard link). For DPP vaults, `encryptionState` is also returned from the service. RSV vaults omit `encryptionState` because the Recovery Services vault GET API does not return an explicit state field. Default output shape is unchanged. [[#1718](https://github.com/microsoft/mcp/pull/1718)]
+- Added the `azmcp resilience recovery plan create` command to create or fully update a Zonal recovery plan with an explicitly selected system-assigned, user-assigned, or combined identity. Updates can switch identity types while preserving existing recovery groups. [[#3268](https://github.com/microsoft/mcp/pull/3268)]
+- Added the `azmcp resilience recovery plan delete` command to delete a recovery plan from an Azure service group. The command is idempotent and reports whether a plan was deleted. [[#3268](https://github.com/microsoft/mcp/pull/3268)]
+- Added the `azmcp resilience recovery plan update-resources` command to include, exclude, configure, or remove recovery resources, including their recovery groups, associated identities, and protection settings. The command validates mandatory protection settings before first inclusion while preserving existing settings on sparse updates. [[#3268](https://github.com/microsoft/mcp/pull/3268)]
+
+### Changed
+
+- Updated capture of `ToolParameters` for multi-step server modes. [[#3296](https://github.com/microsoft/mcp/pull/3296)]
+- Improved Event Grid performance by looking up a topic or system topic directly by name when a resource group is supplied, instead of enumerating every topic in the resource group. [[#3308](https://github.com/microsoft/mcp/pull/3308)]
+
+### Fixed
+
+- Fixed `azmcp eventgrid events publish` so that failures publishing events to an Event Grid topic now propagate as errors (with the correct HTTP status code) instead of being swallowed and reported as a successful (HTTP 200) response with a `Failed` status. [[#3326](https://github.com/microsoft/mcp/pull/3326)]
+
+## 3.0.36 (2026-08-18) (pre-release)
+
+### Added
+
+- Added the 'azmcp resilience drill get' command to list or retrieve drill details for a service group. [[#3232](https://github.com/microsoft/mcp/pull/3232)]
+- Added the 'azmcp resilience drill resource get' command to list or retrieve resources associated with a drill. [[#3232](https://github.com/microsoft/mcp/pull/3232)]
+
+### Changed
+
+- **Breaking:** Tool calls with unknown parameters are now explicitly rejected. [[#3282](https://github.com/microsoft/mcp/pull/3282)]
+
+## 3.0.35 (2026-08-13) (pre-release)
+
+### Changed
+
+- Improved `foundry` and `foundryexensions` namespace-level tool descriptions.
+
+## 3.0.34 (2026-08-11) (pre-release)
+
+### Added
+
+- Added the 'azmcp resilience usageplan create' command to create or update a resilience usage plan in a resource group, including its plan type. [[#3166](https://github.com/microsoft/mcp/pull/3166)]
+- Added the 'azmcp resilience usageplan enrollment create' command to create or update an enrollment under a resilience usage plan, associating it with a service group. [[#3166](https://github.com/microsoft/mcp/pull/3166)]
+
+### Fixed
+
+- Improved the Azure Quick Review (azqr) tool, extension namespace, and consolidated tool descriptions so that prompts asking to scan a subscription for compliance issues or compliance recommendations reliably select the `extension_azqr` tool in All and Namespace modes. [[#3134](https://github.com/microsoft/mcp/pull/3134)]
+
+## 3.0.33 (2026-08-06) (pre-release)
+
+### Added
+
+- Added `azmcp advisor metadata get` to retrieve the global Azure Advisor recommendation-type metadata catalog entry (by recommendation type id) from Azure Resource Graph. [[#3178](https://github.com/microsoft/mcp/pull/3178)]
+
+### Changed
+
+- **Breaking:** Renamed advisor_recommendation-type_list to advisor_metadata_list and moved recommendation-type discovery from the Advisor ARM API to the global Azure Resource Graph metadata catalog with richer localized details and filters for subcategory, Service Health tracking ID, and service-retirement date. Service-retirement filters (tracking ID or retirement date) apply to the ServiceUpgradeAndRetirement subcategory, and conflicting subcategory filters are rejected. [[#3197](https://github.com/microsoft/mcp/pull/3197)]
+- Added new telemetry collection for 'IsLearn' (indicates if the tool call attempted learning), 'ToolSource' (indication on where the invoked tool is from), 'ToolParameters' (the names of the tool parameters), and 'ToolAnnotations' (the annotations of the tool). [[#3156](https://github.com/microsoft/mcp/pull/3156)]
+
+## 3.0.32 (2026-08-04) (pre-release)
+
+### Fixed
+
+- Display a warning when VS Code MCP access is disabled and provide a shortcut to the MCP access setting.
+- Fixed a bug in EventHubs where creating a new event hub or consumer group could throw an `InvalidOperationException` instead of succeeding, because the `NullableResponse<T>.Value` accessor was dereferenced without checking `HasValue` first. [[#3187](https://github.com/microsoft/mcp/pull/3187)]
+
 ## 3.0.31 (2026-07-31) (pre-release)
 
 ### Changed
@@ -828,7 +912,7 @@ For a complete history of changes included in this release, see entries for vers
   - `orchestrator-next`
   - `send-brownfield-analysis`
 - **Breaking:** Narrowed the `subscription list` command response model to include only (`subscriptionId`, `displayName`, `state`, `tenantId`, `isDefault`) instead of the full Azure SDK `SubscriptionData` type. [[#1974](https://github.com/microsoft/mcp/pull/1974)]
-- Improved tool descriptions to enahnce LLM selection accuracy for the following tools: [[#2131](https://github.com/microsoft/mcp/pull/2131)]
+- Improved tool descriptions to enhance LLM selection accuracy for the following tools: [[#2131](https://github.com/microsoft/mcp/pull/2131)]
   - `extension_azqr`
   - `extension_cli_generate`
   - `extension_cli_install`

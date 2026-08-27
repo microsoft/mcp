@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.VirtualDesktop.Models;
 using Azure.ResourceManager.DesktopVirtualization;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Services;
 
-public class VirtualDesktopService(ISubscriptionService subscriptionService) : IVirtualDesktopService
+public class VirtualDesktopService(IAzureService azureService) : IVirtualDesktopService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
+    private readonly IAzureService _azureService = azureService;
 
     public async Task<IReadOnlyList<HostPool>> ListHostpoolsAsync(
         string subscription,
@@ -18,7 +18,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService) : I
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var sub = await _azureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var hostpools = new List<HostPool>();
         await foreach (HostPoolResource resource in sub.GetHostPoolsAsync(cancellationToken))
         {
@@ -34,7 +34,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService) : I
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var sub = await _azureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var hostpools = new List<HostPool>();
 
         var resourceGroupResource = await sub.GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -52,7 +52,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService) : I
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var sub = await _azureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var sessionHosts = new List<SessionHost>();
 
         await foreach (HostPoolResource resource in sub.GetHostPoolsAsync(cancellationToken))
@@ -80,7 +80,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService) : I
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var sub = await _azureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var userSessions = new List<UserSession>();
 
         await foreach (HostPoolResource resource in sub.GetHostPoolsAsync(cancellationToken))
@@ -114,7 +114,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService) : I
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var sub = await _azureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var sessionHosts = new List<SessionHost>();
 
         var armClient = sub.GetCachedClient(client => client);
@@ -135,7 +135,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService) : I
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var sub = await _azureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var userSessions = new List<UserSession>();
 
         var armClient = sub.GetCachedClient(client => client);
@@ -163,7 +163,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService) : I
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var sub = await _azureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var sessionHosts = new List<SessionHost>();
 
         var resourceGroupResource = await sub.GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -186,7 +186,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService) : I
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var sub = await _azureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var userSessions = new List<UserSession>();
 
         var resourceGroupResource = await sub.GetResourceGroupAsync(resourceGroup, cancellationToken);

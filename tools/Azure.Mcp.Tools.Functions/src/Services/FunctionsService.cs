@@ -57,7 +57,7 @@ public sealed class FunctionsService(
         Merge ProjectFiles carefully with existing project files:
         - **local.settings.json**: Merge "Values" entries, don't overwrite existing connection strings
         - **host.json**: Keep existing extensionBundle settings, merge other sections
-        - **requirements.txt / package.json / pom.xml**: Add new dependencies, avoid duplicates
+        - **requirements.txt / package.json / pom.xml / go.mod / go.sum**: Add new dependencies, avoid duplicates
         If anything conflicts, ask the user before overwriting.
 
         Function files placement by language:
@@ -65,6 +65,7 @@ public sealed class FunctionsService(
         - TypeScript/JavaScript: Place files in `src/functions/`
         - Java: Place files in `src/main/java/com/function/`
         - C#: Place files in the project root alongside the .csproj
+        - Go: Place `.go` files in the project root
         """;
 
     public async Task<LanguageListResult> GetLanguageListAsync(CancellationToken cancellationToken = default)

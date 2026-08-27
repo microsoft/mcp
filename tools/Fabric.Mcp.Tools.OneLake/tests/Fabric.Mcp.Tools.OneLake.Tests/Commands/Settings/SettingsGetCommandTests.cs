@@ -4,6 +4,7 @@
 using Fabric.Mcp.Tools.OneLake.Commands.Settings;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Tests.Client;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Settings;
 
@@ -12,7 +13,7 @@ public class SettingsGetCommandTests : CommandUnitTestsBase<SettingsGetCommand, 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("get_settings", Command.Name);
+        Assert.Equal("get-settings", Command.Name);
         Assert.Equal("Get OneLake Settings", Command.Title);
         Assert.Contains("Get the OneLake settings for a workspace", Command.Description);
         Assert.True(Command.Metadata.ReadOnly);
@@ -23,7 +24,7 @@ public class SettingsGetCommandTests : CommandUnitTestsBase<SettingsGetCommand, 
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("get_settings", CommandDefinition.Name);
+        Assert.Equal("get-settings", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);
     }

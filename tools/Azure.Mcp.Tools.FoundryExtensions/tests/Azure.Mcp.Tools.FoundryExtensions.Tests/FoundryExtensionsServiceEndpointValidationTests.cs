@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -17,20 +16,16 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Tests;
 /// </summary>
 public class FoundryExtensionsServiceEndpointValidationTests
 {
-    private readonly ISubscriptionService _subscriptionService;
-    private readonly ITenantService _tenantService;
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IAzureService _azureService;
     private readonly FoundryExtensionsService _service;
 
     public FoundryExtensionsServiceEndpointValidationTests()
     {
-        _subscriptionService = Substitute.For<ISubscriptionService>();
-        _tenantService = Substitute.For<ITenantService>();
+        _azureService = Substitute.For<IAzureService>();
         var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
         cloudConfig.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
-        _tenantService.CloudConfiguration.Returns(cloudConfig);
-        _httpClientFactory = Substitute.For<IHttpClientFactory>();
-        _service = new FoundryExtensionsService(_httpClientFactory, _subscriptionService, _tenantService);
+        _azureService.CloudConfiguration.Returns(cloudConfig);
+        _service = new FoundryExtensionsService(_azureService);
     }
 
     #region Test Data
