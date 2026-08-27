@@ -2864,7 +2864,7 @@ azmcp insights get --scope tenant \
 azmcp iothub hub get --subscription <subscription> \
                      --resource-group <resource-group> \
                      --hub-name <iot-hub-name>
-```                     
+```
 
 ### Azure Key Vault Operations
 
@@ -3317,7 +3317,7 @@ azmcp monitor metrics batchquery --subscription <subscription> \
 # Query CPU metrics across multiple storage accounts at once
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor metrics batchquery --subscription <subscription> \
-                                 --resources "storageacct1,storageacct2,storageacct3" \
+                                 --resources "storageaccount1,storageaccount2,storageaccount3" \
                                  --resource-group <resource-group> \
                                  --resource-type "Microsoft.Storage/storageAccounts" \
                                  --metric-namespace "Microsoft.Storage/storageAccounts" \
