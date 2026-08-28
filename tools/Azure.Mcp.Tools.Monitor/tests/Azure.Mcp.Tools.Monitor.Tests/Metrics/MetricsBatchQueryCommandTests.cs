@@ -8,8 +8,6 @@ using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -87,7 +85,6 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -124,7 +121,6 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
             "total asc",
             5,
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -147,7 +143,6 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -174,7 +169,6 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
             Arg.Is<string?>(t => t == null),
             Arg.Is<int?>(t => t == null),
             Arg.Is<string?>(t => t == null),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -290,7 +284,6 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
@@ -330,7 +323,6 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -415,7 +407,6 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(resultsWithTooManyBuckets);
 
@@ -450,7 +441,6 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
             Arg.Any<string?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Test error"));
 
