@@ -32,12 +32,12 @@ public class ConnectorsDeleteCommandTests : SubscriptionCommandUnitTestsBase<Con
         var optionNames = command.Options.Select(o => o.Name).ToList();
         Assert.Contains("--agent", optionNames);
         Assert.Contains("--name", optionNames);
-        Assert.Contains("--confirm", optionNames);
+        Assert.DoesNotContain("--confirm", optionNames);
     }
 
     [Theory]
-    [InlineData("--subscription sub --agent agent1 --name connector1 --confirm true", true)]
-    [InlineData("--subscription sub --agent agent1 --name connector1", false)]
+    [InlineData("--subscription sub --agent agent1 --name connector1", true)]
+    [InlineData("--subscription sub --agent agent1 --name connector1 --confirm true", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
@@ -90,7 +90,7 @@ public class ConnectorsDeleteCommandTests : SubscriptionCommandUnitTestsBase<Con
             Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--name", "connector1", "--confirm", "true");
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--name", "connector1");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         var result = ValidateAndDeserializeResponse(response, SreAgentJsonContext.Default.ConnectorsDeleteCommandResult);
@@ -116,7 +116,7 @@ public class ConnectorsDeleteCommandTests : SubscriptionCommandUnitTestsBase<Con
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--name", "connector1", "--confirm", "true");
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--name", "connector1");
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
@@ -135,7 +135,7 @@ public class ConnectorsDeleteCommandTests : SubscriptionCommandUnitTestsBase<Con
         Service.DeleteConnectorAsync("sub", "rg", "agent1", "connector1", null, Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--name", "connector1", "--confirm", "true");
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--name", "connector1");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).DeleteConnectorAsync("sub", Arg.Any<string>(), "agent1", "connector1", null, Arg.Any<CancellationToken>());
