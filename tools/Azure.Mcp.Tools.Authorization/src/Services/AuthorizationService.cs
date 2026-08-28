@@ -25,7 +25,6 @@ public class AuthorizationService(IAzureService azureService)
             "Microsoft.Authorization/roleAssignments",
             null, // all resource groups
             subscription,
-            null,
             ConvertToRoleAssignmentModel,
             "authorizationresources",
             additionalFilter: $"id contains '{EscapeKqlString(scope)}'",

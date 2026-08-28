@@ -3,6 +3,7 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Helpers;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -95,6 +96,6 @@ public class BaseAzureServiceRetryLimitsTests
     private sealed class TestAzureService(IAzureService azureService) : BaseAzureService(azureService)
     {
         public T ConfigureRetryPolicyPublic<T>(T clientOptions, RetryPolicyOptions? retryPolicy) where T : ClientOptions =>
-            ConfigureRetryPolicy(clientOptions, retryPolicy);
+            AzureHelper.ConfigureRetryPolicy(clientOptions, retryPolicy);
     }
 }

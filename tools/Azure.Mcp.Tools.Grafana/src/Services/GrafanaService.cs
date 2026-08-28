@@ -26,7 +26,6 @@ public class GrafanaService(IAzureService azureService)
             "Microsoft.Dashboard/grafana",
             resourceGroup: resourceGroup,
             subscription,
-            null,
             ConvertToWorkspaceModel,
             tenant: tenant,
             cancellationToken: cancellationToken);
