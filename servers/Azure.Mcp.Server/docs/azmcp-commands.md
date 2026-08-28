@@ -3793,20 +3793,17 @@ azmcp redis list --subscription <subscription>
 ```bash
 # Get a resilience goal template, or list all goal templates in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience goal template get --subscription <subscription> \
-                                   --service-group <service-group> \
+azmcp resilience goal template get --service-group <service-group> \
                                    [--name <name>]
 
 # Get a resilience goal assignment, or list all goal assignments in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience goal assignment get --subscription <subscription> \
-                                     --service-group <service-group> \
+azmcp resilience goal assignment get --service-group <service-group> \
                                      [--name <name>]
 
 # Get a resource (member) of a goal assignment, or list all resources of the assignment (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience goal resource get --subscription <subscription> \
-                                   --service-group <service-group> \
+azmcp resilience goal resource get --service-group <service-group> \
                                    --goal-assignment <goal-assignment> \
                                    [--name <name>]
 
@@ -3840,8 +3837,7 @@ azmcp resilience usageplan enrollment create --subscription <subscription> \
 
 # Get a resilience recovery plan, or list all recovery plans in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recoveryplan get --subscription <subscription> \
-                                   --service-group <service-group> \
+azmcp resilience recoveryplan get --service-group <service-group> \
                                    [--name <name>]
 
 # Create or update a Zonal resilience recovery plan's identity, recovery group structure, and recovery group pre/post actions. Use recoveryplan resource update instead for recovery resource membership and protection settings. Ask the customer to select an identity type; do not assume SystemAssigned or another default. Identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description must be 5 to 50 characters and is required on create; it is preserved when omitted on update. Additional groups and group actions are preserved when omitted and replaced when supplied.
@@ -3902,22 +3898,19 @@ azmcp resilience recoveryplan checkreadiness --service-group <service-group> \
 
 # Get a resource (member) of a recovery plan, or list all resources of the plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recoveryplan resource get --subscription <subscription> \
-                                            --service-group <service-group> \
+azmcp resilience recoveryplan resource get --service-group <service-group> \
                                             --recovery-plan <recovery-plan> \
                                             [--name <name>]
 
 # Get a recovery job, or list all recovery jobs of a recovery plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recoveryjob get --subscription <subscription> \
-                                 --service-group <service-group> \
+azmcp resilience recoveryjob get --service-group <service-group> \
                                  --recovery-plan <recovery-plan> \
                                  [--name <name>]
 
 # Get a resource (target) of a recovery job, or list all resources of the job (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recoveryjob resource get --subscription <subscription> \
-                                          --service-group <service-group> \
+azmcp resilience recoveryjob resource get --service-group <service-group> \
                                           --recovery-plan <recovery-plan> \
                                           --recovery-job <recovery-job> \
                                           [--name <name>]
