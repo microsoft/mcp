@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Redis.Services;
 using Azure.ResourceManager.Redis.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -24,7 +23,7 @@ public class RedisServiceTests
         // Arrange - GetSubscription returning null should surface as a typed
         // not-found exception (404) rather than a plain Exception (500). See #458.
         var azureService = Substitute.For<IAzureService>();
-        azureService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        azureService.GetSubscription("sub123", Arg.Any<string?>(), null, Arg.Any<CancellationToken>())
             .Returns((SubscriptionResource)null!);
 
         var service = CreateService(azureService);
@@ -39,7 +38,7 @@ public class RedisServiceTests
     {
         // Arrange
         var azureService = Substitute.For<IAzureService>();
-        azureService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        azureService.GetSubscription("sub123", Arg.Any<string?>(), null, Arg.Any<CancellationToken>())
             .Returns((SubscriptionResource)null!);
 
         var service = CreateService(azureService);

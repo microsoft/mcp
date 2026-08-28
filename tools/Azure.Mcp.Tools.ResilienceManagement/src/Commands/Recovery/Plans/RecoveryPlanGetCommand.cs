@@ -43,7 +43,6 @@ public sealed class RecoveryPlanGetCommand(ILogger<RecoveryPlanGetCommand> logge
                 var recoveryPlans = await _resilienceManagementService.ListRecoveryPlansAsync(
                     options.ServiceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new RecoveryPlanGetCommandResult(RecoveryPlans: recoveryPlans.ToList());
             }
@@ -53,7 +52,6 @@ public sealed class RecoveryPlanGetCommand(ILogger<RecoveryPlanGetCommand> logge
                     options.ServiceGroup,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new RecoveryPlanGetCommandResult(RecoveryPlan: recoveryPlan);
             }
