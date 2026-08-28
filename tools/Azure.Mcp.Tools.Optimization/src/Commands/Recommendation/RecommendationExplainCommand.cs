@@ -1,0 +1,126 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Net;
+using Azure;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.Optimization.Models;
+using Azure.Mcp.Tools.Optimization.Options.Recommendation;
+using Azure.Mcp.Tools.Optimization.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+
+namespace Azure.Mcp.Tools.Optimization.Commands.Recommendation;
+
+[CommandMetadata(
+    Id = "c3e9a4f6-1d5b-6a8c-0e4f-3b7d9c1a5e62",
+    Name = "explain",
+    Title = "Explain Recommendation with Utilization Projection",
+    Description = "Explain a specific Azure Advisor cost/right-size recommendation for a resource AND show current " +
+        "versus target-SKU utilization in the same call. IMPORTANT: this tool ALWAYS returns utilization time-series that " +
+        "you MUST render as an inline chart on the SAME turn you receive the response \u2014 rendering the chart is a required " +
+        "part of completing this tool call, not an optional follow-up. Call this whenever the user asks to 'explain recommendation N', " +
+        "'explain this recommendation', 'tell me more about recommendation N', 'why is this recommended', or 'go deeper on' " +
+        "a recommendation after listing recommendations with the 'list' tool. Pass the --resource-id and " +
+        "--recommendation-type-id from the corresponding row returned by the 'list' tool. --target-sku is OPTIONAL: pass " +
+        "the target VM/VMSS SKU to project against only if the user already named one. If omitted, the tool automatically " +
+        "derives the target SKU from the top alternative resize recommendation for the resource, so you can call this " +
+        "directly WITHOUT first calling the 'alternatives' tool. Returns the matching recommendation count, a " +
+        "current-versus-target configuration (current/target SKU, instance count, vCPUs, memory), the utilization thresholds, and the " +
+        "projected CPU / used-memory / total-network utilization time-series (current versus target) as structured JSON over a " +
+        "seven-day window in 30-minute maximum buckets (detail view) by default. Set --view to 'Trend' (six-hour) or 'Both' only " +
+        "when the user explicitly asks for longer-term trend data. Utilization is read from Azure Monitor; target vCPU and memory " +
+        "come from the Microsoft.Compute Resource SKUs API. The response contains structured JSON only \u2014 there is no markdown " +
+        "summary. As soon as you receive the response, ALWAYS render the returned utilization time-series as an inline chart " +
+        "yourself \u2014 immediately, without asking for permission. Plot the recentUtilization (and longTermUtilization when " +
+        "present) series as a line/time-series chart with the timestamp on the x-axis and percentage on the y-axis, drawing " +
+        "separate lines for current versus target CPU, used-memory, and network utilization, and mark the corresponding threshold " +
+        "levels from thresholds. Draw the chart directly in the conversation using your native inline chart/visualization " +
+        "capability. Then briefly summarize the recommendation, the current-versus-target configuration, the maximum utilization " +
+        "comparison, and any threshold risks. Do NOT write HTML, generate images, CREATE FILES, run code, or link to external tools " +
+        "to render the chart. If inline chart rendering is not possible at all, simply skip the chart \u2014 do not create any " +
+        "additional files or artifacts to work around it. " +
+        "Pass the user's subscription name or id straight to --subscription; a name is resolved to its id internally, so do " +
+        "NOT call the 'subscription list' tool first.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class RecommendationExplainCommand(
+    ILogger<RecommendationExplainCommand> logger,
+    IOptimizationService optimizationService,
+    ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<RecommendationExplainOptions, RecommendationExplanationResult>(subscriptionResolver)
+{
+    private readonly IOptimizationService _optimizationService = optimizationService;
+    private readonly ILogger<RecommendationExplainCommand> _logger = logger;
+
+    public override void ValidateOptions(RecommendationExplainOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+
+        if (string.IsNullOrWhiteSpace(options.ResourceId))
+        {
+            validationResult.Errors.Add("--resource-id is required.");
+        }
+        else if (!ArmResourceId.IsValid(options.ResourceId))
+        {
+            validationResult.Errors.Add(OptimizationStrings.ErrorInvalidResourceId);
+        }
+
+        if (string.IsNullOrWhiteSpace(options.RecommendationTypeId))
+        {
+            validationResult.Errors.Add("--recommendation-type-id is required.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.View) &&
+            !Enum.TryParse<UtilizationView>(options.View, ignoreCase: true, out _))
+        {
+            validationResult.Errors.Add("--view must be one of 'Detail', 'Trend', or 'Both'.");
+        }
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(
+        CommandContext context, RecommendationExplainOptions options, CancellationToken cancellationToken)
+    {
+        var view = Enum.TryParse<UtilizationView>(options.View, ignoreCase: true, out var parsed)
+            ? parsed
+            : UtilizationView.Detail;
+
+        try
+        {
+            var result = await _optimizationService.GetRecommendationExplanationAsync(
+                options.ResourceId!,
+                options.RecommendationTypeId!,
+                options.TargetSku,
+                view,
+                options.Subscription!,
+                options.Tenant,
+                options.RetryPolicy,
+                cancellationToken);
+
+            context.Response.Results = ResponseResult.Create(
+                result, OptimizationJsonContext.Default.RecommendationExplanationResult);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error explaining recommendation. Subscription: {Subscription}.",
+                options.Subscription);
+            HandleException(context, ex);
+        }
+
+        return context.Response;
+    }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Authorization failed retrieving the recommendation explanation. Verify you have appropriate permissions. Details: {reqEx.Message}",
+        RequestFailedException reqEx => reqEx.Message,
+        _ => base.GetErrorMessage(ex)
+    };
+}

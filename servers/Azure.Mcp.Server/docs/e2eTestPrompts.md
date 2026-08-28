@@ -414,6 +414,17 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | cosmos_database_container_schema_infer | Infer the schema of container <container_name> in database <database_name> for cosmosdb account <account_name> | none |
 | cosmos_database_container_schema_infer | Sample <sample_size> documents from container <container_name> in database <database_name> of the cosmosdb account <account_name> and tell me the property names and types | none |
 
+## Azure Optimization
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| optimization_recommendation_list | Show me the top cost-saving recommendations for my subscription | none |
+| optimization_recommendation_list | What are my cost optimization recommendations? | none |
+| optimization_recommendation_alternatives | Show me alternative resize options for the VM <resource_id> | none |
+| optimization_recommendation_alternatives | What other SKUs could I resize <resource_id> to, excluding AMD processors? | none |
+| optimization_recommendation_explain | Explain the recommendation <recommendation_type_id> for resource <resource_id> and show its utilization | none |
+| optimization_recommendation_explain | Why is <resource_id> recommended for resizing to <target_sku>? | none |
+
 ## Azure Data Explorer
 
 | Tool Name | Test Prompt | Interaction |

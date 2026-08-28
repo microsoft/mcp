@@ -1,23 +1,23 @@
 # Azure MCP CLI Command Reference
 
 > [!IMPORTANT]
-> The Azure MCP Server has two modes: MCP Server mode and CLI mode.  When you start the MCP Server with `azmcp server start` that will expose an endpoint for MCP Client communication. The `azmcp` CLI also exposes all of the tools via a command line interface, i.e. `azmcp subscription list`.  In this document, "command" refers to CLI commands (e.g., `azmcp storage account list`), while "tool" refers to MCP server tools that can be invoked by MCP clients.
+> The Azure MCP Server has two modes: MCP Server mode and CLI mode. When you start the MCP Server with `azmcp server start` that will expose an endpoint for MCP Client communication. The `azmcp` CLI also exposes all of the tools via a command line interface, i.e. `azmcp subscription list`. In this document, "command" refers to CLI commands (e.g., `azmcp storage account list`), while "tool" refers to MCP server tools that can be invoked by MCP clients.
 
 ## Global Options
 
 The following options are available for most commands:
 
-| Option | Required | Default | Description |
-|-----------|----------|---------|-------------|
-| `--subscription` | No | Environment variable `AZURE_SUBSCRIPTION_ID` | Azure subscription ID for target resources |
-| `--tenant-id` | No | - | Azure tenant ID for authentication |
-| `--auth-method` | No | 'credential' | Authentication method ('credential', 'key', 'connectionString') |
-| `--retry-max-retries` | No | 3 | Maximum retry attempts for failed operations |
-| `--retry-delay` | No | 2 | Delay between retry attempts (seconds) |
-| `--retry-max-delay` | No | 10 | Maximum delay between retries (seconds) |
-| `--retry-mode` | No | 'exponential' | Retry strategy ('fixed' or 'exponential') |
-| `--retry-network-timeout` | No | 100 | Network operation timeout (seconds) |
-| `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
+| Option                    | Required | Default                                      | Description                                                                                                                                                                                     |
+| ------------------------- | -------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--subscription`          | No       | Environment variable `AZURE_SUBSCRIPTION_ID` | Azure subscription ID for target resources                                                                                                                                                      |
+| `--tenant-id`             | No       | -                                            | Azure tenant ID for authentication                                                                                                                                                              |
+| `--auth-method`           | No       | 'credential'                                 | Authentication method ('credential', 'key', 'connectionString')                                                                                                                                 |
+| `--retry-max-retries`     | No       | 3                                            | Maximum retry attempts for failed operations                                                                                                                                                    |
+| `--retry-delay`           | No       | 2                                            | Delay between retry attempts (seconds)                                                                                                                                                          |
+| `--retry-max-delay`       | No       | 10                                           | Maximum delay between retries (seconds)                                                                                                                                                         |
+| `--retry-mode`            | No       | 'exponential'                                | Retry strategy ('fixed' or 'exponential')                                                                                                                                                       |
+| `--retry-network-timeout` | No       | 100                                          | Network operation timeout (seconds)                                                                                                                                                             |
+| `--learn`                 | No       | false                                        | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
 
 ### Discovery with `--learn`
 
@@ -74,6 +74,7 @@ are valid.
 When you run the **Azure MCP Server container image** `mcr.microsoft.com/azure-sdk/azure-mcp` (for example in Azure Container Apps),
 the image already contains an entrypoint that starts the MCP server process.
 The image does **not** support overriding the container command with `azmcp ...` directly, as the entrypoint is already configured to start the server.
+
 - Do **not** override the container command / entrypoint with `azmcp ...` when
   deploying the image. Doing so will cause the container to fail to start.
 - Leave the command / entrypoint blank in Azure Container Apps so the default
@@ -194,11 +195,13 @@ azmcp server start \
 Exposes carefully curated tools that group related Azure operations together based on common user workflows and tasks. This mode provides the optimal balance between discoverability and usability by organizing consolidated tools that combine multiple related operations.
 
 Each consolidated tool groups operations that are commonly used together:
+
 - **Resource management**: Groups operations by resource type and action (get, create, edit, delete)
 - **Workflow-based**: Organizes tools around common tasks (deployment, monitoring, security)
 - **Metadata-aligned**: Only groups commands with exactly the same toolMetadata values (destructive, idempotent, readOnly, etc.)
 
 **Benefits:**
+
 - **Better for AI agents**: Reduces decision complexity by presenting meaningful tool groupings
 - **Optimized tool count**: Well under VS Code's 128-tool limit
 - **Task-oriented**: Tools are named after user intents (e.g., `get_azure_databases_details`, `deploy_azure_resources_and_applications`)
@@ -214,6 +217,7 @@ azmcp server start \
 ```
 
 **Configuration file location**: The consolidated tool definitions are maintained in `core/Azure.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json`. Each definition includes:
+
 - Tool name and description optimized for AI agent selection
 - List of mapped individual commands
 - Matching toolMetadata (destructive, idempotent, readOnly, secret, etc.)
@@ -253,30 +257,32 @@ azmcp server start \
 
 The `azmcp server start` command supports the following options:
 
-| Option | Required | Default | Description |
-|--------|----------|---------|-------------|
-| `--transport` | No | `stdio` | Transport mechanism to use. Valid values: `stdio` (default, supported in all distributions) or `http` (supported only in the Docker image distribution and other builds with HTTP enabled; may not be available in local CLI builds). |
-| `--mode` | No | `namespace` | Server mode: `namespace` (default), `consolidated`, `all`, or `single` |
-| `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all existing modes to filter tools. |
-| `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
-| `--read-only` | No | `false` | Only expose read-only operations |
-| `--debug` | No | `false` | Enable verbose debug logging to stderr |
-| `--dangerously-disable-http-incoming-auth` | No | false | Dangerously disable HTTP incoming authentication |
-| `--dangerously-disable-elicitation` | No | `false` | **⚠️ DANGEROUS**: Disable user consent prompts for sensitive operations |
-| `--outgoing-auth-strategy` | No | `NotSet` | Outgoing authentication strategy for service requests. Valid values: `NotSet`, `UseHostingEnvironmentIdentity`, `UseOnBehalfOf`. |
-| `--dangerously-write-support-logs-to-dir` | No | - | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs. |
-| `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
-| `--disable-caching` | No | `false` | Disable caching of resource responses, requiring repeated requests to fetch fresh data each time. |
+| Option                                     | Required | Default        | Description                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------ | -------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--transport`                              | No       | `stdio`        | Transport mechanism to use. Valid values: `stdio` (default, supported in all distributions) or `http` (supported only in the Docker image distribution and other builds with HTTP enabled; may not be available in local CLI builds).                                                                                                                   |
+| `--mode`                                   | No       | `namespace`    | Server mode: `namespace` (default), `consolidated`, `all`, or `single`                                                                                                                                                                                                                                                                                  |
+| `--namespace`                              | No       | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all existing modes to filter tools.                                                                                                                                                                                                                                           |
+| `--tool`                                   | No       | All tools      | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`.                                                                                                                                                                                               |
+| `--read-only`                              | No       | `false`        | Only expose read-only operations                                                                                                                                                                                                                                                                                                                        |
+| `--debug`                                  | No       | `false`        | Enable verbose debug logging to stderr                                                                                                                                                                                                                                                                                                                  |
+| `--dangerously-disable-http-incoming-auth` | No       | false          | Dangerously disable HTTP incoming authentication                                                                                                                                                                                                                                                                                                        |
+| `--dangerously-disable-elicitation`        | No       | `false`        | **⚠️ DANGEROUS**: Disable user consent prompts for sensitive operations                                                                                                                                                                                                                                                                                 |
+| `--outgoing-auth-strategy`                 | No       | `NotSet`       | Outgoing authentication strategy for service requests. Valid values: `NotSet`, `UseHostingEnvironmentIdentity`, `UseOnBehalfOf`.                                                                                                                                                                                                                        |
+| `--dangerously-write-support-logs-to-dir`  | No       | -              | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs.                                                                                                                                |
+| `--cloud`                                  | No       | `AzureCloud`   | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
+| `--disable-caching`                        | No       | `false`        | Disable caching of resource responses, requiring repeated requests to fetch fresh data each time.                                                                                                                                                                                                                                                       |
 
 > **⚠️ Security Warning for `--dangerously-disable-elicitation`:**
 >
 > This option disables user confirmations (elicitations) before running tools that read sensitive data. When enabled:
+>
 > - Tools that handle secrets, credentials, or sensitive data will execute without user confirmation
 > - This removes an important security layer designed to prevent unauthorized access to sensitive information
 > - Only use this option in trusted, automated environments where user interaction is not possible
 > - Never use this option in production environments or when handling untrusted input
 >
 > **Example usage (use with caution):**
+>
 > ```bash
 > # For automated scenarios only - bypasses security prompts
 > azmcp server start --dangerously-disable-elicitation
@@ -285,12 +291,14 @@ The `azmcp server start` command supports the following options:
 > **⚠️ Security Warning for `--dangerously-write-support-logs-to-dir`:**
 >
 > This option enables detailed debug-level logging that may include sensitive information such as request payloads and authentication details. When enabled:
+>
 > - Log files are created in the specified directory with timestamp-based filenames (e.g., `azmcp_20251202_143052.log`)
 > - Logs may contain sensitive data that could be useful for support troubleshooting
 > - Only use this option when specifically requested by support for diagnosing issues
 > - Remove log files after troubleshooting is complete
 >
 > **Example usage:**
+>
 > ```bash
 > # For support troubleshooting only
 > azmcp server start --dangerously-write-support-logs-to-dir /path/to/logs
@@ -299,6 +307,7 @@ The `azmcp server start` command supports the following options:
 > **Note on `--outgoing-auth-strategy`:**
 >
 > This option controls how the server authenticates when making requests to downstream Azure services:
+>
 > - `NotSet` (default): A safe default is chosen based on other settings
 > - `UseHostingEnvironmentIdentity`: Uses the hosting environment's identity (similar to `DefaultAzureCredential`). All outgoing requests use the same identity regardless of the incoming request's identity
 > - `UseOnBehalfOf`: Exchanges the incoming request's access token for a new token valid for the downstream service. Only valid when the server is running with HTTP transport and incoming HTTP authentication enabled (i.e., `--transport http` without `--dangerously-disable-http-incoming-auth`)
@@ -306,12 +315,14 @@ The `azmcp server start` command supports the following options:
 > **Note on `--cloud`:**
 >
 > Use this option to target sovereign cloud environments:
+>
 > - `AzureCloud` (default): Azure public cloud
 > - `AzureChinaCloud`: Azure China (operated by 21Vianet)
 > - `AzureUSGovernment`: Azure US Government
 > - Custom URL: A custom authority host URL starting with `https://`
 >
 > **Example usage:**
+>
 > ```bash
 > # Connect to Azure US Government cloud
 > azmcp server start --cloud AzureUSGovernment
@@ -434,6 +445,7 @@ azmcp speech stt recognize --endpoint <endpoint> \
 The `--phrases` parameter supports multiple ways to specify phrase hints that improve speech recognition accuracy:
 
 **Multiple Arguments:**
+
 ```bash
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
@@ -441,6 +453,7 @@ azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
 ```
 
 **Comma-Separated Values:**
+
 ```bash
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
@@ -448,6 +461,7 @@ azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
 ```
 
 **Mixed Syntax:**
+
 ```bash
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
@@ -470,15 +484,15 @@ azmcp speech tts synthesize --endpoint <endpoint> \
 
 #### Text-to-Speech Parameters
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `--endpoint` | Yes | Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/) |
-| `--text` | Yes | The text to convert to speech |
-| `--outputAudio` | Yes | Path where the synthesized audio file will be saved (e.g., output.wav, speech.mp3) |
-| `--language` | No | Speech synthesis language (default: en-US). Examples: es-ES, fr-FR, de-DE |
-| `--voice` | No | Neural voice to use (e.g., en-US-JennyNeural, es-ES-ElviraNeural). If not specified, default voice for the language is used |
-| `--format` | No | Output audio format (default: Riff24Khz16BitMonoPcm). Supported formats: Riff24Khz16BitMonoPcm, Audio16Khz32KBitRateMonoMp3, Audio24Khz96KBitRateMonoMp3, Ogg16Khz16BitMonoOpus, Raw16Khz16BitMonoPcm |
-| `--endpointId` | No | Endpoint ID of a custom voice model for personalized speech synthesis |
+| Parameter       | Required | Description                                                                                                                                                                                           |
+| --------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--endpoint`    | Yes      | Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/)                                                                                                              |
+| `--text`        | Yes      | The text to convert to speech                                                                                                                                                                         |
+| `--outputAudio` | Yes      | Path where the synthesized audio file will be saved (e.g., output.wav, speech.mp3)                                                                                                                    |
+| `--language`    | No       | Speech synthesis language (default: en-US). Examples: es-ES, fr-FR, de-DE                                                                                                                             |
+| `--voice`       | No       | Neural voice to use (e.g., en-US-JennyNeural, es-ES-ElviraNeural). If not specified, default voice for the language is used                                                                           |
+| `--format`      | No       | Output audio format (default: Riff24Khz16BitMonoPcm). Supported formats: Riff24Khz16BitMonoPcm, Audio16Khz32KBitRateMonoMp3, Audio24Khz96KBitRateMonoMp3, Ogg16Khz16BitMonoOpus, Raw16Khz16BitMonoPcm |
+| `--endpointId`  | No       | Endpoint ID of a custom voice model for personalized speech synthesis                                                                                                                                 |
 
 #### Supported Audio Formats
 
@@ -654,21 +668,21 @@ azmcp appservice database add --subscription "my-subscription" \
 
 **Database Types Supported:**
 
--   `SqlServer` - Azure SQL Database
--   `MySQL` - Azure Database for MySQL
--   `PostgreSQL` - Azure Database for PostgreSQL
--   `CosmosDB` - Azure Cosmos DB
+- `SqlServer` - Azure SQL Database
+- `MySQL` - Azure Database for MySQL
+- `PostgreSQL` - Azure Database for PostgreSQL
+- `CosmosDB` - Azure Cosmos DB
 
 **Parameters:**
 
--   `--subscription`: Azure subscription ID (required)
--   `--resource-group`: Resource group containing the App Service (required)
--   `--app`: Name of the App Service web app (required)
--   `--database-type`: Type of database - SqlServer, MySQL, PostgreSQL, or CosmosDB (required)
--   `--database-server`: Database server name or endpoint (required)
--   `--database`: Name of the database (required)
--   `--connection-string`: Custom connection string (optional - auto-generated if not provided)
--   `--tenant`: Azure tenant ID for authentication (optional)
+- `--subscription`: Azure subscription ID (required)
+- `--resource-group`: Resource group containing the App Service (required)
+- `--app`: Name of the App Service web app (required)
+- `--database-type`: Type of database - SqlServer, MySQL, PostgreSQL, or CosmosDB (required)
+- `--database-server`: Database server name or endpoint (required)
+- `--database`: Name of the database (required)
+- `--connection-string`: Custom connection string (optional - auto-generated if not provided)
+- `--tenant`: Azure tenant ID for authentication (optional)
 
 #### Web Apps
 
@@ -1210,16 +1224,17 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
 ```
 
 **Options:**
--   `--endpoint`: Azure Communication Services endpoint URL (required)
--   `--sender`: Email address to send from, must be from a verified domain (required)
--   `--to`: Recipient email address(es), comma-separated for multiple recipients (required)
--   `--subject`: Email subject line (required)
--   `--message`: Email content body (required)
--   `--is-html`: Flag indicating the message content is HTML format (optional)
--   `--sender-name`: Display name of the sender (optional)
--   `--cc`: Carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
--   `--bcc`: Blind carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
--   `--reply-to`: Reply-to email address(es), comma-separated for multiple addresses (optional)
+
+- `--endpoint`: Azure Communication Services endpoint URL (required)
+- `--sender`: Email address to send from, must be from a verified domain (required)
+- `--to`: Recipient email address(es), comma-separated for multiple recipients (required)
+- `--subject`: Email subject line (required)
+- `--message`: Email content body (required)
+- `--is-html`: Flag indicating the message content is HTML format (optional)
+- `--sender-name`: Display name of the sender (optional)
+- `--cc`: Carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
+- `--bcc`: Blind carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
+- `--reply-to`: Reply-to email address(es), comma-separated for multiple addresses (optional)
 
 #### SMS
 
@@ -1252,13 +1267,13 @@ azmcp communication sms send --endpoint "https://mycomms.communication.azure.com
 ```
 
 **Options:**
--   `--endpoint`: Azure Communication Services endpoint URL (required)
--   `--from`: SMS-enabled phone number in E.164 format (required)
--   `--to`: Recipient phone number(s) in E.164 format, comma-separated for multiple recipients (required)
--   `--message`: SMS message content (required)
--   `--enable-delivery-report`: Enable delivery reporting for the SMS message (optional)
--   `--tag`: Custom tag for message tracking (optional)
 
+- `--endpoint`: Azure Communication Services endpoint URL (required)
+- `--from`: SMS-enabled phone number in E.164 format (required)
+- `--to`: Recipient phone number(s) in E.164 format, comma-separated for multiple recipients (required)
+- `--message`: SMS message content (required)
+- `--enable-delivery-report`: Enable delivery reporting for the SMS message (optional)
+- `--tag`: Custom tag for message tracking (optional)
 
 ### Azure Compute Operations
 
@@ -1298,11 +1313,13 @@ azmcp compute vm get --subscription "my-subscription" \
 ```
 
 **Command Behavior:**
+
 - **With `--vm-name`**: Gets detailed information about a specific VM (requires `--resource-group`). Optionally include `--instance-view` for runtime status.
 - **With `--resource-group` only**: Lists all VMs in the specified resource group.
 - **With neither**: Lists all VMs in the subscription.
 
 **Returns:**
+
 - VM information including name, location, VM size, provisioning state, OS type, license type, zones, and tags.
 - When `--instance-view` is specified: Also includes power state, provisioning state, VM agent status, disk status, and extension status.
 
@@ -1388,23 +1405,23 @@ If omitted, defaults to `Ubuntu2404`.
 
 Marketplace aliases map to a `publisher:offer:sku:version` URN:
 
-| Alias | OS | Publisher | Offer | SKU | Version |
-|-------|------|-----------|-------|-----|---------|
-| `Ubuntu2604` | Linux | Canonical | ubuntu-26_04-lts | server | latest |
-| `Ubuntu2404` | Linux | Canonical | ubuntu-24_04-lts | server | latest |
-| `Ubuntu2204` | Linux | Canonical | 0001-com-ubuntu-server-jammy | 22_04-lts-gen2 | latest |
-| `Debian12` | Linux | Debian | debian-12 | 12-gen2 | latest |
-| `Debian11` | Linux | Debian | debian-11 | 11-gen2 | latest |
-| `RHEL9` | Linux | RedHat | RHEL | 9_0 | latest |
-| `CentOS8` | Linux | OpenLogic | CentOS | 8_5-gen2 | latest |
-| `Win2022Datacenter` | Windows | MicrosoftWindowsServer | WindowsServer2022 | 2022-datacenter-azure-edition | latest |
-| `Win11Pro` | Windows | MicrosoftWindowsDesktop | windows-11 | win11-22h2-pro | latest |
-| `Win10Pro` | Windows | MicrosoftWindowsDesktop | Windows-10 | win10-22h2-pro-g2 | latest |
+| Alias               | OS      | Publisher               | Offer                        | SKU                           | Version |
+| ------------------- | ------- | ----------------------- | ---------------------------- | ----------------------------- | ------- |
+| `Ubuntu2604`        | Linux   | Canonical               | ubuntu-26_04-lts             | server                        | latest  |
+| `Ubuntu2404`        | Linux   | Canonical               | ubuntu-24_04-lts             | server                        | latest  |
+| `Ubuntu2204`        | Linux   | Canonical               | 0001-com-ubuntu-server-jammy | 22_04-lts-gen2                | latest  |
+| `Debian12`          | Linux   | Debian                  | debian-12                    | 12-gen2                       | latest  |
+| `Debian11`          | Linux   | Debian                  | debian-11                    | 11-gen2                       | latest  |
+| `RHEL9`             | Linux   | RedHat                  | RHEL                         | 9_0                           | latest  |
+| `CentOS8`           | Linux   | OpenLogic               | CentOS                       | 8_5-gen2                      | latest  |
+| `Win2022Datacenter` | Windows | MicrosoftWindowsServer  | WindowsServer2022            | 2022-datacenter-azure-edition | latest  |
+| `Win11Pro`          | Windows | MicrosoftWindowsDesktop | windows-11                   | win11-22h2-pro                | latest  |
+| `Win10Pro`          | Windows | MicrosoftWindowsDesktop | Windows-10                   | win10-22h2-pro-g2             | latest  |
 
 Shared gallery aliases map to a shared gallery image ID:
 
-| Alias | OS | Shared Gallery Image ID |
-|-------|------|-------------------------|
+| Alias                 | OS      | Shared Gallery Image ID                                                                  |
+| --------------------- | ------- | ---------------------------------------------------------------------------------------- |
 | `Win2022Datacenter1P` | Windows | `/sharedGalleries/WINDOWSSERVER.1P/images/2022-DATACENTER-AZURE-EDITION/versions/latest` |
 
 **Examples using different image formats:**
@@ -1537,6 +1554,7 @@ azmcp compute vm delete --subscription "my-subscription" \
 ```
 
 **Command Behavior:**
+
 - Deletes the VM. Associated resources (disks, NICs, public IPs) are NOT automatically deleted.
 - **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VM even if it is in a running or failed state.
 
@@ -1606,6 +1624,7 @@ azmcp compute vm power-state --subscription "my-subscription" \
 ```
 
 **Command Behavior:**
+
 - Changes the power state of a virtual machine. Equivalent to `az vm start/stop/deallocate/restart`.
 - **start**: Powers on a stopped or deallocated VM.
 - **stop**: Shuts down the OS and powers off the VM (VM is still allocated and billing continues). Use `--skip-shutdown` to force power off without OS shutdown.
@@ -1614,6 +1633,7 @@ azmcp compute vm power-state --subscription "my-subscription" \
 - **With `--no-wait`**: Returns immediately after initiating the operation without waiting for completion.
 
 **Returns:**
+
 - VM name, ID, resource group, requested power action, completion status, and a status message.
 
 **Parameters:**
@@ -1662,12 +1682,14 @@ azmcp compute vmss get --subscription "my-subscription" \
 ```
 
 **Command Behavior:**
+
 - **With `--instance-id`**: Gets detailed information about a specific VM instance in the scale set (requires `--vmss-name` and `--resource-group`).
 - **With `--vmss-name`**: Gets detailed information about a specific VMSS (requires `--resource-group`).
 - **With `--resource-group` only**: Lists all VMSS in the specified resource group.
 - **With neither**: Lists all VMSS in the subscription.
 
 **Returns:**
+
 - VMSS information including name, location, SKU, capacity, provisioning state, upgrade policy, overprovision setting, zones, and tags.
 - When `--instance-id` is specified: Returns VM instance information including instance ID, name, location, VM size, provisioning state, OS type, zones, and tags.
 
@@ -1825,6 +1847,7 @@ azmcp compute vmss delete --subscription "my-subscription" \
 ```
 
 **Command Behavior:**
+
 - Deletes the VMSS and all its VM instances. This operation is irreversible.
 - **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VMSS even if it is in a running or failed state.
 
@@ -1856,9 +1879,10 @@ azmcp compute disk get --subscription <subscription> \
 ```
 
 **Options:**
--   `--disk-name`: The name of the managed disk (optional - if not provided, lists all disks)
--   `--resource-group`: The resource group to filter by (optional - if not provided, lists disks across all resource groups; required when specifying a disk name)
--   `--subscription`: Azure subscription ID or name (optional - defaults to AZURE_SUBSCRIPTION_ID environment variable)
+
+- `--disk-name`: The name of the managed disk (optional - if not provided, lists all disks)
+- `--resource-group`: The resource group to filter by (optional - if not provided, lists disks across all resource groups; required when specifying a disk name)
+- `--subscription`: Azure subscription ID or name (optional - defaults to AZURE_SUBSCRIPTION_ID environment variable)
 
 ```bash
 # Create an empty managed disk (location defaults to resource group's location)
@@ -1944,6 +1968,7 @@ azmcp compute disk create --subscription <subscription> \
 ```
 
 **Command Behavior:**
+
 - Creates a new Azure managed disk in the specified resource group.
 - Either `--size-gb`, `--source`, `--gallery-image-reference`, or `--upload-type` must be specified.
 - When `--source` is a resource ID (snapshot or managed disk), the disk is created as a copy. When `--source` is a blob URI, the disk is imported from the VHD.
@@ -1953,6 +1978,7 @@ azmcp compute disk create --subscription <subscription> \
 - Supports configuring disk size, storage SKU, OS type, availability zone, hypervisor generation, tags, encryption settings, performance tier, shared disk, network access, on-demand bursting, IOPS and throughput limits (UltraSSD only), upload type, and security type.
 
 **Returns:**
+
 - Disk information including name, location, resource group, disk size, SKU, provisioning state, OS type, zones, and tags.
 
 **Parameters:**
@@ -1993,11 +2019,13 @@ azmcp compute disk delete --subscription <subscription> \
 ```
 
 **Command Behavior:**
+
 - Deletes an Azure managed disk from the specified resource group.
 - This is an idempotent operation: returns `Deleted = true` if the disk was successfully removed, or `Deleted = false` if the disk was not found.
 - The disk must not be attached to a virtual machine. Detach it first before deleting.
 
 **Returns:**
+
 - `Deleted`: Boolean indicating whether the disk was deleted.
 - `DiskName`: Name of the disk that was targeted for deletion.
 
@@ -2042,12 +2070,14 @@ azmcp compute disk update --subscription <subscription> \
 ```
 
 **Command Behavior:**
+
 - Updates properties of an existing Azure managed disk. Only specified properties are modified; unspecified properties remain unchanged.
 - If `--resource-group` is not specified, the disk is located by name within the subscription.
 - Disk size can only be increased, not decreased.
 - IOPS and throughput limits (`--disk-iops-read-write`, `--disk-mbps-read-write`) apply to UltraSSD disks only.
 
 **Returns:**
+
 - Updated disk information including name, location, resource group, disk size, SKU, provisioning state, OS type, zones, and tags.
 
 **Parameters:**
@@ -2086,10 +2116,11 @@ azmcp confidentialledger entries get --ledger <ledger-name> \
 ```
 
 **Options:**
--   `--ledger`: Confidential Ledger name (required)
--   `--content`: JSON or text data to insert into the ledger (required for the append command)
--   `--collection-id`: Collection ID to store the data with (optional)
--   `--transaction-id`: Ledger transaction identifier to retrieve (required for the get command)
+
+- `--ledger`: Confidential Ledger name (required)
+- `--content`: JSON or text data to insert into the ledger (required for the append command)
+- `--collection-id`: Collection ID to store the data with (optional)
+- `--transaction-id`: Ledger transaction identifier to retrieve (required for the get command)
 
 ### Azure Container Apps Operations
 
@@ -2214,6 +2245,40 @@ azmcp cosmos database container item vector-search --subscription <subscription>
                                                    [--properties-to-select <p1,p2,...>] \
                                                    [--count 10] \
                                                    [--embedding-dimensions <n>]
+```
+
+### Azure Optimization Operations
+
+#### Optimization Recommendations
+
+```bash
+# List top Azure Advisor cost-saving recommendations for a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp optimization recommendation list --subscription <subscription> \
+                                       [--top <top>] \
+                                       [--tenant <tenant>]
+
+# Get alternative compute resize/SKU options for a VM or VM scale set
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp optimization recommendation alternatives --subscription <subscription> \
+                                               --resource-id <resource-id> \
+                                               [--recommendation-type-id <recommendation-type-id>] \
+                                               [--new-skus <new-skus>] \
+                                               [--new-vm-series <new-vm-series>] \
+                                               [--new-processor-types <new-processor-types>] \
+                                               [--exclude-skus <exclude-skus>] \
+                                               [--exclude-vm-series <exclude-vm-series>] \
+                                               [--exclude-processor-types <exclude-processor-types>] \
+                                               [--tenant <tenant>]
+
+# Explain a recommendation with current-versus-target utilization projections
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp optimization recommendation explain --subscription <subscription> \
+                                          --resource-id <resource-id> \
+                                          --recommendation-type-id <recommendation-type-id> \
+                                          [--target-sku <target-sku>] \
+                                          [--view <Detail|Trend|Both>] \
+                                          [--tenant <tenant>]
 ```
 
 ### Azure Data Explorer Operations
@@ -2768,7 +2833,7 @@ azmcp insights get --scope tenant \
 azmcp iothub hub get --subscription <subscription> \
                      --resource-group <resource-group> \
                      --hub-name <iot-hub-name>
-```                     
+```
 
 ### Azure Key Vault Operations
 
@@ -2830,6 +2895,7 @@ Tools that handle sensitive data such as secrets require user consent before exe
 > **🛡️ Elicitation (user confirmation) Security Feature:**
 >
 > Elicitation prompts appear when tools may expose sensitive information like:
+>
 > - Key Vault secrets
 > - Connection strings and passwords
 > - Certificate private keys
@@ -2959,6 +3025,7 @@ azmcp loadtesting testrun createorupdate --subscription <subscription> \
 azmcp grafana list --subscription <subscription> \
                   [--resource-group <resource-group>]
 ```
+
 ### Azure IoT Hub Operations
 
 #### Device Registry Operations
@@ -3033,11 +3100,13 @@ azmcp get azure bestpractices ai_app
 The `azmcp tools list` command provides flexible ways to explore and discover available tools in the Azure MCP server. It supports multiple modes and filtering options that can be combined for precise control over the output format and content.
 
 **Available Options:**
+
 - `--namespace-mode`: List only top-level service namespaces instead of individual tools
 - `--name-only`: Return only tool/namespace names without descriptions, options, or metadata
 - `--namespace <namespace>`: Filter results to specific namespace(s). Can be used multiple times to include multiple namespaces
 
 **Option Combinations:**
+
 - Use `--name-only` alone to get a simple list of all tool names
 - Use `--namespace-mode` alone to see available service namespaces with full details
 - Combine `--namespace-mode` and `--name-only` to get just the namespace names
@@ -3269,6 +3338,7 @@ azmcp monitor instrumentation send-enhancement-select --session-id <session-id> 
 ```
 
 **Notes:**
+
 - `orchestrator-start` and `orchestrator-next` mirror the orchestration flow used by Azure Monitor onboarding.
 - `send-brownfield-analysis` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator-start` when status is `analysis_needed`.
 - `send-enhancement-select` expects one or more enhancement keys from `enhancementOptions` returned by `orchestrator-start` when status is `enhancement_available`.
@@ -3445,29 +3515,31 @@ azmcp azuremigrate platformlandingzone getguidance --scenario <scenario> \
 
 **Available Scenarios:**
 
-| Scenario | Description |
-|----------|-------------|
-| `resource-names` | Update resource naming prefixes and suffixes |
-| `management-groups` | Customize management group names and IDs |
-| `ddos` | Enable or disable DDoS protection plan |
-| `bastion` | Turn off Bastion host |
-| `dns` | Turn off Private DNS zones and resolvers |
-| `gateways` | Turn off Virtual Network Gateways (VPN/ExpressRoute) |
-| `regions` | Add or remove secondary regions |
-| `ip-addresses` | Adjust CIDR ranges and IP address space |
-| `policy-enforcement` | Change policy enforcement mode to DoNotEnforce |
-| `policy-assignment` | Remove or disable a policy assignment |
-| `ama` | Turn off Azure Monitoring Agent |
-| `amba` | Deploy Azure Monitoring Baseline Alerts |
-| `defender` | Turn off Defender Plans |
-| `zero-trust` | Implement Zero Trust Networking |
-| `slz` | Implement Sovereign Landing Zone controls |
+| Scenario             | Description                                          |
+| -------------------- | ---------------------------------------------------- |
+| `resource-names`     | Update resource naming prefixes and suffixes         |
+| `management-groups`  | Customize management group names and IDs             |
+| `ddos`               | Enable or disable DDoS protection plan               |
+| `bastion`            | Turn off Bastion host                                |
+| `dns`                | Turn off Private DNS zones and resolvers             |
+| `gateways`           | Turn off Virtual Network Gateways (VPN/ExpressRoute) |
+| `regions`            | Add or remove secondary regions                      |
+| `ip-addresses`       | Adjust CIDR ranges and IP address space              |
+| `policy-enforcement` | Change policy enforcement mode to DoNotEnforce       |
+| `policy-assignment`  | Remove or disable a policy assignment                |
+| `ama`                | Turn off Azure Monitoring Agent                      |
+| `amba`               | Deploy Azure Monitoring Baseline Alerts              |
+| `defender`           | Turn off Defender Plans                              |
+| `zero-trust`         | Implement Zero Trust Networking                      |
+| `slz`                | Implement Sovereign Landing Zone controls            |
 
 **Policy-related Options:**
+
 - `--policy-name`: Search for a specific policy by partial or full name
 - `--list-policies`: Set to `true` to list ALL policies organized by archetype
 
 **Examples:**
+
 ```bash
 # Get guidance for enabling DDoS protection
 # ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
@@ -3499,70 +3571,75 @@ azmcp azuremigrate platformlandingzone request --subscription <subscription> \
 **Actions:**
 
 1. **Check Existing** (`--action check`)
-   ```bash
-   # Check if a platform landing zone already exists
-   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
-                                                  --resource-group <resource-group> \
-                                                  --migrate-project-name <migrate-project-name> \
-                                                  --action check
-   ```
+
+    ```bash
+    # Check if a platform landing zone already exists
+    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                   --resource-group <resource-group> \
+                                                   --migrate-project-name <migrate-project-name> \
+                                                   --action check
+    ```
 
 2. **Update Parameters** (`--action update`)
-   ```bash
-   # Cache all parameters for generation of the platform landing zone
-   # Defaults are applied automatically if not specified
-   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
-                                                  --resource-group <resource-group> \
-                                                  --migrate-project-name <migrate-project-name> \
-                                                  --action update \
-                                                  [--region-type <single|multi>] \
-                                                  [--firewall-type <azurefirewall|nva>] \
-                                                  [--network-architecture <hubspoke|vwan>] \
-                                                  [--version-control-system <local|github|azuredevops>] \
-                                                  [--regions <comma-separated-regions>] \
-                                                  [--environment-name <environment-name>] \
-                                                  [--organization-name <organization-name>] \
-                                                  [--identity-subscription-id <subscription-id>] \
-                                                  [--management-subscription-id <subscription-id>] \
-                                                  [--connectivity-subscription-id <subscription-id>]
-   ```
+
+    ```bash
+    # Cache all parameters for generation of the platform landing zone
+    # Defaults are applied automatically if not specified
+    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                   --resource-group <resource-group> \
+                                                   --migrate-project-name <migrate-project-name> \
+                                                   --action update \
+                                                   [--region-type <single|multi>] \
+                                                   [--firewall-type <azurefirewall|nva>] \
+                                                   [--network-architecture <hubspoke|vwan>] \
+                                                   [--version-control-system <local|github|azuredevops>] \
+                                                   [--regions <comma-separated-regions>] \
+                                                   [--environment-name <environment-name>] \
+                                                   [--organization-name <organization-name>] \
+                                                   [--identity-subscription-id <subscription-id>] \
+                                                   [--management-subscription-id <subscription-id>] \
+                                                   [--connectivity-subscription-id <subscription-id>]
+    ```
 
 3. **Generate Landing Zone** (`--action generate`)
-   ```bash
-   # Generate the platform landing zone
-   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
-                                                  --resource-group <resource-group> \
-                                                  --migrate-project-name <migrate-project-name> \
-                                                  --action generate
-   ```
+
+    ```bash
+    # Generate the platform landing zone
+    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                   --resource-group <resource-group> \
+                                                   --migrate-project-name <migrate-project-name> \
+                                                   --action generate
+    ```
 
 4. **Download Landing Zone** (`--action download`)
-   ```bash
-   # Download generated landing zone files to local workspace
-   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
-                                                  --resource-group <resource-group> \
-                                                  --migrate-project-name <migrate-project-name> \
-                                                  --action download
-   ```
+
+    ```bash
+    # Download generated landing zone files to local workspace
+    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                   --resource-group <resource-group> \
+                                                   --migrate-project-name <migrate-project-name> \
+                                                   --action download
+    ```
 
 5. **View Status** (`--action status`)
-   ```bash
-   # View cached parameters
-   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
-                                                  --resource-group <resource-group> \
-                                                  --migrate-project-name <migrate-project-name> \
-                                                  --action status
-   ```
+
+    ```bash
+    # View cached parameters
+    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                   --resource-group <resource-group> \
+                                                   --migrate-project-name <migrate-project-name> \
+                                                   --action status
+    ```
 
 6. **Create Azure Migrate Project** (`--action createmigrateproject`)
-   ```bash
-   # Create a new Azure Migrate project if one doesn't exist (requires location parameter)
-   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
-                                                  --resource-group <resource-group> \
-                                                  --migrate-project-name <migrate-project-name> \
-                                                  --action createmigrateproject \
-                                                  --location <azure-region>
-   ```
+    ```bash
+    # Create a new Azure Migrate project if one doesn't exist (requires location parameter)
+    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                   --resource-group <resource-group> \
+                                                   --migrate-project-name <migrate-project-name> \
+                                                   --action createmigrateproject \
+                                                   --location <azure-region>
+    ```
 
 ### Azure Native ISV Operations
 
@@ -3606,6 +3683,7 @@ azmcp quota usage check --subscription <subscription> \
 ```
 
 ### Azure Policy Operations
+
 ```bash
 # List Azure Policy Assignments
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -3629,16 +3707,16 @@ azmcp pricing get [--sku <sku>] \
                   [--filter <odata-filter>]
 ```
 
-| Option | Required | Default | Description |
-|--------|----------|---------|-------------|
-| `--sku` | No* | - | ARM SKU name (e.g., Standard_D4s_v5) |
-| `--service` | No* | - | Azure service name (e.g., Virtual Machines, Storage) |
-| `--region` | No* | - | Azure region (e.g., eastus, westeurope) |
-| `--service-family` | No* | - | Service family (e.g., Compute, Storage, Databases) |
-| `--price-type` | No* | - | Price type (Consumption, Reservation, DevTestConsumption) |
-| `--currency` | No | USD | Currency code (e.g., USD, EUR) |
-| `--include-savings-plan` | No | false | Include savings plan pricing (uses preview API) |
-| `--filter` | No* | - | Raw OData filter for advanced queries |
+| Option                   | Required | Default | Description                                               |
+| ------------------------ | -------- | ------- | --------------------------------------------------------- |
+| `--sku`                  | No\*     | -       | ARM SKU name (e.g., Standard_D4s_v5)                      |
+| `--service`              | No\*     | -       | Azure service name (e.g., Virtual Machines, Storage)      |
+| `--region`               | No\*     | -       | Azure region (e.g., eastus, westeurope)                   |
+| `--service-family`       | No\*     | -       | Service family (e.g., Compute, Storage, Databases)        |
+| `--price-type`           | No\*     | -       | Price type (Consumption, Reservation, DevTestConsumption) |
+| `--currency`             | No       | USD     | Currency code (e.g., USD, EUR)                            |
+| `--include-savings-plan` | No       | false   | Include savings plan pricing (uses preview API)           |
+| `--filter`               | No\*     | -       | Raw OData filter for advanced queries                     |
 
 \* At least one filter option is required.
 
@@ -4379,16 +4457,16 @@ azmcp storage account create --subscription <subscription> \
 
 #### Storage Account Create Parameters
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `--subscription` | Yes | Azure subscription ID or display name. |
-| `--account` | Yes | Globally unique storage account name using 3-24 lowercase letters and numbers. |
-| `--resource-group` | Yes | Resource group name. |
-| `--location` | Yes | Azure region, such as `eastus` or `westus2`. |
-| `--sku` | No | Storage account SKU for StorageV2 accounts. Valid values: `Standard_LRS`, `Standard_GRS`, `Standard_RAGRS`, `Standard_ZRS`, `Premium_LRS`, `Premium_ZRS`, `Standard_GZRS`, `Standard_RAGZRS`. Defaults to `Standard_LRS`. |
-| `--access-tier` | No | Default access tier for blob storage. Valid values: `Hot`, `Cool`, `Cold`, `Premium`. Defaults to `Hot`. |
-| `--enable-hierarchical-namespace` | No | Whether to enable the Azure Data Lake Storage Gen2 hierarchical namespace. Defaults to `false`. |
-| `--tenant` | No | Azure tenant ID or name. |
+| Parameter                         | Required | Description                                                                                                                                                                                                               |
+| --------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--subscription`                  | Yes      | Azure subscription ID or display name.                                                                                                                                                                                    |
+| `--account`                       | Yes      | Globally unique storage account name using 3-24 lowercase letters and numbers.                                                                                                                                            |
+| `--resource-group`                | Yes      | Resource group name.                                                                                                                                                                                                      |
+| `--location`                      | Yes      | Azure region, such as `eastus` or `westus2`.                                                                                                                                                                              |
+| `--sku`                           | No       | Storage account SKU for StorageV2 accounts. Valid values: `Standard_LRS`, `Standard_GRS`, `Standard_RAGRS`, `Standard_ZRS`, `Premium_LRS`, `Premium_ZRS`, `Standard_GZRS`, `Standard_RAGZRS`. Defaults to `Standard_LRS`. |
+| `--access-tier`                   | No       | Default access tier for blob storage. Valid values: `Hot`, `Cool`, `Cold`, `Premium`. Defaults to `Hot`.                                                                                                                  |
+| `--enable-hierarchical-namespace` | No       | Whether to enable the Azure Data Lake Storage Gen2 hierarchical namespace. Defaults to `false`.                                                                                                                           |
+| `--tenant`                        | No       | Azure tenant ID or name.                                                                                                                                                                                                  |
 
 ```bash
 # Get detailed properties of Storage accounts
@@ -4859,11 +4937,11 @@ All responses follow a consistent JSON format:
 
 ```json
 {
-  "status": "200|403|500, etc",
-  "message": "",
-  "options": [],
-  "results": [],
-  "duration": 123
+    "status": "200|403|500, etc",
+    "message": "",
+    "options": [],
+    "results": [],
+    "duration": 123
 }
 ```
 
@@ -4871,14 +4949,14 @@ All responses follow a consistent JSON format:
 
 When invoking `azmcp tools list` (with or without `--namespace-mode`), each returned object now includes a `count` field:
 
-| Field | Description |
-|-------|-------------|
-| `name` | Command or namespace name |
-| `description` | Human-readable description |
-| `command` | Fully qualified CLI invocation path |
-| `subcommands` | (Namespaces only) Array of leaf command objects |
-| `option` | (Leaf commands only) Array of options supported by the command |
-| `count` | Namespaces: number of subcommands; Leaf commands: always 0 (options not counted) |
+| Field         | Description                                                                      |
+| ------------- | -------------------------------------------------------------------------------- |
+| `name`        | Command or namespace name                                                        |
+| `description` | Human-readable description                                                       |
+| `command`     | Fully qualified CLI invocation path                                              |
+| `subcommands` | (Namespaces only) Array of leaf command objects                                  |
+| `option`      | (Leaf commands only) Array of options supported by the command                   |
+| `count`       | Namespaces: number of subcommands; Leaf commands: always 0 (options not counted) |
 
 This quantitative field enables quick sizing of a namespace without traversing nested arrays. Leaf command complexity should be inferred from its option list, not the `count` field.
 
