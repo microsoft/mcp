@@ -1,9 +1,9 @@
 # Coding Instructions for GitHub Copilot
 
-- Always use primary constructors in C#
+- Use primary constructors when a class declares constructor dependencies; options/model POCOs need no explicit constructor
 - Always run dotnet build after making a change
 - Always use System.Text.Json over Newtonsoft
-- Always put new classes and interfaces in separate files
+- Put new top-level classes and interfaces in separate files; keep a command's result record nested in its command class
 - Always make members static if they can be
 - All generated code needs to be AOT safe
 - Never expose `RetryPolicyOptions` through tool options or service contracts; use Azure SDK retry defaults
@@ -12,7 +12,7 @@
 
 ## Engineering System
 
-- Use `./eng/scripts/Build-Local.ps1 -VerifyNpx` to verify changes to powershell, c# project files and npm packages
+- Use `./eng/scripts/Build-Local.ps1 -VerifyNpx` to verify changes to PowerShell, C# project files, and npm packages
 - Don't run local builds to check pipeline YAML files (e.g., files in `eng/pipelines/` with `.yml` extension)
 
 ## Pull Request Guidelines
@@ -21,7 +21,7 @@
 - Follow the [contribution guidelines](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md)
 - Include appropriate documentation
 - Include tests that cover your changes
-- Update CHANGELOG.md with your changes
+- Create a changelog entry under the affected server's `changelog-entries/` directory when required; do not edit generated `CHANGELOG.md` directly
 - Run `.\eng\common\spelling\Invoke-Cspell.ps1`
 - Create the auto-generated PR body as normal, but `copilot` should add an additional section after all of its regular PR body content. The contents should be:
   ```
@@ -32,8 +32,7 @@
 
 ## Transitioning Live Tests to Recorded Tests
 
-- Always convert `tool` services to inject `IHttpClientFactory` into its clients and use `IHttpClientFactory.CreateClient` method to instantiate the `HttpClient` for usage in the tool classes' methods.
-  - If `IHttpClientFactory` is already injected into the client, ensure that `IHttpClientFactory.CreateClient` is used to instantiate the `HttpClient`. If this is done, then no further action is needed.
+- Make outbound HTTP proxy-aware. Direct HTTP consumers inject `IHttpClientFactory` and call `CreateClient()`; Azure SDK client options use `HttpClientTransport(AzureService.GetClient())`, which is backed by the same factory.
 - Always re-parent test classes parented by `CommandTestsBase` to `RecordedCommandTestsBase`. This will require minor fixture adjustments.
 - Always generate a new `assets.json` file alongside the livetest csproj file if one does not exist. This file should contain the following content:
   ```jsonc

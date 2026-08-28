@@ -2568,9 +2568,9 @@ Every new command needs to be added to the consolidated mode. Here are the instr
     ```
     cd servers/Azure.Mcp.Server/src/bin/Debug/net10.0
     # Windows
-    ./azmcp.exe tools list --name --namespace <tool_area>
+    ./azmcp.exe tools list --name-only --namespace <tool_area>
     # Unix
-    ./azmcp tools list --name --namespace <tool_area>
+    ./azmcp tools list --name-only --namespace <tool_area>
     ```
 
 ## Checklist

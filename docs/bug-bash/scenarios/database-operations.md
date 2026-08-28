@@ -2,7 +2,7 @@
 # Database Operations Testing Scenario
 
 > **MCP Tool Support Notice**
-> Azure MCP Server provides **read-only database inspection and querying** capabilities. Database creation, data insertion, and schema modifications require Azure CLI or Portal. This scenario guides you through complete end-to-end workflows, clearly marking when to use MCP tools vs external tools.
+> The Cosmos DB, PostgreSQL, and MySQL tools used here provide **database inspection and read-only querying**. The setup operations in this scenario require Azure CLI or the Azure portal.
 
 ## Objectives
 
@@ -27,7 +27,7 @@
 
 ### Step 1: Setup Resources (External - Not MCP)
 
-> **External Setup Required**: Azure MCP Server cannot create resources. Use GitHub Copilot Chat to run Azure CLI commands or use Azure Portal.
+> **External Setup Required**: The Cosmos DB toolset does not expose the account, database, and container creation operations needed for this fixture. Use Azure CLI or the Azure portal.
 
 **Option A: Prompt GitHub Copilot Chat** (Recommended):
 ```
@@ -76,15 +76,15 @@ az cosmosdb sql container create \
 
 ### Step 2: Discovery with Azure MCP Server
 
-**2.1 List all Cosmos DB accounts** (uses `azmcp_cosmos_account_list`):
+**2.1 List all Cosmos DB accounts** (uses `cosmos_list`):
 ```
 List all Cosmos DB accounts in my subscription
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_cosmos_account_list`
+- [ ] Tool invoked: `cosmos_list`
 - [ ] Your newly created account appears in the list
-- [ ] Account properties shown (name, location, capabilities)
+- [ ] Account name is returned
 
 **2.2 Alternative phrasing**:
 ```
@@ -93,35 +93,33 @@ Show me my Cosmos DB accounts
 
 ### Step 3: Database Inspection with Azure MCP Server
 
-**3.1 List databases** (uses `azmcp_cosmos_database_list`):
+**3.1 List databases** (uses `cosmos_list`):
 ```
 List all databases in Cosmos DB account '<account-name>'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_cosmos_database_list`
+- [ ] Tool invoked: `cosmos_list`
 - [ ] 'ProductCatalog' database is listed
-- [ ] Database properties displayed
 
-**3.2 List containers** (uses `azmcp_cosmos_database_container_list`):
+**3.2 List containers** (uses `cosmos_list`):
 ```
 List all containers in database 'ProductCatalog' for Cosmos DB account '<account-name>'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_cosmos_database_container_list`
+- [ ] Tool invoked: `cosmos_list`
 - [ ] 'Products' container is listed
-- [ ] Partition key path '/category' is shown
 
 ### Step 4: Query Data with Azure MCP Server
 
-**4.1 Query all items** (uses `azmcp_cosmos_database_container_item_query`):
+**4.1 Query all items** (uses `cosmos_database_container_item_query`):
 ```
 Query all items from container 'Products' in database 'ProductCatalog' for Cosmos DB account '<account-name>'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_cosmos_database_container_item_query`
+- [ ] Tool invoked: `cosmos_database_container_item_query`
 - [ ] All 3 sample items returned
 - [ ] Item properties correctly displayed
 
@@ -170,9 +168,11 @@ az group delete --name bugbash-cosmosdb-rg --yes --no-wait
 
 **Objective**: Complete workflow for PostgreSQL server inspection, schema viewing, and querying
 
+For data-plane operations, use a configured Microsoft Entra database user, or specify PostgreSQL authentication with the test admin user and provide the test password when requested. Never include passwords in bug reports.
+
 ### Step 1: Setup Resources (External - Not MCP)
 
-> **External Setup Required**: Azure MCP Server cannot create resources. Use GitHub Copilot Chat to run Azure CLI commands or use Azure Portal.
+> **External Setup Required**: The PostgreSQL toolset does not expose server or database creation. Use Azure CLI or the Azure portal.
 
 **Option A: Prompt GitHub Copilot Chat** (Recommended):
 ```
@@ -224,74 +224,74 @@ az postgres flexible-server db create \
 
 ### Step 2: Server Discovery with Azure MCP Server
 
-**2.1 List all PostgreSQL servers** (uses `azmcp_postgres_server_list`):
+**2.1 List all PostgreSQL servers** (uses `postgres_list`):
 ```
 List all PostgreSQL servers in my subscription
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_postgres_server_list`
+- [ ] Tool invoked: `postgres_list`
 - [ ] Your newly created server appears
 - [ ] Server details shown (name, location, version, SKU)
 
-**2.2 Get server configuration** (uses `azmcp_postgres_server_config_get`):
+**2.2 Get server configuration** (uses `postgres_server_config_get`):
 ```
-Show me the configuration of PostgreSQL server '<server-name>' in resource group 'bugbash-postgres-rg'
+Show me the configuration of PostgreSQL server '<server-name>' in resource group 'bugbash-postgres-rg' as user 'dbadmin'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_postgres_server_config_get`
+- [ ] Tool invoked: `postgres_server_config_get`
 - [ ] Configuration parameters displayed
 - [ ] Server settings accessible
 
 ### Step 3: Database and Schema Inspection with Azure MCP Server
 
-**3.1 List databases** (uses `azmcp_postgres_database_list`):
+**3.1 List databases** (uses `postgres_list`):
 ```
-List all databases in PostgreSQL server '<server-name>' in resource group 'bugbash-postgres-rg'
+List all databases in PostgreSQL server '<server-name>' using PostgreSQL authentication as user 'dbadmin'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_postgres_database_list`
+- [ ] Tool invoked: `postgres_list`
 - [ ] 'inventory' database is listed
 - [ ] System databases also shown (postgres, template0, template1)
 
-**3.2 List tables** (uses `azmcp_postgres_table_list`):
+**3.2 List tables** (uses `postgres_list`):
 ```
-List all tables in PostgreSQL database 'inventory' on server '<server-name>' in resource group 'bugbash-postgres-rg'
+List all tables in PostgreSQL database 'inventory' on server '<server-name>' using PostgreSQL authentication as user 'dbadmin'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_postgres_table_list`
+- [ ] Tool invoked: `postgres_list`
 - [ ] 'products' table is listed
 - [ ] Table names correctly displayed
 
-**3.3 Get table schema** (uses `azmcp_postgres_table_schema_get`):
+**3.3 Get table schema** (uses `postgres_table_schema_get`):
 ```
-Show me the schema of table 'products' in database 'inventory' on server '<server-name>' in resource group 'bugbash-postgres-rg'
+Show me the schema of table 'products' in database 'inventory' on server '<server-name>' as user 'dbadmin'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_postgres_table_schema_get`
+- [ ] Tool invoked: `postgres_table_schema_get`
 - [ ] All columns listed (id, name, description, price, stock_quantity, created_at)
 - [ ] Data types correctly shown
 - [ ] Primary key and constraints visible
 
 ### Step 4: Query Data with Azure MCP Server
 
-**4.1 Query all data** (uses `azmcp_postgres_database_query`):
+**4.1 Query all data** (uses `postgres_database_query`):
 ```
-Show me all products in the 'products' table in database 'inventory' on server '<server-name>' in resource group 'bugbash-postgres-rg'
+Using PostgreSQL authentication as user 'dbadmin', show me all products in the 'products' table in database 'inventory' on server '<server-name>'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_postgres_database_query`
+- [ ] Tool invoked: `postgres_database_query`
 - [ ] All 3 sample records returned
 - [ ] Column values correctly displayed
 
 **4.2 Query with filter**:
 ```
-Show me all products with price less than 100 in the 'products' table in database 'inventory' on server '<server-name>' in resource group 'bugbash-postgres-rg'
+Using PostgreSQL authentication as user 'dbadmin', show me all products with price less than 100 in the 'products' table in database 'inventory' on server '<server-name>'
 ```
 
 **Verify**:
@@ -301,7 +301,7 @@ Show me all products with price less than 100 in the 'products' table in databas
 
 **4.3 Search query**:
 ```
-Show me all items that contain the word 'laptop' in the 'products' table in PostgreSQL database 'inventory' on server '<server-name>' in resource group 'bugbash-postgres-rg'
+Using PostgreSQL authentication as user 'dbadmin', show me all items that contain the word 'laptop' in the 'products' table in database 'inventory' on server '<server-name>'
 ```
 
 **Verify**:
@@ -309,13 +309,13 @@ Show me all items that contain the word 'laptop' in the 'products' table in Post
 - [ ] Laptop item returned
 - [ ] Case-insensitive search works
 
-**4.4 Check server parameters** (uses `azmcp_postgres_server_param_get`):
+**4.4 Check server parameters** (uses `postgres_server_param_get`):
 ```
-Show me the max_connections parameter for PostgreSQL server '<server-name>' in resource group 'bugbash-postgres-rg'
+Show me the max_connections parameter for PostgreSQL server '<server-name>' in resource group 'bugbash-postgres-rg' as user 'dbadmin'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_postgres_server_param_get`
+- [ ] Tool invoked: `postgres_server_param_get`
 - [ ] Parameter value displayed
 - [ ] Parameter metadata shown
 
@@ -374,37 +374,29 @@ When logging issues, include:
 ## 💡 Quick Reference: Supported MCP Tools
 
 ### Cosmos DB
-- `azmcp_cosmos_account_list` - List accounts
-- `azmcp_cosmos_database_list` - List databases
-- `azmcp_cosmos_database_container_list` - List containers
-- `azmcp_cosmos_database_container_item_query` - Query items
+- `cosmos_list` - List accounts by default, databases with `--account`, or containers with `--account` and `--database`
+- `cosmos_database_container_item_query` - Query items
 
 ### PostgreSQL
-- `azmcp_postgres_server_list` - List servers
-- `azmcp_postgres_server_config_get` - Get configuration
-- `azmcp_postgres_server_param_get` - Get specific parameter
-- `azmcp_postgres_database_list` - List databases
-- `azmcp_postgres_table_list` - List tables
-- `azmcp_postgres_table_schema_get` - Get table schema
-- `azmcp_postgres_database_query` - Execute SELECT queries
+- `postgres_list` - List servers by default, databases with `--server` and `--user`, or tables with `--server`, `--database`, and `--user`
+- `postgres_server_config_get` - Get configuration
+- `postgres_server_param_get` - Get specific parameter
+- `postgres_table_schema_get` - Get table schema
+- `postgres_database_query` - Execute SELECT queries
 
 ### MySQL
-- `azmcp_mysql_server_list` - List servers
-- `azmcp_mysql_server_config_get` - Get configuration
-- `azmcp_mysql_server_param_get` - Get specific parameter
-- `azmcp_mysql_database_list` - List databases
-- `azmcp_mysql_table_list` - List tables
-- `azmcp_mysql_table_schema_get` - Get table schema
-- `azmcp_mysql_database_query` - Execute SELECT queries
+- `mysql_list` - List servers by default, databases with `--server` and `--user`, or tables with `--server`, `--database`, and `--user`
+- `mysql_server_config_get` - Get configuration
+- `mysql_server_param_get` - Get specific parameter
+- `mysql_table_schema_get` - Get table schema
+- `mysql_database_query` - Execute SELECT queries
 
 ### Azure SQL
-- `azmcp_sql_server_list` - List servers
-- `azmcp_sql_server_show` - Get server details
-- `azmcp_sql_db_list` - List databases
-- `azmcp_sql_db_show` - Get database details
-- `azmcp_sql_elastic-pool_list` - List elastic pools
-- `azmcp_sql_server_firewall-rule_list` - List firewall rules
-- `azmcp_sql_server_entra-admin_list` - List Entra admins
+- `sql_server_get` - List servers or get one server's details
+- `sql_db_get` - List databases or get one database's details
+- `sql_elastic-pool_list` - List elastic pools
+- `sql_server_firewall-rule_list` - List firewall rules
+- `sql_server_entra-admin_list` - List Entra admins
 
 ---
 

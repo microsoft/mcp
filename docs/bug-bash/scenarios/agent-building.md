@@ -1,14 +1,14 @@
-# AI Agent Building Testing Scenario
+# Microsoft Foundry Extensions Testing Scenario
 
 > **MCP Tool Support Notice**
-> Azure MCP Server provides **Microsoft Foundry resource inspection, model listing, and agent interaction** capabilities. Resource creation and deployment require Azure CLI or Portal. This scenario guides you through complete end-to-end workflows, clearly marking when to use MCP tools vs external tools.
+> Azure MCP Server provides **Microsoft Foundry resource inspection, Azure OpenAI model/deployment listing, completions, embeddings, and knowledge-index inspection** through the Foundry Extensions toolset. Resource creation, deployment, and agent lifecycle management require other tools such as Azure CLI or the Azure portal.
 
 ## Objectives
 
 - Test Microsoft Foundry resource discovery and inspection
-- Test AI model listing and deployment management
-- Test agent creation and interaction workflows
-- Validate agent querying and evaluation capabilities
+- Test Azure OpenAI model and deployment listing
+- Validate completion and embedding tool discovery
+- Test knowledge-index listing and schema inspection when indexes are available
 
 ## Prerequisites
 
@@ -20,13 +20,13 @@
 
 ---
 
-## Scenario 1: Microsoft Foundry Resource Discovery & Model Management
+## Scenario 1: Microsoft Foundry Resource Discovery and OpenAI Models
 
-**Objective**: Complete workflow for discovering Microsoft Foundry resources and managing model deployments
+**Objective**: Discover Microsoft Foundry resources and inspect Azure OpenAI models and deployments
 
 ### Step 1: Setup Resources (External - Not MCP)
 
-> **External Setup Required**: Azure MCP Server cannot create resources. Use GitHub Copilot Chat to run Azure CLI commands or use Azure Portal.
+> **External Setup Required**: The Foundry Extensions toolset does not create Foundry resources or model deployments. Use Azure CLI or the Azure portal for setup.
 
 **Option A: Prompt GitHub Copilot Chat** (Recommended):
 ```
@@ -60,13 +60,13 @@ az cognitiveservices account deployment create \
 
 ### Step 2: Discover Microsoft Foundry Resources with Azure MCP Server
 
-**2.1 Get Microsoft Foundry resource details** (uses `azmcp_foundry_resource_get`):
+**2.1 Get Microsoft Foundry resource details** (uses `foundryextensions_resource_get`):
 ```
 Show me details for Microsoft Foundry resources in my subscription
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_foundry_resource_get`
+- [ ] Tool invoked: `foundryextensions_resource_get`
 - [ ] Your newly created Microsoft Foundry resource appears
 - [ ] Resource properties shown (name, location, SKU)
 
@@ -75,68 +75,31 @@ Show me details for Microsoft Foundry resources in my subscription
 List all Microsoft Foundry resources in resource group 'bugbash-foundry-rg'
 ```
 
-### Step 3: List Available Models with Azure MCP Server
+### Step 3: List OpenAI Models with Azure MCP Server
 
-**3.1 List all available models** (uses `azmcp_foundry_models_list`):
-```
-List all available AI models in Microsoft Foundry
-```
-
-**Verify**:
-- [ ] Tool invoked: `azmcp_foundry_models_list`
-- [ ] Model catalog displayed
-- [ ] GPT-4o and other models listed
-- [ ] Model details shown (publisher, license, capabilities)
-
-**3.2 Search for specific models**:
-```
-Show me all GPT models available in Microsoft Foundry
-```
-
-**Verify**:
-- [ ] Filtered list returned
-- [ ] GPT models displayed
-- [ ] Search functionality works
-
-**3.3 Check playground-compatible models**:
-```
-Which models can I use in the free playground?
-```
-
-**Verify**:
-- [ ] Playground-compatible models listed
-- [ ] Filter applied correctly
-
-### Step 4: Inspect Model Deployments with Azure MCP Server
-
-**4.1 List model deployments** (uses `azmcp_foundry_models_deployments_list`):
-```
-List all model deployments in my Microsoft Foundry resource
-```
-
-**Verify**:
-- [ ] Tool invoked: `azmcp_foundry_models_deployments_list`
-- [ ] Your GPT-4o deployment appears
-- [ ] Deployment details shown (name, model, SKU, capacity)
-
-**4.2 Alternative phrasing**:
-```
-Show me all deployed models in my Microsoft Foundry resource
-```
-
-### Step 5: List OpenAI Models with Azure MCP Server
-
-**5.1 List OpenAI models** (uses `azmcp_foundry_openai_models-list`):
+**3.1 List OpenAI models and deployments** (uses `foundryextensions_openai_models-list`):
 ```
 List all OpenAI models and deployments in my Azure AI resource '<resource-name>' in resource group 'bugbash-foundry-rg'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_foundry_openai_models-list`
+- [ ] Tool invoked: `foundryextensions_openai_models-list`
 - [ ] OpenAI models listed
 - [ ] Deployment information shown
 
-### Step 6: Cleanup (External - Not MCP)
+### Step 4: Optional Foundry Extension Operations
+
+When the resource has suitable deployments or knowledge indexes, also verify these current tools:
+
+- `foundryextensions_openai_chat-completions-create`
+- `foundryextensions_openai_create-completion`
+- `foundryextensions_openai_embeddings-create`
+- `foundryextensions_knowledge_index_list`
+- `foundryextensions_knowledge_index_schema`
+
+Use `--learn` or the Azure MCP command reference to discover each tool's current required parameters before invoking it.
+
+### Step 5: Cleanup (External - Not MCP)
 
 **Option A: Prompt GitHub Copilot Chat**:
 ```
@@ -151,9 +114,8 @@ az group delete --name bugbash-foundry-rg --yes --no-wait
 
 **Expected Results**:
 - Microsoft Foundry resource discovery works
-- Model catalog listing successful
-- Deployment inspection accurate
-- OpenAI model listing functional
+- OpenAI model and deployment listing is accurate
+- Applicable completion, embedding, or knowledge-index operations return structured results
 
 
 ## Common Issues to Watch For
@@ -161,13 +123,10 @@ az group delete --name bugbash-foundry-rg --yes --no-wait
 | Issue | Description | Resolution |
 |-------|-------------|------------|
 | **Authentication Failures** | Can't connect to Microsoft Foundry endpoint | Verify `az login` and endpoint URL is correct |
-| **Agent Not Found** | Agent ID doesn't exist | List agents first to get valid agent IDs |
 | **Token Limits** | Response truncated or incomplete | Model context window exceeded; use shorter prompts |
 | **Rate Limiting** | API throttling errors | Reduce request frequency or upgrade SKU |
 | **Endpoint Mismatch** | Wrong endpoint URL | Verify endpoint matches your Microsoft Foundry resource |
 | **Model Not Deployed** | Deployment not found | Check model deployments are active and provisioned |
-| **Evaluation Failures** | Evaluator returns errors | Ensure Azure OpenAI deployment exists for evaluation |
-| **Empty Agent List** | No agents returned | Create agents via Microsoft Foundry Portal first |
 
 ## What to Report
 
@@ -176,7 +135,7 @@ When logging issues, include:
 - [ ] Tool invoked (from MCP tool output)
 - [ ] Expected vs actual results
 - [ ] Error messages (if any)
-- [ ] Agent ID and endpoint URL (redact sensitive info)
+- [ ] Resource endpoint URL (redact resource-specific details when needed)
 - [ ] Model name and deployment name
 - [ ] Screenshots of unexpected behavior
 
@@ -184,7 +143,6 @@ When logging issues, include:
 
 - [Microsoft Foundry Documentation](https://learn.microsoft.com/azure/ai-foundry/)
 - [Azure OpenAI Service](https://learn.microsoft.com/azure/ai-services/openai/)
-- [Azure AI Agents](https://learn.microsoft.com/azure/ai-services/agents/)
 - [Model Context Protocol](https://modelcontextprotocol.io/)
 - [MCP Command Reference](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
 - [E2E Test Prompts](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
@@ -193,29 +151,17 @@ When logging issues, include:
 ## 💡 Quick Reference: Supported MCP Tools
 
 ### Microsoft Foundry Resources
-- `azmcp_foundry_resource_get` - Get Microsoft Foundry resource details
-- `azmcp_foundry_models_list` - List available AI models
-- `azmcp_foundry_models_deployments_list` - List model deployments
+- `foundryextensions_resource_get` - Get Microsoft Foundry resource details
 
 ### OpenAI Integration
-- `azmcp_foundry_openai_models-list` - List OpenAI models and deployments
-- `azmcp_foundry_openai_chat-completions-create` - Create chat completions
-- `azmcp_foundry_openai_create-completion` - Generate text completions
-- `azmcp_foundry_openai_embeddings-create` - Generate embeddings
-
-### AI Agents
-- `azmcp_foundry_agents_list` - List AI agents
-- `azmcp_foundry_agents_connect` - Query an agent
-- `azmcp_foundry_agents_evaluate` - Evaluate agent response
-- `azmcp_foundry_agents_query-and-evaluate` - Query and evaluate in one step
+- `foundryextensions_openai_models-list` - List OpenAI models and deployments
+- `foundryextensions_openai_chat-completions-create` - Create chat completions
+- `foundryextensions_openai_create-completion` - Generate text completions
+- `foundryextensions_openai_embeddings-create` - Generate embeddings
 
 ### Knowledge Management
-- `azmcp_foundry_knowledge_index_list` - List knowledge indexes
-- `azmcp_foundry_knowledge_index_schema` - Get index schema
-- `azmcp_foundry_knowledge_source_get` - Get knowledge sources
-
-### Model Deployment
-- `azmcp_foundry_models_deploy` - Deploy AI model (write operation)
+- `foundryextensions_knowledge_index_list` - List knowledge indexes
+- `foundryextensions_knowledge_index_schema` - Get index schema
 
 ---
 

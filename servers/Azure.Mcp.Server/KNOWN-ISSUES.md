@@ -11,8 +11,8 @@ The following tools are not supported when the Azure MCP Server is running in HT
 
 | Namespace | Impacted Tools |
 |-----------|----------------|
-| communication | `azmcp_communication_sms_send`, `azmcp_communication_email_send` |
-| confidentialledger | `azmcp_confidentialledger_entries_append`, `azmcp_confidentialledger_entries_get` |
+| communication | `communication_sms_send`, `communication_email_send` |
+| confidentialledger | `confidentialledger_entries_append`, `confidentialledger_entries_get` |
 
 **Workaround:**
 

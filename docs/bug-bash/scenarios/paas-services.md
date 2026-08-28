@@ -1,7 +1,7 @@
 # PaaS Services Testing Scenario
 
 > **MCP Tool Support Notice**
-> Azure MCP Server provides **App Service inspection, Function App discovery, and database connection management** capabilities. Resource creation and application deployment require Azure CLI or Portal. This scenario guides you through complete end-to-end workflows, clearly marking when to use MCP tools vs external tools.
+> This scenario exercises **App Service inspection, Function App discovery, and database connection management**. It uses Azure CLI for deterministic App Service and application deployment setup.
 
 ## Objectives
 
@@ -24,7 +24,7 @@
 
 ### Step 1: Create App Service Resources (External - Not MCP)
 
-> **External Setup Required**: Azure MCP Server cannot create resources. Use GitHub Copilot Chat to run Azure CLI commands or use Azure Portal.
+> **Deterministic external setup**: Use Azure CLI or the Azure portal to create the App Service fixture used by this scenario.
 
 **Option A: Prompt GitHub Copilot Chat** (Recommended):
 ```
@@ -67,13 +67,13 @@ az sql db create \
 
 ### Step 2: Discover App Services with Azure MCP Server
 
-**2.1 List all App Services** (uses `azmcp_appservice_get`):
+**2.1 List all App Services** (uses `appservice_webapp_get`):
 ```
 List all App Services in my subscription
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_appservice_get`
+- [ ] Tool invoked: `appservice_webapp_get`
 - [ ] Your web app appears in the list
 - [ ] App properties shown (name, location, state, URL)
 
@@ -90,13 +90,13 @@ Show me details for App Service '<webapp-name>' in resource group 'bugbash-paas-
 
 ### Step 3: Add Database Connection with Azure MCP Server
 
-**3.1 Add SQL Server database connection** (uses `azmcp_appservice_database_add`):
+**3.1 Add SQL Server database connection** (uses `appservice_database_add`):
 ```
 Add a SQL Server database connection to App Service '<webapp-name>' in resource group 'bugbash-paas-rg' for database '<database-name>' on server '<server-name>'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_appservice_database_add`
+- [ ] Tool invoked: `appservice_database_add`
 - [ ] Connection string created
 - [ ] Database connection configured
 - [ ] Success message displayed
@@ -175,14 +175,14 @@ When logging issues, include:
 ## Quick Reference: Supported MCP Tools
 
 ### App Service
-- `azmcp_appservice_get` - Get App Service details (list all or specific app)
-- `azmcp_appservice_database_add` - Add database connection to App Service
+- `appservice_webapp_get` - Get App Service details (list all or specific app)
+- `appservice_database_add` - Add database connection to App Service
 
 ### Function Apps
-- `azmcp_functionapp_get` - Get Function App details (list all or specific function app)
+- `functionapp_get` - Get Function App details (list all or specific function app)
 
 ### Storage
-- `azmcp_storage_account_get` - List storage accounts
+- `storage_account_get` - List storage accounts
 
 ### Database Support
 - SQL Server (`SqlServer`)

@@ -22,7 +22,6 @@ Azure.Mcp.Tools.AzureBackup/
 │   ├── Commands/
 │   │   ├── AzureBackupJsonContext.cs             # AOT-safe JSON serialization
 │   │   ├── BaseAzureBackupCommand.cs             # Base for vault-scoped commands
-│   │   ├── BaseProtectedItemCommand.cs           # Base for protected-item commands
 │   │   ├── Backup/
 │   │   │   └── BackupStatusCommand.cs
 │   │   ├── DisasterRecovery/
@@ -35,18 +34,25 @@ Azure.Mcp.Tools.AzureBackup/
 │   │   │   └── JobGetCommand.cs
 │   │   ├── Policy/
 │   │   │   ├── PolicyCreateCommand.cs
-│   │   │   └── PolicyGetCommand.cs
+│   │   │   ├── PolicyGetCommand.cs
+│   │   │   └── PolicyUpdateCommand.cs
 │   │   ├── ProtectableItem/
 │   │   │   └── ProtectableItemListCommand.cs
 │   │   ├── ProtectedItem/
 │   │   │   ├── ProtectedItemGetCommand.cs
-│   │   │   └── ProtectedItemProtectCommand.cs
+│   │   │   ├── ProtectedItemProtectCommand.cs
+│   │   │   └── ProtectedItemUndeleteCommand.cs
 │   │   ├── RecoveryPoint/
 │   │   │   └── RecoveryPointGetCommand.cs
+│   │   ├── ResourceGuard/
+│   │   │   └── [create, get, and delete commands]
+│   │   ├── Security/
+│   │   │   └── [MUA and encryption commands]
 │   │   └── Vault/
 │   │       ├── VaultCreateCommand.cs
 │   │       ├── VaultGetCommand.cs
-│   │       └── VaultUpdateCommand.cs
+│   │       ├── VaultUpdateCommand.cs
+│   │       └── PrivateEndpoint/                  # RSV private endpoint commands
 │   ├── Models/                                   # Immutable DTOs (sealed records)
 │   │   ├── BackupJobInfo.cs
 │   │   ├── BackupPolicyInfo.cs
@@ -59,8 +65,8 @@ Azure.Mcp.Tools.AzureBackup/
 │   │   ├── RecoveryPointInfo.cs
 │   │   ├── UnprotectedResourceInfo.cs
 │   │   └── VaultCreateResult.cs
-│   ├── Options/                                  # Option definitions & binding
-│   │   ├── AzureBackupOptionDefinitions.cs
+│   ├── Options/                                  # Attributed options POCOs
+│   │   ├── AzureBackupOptionDefinitions.cs       # Shared descriptions/names
 │   │   ├── BaseAzureBackupOptions.cs
 │   │   ├── BaseProtectedItemOptions.cs
 │   │   └── [per-command Options classes]
@@ -122,18 +128,23 @@ The toolset follows a strict three-layer architecture:
 ### Layer 1: Commands
 
 Each command is a **sealed** class that:
-1. Inherits from `BaseAzureBackupCommand<TOptions>` (vault-scoped) or `BaseProtectedItemCommand<TOptions>` (adds `--protected-item` and `--container`).
-2. Registers required/optional options via `RegisterOptions`.
-3. Binds parsed CLI values to a typed options record via `BindOptions`.
-4. Calls the unified `IAzureBackupService` method.
-5. Wraps the result in a `ResponseResult` using the AOT-safe `AzureBackupJsonContext`.
+1. Inherits from `SubscriptionCommand<TOptions, TResult>` directly or from `BaseAzureBackupCommand<TOptions, TResult>` when shared vault-type validation applies.
+2. Uses `[Option]` attributes on its options POCO; `OptionBinder` registers and binds options automatically.
+3. Optionally overrides `ValidateOptions` for semantic or conditional validation.
+4. Calls the unified `IAzureBackupService` method from `ExecuteAsync(CommandContext, TOptions, CancellationToken)`.
+5. Wraps a public nested result record in `ResponseResult` using the AOT-safe `AzureBackupJsonContext`.
+
+New commands should prefer flat options implementing `ISubscriptionOption`. Some existing vault-scoped commands still use the transitional `BaseAzureBackupOptions` and `BaseProtectedItemOptions` inheritance hierarchy.
 
 Base command hierarchy:
 
 ```
-SubscriptionCommand<T>           <- from MCP Core (handles --subscription, --tenant)
-  └── BaseAzureBackupCommand<T>  <- adds --vault, --resource-group, --vault-type
-        └── BaseProtectedItemCommand<T>  <- adds --protected-item, --container
+BaseCommand<TOptions, TResult>
+  └── AuthenticatedCommand<TOptions, TResult>
+      └── SubscriptionCommand<TOptions, TResult>
+          ├── Concrete Azure Backup command
+          └── BaseAzureBackupCommand<TOptions, TResult>  <- shared vault-type validation
+              └── Concrete vault-scoped command
 ```
 
 ### Layer 2: Unified Service Facade (`AzureBackupService`)
@@ -387,7 +398,7 @@ All response types are registered in `AzureBackupJsonContext`:
 ```csharp
 [JsonSerializable(typeof(VaultGetCommand.VaultGetCommandResult))]
 [JsonSerializable(typeof(PolicyCreateCommand.PolicyCreateCommandResult))]
-// ... all 15 command result types + 11 model types
+// ... every serialized command result and model type
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
@@ -402,36 +413,41 @@ Each command defines a nested result record type (e.g., `VaultGetCommandResult`)
 
 `AzureBackupSetup` implements `IAreaSetup` and:
 1. Registers services as singletons: `IRsvBackupOperations`, `IDppBackupOperations`, `IAzureBackupService`
-2. Registers all 15 command classes as singletons
+2. Registers every command class as a singleton
 3. Builds the command group tree under the `azurebackup` namespace:
 
 ```
 azurebackup/
 ├── vault/          (get, create, update)
-├── policy/         (get, create)
-├── protecteditem/  (get, protect)
+│   └── privateendpoint/ (create, get, delete, approve/reject)
+├── policy/         (get, create, update)
+├── protecteditem/  (get, protect, undelete)
 ├── protectableitem/ (list)
 ├── backup/         (status)
 ├── job/            (get)
 ├── recoverypoint/  (get)
 ├── governance/     (find-unprotected, immutability, soft-delete)
-└── disasterrecovery/     (enable-crr)
+├── disasterrecovery/ (enable-crr)
+├── security/       (enable-mua, disable-mua, configure-encryption)
+└── resourceguard/  (create, get, delete)
 ```
 
 ---
 
-## Option Definitions
+## Options and Shared Descriptions
 
-All option names are centralized in `AzureBackupOptionDefinitions` as `const string` fields, with corresponding `Option<string>` static instances. This ensures:
-- No hardcoded option strings in commands
-- Consistent descriptions across all commands
-- Reusable options via `.AsRequired()` / `.AsOptional()` extension methods
+Options are public writable properties marked with `[Option]`. `AzureBackupOptionDefinitions` contains reusable description strings and a small number of explicit option-name constants; it does not contain `Option<T>` instances. Requiredness comes from the C# `required` modifier, and optional properties are nullable.
+
+This provides:
+- Automatic registration and binding through `OptionBinder`
+- Consistent descriptions across commands
+- Flat per-command options for new commands
 
 Key shared options:
 - `--vault`  -  Vault name
 - `--vault-type`  -  `rsv` or `dpp` (optional with auto-detect)
 - `--resource-group`  -  Azure resource group
-- `--subscription`  -  Subscription (inherited from base)
+- `--subscription`  -  Subscription ID or name resolved by `ISubscriptionResolver`
 - `--protected-item`  -  Protected item / backup instance name
 - `--container`  -  RSV container name (RSV-only)
 
@@ -469,7 +485,7 @@ Live tests use the **recorded test** pattern via `RecordedCommandTestsBase`. Tes
 
 ### Test Coverage
 
-The live test class `AzureBackupCommandTests` contains **20 recorded tests** covering both RSV and DPP:
+The live test class `AzureBackupCommandTests` contains recorded tests covering both RSV and DPP. Representative coverage includes:
 
 | Category | Tests | What's Validated |
 |----------|-------|------------------|

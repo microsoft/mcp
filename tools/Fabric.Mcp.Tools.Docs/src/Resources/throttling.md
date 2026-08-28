@@ -53,43 +53,33 @@ Always respect the `Retry-After` header value and implement exponential backoff 
 using System.Net.Http.Headers;
 
 public async Task<HttpResponseMessage> MakeRequestWithRetryAsync(
-    HttpClient client, 
-    string requestUrl, 
-    int maxRetries = 3)
+    HttpClient client,
+    Uri requestUri,
+    int maxRetries,
+    CancellationToken cancellationToken)
 {
-    int retryCount = 0;
-    
-    while (retryCount < maxRetries)
+    for (var retryCount = 0; retryCount <= maxRetries; retryCount++)
     {
-        var response = await client.GetAsync(requestUrl);
-        
-        if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+        var response = await client.GetAsync(requestUri, cancellationToken);
+        if (response.StatusCode != HttpStatusCode.TooManyRequests)
         {
-            // Get the Retry-After header value
-            int retryAfterSeconds = 60; // Default fallback
-            
-            if (response.Headers.TryGetValues("Retry-After", out var values))
-            {
-                if (int.TryParse(values.First(), out int parsedValue))
-                {
-                    retryAfterSeconds = parsedValue;
-                }
-            }
-            
-            Console.WriteLine($"Throttled. Waiting {retryAfterSeconds} seconds before retry {retryCount + 1}/{maxRetries}");
-            
-            // Wait for the specified duration
-            await Task.Delay(TimeSpan.FromSeconds(retryAfterSeconds));
-            
-            retryCount++;
-            continue;
+            return response;
         }
-        
-        // Return successful response or other error codes
-        return response;
+
+        if (retryCount == maxRetries)
+        {
+            response.Dispose();
+            break;
+        }
+
+        var retryAfter = response.Headers.RetryAfter?.Delta
+            ?? TimeSpan.FromSeconds(Math.Min(60, Math.Pow(2, retryCount + 1)));
+
+        response.Dispose();
+        await Task.Delay(retryAfter, cancellationToken);
     }
-    
-    throw new HttpRequestException($"Request failed after {maxRetries} retries due to throttling");
+
+    throw new HttpRequestException($"Request remained throttled after {maxRetries} retries.");
 }
 ```
 

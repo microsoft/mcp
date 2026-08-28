@@ -200,8 +200,7 @@ Rules:
 - Order: command-specific options first, then `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`
 - Keep parameter names consistent with Azure SDK parameters when possible
 
- > **Note:** Options are defined entirely via `[Option]` attributes.
- > A static `{Toolset}OptionDefinitions` class is not needed
+> **Note:** Options are defined via `[Option]` attributes. Do not create static `Option<T>` parser objects. A constants class may be used when multiple commands share description text or need an explicit option-name constant.
 
 ### 1c. Service Interface and Implementation
 
@@ -448,7 +447,7 @@ public sealed class {Resource}{Operation}Command(
 }
 ```
 
-**Key points (two-generic pattern from `docs/option-conversion.md`):**
+**Key points for the current two-generic pattern:**
 - Two generic parameters: `SubscriptionCommand<TOptions, TResult>` — `TResult` is the command's result record
 - `ISubscriptionResolver` injected via primary constructor and passed to base
 - `ExecuteAsync` receives **pre-bound `TOptions options`** — no `ParseResult` parameter
@@ -1054,9 +1053,9 @@ Add your new tool(s) to the consolidated tools JSON. Use the following command t
 ```powershell
 cd servers/Azure.Mcp.Server/src/bin/Debug/net10.0
 # Windows
-./azmcp.exe tools list --name --namespace <tool_area>
+./azmcp.exe tools list --name-only --namespace <tool_area>
 # Unix
-./azmcp tools list --name --namespace <tool_area>
+./azmcp tools list --name-only --namespace <tool_area>
 ```
 
 **Documentation Standards:**
@@ -1355,7 +1354,7 @@ Guidelines:
 - Register toolset in `Program.cs` `RegisterAreas()`
 - Handle all error cases with `HandleException`
 - Use consistent resource naming patterns
-- Reference `docs/option-conversion.md` when working with legacy one-generic commands
+- Use Phase 1 for the current pattern and the legacy appendix below only when maintaining or converting old one-generic commands
 
 ---
 
@@ -1537,7 +1536,7 @@ Important rules:
 
 ### Intermediate Base Command (only when needed)
 
-Use interface constraints for type-safe shared behavior (see `docs/option-conversion.md` Step 5):
+Use interface constraints for type-safe shared behavior, matching current shared base commands:
 
 ```csharp
 // Define interface for shared option access
@@ -1580,7 +1579,7 @@ The `Id` in `[CommandMetadata]` is a unique GUID for each tool. Generate a new o
 
 ## Reference: Option Extension Methods (Legacy Pattern)
 
-> **⚠️ LEGACY:** This section documents the **one-generic** pattern used by unconverted toolsets (e.g., KeyVault, some older tools). New commands should use the **two-generic pattern** with `[Option]` attributes as shown in Phase 1. Only reference this when maintaining or converting existing one-generic commands. See `docs/option-conversion.md` for the full migration guide.
+> **⚠️ LEGACY:** This section documents the **one-generic** pattern used by unconverted code. New commands should use the **two-generic pattern** with `[Option]` attributes shown in Phase 1. Only reference this section when maintaining or converting existing one-generic commands.
 
 ### Available Extension Methods
 
@@ -2084,9 +2083,9 @@ Every new command must be added to consolidated mode:
    ```powershell
    cd servers/Azure.Mcp.Server/src/bin/Debug/net10.0
     # Windows
-    ./azmcp.exe tools list --name --namespace <tool_area>
+    ./azmcp.exe tools list --name-only --namespace <tool_area>
     # Unix
-    ./azmcp tools list --name --namespace <tool_area>
+    ./azmcp tools list --name-only --namespace <tool_area>
    ```
 
 ### Testing Commands for Remote Mode

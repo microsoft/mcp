@@ -55,10 +55,10 @@ Idempotent. Safe to re-run. Designed to be executed from repo root or script dir
 #>
 param(
     [Parameter(Mandatory)][ValidateSet('Consolidated','Namespace','Both')][string]$Mode,
-    [string]$ConsolidatedToolsPath = "../../../core/Azure.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json",
-    [string]$NamespaceToolsPath = "./namespace-tools.json", # This file contains the output of the `azmcp tools list --namespaces` command.
-    [string]$PromptsPath = "./prompts.json",
-    [string]$ToolsPath = "./tools.json",
+    [string]$ConsolidatedToolsPath,
+    [string]$NamespaceToolsPath,
+    [string]$PromptsPath,
+    [string]$ToolsPath,
     [string]$OutputPath,
     [switch]$Force,
     [switch]$VerboseWarnings
@@ -66,6 +66,17 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+if ([string]::IsNullOrEmpty($ConsolidatedToolsPath)) {
+    $ConsolidatedToolsPath = Join-Path $PSScriptRoot "../../../../servers/Azure.Mcp.Server/src/Resources/consolidated-tools.json"
+}
+if ([string]::IsNullOrEmpty($NamespaceToolsPath)) {
+    # Generated with: azmcp tools list --namespace-mode
+    $NamespaceToolsPath = Join-Path $PSScriptRoot "../prompts/namespace-tools.json"
+}
+if ([string]::IsNullOrEmpty($PromptsPath)) {
+    $PromptsPath = Join-Path $PSScriptRoot "../prompts/prompts.json"
+}
 
 function Write-Log {
     param([string]$Message, [string]$Level = 'INFO')
@@ -258,7 +269,9 @@ function Invoke-NamespaceGeneration {
 }
 
 if (-not (Test-Path $PromptsPath)) { throw "Prompts file not found: $PromptsPath" }
-if (-not (Test-Path $ToolsPath))   { Write-Log "Tools file not found ($ToolsPath) - continuing without validation" 'WARN' }
+if (-not [string]::IsNullOrEmpty($ToolsPath) -and -not (Test-Path $ToolsPath)) {
+    Write-Log "Tools file not found ($ToolsPath) - continuing without validation" 'WARN'
+}
 
 Write-Log "Loading prompts JSON" 'INFO'
 $promptsJson = Get-Content -Raw -Path $PromptsPath | ConvertFrom-Json

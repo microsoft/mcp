@@ -1,127 +1,75 @@
 {
-  "azureaibestpractices_get": [
-    "Get best practices for building AI applications in Azure",
-    "Show me the best practices for Microsoft Foundry agents code generation",
-    "Get guidance for building agents with Microsoft Foundry",
-    "Create an AI app that helps me to manage travel queries.",
-    "Create an AI app that helps me to manage travel queries in Microsoft Foundry"
+  "acr_registry_list": [
+    "List all Azure Container Registries in my subscription",
+    "Show me my Azure Container Registries",
+    "Show me the container registries in my subscription",
+    "List container registries in resource group <resource_group_name>",
+    "Show me the container registries in resource group <resource_group_name>"
   ],
-  "foundry_agents_connect": [
-    "Query an agent in my Microsoft Foundry resource"
+  "acr_registry_repository_list": [
+    "List all container registry repositories in my subscription",
+    "Show me my container registry repositories",
+    "List repositories in the container registry <registry_name>",
+    "Show me the repositories in the container registry <registry_name>"
   ],
-  "foundry_agents_create": [
-    "Create a new Microsoft Foundry agent using instructions in the active editor"
+  "advisor_metadata_get": [
+    "Get the Advisor metadata for recommendation type id <recommendation-type-id>",
+    "What does Advisor recommendation type <recommendation-type-id> mean?",
+    "Show me the catalog details for Advisor recommendation type <recommendation-type-id>",
+    "Get the German (de) metadata for Advisor recommendation type <recommendation-type-id>",
+    "What is the impact and category of Advisor recommendation type <recommendation-type-id>?",
+    "Show the remediation actions for Advisor recommendation type <recommendation-type-id>",
+    "When does Advisor recommendation type <recommendation-type-id> retire?"
   ],
-  "foundry_agents_evaluate": [
-    "Evaluate the full query and response I got from my agent for task_adherence"
+  "advisor_metadata_list": [
+    "List the Advisor recommendation metadata catalog",
+    "Before I deploy any virtual machines, what kinds of recommendations could Advisor produce for them?",
+    "List high-impact Advisor metadata for microsoft.sql/servers/databases",
+    "Show the German metadata catalog for Advisor recommendations",
+    "Which Advisor recommendation types include service-retirement details?",
+    "List Advisor metadata in the ServiceUpgradeAndRetirement subcategory",
+    "Find the Advisor service-retirement metadata with tracking ID QNY1-HB8",
+    "Show Advisor service retirements on or after March 31, 2026"
   ],
-  "foundry_agents_list": [
-    "List all agents in my Microsoft Foundry resource",
-    "Show me the available agents in my Microsoft Foundry resource"
+  "advisor_recommendation_apply": [
+    "Apply Advisor recommendations to this ARM template",
+    "Apply Advisor recommendations to this Terraform file for Storage Account"
   ],
-  "foundry_agents_query-and-evaluate": [
-    "Query and evaluate an agent in my Microsoft Foundry resource for task_adherence"
+  "advisor_recommendation_list": [
+    "List all recommendations in my subscription",
+    "Show me Advisor recommendations in the subscription <subscription>",
+    "List all Advisor recommendations in the subscription <subscription>",
+    "Show me high-impact Security recommendations in subscription <subscription>",
+    "List Cost recommendations for storage accounts in subscription <subscription>",
+    "Find Advisor recommendations mentioning \"right-size\" in subscription <subscription>",
+    "Show me the top 10 Advisor recommendations in subscription <subscription>"
   ],
-  "foundryextensions_knowledge_index_list": [
-    "List all knowledge indexes in my Microsoft Foundry project",
-    "Show me the knowledge indexes in my Microsoft Foundry project"
+  "advisor_recommendation_summary": [
+    "Summarize the key themes from my Advisor recommendations in subscription <subscription>",
+    "Summarize Advisor recommendations in subscription <subscription> by category",
+    "Show the top 10 most common Advisor recommendations in subscription <subscription>",
+    "Group Advisor recommendations by impact in subscription <subscription>",
+    "Which resource types have the most high-impact recommendations in subscription <subscription>?",
+    "Summarize high-impact Security recommendations by resource-type in subscription <subscription>",
+    "Group Cost recommendations for storage accounts by impact in subscription <subscription>",
+    "Summarize Advisor recommendations mentioning \"encryption\" by category in subscription <subscription>"
   ],
-  "foundryextensions_knowledge_index_schema": [
-    "Show me the schema for knowledge index <index-name> in my Microsoft Foundry resource",
-    "Get the schema configuration for knowledge index <index-name>"
+  "aks_cluster_get": [
+    "Get the configuration of AKS cluster <cluster-name>",
+    "Show me the details of AKS cluster <cluster-name> in resource group <resource-group>",
+    "Show me the network configuration for AKS cluster <cluster-name>",
+    "What are the details of my AKS cluster <cluster-name> in <resource-group>?",
+    "List all AKS clusters in my subscription",
+    "Show me my Azure Kubernetes Service clusters",
+    "What AKS clusters do I have?"
   ],
-  "foundry_models_deploy": [
-    "Deploy a GPT4o instance on my resource <resource-name>"
-  ],
-  "foundry_models_deployments_list": [
-    "List all Microsoft Foundry model deployments",
-    "Show me all Microsoft Foundry model deployments"
-  ],
-  "foundry_models_list": [
-    "List all Microsoft Foundry models",
-    "Show me the available Microsoft Foundry models"
-  ],
-  "foundryextensions_openai_chat-completions-create": [
-    "Create a chat completion with the message \"Hello, how are you today?\" using my Microsoft Foundry resource"
-  ],
-  "foundryextensions_openai_create-completion": [
-    "Create a completion with the prompt \"What is Azure?\" using my Microsoft Foundry resource"
-  ],
-  "foundryextensions_openai_embeddings-create": [
-    "Generate embeddings for the text \"Azure OpenAI Service\" using my Microsoft Foundry resource",
-    "Create vector embeddings for my text using my Microsoft Foundry resource"
-  ],
-  "foundryextensions_openai_models-list": [
-    "List all available OpenAI models in my Microsoft Foundry resource",
-    "Show me the OpenAI model deployments in my Microsoft Foundry resource"
-  ],
-  "foundryextensions_resource_get": [
-    "List all Microsoft Foundry resources in my subscription",
-    "Show me the Microsoft Foundry resources in resource group <resource_group_name>",
-    "Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name>"
-  ],
-  "search_knowledge_base_get": [
-    "List all knowledge bases in the Azure AI Search service <service-name>",
-    "Show me the knowledge bases in the Azure AI Search service <service-name>",
-    "List all knowledge bases in the search service <service-name>",
-    "Show me the knowledge bases in the search service <service-name>",
-    "Get the details of knowledge base <agent-name> in the Azure AI Search service <service-name>",
-    "Show me the knowledge base <agent-name> in search service <service-name>"
-  ],
-  "search_knowledge_base_retrieve": [
-    "Run a retrieval with knowledge base <agent-name> in Azure AI Search service <service-name> for the query <query>",
-    "Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query>",
-    "Run a retrieval with knowledge base <agent-name> in search service <service-name> for the query <query>",
-    "Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query>",
-    "Query knowledge base <agent-name> in search service <service-name> about <query>",
-    "Search knowledge base <agent-name> in Azure AI Search service <service-name> for <query>",
-    "What does knowledge base <agent-name> in search service <service-name> know about <query>",
-    "Find information about <query> using knowledge base <agent-name> in search service <service-name>"
-  ],
-  "search_knowledge_source_get": [
-    "List all knowledge sources in the Azure AI Search service <service-name>",
-    "Show me the knowledge sources in the Azure AI Search service <service-name>",
-    "List all knowledge sources in the search service <service-name>",
-    "Show me the knowledge sources in the search service <service-name>",
-    "Get the details of knowledge source <source-name> in the Azure AI Search service <service-name>",
-    "Show me the knowledge source <source-name> in search service <service-name>"
-  ],
-  "search_index_get": [
-    "Show me the details of the index <index-name> in Cognitive Search service <service-name>",
-    "List all indexes in the Cognitive Search service <service-name>",
-    "Show me the indexes in the Cognitive Search service <service-name>"
-  ],
-  "search_index_query": [
-    "Search for instances of <search_term> in the index <index-name> in Cognitive Search service <service-name>"
-  ],
-  "search_service_list": [
-    "List all Cognitive Search services in my subscription",
-    "Show me the Cognitive Search services in my subscription",
-    "Show me my Cognitive Search services"
-  ],
-  "speech_stt_recognize": [
-    "Convert this audio file to text using Azure Speech Services",
-    "Recognize speech from my audio file with language detection",
-    "Transcribe speech from audio file <file_path> with profanity filtering",
-    "Convert speech to text from audio file <file_path> using endpoint <endpoint>",
-    "Transcribe the audio file <file_path> in Spanish language",
-    "Convert speech to text with detailed output format from audio file <file_path>",
-    "Recognize speech from <file_path> with phrase hints for better accuracy",
-    "Transcribe audio using multiple phrase hints: \"Azure\", \"cognitive services\", \"machine learning\"",
-    "Convert speech to text with comma-separated phrase hints: \"Azure, cognitive services, API\"",
-    "Transcribe audio with raw profanity output from file <file_path>"
-  ],
-  "speech_tts_synthesize": [
-    "Convert text to speech and save to output.wav",
-    "Synthesize speech from \"Hello, welcome to Azure\" and save to welcome.wav",
-    "Generate speech audio from text \"Hello world\" using Azure Speech Services",
-    "Convert text to speech with Spanish language and save to spanish-audio.wav",
-    "Synthesize speech with voice en-US-JennyNeural from text \"Azure AI Services\"",
-    "Create MP3 audio file from text \"Welcome to Azure\" with high quality format",
-    "Generate speech with custom voice model using endpoint ID <endpoint-id>",
-    "Convert text to OGG/Opus format audio file",
-    "Synthesize long text content to audio file with streaming",
-    "Create audio file from text in French language with appropriate voice"
+  "aks_nodepool_get": [
+    "Get details for nodepool <nodepool-name> in AKS cluster <cluster-name> in <resource-group>",
+    "Show me the configuration for nodepool <nodepool-name> in AKS cluster <cluster-name> in resource group <resource-group>",
+    "What is the setup of nodepool <nodepool-name> for AKS cluster <cluster-name> in <resource-group>?",
+    "List nodepools for AKS cluster <cluster-name> in <resource-group>",
+    "Show me the nodepool list for AKS cluster <cluster-name> in <resource-group>",
+    "What nodepools do I have for AKS cluster <cluster-name> in <resource-group>"
   ],
   "appconfig_account_list": [
     "List all App Configuration stores in my subscription",
@@ -149,6 +97,12 @@
     "Use app lens to check why my app is slow?",
     "What does app lens say is wrong with my service?"
   ],
+  "applicationinsights_recommendation_list": [
+    "List code optimization recommendations across my Application Insights components",
+    "Show me code optimization recommendations for all Application Insights resources in my subscription",
+    "List profiler recommendations for Application Insights in resource group <resource_group_name>",
+    "List Application Insights code optimization recommendations for improving application performance"
+  ],
   "appservice_database_add": [
     "Add database connection <connection_string> to my app service <app_name> for database <database_name> in resource group <resource_group>",
     "Configure SQL Server database <database_name> for app service <app_name> with connection string <connection_string> in resource group <resource_group>",
@@ -161,34 +115,246 @@
     "Set up database <database_name> for app service <app_name> with connection string <connection_string> under resource group <resource_group>",
     "Configure database <database_name> for app service <app_name> with the connection string <connection_string> in resource group <resource_group>"
   ],
-  "applicationinsights_recommendation_list": [
-    "List code optimization recommendations across my Application Insights components",
-    "Show me code optimization recommendations for all Application Insights resources in my subscription",
-    "List profiler recommendations for Application Insights in resource group <resource_group_name>",
-    "Show me performance improvement recommendations from Application Insights"
+  "appservice_webapp_change-state": [
+    "Start the web app <app> in <resource_group>",
+    "Stop the web app <app> in <resource_group>",
+    "Restart the web app <app> in <resource_group>",
+    "Soft restart the web app <app> in <resource_group> waiting for restart to complete"
   ],
-  "extension_cli_generate": [
-    "Create a Storage account with name <storage_account_name> using Azure CLI",
-    "List all virtual machines in my subscription using Azure CLI",
-    "Show me the details of the storage account <account_name> with Azure CLI commands"
+  "appservice_webapp_deployment_get": [
+    "List the deployments for web app <webapp> in <resource_group>",
+    "Get the deployment <deployment-id> for web app <webapp> in <resource_group>"
   ],
-  "extension_cli_install": [
-    "<Ask the MCP host to uninstall az cli on your machine and run test prompts for extension_cli_generate>",
-    "How to install azd",
-    "What is Azure Functions Core tools and how to install it"
+  "appservice_webapp_diagnostic_diagnose": [
+    "Use Azure App Service diagnostics to diagnose web app <webapp> in <resource_group> with detector <detector_name>",
+    "Use Azure App Service diagnostics to diagnose web app <webapp> in <resource_group> with detector <detector_name> between <start_time> and <end_time> with interval <interval>"
   ],
-  "acr_registry_list": [
-    "List all Azure Container Registries in my subscription",
-    "Show me my Azure Container Registries",
-    "Show me the container registries in my subscription",
-    "List container registries in resource group <resource_group_name>",
-    "Show me the container registries in resource group <resource_group_name>"
+  "appservice_webapp_diagnostic_list": [
+    "List the Azure App Service diagnostic detectors for web app <webapp> in <resource_group>"
   ],
-  "acr_registry_repository_list": [
-    "List all container registry repositories in my subscription",
-    "Show me my container registry repositories",
-    "List repositories in the container registry <registry_name>",
-    "Show me the repositories in the container registry <registry_name>"
+  "appservice_webapp_get": [
+    "List the web apps in my subscription",
+    "Show me the web apps in my <resource_group> resource group",
+    "Get the details for web app <webapp> in <resource_group>"
+  ],
+  "appservice_webapp_settings_get-appsettings": [
+    "List the application settings for web app <webapp> in <resource_group>",
+    "Get the application settings for web app <webapp> in <resource_group>"
+  ],
+  "appservice_webapp_settings_update-appsettings": [
+    "Add application setting <setting-name> with <setting-value> to web app <webapp> in <resource_group>",
+    "Set application setting <setting-name> with <setting-value> to web app <webapp> in <resource_group>",
+    "Delete application setting <setting-name> from web app <webapp> in <resource_group>"
+  ],
+  "azurebackup_backup_status": [
+    "Check backup status for resource <resource_id> in location <location>",
+    "What is the backup status of <resource_id> in location <location> in my subscription?"
+  ],
+  "azurebackup_disasterrecovery_enable-crr": [
+    "Enable cross-region restore on vault <vault_name> in resource group <resource_group>",
+    "Turn on cross-region restore for vault <vault_name> under resource group <resource_group>"
+  ],
+  "azurebackup_governance_find-unprotected": [
+    "Find unprotected resources of type <resource_type> in my subscription",
+    "Show me Azure resources that are not backed up for resource type <resource_type>",
+    "Find unprotected SQL databases and file shares discovered by backup vaults in my subscription",
+    "Find all resources and sub-resources in resource group <resource_group> that are not protected by Azure Backup"
+  ],
+  "azurebackup_governance_immutability": [
+    "Configure immutability state on vault <vault_name> in resource group <resource_group>",
+    "Set immutability to Enabled on vault <vault_name> in resource group <resource_group>"
+  ],
+  "azurebackup_governance_soft-delete": [
+    "Configure soft delete on Azure Backup vault <vault_name> in resource group <resource_group>",
+    "Set soft delete state to AlwaysOn for vault <vault_name> in resource group <resource_group>"
+  ],
+  "azurebackup_job_get": [
+    "Get backup job <job_id> from vault <vault_name> in resource group <resource_group>",
+    "Show me the status of backup job <job_id> in vault <vault_name> under resource group <resource_group>"
+  ],
+  "azurebackup_policy_create": [
+    "Create a backup policy named <policy_name> for AzureIaasVM in vault <vault_name> in resource group <resource_group>",
+    "Set up a new backup policy called <policy_name> for AzureFileShare workload in vault <vault_name> under resource group <resource_group>",
+    "Create an Enhanced VM backup policy <policy_name> with hourly schedule every 4 hours starting 08:00 for 12 hours in vault <vault_name> under resource group <resource_group>",
+    "Create a weekly VM policy <policy_name> on Mondays at 03:00 with 8 weekly, 12 monthly, 5 yearly retention and archive after 90 days in vault <vault_name> under resource group <resource_group>",
+    "Create a SQL backup policy <policy_name> with daily full at 02:00, differential on Wednesdays, and 60-minute log frequency in vault <vault_name> under resource group <resource_group>",
+    "Create an Azure Disk backup policy <policy_name> with daily, weekly, and monthly retention tiers and vault tier copy enabled in vault <vault_name> under resource group <resource_group>"
+  ],
+  "azurebackup_policy_get": [
+    "Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group>",
+    "Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group>"
+  ],
+  "azurebackup_policy_update": [
+    "Update backup policy <policy_name> in vault <vault_name> in resource group <resource_group> to change the schedule time to 04:00",
+    "Modify the daily retention to 60 days for backup policy <policy_name> in vault <vault_name> under resource group <resource_group>"
+  ],
+  "azurebackup_protectableitem_list": [
+    "List protectable items in vault <vault_name> in resource group <resource_group>",
+    "Show me all items that can be backed up in vault <vault_name> under resource group <resource_group>"
+  ],
+  "azurebackup_protecteditem_get": [
+    "Get protected item details for <item_name> in vault <vault_name> and resource group <resource_group>",
+    "Show backup status of protected item <item_name> in vault <vault_name> under resource group <resource_group>"
+  ],
+  "azurebackup_protecteditem_protect": [
+    "Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group>",
+    "Start protecting my Azure VM by enabling backup on <item_name> in vault <vault_name> under resource group <resource_group>"
+  ],
+  "azurebackup_protecteditem_undelete": [
+    "Restore a soft-deleted backup item for datasource <datasource_id> in vault <vault_name> and resource group <resource_group>",
+    "Undelete the accidentally deleted backup for VM <datasource_id> in vault <vault_name> under resource group <resource_group>"
+  ],
+  "azurebackup_recoverypoint_get": [
+    "Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group>",
+    "List available recovery points for <item_name> in vault <vault_name> under resource group <resource_group>"
+  ],
+  "azurebackup_resourceguard_create": [
+    "Create a Resource Guard named <resource_guard> in resource group <resource_group> in region <location>",
+    "Set up a new MUA Resource Guard called <resource_guard> in <location> under resource group <resource_group> excluding operations deleteProtection,updatePolicy",
+    "Create Resource Guard <resource_guard> in <location> under resource group <resource_group> with tags env=prod,team=backup"
+  ],
+  "azurebackup_resourceguard_delete": [
+    "Delete Resource Guard <resource_guard> from resource group <resource_group>",
+    "Remove the Resource Guard <resource_guard> in <resource_group>",
+    "Delete the MUA Resource Guard <resource_guard> from resource group <resource_group>"
+  ],
+  "azurebackup_resourceguard_get": [
+    "Get Resource Guard <resource_guard> in resource group <resource_group>",
+    "List all Resource Guards in resource group <resource_group>",
+    "Show me every MUA Resource Guard in my subscription"
+  ],
+  "azurebackup_security_configure-encryption": [
+    "Configure customer-managed key encryption on vault <vault_name> in resource group <resource_group> using key <key_name> from key vault <key_vault_uri> with system-assigned identity",
+    "Enable CMK encryption on vault <vault_name> using user-assigned identity <identity_id> and key <key_name> from <key_vault_uri>",
+    "Set up customer-managed encryption for backup vault <vault_name> in <resource_group>"
+  ],
+  "azurebackup_security_disable-mua": [
+    "Disable multi-user authorization on vault <vault_name> in resource group <resource_group>",
+    "Turn off MUA on backup vault <vault_name> in <resource_group>",
+    "Unlink the Resource Guard from vault <vault_name> in <resource_group> and disable MUA"
+  ],
+  "azurebackup_security_enable-mua": [
+    "Enable multi-user authorization on vault <vault_name> in resource group <resource_group> with resource guard <resource_guard_id>",
+    "Link Resource Guard <resource_guard_id> to backup vault <vault_name> in <resource_group> to enable MUA",
+    "Turn on MUA for DPP backup vault <vault_name> in <resource_group> using Resource Guard <resource_guard_id>"
+  ],
+  "azurebackup_vault_create": [
+    "Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv'",
+    "Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp'"
+  ],
+  "azurebackup_vault_get": [
+    "Get details of Recovery Services vault <vault_name> in resource group <resource_group>",
+    "Show me information about Azure Backup vault <vault_name> in resource group <resource_group>",
+    "Show the full security posture of vault <vault_name> in resource group <resource_group> including soft delete, immutability, encryption, and MUA",
+    "Get vault <vault_name> in resource group <resource_group> and include all extended posture fields"
+  ],
+  "azurebackup_vault_privateendpoint_approve-reject": [
+    "Approve pending Private Endpoint Connection <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> with action approve",
+    "Reject Private Endpoint Connection <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> with action reject and description \"Not authorized\"",
+    "Respond to the pending private link connection <pe_name> on Recovery Services vault <vault_name> in <resource_group> by approving it"
+  ],
+  "azurebackup_vault_privateendpoint_create": [
+    "Create a Private Endpoint named <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> using subnet <subnet_id> and auto-approve it",
+    "Provision a Private Endpoint <pe_name> for vault <vault_name> in <resource_group> connected to subnet <subnet_id> with group-id AzureBackup",
+    "Set up private connectivity for Recovery Services vault <vault_name> in <resource_group> by creating Private Endpoint <pe_name> in subnet <subnet_id>"
+  ],
+  "azurebackup_vault_privateendpoint_delete": [
+    "Delete Private Endpoint Connection <pe_name> from Recovery Services vault <vault_name> in resource group <resource_group>",
+    "Remove the vault-side private endpoint connection <pe_name> on vault <vault_name> in <resource_group>",
+    "Detach Private Endpoint <pe_name> from Recovery Services vault <vault_name> in <resource_group>"
+  ],
+  "azurebackup_vault_privateendpoint_get": [
+    "List all Private Endpoint Connections on Recovery Services vault <vault_name> in resource group <resource_group>",
+    "Get Private Endpoint Connection <pe_name> on vault <vault_name> in resource group <resource_group>",
+    "Show me the Private Endpoints attached to Recovery Services vault <vault_name> in <resource_group>"
+  ],
+  "azurebackup_vault_update": [
+    "Update Azure Backup vault <vault_name> in resource group <resource_group> to enable soft delete",
+    "Change the identity type of Azure Backup vault <vault_name> in resource group <resource_group> to SystemAssigned"
+  ],
+  "azuremigrate_platformlandingzone_getguidance": [
+    "Get guidance for enabling DDoS protection in my Landing Zone",
+    "How do I turn off Bastion in my Platform Landing Zone?",
+    "Show me how to change IP address ranges in my Platform Landing Zone",
+    "Get guidance for implementing zero trust in my Platform Landing Zone",
+    "How can I disable a policy in my Platform Landing Zone?",
+    "Get guidance for changing resource naming patterns in my Landing Zone",
+    "Show me how to modify network topology in my Landing Zone",
+    "Get guidance for updating management groups in my Platform Landing Zone",
+    "Get Azure Migrate Platform Landing Zone guidance for configuring DDoS protection in an existing landing zone",
+    "List all available policies by archetype in my Landing Zone",
+    "Use Azure Migrate Platform Landing Zone guidance to find policy assignments related to storage encryption in the landing-zone policy catalog"
+  ],
+  "azuremigrate_platformlandingzone_request": [
+    "Check if a platform landing zone already exists for migrate project <migrate-project-name> in resource group <resource-group-name>",
+    "Update the landing zone parameters for migrate project <migrate-project-name> in resource group <resource-group-name>",
+    "Set up a single region landing zone with Azure Firewall for migrate project <migrate-project-name>",
+    "Configure a multi-region landing zone with hub-spoke architecture for migrate project <migrate-project-name> in resource group <resource-group-name>",
+    "Generate a platform landing zone for migrate project <migrate-project-name> in resource group <resource-group-name>",
+    "Generate a platform landing zone",
+    "Generate a platform landing zone and create a new migrate project with name <migrate-project-name> in resource group <resource-group-name>",
+    "Start landing zone generation for migrate project <migrate-project-name>",
+    "Download the generated landing zone for migrate project <migrate-project-name> in resource group <resource-group-name>",
+    "Check parameter status for migrate project <migrate-project-name> in resource group <resource-group-name>",
+    "Verify if all parameters are set for migrate project <migrate-project-name>"
+  ],
+  "azureterraform_avm_get": [
+    "Get the documentation for avm-res-storage-storageaccount version 0.1.0",
+    "Get the documentation for the latest version of Azure Verified Module avm-res-network-virtualnetwork",
+    "Get the documentation for the avm-ptn-aiml-ai-foundry pattern module"
+  ],
+  "azureterraform_avm_list": [
+    "List all available Azure Verified Modules",
+    "Show me the available AVM modules for Terraform",
+    "List the AVM pattern modules available for Terraform"
+  ],
+  "azureterraform_avm_versions": [
+    "Show all versions of avm-res-network-virtualnetwork",
+    "What versions are available for avm-res-storage-storageaccount?",
+    "Show all versions of the avm-ptn-aiml-ai-foundry pattern module"
+  ],
+  "azureterraform_azapi_get": [
+    "Get AzAPI Terraform provider documentation for Microsoft.Storage/storageAccounts",
+    "Get AzAPI docs for Microsoft.Network/virtualNetworks",
+    "Get AzAPI Terraform provider documentation for Microsoft.Compute/virtualMachines with API version 2024-07-01"
+  ],
+  "azureterraform_aztfexport_query": [
+    "Generate an aztfexport command that uses a resource graph query to export all storage accounts in my subscription",
+    "Generate an aztfexport query command to export resources matching \"type == 'Microsoft.Storage/storageAccounts'\""
+  ],
+  "azureterraform_aztfexport_resource": [
+    "Export the resource /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/Microsoft.Storage/storageAccounts/<account> to Terraform",
+    "Generate an aztfexport command to export a single Azure resource to Terraform"
+  ],
+  "azureterraform_aztfexport_resourcegroup": [
+    "Export all resources in resource group my-rg to Terraform",
+    "Export resource group my-rg to Terraform using the azapi provider"
+  ],
+  "azureterraform_azurerm_get": [
+    "Get the documentation for azurerm_virtual_network",
+    "Show me the Terraform provider arguments for azurerm_storage_account",
+    "Get the data source documentation for azurerm_subscription",
+    "Get the Terraform AzureRM provider documentation for the 'sku' argument of azurerm_storage_account"
+  ],
+  "azureterraform_conftest_plan": [
+    "Validate my Terraform plan file against Azure-Proactive-Resiliency-Library-v2 policies",
+    "Validate a Terraform plan JSON file in ./plan-output against Azure policies with high severity filter"
+  ],
+  "azureterraform_conftest_workspace": [
+    "Validate Terraform files in ./my-terraform-folder against Azure security policies",
+    "Validate Terraform files in ./infra using the avmsec policy set"
+  ],
+  "azureterraformbestpractices_get": [
+    "Fetch the Azure Terraform best practices",
+    "Show me the Azure Terraform best practices and generate code sample to get a secret from Azure Key Vault"
+  ],
+  "bicepschema_get": [
+    "How can I use Bicep to create an Azure OpenAI service?"
+  ],
+  "cloudarchitect_design": [
+    "Help me design an Azure cloud service that will serve as an ATM for users",
+    "I want to design a cloud app for ordering groceries",
+    "How can I design a cloud service in Azure that will store and present videos for users?"
   ],
   "communication_email_send": [
     "Send an email to <email-address> with subject <subject>",
@@ -210,6 +376,129 @@
     "Send SMS from my communication service to <phone-number-1>",
     "Send an SMS with delivery receipt tracking"
   ],
+  "compute_disk_create": [
+    "Create a 128 GB managed disk named <disk-name> in resource group <resource-group>",
+    "Create a new Premium_LRS disk called <disk-name> in resource group <resource-group> with 256 GB",
+    "Create a managed disk <disk-name> in resource group <resource-group> in eastus",
+    "Create a disk from snapshot <snapshot-resource-id> in resource group <resource-group>",
+    "Create a managed disk <disk-name> in resource group <resource-group> from blob <blob-uri>",
+    "Create a 64 GB Standard_LRS Linux disk named <disk-name> in resource group <resource-group> in zone 1",
+    "Create a managed disk <disk-name> in resource group <resource-group> with tags env=prod team=infra",
+    "Create a 128 GB Premium_LRS disk named <disk-name> in resource group <resource-group> with performance tier P30",
+    "Create a disk <disk-name> in resource group <resource-group> with customer-managed encryption using disk encryption set <disk-encryption-set-id>",
+    "Create a managed disk from gallery image version <image-version-resource-id> in resource group <resource-group>",
+    "Create a data disk from LUN 0 of gallery image version <image-version-resource-id> in resource group <resource-group>",
+    "Create a disk ready for upload named <disk-name> in resource group <resource-group> with upload size 20972032 bytes",
+    "Create an Azure managed disk named <disk-name> in resource group <resource-group> as a Trusted Launch upload disk with UploadWithSecurityData type and TrustedLaunch security type",
+    "Create an UltraSSD_LRS disk named <disk-name> in resource group <resource-group> with 256 GB, 10000 IOPS, and 500 MBps throughput",
+    "Create a shared managed disk named <disk-name> in resource group <resource-group> with 512 GB and max shares set to 3",
+    "Create a managed disk <disk-name> in resource group <resource-group> with network access policy DenyAll and disk access <disk-access-resource-id>",
+    "Create a 128 GB managed disk named <disk-name> in resource group <resource-group> with on-demand bursting enabled",
+    "Create a managed disk <disk-name> in resource group <resource-group> with encryption type EncryptionAtRestWithPlatformAndCustomerKeys",
+    "Create a V2 hypervisor generation disk named <disk-name> in resource group <resource-group> with 128 GB"
+  ],
+  "compute_disk_delete": [
+    "Delete the managed disk <disk-name> in resource group <resource-group>",
+    "Remove managed disk <disk-name> from resource group <resource-group>",
+    "Delete disk <disk-name> in resource group <resource-group> in my subscription"
+  ],
+  "compute_disk_get": [
+    "List all managed disks in my subscription",
+    "Show me all disks in resource group <resource-group>",
+    "Get details of disk <disk-name> in resource group <resource-group>",
+    "Show me the disk sizes in resource group <resource-group>",
+    "What managed disks are available?",
+    "Get information about disk <disk-name>"
+  ],
+  "compute_disk_update": [
+    "Update disk <disk-name> in resource group <resource-group> to 256 GB",
+    "Change the SKU of disk <disk-name> to Premium_LRS",
+    "Resize disk <disk-name> in resource group <resource-group> to 512 GB",
+    "Update disk <disk-name> to enable bursting",
+    "Set the max shares on disk <disk-name> in resource group <resource-group> to 2",
+    "Change the network access policy of disk <disk-name> to DenyAll",
+    "Update disk <disk-name> in resource group <resource-group> with tags env=staging",
+    "Set the IOPS limit on ultra disk <disk-name> in resource group <resource-group> to 10000",
+    "Update the throughput of disk <disk-name> in resource group <resource-group> to 500 MBps",
+    "Change the performance tier of disk <disk-name> in resource group <resource-group> to P40",
+    "Update disk <disk-name> in resource group <resource-group> to use disk encryption set <disk-encryption-set-id>",
+    "Change the encryption type of disk <disk-name> in resource group <resource-group> to EncryptionAtRestWithPlatformAndCustomerKeys",
+    "Set disk access on disk <disk-name> in resource group <resource-group> to <disk-access-resource-id> with network access policy AllowPrivate",
+    "Update disk <disk-name> to Standard_LRS SKU with 512 GB size and tags env=dev"
+  ],
+  "compute_vm_create": [
+    "Create a new Linux VM named <vm-name> in resource group <resource-group-name>",
+    "Create a virtual machine with Standard_D2s_v5 size in <resource-group-name>",
+    "Create a Windows VM with password authentication in resource group <resource-group-name>",
+    "Create VM <vm-name> in <location> with SSH key authentication",
+    "Deploy a new VM with a 128GB Premium SSD OS disk in resource group <resource-group-name>",
+    "Create a VM with Standard_E4s_v3 size and no public IP in <resource-group-name>"
+  ],
+  "compute_vm_delete": [
+    "Delete VM <vm-name> in resource group <resource-group-name>",
+    "Remove virtual machine <vm-name> from resource group <resource-group-name>",
+    "Destroy VM <vm-name> in resource group <resource-group-name>",
+    "Force delete VM <vm-name> in resource group <resource-group-name> using force-deletion"
+  ],
+  "compute_vm_get": [
+    "List all virtual machines in my subscription",
+    "Show me all VMs in my subscription",
+    "What virtual machines do I have?",
+    "Get all virtual machines in resource group <resource-group-name>",
+    "Show me VMs in resource group <resource-group-name>",
+    "List the Azure virtual machines in resource group <resource-group-name>",
+    "Get details for virtual machine <vm-name> in resource group <resource-group-name>",
+    "Show me virtual machine <vm-name> in resource group <resource-group-name>",
+    "What are the details of VM <vm-name> in resource group <resource-group-name>?",
+    "Get virtual machine <vm-name> with instance view in resource group <resource-group-name>",
+    "Show me VM <vm-name> with runtime status in resource group <resource-group-name>",
+    "What is the power state of virtual machine <vm-name> in resource group <resource-group-name>?",
+    "Get VM <vm-name> status and provisioning state in resource group <resource-group-name>",
+    "Show me the current status of VM <vm-name>"
+  ],
+  "compute_vm_power-state": [
+    "Power on and start VM <vm-name> in resource group <resource-group-name>",
+    "Stop the running virtual machine <vm-name> and power it off in resource group <resource-group-name>",
+    "Deallocate VM <vm-name> in resource group <resource-group-name> to release compute resources while keeping the VM",
+    "Restart VM <vm-name> in resource group <resource-group-name>",
+    "Stop VM <vm-name> in resource group <resource-group-name> and skip the OS shutdown",
+    "Start VM <vm-name> in resource group <resource-group-name> without waiting for completion",
+    "Power off and shut down VM <vm-name> in resource group <resource-group-name>",
+    "Deallocate and power off VM <vm-name> to stop billing for compute resources while preserving the VM"
+  ],
+  "compute_vm_update": [
+    "Add tags to VM <vm-name> in resource group <resource-group-name>",
+    "Set the environment=production tag on Azure virtual machine <vm-name>",
+    "Update VM <vm-name> to enable boot diagnostics in resource group <resource-group-name>",
+    "Change the size of VM <vm-name> to Standard_D4s_v3"
+  ],
+  "compute_vmss_create": [
+    "Create a virtual machine scale set named <vmss-name> in resource group <resource-group-name>",
+    "Create a VMSS with 3 instances in <resource-group-name>",
+    "Deploy a virtual machine scale set with Rolling upgrade policy and 5 instances",
+    "Create Linux VMSS with SSH authentication in <resource-group-name>"
+  ],
+  "compute_vmss_delete": [
+    "Delete scale set <vmss-name> in resource group <resource-group-name>",
+    "Remove VMSS <vmss-name> from resource group <resource-group-name>",
+    "Destroy virtual machine scale set <vmss-name> in resource group <resource-group-name>",
+    "Force delete VMSS <vmss-name> in resource group <resource-group-name> using force-deletion"
+  ],
+  "compute_vmss_get": [
+    "List all virtual machine scale sets in my subscription",
+    "List virtual machine scale sets in resource group <resource-group-name>",
+    "What scale sets are in resource group <resource-group-name>?",
+    "Get details for virtual machine scale set <vmss-name> in resource group <resource-group-name>",
+    "Show me VMSS <vmss-name> in resource group <resource-group-name>",
+    "Show me instance <instance-id> of VMSS <vmss-name> in resource group <resource-group-name>",
+    "What is the status of instance <instance-id> in scale set <vmss-name>?"
+  ],
+  "compute_vmss_update": [
+    "Update the capacity of scale set <vmss-name> to 10",
+    "Enable automatic OS upgrades on VMSS <vmss-name>",
+    "Change upgrade policy to Rolling for <vmss-name>",
+    "Add tags to scale set <vmss-name> in resource group <resource-group-name>"
+  ],
   "confidentialledger_entries_append": [
     "Append an entry to my ledger <ledger_name> with data {\"key\": \"value\"}",
     "Write a tamper-proof entry to ledger <ledger_name> containing {\"transaction\": \"data\"}",
@@ -221,116 +510,75 @@
     "Get entry from Confidential Ledger for transaction <transaction_id> on ledger <ledger_name>",
     "Get transaction <transaction_id> from ledger <ledger_name>"
   ],
-  "cosmos_list": [
-    "List all cosmosdb accounts in my subscription",
-    "Show me my cosmosdb accounts",
-    "Show me the cosmosdb accounts in my subscription",
-    "List all the databases in the cosmosdb account <account_name>",
-    "Show me the databases in the cosmosdb account <account_name>",
-    "List all the containers in the database <database_name> for the cosmosdb account <account_name>",
-    "Show me the containers in the database <database_name> for the cosmosdb account <account_name>"
+  "containerapps_list": [
+    "List all Azure Container Apps in my subscription",
+    "Show me my Azure Container Apps",
+    "List container apps in resource group <resource_group_name>",
+    "Show me the container apps in resource group <resource_group_name>"
+  ],
+  "cosmos_database_container_item_get": [
+    "Get the document with id <document_id> from container <container_name> in database <database_name> of the cosmosdb account <account_name>",
+    "Find the document <document_id> in container <container_name> from database <database_name> of the cosmosdb account <account_name> using partition key <partition_key>"
+  ],
+  "cosmos_database_container_item_list-recent": [
+    "Show me the 15 most recent documents in container <container_name> of database <database_name> in cosmosdb account <account_name>",
+    "Get the latest documents from <container_name> in <database_name> for cosmosdb account <account_name>"
   ],
   "cosmos_database_container_item_query": [
     "Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name>"
   ],
-  "kusto_cluster_get": [
-    "Show me the details of the Data Explorer cluster <cluster_name>"
+  "cosmos_database_container_item_text-search": [
+    "Search documents in container <container_name> from database <database_name> of the cosmosdb account <account_name> where <search_property> contains \"<search_phrase>\"",
+    "Run a full-text search for the word \"<search_phrase>\" against property <search_property> in container <container_name> of database <database_name> for cosmosdb account <account_name>"
   ],
-  "kusto_cluster_list": [
-    "List all Data Explorer clusters in my subscription",
-    "Show me my Data Explorer clusters",
-    "Show me the Data Explorer clusters in my subscription"
+  "cosmos_database_container_item_vector-search": [
+    "Find documents similar to \"<text_to_search>\" in container <container_name> of database <database_name> in cosmosdb account <account_name> using vector property <vector_property> with Azure OpenAI endpoint <endpoint> and deployment <deployment>",
+    "Show me the top <count> documents in container <container_name> of database <database_name> for cosmosdb account <account_name> most similar to \"<text_to_search>\" using vector property <vector_property>, embedding deployment <deployment> at endpoint <endpoint> with <embedding_dimensions> dimensions, and project only <properties_to_select>"
   ],
-  "kusto_database_list": [
-    "List all databases in the Data Explorer cluster <cluster_name>",
-    "Show me the databases in the Data Explorer cluster <cluster_name>"
+  "cosmos_database_container_schema_infer": [
+    "Infer the schema of container <container_name> in database <database_name> for cosmosdb account <account_name>",
+    "Sample <sample_size> documents from container <container_name> in database <database_name> of the cosmosdb account <account_name> and tell me the property names and types"
   ],
-  "kusto_query": [
-    "Show me all items that contain the word <search_term> in the Data Explorer table <table_name> in cluster <cluster_name>"
+  "cosmos_list": [
+    "List all cosmosdb accounts in my subscription",
+    "Show me my cosmosdb accounts",
+    "Show me the cosmosdb accounts in my subscription",
+    "List all the cosmosdb accounts in resource group <resource_group>",
+    "List all the databases in the cosmosdb account <account_name>",
+    "List all the databases in the cosmosdb account <account_name> in resource group <resource_group>",
+    "Show me the databases in the cosmosdb account <account_name>",
+    "List all the containers in the database <database_name> for the cosmosdb account <account_name>",
+    "Show me the containers in the database <database_name> for the cosmosdb account <account_name>"
   ],
-  "kusto_sample": [
-    "Show me a data sample from the Data Explorer table <table_name> in cluster <cluster_name>"
-  ],
-  "kusto_table_list": [
-    "List all tables in the Data Explorer database <database_name> in cluster <cluster_name>",
-    "Show me the tables in the Data Explorer database <database_name> in cluster <cluster_name>"
-  ],
-  "kusto_table_schema": [
-    "Show me the schema for table <table_name> in the Data Explorer database <database_name> in cluster <cluster_name>"
-  ],
-  "mysql_list": [
-    "List all MySQL servers in my subscription",
-    "Show me my MySQL servers",
-    "Show me the MySQL servers in my subscription",
-    "List all MySQL databases in server <server>",
-    "Show me the MySQL databases in server <server>",
-    "List all tables in the MySQL database <database> in server <server>",
-    "Show me the tables in the MySQL database <database> in server <server>"
-  ],
-  "mysql_database_query": [
-    "Show me all items that contain the word <search_term> in the MySQL database <database> in server <server>"
-  ],
-  "mysql_server_config_get": [
-    "Show me the configuration of MySQL server <server>"
-  ],
-  "mysql_server_param_get": [
-    "Show me the value of connection timeout in seconds in my MySQL server <server>"
-  ],
-  "mysql_server_param_set": [
-    "Set connection timeout to 20 seconds for my MySQL server <server>"
-  ],
-  "mysql_table_schema_get": [
-    "Show me the schema of table <table> in the MySQL database <database> in server <server>"
-  ],
-  "postgres_list": [
-    "List all PostgreSQL servers in my subscription",
-    "Show me my PostgreSQL servers",
-    "Show me the PostgreSQL servers in my subscription",
-    "List all PostgreSQL databases in server <server>",
-    "Show me the PostgreSQL databases in server <server>",
-    "List all tables in the PostgreSQL database <database> in server <server>",
-    "Show me the tables in the PostgreSQL database <database> in server <server>"
-  ],
-  "postgres_database_query": [
-    "Show me all items that contain the word <search_term> in the PostgreSQL database <database> in server <server>"
-  ],
-  "postgres_server_config_get": [
-    "Show me the configuration of PostgreSQL server <server>"
-  ],
-  "postgres_server_param_get": [
-    "Show me if the parameter my PostgreSQL server <server> has replication enabled"
-  ],
-  "postgres_server_param_set": [
-    "Enable replication for my PostgreSQL server <server>"
-  ],
-  "postgres_table_schema_get": [
-    "Show me the schema of table <table> in the PostgreSQL database <database> in server <server>"
+  "datadog_monitoredresources_list": [
+    "List all monitored resources in the Datadog resource <resource_name>",
+    "Show me the monitored resources in the Datadog resource <resource_name>"
   ],
   "deploy_app_logs_get": [
     "Show me the log of the application deployed by azd"
   ],
   "deploy_architecture_diagram_generate": [
-    "Generate the azure architecture diagram for this application"
+    "Generate the Azure architecture diagram for this application"
   ],
   "deploy_iac_rules_get": [
-    "Show me the rules to generate bicep scripts"
+    "Give me the IaC rules for deploying this application to Azure Container Apps using Azure CLI and Bicep"
   ],
   "deploy_pipeline_guidance_get": [
-    "How can I create a CI/CD pipeline to deploy this app to Azure?"
+    "Generate a CI/CD pipeline using GitHub Actions workflow to deploy my application to Azure with best practices"
   ],
   "deploy_plan_get": [
-    "Create a plan to deploy this application to azure"
+    "Generate an Azure deployment plan for this project using Azure CLI and IaC templates"
+  ],
+  "deviceregistry_namespace_list": [
+    "List all Device Registry namespaces in my subscription",
+    "Show me the Device Registry namespaces in subscription <subscription>",
+    "List Device Registry namespaces in resource group <resource_group_name>",
+    "What Device Registry namespaces do I have in my Azure subscription?"
   ],
   "eventgrid_events_publish": [
     "Publish an event to Event Grid topic <topic_name> using <event_schema> with the following data <event_data>",
     "Publish event to my Event Grid topic <topic_name> with the following events <event_data>",
     "Send an event to Event Grid topic <topic_name> in resource group <resource_group_name> with <event_data>"
-  ],
-  "eventgrid_topic_list": [
-    "List all Event Grid topics in my subscription",
-    "Show me the Event Grid topics in my subscription",
-    "List all Event Grid topics in subscription <subscription>",
-    "List all Event Grid topics in resource group <resource_group_name> in subscription <subscription>"
   ],
   "eventgrid_subscription_list": [
     "Show me all Event Grid subscriptions for topic <topic_name>",
@@ -340,6 +588,12 @@
     "List all Event Grid subscriptions in subscription <subscription>",
     "Show Event Grid subscriptions in resource group <resource_group_name> in subscription <subscription>",
     "List Event Grid subscriptions for subscription <subscription> in location <location>"
+  ],
+  "eventgrid_topic_list": [
+    "List all Event Grid topics in my subscription",
+    "Show me the Event Grid topics in my subscription",
+    "List all Event Grid topics in subscription <subscription>",
+    "List all Event Grid topics in resource group <resource_group_name> in subscription <subscription>"
   ],
   "eventhubs_eventhub_consumergroup_delete": [
     "Delete my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>"
@@ -364,15 +618,129 @@
     "Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>"
   ],
   "eventhubs_namespace_delete": [
-    "Delete my namespace <namespace_name> in my resource group <resource_group_name>"
+    "Delete Azure Event Hubs namespace <namespace_name> in resource group <resource_group_name>"
   ],
   "eventhubs_namespace_get": [
     "List all Event Hubs namespaces in my subscription",
     "Get the details of my namespace <namespace_name> in my resource group <resource_group_name>"
   ],
   "eventhubs_namespace_update": [
-    "Create an new namespace <namespace_name> in my resource group <resource_group_name>",
+    "Create a new Azure Event Hubs namespace <namespace_name> in resource group <resource_group_name>",
     "Update my namespace <namespace_name> in my resource group <resource_group_name>"
+  ],
+  "extension_azqr": [
+    "Check my Azure subscription for any compliance issues or recommendations",
+    "Provide compliance recommendations for my current Azure subscription",
+    "Scan my Azure subscription for compliance recommendations"
+  ],
+  "extension_cli_generate": [
+    "What's the Azure CLI command for getting a storage account's details?",
+    "List all virtual machines in my subscription using Azure CLI",
+    "Show me the details of the storage account <account_name> using Azure CLI commands"
+  ],
+  "extension_cli_install": [
+    "<Ask the MCP host to uninstall az cli on your machine and run test prompts for extension_cli_generate>",
+    "How to install azd",
+    "What is Azure Functions Core tools and how to install it"
+  ],
+  "fileshares_fileshare_check-name-availability": [
+    "Check if file share name <file_share_name> is available in <location> in subscription <subscription>",
+    "Is the file share name <file_share_name> available in <location>?",
+    "Verify availability of file share name <file_share_name> in <location>"
+  ],
+  "fileshares_fileshare_create": [
+    "Create a new file share <file_share_name> in resource group <resource_group_name>",
+    "Create file share <file_share_name> in resource group <resource_group_name> with 100 GB storage",
+    "Create a file share named <file_share_name> in location <location> with resource group <resource_group_name>",
+    "Set up a new file share <file_share_name> in resource group <resource_group_name>"
+  ],
+  "fileshares_fileshare_delete": [
+    "Delete the file share <file_share_name> from resource group <resource_group_name>",
+    "Remove file share <file_share_name> in resource group <resource_group_name>"
+  ],
+  "fileshares_fileshare_get": [
+    "List all file shares in my subscription",
+    "Show me the file shares in resource group <resource_group_name>",
+    "Get details of file share <file_share_name> in resource group <resource_group_name>",
+    "Show me the file share <file_share_name> in resource group <resource_group_name>",
+    "What file shares exist in resource group <resource_group_name>?"
+  ],
+  "fileshares_fileshare_peconnection_get": [
+    "List all private endpoint connections for file share <file_share_name> in resource group <resource_group_name>",
+    "Show me the private endpoint connections for file share <file_share_name>",
+    "Get private endpoint connection <connection_name> for file share <file_share_name> in resource group <resource_group_name>",
+    "What private endpoint connections exist for file share <file_share_name>?"
+  ],
+  "fileshares_fileshare_peconnection_update": [
+    "Approve the private endpoint connection <connection_name> for file share <file_share_name> in resource group <resource_group_name>",
+    "Reject private endpoint connection <connection_name> for file share <file_share_name>",
+    "Update private endpoint connection <connection_name> status to Approved for file share <file_share_name>",
+    "Change the status of private endpoint connection <connection_name> to Rejected"
+  ],
+  "fileshares_fileshare_snapshot_create": [
+    "Create a snapshot of file share <file_share_name> in resource group <resource_group_name>",
+    "Create a snapshot for file share <file_share_name> in resource group <resource_group_name>",
+    "Take a snapshot of file share <file_share_name>"
+  ],
+  "fileshares_fileshare_snapshot_delete": [
+    "Delete the snapshot <snapshot_id> from file share <file_share_name> in resource group <resource_group_name>",
+    "Remove snapshot <snapshot_id> from file share <file_share_name>"
+  ],
+  "fileshares_fileshare_snapshot_get": [
+    "List all snapshots for file share <file_share_name> in resource group <resource_group_name>",
+    "Show me the snapshots of file share <file_share_name> in resource group <resource_group_name>",
+    "Get snapshot <snapshot_id> for file share <file_share_name>"
+  ],
+  "fileshares_fileshare_snapshot_update": [
+    "Update the snapshot <snapshot_id> of file share <file_share_name> in resource group <resource_group_name>",
+    "Update metadata for snapshot <snapshot_id> of file share <file_share_name>"
+  ],
+  "fileshares_fileshare_update": [
+    "Update file share <file_share_name> in resource group <resource_group_name>",
+    "Update the provisioned storage for file share <file_share_name> to 200 GB",
+    "Modify file share <file_share_name> in resource group <resource_group_name> with new settings"
+  ],
+  "fileshares_limits": [
+    "Get the file share limits for subscription <subscription> in location <location>",
+    "Get the Azure Files share service limits in my subscription for location <location>",
+    "Show me the file share service limits in location <location>"
+  ],
+  "fileshares_rec": [
+    "Get Azure Files provisioning recommendations for file share <file_share_name> in resource group <resource_group_name>",
+    "Show me provisioning recommendations for file share <file_share_name>",
+    "Get the Azure Files recommended provisioning settings for file share <file_share_name>"
+  ],
+  "fileshares_usage": [
+    "Get Azure Files usage data for file share <file_share_name> in resource group <resource_group_name>",
+    "Show me the usage statistics for file share <file_share_name>",
+    "Get the current Azure Files usage for file share <file_share_name>"
+  ],
+  "foundryextensions_knowledge_index_list": [
+    "List all knowledge indexes in my Microsoft Foundry project",
+    "Show me the knowledge indexes in my Microsoft Foundry project"
+  ],
+  "foundryextensions_knowledge_index_schema": [
+    "Show me the schema for knowledge index <index-name> in my Microsoft Foundry resource",
+    "Get the schema configuration for knowledge index <index-name>"
+  ],
+  "foundryextensions_openai_chat-completions-create": [
+    "Create a chat completion with the message \"Hello, how are you today?\" using my Microsoft Foundry resource"
+  ],
+  "foundryextensions_openai_create-completion": [
+    "Create a completion with the prompt \"What is Azure?\" using my Microsoft Foundry resource"
+  ],
+  "foundryextensions_openai_embeddings-create": [
+    "Generate embeddings for the text \"Azure OpenAI Service\" using my Microsoft Foundry resource",
+    "Create vector embeddings for my text using my Microsoft Foundry resource"
+  ],
+  "foundryextensions_openai_models-list": [
+    "List all available OpenAI models in my Microsoft Foundry resource",
+    "Use Microsoft Foundry Extensions to list the OpenAI model deployments in my Microsoft Foundry resource"
+  ],
+  "foundryextensions_resource_get": [
+    "Use Microsoft Foundry Extensions to list all Microsoft Foundry resources in my subscription",
+    "Use Microsoft Foundry Extensions to list Microsoft Foundry resources in resource group <resource_group_name>",
+    "Use Microsoft Foundry Extensions to get details for resource <resource_name> in resource group <resource_group_name>"
   ],
   "functionapp_get": [
     "Describe the function app <function_app_name> in resource group <resource_group_name>",
@@ -388,10 +756,78 @@
     "Show me my Azure function apps",
     "What function apps do I have?"
   ],
+  "functions_language_list": [
+    "Check the available languages that Azure Functions supports.",
+    "Use Azure Functions language discovery to list the supported languages and compare them",
+    "Use Azure Functions runtime discovery to list the available runtime versions"
+  ],
+  "functions_project_get": [
+    "Set up a new Azure Functions project in Python",
+    "Generate the project files for a TypeScript Azure Functions app",
+    "Use an Azure Functions project template to create boilerplate for a Java app using JDK 21"
+  ],
+  "functions_template_get": [
+    "Get the available triggers and bindings for C# Azure Functions.",
+    "Show me all the Python Azure Function templates",
+    "Create a Timer trigger function in C# that runs every 5 minutes",
+    "Show me a Cosmos DB trigger with an output binding in Java",
+    "Generate a MCP Tool trigger in TypeScript for Node.js 22"
+  ],
+  "get_azure_bestpractices_ai_app": [
+    "Get best practices for building AI applications in Azure",
+    "Show me the best practices for Microsoft Foundry agents code generation",
+    "Get guidance for building agents with Microsoft Foundry",
+    "Create an AI app that helps me to manage travel queries.",
+    "Create an AI app that helps me to manage travel queries in Microsoft Foundry"
+  ],
+  "get_azure_bestpractices_get": [
+    "Get the latest Azure code generation best practices",
+    "Get the latest Azure deployment best practices",
+    "Get the latest Azure best practices",
+    "Get the latest Azure Functions code generation best practices",
+    "Get the latest Azure Functions deployment best practices",
+    "Get the latest Azure Functions best practices",
+    "Get the latest Azure Static Web Apps best practices",
+    "What are azure function best practices?",
+    "configure azure mcp in coding agent for my repo"
+  ],
+  "grafana_list": [
+    "List all Azure Managed Grafana in one subscription"
+  ],
+  "group_list": [
+    "List all resource groups in my subscription",
+    "Show me my resource groups",
+    "Show me the resource groups in my subscription"
+  ],
+  "group_resource_list": [
+    "List all resources in my resource group",
+    "Show me what resources are in the resource group myRG",
+    "What resources exist in resource group myRG?"
+  ],
+  "insights_get": [
+    "Generate insights from my current subscription",
+    "Summarize what's deployed across my Azure environment and highlight notable patterns",
+    "Analyze my tenant and give me insights about the overall infrastructure",
+    "Use Azure Insights to analyze my existing Azure environment and summarize its deployed resources",
+    "Analyze subscription <subscription_id> for architectural patterns",
+    "Analyze my Azure infrastructure and surface patterns to help me plan my next project",
+    "Generate insights about my Azure environment to help me plan a new data analytics platform",
+    "What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS?"
+  ],
+  "iothub_device_list": [
+    "List devices in IoT Hub <hub_name> in resource group <resource_group_name>",
+    "Show all devices registered to IoT Hub <hub_name>",
+    "Get the device registry for IoT Hub <hub_name> in subscription <subscription_id>"
+  ],
+  "iothub_hub_get": [
+    "Get details for IoT Hub <hub_name> in resource group <resource_group_name>",
+    "Show IoT Hub <hub_name> in resource group <resource_group_name> for subscription <subscription_id>",
+    "Retrieve IoT Hub <hub_name> metadata from resource group <resource_group_name>"
+  ],
   "keyvault_admin_settings_get": [
     "Get the account settings for my key vault <key_vault_account_name>",
     "Show me the account settings for managed HSM keyvault <key_vault_account_name>",
-    "What's the value of the <setting_name> setting in my key vault with name <key_vault_account_name>"
+    "Get the value of the <setting_name> administrative setting in Key Vault <key_vault_account_name>"
   ],
   "keyvault_certificate_create": [
     "Create a new certificate called <certificate_name> in the key vault <key_vault_account_name>",
@@ -420,7 +856,6 @@
     "Load certificate <certificate_name> from file <file_path> into vault <key_vault_account_name>",
     "Add existing certificate file <file_path> to the key vault <key_vault_account_name> with name <certificate_name>"
   ],
-
   "keyvault_key_create": [
     "Create a new key called <key_name> with the RSA type in the key vault <key_vault_account_name>",
     "Generate a key <key_name> with type <key_type> in vault <key_vault_account_name>",
@@ -461,22 +896,30 @@
     "Enumerate secrets in key vault <key_vault_account_name>",
     "Show secrets names in the key vault <key_vault_account_name>"
   ],
-  "aks_cluster_get": [
-    "Get the configuration of AKS cluster <cluster-name>",
-    "Show me the details of AKS cluster <cluster-name> in resource group <resource-group>",
-    "Show me the network configuration for AKS cluster <cluster-name>",
-    "What are the details of my AKS cluster <cluster-name> in <resource-group>?",
-    "List all AKS clusters in my subscription",
-    "Show me my Azure Kubernetes Service clusters",
-    "What AKS clusters do I have?"
+  "kusto_cluster_get": [
+    "Show me the details of the Data Explorer cluster <cluster_name>"
   ],
-  "aks_nodepool_get": [
-    "Get details for nodepool <nodepool-name> in AKS cluster <cluster-name> in <resource-group>",
-    "Show me the configuration for nodepool <nodepool-name> in AKS cluster <cluster-name> in resource group <resource-group>",
-    "What is the setup of nodepool <nodepool-name> for AKS cluster <cluster-name> in <resource-group>?",
-    "List nodepools for AKS cluster <cluster-name> in <resource-group>",
-    "Show me the nodepool list for AKS cluster <cluster-name> in <resource-group>",
-    "What nodepools do I have for AKS cluster <cluster-name> in <resource-group>"
+  "kusto_cluster_list": [
+    "List all Data Explorer clusters in my subscription",
+    "Show me my Data Explorer clusters",
+    "Show me the Data Explorer clusters in my subscription"
+  ],
+  "kusto_database_list": [
+    "List all databases in the Data Explorer cluster <cluster_name>",
+    "Show me the databases in the Data Explorer cluster <cluster_name>"
+  ],
+  "kusto_query": [
+    "Show me all items that contain the word <search_term> in the Data Explorer table <table_name> in cluster <cluster_name>"
+  ],
+  "kusto_sample": [
+    "Show me a data sample from the Data Explorer table <table_name> in cluster <cluster_name>"
+  ],
+  "kusto_table_list": [
+    "List all tables in the Data Explorer database <database_name> in cluster <cluster_name>",
+    "Show me the tables in the Data Explorer database <database_name> in cluster <cluster_name>"
+  ],
+  "kusto_table_schema": [
+    "Show me the schema for table <table_name> in the Data Explorer database <database_name> in cluster <cluster_name>"
   ],
   "loadtesting_test_create": [
     "Create a basic URL test using the following endpoint URL <test-url> that runs for 30 minutes with 45 virtual users. The test name is <sample-name> with the test id <test-id> and the load testing resource is <load-test-resource> in the resource group <resource-group> in my subscription"
@@ -490,19 +933,65 @@
   "loadtesting_testresource_list": [
     "List all load testing resources in the resource group <resource-group> in my subscription"
   ],
+  "loadtesting_testrun_createorupdate": [
+    "Create a test run using the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>. Use the name of test run <display-name> and description as <description>",
+    "Update a test run display name as <display-name> for the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>."
+  ],
   "loadtesting_testrun_get": [
     "Get the load test run with id <testrun-id> in the load test resource <test-resource> in resource group <resource-group>",
     "Get all the load test runs for the test with id <test-id> in the load test resource <test-resource> in resource group <resource-group>"
   ],
-  "loadtesting_testrun_createorupdate": [
-    "Create a test run using the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>. Use the name of test run <display-name> and description as <description>",
-    "Update a test run display name as <display-name> for the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>"
+  "managedlustre_fs_blob_autoexport_cancel": [
+    "Cancel the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>"
   ],
-  "grafana_list": [
-    "List all Azure Managed Grafana in one subscription"
+  "managedlustre_fs_blob_autoexport_create": [
+    "Create an autoexport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>"
+  ],
+  "managedlustre_fs_blob_autoexport_delete": [
+    "Delete the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>"
+  ],
+  "managedlustre_fs_blob_autoexport_get": [
+    "Get the details of autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Show the list of autoexport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>"
+  ],
+  "managedlustre_fs_blob_autoimport_cancel": [
+    "Cancel the autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>"
+  ],
+  "managedlustre_fs_blob_autoimport_create": [
+    "Create an autoimport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>"
+  ],
+  "managedlustre_fs_blob_autoimport_delete": [
+    "Delete the autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>"
+  ],
+  "managedlustre_fs_blob_autoimport_get": [
+    "Get the details of autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Get the details of all the autoimport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>"
+  ],
+  "managedlustre_fs_blob_import_cancel": [
+    "Cancel the one-time import job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>"
+  ],
+  "managedlustre_fs_blob_import_create": [
+    "Create a one-time import job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>"
+  ],
+  "managedlustre_fs_blob_import_delete": [
+    "Delete the one-time import job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>"
+  ],
+  "managedlustre_fs_blob_import_get": [
+    "Get the details of import job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "List all one-time import jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>"
   ],
   "managedlustre_fs_create": [
     "Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time>"
+  ],
+  "managedlustre_fs_expansion_create": [
+    "Create an expansion job to increase the storage capacity of the Azure Managed Lustre filesystem <filesystem_name> to <new_size_tib> TiB in resource group <resource_group_name>"
+  ],
+  "managedlustre_fs_expansion_delete": [
+    "Delete the expansion job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>"
+  ],
+  "managedlustre_fs_expansion_get": [
+    "Get the details of expansion job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "List all expansion jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>"
   ],
   "managedlustre_fs_list": [
     "List the Azure Managed Lustre filesystems in my subscription <subscription_name>",
@@ -527,34 +1016,43 @@
     "Search for Microsoft products in the marketplace",
     "Show me marketplace products from publisher <publisher_name>"
   ],
-  "get_azure_bestpractices_ai_app": [
-    "Get best practices for building AI applications in Azure",
-    "Show me the best practices for Microsoft Foundry agents code generation",
-    "Get guidance for building agents with Microsoft Foundry",
-    "Create an AI app that helps me to manage travel queries.",
-    "Create an AI app that helps me to manage travel queries in Microsoft Foundry"
-  ],
-  "get_azure_bestpractices_get": [
-    "Get the latest Azure code generation best practices",
-    "Get the latest Azure deployment best practices",
-    "Get the latest Azure best practices",
-    "Get the latest Azure Functions code generation best practices",
-    "Get the latest Azure Functions deployment best practices",
-    "Get the latest Azure Functions best practices",
-    "Get the latest Azure Static Web Apps best practices",
-    "What are azure function best practices?",
-    "configure azure mcp in coding agent for my repo"
-  ],
   "monitor_activitylog_list": [
     "List the activity logs of the last month for <resource_name>"
   ],
   "monitor_healthmodels_get": [
-    "Show me the health model <health_model_name> in resource group <resource_group>",
-    "Get the Azure Monitor health model named <health_model_name>"
+    "Show me the health model <health_model_name> in resource group <resource_group>"
   ],
   "monitor_healthmodels_list": [
     "List the Azure Monitor health models in my subscription",
     "What health models are in resource group <resource_group>?"
+  ],
+  "monitor_instrumentation_get-learning-resource": [
+    "Get the onboarding learning resource at path <resource_path>",
+    "Show me the content of the Azure Monitor onboarding learning resource at path <resource_path>",
+    "Use Azure Monitor instrumentation onboarding to get the learning resource file at path <resource_path>",
+    "List all available Azure Monitor onboarding learning resources",
+    "Show me all learning resource paths for Azure Monitor instrumentation",
+    "What learning resources are available for Azure Monitor instrumentation onboarding?"
+  ],
+  "monitor_instrumentation_orchestrator-next": [
+    "After completing the previous Azure Monitor instrumentation step, get the next action for session <session_id> with completion note <completion_note>",
+    "Get the next Azure Monitor instrumentation onboarding action for session <session_id> after I completed <completion_note>",
+    "I finished the previous instrumentation step; return the next step for session <session_id> with note <completion_note>"
+  ],
+  "monitor_instrumentation_orchestrator-start": [
+    "Start Azure Monitor instrumentation orchestration for workspace <workspace_path>",
+    "Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step",
+    "Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one"
+  ],
+  "monitor_instrumentation_send-brownfield-analysis": [
+    "Send brownfield code analysis findings JSON <findings_json> to Azure Monitor instrumentation session <session_id> after analysis was requested",
+    "Submit brownfield analysis findings <findings_json> to Azure Monitor instrumentation session <session_id>",
+    "Send completed brownfield telemetry analysis <findings_json> to Azure Monitor instrumentation onboarding session <session_id>"
+  ],
+  "monitor_instrumentation_send-enhancement-select": [
+    "Submit enhancement selection keys <enhancement_keys> for Azure Monitor instrumentation session <session_id> after enhancement options are presented",
+    "Continue instrumentation enhancement flow by sending selected keys <enhancement_keys> to session <session_id>",
+    "Send chosen enhancement option keys <enhancement_keys> to Azure Monitor instrumentation onboarding session <session_id>"
   ],
   "monitor_metrics_definitions": [
     "Get metric definitions for <resource_type> <resource_name> from the namespace",
@@ -582,9 +1080,7 @@
   ],
   "monitor_webtests_createorupdate": [
     "Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>",
-    "Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>",
-    "Create or update web test <webtest_resource_name> in resource group <resource_group>",
-    "Set up a web test named <webtest_resource_name> in <resource_group> for application insights <appinsights_component>"
+    "Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>"
   ],
   "monitor_workspace_list": [
     "List all Log Analytics workspaces in my subscription",
@@ -594,24 +1090,75 @@
   "monitor_workspace_log_query": [
     "Show me the logs for the past hour in the Log Analytics workspace <workspace_name>"
   ],
-  "datadog_monitoredresources_list": [
-    "List all monitored resources in the Datadog resource <resource_name>",
-    "Show me the monitored resources in the Datadog resource <resource_name>"
+  "mysql_database_query": [
+    "Show me all items that contain the word <search_term> in the MySQL database <database> in server <server>"
   ],
-  "extension_azqr": [
-    "Check my Azure subscription for any compliance issues or recommendations",
-    "Provide compliance recommendations for my current Azure subscription",
-    "Scan my Azure subscription for compliance recommendations"
+  "mysql_list": [
+    "List all MySQL servers in my subscription",
+    "Show me my MySQL servers",
+    "Show me the MySQL servers in my subscription",
+    "List all MySQL databases in server <server>",
+    "Show me the MySQL databases in server <server>",
+    "List all tables in the MySQL database <database> in server <server>",
+    "Show me the tables in the MySQL database <database> in server <server>"
+  ],
+  "mysql_server_config_get": [
+    "Show me the configuration of MySQL server <server>"
+  ],
+  "mysql_server_param_get": [
+    "Show me the value of connection timeout in seconds in my MySQL server <server>"
+  ],
+  "mysql_server_param_set": [
+    "Set connection timeout to 20 seconds for my MySQL server <server>"
+  ],
+  "mysql_table_schema_get": [
+    "Show me the schema of table <table> in the MySQL database <database> in server <server>"
+  ],
+  "policy_assignment_list": [
+    "List Azure Policies in the subscription <subscription_id>"
+  ],
+  "postgres_database_query": [
+    "Show me all items that contain the word <search_term> in the PostgreSQL database <database> in server <server>"
+  ],
+  "postgres_list": [
+    "List all PostgreSQL servers in my subscription",
+    "Show me my PostgreSQL servers",
+    "Show me the PostgreSQL servers in my subscription",
+    "List all PostgreSQL databases in server <server>",
+    "Show me the PostgreSQL databases in server <server>",
+    "List all tables in the PostgreSQL database <database> in server <server>",
+    "Show me the tables in the PostgreSQL database <database> in server <server>",
+    "List all tables in the <schema> schema of the PostgreSQL database <database> in server <server>"
+  ],
+  "postgres_server_config_get": [
+    "Show me the configuration of PostgreSQL server <server>"
+  ],
+  "postgres_server_param_get": [
+    "Show me if the parameter my PostgreSQL server <server> has replication enabled"
+  ],
+  "postgres_server_param_set": [
+    "Enable replication for my PostgreSQL server <server>"
+  ],
+  "postgres_table_schema_get": [
+    "Show me the schema of table <table> in the PostgreSQL database <database> in server <server>"
+  ],
+  "pricing_get": [
+    "What is the price of Standard_D4s_v5 VMs?",
+    "What's the price difference between Premium_LRS and Standard_LRS storage?",
+    "Get consumption price for Standard_E8s_v5 in brazil",
+    "What is the price for Virtual Machines?",
+    "How much does a Standard_D4s_v5 VM cost per hour?",
+    "Which is cheaper- Standard_D4s_v5 in eastus vs westeurope",
+    "Get pricing where productName contains 'Premium'",
+    "How much does Hot access tier storage cost per GB in westeurope?",
+    "Show savings plan prices for Standard_E4s_v5 Linux VMs",
+    "Here's my Bicep template. Can you estimate the monthly cost of this deployment? <bicep_template>"
   ],
   "quota_region_availability_list": [
     "Show me the available regions for these resource types <resource_types>"
   ],
   "quota_usage_check": [
     "Check usage information for <resource_type> in region <region>"
-  ],
-  "role_assignment_list": [
-    "List all available role assignments in my subscription",
-    "Show me the available role assignments in my subscription"
   ],
   "redis_create": [
     "Create a new Redis resource named <resource_name> with SKU <sku_name> in resource group <resource_group_name>",
@@ -626,16 +1173,125 @@
     "Show me my Redis caches",
     "Get Redis clusters"
   ],
-  "group_list": [
-    "List all resource groups in my subscription",
-    "Show me my resource groups",
-    "Show me the resource groups in my subscription"
+  "resilience_drill_create": [
+    "Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, resource group <resource_group>, automated built-in roles, and recovery plan <recovery_plan_name>",
+    "Create a regional resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, and manual RBAC setup",
+    "Create a resilience drill for service group <service_group>"
+  ],
+  "resilience_drill_delete": [
+    "Delete resilience drill <drill_name> from service group <service_group>",
+    "Permanently remove drill <drill_name> in service group <service_group>"
+  ],
+  "resilience_drill_get": [
+    "List all resilience drills in service group <service_group>",
+    "Get the details of resilience drill <drill_name> in service group <service_group>"
+  ],
+  "resilience_drill_resource_get": [
+    "List all drill resources for resilience drill <drill_name> in service group <service_group>",
+    "List all drill targets for resilience drill <drill_name> in service group <service_group>",
+    "Show the resources targeted by resilience drill <drill_name> in service group <service_group>",
+    "Get the complete details of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group>",
+    "Get drill target <resource_name> for resilience drill <drill_name> in service group <service_group>",
+    "Retrieve the ARM properties of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group>"
+  ],
+  "resilience_drill_run_get": [
+    "List all runs of drill <drill_name> in service group <service_group>",
+    "Get drill run <drill_run_name> for drill <drill_name> in service group <service_group>"
+  ],
+  "resilience_drill_run_resource_get": [
+    "List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group>",
+    "Get resource <resource_name> from drill run <drill_run_name> for drill <drill_name> in service group <service_group>"
+  ],
+  "resilience_drill_update": [
+    "Update resilience drill <drill_name> in service group <service_group> to use manual RBAC setup",
+    "Associate recovery plan <recovery_plan_name> with resilience drill <drill_name> in service group <service_group>",
+    "Move the supporting resources of resilience drill <drill_name> in service group <service_group> to subscription <subscription> and region <region>"
+  ],
+  "resilience_goal_assignment_get": [
+    "List all resilience goal assignments in service group <service_group>",
+    "Get the details of goal assignment <goal_assignment_name> in service group <service_group>"
+  ],
+  "resilience_goal_resource_get": [
+    "List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group>",
+    "Get the goal resource <resource_name> for goal assignment <goal_assignment_name> in service group <service_group>"
+  ],
+  "resilience_goal_template_get": [
+    "List all resilience goal templates in service group <service_group>",
+    "Get the details of goal template <goal_template_name> in service group <service_group>"
+  ],
+  "resilience_recoveryjob_get": [
+    "List all recovery jobs of recovery plan <recovery_plan_name> in service group <service_group>",
+    "Get the details of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group>"
+  ],
+  "resilience_recoveryjob_resource_get": [
+    "List all resources (targets) of recovery job <recovery_job_name> for recovery plan <recovery_plan_name> in service group <service_group>",
+    "Get the recovery job resource <resource_name> for recovery job <recovery_job_name> of recovery plan <recovery_plan_name> in service group <service_group>"
+  ],
+  "resilience_recoveryplan_checkreadiness": [
+    "Check whether recovery plan <recovery_plan_name> and its protected resources are ready for recovery operations in service group <service_group>",
+    "Discover readiness issues for the resources in recovery plan <recovery_plan_name> in service group <service_group>"
+  ],
+  "resilience_recoveryplan_create": [
+    "Create a Zonal recovery plan named <recovery_plan_name> in service group <service_group>",
+    "Set up a Zonal recovery plan named <recovery_plan_name> in service group <service_group>. Use a system-assigned managed identity, description <plan_description>, and default recovery group description <default_group_description>",
+    "Create Zonal recovery plan <recovery_plan_name> in service group <service_group> and attach user-assigned managed identity <user_assigned_identity_resource_id>. Use <plan_description> for the plan description and <default_group_description> for the default recovery group",
+    "Change recovery plan <recovery_plan_name> in service group <service_group> to a system-assigned managed identity and description <plan_description>. Keep its Zonal plan type and existing recovery groups",
+    "Split recovery plan <recovery_plan_name> in service group <service_group> into its default recovery group and one additional group described as <additional_group_description>. Preserve its existing plan type and managed identity",
+    "Update recovery plan <recovery_plan_name> in service group <service_group>. Add a manual pre-action named <manual_action_name> with timeout <timeout_minutes> to the default group, and add a post-action script using Automation runbook <runbook_resource_id> to additional recovery group <recovery_group_id>. Preserve its existing plan type and managed identity",
+    "Add a pre-action to the default group of recovery plan <recovery_plan_name> in service group <service_group>. I have not chosen the action values yet. Explain the accepted values and ask me for the action type, name, optional description, timeout, and any runbook-specific values one at a time before updating the plan. Preserve its existing plan type and managed identity",
+    "Change a system-assigned recovery plan <recovery_plan_name> in service group <service_group> to use a user-assigned managed identity",
+    "Update recovery plan <recovery_plan_name> in service group <service_group> to use both its system-assigned identity and user-assigned managed identity <user_assigned_identity_resource_id>. Preserve its existing plan settings"
+  ],
+  "resilience_recoveryplan_delete": [
+    "Delete the entire recovery plan <recovery_plan_name> from service group <service_group>",
+    "Recovery plan <recovery_plan_name> is no longer needed. Delete it from resilience service group <service_group>"
+  ],
+  "resilience_recoveryplan_get": [
+    "List all resilience recovery plans in service group <service_group>",
+    "Get the details of recovery plan <recovery_plan_name> in service group <service_group>"
+  ],
+  "resilience_recoveryplan_resource_get": [
+    "List all resources (members) of recovery plan <recovery_plan_name> in service group <service_group>",
+    "Get the recovery resource <resource_name> for recovery plan <recovery_plan_name> in service group <service_group>"
+  ],
+  "resilience_recoveryplan_resource_update": [
+    "Include and configure recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group> with selected protection solution type <protection_solution_type> and settings <protection_settings_json>",
+    "Add recovery resource <recovery_resource_id> to recovery plan <recovery_plan_name> in service group <service_group>. Protect it with CustomRunbook using failover runbook <failover_runbook_resource_id> and reprotect runbook <reprotect_runbook_resource_id>",
+    "Include virtual machine recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group> using AzureSiteRecovery protection settings <protection_settings_json> with disk reprotection, staging storage, and a test failover virtual network",
+    "Include recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group>, but I have not chosen CustomRunbook or AzureSiteRecovery protection settings",
+    "Keep recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group>, but exclude it from recovery operations",
+    "Update recovery plan <recovery_plan_name> in service group <service_group> by removing recovery resource <recovery_resource_id> from its resource membership while retaining the recovery plan and its other recovery resources"
+  ],
+  "resilience_recoveryplan_validateforfailover": [
+    "Validate recovery plan <recovery_plan_name> for failover in service group <service_group>, but I have not specified a source location or selected recovery-resource ID",
+    "Validate which resources in recovery plan <recovery_plan_name> in service group <service_group> can fail over from <source_location> and report blocking reasons",
+    "Check whether recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> is qualified for failover without requiring a source location or executing failover",
+    "Validate recovery plan <recovery_plan_name> for failover from <source_location>, supply required user consent, and return per-resource qualification results without updating resources"
+  ],
+  "resilience_usageplan_create": [
+    "Create a resilience usage plan <usage_plan_name> with plan type Basic in resource group <resource_group_name>",
+    "Set up a Basic resilience usage plan named <usage_plan_name> in resource group <resource_group_name>",
+    "Update resilience usage plan <usage_plan_name> in resource group <resource_group_name> to use the Basic plan type"
+  ],
+  "resilience_usageplan_enrollment_create": [
+    "Create a usage plan enrollment <enrollment_name> for usage plan <usage_plan_name> associated with service group <service_group> in resource group <resource_group_name>",
+    "Enroll service group <service_group> in usage plan <usage_plan_name> as <enrollment_name> in resource group <resource_group_name>",
+    "Update enrollment <enrollment_name> under usage plan <usage_plan_name> to use service group <service_group> in resource group <resource_group_name>"
+  ],
+  "resilience_usageplan_enrollment_get": [
+    "List all enrollments of usage plan <usage_plan_name> in resource group <resource_group_name>",
+    "Get the details of usage plan enrollment <enrollment_name> for usage plan <usage_plan_name> in resource group <resource_group_name>"
+  ],
+  "resilience_usageplan_get": [
+    "List all resilience usage plans in my subscription",
+    "List all resilience usage plans in resource group <resource_group_name>",
+    "Get the details of usage plan <usage_plan_name> in resource group <resource_group_name>"
   ],
   "resourcehealth_availability-status_get": [
     "Get the availability status for resource <resource_name>",
-    "Show me the health status of the storage account <storage_account_name>",
+    "What is the Azure Resource Health availability status of the storage account <storage_account_name>?",
     "What is the availability status of virtual machine <vm_name> in resource group <resource_group_name>?",
-    "List availability status for all resources in my subscription",
+    "Get Azure Resource Health availability status for all resources in my subscription",
     "Show me the health status of all my Azure resources",
     "What resources in resource group <resource_group_name> have health issues?"
   ],
@@ -646,6 +1302,52 @@
     "List active service health events in my subscription",
     "Show me planned maintenance events for my Azure services"
   ],
+  "role_assignment_list": [
+    "List all available role assignments in my subscription",
+    "Show me the available role assignments in my subscription"
+  ],
+  "search_index_get": [
+    "Show me the details of the index <index-name> in Cognitive Search service <service-name>",
+    "List all indexes in the Cognitive Search service <service-name>",
+    "Show me the indexes in the Cognitive Search service <service-name>"
+  ],
+  "search_index_query": [
+    "Search for instances of <search_term> in the index <index-name> in Cognitive Search service <service-name>",
+    "Search the index <index-name> in Cognitive Search service <service-name> for <search_term> using the simple query syntax",
+    "Run a semantic query for <search_term> against the index <index-name> in Cognitive Search service <service-name>",
+    "Run a semantic query for <search_term> against index <index-name> in Cognitive Search service <service-name> using semantic configuration <semantic-configuration>"
+  ],
+  "search_knowledge_base_get": [
+    "List all knowledge bases in the Azure AI Search service <service-name>",
+    "Show me the knowledge bases in the Azure AI Search service <service-name>",
+    "List all knowledge bases in the search service <service-name>",
+    "Show me the knowledge bases in the search service <service-name>",
+    "Get the details of knowledge base <agent-name> in the Azure AI Search service <service-name>",
+    "Show me the knowledge base <agent-name> in search service <service-name>"
+  ],
+  "search_knowledge_base_retrieve": [
+    "Run a retrieval with knowledge base <agent-name> in Azure AI Search service <service-name> for the query <query>",
+    "Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query>",
+    "Run a retrieval with knowledge base <agent-name> in search service <service-name> for the query <query>",
+    "Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query>",
+    "Query knowledge base <agent-name> in search service <service-name> about <query>",
+    "Search knowledge base <agent-name> in Azure AI Search service <service-name> for <query>",
+    "What does knowledge base <agent-name> in search service <service-name> know about <query>",
+    "Find information about <query> using knowledge base <agent-name> in search service <service-name>"
+  ],
+  "search_knowledge_source_get": [
+    "List all knowledge sources in the Azure AI Search service <service-name>",
+    "Show me the knowledge sources in the Azure AI Search service <service-name>",
+    "List all knowledge sources in the search service <service-name>",
+    "Show me the knowledge sources in the search service <service-name>",
+    "Get the details of knowledge source <source-name> in the Azure AI Search service <service-name>",
+    "Show me the knowledge source <source-name> in search service <service-name>"
+  ],
+  "search_service_list": [
+    "List all Cognitive Search services in my subscription",
+    "Show me the Cognitive Search services in my subscription",
+    "Show me my Cognitive Search services"
+  ],
   "servicebus_queue_details": [
     "Show me the details of service bus <service_bus_name> queue <queue_name>"
   ],
@@ -655,6 +1357,15 @@
   "servicebus_topic_subscription_details": [
     "Show me the details of service bus <service_bus_name> subscription <subscription_name>"
   ],
+  "servicefabric_managedcluster_node_get": [
+    "Get all nodes in Service Fabric managed cluster <cluster_name> in resource group <resource_group_name>",
+    "Show me the nodes and their status for Service Fabric managed cluster <cluster_name>",
+    "Get node <node_name> from Service Fabric managed cluster <cluster_name>"
+  ],
+  "servicefabric_managedcluster_nodetype_restart": [
+    "Restart nodes <node_name_1> and <node_name_2> in Service Fabric managed cluster <cluster_name> UD by UD",
+    "Restart node <node_name_1> in node type <node_type_name> on managed cluster <cluster_name>"
+  ],
   "signalr_runtime_get": [
     "Show me the details of SignalR <signalr_name>",
     "Show me the network information of SignalR runtime <signalr_name>",
@@ -662,6 +1373,30 @@
     "Get information about my SignalR runtime <signalr_name> in <resource_group_name>",
     "Show all the SignalRs information in <resource_group_name>",
     "List all SignalRs in my subscription"
+  ],
+  "speech_stt_recognize": [
+    "Convert this audio file to text using Azure Speech Services",
+    "Recognize speech from my audio file with language detection",
+    "Transcribe speech from audio file <file_path> with profanity filtering",
+    "Convert speech to text from audio file <file_path> using endpoint <endpoint>",
+    "Transcribe the audio file <file_path> in Spanish language",
+    "Convert speech to text with detailed output format from audio file <file_path>",
+    "Recognize speech from <file_path> with phrase hints for better accuracy",
+    "Transcribe audio using multiple phrase hints: \"Azure\", \"cognitive services\", \"machine learning\"",
+    "Convert speech to text with comma-separated phrase hints: \"Azure, cognitive services, API\"",
+    "Transcribe audio with raw profanity output from file <file_path>"
+  ],
+  "speech_tts_synthesize": [
+    "Convert text to speech and save to output.wav",
+    "Synthesize speech from \"Hello, welcome to Azure\" and save to welcome.wav",
+    "Generate speech audio from text \"Hello world\" using Azure Speech Services",
+    "Convert text to speech with Spanish language and save to spanish-audio.wav",
+    "Synthesize speech with voice en-US-JennyNeural from text \"Azure AI Services\"",
+    "Create MP3 audio file from text \"Welcome to Azure\" with high quality format",
+    "Generate speech with custom voice model using endpoint ID <endpoint-id>",
+    "Convert text to OGG/Opus format audio file",
+    "Synthesize long text content to audio file with streaming",
+    "Create audio file from text in French language with appropriate voice"
   ],
   "sql_db_create": [
     "Create a new SQL database named <database_name> in server <server_name>",
@@ -729,6 +1464,171 @@
     "Get Azure SQL server <server_name> info",
     "Display the properties of Azure SQL server <server_name>"
   ],
+  "sreagent_agents_create": [
+    "Use SRE Agent sub-agent management to create sub-agent <name> on SRE Agent <agent_name>"
+  ],
+  "sreagent_agents_delete": [
+    "Use SRE Agent sub-agent management to delete sub-agent <name> from SRE Agent <agent_name>"
+  ],
+  "sreagent_agents_get": [
+    "Show me the details of SRE Agent <agent_name> in resource group <resource_group>"
+  ],
+  "sreagent_agents_list": [
+    "List all Azure SRE Agent resources in my subscription"
+  ],
+  "sreagent_agents_tools_create": [
+    "Create a custom tool called <tool_name> on SRE Agent <agent_name>"
+  ],
+  "sreagent_agents_tools_get": [
+    "Get the definition of custom tool <tool_name> from SRE Agent <agent_name>"
+  ],
+  "sreagent_agents_tools_list": [
+    "List the custom tools attached to SRE Agent <agent_name>"
+  ],
+  "sreagent_architecture_plan": [
+    "Use SRE Agent architecture planning for these requirements: <requirements>"
+  ],
+  "sreagent_commonprompts_create": [
+    "Create a common prompt called <prompt_name> on SRE Agent <agent_name>"
+  ],
+  "sreagent_commonprompts_delete": [
+    "Permanently remove and erase common prompt <prompt_name> from SRE Agent <agent_name>"
+  ],
+  "sreagent_commonprompts_get": [
+    "Show me the common prompt <prompt_name> on SRE Agent <agent_name>"
+  ],
+  "sreagent_commonprompts_list": [
+    "List the common prompts on SRE Agent <agent_name>"
+  ],
+  "sreagent_connectors_create_kusto": [
+    "Create a Kusto connector on SRE Agent <agent_name>"
+  ],
+  "sreagent_connectors_create_mcp": [
+    "Create an MCP connector on SRE Agent <agent_name>"
+  ],
+  "sreagent_connectors_delete": [
+    "Remove the connector <connector_name> from SRE Agent <agent_name>"
+  ],
+  "sreagent_connectors_get": [
+    "Show me the details of connector <connector_name> on SRE Agent <agent_name>"
+  ],
+  "sreagent_connectors_list": [
+    "List the connectors configured on SRE Agent <agent_name>"
+  ],
+  "sreagent_connectors_test": [
+    "Test the connector <connector_name> on SRE Agent <agent_name> and list its tools"
+  ],
+  "sreagent_docs_get": [
+    "Show me the SRE Agent documentation for the topic <topic>"
+  ],
+  "sreagent_docs_memories_add": [
+    "Add a document called <name> to the SRE Agent knowledge base"
+  ],
+  "sreagent_docs_memories_delete": [
+    "Confirm and delete knowledge base document <name> from SRE Agent <agent_name>"
+  ],
+  "sreagent_docs_memories_list": [
+    "Get a complete list of all indexed knowledge base documents stored in SRE Agent <agent_name> memory without filtering"
+  ],
+  "sreagent_docs_memories_reindex": [
+    "Reindex the knowledge base documents for SRE Agent <agent_name>"
+  ],
+  "sreagent_docs_memories_search": [
+    "Search the SRE Agent knowledge base for <text>"
+  ],
+  "sreagent_hooks_delete": [
+    "Remove and permanently delete hook <hook_name> from SRE Agent <agent_name>"
+  ],
+  "sreagent_hooks_get": [
+    "Show me the details of hook <hook_name> on SRE Agent <agent_name>"
+  ],
+  "sreagent_hooks_list": [
+    "List the hooks configured for SRE Agent <agent_name>"
+  ],
+  "sreagent_hooks_thread_activate": [
+    "Activate hook <hook_name> on thread <thread_id> of SRE Agent <agent_name>"
+  ],
+  "sreagent_hooks_thread_deactivate": [
+    "Deactivate hook <hook_name> on thread <thread_id> of SRE Agent <agent_name>"
+  ],
+  "sreagent_hooks_thread_list": [
+    "List the hook activation states for thread <thread_id> on SRE Agent <agent_name>"
+  ],
+  "sreagent_incidents_active_list": [
+    "List the active incidents on SRE Agent <agent_name>"
+  ],
+  "sreagent_incidents_create": [
+    "Create a new incident investigation for SRE Agent <agent_name> with title <title>"
+  ],
+  "sreagent_incidents_plans_create": [
+    "Enable a new incident response plan on SRE Agent <agent_name> with alert filter <filter> and handler <handler>"
+  ],
+  "sreagent_incidents_plans_list": [
+    "List the incident response plans configured on SRE Agent <agent_name>"
+  ],
+  "sreagent_incidents_setup_pagerduty": [
+    "Configure the PagerDuty incident-management integration for SRE Agent <agent_name>"
+  ],
+  "sreagent_incidents_setup_servicenow": [
+    "Configure the ServiceNow incident-management integration for SRE Agent <agent_name>"
+  ],
+  "sreagent_scheduledtasks_create": [
+    "Schedule a recurring task on SRE Agent <agent_name> that runs every Monday"
+  ],
+  "sreagent_scheduledtasks_delete": [
+    "Delete the scheduled task <task_id> from SRE Agent <agent_name>"
+  ],
+  "sreagent_scheduledtasks_get": [
+    "Show me the scheduled task <task_id> on SRE Agent <agent_name>"
+  ],
+  "sreagent_scheduledtasks_list": [
+    "List the scheduled tasks on SRE Agent <agent_name>"
+  ],
+  "sreagent_scheduledtasks_pause": [
+    "Pause the scheduled task <task_id> on SRE Agent <agent_name>"
+  ],
+  "sreagent_scheduledtasks_resume": [
+    "Resume the scheduled task <task_id> on SRE Agent <agent_name>"
+  ],
+  "sreagent_skills_create": [
+    "Add a new skill called <skill_name> to SRE Agent <agent_name>"
+  ],
+  "sreagent_skills_delete": [
+    "Delete the skill <skill_name> from SRE Agent <agent_name>"
+  ],
+  "sreagent_skills_list": [
+    "List all skills available on SRE Agent <agent_name>"
+  ],
+  "sreagent_threads_create": [
+    "Start a new thread on SRE Agent <agent_name>"
+  ],
+  "sreagent_threads_delete": [
+    "Delete thread <thread_id> from SRE Agent <agent_name>"
+  ],
+  "sreagent_threads_get": [
+    "Show me thread <thread_id> on SRE Agent <agent_name>"
+  ],
+  "sreagent_threads_investigate": [
+    "Use SRE Agent <agent_name> to investigate this issue: <issue>"
+  ],
+  "sreagent_threads_investigate_yolo": [
+    "Investigate <issue> on SRE Agent <agent_name> in yolo mode, automatically granting all pending approvals without waiting"
+  ],
+  "sreagent_threads_list": [
+    "List the active threads on SRE Agent <agent_name>"
+  ],
+  "sreagent_threads_send_message": [
+    "Send a message to thread <thread_id> on SRE Agent <agent_name>"
+  ],
+  "sreagent_workflows_apply": [
+    "Apply the workflow YAML to SRE Agent <agent_name>"
+  ],
+  "sreagent_workflows_generate": [
+    "Generate a YAML workflow for a tool named <tool_name>"
+  ],
+  "sreagent_workflows_validate": [
+    "Validate the following SRE Agent workflow YAML"
+  ],
   "storage_account_create": [
     "Create a new storage account called testaccount123 in East US region",
     "Create a storage account with premium performance and LRS replication",
@@ -742,25 +1642,85 @@
     "Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings"
   ],
   "storage_blob_container_create": [
-    "Create the storage container mycontainer in storage account <account>",
-    "Create the container using blob public access in storage account <account>",
-    "Create a new blob container named documents with container public access in storage account <account>"
+    "Create the storage container mycontainer in storage account <account>"
   ],
   "storage_blob_container_get": [
     "Show me the properties of the storage container <container> in the storage account <account>",
     "List all blob containers in the storage account <account>",
+    "List all blob containers in the storage account <account> with prefix <prefix>",
     "Show me the containers in the storage account <account>"
   ],
   "storage_blob_get": [
     "Show me the properties for blob <blob> in container <container> in storage account <account>",
     "Get the details about blob <blob> in the container <container> in storage account <account>",
     "List all blobs in the blob container <container> in the storage account <account>",
+    "List all blobs in the blob container <container> in the storage account <account> with prefix <prefix>",
     "Show me the blobs in the blob container <container> in the storage account <account>"
   ],
   "storage_blob_upload": [
-    "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>",
-    "Upload a local file to my Azure blob storage container",
-    "Put file <local-file-path> into blob <blob> in storage container <container> on account <account>"
+    "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>"
+  ],
+  "storage_table_list": [
+    "List all tables in the storage account <account>",
+    "Show me the tables in the storage account <account>"
+  ],
+  "storagesync_cloudendpoint_changedetection": [
+    "Trigger change detection on cloud endpoint <endpoint-name> in sync group <syncgroup-name> in service <service-name> for directory path <path>"
+  ],
+  "storagesync_cloudendpoint_create": [
+    "Create a new cloud endpoint named <endpoint-name> for Azure file share <share-name> in storage account <storage-account-name>"
+  ],
+  "storagesync_cloudendpoint_delete": [
+    "Delete the cloud endpoint <endpoint-name> from sync group <syncgroup-name>"
+  ],
+  "storagesync_cloudendpoint_get": [
+    "Get the details of cloud endpoint <endpoint-name> in sync group <syncgroup-name>",
+    "List all cloud endpoints in sync group <syncgroup-name>"
+  ],
+  "storagesync_registeredserver_get": [
+    "Get the details of registered server <server-name> in service <service-name>",
+    "List all registered servers in service <service-name>"
+  ],
+  "storagesync_registeredserver_unregister": [
+    "Unregister server <server-name> from service <service-name>"
+  ],
+  "storagesync_registeredserver_update": [
+    "Update registered server <server-name> configuration in service <service-name>"
+  ],
+  "storagesync_serverendpoint_create": [
+    "Create a new server endpoint on server <server-name> pointing to local path <local-path> in sync group <syncgroup-name>"
+  ],
+  "storagesync_serverendpoint_delete": [
+    "Delete the server endpoint <endpoint-name> from sync group <syncgroup-name>"
+  ],
+  "storagesync_serverendpoint_get": [
+    "Get the details of server endpoint <endpoint-name> in sync group <syncgroup-name>",
+    "List all server endpoints in sync group <syncgroup-name>"
+  ],
+  "storagesync_serverendpoint_update": [
+    "Update server endpoint <endpoint-name> with cloud tiering enabled and tiering policy in sync group <syncgroup-name>"
+  ],
+  "storagesync_service_create": [
+    "Create a new Storage Sync Service named <service-name> in resource group <resource-group-name> at location <location>"
+  ],
+  "storagesync_service_delete": [
+    "Delete the Storage Sync Service <service-name> from resource group <resource-group-name>"
+  ],
+  "storagesync_service_get": [
+    "Get the details of Storage Sync Service <service-name> in resource group <resource-group-name>",
+    "List all Storage Sync Services in resource group <resource-group-name>"
+  ],
+  "storagesync_service_update": [
+    "Update Storage Sync Service <service-name> with new tags"
+  ],
+  "storagesync_syncgroup_create": [
+    "Create a new sync group named <syncgroup-name> in service <service-name>"
+  ],
+  "storagesync_syncgroup_delete": [
+    "Delete the sync group <syncgroup-name> from service <service-name>"
+  ],
+  "storagesync_syncgroup_get": [
+    "Get the details of sync group <syncgroup-name> in service <service-name>"
   ],
   "subscription_list": [
     "List all subscriptions for my account",
@@ -768,22 +1728,21 @@
     "What is my current subscription?",
     "What subscriptions do I have?"
   ],
-  "storage_table_list": [
-    "List all tables in the storage account <storage-account>",
-    "Show me the tables in the storage account <storage-account>"
-  ],
-  "azureterraformbestpractices_get": [
-    "Fetch the Azure Terraform best practices",
-    "Show me the Azure Terraform best practices and generate code sample to get a secret from Azure Key Vault"
-  ],
-  "virtualdesktop_hostpool_list": [
-    "List all host pools in my subscription"
-  ],
   "virtualdesktop_hostpool_host_list": [
     "List all session hosts in host pool <hostpool_name>"
   ],
   "virtualdesktop_hostpool_host_user-list": [
     "List all user sessions on session host <sessionhost_name> in host pool <hostpool_name>"
+  ],
+  "virtualdesktop_hostpool_list": [
+    "List all host pools in my subscription"
+  ],
+  "wellarchitectedframework_serviceguide_get": [
+    "List all services with Well-Architected Framework guidance",
+    "What services have architectural guidance?",
+    "Get Well-Architected Framework guidance for App Service",
+    "What's the waf guidance for a VM?",
+    "What's the architectural guidance for Azure Cosmos DB"
   ],
   "workbooks_create": [
     "Create a new workbook named <workbook_name>"
@@ -801,72 +1760,5 @@
   ],
   "workbooks_update": [
     "Update the workbook <workbook_resource_id> with a new text step"
-  ],
-  "bicepschema_get": [
-    "How can I use Bicep to create an Azure OpenAI service?"
-  ],
-  "cloudarchitect_design": [
-    "Help me design an Azure cloud service that will serve as an ATM for users",
-    "I want to design a cloud app for ordering groceries",
-    "How can I design a cloud service in Azure that will store and present videos for users?"
-  ],
-  "foundry_agents_connect": [
-    "Query an agent in my Microsoft Foundry resource"
-  ],
-  "foundry_agents_create": [
-    "Create a new Microsoft Foundry agent using instructions in the active editor"
-  ],
-  "foundry_agents_evaluate": [
-    "Evaluate the full query and response I got from my agent for task_adherence"
-  ],
-  "foundry_agents_list": [
-    "List all agents in my Microsoft Foundry resource",
-    "Show me the available agents in my Microsoft Foundry resource"
-  ],
-  "foundry_agents_query-and-evaluate": [
-    "Query and evaluate an agent in my Microsoft Foundry resource for task_adherence"
-  ],
-  "foundryextensions_knowledge_index_list": [
-    "List all knowledge indexes in my Microsoft Foundry project",
-    "Show me the knowledge indexes in my Microsoft Foundry project"
-  ],
-  "foundryextensions_knowledge_index_schema": [
-    "Show me the schema for knowledge index <index-name> in my Microsoft Foundry resource",
-    "Get the schema configuration for knowledge index <index-name>"
-  ],
-  "foundry_models_deploy": [
-    "Deploy a GPT4o instance on my resource <resource-name>"
-  ],
-  "foundry_models_deployments_list": [
-    "List all Microsoft Foundry model deployments",
-    "Show me all Microsoft Foundry model deployments"
-  ],
-  "foundry_models_list": [
-    "List all Microsoft Foundry models",
-    "Show me the available Microsoft Foundry models"
-  ],
-  "foundryextensions_openai_chat-completions-create": [
-    "Create a chat completion with the message \"Hello, how are you today?\" using my Microsoft Foundry resource"
-  ],
-  "foundryextensions_openai_create-completion": [
-    "Create a completion with the prompt \"What is Azure?\" using my Microsoft Foundry resource"
-  ],
-  "foundryextensions_openai_embeddings-create": [
-    "Generate embeddings for the text \"Azure OpenAI Service\" using my Microsoft Foundry resource",
-    "Create vector embeddings for my text using my Microsoft Foundry resource"
-  ],
-  "foundryextensions_openai_models-list": [
-    "List all available OpenAI models in my Microsoft Foundry resource",
-    "Show me the OpenAI model deployments in my Microsoft Foundry resource"
-  ],
-  "foundryextensions_resource_get": [
-    "List all Microsoft Foundry resources in my subscription",
-    "Show me the Microsoft Foundry resources in resource group <resource_group_name>",
-    "Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name>"
-  ],
-  "advisor_recommendations_list": [
-    "List all recommendations in my subscription",
-    "Show me Advisor recommendations in the subscription <subscription>",
-    "List all Advisor recommendations in the subscription <subscription>"
   ]
 }

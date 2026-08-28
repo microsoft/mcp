@@ -13,7 +13,7 @@ This repository ships CLI tools. Specifically, multiple combinations of `tools` 
   - Registers any behavior changes from default for the auto-started proxy
   - Manages recording state (`Record`, `Playback`, `Live`) based on `.testsettings.json`.
 
-- **HTTP Redirect** – In Debug builds the server-side `IHttpClientFactory.CreateClient()` automatically routes traffic through the proxy when `TEST_PROXY_URL` is set. Tests don’t need to customize transports, they merely need to ensure the tool they are testing is correctly injecting and utilizing `IHttpClientFactory`.
+- **HTTP Redirect** – In Debug builds, clients created by `IHttpClientFactory.CreateClient()` automatically route traffic through the proxy when `TEST_PROXY_URL` is set. Direct HTTP consumers use `IHttpClientFactory`; Azure SDK client options use `HttpClientTransport(AzureService.GetClient())`, which is backed by the same factory. Tests do not customize transports themselves.
 
 ## Test Proxy Primer (Relevant Bits)
 
@@ -32,7 +32,7 @@ For MCP developers, the key takeaways are:
 
 ```
 docs/recorded-tests.md             # this file
-core/Azure.Mcp.Core/tests/...      # RecordedCommandTestsBase and supporting infrastructure
+core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Client/ # RecordedCommandTestsBase and supporting infrastructure
 .proxy/                            # auto-downloaded Test Proxy binaries (created on demand)
 .assets/                           # sparse clones of Azure/azure-sdk-assets slices
 ```
@@ -43,7 +43,7 @@ The `.proxy` directory is recreated whenever a recorded test run needs the Test 
 
 1. **Rebase on latest** – Ensure your branch includes the current recorded-test infrastructure.
 2. **Re-parent the test class** – Update live tests to inherit from `RecordedCommandTestsBase` instead of `CommandTestsBase`.
-3. **Ensure proxy-aware HTTP usage** – Commands must obtain `HttpClient` instances via `IHttpClientFactory.CreateClient()` to benefit from playback redirection.
+3. **Ensure proxy-aware HTTP usage** – Direct HTTP consumers must use `IHttpClientFactory.CreateClient()`. Azure SDK clients must set `HttpClientTransport(AzureService.GetClient())` in their client options.
 4. **Add `assets.json`** – If the toolset doesn’t have one, create `tools/<Tool>/tests/<Tests.CsProj.Folder>/assets.json`:
    ```json
    {
@@ -133,9 +133,9 @@ Example:
     [Fact]
     public async Task Should_create_key()
     {
-        var keyName = "key" + Random.Shared.NextInt64();
-
-        RegisterVariable("keyName", keyName); // register a variable for save when recording ends
+        var keyName = RegisterOrRetrieveVariable(
+            "keyName",
+            "key" + Random.Shared.NextInt64());
 
         var result = await CallToolAsync(
             "keyvault_key_create",
@@ -143,8 +143,7 @@ Example:
             {
                 { "subscription", Settings.SubscriptionId },
                 { "vault", Settings.ResourceBaseName },
-                // during playback, the saved value from recording will be retrieved and utilized
-                { "key", TestVariables["keyName"]},
+                { "key", keyName },
                 { "key-type", KeyType.Rsa.ToString() }
             });
 ```
@@ -154,7 +153,9 @@ This means values that don't make sense for `sanitization` can be propagated to 
 #### An example of setting each sanitizer type
 
 ```cs
-public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture) {
+public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+{
 
     // given a json path
     public override List<BodyKeySanitizer> BodyKeySanitizers => new()
@@ -221,7 +222,9 @@ public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixtu
 #### Setting the matcher
 
 ```cs
-public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture) {
+public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+{
     public override CustomDefaultMatcher? TestMatcher { get; set; } = new CustomDefaultMatcher()
     {
         // By default, request and response bodies are compared during matching. You can disable this by setting CompareBodies to false.

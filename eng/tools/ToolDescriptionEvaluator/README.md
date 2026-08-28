@@ -30,6 +30,8 @@ The application:
 
 ## Usage Modes
 
+The `dotnet run` examples below assume the current directory is `eng/tools/ToolDescriptionEvaluator/src`. From the repository root, use `dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- <arguments>` instead.
+
 ### 1. Full Analysis Mode (Default)
 
 Runs comprehensive analysis on all tools and prompts:
@@ -84,22 +86,22 @@ dotnet run -- --server "Fabric" --area "workspace"
 
 ### 4. Tool Prefix Filtering Mode
 
-Filter prompts by tool name prefix to test specific Azure service tools. Service names are automatically prefixed with `azmcp_`:
+Filter prompts by their current tool-name prefix to test specific service areas:
 
 ```bash
-# Filter by service name (auto-prefixed to azmcp_*)
-dotnet run -- --area "keyvault"      # Filters azmcp_keyvault_* tools
-dotnet run -- --area "storage"       # Filters azmcp_storage_* tools
-dotnet run -- --area "functionapp"   # Filters azmcp_functionapp_* tools
-dotnet run -- --area "sql"           # Filters azmcp_sql_* tools
-dotnet run -- --area "cosmos"        # Filters azmcp_cosmos_* tools
+# Filter by tool-name prefix
+dotnet run -- --area "keyvault"      # Filters keyvault_* tools
+dotnet run -- --area "storage"       # Filters storage_* tools
+dotnet run -- --area "functionapp"   # Filters functionapp_* tools
+dotnet run -- --area "sql"           # Filters sql_* tools
+dotnet run -- --area "cosmos"        # Filters cosmos_* tools
 
 # Filter multiple services at once (comma-separated)
 dotnet run -- --area "keyvault,storage"       # Filters both Key Vault and Storage tools
 dotnet run -- --area "sql,cosmos,storage"     # Filters SQL, Cosmos, and Storage tools
 
-# Or use explicit prefix (same result)
-dotnet run -- --area "azmcp_keyvault"
+# A more specific prefix narrows the selected tools
+dotnet run -- --area "keyvault_secret"
 ```
 
 ### 5. Custom Files Mode
@@ -241,7 +243,7 @@ Results are written to `results.md` with:
 Results are written to `results.txt` when using the following option:
 
 ```bash
-dotnet run -- --text
+dotnet run -- --text-results
 ```
 
 - Compact, simple format for quick review
@@ -254,9 +256,9 @@ The tool supports several command line options for customization:
 
 ```bash
 # Tool prefix filtering
-dotnet run -- --area "storage"                    # Filter to storage tools only (auto-prefixed to azmcp_storage)
-dotnet run -- --area "keyvault"                   # Filter to Key Vault tools only (auto-prefixed to azmcp_keyvault)
-dotnet run -- --area "functionapp"                # Filter to Function App tools only (auto-prefixed to azmcp_functionapp)
+dotnet run -- --area "storage"                    # Filter to storage_* tools only
+dotnet run -- --area "keyvault"                   # Filter to keyvault_* tools only
+dotnet run -- --area "functionapp"                # Filter to functionapp_* tools only
 dotnet run -- --area "keyvault,storage"           # Filter to multiple areas (comma-separated)
 dotnet run -- --area "sql,cosmos,functionapp"     # Filter to SQL, Cosmos, and Function App tools
 
@@ -315,46 +317,46 @@ The tool reads from `../../../servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` w
 ```markdown
 ## Azure Storage
 
-| Tool Name | Test Prompt |
-|:----------|:------------|
-| azmcp_storage_account_get | List all storage accounts in my subscription |
-| azmcp_storage_account_get | Show me my storage accounts |
-| azmcp_storage_container_get | List containers in storage account <account-name> |
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| storage_account_get | List all storage accounts in my subscription | none |
+| storage_account_get | Show me my storage accounts | none |
+| storage_blob_container_get | List containers in storage account <account-name> | none |
 
 ## Azure Key Vault
 
-| Tool Name | Test Prompt |
-|:----------|:------------|
-| azmcp_keyvault_secret_get | Get my secret from Key Vault |
-| azmcp_keyvault_key_get | List all keys in my Key Vault |
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| keyvault_secret_get | Get my secret from Key Vault | clarification-required |
+| keyvault_key_get | List all keys in my Key Vault | clarification-required |
 ```
 
 #### Tool Prefix Filtering
 
 The tool supports filtering by tool name prefixes using the `--area` parameter. This allows you to test all tools for a specific Azure service by matching the tool name prefix.
 
-For example, `--area "keyvault"` (auto-prefixed to `azmcp_keyvault`) will match all tools starting with `azmcp_keyvault` including:
-- `azmcp_keyvault_certificate_create`
-- `azmcp_keyvault_certificate_get`  
-- `azmcp_keyvault_secret_get`
-- `azmcp_keyvault_key_get`
+For example, `--area "keyvault"` matches all tools starting with `keyvault`, including:
+- `keyvault_certificate_create`
+- `keyvault_certificate_get`
+- `keyvault_secret_get`
+- `keyvault_key_get`
 - And all other Key Vault tools
 
 ```bash
-# Filter by service name (automatically prefixed with azmcp_)
-dotnet run -- --area "keyvault"       # Matches all azmcp_keyvault_* tools
-dotnet run -- --area "storage"        # Matches all azmcp_storage_* tools
-dotnet run -- --area "functionapp"    # Matches all azmcp_functionapp_* tools
+# Filter by service/tool prefix
+dotnet run -- --area "keyvault"       # Matches all keyvault_* tools
+dotnet run -- --area "storage"        # Matches all storage_* tools
+dotnet run -- --area "functionapp"    # Matches all functionapp_* tools
 
 # Filter multiple services at once (comma-separated)
 dotnet run -- --area "keyvault,storage"        # Matches Key Vault and Storage tools
 dotnet run -- --area "sql,cosmos,functionapp"  # Matches SQL, Cosmos, and Function App tools
 
-# Or use explicit prefix (same result)
-dotnet run -- --area "azmcp_keyvault"
+# Use a more specific prefix to narrow the selection
+dotnet run -- --area "keyvault_secret"
 ```
 
-Common service names (automatically prefixed with `azmcp_`) include: `foundry`, `foundryextensions`, `search`, `appconfig`, `applens`, `appservice`, `applicationinsights`, `acr`, `cosmos`, `kusto`, `mysql`, `postgres`, `eventgrid`, `functionapp`, `keyvault`, `aks`, `loadtesting`, `monitor`, `quota`, `redis`, `storage`, `servicebus`, `sql`, `virtualdesktop`, `workbooks`, and more.
+Common service prefixes include: `foundry`, `foundryextensions`, `search`, `appconfig`, `applens`, `appservice`, `applicationinsights`, `acr`, `cosmos`, `kusto`, `mysql`, `postgres`, `eventgrid`, `functionapp`, `keyvault`, `aks`, `loadtesting`, `monitor`, `quota`, `redis`, `storage`, `servicebus`, `sql`, `virtualdesktop`, `workbooks`, and more.
 
 #### JSON Format (Alternative)
 
@@ -362,11 +364,11 @@ Prompts can be organized in JSON format:
 
 ```json
 {
-  "azmcp-storage-account-get": [
+  "storage_account_get": [
     "List all storage accounts in my subscription",
     "Show me my storage accounts"
   ],
-  "azmcp-storage-container-get": [
+  "storage_blob_container_get": [
     "List containers in storage account <account-name>"
   ]
 }

@@ -37,14 +37,39 @@ There are two approaches you can take for polling on state and getting the resul
 ## C# code sample for polling the operation state
 
 ```csharp
-// Get operationUrl from location header or by building it with operation ID and Get State API.  
-do 
-{ 
-  Thread.Sleep(retryAfter * 1000); // Get retryAfter value from Retry-After header. 
-  response = client.GetAsync(operationUrl).Result;  
-  jsonOperation = response.Content.ReadAsStringAsync().Result; 
-  operation = JsonSerializer.Deserialize<FabricOperation>(jsonOperation); 
-} while (operation.status != "Succeeded" && operation.status != "Failed"); 
+public static async Task<FabricOperation> WaitForOperationAsync(
+  HttpClient client,
+  Uri operationUri,
+  TimeSpan initialRetryAfter,
+  CancellationToken cancellationToken)
+{
+  var retryAfter = initialRetryAfter;
+
+  while (true)
+  {
+    await Task.Delay(retryAfter, cancellationToken);
+
+    using var response = await client.GetAsync(operationUri, cancellationToken);
+    response.EnsureSuccessStatusCode();
+
+    await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+    var operation = await JsonSerializer.DeserializeAsync(
+      responseStream,
+      FabricJsonContext.Default.FabricOperation,
+      cancellationToken) ?? throw new InvalidOperationException("Fabric returned an empty operation response.");
+
+    if (operation.Status is "Succeeded" or "Failed")
+    {
+      return operation;
+    }
+
+    retryAfter = response.Headers.RetryAfter?.Delta ?? retryAfter;
+  }
+}
+
+[JsonSerializable(typeof(FabricOperation))]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+internal sealed partial class FabricJsonContext : JsonSerializerContext;
 ```
 
 ## Item creation example

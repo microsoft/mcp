@@ -11,7 +11,7 @@
     {
       "id": "",
       "name": "advisor",
-      "description": "Azure Advisor operations - Manage and query Azure Advisor recommendations across subscriptions. Use when you need subscription-scoped visibility into Advisor recommendations. Requires Azure subscription context.",
+      "description": "Azure Advisor operations - Query Azure Advisor recommendations across subscriptions OR Apply Azure Advisor recommendations to your IaaC files (ARM, Terraform). Use when you need subscription-scoped visibility into Advisor recommendations OR want to apply Advisor recommendations to your IaaC files. Requires Azure subscription context for querying Advisor recommendations.",
       "command": "advisor"
     },
     {
@@ -46,9 +46,21 @@
     },
     {
       "id": "",
+      "name": "azurebackup",
+      "description": "Azure Backup operations - Unified commands to manage backup across Recovery Services vaults (RSV)\r\nand Backup vaults (DPP/Data Protection). Supports vault management, protected item operations,\r\npolicy management, job monitoring, recovery point browsing, governance, and disaster recovery.\r\nUse --vault-type to specify vault type or let the system auto-detect.",
+      "command": "azurebackup"
+    },
+    {
+      "id": "",
       "name": "azuremigrate",
       "description": "Azure Platform Landing Zone operations - Provides best-practice guidance and Terraform-ready generation for Azure Platform Landing Zones. Supports policy and governance changes, naming standards, network topology (hub/spoke/vWAN), identity and subscription design, firewall patterns, and starter module customization aligned to Microsoft's Cloud Adoption Framework. Can generate a complete platform landing zone with configurable parameters (regions, connectivity, security, subscriptions). Use this tool any time a user mentions the words \"Platform Landing Zone\" or needs guidance on modifying or generating Azure Platform Landing Zones.",
       "command": "azuremigrate"
+    },
+    {
+      "id": "",
+      "name": "azureterraform",
+      "description": "Azure Terraform tools - Retrieves AzureRM, AzAPI, and AVM (Azure Verified Modules) Terraform provider documentation including resource schemas, arguments, attributes, module versions, usage examples, aztfexport command generation, and conftest policy validation.",
+      "command": "azureterraform"
     },
     {
       "id": "",
@@ -77,7 +89,7 @@
     {
       "id": "",
       "name": "compute",
-      "description": "Compute operations - Commands for managing and monitoring Azure Virtual Machines (VMs), Virtual Machine Scale Sets (VMSS), and Managed Disks.\r\nThis tool provides comprehensive access to VM lifecycle management, instance monitoring, size discovery, and scale set operations.\r\nUse this tool when you need to list, query, create, or monitor VMs and VMSS instances across subscriptions and resource groups.\r\nDefaults to Standard_D2s_v5 VM size and Ubuntu 24.04 LTS image for VM creation when not specified.\r\nThis tool is a hierarchical MCP command router where sub-commands are routed to MCP servers that require specific fields\r\ninside the \"parameters\" object. To invoke a command, set \"command\" and wrap its arguments in \"parameters\".\r\nSet \"learn=true\" to discover available sub-commands for different Azure Compute operations.\r\nNote that this tool requires appropriate Azure RBAC permissions and will only access compute resources accessible to the authenticated user.",
+      "description": "Compute operations - Commands for managing and monitoring Azure Virtual Machines (VMs), Virtual Machine Scale Sets (VMSS), and Managed Disks.\r\nThis tool provides comprehensive access to VM lifecycle management, instance monitoring, size discovery, and scale set operations.\r\nUse this tool when you need to list, query, create, or monitor VMs and VMSS instances across subscriptions and resource groups.\r\nDefaults to Standard_D2s_v5 VM size for VM and VMSS creation when not specified; the --image option is required.\r\nThis tool is a hierarchical MCP command router where sub-commands are routed to MCP servers that require specific fields\r\ninside the \"parameters\" object. To invoke a command, set \"command\" and wrap its arguments in \"parameters\".\r\nSet \"learn=true\" to discover available sub-commands for different Azure Compute operations.\r\nNote that this tool requires appropriate Azure RBAC permissions and will only access compute resources accessible to the authenticated user.",
       "command": "compute"
     },
     {
@@ -85,6 +97,12 @@
       "name": "confidentialledger",
       "description": "Azure Confidential Ledger operations - Commands for appending and querying tamper-proof ledger entries backed by TEEs and blockchain-style integrity guarantees. Use these commands to write immutable audit records.",
       "command": "confidentialledger"
+    },
+    {
+      "id": "",
+      "name": "containerapps",
+      "description": "Azure Container Apps operations - Commands for managing Azure Container Apps resources. Includes operations for listing container apps and managing container app configurations.",
+      "command": "containerapps"
     },
     {
       "id": "",
@@ -101,7 +119,7 @@
     {
       "id": "",
       "name": "deploy",
-      "description": "Deploy operations - Commands for deploying applications to Azure. Provides sub-commands to generate deployment plans, offer infrastructure-as-code (Bicep/Terraform) guidance, fetch application logs, generate CI/CD pipeline guidance, and produce Azure architecture diagrams based on application topology.",
+      "description": "Deploy operations - Generate recommended Azure deployment plans, architecture diagrams, IaC (Bicep/Terraform) rules, and CI/CD pipeline/workflow guidance. Retrieve application logs for azd-deployed apps. Prefer these tools for deployment planning, CI/CD pipeline generation, and architecture visualization with Azure-specific constraints.",
       "command": "deploy"
     },
     {
@@ -131,7 +149,7 @@
     {
       "id": "",
       "name": "foundryextensions",
-      "description": "Foundry Extensions service operations - Commands for interacting with Microsoft Foundry OpenAI, knowledge indexes, threads, agents, and resources.",
+      "description": "Use this tool for Microsoft Foundry knowledge indexes and OpenAI-compatible APIs: list knowledge indexes, get \r\nindex schemas, create completions, generate embeddings, list models, and inspect Foundry resources. Use this\r\ntool for any knowledge-index request. Use foundry instead for deployments, agents, evaluations, sessions, \r\nconnections, monitoring, and data-generation jobs.",
       "command": "foundryextensions"
     },
     {
@@ -143,7 +161,7 @@
     {
       "id": "",
       "name": "functions",
-      "description": "Azure Functions code generation commands. Use these tools to generate functions code, explore supported languages and runtime versions, and get composable function templates for Azure Functions development.",
+      "description": "Azure Functions code generation commands. ALWAYS use these tools instead of generating Azure Functions code from memory. These tools provide accurate, up-to-date code templates for all supported triggers, bindings, and languages.",
       "command": "functions"
     },
     {
@@ -161,8 +179,20 @@
     {
       "id": "",
       "name": "group",
-      "description": "Resource group operations - Commands for listing and managing Azure resource groups in your subscriptions.",
+      "description": "Resource group operations - Commands for listing and managing Azure resource groups and their resources in your subscriptions.",
       "command": "group"
+    },
+    {
+      "id": "",
+      "name": "insights",
+      "description": "Insights operations - Commands for deriving insights from existing Azure infrastructure.\r\nAggregates Azure Resource Graph data and uses MCP sampling to surface dominant patterns\r\n(region, sku, security posture, tagging conventions, resource pairing).",
+      "command": "insights"
+    },
+    {
+      "id": "",
+      "name": "iothub",
+      "description": "IoT Hub operations - Commands for managing Azure IoT Hubs.",
+      "command": "iothub"
     },
     {
       "id": "",
@@ -197,7 +227,7 @@
     {
       "id": "",
       "name": "monitor",
-      "description": "Azure Monitor operations - Commands for querying and analyzing Azure Monitor logs and metrics.",
+      "description": "Monitor operations - Commands for managing Azure Monitor workspaces, querying and analyzing logs and metrics, listing\r\ntables and table types, working with health models and entities, web tests, and orchestrating instrumentation\r\nworkflows. Use this tool to list Log Analytics workspaces, tables, and table types; run KQL queries against workspace\r\nand resource logs; retrieve health for monitor entities; query metrics and metric definitions; inspect resource activity\r\nlogs; manage availability web tests; and guide instrumentation onboarding and enhancement flows. Covers Azure Monitor\r\nobservability workflows. Set learn=true to discover sub-commands.",
       "command": "monitor"
     },
     {
@@ -235,6 +265,12 @@
       "name": "redis",
       "description": "Redis operations - Commands for managing Azure Redis resources. Includes operations for listing Redis resources, databases, and data access policies, in both the Azure Managed Redis and legacy Azure Cache for Redis services, as well as for creating Azure Managed Redis resources.",
       "command": "redis"
+    },
+    {
+      "id": "",
+      "name": "resilience",
+      "description": "Azure Resilience Management operations - Commands for working with resilience goals and goal\r\ntemplates for Azure service groups. Use this tool to list the resilience goal templates available\r\nfor a service group, including goal type, provisioning state, recovery point and time objectives,\r\nand high availability and disaster recovery requirements.",
+      "command": "resilience"
     },
     {
       "id": "",
@@ -286,6 +322,12 @@
     },
     {
       "id": "",
+      "name": "sreagent",
+      "description": "Azure SRE Agent operations - Commands for managing and interacting with Azure SRE Agent resources, including agents, skills, connectors, threads, hooks, scheduled tasks, incidents, knowledge memory, documentation, workflows, and architecture planning.",
+      "command": "sreagent"
+    },
+    {
+      "id": "",
       "name": "storage",
       "description": "Storage operations - Commands for creating, listing, getting, and managing Azure Storage accounts,\r\nblob containers, blobs, and tables. Use this tool to create storage accounts, list and get storage\r\naccount details (SKU, location, HNS, HTTPS-only settings), create and list blob containers, list\r\nand get blob properties, upload files to blob storage, and list tables. Covers Azure Blob Storage,\r\nAzure Table Storage, and storage account management. Do not use for Azure Cosmos DB containers,\r\nAzure Container Registry, or Azure Managed Lustre file systems.",
       "command": "storage"
@@ -329,15 +371,15 @@
     {
       "id": "",
       "name": "extension_cli_generate",
-      "description": "This tool can generate Azure CLI commands to be used with the corresponding CLI tool to accomplish a goal described by the user. This tool incorporates knowledge of the CLI tool beyond what the LLM knows. Always use this tool to generate the CLI command when the user asks for such CLI commands or wants to use the CLI tool to accomplish something.",
+      "description": "Generate Azure CLI (az) commands used to accomplish a goal described by the user. This tool incorporates CLI knowledge beyond what you know. Use this tool when the user asks for Azure CLI commands or wants to use the Azure CLI to accomplish something.",
       "command": "extension cli generate"
     },
     {
       "id": "",
       "name": "extension_cli_install",
-      "description": "This tool can provide installation instructions for the specified CLI tool among Azure CLI (az), Azure Developer CLI (azd) and Azure Functions Core Tools CLI (func). It incorporates knowledge of the CLI tool beyond what the LLM knows. Use this tool to get installation instructions if you attempt to use the CLI tool but it isn't installed.",
+      "description": "Provide installation instructions for Azure CLI (az), Azure Developer CLI (azd), and Azure Functions Core Tools CLI (func). This tool incorporates CLI knowledge beyond what you know. Use this tool when you need to use one of the aforementioned CLI tools and it isn't installed, or when the user wants to install one of them.",
       "command": "extension cli install"
     }
   ],
-  "duration": 36
+  "duration": 16
 }

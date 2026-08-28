@@ -16,7 +16,7 @@
     Optionally build the root project in Debug mode to ensure tools can be loaded dynamically
 
 .PARAMETER Area
-    Filter prompts by tool name prefix. Service names are auto-prefixed with "azmcp_" (e.g., "keyvault" becomes "azmcp_keyvault")
+    Filter prompts by tool name prefix (e.g., "keyvault" matches "keyvault_*" tools)
 
 .EXAMPLE
     ./Run-ToolDescriptionEvaluator.ps1
@@ -29,11 +29,11 @@
 
 .EXAMPLE
     ./Run-ToolDescriptionEvaluator.ps1 -Area "storage"
-    Runs the Tool Description Evaluator filtering prompts to only tools with the azmcp_storage prefix
+    Runs the Tool Description Evaluator filtering prompts to only tools with the storage prefix
 
 .EXAMPLE
     ./Run-ToolDescriptionEvaluator.ps1 -Area "keyvault"
-    Runs the Tool Description Evaluator filtering prompts to only tools with the azmcp_keyvault prefix
+    Runs the Tool Description Evaluator filtering prompts to only tools with the keyvault prefix
 
 .EXAMPLE
     ./Run-ToolDescriptionEvaluator.ps1 -Area "functionapp" -BuildAzureMcp
@@ -55,12 +55,11 @@ try {
     $toolDir = Resolve-Path "$PSScriptRoot/../src" | Select-Object -ExpandProperty Path
 
     # Build the whole Azure MCP Server project if needed
-    if ($BuildAzureMcp)
-    {
+    if ($BuildAzureMcp) {
         Write-Host "Building root project to enable dynamic tool loading..." -ForegroundColor Yellow
 
         & dotnet build "$repoRoot/servers/Azure.Mcp.Server/Azure.Mcp.Server.slnx"
-`
+
         if ($LASTEXITCODE -ne 0) {
             throw "Failed to build server solution"
         }
@@ -70,7 +69,7 @@ try {
 
     # Locate azmcp CLI artifact (platform & build-type agnostic)
     $platformIsWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)
-    $candidateNames = if ($platformIsWindows) { @('azmcp.exe','azmcp','azmcp.dll') } else { @('azmcp','azmcp.dll') }
+    $candidateNames = if ($platformIsWindows) { @('azmcp.exe', 'azmcp', 'azmcp.dll') } else { @('azmcp', 'azmcp.dll') }
     $searchRoots = @(
         "$repoRoot/servers/Azure.Mcp.Server/src/bin/Debug",
         "$repoRoot/servers/Azure.Mcp.Server/src/bin/Release"
@@ -100,7 +99,8 @@ try {
             $any = Get-ChildItem -Path $root -Filter 'azmcp*' -Recurse -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer }
             
             if ($any) {
-                Write-Host "[WARNING] In $root found: $($any | Select-Object -ExpandProperty Name -Join ', ')" -ForegroundColor Yellow
+                $artifactNames = ($any | Select-Object -ExpandProperty Name) -join ', '
+                Write-Host "[WARNING] In $root found: $artifactNames" -ForegroundColor Yellow
             }
         }
 
@@ -140,7 +140,8 @@ try {
 
     if ($runArgs.Count -gt 0) {
         & dotnet run -- @runArgs
-    } else {
+    }
+    else {
         & dotnet run
     }
 

@@ -160,13 +160,13 @@ For each file that needs changes, provide:
 Depending on the gap, verify the relevant doc file follows the expected format:
 
 **`servers/Azure.Mcp.Server/docs/azmcp-commands.md`** — must include:
-- A global options table at the top (subscription, resource-group, tenant)
+- A common options table at the top (subscription, tenant, learn), with command-specific options documented in each command section
 - One `## azmcp <service> <resource> <operation>` section per command, containing a description, parameters table, and example usage block
 
 **`servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`** — must include:
 - A header explaining the file's purpose
 - Service area sections (e.g., `## Azure Advisor`, `## Azure AI Search`) in alphabetical order
-- Within each section, a table with columns `Tool Name | Test Prompt` listing tool names alphabetically
+- Within each section, a table with columns `Tool Name | Test Prompt | Interaction` listing tool names alphabetically
 - New commands added in alphabetical order within their service section
 
 **`servers/Azure.Mcp.Server/README.md`** — must include:
@@ -175,7 +175,7 @@ Depending on the gap, verify the relevant doc file follows the expected format:
 - A `## What can you do with the Azure MCP Server?` section with per-service subsections (e.g., `### 🧮 Microsoft Foundry`, `### 💾 Azure Storage`, `### 🖥️ Azure Compute`) showing example prompts
 - A `## Complete List of Supported Azure Services` section listing all supported services with emoji icons and brief descriptions
 - A `# Support and Reference` section with Documentation, Feedback and Support, Security, and other subsections
-Use `tools/Azure.Mcp.Tools.Storage/` as the canonical reference for toolset documentation patterns (README, option definitions, command structure)
+Use `tools/Azure.Mcp.Tools.Storage/` as a reference for current options, command, service, and test structure. The server README is the package documentation source.
 
 ### Step 3: Validate
 
