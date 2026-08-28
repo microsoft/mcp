@@ -47,7 +47,6 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAz
                 options.Subscription!,
                 options.Location,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

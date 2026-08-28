@@ -6,7 +6,6 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Services.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Authorization.Services;
 
@@ -17,7 +16,6 @@ public class AuthorizationService(IAzureService azureService)
         string subscription,
         string scope,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(scope), scope));
@@ -27,7 +25,7 @@ public class AuthorizationService(IAzureService azureService)
             "Microsoft.Authorization/roleAssignments",
             null, // all resource groups
             subscription,
-            retryPolicy,
+            null,
             ConvertToRoleAssignmentModel,
             "authorizationresources",
             additionalFilter: $"id contains '{EscapeKqlString(scope)}'",
