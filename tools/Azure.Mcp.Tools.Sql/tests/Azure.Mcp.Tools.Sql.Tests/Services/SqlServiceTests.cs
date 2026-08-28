@@ -49,7 +49,6 @@ public class SqlServiceTests
         _azureService.GetSubscription(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-            null,
                 Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException(SubscriptionResolvedMessage));
 
@@ -115,14 +114,13 @@ public class SqlServiceTests
         _azureService.Received(1).GetSubscription(
             SubscriptionName,
             Arg.Any<string?>(),
-            null,
             Arg.Any<CancellationToken>());
 
     [Fact]
     public async Task ListDatabasesAsync_WithSubscriptionName_ResolvesNameToId()
     {
         _azureService.IsSubscriptionId(SubscriptionName).Returns(false);
-        _azureService.GetSubscriptionIdByName(SubscriptionName, Arg.Any<string?>(), null, Arg.Any<CancellationToken>())
+        _azureService.GetSubscriptionIdByName(SubscriptionName, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException(ResolveSentinel));
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -130,14 +128,14 @@ public class SqlServiceTests
 
         Assert.Equal(ResolveSentinel, exception.Message);
         await _azureService.Received(1).GetSubscriptionIdByName(
-            SubscriptionName, Arg.Any<string?>(), null, Arg.Any<CancellationToken>());
+            SubscriptionName, Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetElasticPoolsAsync_WithSubscriptionName_ResolvesNameToId()
     {
         _azureService.IsSubscriptionId(SubscriptionName).Returns(false);
-        _azureService.GetSubscriptionIdByName(SubscriptionName, Arg.Any<string?>(), null, Arg.Any<CancellationToken>())
+        _azureService.GetSubscriptionIdByName(SubscriptionName, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException(ResolveSentinel));
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -145,7 +143,7 @@ public class SqlServiceTests
 
         Assert.Equal(ResolveSentinel, exception.Message);
         await _azureService.Received(1).GetSubscriptionIdByName(
-            SubscriptionName, Arg.Any<string?>(), null, Arg.Any<CancellationToken>());
+            SubscriptionName, Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -164,7 +162,7 @@ public class SqlServiceTests
         }
 
         await _azureService.DidNotReceive().GetSubscriptionIdByName(
-            Arg.Any<string>(), Arg.Any<string?>(), null, Arg.Any<CancellationToken>());
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -183,14 +181,14 @@ public class SqlServiceTests
         }
 
         await _azureService.DidNotReceive().GetSubscriptionIdByName(
-            Arg.Any<string>(), Arg.Any<string?>(), null, Arg.Any<CancellationToken>());
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetDatabaseAsync_WithSubscriptionName_ResolvesNameToId()
     {
         _azureService.IsSubscriptionId(SubscriptionName).Returns(false);
-        _azureService.GetSubscriptionIdByName(SubscriptionName, Arg.Any<string?>(), null, Arg.Any<CancellationToken>())
+        _azureService.GetSubscriptionIdByName(SubscriptionName, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException(ResolveSentinel));
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -198,7 +196,7 @@ public class SqlServiceTests
 
         Assert.Equal(ResolveSentinel, exception.Message);
         await _azureService.Received(1).GetSubscriptionIdByName(
-            SubscriptionName, Arg.Any<string?>(), null, Arg.Any<CancellationToken>());
+            SubscriptionName, Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -217,7 +215,7 @@ public class SqlServiceTests
         }
 
         await _azureService.DidNotReceive().GetSubscriptionIdByName(
-            Arg.Any<string>(), Arg.Any<string?>(), null, Arg.Any<CancellationToken>());
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
 }
