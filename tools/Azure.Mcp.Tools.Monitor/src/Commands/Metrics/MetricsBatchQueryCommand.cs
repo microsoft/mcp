@@ -94,7 +94,6 @@ public sealed class MetricsBatchQueryCommand(ILogger<MetricsBatchQueryCommand> l
                 options.OrderBy,
                 options.Top,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             // Validate bucket count limit

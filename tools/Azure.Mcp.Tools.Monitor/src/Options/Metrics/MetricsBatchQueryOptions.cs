@@ -89,7 +89,4 @@ public sealed class MetricsBatchQueryOptions : ISubscriptionOption
     /// </summary>
     [Option(Description = "The maximum number of time buckets to return per metric time series. Defaults to 50.", DefaultValue = 50)]
     public int? MaxBuckets { get; set; }
-
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
