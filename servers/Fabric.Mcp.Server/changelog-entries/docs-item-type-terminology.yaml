@@ -1,9 +1,0 @@
-changes:
-  - section: "Breaking Changes"
-    description: "Renamed the `docs` toolset's `--workload-type` parameter to `--item-type`, aligning it with `core_create-item`'s existing `--item-type` and with official Fabric terminology. The accepted values are almost all Fabric item types (`notebook`, `lakehouse`, `dataPipeline`, `report`, ...); the description now also enumerates the four non-item API areas (`platform`, `admin`, `spark`, `realTimeIntelligence`)."
-  - section: "Breaking Changes"
-    description: "Renamed the `docs_workloads` tool to `docs_list-item-types` and the `docs_workload-api-spec` tool to `docs_item-api-spec`."
-  - section: "Breaking Changes"
-    description: "The `docs_list-item-types` response property changed from `workloads` to `itemTypes`."
-  - section: "Bugs Fixed"
-    description: "Fixed `docs_item-api-spec` error messages referencing a non-existent `list_workloads` command; they now point to the `list-item-types` tool."

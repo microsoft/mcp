@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -22,7 +21,7 @@ public class GoalAssignmentGetCommandTests : CommandUnitTestsBase<GoalAssignment
     public async Task ExecuteAsync_ListsGoalAssignments_WhenNameOmitted()
     {
         var expected = new List<ResourceSummary> { new("id1", "assignment1"), new("id2", "assignment2") };
-        Service.ListGoalAssignmentsAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListGoalAssignmentsAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup);
@@ -37,7 +36,7 @@ public class GoalAssignmentGetCommandTests : CommandUnitTestsBase<GoalAssignment
     public async Task ExecuteAsync_GetsGoalAssignment_WhenNameProvided()
     {
         var expected = new GoalAssignmentInfo("id1", "assignment1");
-        Service.GetGoalAssignmentAsync(ServiceGroup, "assignment1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetGoalAssignmentAsync(ServiceGroup, "assignment1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--name", "assignment1");
@@ -52,7 +51,7 @@ public class GoalAssignmentGetCommandTests : CommandUnitTestsBase<GoalAssignment
     public async Task ExecuteAsync_HandlesException()
     {
         var expectedError = "Test error";
-        Service.ListGoalAssignmentsAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListGoalAssignmentsAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup);

@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -50,7 +49,6 @@ public class SessionHostListCommandTests : SubscriptionCommandUnitTestsBase<Sess
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(mockSessionHosts);
 
@@ -58,7 +56,6 @@ public class SessionHostListCommandTests : SubscriptionCommandUnitTestsBase<Sess
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(mockSessionHosts);
 
@@ -67,7 +64,6 @@ public class SessionHostListCommandTests : SubscriptionCommandUnitTestsBase<Sess
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(mockSessionHosts);
         }
@@ -103,7 +99,6 @@ public class SessionHostListCommandTests : SubscriptionCommandUnitTestsBase<Sess
             "sub123",
             "pool1",
             null,
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedSessionHosts);
 
@@ -119,7 +114,6 @@ public class SessionHostListCommandTests : SubscriptionCommandUnitTestsBase<Sess
             "sub123",
             "pool1",
             null,
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -138,7 +132,6 @@ public class SessionHostListCommandTests : SubscriptionCommandUnitTestsBase<Sess
             "sub123",
             resourceId,
             null,
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedSessionHosts);
 
@@ -154,14 +147,12 @@ public class SessionHostListCommandTests : SubscriptionCommandUnitTestsBase<Sess
             "sub123",
             resourceId,
             null,
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
         await Service.DidNotReceive().ListSessionHostsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -180,7 +171,6 @@ public class SessionHostListCommandTests : SubscriptionCommandUnitTestsBase<Sess
             "rg1",
             "pool1",
             null,
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedSessionHosts);
 
@@ -197,7 +187,6 @@ public class SessionHostListCommandTests : SubscriptionCommandUnitTestsBase<Sess
             "rg1",
             "pool1",
             null,
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -209,7 +198,6 @@ public class SessionHostListCommandTests : SubscriptionCommandUnitTestsBase<Sess
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -217,7 +205,6 @@ public class SessionHostListCommandTests : SubscriptionCommandUnitTestsBase<Sess
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -238,7 +225,6 @@ public class SessionHostListCommandTests : SubscriptionCommandUnitTestsBase<Sess
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -246,7 +232,6 @@ public class SessionHostListCommandTests : SubscriptionCommandUnitTestsBase<Sess
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

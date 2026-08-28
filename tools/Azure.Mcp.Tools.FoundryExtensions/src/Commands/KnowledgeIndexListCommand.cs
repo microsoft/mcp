@@ -53,7 +53,6 @@ public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryE
             var indexes = await _foundryExtensionsService.ListKnowledgeIndexes(
                 options.Endpoint,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(indexes ?? []), FoundryExtensionsJsonContext.Default.KnowledgeIndexListCommandResult);

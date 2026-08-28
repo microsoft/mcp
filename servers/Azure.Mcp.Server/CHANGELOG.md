@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.38 (Unreleased)
+## 3.0.0-beta.40 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,42 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 3.0.0-beta.39 (2026-08-27)
+
+### Features Added
+
+- Added support for creating, replacing, and removing additional recovery groups and their manual or Custom Runbook pre/post actions through the `azmcp resilience recoveryplan create` command. [[#3352](https://github.com/microsoft/mcp/pull/3352)]
+- Added the resilience recovery plan validate-for-failover tool to report per-resource failover qualification and blocking reasons. [[#3354](https://github.com/microsoft/mcp/pull/3354)]
+- Added the `azmcp resilience drill delete` command to delete a resilience drill from an Azure service group. [[#3343](https://github.com/microsoft/mcp/pull/3343)]
+- Added AMLFS expansion job commands (create, get, delete) to resize Azure Managed Lustre filesystem storage capacity. [[#3344](https://github.com/microsoft/mcp/pull/3344)]
+- Added the resilience drill create command for creating or updating zonal and regional drills in Azure service groups. [[#3320](https://github.com/microsoft/mcp/pull/3320)]
+- Added the resilience drill update tool for changing supporting resource placement, RBAC setup mode, and recovery plan association. [[#3324](https://github.com/microsoft/mcp/pull/3324)]
+- Added `azurebackup resourceguard` command group with `create`, `get`, and `delete` operations for managing Multi-User Authorization Resource Guards. [[#3322](https://github.com/microsoft/mcp/pull/3322)]
+- Added `azurebackup security disable-mua` command to explicitly disable Multi-User Authorization on a vault. [[#3322](https://github.com/microsoft/mcp/pull/3322)]
+- Added `azurebackup vault privateendpoint` command group for managing Private Endpoints (v2 experience) on Recovery Services vaults (RSV). Includes `create`, `get`, `delete`, and `approve-reject` (with an `--action approve|reject` parameter) operations. Backup vaults (DPP) are not supported and return a clear error directing users to RSV. [[#3345](https://github.com/microsoft/mcp/pull/3345)]
+
+### Breaking Changes
+
+- Renamed `azurebackup security configure-mua` to `azurebackup security enable-mua`. [[#3322](https://github.com/microsoft/mcp/pull/3322)]
+
+### Bugs Fixed
+
+- Aligned resilience recovery group and action input validation with the service API contract. [[#3352](https://github.com/microsoft/mcp/pull/3352)]
+- Fixed `azurebackup security configure-mua` (now `enable-mua`) silently disabling MUA when `--resource-guard-id` was omitted. The parameter is now required for enabling MUA; use the new `azurebackup security disable-mua` command to disable. [[#3322](https://github.com/microsoft/mcp/pull/3322)]
+
+## 3.0.0-beta.38 (2026-08-25)
+
+### Features Added
+
+- Added the `azmcp resilience drill run get` command to list runs of a resilience drill or get a specific drill run. [[#3318](https://github.com/microsoft/mcp/pull/3318)]
+- Added the `azmcp resilience drill run resource get` command to list resources of a resilience drill run or get a specific drill run resource. [[#3318](https://github.com/microsoft/mcp/pull/3318)]
+- Added the `azmcp resilience recoveryplan checkreadiness` command to discover and assess whether a recovery plan and its protected resources are ready for recovery operations. The command waits for the readiness job and returns its status, errors, failed tasks, and failed resources. [[#3268](https://github.com/microsoft/mcp/pull/3268)]
+- The `azmcp search index query` command now uses the full Lucene query syntax by default and supports a new optional `--query-type` option to select between `simple`, `full`, and `semantic` queries. [[#3251](https://github.com/microsoft/mcp/pull/3251)]
+
+### Breaking Changes
+
+- Renamed the recovery plan command group from `azmcp resilience recovery plan` to `azmcp resilience recoveryplan` and the recovery job command group from `azmcp resilience recovery job` to `azmcp resilience recoveryjob`. Existing get commands now use the corresponding single-word resource group names. [[#3268](https://github.com/microsoft/mcp/pull/3268)]
 
 ## 3.0.0-beta.37 (2026-08-20)
 

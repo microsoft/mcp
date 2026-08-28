@@ -15,7 +15,6 @@ using Azure.Mcp.Tools.Speech.Services.Synthesizers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -88,7 +87,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Any<string[]>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(fastResult);
     }
@@ -111,7 +109,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(realtimeResult);
     }
@@ -142,7 +139,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             "detailed",
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(realtimeResult);
     }
@@ -245,7 +241,6 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
 
             await _realtimeTranscriptionRecognizer.DidNotReceive().RecognizeAsync(
@@ -255,7 +250,6 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
 
             Assert.NotNull(result.Result.FastTranscriptionResult);
@@ -270,7 +264,6 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
 
             await _fastTranscriptionRecognizer.DidNotReceive().RecognizeAsync(
@@ -279,7 +272,6 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
 
             Assert.NotNull(result.Result.RealtimeContinuousResult);
@@ -323,7 +315,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Any<string[]>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
@@ -343,7 +334,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Any<string[]>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
         // 2. Realtime recognizer was called as a fallback
@@ -356,7 +346,6 @@ public class SttRecognizeCommandTests : IDisposable
            Arg.Any<string[]>(),
            Arg.Any<string>(),
            Arg.Any<string>(),
-           Arg.Any<RetryPolicyOptions>(),
            Arg.Any<CancellationToken>());
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -377,7 +366,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
@@ -394,7 +382,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Any<string[]>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
         // 2. Realtime recognizer was called and failed
@@ -407,7 +394,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
@@ -492,7 +478,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Any<string[]>(),
             profanityOption,
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -518,7 +503,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Do<string[]>(phrases => capturedPhrases = phrases),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(fastResult);
 
@@ -552,7 +536,6 @@ public class SttRecognizeCommandTests : IDisposable
                 phrases.Contains("Azure") &&
                 phrases.Contains("cognitive services")),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -580,31 +563,6 @@ public class SttRecognizeCommandTests : IDisposable
             language,
             Arg.Any<string[]>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithRetryPolicy_ShouldPassToService()
-    {
-        // Arrange
-        var testFile = await CreateTestFileAsync("test-audio-retry.wav");
-        SetupFastTranscriptionMock("Hello with retry");
-
-        // Act
-        var response = await ExecuteCommandAsync($"--endpoint {_knownEndpoint} --file {testFile} --retry-max-retries 5");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-
-        // Verify the service was called with retry policy
-        await _fastTranscriptionRecognizer.Received(1).RecognizeAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string[]>(),
-            Arg.Any<string>(),
-            Arg.Is<RetryPolicyOptions>(policy => policy.MaxRetries == 5),
             Arg.Any<CancellationToken>());
     }
 
@@ -635,7 +593,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(exceptionToThrow);
 
@@ -683,7 +640,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(realtimeResult);
 
@@ -766,7 +722,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Do<string[]>(phrases => capturedPhrases = phrases),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(fastResult);
 
@@ -829,7 +784,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Do<string[]>(phrases => capturedPhrases = phrases),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(fastResult);
 
@@ -889,7 +843,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Do<string[]>(phrases => capturedPhrases = phrases),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(fastResult);
 
@@ -929,7 +882,6 @@ public class SttRecognizeCommandTests : IDisposable
                     phrases.Contains("cognitive services") &&
                     phrases.Contains("machine learning")),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                     Arg.Any<CancellationToken>());
         }
         finally
@@ -977,7 +929,6 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
         }
         finally
@@ -1019,7 +970,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(realtimeResult);
 
@@ -1045,7 +995,6 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
         }
         finally
@@ -1084,7 +1033,6 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
 
             await _fastTranscriptionRecognizer.DidNotReceive().RecognizeAsync(
@@ -1093,7 +1041,6 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
         }
         finally

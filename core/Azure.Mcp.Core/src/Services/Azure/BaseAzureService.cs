@@ -102,27 +102,15 @@ public abstract class BaseAzureService(IAzureService azureService)
         AzureHelper.AddDefaultPolicies(clientOptions);
 
     /// <summary>
-    /// Configures retry policy options on the provided client options
-    /// </summary>
-    /// <typeparam name="T">Type of client options that inherits from ClientOptions</typeparam>
-    /// <param name="clientOptions">The client options to configure</param>
-    /// <param name="retryPolicy">Optional retry policy configuration</param>
-    /// <returns>The configured client options</returns>
-    protected static T ConfigureRetryPolicy<T>(T clientOptions, RetryPolicyOptions? retryPolicy) where T : ClientOptions =>
-        AzureHelper.ConfigureRetryPolicy(clientOptions, retryPolicy);
-
-    /// <summary>
-    /// Creates an Azure Resource Manager client with an optional retry policy.
+    /// Creates an Azure Resource Manager client.
     /// </summary>
     /// <param name="tenantIdOrName">Optional Azure tenant ID or name.</param>
-    /// <param name="retryPolicy">Optional retry policy configuration.</param>
     /// <param name="armClientOptions">Optional ARM client options.</param>
     protected async Task<ArmClient> CreateArmClientAsync(
         string? tenantIdOrName = null,
-        RetryPolicyOptions? retryPolicy = null,
         ArmClientOptions? armClientOptions = null,
         CancellationToken cancellationToken = default) =>
-        await AzureHelper.CreateArmClientAsync(AzureService, tenantIdOrName, retryPolicy, armClientOptions, cancellationToken);
+        await AzureHelper.CreateArmClientAsync(AzureService, tenantIdOrName, armClientOptions: armClientOptions, cancellationToken: cancellationToken);
 
     /// <summary>
     /// Validates that the provided named parameters are not null or empty

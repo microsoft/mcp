@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Redis.Commands;
 using Azure.Mcp.Tools.Redis.Models;
 using Azure.Mcp.Tools.Redis.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -44,7 +43,6 @@ public class ResourceCreateCommandTests : SubscriptionCommandUnitTestsBase<Resou
                 Arg.Any<bool?>(),
                 Arg.Any<string[]?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new Resource { Name = "test-redis" });
         }
@@ -79,7 +77,6 @@ public class ResourceCreateCommandTests : SubscriptionCommandUnitTestsBase<Resou
             false,
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
@@ -112,7 +109,6 @@ public class ResourceCreateCommandTests : SubscriptionCommandUnitTestsBase<Resou
             false,
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -132,7 +128,6 @@ public class ResourceCreateCommandTests : SubscriptionCommandUnitTestsBase<Resou
             Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
         .ThrowsAsync(new Exception("Resource group 'test-rg' not found"));
 
@@ -159,7 +154,6 @@ public class ResourceCreateCommandTests : SubscriptionCommandUnitTestsBase<Resou
             Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -192,7 +186,6 @@ public class ResourceCreateCommandTests : SubscriptionCommandUnitTestsBase<Resou
                 modules.Contains("RedisBloom") &&
                 modules.Contains("RedisJSON")),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
@@ -225,7 +218,6 @@ public class ResourceCreateCommandTests : SubscriptionCommandUnitTestsBase<Resou
                 modules.Contains("RedisBloom") &&
                 modules.Contains("RedisJSON")),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -254,7 +246,6 @@ public class ResourceCreateCommandTests : SubscriptionCommandUnitTestsBase<Resou
             Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
@@ -283,7 +274,6 @@ public class ResourceCreateCommandTests : SubscriptionCommandUnitTestsBase<Resou
             Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -312,7 +302,6 @@ public class ResourceCreateCommandTests : SubscriptionCommandUnitTestsBase<Resou
             true,
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
@@ -341,7 +330,6 @@ public class ResourceCreateCommandTests : SubscriptionCommandUnitTestsBase<Resou
             true,
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -373,7 +361,6 @@ public class ResourceCreateCommandTests : SubscriptionCommandUnitTestsBase<Resou
                 modules.Length == 1 &&
                 modules.Contains("RedisJSON")),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
@@ -406,7 +393,6 @@ public class ResourceCreateCommandTests : SubscriptionCommandUnitTestsBase<Resou
                 modules.Length == 1 &&
                 modules.Contains("RedisJSON")),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -424,7 +410,6 @@ public class ResourceCreateCommandTests : SubscriptionCommandUnitTestsBase<Resou
             Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
         .ThrowsAsync(new KeyNotFoundException("Resource group 'test-rg' not found in subscription 'sub123'"));
 

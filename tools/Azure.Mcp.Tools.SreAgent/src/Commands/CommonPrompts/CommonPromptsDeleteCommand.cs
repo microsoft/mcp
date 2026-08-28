@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.CommonPrompts;
     Id = "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
     Name = "delete",
     Title = "Delete Common Prompt",
-    Description = "Permanently remove and irreversibly delete a named common prompt from an SRE Agent. Erases the prompt definition after explicit user confirmation. This action cannot be undone.",
+    Description = "Permanently remove and irreversibly delete a named common prompt from an SRE Agent. This action cannot be undone.",
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -33,11 +33,6 @@ public sealed class CommonPromptsDeleteCommand(ILogger<CommonPromptsDeleteComman
     {
         try
         {
-            if (!options.Confirm)
-            {
-                throw new InvalidOperationException($"Refusing to delete common prompt '{options.Name}': destructive operation requires --confirm true.");
-            }
-
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
                 options,

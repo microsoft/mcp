@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -46,7 +45,6 @@ public class AutoimportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Is(_fileSystemName),
             Arg.Is(_jobName),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedJob);
 
@@ -67,7 +65,6 @@ public class AutoimportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Is(_fileSystemName),
             Arg.Is(_jobName),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -100,7 +97,6 @@ public class AutoimportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Autoimport job not found"));
 
@@ -126,7 +122,6 @@ public class AutoimportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
@@ -162,7 +157,6 @@ public class AutoimportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedJob);
 
@@ -181,7 +175,6 @@ public class AutoimportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Is(_fileSystemName),
             Arg.Is(_jobName),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -198,7 +191,6 @@ public class AutoimportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
         Service.ListAutoimportJobsAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedJobs);
 
@@ -217,12 +209,11 @@ public class AutoimportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Is(_resourceGroup),
             Arg.Is(_fileSystemName),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
         // Should NOT have called GetAutoimportJobAsync
         await Service.DidNotReceive().GetAutoimportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }
