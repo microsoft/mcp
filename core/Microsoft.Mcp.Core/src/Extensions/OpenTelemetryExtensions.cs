@@ -147,6 +147,8 @@ public static class OpenTelemetryExtensions
             tracing.AddAzureMonitorTraceExporter(options =>
             {
                 options.ConnectionString = appInsightsConnectionString;
+                options.SamplingRatio = 1.0f;
+                options.TracesPerSecond = null;
             },
             name: AppInsightsInstanceType.Microsoft);
         });
