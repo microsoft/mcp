@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -38,7 +37,7 @@ public class DrillGetCommandTests : CommandUnitTestsBase<DrillGetCommand, IResil
     {
         if (shouldSucceed)
         {
-            Service.ListDrillsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Service.ListDrillsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
 
@@ -51,7 +50,7 @@ public class DrillGetCommandTests : CommandUnitTestsBase<DrillGetCommand, IResil
     public async Task ExecuteAsync_ListsDrills_WhenNameOmitted()
     {
         var expected = new List<ResourceSummary> { new("id1", "drill1"), new("id2", "drill2") };
-        Service.ListDrillsAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListDrillsAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup);
@@ -64,7 +63,7 @@ public class DrillGetCommandTests : CommandUnitTestsBase<DrillGetCommand, IResil
     [Fact]
     public async Task ExecuteAsync_GetsDrill_WhenNameProvided()
     {
-        Service.GetDrillAsync(ServiceGroup, "drill1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetDrillAsync(ServiceGroup, "drill1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Drill("drill1"));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--name", "drill1");
@@ -79,7 +78,7 @@ public class DrillGetCommandTests : CommandUnitTestsBase<DrillGetCommand, IResil
     public async Task ExecuteAsync_HandlesException()
     {
         var expectedError = "Test error";
-        Service.ListDrillsAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListDrillsAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup);
@@ -91,7 +90,7 @@ public class DrillGetCommandTests : CommandUnitTestsBase<DrillGetCommand, IResil
     [Fact]
     public async Task ExecuteAsync_HandlesNotFoundException()
     {
-        Service.ListDrillsAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListDrillsAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Drill not found"));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup);

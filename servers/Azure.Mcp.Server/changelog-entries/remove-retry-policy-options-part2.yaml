@@ -1,0 +1,3 @@
+changes:
+  - section: Breaking Changes
+    description: Removed custom retry policy options from Authorization, Azure Backup, and Azure Migrate tools.

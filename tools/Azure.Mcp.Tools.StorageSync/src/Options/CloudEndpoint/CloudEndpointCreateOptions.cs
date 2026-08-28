@@ -50,6 +50,4 @@ public sealed class CloudEndpointCreateOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [OptionContainer<RetryPolicyOptions>(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

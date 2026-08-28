@@ -61,7 +61,6 @@ public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogge
                 options.ImportPrefixes,
                 options.MaximumErrors,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(job), ManagedLustreJsonContext.Default.ImportJobCreateResult);

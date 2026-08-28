@@ -41,7 +41,6 @@ public sealed class RegisteredServerUnregisterCommand(ILogger<RegisteredServerUn
                 options.Name,
                 options.ServerId,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Message = "Server unregistered successfully";

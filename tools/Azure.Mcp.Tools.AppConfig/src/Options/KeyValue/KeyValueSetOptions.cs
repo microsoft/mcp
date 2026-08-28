@@ -31,7 +31,4 @@ public class KeyValueSetOptions : ISubscriptionOption
 
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
-
-    [OptionContainer<RetryPolicyOptions>(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

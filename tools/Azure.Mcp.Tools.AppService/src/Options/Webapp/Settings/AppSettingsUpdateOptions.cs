@@ -29,6 +29,4 @@ public sealed class AppSettingsUpdateOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }
 
-    [OptionContainer<RetryPolicyOptions>(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

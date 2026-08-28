@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.Mcp.Core.Options;
-
 namespace Azure.Mcp.Tools.IoTHub.Services;
 
 /// <summary>
@@ -16,6 +14,5 @@ public interface IIoTHubHostnameResolver
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

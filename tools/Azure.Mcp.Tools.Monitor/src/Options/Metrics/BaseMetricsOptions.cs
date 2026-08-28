@@ -32,6 +32,4 @@ public abstract class BaseMetricsOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }
 
-    [OptionContainer<RetryPolicyOptions>(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

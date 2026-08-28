@@ -47,7 +47,6 @@ public sealed class ResourceGuardDeleteCommand(ILogger<ResourceGuardDeleteComman
                 options.ResourceGroup,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

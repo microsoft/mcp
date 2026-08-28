@@ -11,7 +11,6 @@ using Azure.ResourceManager.RecoveryServices.Models;
 using Azure.ResourceManager.RecoveryServicesBackup;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Azure.ResourceManager.Resources;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
@@ -27,7 +26,7 @@ public sealed partial class RsvBackupOperations
         string vaultName, string resourceGroup, string subscription,
         string privateEndpointName, string vnetSubnetId, string groupId,
         string? location, bool autoApprove,
-        string? tenant, RetryPolicyOptions? retryPolicy,
+        string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -41,7 +40,7 @@ public sealed partial class RsvBackupOperations
         ValidateGroupId(groupId);
         var subnetResourceId = ParseSubnetId(vnetSubnetId);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
@@ -88,7 +87,7 @@ public sealed partial class RsvBackupOperations
                 vaultName, resourceGroup, subscription, ExtractPecName(pec.Id!),
                 PrivateEndpointConnectionStatus.Approved,
                 description: "Auto-approved by Azure MCP tool",
-                tenant, retryPolicy, cancellationToken);
+                tenant, cancellationToken);
         }
 
         return MapToPrivateEndpointConnectionInfo(pec);
@@ -96,7 +95,7 @@ public sealed partial class RsvBackupOperations
 
     public async Task<List<PrivateEndpointConnectionInfo>> ListPrivateEndpointsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy,
+        string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -104,7 +103,7 @@ public sealed partial class RsvBackupOperations
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
@@ -121,7 +120,7 @@ public sealed partial class RsvBackupOperations
     public async Task<PrivateEndpointConnectionInfo> GetPrivateEndpointAsync(
         string vaultName, string resourceGroup, string subscription,
         string privateEndpointConnectionName,
-        string? tenant, RetryPolicyOptions? retryPolicy,
+        string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -130,7 +129,7 @@ public sealed partial class RsvBackupOperations
             (nameof(subscription), subscription),
             (nameof(privateEndpointConnectionName), privateEndpointConnectionName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var pecResource = GetBackupPrivateEndpointConnectionResource(
             armClient, subscription, resourceGroup, vaultName, privateEndpointConnectionName);
 
@@ -141,7 +140,7 @@ public sealed partial class RsvBackupOperations
     public async Task<OperationResult> DeletePrivateEndpointAsync(
         string vaultName, string resourceGroup, string subscription,
         string privateEndpointConnectionName,
-        string? tenant, RetryPolicyOptions? retryPolicy,
+        string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -150,7 +149,7 @@ public sealed partial class RsvBackupOperations
             (nameof(subscription), subscription),
             (nameof(privateEndpointConnectionName), privateEndpointConnectionName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var pecResource = GetBackupPrivateEndpointConnectionResource(
             armClient, subscription, resourceGroup, vaultName, privateEndpointConnectionName);
 
@@ -166,7 +165,7 @@ public sealed partial class RsvBackupOperations
     public async Task<PrivateEndpointConnectionInfo> SetPrivateEndpointConnectionStateAsync(
         string vaultName, string resourceGroup, string subscription,
         string privateEndpointConnectionName, PrivateEndpointConnectionStatus targetStatus,
-        string? description, string? tenant, RetryPolicyOptions? retryPolicy,
+        string? description, string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -175,7 +174,7 @@ public sealed partial class RsvBackupOperations
             (nameof(subscription), subscription),
             (nameof(privateEndpointConnectionName), privateEndpointConnectionName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var pecResource = GetBackupPrivateEndpointConnectionResource(
             armClient, subscription, resourceGroup, vaultName, privateEndpointConnectionName);
 

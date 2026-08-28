@@ -67,7 +67,6 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
                 options.RecoveryPlan,
                 content,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

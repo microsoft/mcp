@@ -33,9 +33,6 @@ public sealed class OpenAiCompletionsCreateOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [OptionContainer<RetryPolicyOptions>(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
-
     [Option(Description = OptionDescriptions.AuthMethod)]
     public AuthMethod? AuthMethod { get; set; }
 }

@@ -41,7 +41,6 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger, I
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(workspaces ?? []), MonitorJsonContext.Default.WorkspaceListCommandResult);

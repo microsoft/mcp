@@ -385,9 +385,6 @@ public class AccountGetOptions : ISubscriptionOption
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
-
-    [OptionContainer<RetryPolicyOptions>(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 
 // Commands use two-generic base: SubscriptionCommand<TOptions, TResult>
@@ -446,7 +443,7 @@ protected override int GetStatusCode(Exception ex) => ex switch
 try
 {
     // Command execution logic
-    var results = await service.GetResourcesAsync(options.Subscription!, options.RetryPolicy);
+    var results = await service.GetResourcesAsync(options.Subscription!, cancellationToken);
     context.Response.Results = ResponseResult.Create(new(results ?? []), ServiceJsonContext.Default.CommandResult);
 }
 catch (Exception ex)
@@ -468,13 +465,16 @@ Choose the appropriate base class based on operations:
 public class StorageService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IStorageService
 {
-    public async Task<ResourceQueryResults<StorageAccount>> ListAccountsAsync(string subscription, string? resourceGroup, RetryPolicyOptions? retryPolicy)
+    public async Task<ResourceQueryResults<StorageAccount>> ListAccountsAsync(
+        string subscription,
+        string? resourceGroup,
+        CancellationToken cancellationToken = default)
     {
         return await ExecuteResourceQueryAsync(
             "Microsoft.Storage/storageAccounts",
             resourceGroup,
             subscription,
-            retryPolicy,
+            null,
             ConvertToStorageAccountModel,
             cancellationToken: cancellationToken);
     }
@@ -495,9 +495,9 @@ public class StorageService(IAzureService azureService)
         string? accessTier = null,
         bool? enableHierarchicalNamespace = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        CancellationToken cancellationToken = default)
     {
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         // Use subscriptionResource for write operations
     }
 }
@@ -513,6 +513,21 @@ internal partial class StorageJsonContext : JsonSerializerContext;
 
 // Usage in commands
 context.Response.Results = ResponseResult.Create(new(results), StorageJsonContext.Default.StorageAccountGetCommandResult);
+```
+
+### Long-running operations
+
+Long-running operations (at this time) don't offer the ability to configure polling intervals, and even if they were
+able to there is a limit on how small of a polling interval can be used. Due to this, to prevent long-running operations
+with a significant number of polls from wasting CPU time waiting during testing, all long-running operations should use
+a two call pattern. The first call is the service method starting the polling operation, that should pass
+`WaitUntil.Started` to simply begin the operation. Then waiting for completion should call
+`BaseAzureService.WaitForLroCompletionAsync` to wait for completion in a way that testing can ignore the polling
+interval to prevent CPU wait loops that aren't necessary when playback testing.
+
+```csharp
+var lroOperation = Service.LroAsync(WaitUntil.Started, cancellationToken);
+await WaitForLroCompletionAsync(lroOperation, cancellationToken);
 ```
 
 ## Adding New Commands and Services
@@ -633,7 +648,6 @@ All new toolsets must be AOT-compatible or excluded from native builds:
 ### Caching and Performance
 - Use `ICacheService` for expensive Azure operations
 - Implement `BaseAzureResourceService` for efficient Resource Graph queries
-- Follow retry policy patterns with `RetryPolicyOptions`
 
 ## Remote MCP Server Architecture
 

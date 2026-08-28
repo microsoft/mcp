@@ -54,7 +54,6 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
                     options.Job,
                     options.VaultType,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -69,7 +68,6 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
                     options.Subscription!,
                     options.VaultType,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
