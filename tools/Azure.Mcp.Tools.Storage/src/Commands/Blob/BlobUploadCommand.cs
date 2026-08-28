@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob;
 using Azure.Mcp.Tools.Storage.Services;
@@ -26,8 +24,8 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob;
     ReadOnly = false,
     Secret = false,
     LocalRequired = true)]
-public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorageService storageService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<BlobUploadOptions, BlobUploadResult>(subscriptionResolver)
+public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorageService storageService)
+    : AuthenticatedCommand<BlobUploadOptions, BlobUploadResult>
 {
     private readonly ILogger<BlobUploadCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
@@ -41,7 +39,6 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorag
                 options.Container,
                 options.Blob,
                 options.LocalFilePath,
-                options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

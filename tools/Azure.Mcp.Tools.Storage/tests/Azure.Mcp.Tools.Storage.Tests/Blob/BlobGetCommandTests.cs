@@ -2,25 +2,24 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.Tests.Blob;
 
-public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetCommand, IStorageService>
+public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IStorageService>
 {
     [Fact]
     public async Task ExecuteAsync_NoParameters_ReturnsBlobs()
     {
         // Arrange
-        var subscription = "sub123";
         var account = "testaccount";
         var container = "container123";
         var expectedBlobs = new List<BlobInfo>(
@@ -33,7 +32,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -42,7 +40,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", subscription,
             "--account", account,
             "--container", container);
 
@@ -58,7 +55,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoBlobs()
     {
         // Arrange
-        var subscription = "sub123";
         var account = "testaccount";
         var container = "container123";
 
@@ -66,7 +62,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -75,7 +70,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", subscription,
             "--account", account,
             "--container", container);
 
@@ -90,7 +84,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
     {
         // Arrange
         var expectedError = "Test error";
-        var subscription = "sub123";
         var account = "testaccount";
         var container = "container123";
 
@@ -98,7 +91,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -107,7 +99,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", subscription,
             "--account", account,
             "--container", container);
 
@@ -123,20 +114,17 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
         Assert.Equal("get", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
+        Assert.DoesNotContain(CommandDefinition.Options, option => option.Name == "--subscription");
     }
 
     [Theory]
-    [InlineData("--account mystorageaccount --subscription sub123 --container container", true)]
-    [InlineData("--subscription sub123 --account mystorageaccount --container container", true)]
-    [InlineData("--subscription sub123 --account mystorageaccount --container container --blob blob", true)]
-    [InlineData("--subscription sub123 --account mystorageaccount --container container --blob blob --prefix prefix", true)]
-    [InlineData("--subscription sub123", false)] // Missing account and container
-    [InlineData("--account mystorageaccount", false)] // Missing subscription and container
-    [InlineData("--container container", false)] // Missing subscription and account
-    [InlineData("--subscription sub123 --account mystorageaccount", false)] // Missing container
-    [InlineData("--subscription sub123 --container container", false)] // Missing account
-    [InlineData("--account mystorageaccount --container container", false)] // Missing subscription
-    [InlineData("--blob blob", false)] // Missing subscription, account, and container
+    [InlineData("--account mystorageaccount --container container", true)]
+    [InlineData("--container container --account mystorageaccount", true)]
+    [InlineData("--account mystorageaccount --container container --blob blob", true)]
+    [InlineData("--account mystorageaccount --container container --blob blob --prefix prefix", true)]
+    [InlineData("--account mystorageaccount", false)] // Missing container
+    [InlineData("--container container", false)] // Missing account
+    [InlineData("--blob blob", false)] // Missing account and container
     [InlineData("", false)] // No parameters
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -151,7 +139,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions>(),
@@ -180,7 +167,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
     {
         // Arrange
         var account = "mystorageaccount";
-        var subscription = "sub123";
         var container = "container123";
         var blob = "blob123";
         var expected = new BlobInfo(blob, DateTimeOffset.UtcNow, null, null, "application/octet-stream", null, null,
@@ -190,7 +176,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is(blob),
-            Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -200,7 +185,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
         // Act
         var response = await ExecuteCommandAsync(
             "--account", account,
-            "--subscription", subscription,
             "--container", container,
             "--blob", blob);
 
@@ -219,7 +203,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
     {
         // Arrange
         var account = "mystorageaccount";
-        var subscription = "sub123";
         var container = "container123";
         var blob = "blob123";
 
@@ -227,7 +210,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is(blob),
-            Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -237,7 +219,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
         // Act
         var response = await ExecuteCommandAsync(
             "--account", account,
-            "--subscription", subscription,
             "--container", container,
             "--blob", blob);
 
@@ -252,7 +233,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
     {
         // Arrange
         var account = "mystorageaccount";
-        var subscription = "sub123";
         var container = "container123";
         var blob = "notfound";
 
@@ -260,7 +240,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is(blob),
-            Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -270,7 +249,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
         // Act
         var response = await ExecuteCommandAsync(
             "--account", account,
-            "--subscription", subscription,
             "--container", container,
             "--blob", blob);
 
@@ -284,7 +262,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
     {
         // Arrange
         var account = "mystorageaccount";
-        var subscription = "sub123";
         var container = "container123";
         var blob = "blob123";
 
@@ -292,7 +269,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is(blob),
-            Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -302,7 +278,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
         // Act
         var response = await ExecuteCommandAsync(
             "--account", account,
-            "--subscription", subscription,
             "--container", container,
             "--blob", blob);
 

@@ -21,7 +21,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string location,
-        string? sku, string? storageType, string? tenant,
+        string? storageType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -1677,7 +1677,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? workloadType, string? containerName, string? tenant,
+        string? workloadType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(

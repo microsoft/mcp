@@ -83,7 +83,6 @@
     "Send broadcast SMS to <phone-number-1> and <phone-number-2> saying \"Urgent notification\"",
     "Send email to multiple recipients: <email-address-1>, <email-address-2>",
     "Send email with CC to <email-address-1> and <email-address-2>",
-    "Send email with custom sender name <sender-name>",
     "Send email with reply-to address set to <email-address>",
     "Send HTML-formatted email to <email-address> with subject <subject>",
     "Send SMS from my communication service to <phone-number-1>",

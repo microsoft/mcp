@@ -199,7 +199,6 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             "storage_blob_get",
             new()
             {
-            { "subscription", Settings.SubscriptionName },
             { "tenant", Settings.TenantId },
             { "account", Settings.ResourceBaseName },
             { "container", "bar" },
@@ -217,7 +216,6 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             "storage_blob_get",
             new()
             {
-            { "subscription", Settings.SubscriptionName },
             { "tenant", Settings.TenantId },
             { "account", Settings.ResourceBaseName },
             { "container", "bar" },
@@ -236,7 +234,6 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             "storage_blob_get",
             new()
             {
-            { "subscription", Settings.SubscriptionName },
             { "tenant", Settings.TenantId },
             { "account", Settings.ResourceBaseName },
             { "container", "bar" },
@@ -277,7 +274,6 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 "storage_blob_upload",
                 new()
                 {
-                    { "subscription", Settings.SubscriptionName },
                     { "tenant", Settings.TenantId },
                     { "account", Settings.ResourceBaseName },
                     { "container", "bar" },
@@ -316,7 +312,6 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             "storage_blob_container_get",
             new()
             {
-            { "subscription", Settings.SubscriptionName },
             { "tenant", Settings.TenantId },
             { "account", Settings.ResourceBaseName },
             { "retry-max-retries", 0 }
@@ -334,7 +329,6 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             "storage_blob_container_get",
             new()
             {
-            { "subscription", Settings.SubscriptionName },
             { "tenant", Settings.TenantId },
             { "account", Settings.ResourceBaseName },
             { "prefix", "ba" },
@@ -353,7 +347,6 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             "storage_blob_container_get",
             new()
             {
-            { "subscription", Settings.SubscriptionName },
             { "account", Settings.ResourceBaseName },
             { "container", "bar" }
             });
@@ -375,7 +368,6 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             "storage_blob_container_create",
             new()
             {
-            { "subscription", Settings.SubscriptionName },
             { "account", Settings.ResourceBaseName },
             { "container", containerName }
             });
@@ -430,7 +422,6 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             "storage_table_list",
             new()
             {
-            { "subscription", Settings.SubscriptionName },
             { "tenant", Settings.TenantId },
             { "account", Settings.ResourceBaseName },
             });
@@ -449,7 +440,6 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             "storage_table_list",
             new()
             {
-            { "subscription", Settings.SubscriptionName },
             { "tenant", Settings.TenantName },
             { "account", Settings.ResourceBaseName },
             });

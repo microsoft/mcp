@@ -1,0 +1,3 @@
+changes:
+  - section: Breaking Changes
+    description: Removed the unused `--target-table-name` parameter from the OneLake Dataverse shortcut creation tool.

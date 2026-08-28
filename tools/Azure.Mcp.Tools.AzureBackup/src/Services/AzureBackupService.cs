@@ -97,7 +97,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     ];
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string vaultType,
-        string location, string? sku, string? storageType, string? tenant,
+        string location, string? storageType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         // Perform validations that don't require a network call first so invalid input
@@ -106,8 +106,8 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
 
         return VaultTypeResolver.IsRsv(vaultType)
-            ? await rsvOps.CreateVaultAsync(vaultName, resourceGroup, subscription, location, sku, storageType, tenant, retryPolicy, cancellationToken)
-            : await dppOps.CreateVaultAsync(vaultName, resourceGroup, subscription, location, sku, storageType, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.CreateVaultAsync(vaultName, resourceGroup, subscription, location, storageType, tenant, retryPolicy, cancellationToken)
+            : await dppOps.CreateVaultAsync(vaultName, resourceGroup, subscription, location, storageType, tenant, retryPolicy, cancellationToken);
     }
 
     public async Task<BackupVaultInfo> GetVaultAsync(
@@ -199,7 +199,6 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string policyName, string? vaultType,
         string? containerName, string? datasourceType,
-        string? aksIncludedNamespaces, string? aksExcludedNamespaces,
         string? aksLabelSelectors, string? aksIncludeClusterScopeResources,
         string? aksSnapshotResourceGroup,
         string? tenant,
@@ -210,7 +209,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
         return VaultTypeResolver.IsRsv(resolvedType)
             ? await rsvOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, containerName, datasourceType, tenant, retryPolicy, cancellationToken)
-            : await dppOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, datasourceType, aksIncludedNamespaces, aksExcludedNamespaces, aksLabelSelectors, aksIncludeClusterScopeResources, aksSnapshotResourceGroup, tenant, retryPolicy, cancellationToken);
+            : await dppOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, datasourceType, aksLabelSelectors, aksIncludeClusterScopeResources, aksSnapshotResourceGroup, tenant, retryPolicy, cancellationToken);
     }
 
     public async Task<ProtectedItemInfo> GetProtectedItemAsync(
@@ -377,7 +376,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? workloadType, string? containerName, string? vaultType, string? tenant,
+        string? workloadType, string? vaultType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
@@ -398,7 +397,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             }
         }
 
-        return await rsvOps.ListProtectableItemsAsync(vaultName, resourceGroup, subscription, workloadType, containerName, tenant, retryPolicy, cancellationToken);
+        return await rsvOps.ListProtectableItemsAsync(vaultName, resourceGroup, subscription, workloadType, tenant, retryPolicy, cancellationToken);
     }
 
     public async Task<Models.BackupStatusResult> GetBackupStatusAsync(

@@ -2,20 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Secrets;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.Tests.Secret;
 
-public class SecretGetCommandTests : SubscriptionCommandUnitTestsBase<SecretGetCommand, IKeyVaultService>
+public class SecretGetCommandTests : CommandUnitTestsBase<SecretGetCommand, IKeyVaultService>
 {
-    private const string _knownSubscriptionId = "knownSubscription";
     private const string _knownVaultName = "knownVaultName";
     private const string _knownSecretName = "knownSecretName";
     private const string _knownSecretValue = "knownSecretValue";
@@ -28,7 +27,6 @@ public class SecretGetCommandTests : SubscriptionCommandUnitTestsBase<SecretGetC
         Service.GetSecret(
             Arg.Is(_knownVaultName),
             Arg.Is(_knownSecretName),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(_knownKeyVaultSecret);
@@ -36,8 +34,7 @@ public class SecretGetCommandTests : SubscriptionCommandUnitTestsBase<SecretGetC
         // Act
         var response = await ExecuteCommandAsync(
             "--vault", _knownVaultName,
-            "--secret", _knownSecretName,
-            "--subscription", _knownSubscriptionId);
+            "--secret", _knownSecretName);
 
         // Assert
         var retrievedSecret = ValidateAndDeserializeResponse(response, KeyVaultJsonContext.Default.SecretGetCommandResult);
@@ -58,15 +55,13 @@ public class SecretGetCommandTests : SubscriptionCommandUnitTestsBase<SecretGetC
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
         var response = await ExecuteCommandAsync(
             "--vault", _knownVaultName,
-            "--secret", _knownSecretName,
-            "--subscription", _knownSubscriptionId);
+            "--secret", _knownSecretName);
 
         // Assert
         Assert.NotNull(response);
@@ -82,15 +77,12 @@ public class SecretGetCommandTests : SubscriptionCommandUnitTestsBase<SecretGetC
 
         Service.ListSecrets(
             Arg.Is(_knownVaultName),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedSecrets);
 
         // Act
-        var response = await ExecuteCommandAsync(
-            "--vault", _knownVaultName,
-            "--subscription", _knownSubscriptionId);
+        var response = await ExecuteCommandAsync("--vault", _knownVaultName);
 
         // Assert
         var result = ValidateAndDeserializeResponse(response, KeyVaultJsonContext.Default.SecretGetCommandResult);
@@ -109,19 +101,20 @@ public class SecretGetCommandTests : SubscriptionCommandUnitTestsBase<SecretGetC
 
         Service.ListSecrets(
             Arg.Is(_knownVaultName),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
-        var response = await ExecuteCommandAsync(
-            "--vault", _knownVaultName,
-            "--subscription", _knownSubscriptionId);
+        var response = await ExecuteCommandAsync("--vault", _knownVaultName);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains(expectedError, response.Message);
     }
+
+    [Fact]
+    public void Constructor_DoesNotExposeSubscriptionOption() =>
+        Assert.DoesNotContain(Command.GetCommand().Options, option => option.Name == "--subscription");
 }

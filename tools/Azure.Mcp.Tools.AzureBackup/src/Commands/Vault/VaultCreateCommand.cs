@@ -69,7 +69,6 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
                 options.Subscription!,
                 options.VaultType!,
                 options.Location!,
-                options.Sku,
                 options.StorageType,
                 options.Tenant,
                 options.RetryPolicy,

@@ -36,9 +36,6 @@ public sealed class OpenAiChatCompletionsCreateOptions : ISubscriptionOption
     [Option(Description = "Up to 4 sequences where the API will stop generating further tokens.")]
     public string? Stop { get; set; }
 
-    [Option(Description = "Whether to stream back partial progress. Default is false.")]
-    public bool? Stream { get; set; }
-
     [Option(Description = "If specified, the system will make a best effort to sample deterministically.")]
     public int? Seed { get; set; }
 

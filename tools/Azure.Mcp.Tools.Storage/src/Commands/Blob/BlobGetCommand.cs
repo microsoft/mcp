@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob;
 using Azure.Mcp.Tools.Storage.Services;
@@ -21,7 +19,7 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob;
         get details for a specific blob. If no blob specified, lists all blobs present in the container, optionally
         filtering on a prefix. The prefix is ignored if a blob is specified.
 
-        Required: --account, --container, --subscription
+        Required: --account, --container
         Optional: --blob, --tenant, --prefix
 
         Returns: blob name, size, lastModified, contentType, contentHash, metadata, and blob properties.
@@ -33,8 +31,8 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageService storageService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<BlobGetOptions, BlobGetCommand.BlobGetCommandResult>(subscriptionResolver)
+public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageService storageService)
+    : AuthenticatedCommand<BlobGetOptions, BlobGetCommand.BlobGetCommandResult>
 {
     private readonly ILogger<BlobGetCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
@@ -47,7 +45,6 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
                 options.Account,
                 options.Container,
                 options.Blob,
-                options.Subscription!,
                 options.Prefix,
                 options.Tenant,
                 options.RetryPolicy,

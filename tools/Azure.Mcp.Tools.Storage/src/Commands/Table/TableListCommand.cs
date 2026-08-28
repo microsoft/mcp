@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Options.Table;
 using Azure.Mcp.Tools.Storage.Services;
@@ -16,15 +14,15 @@ namespace Azure.Mcp.Tools.Storage.Table.Commands;
     Id = "1236ad1d-baf1-4b95-8c1d-420637ce08da",
     Name = "list",
     Title = "List Tables in Azure Storage",
-    Description = "List all tables in an Azure Storage account. Shows table names for the specified storage account. Required: account, subscription. Optional: tenant. Returns: table names. Do not use this tool for Cosmos DB tables or Kusto/Data Explorer tables.",
+    Description = "List all tables in an Azure Storage account. Shows table names for the specified storage account. Required: account. Optional: tenant. Returns: table names. Do not use this tool for Cosmos DB tables or Kusto/Data Explorer tables.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageService storageService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<TableListOptions, TableListCommand.TableListCommandResult>(subscriptionResolver)
+public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageService storageService)
+    : AuthenticatedCommand<TableListOptions, TableListCommand.TableListCommandResult>
 {
     private readonly ILogger<TableListCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
@@ -35,7 +33,6 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageS
         {
             var tables = await _storageService.ListTables(
                 options.Account,
-                options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.KeyVault.Models;
 using Azure.Mcp.Tools.KeyVault.Options.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -23,8 +21,8 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger, IKeyVaultService keyVaultService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<CertificateGetOptions, CertificateGetCommand.CertificateGetCommandResult>(subscriptionResolver)
+public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger, IKeyVaultService keyVaultService)
+    : AuthenticatedCommand<CertificateGetOptions, CertificateGetCommand.CertificateGetCommandResult>
 {
     private readonly ILogger<CertificateGetCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
@@ -38,7 +36,6 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger,
                 // List all certificates
                 var certificates = await _keyVaultService.ListCertificates(
                     options.Vault,
-                    options.Subscription!,
                     options.Tenant,
                     cancellationToken);
 
@@ -50,7 +47,6 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger,
                 var certificate = await _keyVaultService.GetCertificate(
                     options.Vault,
                     options.Certificate,
-                    options.Subscription!,
                     options.Tenant,
                     cancellationToken);
 

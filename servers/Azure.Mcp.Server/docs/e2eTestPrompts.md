@@ -292,7 +292,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | communication_email_send | Send email with CC to <email-address-1> and <email-address-2> | clarification-required |
 | communication_email_send | Send email to multiple recipients: <email-address-1>, <email-address-2> | clarification-required |
 | communication_email_send | Send email with reply-to address set to <email-address> | clarification-required |
-| communication_email_send | Send email with custom sender name <sender-name> | clarification-required |
 | communication_email_send | Send an email with BCC recipients | clarification-required |
 | communication_sms_send | Send an SMS message to <phone-number> saying "Hello" | clarification-required |
 | communication_sms_send | Send SMS to <phone-number-2> from <phone-number-1> with message "Test message" | clarification-required |

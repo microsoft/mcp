@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
@@ -21,7 +19,7 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
         show details for a specific Storage container. If no container specified, shows all containers in the storage
         account, optionally filtering on a prefix. The prefix is ignored if a container is specified.
 
-        Required: --account, --subscription
+        Required: --account
         Optional: --container, --tenant, --prefix
 
         Returns: container name, lastModified, leaseStatus, publicAccess, metadata, and container properties.
@@ -33,8 +31,8 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IStorageService storageService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<ContainerGetOptions, ContainerGetCommand.ContainerGetCommandResult>(subscriptionResolver)
+public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IStorageService storageService)
+    : AuthenticatedCommand<ContainerGetOptions, ContainerGetCommand.ContainerGetCommandResult>
 {
     private readonly ILogger<ContainerGetCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
@@ -46,7 +44,6 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
             var containers = await _storageService.GetContainerDetails(
                 options.Account,
                 options.Container,
-                options.Subscription!,
                 options.Prefix,
                 options.Tenant,
                 options.RetryPolicy,

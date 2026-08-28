@@ -879,7 +879,6 @@ azmcp azurebackup vault create --subscription <subscription> \
                                --vault <vault> \
                                --location <location> \
                                --vault-type <vault-type> \
-                               [--sku <sku>] \
                                [--storage-type <storage-type>]
 
 # Retrieves backup vault information. When --vault and --resource-group are specified, returns detailed information about a single vault including type, location, SKU, and storage redundancy. When omitted, lists all backup vaults (RSV and Backup vaults) in the subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or --resource-group to narrow the listing results. Use --expand to include extended posture fields: 'security' (encryption key URI and cross-region restore state; DPP vaults additionally return encryption state — RSV vaults omit it because the vault GET API does not return an explicit state field), 'mua' (Multi-User Authorization / Resource Guard link), or 'all'.
@@ -1019,8 +1018,6 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 [--pitr-retention-days <int>] \
                                 [--policy-tags <key=value[,key=value...]>] \
                                 [--aks-snapshot-resource-group <resource-group>] \
-                                [--aks-included-namespaces <ns[,ns...]>] \
-                                [--aks-excluded-namespaces <ns[,ns...]>] \
                                 [--aks-label-selectors <selector[,selector...]>] \
                                 [--aks-include-cluster-scope-resources <true|false>]
 
@@ -1085,8 +1082,7 @@ azmcp azurebackup protectableitem list --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --vault <vault> \
                                        [--vault-type <vault-type>] \
-                                       [--workload-type <workload-type>] \
-                                       [--container <container>]
+                                       [--workload-type <workload-type>]
 ```
 
 #### Backup
@@ -1269,7 +1265,6 @@ azmcp communication email send --endpoint <endpoint> \
                                --subject <email-subject> \
                                --message <email-content> \
                                [--is-html] \
-                               [--sender-name <sender-display-name>] \
                                [--cc <cc-recipient-email>] \
                                [--bcc <bcc-recipient-email>] \
                                [--reply-to <reply-to-email>]
@@ -1283,11 +1278,10 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
                                --subject "Important message" \
                                --message "Hello from Azure Communication Services!"
 
-# Send HTML-formatted email with CC and sender name
+# Send HTML-formatted email with CC
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
                                --from "sender@verified-domain.com" \
-                               --sender-name "Support Team" \
                                --to "recipient@example.com" \
                                --cc "manager@example.com" \
                                --subject "Monthly Report" \
@@ -1312,7 +1306,6 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
 -   `--subject`: Email subject line (required)
 -   `--message`: Email content body (required)
 -   `--is-html`: Flag indicating the message content is HTML format (optional)
--   `--sender-name`: Display name of the sender (optional)
 -   `--cc`: Carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
 -   `--bcc`: Blind carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
 -   `--reply-to`: Reply-to email address(es), comma-separated for multiple addresses (optional)
@@ -2375,18 +2368,14 @@ azmcp mysql list --subscription <subscription> \
 
 # Executes a SELECT query on a MySQL Database. The query must start with SELECT and cannot contain any destructive SQL operations for security reasons.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp mysql database query --subscription <subscription> \
-                           --resource-group <resource-group> \
-                           --user <user> \
+azmcp mysql database query --user <user> \
                            --server <server> \
                            --database <database> \
                            --query <query>
 
 # Get the schema of a specific table in a MySQL database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp mysql table schema get --subscription <subscription> \
-                             --resource-group <resource-group> \
-                             --user <user> \
+azmcp mysql table schema get --user <user> \
                              --server <server> \
                              --database <database> \
                              --table <table>
@@ -2395,14 +2384,12 @@ azmcp mysql table schema get --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql server config get --subscription <subscription> \
                               --resource-group <resource-group> \
-                              --user <user> \
                               --server <server>
 
 # Retrieve a specific parameter of a MySQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql server param get --subscription <subscription> \
                              --resource-group <resource-group> \
-                             --user <user> \
                              --server <server> \
                              --param <parameter>
 
@@ -2410,7 +2397,6 @@ azmcp mysql server param get --subscription <subscription> \
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql server param set --subscription <subscription> \
                              --resource-group <resource-group> \
-                             --user <user> \
                              --server <server> \
                              --param <parameter> \
                              --value <value>
@@ -2451,14 +2437,12 @@ azmcp postgres table schema get --user <user> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres server config get --subscription <subscription> \
                                  --resource-group <resource-group> \
-                                 --user <user> \
                                  --server <server>
 
 # Retrieve a specific parameter of a PostgreSQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres server param get --subscription <subscription> \
                                 --resource-group <resource-group> \
-                                --user <user> \
                                 --server <server> \
                                 --param <parameter>
 
@@ -2466,7 +2450,6 @@ azmcp postgres server param get --subscription <subscription> \
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres server param set --subscription <subscription> \
                                 --resource-group <resource-group> \
-                                --user <user> \
                                 --server <server> \
                                 --param <parameter> \
                                 --value <value>
@@ -2873,8 +2856,7 @@ azmcp iothub hub get --subscription <subscription> \
 ```bash
 # Gets Key Vault Managed HSM account settings
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault admin settings get --subscription <subscription> \
-                                  --vault <vault-name>
+azmcp keyvault admin settings get --vault <vault-name>
 ```
 
 #### Certificates
@@ -2882,20 +2864,17 @@ azmcp keyvault admin settings get --subscription <subscription> \
 ```bash
 # Creates a certificate in a key vault with the default policy
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault certificate create --subscription <subscription> \
-                                  --vault <vault-name> \
+azmcp keyvault certificate create --vault <vault-name> \
                                   --name <certificate-name>
 
 # Get a specific certificate or list all certificates. If --name is provided, returns a specific certificate; otherwise, lists all certificates in the key vault.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault certificate get --subscription <subscription> \
-                               --vault <vault-name> \
+azmcp keyvault certificate get --vault <vault-name> \
                                [--name <certificate-name>]
 
 # Imports an existing certificate (PFX or PEM) into a key vault
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp keyvault certificate import --subscription <subscription> \
-                                  --vault <vault-name> \
+azmcp keyvault certificate import --vault <vault-name> \
                                   --certificate <certificate-name> \
                                   --certificate-data <path-or-base64-or-raw-pem> \
                                   [--password <pfx-password>]
@@ -2906,15 +2885,13 @@ azmcp keyvault certificate import --subscription <subscription> \
 ```bash
 # Creates a key in a key vault
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault key create --subscription <subscription> \
-                          --vault <vault-name> \
+azmcp keyvault key create --vault <vault-name> \
                           --key <key-name> \
                           --key-type <key-type>
 
 # Get a specific key or list all keys. If --key is provided, returns a specific key; otherwise, lists all keys in the key vault.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault key get --subscription <subscription> \
-                       --vault <vault-name> \
+azmcp keyvault key get --vault <vault-name> \
                        [--key <key-name>] \
                        [--include-managed]
 ```
@@ -2936,15 +2913,13 @@ Tools that handle sensitive data such as secrets require user consent before exe
 ```bash
 # Creates a secret in a key vault (will prompt for user consent)
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
-azmcp keyvault secret create --subscription <subscription> \
-                             --vault <vault-name> \
+azmcp keyvault secret create --vault <vault-name> \
                              --name <secret-name> \
                              --value <secret-value>
 
 # Get a specific secret or list all secrets. If --secret is provided, returns a specific secret with its value (requires user consent); otherwise, lists all secrets in the key vault (returns secret names and properties, not values).
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
-azmcp keyvault secret get --subscription <subscription> \
-                          --vault <vault-name> \
+azmcp keyvault secret get --vault <vault-name> \
                           [--secret <secret-name>]
 ```
 
@@ -3199,8 +3174,7 @@ azmcp monitor workspace list --subscription <subscription> \
 # .delete, .set, .append, .set-or-append, .set-or-replace, .ingest, .purge, .execute)
 # are rejected.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor resource log query --subscription <subscription> \
-                                 --resource-id <resource-id> \
+azmcp monitor resource log query --resource-id <resource-id> \
                                  --table <table> \
                                  --query <kql-query> \
                                  [--hours <hours>] \
@@ -4580,29 +4554,25 @@ azmcp storage account get --subscription <subscription> \
 ```bash
 # Create a blob container with optional public access
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storage blob container create --subscription <subscription> \
-                                    --account <account> \
+azmcp storage blob container create --account <account> \
                                     --container <container>
 
 # Get detailed properties of Storage containers
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storage blob container get --subscription <subscription> \
-                                 --account <account> \
+azmcp storage blob container get --account <account> \
                                  [--container <container>] \
                                  [--prefix <prefix>]
 
 # Get detailed properties of Storage blobs
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storage blob get --subscription <subscription> \
-                           --account <account> \
-                           --container <container> \
-                           [--blob <blob>] \
-                           [--prefix <prefix>]
+azmcp storage blob get --account <account> \
+                       --container <container> \
+                       [--blob <blob>] \
+                       [--prefix <prefix>]
 
 # Upload a file to a Storage blob
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp storage blob upload --subscription <subscription> \
-                          --account <account> \
+azmcp storage blob upload --account <account> \
                           --container <container> \
                           --blob <blob> \
                           --local-file-path <path-to-local-file>
@@ -4613,8 +4583,7 @@ azmcp storage blob upload --subscription <subscription> \
 ```bash
 # List tables in an Azure Storage account
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storage table list --subscription <subscription> \
-                         --account <account>
+azmcp storage table list --account <account>
 ```
 
 ### Azure Storage Sync Operations
@@ -5015,9 +4984,7 @@ azmcp bicepschema get --resource-type <resource-type> \
 azmcp cloudarchitect design [--question <question>] \
                             [--question-number <question-number>] \
                             [--total-questions <total-questions>] \
-                            [--answer <answer>] \
                             [--next-question-needed <true/false>] \
-                            [--confidence-score <confidence-score>] \
                             [--state <state>]
 
 # Example:
@@ -5025,8 +4992,7 @@ azmcp cloudarchitect design [--question <question>] \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cloudarchitect design --question "What type of application are you building?" \
                             --question-number 1 \
-                            --total-questions 5 \
-                            --confidence-score 0.1
+                            --total-questions 5
 ```
 
 ## Response Format

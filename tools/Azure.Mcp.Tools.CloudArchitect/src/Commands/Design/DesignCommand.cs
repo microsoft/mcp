@@ -19,8 +19,8 @@ namespace Azure.Mcp.Tools.CloudArchitect.Commands.Design;
     Description = """
         Recommends architecture design for cloud services/apps/solutions, such as: file storage, banking, video streaming, e-commerce, SaaS, and more. Use as follows:
         1. Ask about user role, business goals, etc (1-2 questions at a time).
-        2. Track confidence returned by service and update requirements (explicit/implicit/assumed).
-        3. Repeat steps 1 and 2 as needed until confidence >= 0.7
+        2. Track confidence factors in state and update requirements (explicit/implicit/assumed).
+        3. Repeat steps 1 and 2 until requirements are sufficiently understood, then set nextQuestionNeeded to false.
         4. Present architecture with table format, visual organization, ASCII diagrams.
         5. Follow Azure Well-Architected Framework principles.
         6. Cover all tiers: infrastructure, platform, application, data, security, operations.
@@ -51,12 +51,6 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger)
     public override void ValidateOptions(ArchitectureDesignToolOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-
-        // Validate confidence score is between 0.0 and 1.0
-        if (options.ConfidenceScore < 0.0 || options.ConfidenceScore > 1.0)
-        {
-            validationResult.Errors.Add("Confidence score must be between 0.0 and 1.0");
-        }
 
         // Validate question number is not negative
         if (options.QuestionNumber < 0)

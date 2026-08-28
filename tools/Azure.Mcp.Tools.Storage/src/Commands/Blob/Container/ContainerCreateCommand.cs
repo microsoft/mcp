@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
@@ -19,7 +17,7 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
     Description = """
         Create/provision a new Azure Storage blob container in a storage account.
 
-        Required: --account, --container, --subscription
+        Required: --account, --container
         Optional: --tenant
 
         Returns: container name, lastModified, eTag, leaseStatus, publicAccessLevel, hasImmutabilityPolicy, hasLegalHold.
@@ -31,8 +29,8 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logger, IStorageService storageService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<ContainerCreateOptions, ContainerCreateCommand.ContainerCreateCommandResult>(subscriptionResolver)
+public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logger, IStorageService storageService)
+    : AuthenticatedCommand<ContainerCreateOptions, ContainerCreateCommand.ContainerCreateCommandResult>
 {
     private readonly ILogger<ContainerCreateCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
@@ -44,7 +42,6 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
             var containerInfo = await _storageService.CreateContainer(
                 options.Account,
                 options.Container,
-                options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

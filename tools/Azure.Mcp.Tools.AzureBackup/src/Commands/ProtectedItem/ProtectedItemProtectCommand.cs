@@ -104,8 +104,6 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
                 options.VaultType,
                 options.Container,
                 options.DatasourceType,
-                options.AksIncludedNamespaces,
-                options.AksExcludedNamespaces,
                 options.AksLabelSelectors,
                 options.AksIncludeClusterScopeResources ? "true" : null,
                 options.AksSnapshotResourceGroup,

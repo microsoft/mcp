@@ -20,12 +20,11 @@ public class ServerParamSetCommandTests : SubscriptionCommandUnitTestsBase<Serve
     public async Task ExecuteAsync_ReturnsSuccessMessage_WhenParamIsSet()
     {
         var expectedMessage = "Parameter 'work_mem' updated successfully to '256MB'.";
-        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "work_mem", "256MB", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedMessage);
+        Service.SetServerParameterAsync("sub123", "rg1", "server123", "work_mem", "256MB", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedMessage);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1",
             "--server", "server123",
             "--param", "work_mem",
             "--value", "256MB");
@@ -40,12 +39,11 @@ public class ServerParamSetCommandTests : SubscriptionCommandUnitTestsBase<Serve
     [Fact]
     public async Task ExecuteAsync_ReturnsNull_WhenParamDoesNotExist()
     {
-        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "shared_buffers", "512MB", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns("");
+        Service.SetServerParameterAsync("sub123", "rg1", "server123", "shared_buffers", "512MB", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns("");
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1",
             "--server", "server123",
             "--param", "shared_buffers",
             "--value", "512MB");
@@ -59,7 +57,6 @@ public class ServerParamSetCommandTests : SubscriptionCommandUnitTestsBase<Serve
     [Theory]
     [InlineData("--subscription")]
     [InlineData("--resource-group")]
-    [InlineData("--user")]
     [InlineData("--server")]
     [InlineData("--param")]
     [InlineData("--value")]
@@ -68,7 +65,6 @@ public class ServerParamSetCommandTests : SubscriptionCommandUnitTestsBase<Serve
         var response = await ExecuteCommandAsync(ArgBuilder.BuildArgs(missingParameter,
             ("--subscription", "sub123"),
             ("--resource-group", "rg1"),
-            ("--user", "user1"),
             ("--server", "server123"),
             ("--param", "max_connections"),
             ("--value", "200")
@@ -83,34 +79,32 @@ public class ServerParamSetCommandTests : SubscriptionCommandUnitTestsBase<Serve
     public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
     {
         var expectedMessage = "Parameter updated successfully.";
-        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedMessage);
+        Service.SetServerParameterAsync("sub123", "rg1", "server123", "max_connections", "200", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedMessage);
 
         await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1",
             "--server", "server123",
             "--param", "max_connections",
             "--value", "200");
 
-        await Service.Received(1).SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).SetServerParameterAsync("sub123", "rg1", "server123", "max_connections", "200", Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_ForwardsTenant()
     {
-        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns("ok");
+        Service.SetServerParameterAsync("sub123", "rg1", "server123", "max_connections", "200", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns("ok");
 
         await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1",
             "--server", "server123",
             "--param", "max_connections",
             "--value", "200",
             "--tenant", "tenant123");
 
-        await Service.Received(1).SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", "tenant123", Arg.Any<CancellationToken>());
+        await Service.Received(1).SetServerParameterAsync("sub123", "rg1", "server123", "max_connections", "200", "tenant123", Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -127,7 +121,6 @@ public class ServerParamSetCommandTests : SubscriptionCommandUnitTestsBase<Serve
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1",
             "--server", "server123",
             "--param", blockedParam,
             "--value", "off");
@@ -135,19 +128,18 @@ public class ServerParamSetCommandTests : SubscriptionCommandUnitTestsBase<Serve
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("security-sensitive", response.Message);
-        await Service.DidNotReceiveWithAnyArgs().SetServerParameterAsync("", "", "", "", "", "", null, TestContext.Current.CancellationToken);
+        await Service.DidNotReceiveWithAnyArgs().SetServerParameterAsync("", "", "", "", "", null, TestContext.Current.CancellationToken);
     }
 
     [Fact]
     public async Task ExecuteAsync_AllowsNonBlockedParameters()
     {
         var expectedMessage = "Parameter 'custom_setting' updated successfully.";
-        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "custom_setting", "42", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedMessage);
+        Service.SetServerParameterAsync("sub123", "rg1", "server123", "custom_setting", "42", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedMessage);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1",
             "--server", "server123",
             "--param", "custom_setting",
             "--value", "42");
@@ -155,6 +147,10 @@ public class ServerParamSetCommandTests : SubscriptionCommandUnitTestsBase<Serve
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
     }
+
+    [Fact]
+    public void Constructor_DoesNotExposeUserOption() =>
+        Assert.DoesNotContain(Command.GetCommand().Options, option => option.Name == "--user");
 
     [Fact]
     public void EnsureParameterAllowed_ThrowsForNullOrEmpty()

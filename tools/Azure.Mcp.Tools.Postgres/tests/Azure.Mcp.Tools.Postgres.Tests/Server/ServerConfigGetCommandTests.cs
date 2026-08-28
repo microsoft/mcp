@@ -18,12 +18,11 @@ public class ServerConfigGetCommandTests : SubscriptionCommandUnitTestsBase<Serv
     public async Task ExecuteAsync_ReturnsConfig_WhenConfigExists()
     {
         var expectedConfig = "config123";
-        Service.GetServerConfigAsync("sub123", "rg1", "user1", "server123", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedConfig);
+        Service.GetServerConfigAsync("sub123", "rg1", "server123", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedConfig);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1",
             "--server", "server123");
 
         var result = ValidateAndDeserializeResponse(response, PostgresJsonContext.Default.ServerConfigGetCommandResult);
@@ -33,12 +32,11 @@ public class ServerConfigGetCommandTests : SubscriptionCommandUnitTestsBase<Serv
     [Fact]
     public async Task ExecuteAsync_ReturnsNull_WhenConfigDoesNotExist()
     {
-        Service.GetServerConfigAsync("sub123", "rg1", "user1", "server123", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns("");
+        Service.GetServerConfigAsync("sub123", "rg1", "server123", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns("");
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1",
             "--server", "server123");
 
         Assert.NotNull(response);
@@ -50,14 +48,12 @@ public class ServerConfigGetCommandTests : SubscriptionCommandUnitTestsBase<Serv
     [Theory]
     [InlineData("--subscription")]
     [InlineData("--resource-group")]
-    [InlineData("--user")]
     [InlineData("--server")]
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
         var response = await ExecuteCommandAsync(ArgBuilder.BuildArgs(missingParameter,
             ("--subscription", "sub123"),
             ("--resource-group", "rg1"),
-            ("--user", "user1"),
             ("--server", "server123")
         ));
 
@@ -69,15 +65,18 @@ public class ServerConfigGetCommandTests : SubscriptionCommandUnitTestsBase<Serv
     [Fact]
     public async Task ExecuteAsync_ForwardsTenant()
     {
-        Service.GetServerConfigAsync("sub123", "rg1", "user1", "server123", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns("config123");
+        Service.GetServerConfigAsync("sub123", "rg1", "server123", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns("config123");
 
         await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
-            "--user", "user1",
             "--server", "server123",
             "--tenant", "tenant123");
 
-        await Service.Received(1).GetServerConfigAsync("sub123", "rg1", "user1", "server123", "tenant123", Arg.Any<CancellationToken>());
+        await Service.Received(1).GetServerConfigAsync("sub123", "rg1", "server123", "tenant123", Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public void Constructor_DoesNotExposeUserOption() =>
+        Assert.DoesNotContain(Command.GetCommand().Options, option => option.Name == "--user");
 }

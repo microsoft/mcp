@@ -3,18 +3,17 @@
 
 using System.Net;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Services;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests.Log;
 
-public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsBase<ResourceLogQueryCommand, IMonitorService>
+public sealed class ResourceLogQueryCommandTests : CommandUnitTestsBase<ResourceLogQueryCommand, IMonitorService>
 {
-    private const string _knownSubscription = "knownSubscription";
     private const string _knownResourceId = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/storage1";
     private const string _knownTable = "StorageEvents";
     private const string _knownQuery = "| limit 10";
@@ -22,11 +21,18 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
     private const string _knownHours = "24";
     private const string _knownLimit = "100";
 
+    [Fact]
+    public void Constructor_DoesNotExposeSubscriptionOption()
+    {
+        var command = Command.GetCommand();
+        Assert.DoesNotContain(command.Options, option => option.Name == "--subscription");
+    }
+
     [Theory]
-    [InlineData($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"", true)]
-    [InlineData($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\" --hours {_knownHours} --limit {_knownLimit}", true)]
-    [InlineData($"--subscription {_knownSubscription} --table {_knownTable} --query \"{_knownQuery}\"", false)] // missing resource-id
-    [InlineData($"--subscription {_knownSubscription}", false)]
+    [InlineData($"--resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"", true)]
+    [InlineData($"--resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\" --hours {_knownHours} --limit {_knownLimit}", true)]
+    [InlineData($"--table {_knownTable} --query \"{_knownQuery}\"", false)] // missing resource-id
+    [InlineData($"--resource-id {_knownResourceId}", false)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -39,7 +45,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
                 new JsonObject([new("TimeGenerated", "2023-01-01T12:01:00Z"), new("Message", "Another resource log entry")])
             };
             Service.QueryResourceLogs(
-                _knownSubscription,
                 _knownResourceId,
                 _knownQuery,
                 _knownTable,
@@ -77,7 +82,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
             new JsonObject([new("TimeGenerated", "2023-01-01T12:02:00Z"), new("ResourceId", _knownResourceId), new("Level", "Error")])
         };
         Service.QueryResourceLogs(
-            _knownSubscription,
             _knownResourceId,
             _knownQuery,
             _knownTable,
@@ -89,7 +93,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", _knownSubscription,
             "--resource-id", _knownResourceId,
             "--table", _knownTable,
             "--query", _knownQuery);
@@ -100,7 +103,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
 
         // Verify the mock was called
         await Service.Received(1).QueryResourceLogs(
-            _knownSubscription,
             _knownResourceId,
             _knownQuery,
             _knownTable,
@@ -116,7 +118,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
         // Arrange
         var mockResults = new List<JsonNode> { new JsonObject([new("result", "data")]) };
         Service.QueryResourceLogs(
-            _knownSubscription,
             _knownResourceId,
             _knownQuery,
             _knownTable,
@@ -128,7 +129,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", _knownSubscription,
             "--resource-id", _knownResourceId,
             "--table", _knownTable,
             "--query", _knownQuery,
@@ -139,7 +139,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).QueryResourceLogs(
-            _knownSubscription,
             _knownResourceId,
             _knownQuery,
             _knownTable,
@@ -155,7 +154,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
         // Arrange
         var mockResults = new List<JsonNode> { new JsonObject([new("result", "data")]) };
         Service.QueryResourceLogs(
-            _knownSubscription,
             _knownResourceId,
             _knownQuery,
             _knownTable,
@@ -167,7 +165,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", _knownSubscription,
             "--resource-id", _knownResourceId,
             "--table", _knownTable,
             "--query", _knownQuery);
@@ -175,7 +172,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).QueryResourceLogs(
-            _knownSubscription,
             _knownResourceId,
             _knownQuery,
             _knownTable,
@@ -190,7 +186,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
     {
         // Arrange
         Service.QueryResourceLogs(
-            _knownSubscription,
             _knownResourceId,
             _knownQuery,
             _knownTable,
@@ -202,7 +197,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", _knownSubscription,
             "--resource-id", _knownResourceId,
             "--table", _knownTable,
             "--query", _knownQuery);
@@ -222,7 +216,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
         var table = "VMEvents";
         var mockResults = new List<JsonNode> { new JsonObject([new("result", "vm data")]) };
         Service.QueryResourceLogs(
-            _knownSubscription,
             complexResourceId,
             query,
             table,
@@ -234,7 +227,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", _knownSubscription,
             "--resource-id", complexResourceId,
             "--table", table,
             "--query", query);
@@ -242,7 +234,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).QueryResourceLogs(
-            _knownSubscription,
             complexResourceId,
             query,
             table,

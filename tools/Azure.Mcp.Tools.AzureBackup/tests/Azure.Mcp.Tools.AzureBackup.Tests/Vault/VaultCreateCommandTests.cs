@@ -30,7 +30,7 @@ public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCre
         // Arrange
         Service.CreateVaultAsync(
             Arg.Is("myVault"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("rsv"), Arg.Is("eastus"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(new VaultCreateResult("id1", "myVault", "rsv", "eastus", "Succeeded"));
 
         // Act
@@ -53,7 +53,7 @@ public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCre
         // Arrange
         Service.CreateVaultAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("rsv"), Arg.Is("eastus"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -78,7 +78,7 @@ public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCre
         {
             Service.CreateVaultAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("rsv"), Arg.Is("eastus"),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
                 .Returns(new VaultCreateResult("id", "v", "rsv", "eastus", "Succeeded"));
         }
 
@@ -108,7 +108,7 @@ public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCre
         Assert.Contains(options, o => o.Name == "--vault");
         Assert.Contains(options, o => o.Name == "--vault-type");
         Assert.Contains(options, o => o.Name == "--location");
-        Assert.Contains(options, o => o.Name == "--sku");
         Assert.Contains(options, o => o.Name == "--storage-type");
+        Assert.DoesNotContain(options, o => o.Name == "--sku");
     }
 }

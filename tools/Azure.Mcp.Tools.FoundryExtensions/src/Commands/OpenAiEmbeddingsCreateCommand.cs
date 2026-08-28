@@ -42,9 +42,6 @@ public sealed class OpenAiEmbeddingsCreateCommand(IFoundryExtensionsService foun
                 options.InputText,
                 options.Subscription!,
                 options.ResourceGroup,
-                options.User,
-                options.EncodingFormat!,
-                options.Dimensions,
                 options.Tenant,
                 options.AuthMethod ?? AuthMethod.Credential,
                 cancellationToken: cancellationToken);

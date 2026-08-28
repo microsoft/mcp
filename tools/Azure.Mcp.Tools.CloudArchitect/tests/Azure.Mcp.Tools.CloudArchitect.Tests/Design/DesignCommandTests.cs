@@ -29,10 +29,10 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
         Assert.Contains("--question", optionNames);
         Assert.Contains("--question-number", optionNames);
         Assert.Contains("--total-questions", optionNames);
-        Assert.Contains("--answer", optionNames);
         Assert.Contains("--next-question-needed", optionNames);
-        Assert.Contains("--confidence-score", optionNames);
         Assert.Contains("--state", optionNames);
+        Assert.DoesNotContain("--answer", optionNames);
+        Assert.DoesNotContain("--confidence-score", optionNames);
     }
 
     // TODO: jongio - See why --architecture-tier are in the tests, but not in the DesignCommand.
@@ -41,9 +41,7 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
     [InlineData("--question \"What is your application type?\"")]
     [InlineData("--question-number 1")]
     [InlineData("--total-questions 5")]
-    [InlineData("--answer \"Web application\"")]
     [InlineData("--next-question-needed true")]
-    [InlineData("--confidence-score 0.8")]
     [InlineData("--question \"App type?\" --question-number 1 --total-questions 5")]
     public async Task ExecuteAsync_ReturnsArchitectureDesignText(string args)
     {
@@ -68,9 +66,7 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
             "--question", "What is your application type?",
             "--question-number", "1",
             "--total-questions", "5",
-            "--answer", "Web application",
-            "--next-question-needed", "true",
-            "--confidence-score", "0.8");
+            "--next-question-needed", "true");
 
         // Assert
         var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
@@ -107,12 +103,10 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
     {
         // Arrange - Test multiple options with various escaping scenarios
         var complexQuestion = "What is your \"primary\" application 'type' and how \"big\" will it be?";
-        var complexAnswer = "It's a \"web application\" with 'high' scalability requirements";
 
         var args = new[]
         {
             "--question", complexQuestion,
-            "--answer", complexAnswer,
             "--question-number", "2",
             "--total-questions", "10"
         };
@@ -129,7 +123,6 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
         var options = Command.BindOptions(CommandDefinition.Parse(args));
 
         Assert.Equal(complexQuestion, options.Question);
-        Assert.Equal(complexAnswer, options.Answer);
     }
 
     [Fact]
@@ -188,9 +181,7 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
             "--question", "What type of application are you building?",
             "--question-number", "3",
             "--total-questions", "8",
-            "--answer", "A financial trading platform",
             "--next-question-needed", "false",
-            "--confidence-score", "0.9",
         };
 
         // Act
@@ -203,9 +194,7 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
         Assert.Equal("What type of application are you building?", options.Question);
         Assert.Equal(3, options.QuestionNumber);
         Assert.Equal(8, options.TotalQuestions);
-        Assert.Equal("A financial trading platform", options.Answer);
         Assert.False(options.NextQuestionNeeded);
-        Assert.Equal(0.9, options.ConfidenceScore);
 
         // Verify the response structure
         var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
@@ -219,36 +208,6 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
     }
 
     #region Validation Tests
-
-    [Theory]
-    [InlineData(-0.1)]
-    [InlineData(1.1)]
-    [InlineData(2.0)]
-    [InlineData(-1.0)]
-    public void Parse_InvalidConfidenceScore_ReturnsError(double invalidScore)
-    {
-        // Arrange & Act
-        var validationResult = Validate("--confidence-score", invalidScore.ToString());
-
-        // Assert
-        Assert.NotEmpty(validationResult.Errors);
-        Assert.Contains("Confidence score must be between 0.0 and 1.0", validationResult.Errors);
-    }
-
-    [Theory]
-    [InlineData(0.0)]
-    [InlineData(0.5)]
-    [InlineData(1.0)]
-    [InlineData(0.1)]
-    [InlineData(0.9)]
-    public void Parse_ValidConfidenceScore_NoErrors(double validScore)
-    {
-        // Arrange & Act
-        var validationResult = Validate("--confidence-score", validScore.ToString());
-
-        // Assert
-        Assert.Empty(validationResult.Errors);
-    }
 
     [Theory]
     [InlineData(-1)]
@@ -321,18 +280,6 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
     }
 
     [Fact]
-    public void Parse_MultipleValidationErrors_ReturnsFirstError()
-    {
-        // Arrange & Act - Set both invalid confidence score and negative question number
-        var validationResult = Validate("--confidence-score", "1.5", "--question-number", "-1");
-
-        // Assert
-        Assert.NotEmpty(validationResult.Errors);
-        // Should return the first validation error encountered
-        Assert.Contains("Confidence score must be between 0.0 and 1.0", validationResult.Errors);
-    }
-
-    [Fact]
     public async Task ExecuteAsync_WithComplexStateJson_ParsesSuccessfully()
     {
         // Arrange - Use the exact JSON from the original error
@@ -394,8 +341,7 @@ public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
         // Act
         var response = await ExecuteCommandAsync(
             "--state", stateJson,
-            "--question", "What is your primary business goal?",
-            "--confidence-score", "0.5");
+            "--question", "What is your primary business goal?");
 
         // Assert
         var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);

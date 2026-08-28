@@ -36,7 +36,7 @@ public class MySqlServiceServerNameValidationTests
         // is thrown before any credential or network operation.
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
             _mysqlService.ListDatabasesAsync(
-                "test-sub", "test-rg", "test-user",
+                "test-user",
                 maliciousServer,
                 TestContext.Current.CancellationToken));
 
@@ -50,7 +50,7 @@ public class MySqlServiceServerNameValidationTests
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
             _mysqlService.ExecuteQueryAsync(
-                "test-sub", "test-rg", "test-user",
+                "test-user",
                 maliciousServer, "testdb", "SELECT 1",
                 TestContext.Current.CancellationToken));
 
@@ -64,7 +64,7 @@ public class MySqlServiceServerNameValidationTests
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
             _mysqlService.GetTablesAsync(
-                "test-sub", "test-rg", "test-user",
+                "test-user",
                 maliciousServer, "testdb",
                 TestContext.Current.CancellationToken));
 
@@ -78,7 +78,7 @@ public class MySqlServiceServerNameValidationTests
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
             _mysqlService.GetTableSchemaAsync(
-                "test-sub", "test-rg", "test-user",
+                "test-user",
                 maliciousServer, "testdb", "test_table",
                 TestContext.Current.CancellationToken));
 

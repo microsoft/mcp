@@ -26,7 +26,6 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
     private readonly ILogger<MonitorService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<JsonNode>> QueryResourceLogs(
-        string subscription,
         string resourceId,
         string query,
         string table,
@@ -35,7 +34,7 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         string? tenant,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceId), resourceId), (nameof(table), table));
+        ValidateRequiredParameters((nameof(resourceId), resourceId), (nameof(table), table));
 
         query = BuildQuery(query, table, limit);
         KqlQueryValidator.ValidateQuerySafety(query);

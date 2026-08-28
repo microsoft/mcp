@@ -323,7 +323,7 @@ public class AzureBackupServiceTests
     public async Task ListProtectableItemsAsync_DppVaultType_ThrowsArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", null, null, "dpp", null, null, CancellationToken.None));
+            _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", null, "dpp", null, null, CancellationToken.None));
 
         Assert.Contains("RSV", ex.Message);
     }
@@ -332,10 +332,10 @@ public class AzureBackupServiceTests
     public async Task ListProtectableItemsAsync_RsvVaultType_DelegatesToRsv()
     {
         var expected = new List<ProtectableItemInfo> { new("item1", "SQL", null, null, null, null, null, null, null) };
-        _rsvOps.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", null, null, null, null, Arg.Any<CancellationToken>())
+        _rsvOps.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", null, null, null, Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var result = await _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", null, null, "rsv", null, null, CancellationToken.None);
+        var result = await _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", null, "rsv", null, null, CancellationToken.None);
 
         Assert.Single(result);
     }
@@ -348,10 +348,10 @@ public class AzureBackupServiceTests
             .Returns(new BackupVaultInfo(null, "vault", "RSV", "eastus", "rg", null, null, null, null, null, null, null, null, null));
 
         var expected = new List<ProtectableItemInfo> { new("item1", "SQL", null, null, null, null, null, null, null) };
-        _rsvOps.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", null, null, null, null, Arg.Any<CancellationToken>())
+        _rsvOps.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", null, null, null, Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var result = await _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", null, null, null, null, null, CancellationToken.None);
+        var result = await _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", null, null, null, null, CancellationToken.None);
 
         Assert.Single(result);
     }
@@ -366,7 +366,7 @@ public class AzureBackupServiceTests
             .Returns(new BackupVaultInfo(null, "vault", "DPP", "eastus", "rg", null, null, null, null, null, null, null, null, null));
 
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", null, null, null, null, null, CancellationToken.None));
+            _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", null, null, null, null, CancellationToken.None));
 
         Assert.Contains("DPP", ex.Message);
         Assert.Contains("Protectable item discovery is only supported", ex.Message);

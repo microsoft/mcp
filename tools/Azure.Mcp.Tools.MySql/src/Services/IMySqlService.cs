@@ -5,11 +5,11 @@ namespace Azure.Mcp.Tools.MySql.Services;
 
 public interface IMySqlService
 {
-    Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string server, CancellationToken cancellationToken);
-    Task<List<string>> ExecuteQueryAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string query, CancellationToken cancellationToken);
+    Task<List<string>> ListDatabasesAsync(string user, string server, CancellationToken cancellationToken);
+    Task<List<string>> ExecuteQueryAsync(string user, string server, string database, string query, CancellationToken cancellationToken);
 
-    Task<TableListResult> GetTablesAsync(string subscriptionId, string resourceGroup, string user, string server, string database, CancellationToken cancellationToken);
-    Task<List<string>> GetTableSchemaAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string table, CancellationToken cancellationToken);
+    Task<TableListResult> GetTablesAsync(string user, string server, string database, CancellationToken cancellationToken);
+    Task<List<string>> GetTableSchemaAsync(string user, string server, string database, string table, CancellationToken cancellationToken);
 
     Task<List<string>> ListServersAsync(string subscriptionId, string resourceGroup, CancellationToken cancellationToken);
     Task<List<string>> ListServersInSubscriptionAsync(string subscriptionId, CancellationToken cancellationToken);

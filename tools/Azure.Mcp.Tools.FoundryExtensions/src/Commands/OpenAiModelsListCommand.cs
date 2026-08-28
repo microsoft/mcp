@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
@@ -42,7 +41,6 @@ public sealed class OpenAiModelsListCommand(IFoundryExtensionsService foundryExt
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.AuthMethod ?? AuthMethod.Credential,
                 cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

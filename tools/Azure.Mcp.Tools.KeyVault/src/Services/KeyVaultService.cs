@@ -16,11 +16,10 @@ public sealed class KeyVaultService(IAzureService azureService)
     public async Task<List<string>> ListKeys(
         string vaultName,
         bool includeManagedKeys,
-        string subscriptionId,
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName));
 
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateKeyClient(vaultName, credential);
@@ -37,11 +36,10 @@ public sealed class KeyVaultService(IAzureService azureService)
     public async Task<KeyVaultKey> GetKey(
         string vaultName,
         string keyName,
-        string subscriptionId,
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(keyName), keyName), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(keyName), keyName));
 
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateKeyClient(vaultName, credential);
@@ -53,11 +51,10 @@ public sealed class KeyVaultService(IAzureService azureService)
         string vaultName,
         string keyName,
         string keyType,
-        string subscriptionId,
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(keyName), keyName), (nameof(keyType), keyType), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(keyName), keyName), (nameof(keyType), keyType));
 
         var type = new KeyType(keyType);
         var credential = await GetCredential(tenantId, cancellationToken);
@@ -68,11 +65,10 @@ public sealed class KeyVaultService(IAzureService azureService)
 
     public async Task<List<string>> ListSecrets(
         string vaultName,
-        string subscriptionId,
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName));
 
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateSecretClient(vaultName, credential);
@@ -90,11 +86,10 @@ public sealed class KeyVaultService(IAzureService azureService)
         string vaultName,
         string secretName,
         string secretValue,
-        string subscriptionId,
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(secretName), secretName), (nameof(secretValue), secretValue), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(secretName), secretName), (nameof(secretValue), secretValue));
 
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateSecretClient(vaultName, credential);
@@ -105,11 +100,10 @@ public sealed class KeyVaultService(IAzureService azureService)
     public async Task<KeyVaultSecret> GetSecret(
         string vaultName,
         string secretName,
-        string subscriptionId,
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(secretName), secretName), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(secretName), secretName));
 
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateSecretClient(vaultName, credential);
@@ -119,11 +113,10 @@ public sealed class KeyVaultService(IAzureService azureService)
 
     public async Task<List<string>> ListCertificates(
         string vaultName,
-        string subscriptionId,
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName));
 
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateCertificateClient(vaultName, credential);
@@ -140,11 +133,10 @@ public sealed class KeyVaultService(IAzureService azureService)
     public async Task<KeyVaultCertificateWithPolicy> GetCertificate(
         string vaultName,
         string certificateName,
-        string subscriptionId,
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName));
 
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateCertificateClient(vaultName, credential);
@@ -155,11 +147,10 @@ public sealed class KeyVaultService(IAzureService azureService)
     public async Task<KeyVaultCertificateWithPolicy> CreateCertificate(
         string vaultName,
         string certificateName,
-        string subscriptionId,
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName));
 
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateCertificateClient(vaultName, credential);
@@ -174,11 +165,10 @@ public sealed class KeyVaultService(IAzureService azureService)
         string certificateName,
         string certificateData,
         string? password,
-        string subscriptionId,
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(certificateData), certificateData), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(certificateData), certificateData));
 
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateCertificateClient(vaultName, credential);
@@ -318,11 +308,10 @@ public sealed class KeyVaultService(IAzureService azureService)
 
     public async Task<GetSettingsResult> GetVaultSettings(
         string vaultName,
-        string subscription,
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscription), subscription));
+        ValidateRequiredParameters((nameof(vaultName), vaultName));
         var credential = await GetCredential(tenantId, cancellationToken);
         var hsmUri = new Uri(GetHsmUri(vaultName));
 

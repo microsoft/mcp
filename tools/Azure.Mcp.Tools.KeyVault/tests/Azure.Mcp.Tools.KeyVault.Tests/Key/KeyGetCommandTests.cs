@@ -2,20 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Key;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Keys;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.Tests.Key;
 
-public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand, IKeyVaultService>
+public class KeyGetCommandTests : CommandUnitTestsBase<KeyGetCommand, IKeyVaultService>
 {
-    private const string _knownSubscriptionId = "knownSubscription";
     private const string _knownVaultName = "knownVaultName";
     private const string _knownKeyName = "knownKeyName";
     private readonly KeyType _knownKeyType = KeyType.Rsa;
@@ -43,7 +42,6 @@ public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand
         Service.GetKey(
             Arg.Is(_knownVaultName),
             Arg.Is(_knownKeyName),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(_knownKeyVaultKey);
@@ -51,8 +49,7 @@ public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand
         // Act
         var response = await ExecuteCommandAsync(
             "--vault", _knownVaultName,
-            "--key", _knownKeyName,
-            "--subscription", _knownSubscriptionId);
+            "--key", _knownKeyName);
 
         // Assert
         var retrievedKey = ValidateAndDeserializeResponse(response, KeyVaultJsonContext.Default.KeyGetCommandResult);
@@ -72,7 +69,6 @@ public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand
         Service.GetKey(
             Arg.Is(_knownVaultName),
             Arg.Is(_knownKeyName),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
@@ -80,8 +76,7 @@ public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand
         // Act
         var response = await ExecuteCommandAsync(
             "--vault", _knownVaultName,
-            "--key", _knownKeyName,
-            "--subscription", _knownSubscriptionId);
+            "--key", _knownKeyName);
 
         // Assert
         Assert.NotNull(response);
@@ -98,15 +93,12 @@ public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand
         Service.ListKeys(
             Arg.Is(_knownVaultName),
             Arg.Is(false),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedKeys);
 
         // Act
-        var response = await ExecuteCommandAsync(
-            "--vault", _knownVaultName,
-            "--subscription", _knownSubscriptionId);
+        var response = await ExecuteCommandAsync("--vault", _knownVaultName);
 
         // Assert
         var result = ValidateAndDeserializeResponse(response, KeyVaultJsonContext.Default.KeyGetCommandResult);
@@ -126,7 +118,6 @@ public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand
         Service.ListKeys(
             Arg.Is(_knownVaultName),
             Arg.Is(true),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedKeys);
@@ -134,7 +125,6 @@ public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand
         // Act
         var response = await ExecuteCommandAsync(
             "--vault", _knownVaultName,
-            "--subscription", _knownSubscriptionId,
             "--include-managed", "true");
 
         // Assert
@@ -155,15 +145,12 @@ public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand
         Service.ListKeys(
             Arg.Is(_knownVaultName),
             Arg.Any<bool>(),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
-        var response = await ExecuteCommandAsync(
-            "--vault", _knownVaultName,
-            "--subscription", _knownSubscriptionId);
+        var response = await ExecuteCommandAsync("--vault", _knownVaultName);
 
         // Assert
         Assert.NotNull(response);
@@ -182,14 +169,11 @@ public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand
         Service.ListKeys(
             Arg.Is(_knownVaultName),
             Arg.Is(false),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedKeys);
 
-        var response = await ExecuteCommandAsync(
-            "--vault", _knownVaultName,
-            "--subscription", _knownSubscriptionId);
+        var response = await ExecuteCommandAsync("--vault", _knownVaultName);
 
         var result = ValidateAndDeserializeResponse(response, KeyVaultJsonContext.Default.KeyGetCommandResult);
 
@@ -197,4 +181,8 @@ public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand
         Assert.Equal(expectedKeys.Count, result.Keys.Count);
         Assert.Contains("null-managed-key", result.Keys);
     }
+
+    [Fact]
+    public void Constructor_DoesNotExposeSubscriptionOption() =>
+        Assert.DoesNotContain(Command.GetCommand().Options, option => option.Name == "--subscription");
 }

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.MySql.Options.Table;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
@@ -22,8 +20,8 @@ namespace Azure.Mcp.Tools.MySql.Commands.Table;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger, IMySqlService mysqlService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<TableSchemaGetOptions, TableSchemaGetCommand.TableSchemaGetCommandResult>(subscriptionResolver)
+public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger, IMySqlService mysqlService)
+    : AuthenticatedCommand<TableSchemaGetOptions, TableSchemaGetCommand.TableSchemaGetCommandResult>
 {
     private readonly IMySqlService _mysqlService = mysqlService;
     private readonly ILogger<TableSchemaGetCommand> _logger = logger;
@@ -32,7 +30,7 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger,
     {
         try
         {
-            var schema = await _mysqlService.GetTableSchemaAsync(options.Subscription!, options.ResourceGroup, options.User, options.Server, options.Database, options.Table, cancellationToken);
+            var schema = await _mysqlService.GetTableSchemaAsync(options.User, options.Server, options.Database, options.Table, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(schema ?? []), MySqlJsonContext.Default.TableSchemaGetCommandResult);
         }
         catch (Exception ex)

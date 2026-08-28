@@ -2,18 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.Tests.Certificate;
 
-public class CertificateGetCommandTests : SubscriptionCommandUnitTestsBase<CertificateGetCommand, IKeyVaultService>
+public class CertificateGetCommandTests : CommandUnitTestsBase<CertificateGetCommand, IKeyVaultService>
 {
-    private const string _knownSubscriptionId = "knownSubscription";
     private const string _knownVaultName = "knownVaultName";
     private const string _knownCertificateName = "knownCertificateName";
 
@@ -28,7 +27,6 @@ public class CertificateGetCommandTests : SubscriptionCommandUnitTestsBase<Certi
         Service.GetCertificate(
             Arg.Is(_knownVaultName),
             Arg.Is(_knownCertificateName),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
@@ -36,14 +34,12 @@ public class CertificateGetCommandTests : SubscriptionCommandUnitTestsBase<Certi
         // Act
         var response = await ExecuteCommandAsync(
             "--vault", _knownVaultName,
-            "--certificate", _knownCertificateName,
-            "--subscription", _knownSubscriptionId);
+            "--certificate", _knownCertificateName);
 
         // Assert - Verify the service was called with correct parameters
         await Service.Received(1).GetCertificate(
             Arg.Is(_knownVaultName),
             Arg.Is(_knownCertificateName),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>());
 
@@ -60,7 +56,6 @@ public class CertificateGetCommandTests : SubscriptionCommandUnitTestsBase<Certi
         Service.GetCertificate(
             Arg.Is(_knownVaultName),
             Arg.Is(_knownCertificateName),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
@@ -68,8 +63,7 @@ public class CertificateGetCommandTests : SubscriptionCommandUnitTestsBase<Certi
         // Act
         var response = await ExecuteCommandAsync(
             "--vault", _knownVaultName,
-            "--certificate", _knownCertificateName,
-            "--subscription", _knownSubscriptionId);
+            "--certificate", _knownCertificateName);
 
         // Assert
         Assert.NotNull(response);
@@ -85,15 +79,12 @@ public class CertificateGetCommandTests : SubscriptionCommandUnitTestsBase<Certi
 
         Service.ListCertificates(
             Arg.Is(_knownVaultName),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedCertificates);
 
         // Act
-        var response = await ExecuteCommandAsync(
-            "--vault", _knownVaultName,
-            "--subscription", _knownSubscriptionId);
+        var response = await ExecuteCommandAsync("--vault", _knownVaultName);
 
         // Assert
         var result = ValidateAndDeserializeResponse(response, Commands.KeyVaultJsonContext.Default.CertificateGetCommandResult);
@@ -112,19 +103,20 @@ public class CertificateGetCommandTests : SubscriptionCommandUnitTestsBase<Certi
 
         Service.ListCertificates(
             Arg.Is(_knownVaultName),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
-        var response = await ExecuteCommandAsync(
-            "--vault", _knownVaultName,
-            "--subscription", _knownSubscriptionId);
+        var response = await ExecuteCommandAsync("--vault", _knownVaultName);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
     }
+
+    [Fact]
+    public void Constructor_DoesNotExposeSubscriptionOption() =>
+        Assert.DoesNotContain(Command.GetCommand().Options, option => option.Name == "--subscription");
 }

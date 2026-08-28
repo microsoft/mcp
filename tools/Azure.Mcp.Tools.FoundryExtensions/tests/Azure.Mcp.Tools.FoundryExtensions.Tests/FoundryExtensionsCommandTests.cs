@@ -236,8 +236,6 @@ public class FoundryExtensionsCommandTests(ITestOutputHelper output, TestProxyFi
                 { "resource-name", TestVariables["resourceName"] },
                 { "deployment", TestVariables["deploymentName"] },
                 { "input-text", inputText },
-                { "user", "test-user" },
-                { "encoding-format", "float" },
                 { "tenant", TestVariables["tenantId"] }
             });
 
@@ -318,7 +316,6 @@ public class FoundryExtensionsCommandTests(ITestOutputHelper output, TestProxyFi
         var subscriptionId = Settings.SubscriptionId;
         var tenantId = Settings.TenantId;
         var inputText = "Test embeddings with optional parameters.";
-        var dimensions = 512; // Test with reduced dimensions if supported
 
         RegisterVariable("resourceName", resourceName);
         RegisterVariable("deploymentName", deploymentName);
@@ -334,9 +331,6 @@ public class FoundryExtensionsCommandTests(ITestOutputHelper output, TestProxyFi
                 { "resource-name", TestVariables["resourceName"] },
                 { "deployment", TestVariables["deploymentName"] },
                 { "input-text", inputText },
-                { "user", "test-user-with-params" },
-                { "encoding-format", "float" },
-                { "dimensions", dimensions.ToString() },
                 { "tenant", TestVariables["tenantId"] }
             });
 
@@ -346,13 +340,8 @@ public class FoundryExtensionsCommandTests(ITestOutputHelper output, TestProxyFi
         var firstEmbedding = data.EnumerateArray().First();
         var embeddingVector = firstEmbedding.GetProperty("embedding");
 
-        // Verify embedding vector dimensions match requested dimensions (if model supports it)
         var vectorArray = embeddingVector.EnumerateArray().ToArray();
         Assert.True(vectorArray.Length > 0, "Embedding vector should not be empty");
-
-        // Note: Some models may not support custom dimensions and will return default size
-        // So we just verify we got a reasonable response, not necessarily the exact dimensions requested
-        Assert.True(vectorArray.Length >= 512, $"Embedding vector should have reasonable dimensions, got {vectorArray.Length}");
 
         // Verify all values are valid numbers
         foreach (var value in vectorArray)

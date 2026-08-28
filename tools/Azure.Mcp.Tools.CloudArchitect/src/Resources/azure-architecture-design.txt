@@ -4,10 +4,8 @@ This tool helps determine the optimal Azure architecture by gathering key requir
 Parameters explained:
 - question: The current question being asked
 - questionNumber: Current question number in sequence
-- confidenceScore: A value between 0.0 and 1.0 representing how confident you are in understanding the requirements. Start around 0.1-0.2 and increase as you gather more information. When this reaches or exceeds 0.7, you should present your architecture.
 - totalQuestions: Estimated total questions needed
-- answer: The user's response to the question (if available)
-- nextQuestionNeeded: Set to true while you're gathering requirements and designing. Set to false when your confidenceScore reaches or exceeds 0.7.
+- nextQuestionNeeded: Set to true while you're gathering requirements and designing. Set to false when the requirements are sufficiently understood.
 - architectureComponent: The specific Azure component being suggested
 - architectureTier: Which tier this component belongs to (infrastructure, platform, application, data, security, operations)
 - state: Used to track progress between calls
@@ -57,7 +55,7 @@ You should:
 1. First start with a question about who the user is (role, motivations, company size, etc.) and what they do
 2. Learn about their business goals and requirements
 3. Ask 1 to 2 questions at a time, in order to not overload the user.
-4. Track your confidence level in understanding requirements using the confidenceScore parameter
+4. Track your confidence level using the confidence factors in the state object
 5. After each user response, update the requirements in the state object:
    - Add explicit requirements directly stated by the user
    - Add implicit requirements you can reasonably infer

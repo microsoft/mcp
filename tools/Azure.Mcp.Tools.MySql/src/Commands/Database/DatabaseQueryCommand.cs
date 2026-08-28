@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.MySql.Options.Database;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
@@ -22,8 +20,8 @@ namespace Azure.Mcp.Tools.MySql.Commands.Database;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger, IMySqlService mysqlService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<DatabaseQueryOptions, DatabaseQueryCommand.DatabaseQueryCommandResult>(subscriptionResolver)
+public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger, IMySqlService mysqlService)
+    : AuthenticatedCommand<DatabaseQueryOptions, DatabaseQueryCommand.DatabaseQueryCommandResult>
 {
     private readonly IMySqlService _mysqlService = mysqlService;
     private readonly ILogger<DatabaseQueryCommand> _logger = logger;
@@ -32,7 +30,7 @@ public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger, I
     {
         try
         {
-            var result = await _mysqlService.ExecuteQueryAsync(options.Subscription!, options.ResourceGroup, options.User, options.Server, options.Database, options.Query, cancellationToken);
+            var result = await _mysqlService.ExecuteQueryAsync(options.User, options.Server, options.Database, options.Query, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result ?? []), MySqlJsonContext.Default.DatabaseQueryCommandResult);
         }
         catch (Exception ex)

@@ -2,25 +2,24 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.Tests.Blob.Container;
 
-public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<ContainerGetCommand, IStorageService>
+public class ContainerGetCommandTests : CommandUnitTestsBase<ContainerGetCommand, IStorageService>
 {
     [Fact]
     public async Task ExecuteAsync_NoParameters_ReturnsContainers()
     {
         // Arrange
-        var subscription = "sub123";
         var account = "testaccount";
         var expectedContainers = new List<ContainerInfo>(
         [
@@ -31,7 +30,6 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
         Service.GetContainerDetails(
             Arg.Is(account),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -39,7 +37,7 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
             .Returns(expectedContainers);
 
         // Act
-        var response = await ExecuteCommandAsync("--subscription", subscription, "--account", account);
+        var response = await ExecuteCommandAsync("--account", account);
 
         // Assert
         var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.ContainerGetCommandResult);
@@ -53,13 +51,11 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoContainers()
     {
         // Arrange
-        var subscription = "sub123";
         var account = "testaccount";
 
         Service.GetContainerDetails(
             Arg.Is(account),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -67,7 +63,7 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
             .Returns([]);
 
         // Act
-        var response = await ExecuteCommandAsync("--subscription", subscription, "--account", account);
+        var response = await ExecuteCommandAsync("--account", account);
 
         // Assert
         var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.ContainerGetCommandResult);
@@ -80,13 +76,11 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
     {
         // Arrange
         var expectedError = "Test error";
-        var subscription = "sub123";
         var account = "testaccount";
 
         Service.GetContainerDetails(
             Arg.Is(account),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -94,7 +88,7 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
-        var response = await ExecuteCommandAsync("--subscription", subscription, "--account", account);
+        var response = await ExecuteCommandAsync("--account", account);
 
         // Assert
         Assert.NotNull(response);
@@ -108,15 +102,14 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
         Assert.Equal("get", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
+        Assert.DoesNotContain(CommandDefinition.Options, option => option.Name == "--subscription");
     }
 
     [Theory]
-    [InlineData("--account mystorageaccount --subscription sub123", true)]
-    [InlineData("--subscription sub123 --account mystorageaccount", true)]
-    [InlineData("--subscription sub123 --account mystorageaccount --container container", true)]
-    [InlineData("--subscription sub123 --account mystorageaccount --container container --prefix prefix", true)]
-    [InlineData("--subscription sub123", false)] // Missing account
-    [InlineData("--account mystorageaccount", false)] // Missing subscription
+    [InlineData("--account mystorageaccount", true)]
+    [InlineData("--account mystorageaccount --container container", true)]
+    [InlineData("--account mystorageaccount --container container --prefix prefix", true)]
+    [InlineData("", false)] // Missing account
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
@@ -129,7 +122,6 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
             Service.GetContainerDetails(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions>(),
@@ -158,7 +150,6 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
     {
         // Arrange
         var account = "mystorageaccount";
-        var subscription = "sub123";
         var container = "container123";
         var expected = new ContainerInfo(container, DateTimeOffset.UtcNow, "etag123", new Dictionary<string, string>(),
             "unlocked", "available", null, "private", false, false, null, null, false);
@@ -166,7 +157,6 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
         Service.GetContainerDetails(
             Arg.Is(account),
             Arg.Is(container),
-            Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -176,7 +166,6 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
         // Act
         var response = await ExecuteCommandAsync(
             "--account", account,
-            "--subscription", subscription,
             "--container", container);
 
         // Assert
@@ -194,13 +183,11 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
     {
         // Arrange
         var account = "mystorageaccount";
-        var subscription = "sub123";
         var container = "container123";
 
         Service.GetContainerDetails(
             Arg.Is(account),
             Arg.Is(container),
-            Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -210,7 +197,6 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
         // Act
         var response = await ExecuteCommandAsync(
             "--account", account,
-            "--subscription", subscription,
             "--container", container);
 
         // Assert
@@ -224,13 +210,11 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
     {
         // Arrange
         var account = "mystorageaccount";
-        var subscription = "sub123";
         var container = "notfound";
 
         Service.GetContainerDetails(
             Arg.Is(account),
             Arg.Is(container),
-            Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -240,7 +224,6 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
         // Act
         var response = await ExecuteCommandAsync(
             "--account", account,
-            "--subscription", subscription,
             "--container", container);
 
         // Assert
@@ -253,13 +236,11 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
     {
         // Arrange
         var account = "mystorageaccount";
-        var subscription = "sub123";
         var container = "container123";
 
         Service.GetContainerDetails(
             Arg.Is(account),
             Arg.Is(container),
-            Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -269,7 +250,6 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
         // Act
         var response = await ExecuteCommandAsync(
             "--account", account,
-            "--subscription", subscription,
             "--container", container);
 
         // Assert

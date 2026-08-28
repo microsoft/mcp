@@ -1,0 +1,10 @@
+changes:
+  - section: Breaking Changes
+    description: |
+      Removed unused public tool parameters:
+      - Azure Backup: `--sku` from vault create, AKS namespace filters from protected item protect, and `--container` from protectable item list.
+      - Cloud Architect: `--answer` and `--confidence-score`.
+      - Communication email: `--sender-name`.
+      - Foundry Extensions: embedding `--user`, `--encoding-format`, and `--dimensions`; model-list `--auth-method`; chat completion `--stream`.
+      - Monitor resource log query, Key Vault operations, and Storage blob, container, and table operations: `--subscription`.
+      - MySQL database query and table schema: `--subscription` and `--resource-group`; PostgreSQL server configuration: `--user`.

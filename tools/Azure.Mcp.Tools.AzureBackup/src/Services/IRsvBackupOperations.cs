@@ -14,7 +14,6 @@ public interface IRsvBackupOperations
         string resourceGroup,
         string subscription,
         string location,
-        string? sku,
         string? storageType,
         string? tenant,
         RetryPolicyOptions? retryPolicy,
@@ -122,7 +121,6 @@ public interface IRsvBackupOperations
         string resourceGroup,
         string subscription,
         string? workloadType,
-        string? containerName,
         string? tenant,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
