@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.ScheduledTasks;
     Id = "64680a1f-b076-460b-87fd-20fdc971a804",
     Name = "delete",
     Title = "Delete Scheduled Task",
-    Description = "Delete an SRE Agent scheduled task. Requires confirm=true.",
+    Description = "Delete an SRE Agent scheduled task.",
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -32,10 +32,6 @@ public sealed class ScheduledTasksDeleteCommand(ILogger<ScheduledTasksDeleteComm
     {
         try
         {
-            if (!options.Confirm)
-            {
-                throw new InvalidOperationException("Deleting a scheduled task requires --confirm true.");
-            }
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
                 options,

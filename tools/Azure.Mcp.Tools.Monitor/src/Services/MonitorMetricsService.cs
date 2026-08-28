@@ -10,7 +10,6 @@ using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Monitor.Query.Metrics;
 using Azure.ResourceManager.Monitor;
 using Azure.ResourceManager.Monitor.Models;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using MetricDefinition = Azure.Mcp.Tools.Monitor.Models.MetricDefinition;
 using MetricNamespace = Azure.Mcp.Tools.Monitor.Models.MetricNamespace;
@@ -37,19 +36,18 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         string? aggregation = null,
         string? filter = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName), (nameof(metricNamespace), metricNamespace));
         ArgumentNullException.ThrowIfNull(metricNames);
 
-        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
+        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, cancellationToken);
         if (string.IsNullOrEmpty(resourceId))
         {
             throw new ArgumentException($"Resource '{resourceName}' not found or could not be resolved.");
         }
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         // Parse time range
         DateTimeOffset? startTimeOffset = null;
@@ -218,17 +216,16 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         string? metricNamespace = null,
         string? searchString = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
-        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
+        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, cancellationToken);
         if (string.IsNullOrEmpty(resourceId))
         {
             throw new ArgumentException($"Resource '{resourceName}' not found or could not be resolved.");
         }
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         // List metric definitions using the new API
         var definitionsPageable = armClient.GetMonitorMetricDefinitionsAsync(
@@ -290,17 +287,16 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         string resourceName,
         string? searchString = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
-        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
+        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, cancellationToken);
         if (string.IsNullOrEmpty(resourceId))
         {
             throw new ArgumentException($"Resource '{resourceName}' not found or could not be resolved.");
         }
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         // List metric namespaces using the new API
         var namespacesPageable = armClient.GetMonitorMetricNamespacesAsync(new(resourceId!), cancellationToken: cancellationToken);
@@ -344,7 +340,6 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         string? orderBy = null,
         int? top = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(metricNamespace), metricNamespace));
@@ -366,11 +361,11 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         var resourceIds = new List<ResourceIdentifier>(resourceNames.Count);
         foreach (var resourceName in resourceNames)
         {
-            var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
+            var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, cancellationToken);
             resourceIds.Add(resourceId);
         }
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         // The batch metrics endpoint is regional and requires all resources to share the same region, so resolve
         // the region from the first resource and let the service validate the rest.
@@ -380,7 +375,6 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         var credential = await GetCredential(tenant, cancellationToken);
         var metricsClientOptions = AddDefaultPolicies(new MetricsClientOptions());
         metricsClientOptions.Audience = GetMetricsClientAudience();
-        ConfigureRetryPolicy(metricsClientOptions, retryPolicy);
         metricsClientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
 
         var metricsClient = new MetricsClient(new Uri($"https://{region}.{GetMetricsEndpointHostSuffix()}"), credential, metricsClientOptions);

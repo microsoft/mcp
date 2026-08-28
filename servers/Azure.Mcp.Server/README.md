@@ -1266,6 +1266,7 @@ Example prompts that generate Azure CLI commands:
 * "Remove recovery resource 'my-resource' from recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "Delete recovery plan 'my-recovery-plan' from service group 'my-service-group' and report whether it existed"
 * "List the recovery jobs of recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Update resilience drill 'my-drill' in service group 'my-service-group' to use manual RBAC setup"
 * "Create a zonal resilience drill 'my-drill' in service group 'my-service-group'"
 * "Get the resilience drill 'my-drill' in service group 'my-service-group'"
 * "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"

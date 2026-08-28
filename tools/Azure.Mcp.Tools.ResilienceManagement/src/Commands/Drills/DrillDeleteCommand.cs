@@ -54,7 +54,6 @@ public sealed class DrillDeleteCommand(ILogger<DrillDeleteCommand> logger, IResi
                 options.ServiceGroup,
                 options.Drill,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

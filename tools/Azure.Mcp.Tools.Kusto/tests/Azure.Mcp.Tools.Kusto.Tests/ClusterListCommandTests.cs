@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -21,7 +20,7 @@ public sealed class ClusterListCommandTests : SubscriptionCommandUnitTestsBase<C
         // Arrange
         var expectedClusters = new ResourceQueryResults<string>(["clusterA", "clusterB"], false);
         Service.ListClustersAsync(
-            "sub123", Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            "sub123", Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedClusters);
 
         // Act
@@ -37,7 +36,7 @@ public sealed class ClusterListCommandTests : SubscriptionCommandUnitTestsBase<C
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoClustersExist()
     {
         // Arrange
-        Service.ListClustersAsync("sub123", Arg.Any<string?>(), null, null, Arg.Any<CancellationToken>())
+        Service.ListClustersAsync("sub123", Arg.Any<string?>(), null, Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<string>([], false));
 
         // Act
@@ -57,7 +56,7 @@ public sealed class ClusterListCommandTests : SubscriptionCommandUnitTestsBase<C
         var subscriptionId = "sub123";
 
         // Arrange
-        Service.ListClustersAsync(subscriptionId, Arg.Any<string?>(), null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListClustersAsync(subscriptionId, Arg.Any<string?>(), null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -74,7 +73,7 @@ public sealed class ClusterListCommandTests : SubscriptionCommandUnitTestsBase<C
     {
         // Arrange
         const string resourceGroup = "test-rg";
-        Service.ListClustersAsync(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListClustersAsync(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<string>([], false));
 
         // Act
@@ -82,6 +81,6 @@ public sealed class ClusterListCommandTests : SubscriptionCommandUnitTestsBase<C
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await Service.Received(1).ListClustersAsync(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListClustersAsync(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

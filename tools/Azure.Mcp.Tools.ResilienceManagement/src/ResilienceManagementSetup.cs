@@ -41,6 +41,7 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<RecoveryPlanGetCommand>();
         services.AddSingleton<RecoveryPlanCreateCommand>();
         services.AddSingleton<RecoveryPlanDeleteCommand>();
+        services.AddSingleton<RecoveryPlanValidateForFailoverCommand>();
         services.AddSingleton<RecoveryPlanUpdateResourcesCommand>();
         services.AddSingleton<RecoveryPlanCheckReadinessCommand>();
         services.AddSingleton<RecoveryResourceGetCommand>();
@@ -48,6 +49,7 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<RecoveryJobResourceGetCommand>();
         services.AddSingleton<DrillCreateCommand>();
         services.AddSingleton<DrillGetCommand>();
+        services.AddSingleton<DrillUpdateCommand>();
         services.AddSingleton<DrillDeleteCommand>();
         services.AddSingleton<DrillResourceGetCommand>();
         services.AddSingleton<DrillRunGetCommand>();
@@ -107,9 +109,10 @@ public class ResilienceManagementSetup : IAreaSetup
         recoveryPlans.AddCommand<RecoveryPlanGetCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanCreateCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanDeleteCommand>(serviceProvider);
+        recoveryPlans.AddCommand<RecoveryPlanValidateForFailoverCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanCheckReadinessCommand>(serviceProvider);
 
-        // Create resource subgroup under recovery plan
+        // Create resource subgroup under recoveryplan
         var recoveryResources = new CommandGroup("resource", "Resilience recovery resource operations - Commands for listing, getting, and updating the resources (members) of a resilience recovery plan.");
         recoveryPlans.AddSubGroup(recoveryResources);
 
@@ -134,6 +137,7 @@ public class ResilienceManagementSetup : IAreaSetup
 
         drills.AddCommand<DrillCreateCommand>(serviceProvider);
         drills.AddCommand<DrillGetCommand>(serviceProvider);
+        drills.AddCommand<DrillUpdateCommand>(serviceProvider);
         drills.AddCommand<DrillDeleteCommand>(serviceProvider);
 
         // Create resource subgroup under drill

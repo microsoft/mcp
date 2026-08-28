@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Monitor.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -26,7 +25,6 @@ public interface IMonitorMetricsService
     /// <param name="filter">Optional OData filter to apply</param>
     /// <param name="metricNamespace">Required metric namespace</param>
     /// <param name="tenant">Optional tenant ID for multi-tenant scenarios</param>
-    /// <param name="retryPolicy">Optional retry policy parameters</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of metric results with time series data</returns>
     Task<List<MetricResult>> QueryMetricsAsync(
@@ -42,7 +40,6 @@ public interface IMonitorMetricsService
         string? aggregation = null,
         string? filter = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -55,7 +52,6 @@ public interface IMonitorMetricsService
     /// <param name="metricNamespace">Optional metric namespace</param>
     /// <param name="searchString">Optional search string to filter metric definitions by name and description</param>
     /// <param name="tenant">Optional tenant ID for multi-tenant scenarios</param>
-    /// <param name="retryPolicy">Optional retry policy parameters</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of metric definitions</returns>
     Task<List<MetricDefinition>> ListMetricDefinitionsAsync(
@@ -66,7 +62,6 @@ public interface IMonitorMetricsService
         string? metricNamespace = null,
         string? searchString = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -78,7 +73,6 @@ public interface IMonitorMetricsService
     /// <param name="resourceName">The resource name</param>
     /// <param name="searchString">Optional search string to filter namespaces</param>
     /// <param name="tenant">Optional tenant ID for multi-tenant scenarios</param>
-    /// <param name="retryPolicy">Optional retry policy parameters</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of metric namespaces</returns>
     Task<List<MetricNamespace>> ListMetricNamespacesAsync(
@@ -88,7 +82,6 @@ public interface IMonitorMetricsService
         string resourceName,
         string? searchString = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -109,7 +102,6 @@ public interface IMonitorMetricsService
     /// <param name="orderBy">Optional sort order, only valid when <paramref name="filter"/> is specified</param>
     /// <param name="top">Optional maximum number of time series to retrieve per resource per metric, only valid when <paramref name="filter"/> is specified</param>
     /// <param name="tenant">Optional tenant ID for multi-tenant scenarios</param>
-    /// <param name="retryPolicy">Optional retry policy parameters</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of metric results per resource, with time series data</returns>
     Task<List<ResourceMetricsResult>> QueryMetricsBatchAsync(
@@ -127,6 +119,5 @@ public interface IMonitorMetricsService
         string? orderBy = null,
         int? top = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

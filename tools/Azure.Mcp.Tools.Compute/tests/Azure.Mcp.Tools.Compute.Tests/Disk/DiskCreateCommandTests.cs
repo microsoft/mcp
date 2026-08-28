@@ -10,7 +10,6 @@ using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -94,7 +93,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -170,7 +168,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -244,7 +241,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -314,7 +310,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -378,7 +373,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service unavailable"));
 
@@ -479,7 +473,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -545,7 +538,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -617,7 +609,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -668,7 +659,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -722,7 +712,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -808,7 +797,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             uploadSizeBytes,
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -891,7 +879,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             uploadSizeBytes,
             "TrustedLaunch",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -961,7 +948,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -1028,7 +1014,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -1073,7 +1058,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -1181,7 +1165,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new SecurityException("Endpoint must use HTTPS protocol. Got: http"));
 
@@ -1231,7 +1214,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new SecurityException("Endpoint host 'evil-server.com' is not a valid storage-blob domain for Azure Public Cloud."));
 

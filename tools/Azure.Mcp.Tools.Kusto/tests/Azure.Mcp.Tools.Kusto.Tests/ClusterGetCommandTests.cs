@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Models;
 using Azure.Mcp.Tools.Kusto.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -39,7 +38,7 @@ public sealed class ClusterGetCommandTests : SubscriptionCommandUnitTestsBase<Cl
         );
 
         Service.GetClusterAsync(
-            "sub123", "clusterA", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            "sub123", "clusterA", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedCluster);
 
         var response = await ExecuteCommandAsync("--subscription sub123 --cluster clusterA");
@@ -54,7 +53,7 @@ public sealed class ClusterGetCommandTests : SubscriptionCommandUnitTestsBase<Cl
     public async Task ExecuteAsync_Returns404_WhenClusterDoesNotExist()
     {
         Service.GetClusterAsync(
-            "sub123", "clusterA", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            "sub123", "clusterA", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new KeyNotFoundException("Kusto cluster 'clusterA' not found for subscription 'sub123'."));
 
         var response = await ExecuteCommandAsync("--subscription sub123 --cluster clusterA");
@@ -68,7 +67,7 @@ public sealed class ClusterGetCommandTests : SubscriptionCommandUnitTestsBase<Cl
     {
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         Service.GetClusterAsync(
-            "sub123", "clusterA", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            "sub123", "clusterA", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var response = await ExecuteCommandAsync("--subscription sub123 --cluster clusterA");

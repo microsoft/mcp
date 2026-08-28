@@ -32,7 +32,7 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
     {
         try
         {
-            var settingsResult = await _keyVaultService.GetVaultSettings(options.Vault, options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken);
+            var settingsResult = await _keyVaultService.GetVaultSettings(options.Vault, options.Subscription!, options.Tenant, cancellationToken);
 
             // Convert settings to a dictionary of strings for easier serialization in case the service adds new settings in the future.
             Dictionary<string, string> settings = new(StringComparer.OrdinalIgnoreCase);
