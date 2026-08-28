@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.Server;
 using Azure.Mcp.Tools.Sql.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -40,7 +39,6 @@ public class ServerDeleteCommandTests : SubscriptionCommandUnitTestsBase<ServerD
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(true);
         }
@@ -67,7 +65,6 @@ public class ServerDeleteCommandTests : SubscriptionCommandUnitTestsBase<ServerD
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -80,7 +77,7 @@ public class ServerDeleteCommandTests : SubscriptionCommandUnitTestsBase<ServerD
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        await Service.Received(1).DeleteServerAsync("testserver", "rg", "sub", Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).DeleteServerAsync("testserver", "rg", "sub", Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -91,7 +88,6 @@ public class ServerDeleteCommandTests : SubscriptionCommandUnitTestsBase<ServerD
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(false);
 
@@ -114,7 +110,6 @@ public class ServerDeleteCommandTests : SubscriptionCommandUnitTestsBase<ServerD
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -139,7 +134,6 @@ public class ServerDeleteCommandTests : SubscriptionCommandUnitTestsBase<ServerD
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 
@@ -164,7 +158,6 @@ public class ServerDeleteCommandTests : SubscriptionCommandUnitTestsBase<ServerD
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 

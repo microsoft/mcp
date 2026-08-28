@@ -26,7 +26,6 @@ public sealed class AcrService(IAzureService azureService)
             "Microsoft.ContainerRegistry/registries",
             resourceGroup,
             subscription,
-            null,
             ConvertToAcrRegistryInfoModel,
             tenant: tenant,
             cancellationToken: cancellationToken);
@@ -47,7 +46,6 @@ public sealed class AcrService(IAzureService azureService)
             "Microsoft.ContainerRegistry/registries",
             resourceGroup: resourceGroup,
             subscription: subscription,
-            retryPolicy: null,
             converter: ConvertToAcrRegistryInfoModel,
             additionalFilter: $"name =~ '{EscapeKqlString(registry)}'",
             tenant: tenant,

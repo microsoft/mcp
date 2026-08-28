@@ -47,7 +47,6 @@ public class HooksDeleteCommandTests : SubscriptionCommandUnitTestsBase<HooksDel
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
             Service.DeleteHookAsync(
@@ -78,7 +77,6 @@ public class HooksDeleteCommandTests : SubscriptionCommandUnitTestsBase<HooksDel
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.DeleteHookAsync(
@@ -103,7 +101,6 @@ public class HooksDeleteCommandTests : SubscriptionCommandUnitTestsBase<HooksDel
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.DeleteHookAsync(
@@ -127,7 +124,6 @@ public class HooksDeleteCommandTests : SubscriptionCommandUnitTestsBase<HooksDel
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.DeleteHookAsync("https://agent1.azuresre.ai", "hook1", null, Arg.Any<CancellationToken>())

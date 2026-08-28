@@ -117,7 +117,6 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
                 options.UserAssignedIdentity,
                 options.DefaultGroupDescription,
                 options.Tenant,
-                options.RetryPolicy,
                 additionalGroups: additionalGroups,
                 defaultGroupPreActions: defaultGroupPreActions,
                 defaultGroupPostActions: defaultGroupPostActions,

@@ -52,7 +52,6 @@ public class AdvisorService(IAzureService azureService)
             "Microsoft.Advisor/recommendations",
             resourceGroup,
             subscription,
-            null,
             ConvertToAdvisorRecommendationModel,
             tableName: "advisorresources",
             additionalFilter: additionalFilter,

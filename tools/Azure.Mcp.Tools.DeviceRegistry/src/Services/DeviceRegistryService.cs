@@ -22,7 +22,6 @@ public class DeviceRegistryService(IAzureService azureService)
             "Microsoft.DeviceRegistry/namespaces",
             resourceGroup,
             subscription,
-            null,
             ConvertToNamespaceInfoModel,
             cancellationToken: cancellationToken);
     }

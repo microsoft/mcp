@@ -3,11 +3,9 @@
 
 using System.Net;
 using Azure.Mcp.Tests.Commands;
-using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.Docs;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -48,7 +46,6 @@ public class MemoriesDeleteCommandTests : SubscriptionCommandUnitTestsBase<Memor
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" });
             Service.DeleteMemoryAsync(
@@ -79,7 +76,6 @@ public class MemoriesDeleteCommandTests : SubscriptionCommandUnitTestsBase<Memor
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" });
         Service.DeleteMemoryAsync(
@@ -103,7 +99,6 @@ public class MemoriesDeleteCommandTests : SubscriptionCommandUnitTestsBase<Memor
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" });
         Service.DeleteMemoryAsync(

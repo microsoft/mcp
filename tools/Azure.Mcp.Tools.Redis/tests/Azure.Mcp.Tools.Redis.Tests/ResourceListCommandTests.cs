@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Redis.Commands;
 using Azure.Mcp.Tools.Redis.Models.CacheForRedis;
 using Azure.Mcp.Tools.Redis.Models.ManagedRedis;
 using Azure.Mcp.Tools.Redis.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -36,7 +35,6 @@ public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<Resourc
             Service.ListResourcesAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns([]);
         }
@@ -51,7 +49,7 @@ public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<Resourc
     {
         // Arrange
         var expectedCaches = new CacheModel[] { new() { Name = "cache1" }, new() { Name = "cache2" } };
-        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedCaches);
 
         // Act
@@ -69,7 +67,7 @@ public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<Resourc
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoCaches()
     {
         // Arrange
-        Service.ListResourcesAsync("sub123", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns([]);
+        Service.ListResourcesAsync("sub123", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns([]);
 
         // Act
         var response = await ExecuteCommandAsync("--subscription", "sub123");
@@ -85,7 +83,7 @@ public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<Resourc
     {
         // Arrange
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
-        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -101,7 +99,7 @@ public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<Resourc
     public async Task ExecuteAsync_ReturnsNotFound_WhenSubscriptionNotFound()
     {
         // Arrange
-        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new KeyNotFoundException("Subscription 'sub123' not found"));
 
         // Act
@@ -116,7 +114,7 @@ public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<Resourc
     public async Task ExecuteAsync_PreservesStatusCode_WhenRequestFailedException()
     {
         // Arrange
-        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
         // Act
@@ -138,7 +136,7 @@ public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<Resourc
         };
 
         var expectedCaches = new CacheModel[] { new() { Name = "cache1" }, new() { Name = "cache2", AccessPolicyAssignments = expectedAssignments } };
-        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedCaches);
 
         // Act
@@ -164,7 +162,7 @@ public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<Resourc
     {
         // Arrange
         var expectedCaches = new CacheModel[] { new() { Name = "cache1" } };
-        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedCaches);
 
         // Act
@@ -209,7 +207,7 @@ public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<Resourc
 
         var expectedCaches = new CacheModel[] { new() { Name = "cache1", Databases = expectedDatabases } };
 
-        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedCaches);
 
         // Act
@@ -235,7 +233,7 @@ public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<Resourc
         // Arrange
         var expectedCaches = new CacheModel[] { new() { Name = "cache1" } };
 
-        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedCaches);
 
         // Act

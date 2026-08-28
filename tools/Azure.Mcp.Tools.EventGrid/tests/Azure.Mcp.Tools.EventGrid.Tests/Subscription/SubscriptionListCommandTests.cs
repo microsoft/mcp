@@ -166,7 +166,7 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
                 ]);
 
             // Set up subscription service for cross-subscription search scenario
-            _azureService.GetSubscriptions(Arg.Any<string>(), null, Arg.Any<CancellationToken>())
+            _azureService.GetSubscriptions(Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
 

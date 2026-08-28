@@ -25,7 +25,7 @@ public class ResourceResolverServiceTests
         _azureService = Substitute.For<IAzureService>();
         _service = new ResourceResolverService(_azureService);
 
-        _azureService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), null, cancellationToken: Arg.Any<CancellationToken>())
+        _azureService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>())
             .Returns(_subscriptionResource);
     }
 
@@ -63,7 +63,7 @@ public class ResourceResolverServiceTests
         // Assert
         Assert.Equal(fullResourceId, result.ToString());
         // Verify that subscription service was not called since we're passing a full resource ID
-        await _azureService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), null, Arg.Any<CancellationToken>());
+        await _azureService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public class ResourceResolverServiceTests
 
         // Assert
         Assert.Equal(expectedResourceId, result);
-        await _azureService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), null, Arg.Any<CancellationToken>());
+        await _azureService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -149,7 +149,7 @@ public class ResourceResolverServiceTests
         var resourcesAsyncPageable = CreateAsyncPageableWithItems(resource);
 
         subscriptionResource.GetGenericResourcesAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns(resourcesAsyncPageable);
-        _azureService.GetSubscription(subscription, Arg.Any<string?>(), null, Arg.Any<CancellationToken>())
+        _azureService.GetSubscription(subscription, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(subscriptionResource);
 
         // Act

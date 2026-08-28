@@ -63,7 +63,6 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
                 options.QueryStartTime,
                 options.QueryEndTime,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(events ?? []), ResourceHealthJsonContext.Default.ServiceHealthEventsListCommandResult);
