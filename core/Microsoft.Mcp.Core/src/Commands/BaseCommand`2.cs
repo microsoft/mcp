@@ -118,6 +118,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         }
 
         CommandResponse response = await ExecuteAsync(context, options, cancellationToken);
+        CaptureTelemetryFailureMessage(context, response);
         return response;
     }
 
@@ -135,6 +136,20 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
                 $"Command type '{GetType().FullName}' called {nameof(SetResult)} without overriding {nameof(ResultTypeInfo)}.");
 
         context.Response.Results = ResponseResult.Create(result, typeInfo);
+    }
+
+    /// <summary>
+    /// Adds a command-provided, sanitized message to telemetry for failed responses.
+    /// </summary>
+    /// <param name="context">The command execution context containing the telemetry activity.</param>
+    /// <param name="response">The command response containing the optional telemetry message.</param>
+    private static void CaptureTelemetryFailureMessage(CommandContext context, CommandResponse response)
+    {
+        var isError = response.Status < HttpStatusCode.OK || response.Status >= HttpStatusCode.Ambiguous;
+        if (isError && !string.IsNullOrWhiteSpace(response.TelemetryFailureMessage))
+        {
+            context.Activity?.SetTag(TagName.ExceptionMessage, response.TelemetryFailureMessage);
+        }
     }
 
     protected virtual void HandleException(CommandContext context, Exception ex)
