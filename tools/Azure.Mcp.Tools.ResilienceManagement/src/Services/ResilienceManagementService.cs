@@ -778,10 +778,10 @@ public sealed class ResilienceManagementService(IAzureService azureService)
     {
         JsonElement error = GetOptionalObject(result, "error");
         string? errorCode = GetOptionalString(error, "code");
+        // RO returns no error object on success; its legacy response example uses code "None".
+        // Any other error object represents a failed validation, even when its code is missing.
         bool isValid = error.ValueKind != JsonValueKind.Object ||
-            string.IsNullOrWhiteSpace(errorCode) ||
-            string.Equals(errorCode, "None", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(errorCode, "Success", StringComparison.OrdinalIgnoreCase);
+            string.Equals(errorCode, "None", StringComparison.OrdinalIgnoreCase);
         return new RecoveryPlanValidateForOperationResult(
             operationId,
             operationName,

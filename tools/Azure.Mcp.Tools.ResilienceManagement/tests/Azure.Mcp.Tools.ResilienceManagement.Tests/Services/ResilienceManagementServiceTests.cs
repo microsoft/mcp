@@ -575,6 +575,25 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public void CreateRecoveryPlanValidateForOperationResult_MapsMissingPropertiesAsValid()
+    {
+        BinaryData operationResponse = BinaryData.FromObjectAsJson(new
+        {
+            status = "Succeeded",
+            properties = (object?)null
+        });
+
+        RecoveryPlanValidateForOperationResult result = ResilienceManagementService.CreateRecoveryPlanValidateForOperationResult(
+            "11111111-1111-1111-1111-111111111111",
+            "Failover",
+            operationResponse);
+
+        Assert.True(result.IsValid);
+        Assert.Null(result.ErrorCode);
+        Assert.Null(result.ErrorMessage);
+    }
+
+    [Fact]
     public void CreateRecoveryPlanValidateForOperationResult_MapsBlockedOperationFromObjectProperties()
     {
         BinaryData operationResponse = BinaryData.FromObjectAsJson(new
@@ -598,6 +617,35 @@ public sealed class ResilienceManagementServiceTests
         Assert.False(result.IsValid);
         Assert.Equal("RecoveryPlanStateDoesNotSupportOperation", result.ErrorCode);
         Assert.Equal("Operation Reprotect is not allowed for the current recovery plan state.", result.ErrorMessage);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("Success")]
+    public void CreateRecoveryPlanValidateForOperationResult_MapsNonNoneErrorAsInvalid(string? errorCode)
+    {
+        BinaryData operationResponse = BinaryData.FromObjectAsJson(new
+        {
+            status = "Succeeded",
+            properties = new
+            {
+                error = new
+                {
+                    code = errorCode,
+                    message = "Operation validation failed."
+                }
+            }
+        });
+
+        RecoveryPlanValidateForOperationResult result = ResilienceManagementService.CreateRecoveryPlanValidateForOperationResult(
+            "11111111-1111-1111-1111-111111111111",
+            "Failover",
+            operationResponse);
+
+        Assert.False(result.IsValid);
+        Assert.Equal(errorCode, result.ErrorCode);
+        Assert.Equal("Operation validation failed.", result.ErrorMessage);
     }
 
     [Fact]
