@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added the resilience recovery plan finalize tool to validate a configured editable plan, transition it toward ready, and return an operation ID for tracking."

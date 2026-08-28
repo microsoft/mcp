@@ -977,17 +977,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_recoveryplan_checkreadiness | Discover readiness issues for the resources in recovery plan <recovery_plan_name> in service group <service_group> | none |
 | resilience_recoveryplan_delete | Delete the entire recovery plan <recovery_plan_name> from service group <service_group> | none |
 | resilience_recoveryplan_delete | Recovery plan <recovery_plan_name> is no longer needed. Delete it from resilience service group <service_group> | none |
-| resilience_recoveryplan_finalize | Finalize configured recovery plan <recovery_plan_name> in service group <service_group> and return the operation ID so I can track the state transition toward ready | none |
-| resilience_recoveryplan_finalize | Commit or finalize recovery plan <recovery_plan_name> in service group <service_group>, but ask whether I mean plan finalization or failover commit before changing state | clarification-required |
-| resilience_recoveryplan_finalize | Check whether recovery plan <recovery_plan_name> and its protected resources are ready for recovery operations in service group <service_group>, without finalizing the plan | negative |
-| resilience_recoveryplan_failover | Fail over recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> from <source_location> and return the operation ID so I can track execution | none |
-| resilience_recoveryplan_failover | Execute failover for recovery plan <recovery_plan_name> in service group <service_group>, but I have not selected a source location or recovery-resource ID | clarification-required |
-| resilience_recoveryplan_failover | Check whether recovery plan <recovery_plan_name> can fail over from <source_location> without starting recovery workloads | negative |
 | resilience_recoveryplan_get | List all resilience recovery plans in service group <service_group> | none |
 | resilience_recoveryplan_get | Get the details of recovery plan <recoveryplan_name> in service group <service_group> | none |
-| resilience_recoveryplan_reprotect | Reprotect recovery resource <recovery_resource_id> in recovery plan <recoveryplan_name> after failover and return the operation ID so I can track execution | none |
-| resilience_recoveryplan_reprotect | Execute reprotect for recovery plan <recoveryplan_name> in service group <service_group>, but I have not selected any recovery-resource IDs | clarification-required |
-| resilience_recoveryplan_reprotect | Check which resources in recovery plan <recoveryplan_name> are qualified for reprotect without changing recovery protection state | negative |
 | resilience_recoveryplan_validateforfailover | Validate recovery plan <recoveryplan_name> for failover in service group <service_group>, but I have not specified a source location or selected recovery-resource ID | clarification-required |
 | resilience_recoveryplan_validateforfailover | Validate which resources in recovery plan <recoveryplan_name> in service group <service_group> can fail over from <source_location> and report blocking reasons | none |
 | resilience_recoveryplan_validateforfailover | Check whether recovery resource <recovery_resource_id> in recovery plan <recoveryplan_name> is qualified for failover without requiring a source location or executing failover | none |

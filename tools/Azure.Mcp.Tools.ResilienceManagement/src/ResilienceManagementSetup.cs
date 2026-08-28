@@ -41,9 +41,6 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<RecoveryPlanGetCommand>();
         services.AddSingleton<RecoveryPlanCreateCommand>();
         services.AddSingleton<RecoveryPlanDeleteCommand>();
-        services.AddSingleton<RecoveryPlanFinalizeCommand>();
-        services.AddSingleton<RecoveryPlanFailoverCommand>();
-        services.AddSingleton<RecoveryPlanReprotectCommand>();
         services.AddSingleton<RecoveryPlanValidateForFailoverCommand>();
         services.AddSingleton<RecoveryPlanValidateForReprotectCommand>();
         services.AddSingleton<RecoveryPlanValidateForOperationCommand>();
@@ -114,9 +111,6 @@ public class ResilienceManagementSetup : IAreaSetup
         recoveryPlans.AddCommand<RecoveryPlanGetCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanCreateCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanDeleteCommand>(serviceProvider);
-        recoveryPlans.AddCommand<RecoveryPlanFinalizeCommand>(serviceProvider);
-        recoveryPlans.AddCommand<RecoveryPlanFailoverCommand>(serviceProvider);
-        recoveryPlans.AddCommand<RecoveryPlanReprotectCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanValidateForFailoverCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanValidateForReprotectCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanValidateForOperationCommand>(serviceProvider);
