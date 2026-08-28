@@ -972,7 +972,8 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             }
         }
 
-        var operation = await collection.CreateOrUpdateAsync(WaitUntil.Completed, resourceGuardName, data, cancellationToken);
+        var operation = await collection.CreateOrUpdateAsync(WaitUntil.Started, resourceGuardName, data, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
         return ToResourceGuardInfo(operation.Value.Data);
     }
 
