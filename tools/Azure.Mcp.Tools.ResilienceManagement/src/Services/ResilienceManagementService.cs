@@ -1502,7 +1502,8 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
         var drillId = ResilienceManagementDrillResource.CreateResourceIdentifier(serviceGroup, drill);
         ResilienceManagementDrillResource drillResource = armClient.GetResilienceManagementDrillResource(drillId);
-        await drillResource.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        var operation = await drillResource.DeleteAsync(WaitUntil.Started, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
     }
 
     public async Task<IEnumerable<ResourceSummary>> ListDrillResourcesAsync(string serviceGroup, string drill, string? tenant = null, CancellationToken cancellationToken = default)
