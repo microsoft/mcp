@@ -12,11 +12,6 @@ The following options are available for most commands:
 | `--subscription` | No | Environment variable `AZURE_SUBSCRIPTION_ID` | Azure subscription ID for target resources |
 | `--tenant-id` | No | - | Azure tenant ID for authentication |
 | `--auth-method` | No | 'credential' | Authentication method ('credential', 'key', 'connectionString') |
-| `--retry-max-retries` | No | 3 | Maximum retry attempts for failed operations |
-| `--retry-delay` | No | 2 | Delay between retry attempts (seconds) |
-| `--retry-max-delay` | No | 10 | Maximum delay between retries (seconds) |
-| `--retry-mode` | No | 'exponential' | Retry strategy ('fixed' or 'exponential') |
-| `--retry-network-timeout` | No | 100 | Network operation timeout (seconds) |
 | `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
 
 ### Discovery with `--learn`
@@ -570,7 +565,7 @@ azmcp appconfig kv set --subscription <subscription> \
 ### Azure App Lens Operations
 
 > [!NOTE]
-> The `applens resource diagnose` command does not support `--auth-method` or any `--retry-*` options.
+> The `applens resource diagnose` command does not support `--auth-method`.
 
 ```bash
 # Diagnose resource using Azure App Lens
@@ -2951,7 +2946,7 @@ azmcp keyvault secret get --subscription <subscription> \
 ### Azure Kubernetes Service (AKS) Operations
 
 > [!NOTE]
-> The `aks cluster get` and `aks nodepool get` commands do not support `--auth-method` (the `--retry-*` options are still supported).
+> The `aks cluster get` and `aks nodepool get` commands do not support `--auth-method` or any `--retry-*` options.
 
 ```bash
 # Gets Azure Kubernetes Service (AKS) cluster details
@@ -5001,7 +4996,7 @@ azmcp bicepschema get --resource-type <resource-type> \
 ### Cloud Architect
 
 > [!NOTE]
-> The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant-id`, `--auth-method`, or any `--retry-*` options.
+> The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant-id`, or `--auth-method`.
 
 ```bash
 # Design Azure cloud architectures through guided questions
