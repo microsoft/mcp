@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Advisor.Models;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Services;
 
@@ -42,7 +41,6 @@ public class AdvisorService(IAzureService azureService)
     public async Task<ResourceQueryResults<Recommendation>> ListRecommendationsAsync(
         string subscription,
         string? resourceGroup,
-        RetryPolicyOptions? retryPolicy,
         RecommendationFilters? filters = null,
         int top = 50,
         string? tenant = null,
@@ -54,7 +52,7 @@ public class AdvisorService(IAzureService azureService)
             "Microsoft.Advisor/recommendations",
             resourceGroup,
             subscription,
-            retryPolicy,
+            null,
             ConvertToAdvisorRecommendationModel,
             tableName: "advisorresources",
             additionalFilter: additionalFilter,
@@ -321,7 +319,6 @@ public class AdvisorService(IAzureService azureService)
     public async Task<RecommendationSummary> SummarizeRecommendationsAsync(
         string subscription,
         string? resourceGroup,
-        RetryPolicyOptions? retryPolicy,
         string groupBy,
         RecommendationFilters? filters = null,
         string? tenant = null,
@@ -330,7 +327,7 @@ public class AdvisorService(IAzureService azureService)
         ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
         ArgumentException.ThrowIfNullOrWhiteSpace(groupBy);
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var allTenants = await AzureService.GetTenants(cancellationToken);
         var tenantResource = allTenants.FirstOrDefault(t => t.Data.TenantId == subscriptionResource.Data.TenantId)
             ?? throw new InvalidOperationException($"No accessible tenant found for subscription '{subscription}'");

@@ -44,7 +44,6 @@ public sealed class DiskDeleteCommand(ILogger<DiskDeleteCommand> logger, IComput
                 options.ResourceGroup,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

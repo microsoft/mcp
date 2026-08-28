@@ -60,7 +60,6 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTe
                     options.TestrunId,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 // Set results if any were returned
                 context.Response.Results = result != null
@@ -76,7 +75,6 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTe
                     options.TestId,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 context.Response.Results = ResponseResult.Create(new(results ?? []), LoadTestJsonContext.Default.TestRunGetCommandResult);
             }

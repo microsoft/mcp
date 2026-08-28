@@ -59,7 +59,6 @@ public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger, IAppC
                 options.KeyFilter,
                 options.LabelFilter,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(settings ?? []), AppConfigJsonContext.Default.KeyValueGetCommandResult);

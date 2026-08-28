@@ -41,7 +41,6 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultServic
                     options.IncludeManaged,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(keys ?? [], null), KeyVaultJsonContext.Default.KeyGetCommandResult);
@@ -54,7 +53,6 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultServic
                     options.Key,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, KeyDetails.FromKey(key)), KeyVaultJsonContext.Default.KeyGetCommandResult);

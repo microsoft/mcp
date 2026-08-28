@@ -5,7 +5,6 @@ using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.DeviceRegistry.Models;
 using Azure.Mcp.Tools.DeviceRegistry.Services.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.DeviceRegistry.Services;
 
@@ -15,7 +14,6 @@ public class DeviceRegistryService(IAzureService azureService)
     public async Task<ResourceQueryResults<DeviceRegistryNamespaceInfo>> ListNamespacesAsync(
         string subscription,
         string? resourceGroup = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
@@ -24,7 +22,7 @@ public class DeviceRegistryService(IAzureService azureService)
             "Microsoft.DeviceRegistry/namespaces",
             resourceGroup,
             subscription,
-            retryPolicy,
+            null,
             ConvertToNamespaceInfoModel,
             cancellationToken: cancellationToken);
     }

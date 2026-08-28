@@ -47,7 +47,6 @@ public sealed class OpenAiEmbeddingsCreateCommand(IFoundryExtensionsService foun
                 options.Dimensions,
                 options.Tenant,
                 options.AuthMethod ?? AuthMethod.Credential,
-                options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
