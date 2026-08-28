@@ -45,7 +45,6 @@ public sealed class StorageService(IAzureService azureService)
                 "Microsoft.Storage/storageAccounts",
                 resourceGroup,
                 subscription,
-                null,
                 ConvertToAccountInfoModel,
                 tenant: tenant,
                 cancellationToken: cancellationToken);
@@ -56,7 +55,6 @@ public sealed class StorageService(IAzureService azureService)
                 "Microsoft.Storage/storageAccounts",
                 resourceGroup,
                 subscription,
-                null,
                 ConvertToAccountInfoModel,
                 additionalFilter: $"name =~ '{EscapeKqlString(account)}'",
                 tenant: tenant,

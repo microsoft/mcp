@@ -65,7 +65,6 @@ public sealed class KustoService(IAzureService azureService, ICacheService cache
             "Microsoft.Kusto/clusters",
             resourceGroup,
             subscriptionId,
-            null,
             item => ConvertToClusterModel(item).ClusterName,
             tenant: tenant,
             cancellationToken: cancellationToken);
@@ -85,7 +84,6 @@ public sealed class KustoService(IAzureService azureService, ICacheService cache
             "Microsoft.Kusto/clusters",
             null, // all resource groups
             subscriptionId,
-            null,
             ConvertToClusterModel,
             additionalFilter: $"name =~ '{EscapeKqlString(clusterName)}'",
             tenant: tenant,

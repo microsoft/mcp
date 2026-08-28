@@ -543,15 +543,15 @@ public class AzureBackupServiceTests
         const string name = "My Production Sub";
         const string resolvedId = "33333333-3333-3333-3333-333333333333";
 
-        var subData = Azure.ResourceManager.Models.ResourceManagerModelFactory.SubscriptionData(
+        var subData = ResourceManager.Models.ResourceManagerModelFactory.SubscriptionData(
             id: new Azure.Core.ResourceIdentifier($"/subscriptions/{resolvedId}"),
             subscriptionId: resolvedId,
             displayName: name,
             tenantId: null,
-            state: Azure.ResourceManager.Resources.Models.SubscriptionState.Enabled);
-        var subResource = Substitute.For<Azure.ResourceManager.Resources.SubscriptionResource>();
+            state: ResourceManager.Resources.Models.SubscriptionState.Enabled);
+        var subResource = Substitute.For<ResourceManager.Resources.SubscriptionResource>();
         subResource.Data.Returns(subData);
-        _azureService.GetSubscription(name, null, null, Arg.Any<CancellationToken>()).Returns(subResource);
+        _azureService.GetSubscription(name, null, Arg.Any<CancellationToken>()).Returns(subResource);
 
         _rsvOps.ListVaultsAsync(resolvedId, tenant: null, cancellationToken: Arg.Any<CancellationToken>()).Returns([]);
         _dppOps.ListVaultsAsync(resolvedId, tenant: null, cancellationToken: Arg.Any<CancellationToken>()).Returns([]);
@@ -576,8 +576,7 @@ public class AzureBackupServiceTests
 
         await _service.ListVaultsAsync(guid, resourceGroup: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None);
 
-        await _azureService.DidNotReceive().GetSubscription(
-            Arg.Any<string>(), Arg.Any<string?>(), null, Arg.Any<CancellationToken>());
+        await _azureService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     #endregion

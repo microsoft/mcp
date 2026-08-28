@@ -67,7 +67,6 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
             SreAgentResourceType,
             resourceGroup,
             subscription,
-            null,
             ConvertToSreAgentResource,
             tenant: tenant,
             cancellationToken: cancellationToken);
@@ -89,7 +88,6 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
             SreAgentResourceType,
             resourceGroup,
             subscription,
-            null,
             ConvertToSreAgentResource,
             additionalFilter: $"name =~ '{EscapeKqlString(agentName)}'",
             tenant: tenant,
@@ -248,7 +246,6 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
             SreAgentResourceType,
             null,
             subscription,
-            null,
             ConvertToSreAgentResource,
             additionalFilter: $"name =~ '{EscapeKqlString(agentName)}'",
             tenant: tenant,

@@ -51,7 +51,7 @@ public class SearchServiceCacheTests
 
         // Assert: result comes from cache and no ARM call is made
         Assert.Equal(cached, result);
-        await _azureService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), null, Arg.Any<CancellationToken>());
+        await _azureService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
