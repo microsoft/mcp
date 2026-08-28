@@ -181,24 +181,22 @@ public class {Resource}{Operation}Options : ISubscriptionOption
 
     [Option(OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
-
-    [Option(Name = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
 
 Rules:
 - Implement `ISubscriptionOption` for commands that need subscription resolution
 - Use `[Option("description")]` for the description — property name auto-converts to `--kebab-case`
-- Use `[Option(Name = "custom")]` only when the default kebab-case conversion is wrong (e.g., `RetryPolicy` → `--retry` not `--retry-policy`)
+- Use `[Option(Name = "custom")]` only when the default kebab-case conversion is wrong (e.g., when property is named `FooBar` and has `[Option(Name = "foobar")]` you get `--foobar` instead of `--foo-bar`)
 - Use `[Option(OptionDescriptions.X)]` for shared descriptions (`Subscription`, `Tenant`, `ResourceGroup`, `AuthMethod`)
+- Use `[OptionContainer(Prefix = "prefix")]` for model types which contain nested parameters. `"prefix"` will be prepended to the `[Option]`s in the model type (e.g., when `[OptionContainer(Prefix = "foo")]`'s model contains `[Option(Name = "bar")]` the parameter name is `--foo-bar`).
 - Use `subscription` (never `subscriptionId`) — supports both IDs and names
 - Use `resourceGroup` (never `resourceGroupName`)
 - Use singular nouns for resources (`server` not `serverName`)
 - Remove unnecessary `name` suffixes (`Account` / `--account` not `AccountName` / `--account-name`)
 - Use `required` on required options; use nullable types (`?`) for optional options.
 - Non-nullable value types (e.g., `public int Count { get; set; }`) are always valid without `required` — they default to `0`. Use `required` if the caller must explicitly provide a value, or use `int?` if the parameter should be truly optional.
-- Order: command-specific options first, then `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`, `RetryPolicy`
+- Order: command-specific options first, then `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`
 - Keep parameter names consistent with Azure SDK parameters when possible
 
  > **Note:** Options are defined entirely via `[Option]` attributes.
@@ -222,7 +220,6 @@ public interface I{Toolset}Service
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     // Data plane operation (returns simple List)
@@ -230,7 +227,6 @@ public interface I{Toolset}Service
         string resourceName,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }
 ```
@@ -254,14 +250,13 @@ public class {Toolset}Service(IAzureService azureService)
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         return await ExecuteResourceQueryAsync(
             "Microsoft.{Provider}/{resourceType}",
             resourceGroup,
             subscription,
-            retryPolicy,
+            null,
             ConvertToModel,
             tenant: tenant,
             cancellationToken: cancellationToken);
@@ -290,10 +285,9 @@ public class {Toolset}Service(IAzureService azureService)
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 
         // CRITICAL: Use GetResourceGroupAsync with await
         var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -319,11 +313,10 @@ public class MyService(IAzureService azureService)
     private async Task<MyDataPlaneClient> CreateDataPlaneClientAsync(
         string resourceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         var endpoint = GetResourceEndpoint(resourceName);
-        var options = ConfigureRetryPolicy(AddDefaultPolicies(new MyClientOptions()), retryPolicy);
+        var options = AddDefaultPolicies(new MyClientOptions());
         options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new MyDataPlaneClient(
             new Uri(endpoint),
@@ -411,7 +404,6 @@ public sealed class {Resource}{Operation}Command(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
@@ -626,8 +618,10 @@ public class {Resource}{Operation}CommandTests
         if (shouldSucceed)
         {
             Service.GetResourcesAsync(
-                Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new ResourceQueryResults<MyModel>([], false));
         }
@@ -643,8 +637,10 @@ public class {Resource}{Operation}CommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         Service.GetResourcesAsync(
-            Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<MyModel>([], false));
 
@@ -659,8 +655,10 @@ public class {Resource}{Operation}CommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         Service.GetResourcesAsync(
-            Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -675,8 +673,10 @@ public class {Resource}{Operation}CommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         Service.GetResourcesAsync(
-            Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Resource not found"));
 
@@ -951,7 +951,7 @@ dotnet test tools/Azure.Mcp.Tools.{Toolset}/tests
 .\eng\common\spelling\Invoke-Cspell.ps1
 
 # 5. Full verification
-./eng/scripts/Build-Local.ps1 -UsePaths -VerifyNpx
+./eng/scripts/Build-Local.ps1 -VerifyNpx
 
 # 6. AOT/Native build (required for AOT-compatible toolsets)
 ./eng/scripts/Build-Local.ps1 -BuildNative
@@ -1402,10 +1402,10 @@ var vms = await vmssResource.Value
 
 ```csharp
 // ✅ Correct: use IAzureService
-var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, retryPolicy);
+var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, cancellationToken);
 
 // ❌ Wrong: manual ARM client creation
-var armClient = await CreateArmClientAsync(tenant, retryPolicy);
+var armClient = await CreateArmClientAsync(tenant, cancellationToken);
 var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{subscription}"));
 ```
 
@@ -1733,17 +1733,15 @@ catch (Exception ex)
 Task<List<string>> GetStorageAccounts(
     string subscription,
     string? tenant = null,
-    RetryPolicyOptions? retryPolicy = null,
     CancellationToken cancellationToken = default);
 
 // ❌ Incorrect: all on single line
-Task<List<string>> GetStorageAccounts(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null);
+Task<List<string>> GetStorageAccounts(string subscription, string? tenant = null, CancellationToken? cancellationToken = default);
 
 // ❌ Incorrect: missing CancellationToken
 Task<List<string>> GetStorageAccounts(
     string subscription,
-    string? tenant = null,
-    RetryPolicyOptions? retryPolicy = null);
+    string? tenant = null);
 ```
 
 Rules:
@@ -1970,7 +1968,7 @@ var credential = await _tokenCredentialProvider.GetTokenCredentialAsync(tenant, 
 **✅ DO:**
 ```csharp
 // Authentication provider handles all transport scenarios
-var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
 // Options are pre-bound by framework, no shared state
 // (In ExecuteAsync, 'options' parameter is already bound)
@@ -2003,7 +2001,8 @@ private MyOptions? _currentOptions;      // Race condition!
 
 ```csharp
 public async Task<List<Resource>> GetResourcesAsync(
-    string subscription, string? tenant, RetryPolicyOptions? retryPolicy,
+    string subscription,
+    string? tenant,
     CancellationToken cancellationToken)
 {
     // IAzureService handles tenant resolution for all modes:

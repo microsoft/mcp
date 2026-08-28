@@ -4,7 +4,6 @@
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Monitor.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -37,7 +36,6 @@ public class MonitorMetricsServiceTests
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceIdentifier(TestResourceId));
     }
@@ -193,7 +191,6 @@ public class MonitorMetricsServiceTests
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Resource not found"));
 

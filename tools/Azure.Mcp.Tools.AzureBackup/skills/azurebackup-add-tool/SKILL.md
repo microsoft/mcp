@@ -265,7 +265,7 @@ If new Azure Backup-specific technical terms are flagged, add them to `tools/Azu
 #### 5f. Full Build Verification
 
 ```powershell
-./eng/scripts/Build-Local.ps1 -UsePaths -VerifyNpx
+./eng/scripts/Build-Local.ps1 -VerifyNpx
 ```
 
 #### 5g. AOT/Native Build Verification

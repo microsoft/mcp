@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -40,7 +39,6 @@ public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<Name
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(true);
         }
@@ -74,7 +72,6 @@ public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<Name
             "test-rg",
             "test-sub",
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -92,7 +89,6 @@ public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<Name
             "test-rg",
             "test-sub",
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -105,7 +101,6 @@ public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<Name
             "test-rg",
             "test-sub",
             "test-tenant-123",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -124,7 +119,6 @@ public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<Name
             "test-rg",
             "test-sub",
             "test-tenant-123",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -137,7 +131,6 @@ public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new KeyNotFoundException("Namespace not found"));
 
@@ -161,7 +154,6 @@ public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
@@ -185,7 +177,6 @@ public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "Conflict: The namespace cannot be deleted in its current state"));
 
@@ -210,7 +201,6 @@ public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Identity.AuthenticationFailedException("Authentication failed"));
 
@@ -235,7 +225,6 @@ public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Resource group not found"));
 
@@ -259,7 +248,6 @@ public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Unexpected error"));
 
@@ -283,7 +271,6 @@ public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -337,7 +324,6 @@ public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -355,7 +341,6 @@ public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<Name
             resourceGroup,
             Arg.Any<string>(),
             tenant,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -368,7 +353,6 @@ public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -385,7 +369,6 @@ public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<Name
             "test-rg",
             "test-sub",
             null, // tenant should be null
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -400,7 +383,6 @@ public class NamespaceDeleteCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(false);
 

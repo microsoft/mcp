@@ -1176,14 +1176,24 @@ azmcp azurebackup disasterrecovery enable-crr --subscription <subscription> \
 #### Security
 
 ```bash
-# Configures Multi-User Authorization (MUA) on a vault by linking or unlinking a Resource Guard.
-# Provide --resource-guard-id to enable MUA. Omit to disable MUA (protected operation).
+# Enables Multi-User Authorization (MUA) on a vault by linking a Resource Guard.
+# --resource-guard-id is required. To disable MUA, use 'security disable-mua'.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp azurebackup security configure-mua --subscription <subscription> \
-                                         --resource-group <resource-group> \
-                                         --vault <vault> \
-                                         [--vault-type <vault-type>] \
-                                         [--resource-guard-id <resource-guard-id>]
+azmcp azurebackup security enable-mua --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --vault <vault> \
+                                      --resource-guard-id <resource-guard-id> \
+                                      [--vault-type <vault-type>]
+```
+
+```bash
+# Disables Multi-User Authorization (MUA) on a vault by unlinking the Resource Guard.
+# Critical operations will no longer require approval after this call.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup security disable-mua --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --vault <vault> \
+                                       [--vault-type <vault-type>]
 ```
 
 ```bash
@@ -1199,6 +1209,38 @@ azmcp azurebackup security configure-encryption --subscription <subscription> \
                                                 [--vault-type <vault-type>] \
                                                 [--key-version <key-version>] \
                                                 [--user-assigned-identity-id <user-assigned-identity-id>]
+```
+
+#### Resource Guard
+
+```bash
+# Creates a Resource Guard for Multi-User Authorization (MUA). Once a vault is linked to this
+# Resource Guard, protected operations (disable soft delete, remove immutability, stop protection,
+# disable MUA) will require approval from a security admin with Backup MUA Admin role on the guard.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup resourceguard create --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-guard <resource-guard> \
+                                       --location <location> \
+                                       [--excluded-operations <excluded-operations>] \
+                                       [--tags <tags>]
+```
+
+```bash
+# Gets a Resource Guard by name, or lists Resource Guards in a resource group or subscription.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup resourceguard get --subscription <subscription> \
+                                    [--resource-group <resource-group>] \
+                                    [--resource-guard <resource-guard>]
+```
+
+```bash
+# Deletes a Resource Guard. Any vaults still linked to this guard will no longer be protected
+# by MUA after deletion.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup resourceguard delete --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-guard <resource-guard>
 ```
 
 ### Azure CLI Operations
@@ -3393,6 +3435,28 @@ azmcp managedlustre fs subnetsize validate --subscription <subscription> \
 azmcp managedlustre fs sku get --subscription <subscription> \
                                             --location <location>
 
+# Create an expansion job to increase the storage capacity of an Azure Managed Lustre filesystem
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs expansion create --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --filesystem-name <filesystem-name> \
+                                        --new-size <new-size-tib> \
+                                        [--expansion-job-name <expansion-job-name>]
+
+# Get expansion job details for an Azure Managed Lustre filesystem. Returns a specific job if expansion-job-name is provided, otherwise lists all expansion jobs.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs expansion get --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --filesystem-name <filesystem-name> \
+                                     [--expansion-job-name <expansion-job-name>]
+
+# Delete an expansion job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs expansion delete --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --filesystem-name <filesystem-name> \
+                                        --expansion-job-name <expansion-job-name>
+
 # Create an autoexport job for an Azure Managed Lustre filesystem
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre fs blob autoexport create --subscription <subscription> \
@@ -3786,7 +3850,7 @@ azmcp resilience recoveryplan get --subscription <subscription> \
                                    --service-group <service-group> \
                                    [--name <name>]
 
-# Create or fully update a Zonal resilience recovery plan. Ask the customer to select an identity type; do not assume SystemAssigned or another default. Identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description must be 5 to 50 characters and is required on create; it is preserved when omitted on update.
+# Create or update a Zonal resilience recovery plan's identity, recovery group structure, and recovery group pre/post actions. Use recoveryplan resource update instead for recovery resource membership and protection settings. Ask the customer to select an identity type; do not assume SystemAssigned or another default. Identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description must be 5 to 50 characters and is required on create; it is preserved when omitted on update. Additional groups and group actions are preserved when omitted and replaced when supplied.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan create --service-group <service-group> \
                                       --recovery-plan <recovery-plan> \
@@ -3794,15 +3858,39 @@ azmcp resilience recoveryplan create --service-group <service-group> \
                                       [--plan-description <plan-description>] \
                                       --identity-type <SystemAssigned|UserAssigned|SystemAndUserAssigned> \
                                       [--user-assigned-identity <user-assigned-identity-resource-id>] \
-                                      [--default-group-description <default-group-description>]
+                                      [--default-group-description <default-group-description>] \
+                                      [--default-group-pre-actions '<json-array>'] \
+                                      [--default-group-post-actions '<json-array>'] \
+                                      [--additional-groups '<json-array>']
 
 # Provide --user-assigned-identity when --identity-type is UserAssigned or SystemAndUserAssigned.
 # Directly replacing one user-assigned identity with another is not currently supported.
+# Additional group orderId values must be unique and sequential starting at 1. groupUniqueId is optional.
+# Additional group objects may contain preActions and postActions arrays. Default group actions use the dedicated options above.
+# Before adding an action, collect and explain each value to the customer:
+# 1. type: ManualAction pauses for a person to complete a step; CustomRunbook runs an Azure Automation runbook.
+# 2. name: a 3 to 24 character customer-facing action name containing only letters, numbers, or hyphens.
+# 3. description: optional action instructions up to 100 characters; an empty value is allowed.
+# 4. timeoutInMinutes: a positive whole number defining how long the action may run.
+# 5. actionResourceId: required only for CustomRunbook; use the full Microsoft.Automation/automationAccounts/runbooks resource ID.
+# 6. parameters: optional for CustomRunbook; use a JSON object whose values are strings.
+# ManualAction example: [{"type":"ManualAction","name":"Confirm-dependencies","description":"Verify dependencies are ready","timeoutInMinutes":30}]
+# CustomRunbook example: [{"type":"CustomRunbook","name":"Start-dependencies","description":"Start application dependencies","timeoutInMinutes":30,"actionResourceId":"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Automation/automationAccounts/{account}/runbooks/{runbook}","parameters":{"environment":"production"}}]
+# Omit an action option or property to preserve existing actions. Specify [] to clear that action list.
 
 # Delete a resilience recovery plan. Returns deleted=false when the plan does not exist.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan delete --service-group <service-group> \
                                       --recovery-plan <recovery-plan>
+
+# Validate which recovery-plan resources are qualified for failover from the specified source locations.
+# Optionally limit validation to selected full recovery-resource IDs and provide execution consent.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan validateforfailover --service-group <service-group> \
+                                                   --recovery-plan <recovery-plan> \
+                                                   --source-locations <source-location> [<source-location> ...] \
+                                                   [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
+                                                   [--user-consent <Unspecified|Allowed>]
 
 # Configure recovery-plan resource inclusions, exclusions, removals, recovery groups, identities, and protection settings. At least one JSON array is required.
 # First inclusion requires matching protection type and settings. CustomRunbook requires failover and reprotect runbook resource IDs.
@@ -3840,11 +3928,29 @@ azmcp resilience recoveryjob resource get --subscription <subscription> \
                                           --recovery-job <recovery-job> \
                                           [--name <name>]
 
+# Create or update a resilience drill in a service group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill create --service-group <service-group> \
+                              --drill <drill> \
+                              --subscription <subscription> \
+                              --region <region> \
+                              --drill-type <drill-type> \
+                              --rbac-setup-mode <rbac-setup-mode> \
+                              [--resource-group <resource-group>] \
+                              [--recovery-plan <recovery-plan>]
+
 # Get a resilience drill, or list all drills in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill get --service-group <service-group> \
                            [--name <name>]
 
+# Update mutable properties of a resilience drill
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill update --service-group <service-group> \
+                              --drill <drill> \
+                              [--subscription <subscription> --region <region>] \
+                              [--rbac-setup-mode <AutomatedCustomRole|AutomatedBuiltinRoles|Manual>] \
+                              [--recovery-plan <recovery-plan>]
 # Delete a resilience drill from a service group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill delete --service-group <service-group> \

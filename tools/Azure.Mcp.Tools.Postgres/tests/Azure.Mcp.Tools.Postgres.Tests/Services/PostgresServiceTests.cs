@@ -221,57 +221,54 @@ public class PostgresServiceTests
     }
 
     [Fact]
-    public async Task GetServerConfigAsync_ForwardsTenantAndRetryPolicy()
+    public async Task GetServerConfigAsync_ForwardsTenant()
     {
         // Arrange
         var tenant = "tenant123";
-        var retryPolicy = new Microsoft.Mcp.Core.Options.RetryPolicyOptions();
         _azureService
-            .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, Arg.Any<CancellationToken>())
+            .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, null, Arg.Any<CancellationToken>())
             .Returns((ResourceGroupResource?)null);
 
         // Act & Assert — resource group lookup happens first; null triggers the exception
         await Assert.ThrowsAsync<Exception>(() =>
-            _postgresService.GetServerConfigAsync(subscriptionId, resourceGroup, user, server, tenant, retryPolicy, TestContext.Current.CancellationToken));
+            _postgresService.GetServerConfigAsync(subscriptionId, resourceGroup, user, server, tenant, TestContext.Current.CancellationToken));
 
         await _azureService.Received(1)
-            .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, Arg.Any<CancellationToken>());
+            .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task GetServerParameterAsync_ForwardsTenantAndRetryPolicy()
+    public async Task GetServerParameterAsync_ForwardsTenant()
     {
         // Arrange
         var tenant = "tenant123";
-        var retryPolicy = new Microsoft.Mcp.Core.Options.RetryPolicyOptions();
         _azureService
-            .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, Arg.Any<CancellationToken>())
+            .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, null, Arg.Any<CancellationToken>())
             .Returns((ResourceGroupResource?)null);
 
         // Act & Assert
         await Assert.ThrowsAsync<Exception>(() =>
-            _postgresService.GetServerParameterAsync(subscriptionId, resourceGroup, user, server, "param123", tenant, retryPolicy, TestContext.Current.CancellationToken));
+            _postgresService.GetServerParameterAsync(subscriptionId, resourceGroup, user, server, "param123", tenant, TestContext.Current.CancellationToken));
 
         await _azureService.Received(1)
-            .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, Arg.Any<CancellationToken>());
+            .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SetServerParameterAsync_ForwardsTenantAndRetryPolicy()
+    public async Task SetServerParameterAsync_ForwardsTenant()
     {
         // Arrange
         var tenant = "tenant123";
-        var retryPolicy = new Microsoft.Mcp.Core.Options.RetryPolicyOptions();
         _azureService
-            .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, Arg.Any<CancellationToken>())
+            .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, null, Arg.Any<CancellationToken>())
             .Returns((ResourceGroupResource?)null);
 
         // Act & Assert
         await Assert.ThrowsAsync<Exception>(() =>
-            _postgresService.SetServerParameterAsync(subscriptionId, resourceGroup, user, server, "param123", "value123", tenant, retryPolicy, TestContext.Current.CancellationToken));
+            _postgresService.SetServerParameterAsync(subscriptionId, resourceGroup, user, server, "param123", "value123", tenant, TestContext.Current.CancellationToken));
 
         await _azureService.Received(1)
-            .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, Arg.Any<CancellationToken>());
+            .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, null, Arg.Any<CancellationToken>());
     }
 }
 
