@@ -11,7 +11,6 @@ using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options.Threads;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.SreAgent.Services;
 
 /// <summary>
@@ -60,7 +59,6 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
@@ -69,7 +67,7 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
             SreAgentResourceType,
             resourceGroup,
             subscription,
-            retryPolicy,
+            null,
             ConvertToSreAgentResource,
             tenant: tenant,
             cancellationToken: cancellationToken);
@@ -82,7 +80,6 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
         string? resourceGroup = null,
         string agentName = "",
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
@@ -92,7 +89,7 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
             SreAgentResourceType,
             resourceGroup,
             subscription,
-            retryPolicy,
+            null,
             ConvertToSreAgentResource,
             additionalFilter: $"name =~ '{EscapeKqlString(agentName)}'",
             tenant: tenant,
@@ -242,7 +239,6 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
         string subscription,
         string agentName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
@@ -250,10 +246,10 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
 
         var agent = await ExecuteSingleResourceQueryAsync(
             SreAgentResourceType,
-            resourceGroup: null,
-            subscription: subscription,
-            retryPolicy: retryPolicy,
-            converter: ConvertToSreAgentResource,
+            null,
+            subscription,
+            null,
+            ConvertToSreAgentResource,
             additionalFilter: $"name =~ '{EscapeKqlString(agentName)}'",
             tenant: tenant,
             cancellationToken: cancellationToken);

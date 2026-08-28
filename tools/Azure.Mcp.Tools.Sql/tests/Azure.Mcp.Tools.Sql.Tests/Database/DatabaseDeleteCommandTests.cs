@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.Database;
 using Azure.Mcp.Tools.Sql.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -47,7 +46,6 @@ public class DatabaseDeleteCommandTests : SubscriptionCommandUnitTestsBase<Datab
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(true);
         }
@@ -75,7 +73,6 @@ public class DatabaseDeleteCommandTests : SubscriptionCommandUnitTestsBase<Datab
             "db1",
             "rg1",
             "sub1",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -98,7 +95,6 @@ public class DatabaseDeleteCommandTests : SubscriptionCommandUnitTestsBase<Datab
             "missingdb",
             "rg1",
             "sub1",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(false);
 
@@ -121,7 +117,6 @@ public class DatabaseDeleteCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -145,7 +140,6 @@ public class DatabaseDeleteCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(requestFailed);
 
@@ -168,7 +162,6 @@ public class DatabaseDeleteCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(requestFailed);
 
@@ -195,7 +188,6 @@ public class DatabaseDeleteCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -210,36 +202,6 @@ public class DatabaseDeleteCommandTests : SubscriptionCommandUnitTestsBase<Datab
             database,
             resourceGroup,
             subscription,
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithRetryPolicyOptions()
-    {
-        Service.DeleteDatabaseAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(true);
-
-        var response = await ExecuteCommandAsync(
-            "--subscription", "sub1",
-            "--resource-group", "rg1",
-            "--server", "server1",
-            "--database", "db1",
-            "--retry-max-retries", "5");
-
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        await Service.Received(1).DeleteDatabaseAsync(
-            "server1",
-            "db1",
-            "rg1",
-            "sub1",
-            Arg.Is<RetryPolicyOptions?>(r => r != null && r.MaxRetries == 5),
             Arg.Any<CancellationToken>());
     }
 
@@ -256,7 +218,6 @@ public class DatabaseDeleteCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -272,7 +233,6 @@ public class DatabaseDeleteCommandTests : SubscriptionCommandUnitTestsBase<Datab
             dbName,
             "rg1",
             "sub1",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -285,7 +245,6 @@ public class DatabaseDeleteCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(argumentException);
 
@@ -307,7 +266,6 @@ public class DatabaseDeleteCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
