@@ -8,6 +8,8 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
@@ -21,17 +23,85 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// A tool loader that creates MCP tools from the registered command factory.
 /// Exposes MCP commands as MCP tools that can be invoked through the MCP protocol.
 /// </summary>
-public sealed class CommandFactoryToolLoader(
+public sealed partial class CommandFactoryToolLoader(
     ICommandFactory commandFactory,
     IOptions<ServerRuntimeConfiguration> configuration,
-    ILogger<CommandFactoryToolLoader> logger) : BaseToolLoader(logger)
+    ILogger<CommandFactoryToolLoader> logger,
+    IConsolidatedToolDefinitionProvider? consolidatedToolDefinitionProvider = null) : BaseToolLoader(logger)
 {
-    private readonly ICommandFactory _commandFactory = commandFactory;
-    private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration;
-    private IReadOnlyDictionary<string, IBaseCommand> _toolCommands =
-        (configuration.Value.Namespace == null || configuration.Value.Namespace.Length == 0)
+    internal static readonly string[] UtilityNamespaces = ["subscription", "group"];
+    private static readonly string[] s_ignoredCommandGroups = ["extension", "server", "tools", .. UtilityNamespaces];
+
+    private readonly ICommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+    private readonly IReadOnlyDictionary<string, IBaseCommand> _toolCommands =
+        (configuration.Value.Mode == ModeTypes.ConsolidatedProxy ||
+         configuration.Value.Namespace == null ||
+         configuration.Value.Namespace.Length == 0)
             ? commandFactory.AllCommands
             : commandFactory.GroupCommands(configuration.Value.Namespace);
+
+    private readonly Lazy<IReadOnlyList<CommandGroup>> _commandGroups = new(() =>
+    {
+        if (configuration.Value.Mode == ModeTypes.ConsolidatedProxy)
+        {
+            return CreateConsolidatedCommandGroups(
+                commandFactory,
+                consolidatedToolDefinitionProvider ?? throw new InvalidOperationException("A consolidated tool definition provider is required in consolidated mode."),
+                configuration.Value,
+                logger);
+        }
+
+        IEnumerable<CommandGroup> commandGroups = commandFactory.RootGroup.SubGroup;
+
+        commandGroups = commandGroups
+            .Where(group => !s_ignoredCommandGroups.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
+            .Where(group => configuration.Value.Namespace == null ||
+                           configuration.Value.Namespace.Length == 0 ||
+                           configuration.Value.Namespace.Contains(group.Name, StringComparer.OrdinalIgnoreCase));
+
+        return [.. commandGroups];
+    });
+
+    private readonly Lazy<IReadOnlyDictionary<string, IBaseCommand>> _utilityCommands = new(() =>
+    {
+        var utilityNamespaces = new List<string>(UtilityNamespaces);
+        if (configuration.Value.Namespace == null || configuration.Value.Namespace.Length == 0)
+        {
+            utilityNamespaces.Add("extension");
+        }
+
+        return commandFactory.GroupCommands([.. utilityNamespaces]);
+    });
+
+    private ListToolsResult? _cachedListToolsResult;
+
+    private static readonly JsonElement s_namespaceToolSchema = JsonSerializer.Deserialize("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "intent": {
+                            "type": "string",
+                            "description": "The intent of the operation to perform."
+                        },
+                        "command": {
+                            "type": "string",
+                            "description": "The command to execute against the specified tool."
+                        },
+                        "parameters": {
+                            "type": "object",
+                            "description": "The parameters to pass to the tool command."
+                        },
+                        "learn": {
+                            "type": "boolean",
+                            "description": "To learn about the tool and its supported child tools and parameters.",
+                            "default": false
+                        }
+                    },
+                    "required": ["intent"],
+                    "additionalProperties": false
+                }
+                """, ServerJsonContext.Default.JsonElement);
 
     /// <summary>
     /// Lists all tools available from the command factory.
@@ -41,6 +111,11 @@ public sealed class CommandFactoryToolLoader(
     /// <returns>A result containing the list of available tools.</returns>
     public override ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
+        if (_configuration.Value.Mode != ModeTypes.All)
+        {
+            return ValueTask.FromResult(ListCommandGroups());
+        }
+
         var visibleCommands = CommandFactory.GetVisibleCommands(_toolCommands);
 
         // Filter by specific tools if provided
@@ -66,6 +141,73 @@ public sealed class CommandFactoryToolLoader(
         return ValueTask.FromResult(listToolsResult);
     }
 
+    private ListToolsResult ListCommandGroups()
+    {
+        if (_cachedListToolsResult != null)
+        {
+            return _cachedListToolsResult;
+        }
+
+        var tools = _commandGroups.Value
+            .Where(group => !_configuration.Value.ReadOnly || !AllToolsInGroupMatch(metadata => !metadata.ReadOnly, group))
+            .Where(group => !_configuration.Value.IsHttpMode || !AllToolsInGroupMatch(metadata => metadata.LocalRequired, group))
+            .Select(CreateCommandGroupTool)
+            .ToList();
+
+        if (_configuration.Value.Mode == ModeTypes.NamespaceProxy)
+        {
+            var utilityCommands = CommandFactory.GetVisibleCommands(_utilityCommands.Value)
+                .Where(command => IsToolIncluded(command.Key))
+                .Where(command => !_configuration.Value.ReadOnly || command.Value.Metadata.ReadOnly)
+                .Where(command => !_configuration.Value.IsHttpMode || !command.Value.Metadata.LocalRequired)
+                .Select(command => GetTool(command.Key, command.Value));
+
+            tools.AddRange(utilityCommands);
+        }
+
+        _cachedListToolsResult = new ListToolsResult { Tools = tools };
+        _logger.LogInformation("Listing {NumberOfTools} tools.", tools.Count);
+        return _cachedListToolsResult;
+    }
+
+    private static Tool CreateCommandGroupTool(CommandGroup group) => new()
+    {
+        Name = group.Name,
+        Description = group.Description + """
+            This tool is a hierarchical MCP command router.
+            Sub commands require specific fields inside the "parameters" object.
+            To invoke a command, set "command" and wrap its args in "parameters".
+            Set "learn=true" to discover available sub commands.
+            """,
+        InputSchema = s_namespaceToolSchema,
+        Annotations = new ToolAnnotations
+        {
+            Title = group.Title ?? group.Name,
+            DestructiveHint = group.ToolMetadata?.Destructive,
+            IdempotentHint = group.ToolMetadata?.Idempotent,
+            OpenWorldHint = group.ToolMetadata?.OpenWorld,
+            ReadOnlyHint = group.ToolMetadata?.ReadOnly,
+        },
+    };
+
+    private bool IsToolIncluded(string toolName) =>
+        _configuration.Value.Tool == null ||
+        _configuration.Value.Tool.Length == 0 ||
+        _configuration.Value.Tool.Any(tool => tool.Contains(toolName, StringComparison.OrdinalIgnoreCase));
+
+    private static bool AllToolsInGroupMatch(Predicate<ToolMetadata> predicate, CommandGroup group)
+    {
+        foreach (var command in group.Commands.Values)
+        {
+            if (!predicate(command.Metadata))
+            {
+                return false;
+            }
+        }
+
+        return group.SubGroup.All(subGroup => AllToolsInGroupMatch(predicate, subGroup));
+    }
+
     /// <summary>
     /// Handles tool calls by executing the corresponding command from the command factory.
     /// </summary>
@@ -73,6 +215,24 @@ public sealed class CommandFactoryToolLoader(
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The result of the tool call operation.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
+    {
+        if (_configuration.Value.Mode != ModeTypes.All && IsCommandGroupTool(request.Params?.Name))
+        {
+            return await CallCommandGroupToolHandler(request, cancellationToken);
+        }
+
+        if (_configuration.Value.Mode != ModeTypes.All &&
+            (_configuration.Value.Mode != ModeTypes.NamespaceProxy ||
+             request.Params == null ||
+             !_utilityCommands.Value.ContainsKey(request.Params.Name)))
+        {
+            return ToolNotFound(request.Params?.Name);
+        }
+
+        return await CallFlatToolHandler(request, cancellationToken);
+    }
+
+    private async ValueTask<CallToolResult> CallFlatToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
         if (request.Params == null)
         {
@@ -111,9 +271,10 @@ public sealed class CommandFactoryToolLoader(
             }
         }
 
-        var activity = Activity.Current?.SetTag(TagName.ToolName, toolName);
-
-        var command = _toolCommands.GetValueOrDefault(toolName);
+        var commands = _configuration.Value.Mode == ModeTypes.NamespaceProxy
+            ? _utilityCommands.Value
+            : _toolCommands;
+        var command = commands.GetValueOrDefault(toolName);
         if (command == null)
         {
             var content = new TextContentBlock
@@ -127,6 +288,28 @@ public sealed class CommandFactoryToolLoader(
                 IsError = true,
             };
         }
+
+        return await ExecuteCommandAsync(
+            request,
+            toolName,
+            toolName,
+            command,
+            request.Params.Arguments,
+            _commandFactory.GetServiceArea(toolName),
+            cancellationToken);
+    }
+
+    private async ValueTask<CallToolResult> ExecuteCommandAsync(
+        RequestContext<CallToolRequestParams> request,
+        string toolName,
+        string displayName,
+        IBaseCommand command,
+        IDictionary<string, JsonElement>? arguments,
+        string? serviceArea,
+        CancellationToken cancellationToken)
+    {
+        var activity = Activity.Current?.SetTag(TagName.ToolName, toolName);
+
         activity?.SetTag(TagName.ToolId, command.Id)
             .SetTag(TagName.ToolSource, "internal")
             .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(command));
@@ -136,7 +319,7 @@ public sealed class CommandFactoryToolLoader(
         {
             var content = new TextContentBlock
             {
-                Text = $"Tool '{toolName}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
+                Text = $"Tool '{displayName}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
             };
 
             return new CallToolResult
@@ -152,7 +335,7 @@ public sealed class CommandFactoryToolLoader(
         {
             var content = new TextContentBlock
             {
-                Text = $"Tool '{toolName}' is not available. This server is running in HTTP mode and this tool requires local execution.",
+                Text = $"Tool '{displayName}' is not available. This server is running in HTTP mode and this tool requires local execution.",
             };
 
             return new CallToolResult
@@ -172,7 +355,7 @@ public sealed class CommandFactoryToolLoader(
         // Check if this tool requires elicitation for sensitive or destructive operations
         var elicitationResult = await HandleElicitationAsync(
             request,
-            toolName,
+            displayName,
             command,
             _configuration.Value.DangerouslyDisableElicitation,
             _logger,
@@ -192,11 +375,11 @@ public sealed class CommandFactoryToolLoader(
 
         if (effectiveOptions.Count == 1 && IsRawMcpToolInputOption(effectiveOptions[0]))
         {
-            commandOptions = realCommand.ParseFromRawMcpToolInput(request.Params.Arguments);
+            commandOptions = realCommand.ParseFromRawMcpToolInput(arguments);
         }
         else
         {
-            if (!realCommand.TryParseFromDictionary(request.Params.Arguments, out commandOptions, out var parseErrors))
+            if (!realCommand.TryParseFromDictionary(arguments, out commandOptions, out var parseErrors))
             {
                 return new CallToolResult
                 {
@@ -217,7 +400,6 @@ public sealed class CommandFactoryToolLoader(
 
         if (commandContext.Activity != null)
         {
-            var serviceArea = _commandFactory.GetServiceArea(toolName);
             commandContext.Activity.SetTag(TagName.ToolArea, serviceArea);
         }
 
@@ -250,6 +432,20 @@ public sealed class CommandFactoryToolLoader(
             _logger.LogTrace("Finished executing '{Tool}'.", realCommand.Name);
         }
     }
+
+    private bool IsCommandGroupTool(string? toolName) =>
+        !string.IsNullOrWhiteSpace(toolName) &&
+        _commandGroups.Value.Any(group => string.Equals(group.Name, toolName, StringComparison.OrdinalIgnoreCase));
+
+    internal bool ContainsCommandGroup(string toolName) => IsCommandGroupTool(toolName);
+
+    internal IList<Tool> GetCommandGroupTools() => ListCommandGroups().Tools;
+
+    private static CallToolResult ToolNotFound(string? toolName) => new()
+    {
+        Content = [new TextContentBlock { Text = $"Could not find command: {toolName}" }],
+        IsError = true,
+    };
 
     /// <summary>
     /// Converts a command to an MCP tool definition.
@@ -313,7 +509,8 @@ public sealed class CommandFactoryToolLoader(
     /// </summary>
     protected override ValueTask DisposeAsyncCore()
     {
-        // CommandFactoryToolLoader doesn't create or manage disposable resources
+        _cachedCommandGroupTools.Clear();
+        _cachedListToolsResult = null;
         return ValueTask.CompletedTask;
     }
 }

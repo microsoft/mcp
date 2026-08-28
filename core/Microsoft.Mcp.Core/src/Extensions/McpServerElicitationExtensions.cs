@@ -216,7 +216,7 @@ public static class McpServerElicitationExtensions
 
         if (toolMetadata is JsonObject jsonMetadata)
         {
-            // tool.Meta uses "SecretHint" (set in CommandFactoryToolLoader/NamespaceToolLoader)
+            // tool.Meta uses "SecretHint" (set in CommandFactoryToolLoader)
             if (jsonMetadata.TryGetPropertyValue(McpHelper.SecretHintMetaKey, out var secretValue) &&
                 secretValue is JsonValue secretJsonValue &&
                 secretJsonValue.TryGetValue(out bool isSecret) &&

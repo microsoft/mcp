@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.Diagnostics;
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Tests.Areas.Server.Helpers;
@@ -14,6 +16,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Client;
@@ -51,35 +54,49 @@ public class SingleProxyToolLoaderTests
         bool useRealDiscovery = true,
         ServerRuntimeConfiguration? configuration = null)
     {
-        var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
-        var runtimeConfiguration = Microsoft.Extensions.Options.Options.Create(configuration ?? new ServerRuntimeConfiguration());
+        configuration ??= new ServerRuntimeConfiguration();
+        configuration.Mode = ModeTypes.SingleToolProxy;
+        var runtimeConfiguration = Microsoft.Extensions.Options.Options.Create(configuration);
         var serverConfiguration = CreateServerConfigurationOptions();
+        var commandFactoryToolLoader = CreateCommandFactoryToolLoader(runtimeConfiguration, includeCommands: useRealDiscovery);
 
         if (useRealDiscovery)
         {
-            var commandGroupLogger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
-            var commandGroupDiscoveryStrategy = new CommandGroupDiscoveryStrategy(
-                CommandFactoryHelpers.CreateCommandFactory(serviceProvider),
-                runtimeConfiguration,
-                commandGroupLogger
-            );
             var registryLogger = Substitute.For<ILogger<RegistryDiscoveryStrategy>>();
             var registryDiscoveryStrategy = CreateStrategy(runtimeConfiguration.Value, registryLogger);
-            var compositeLogger = Substitute.For<ILogger<CompositeDiscoveryStrategy>>();
-            var compositeDiscoveryStrategy = new CompositeDiscoveryStrategy([
-                commandGroupDiscoveryStrategy,
-                registryDiscoveryStrategy
-            ], compositeLogger);
-            var toolLoader = new SingleProxyToolLoader(compositeDiscoveryStrategy, logger, runtimeConfiguration, serverConfiguration);
-            return (toolLoader, compositeDiscoveryStrategy);
+            var toolLoader = new SingleProxyToolLoader(commandFactoryToolLoader, registryDiscoveryStrategy, logger, runtimeConfiguration, serverConfiguration);
+            return (toolLoader, registryDiscoveryStrategy);
         }
         else
         {
             var mockDiscoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
-            var toolLoader = new SingleProxyToolLoader(mockDiscoveryStrategy, logger, runtimeConfiguration, serverConfiguration);
+            var toolLoader = new SingleProxyToolLoader(commandFactoryToolLoader, mockDiscoveryStrategy, logger, runtimeConfiguration, serverConfiguration);
             return (toolLoader, mockDiscoveryStrategy);
         }
+    }
+
+    private static CommandFactoryToolLoader CreateCommandFactoryToolLoader(
+        Microsoft.Extensions.Options.IOptions<ServerRuntimeConfiguration> configuration,
+        bool includeCommands = false)
+    {
+        ICommandFactory commandFactory;
+        if (includeCommands)
+        {
+            commandFactory = CommandFactoryHelpers.CreateCommandFactory();
+        }
+        else
+        {
+            commandFactory = Substitute.For<ICommandFactory>();
+            commandFactory.RootGroup.Returns(new CommandGroup("root", "Root"));
+            commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand>());
+            commandFactory.GroupCommands(Arg.Any<string[]>()).Returns(new Dictionary<string, IBaseCommand>());
+        }
+
+        return new CommandFactoryToolLoader(
+            commandFactory,
+            configuration,
+            Substitute.For<ILogger<CommandFactoryToolLoader>>());
     }
 
     [Fact]
@@ -226,6 +243,66 @@ public class SingleProxyToolLoaderTests
     }
 
     [Fact]
+    public async Task CallToolHandler_InternalCommand_ExecutesWithoutCreatingMcpClient()
+    {
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            Mode = ModeTypes.SingleToolProxy
+        });
+        var command = Substitute.For<IBaseCommand>();
+        command.Id.Returns(Guid.NewGuid().ToString());
+        command.Title.Returns("List storage accounts");
+        command.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
+        command.GetCommand().Returns(new Command("account_list", "List storage accounts"));
+        command.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
+            .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "In-process result" });
+
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+        storageGroup.AddCommand("account_list", command);
+        var rootGroup = new CommandGroup("root", "Root commands");
+        rootGroup.AddSubGroup(storageGroup);
+
+        var commands = new Dictionary<string, IBaseCommand> { ["account_list"] = command };
+        var commandFactory = Substitute.For<ICommandFactory>();
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.AllCommands.Returns(commands);
+        commandFactory.GroupCommands(Arg.Any<string[]>()).Returns(commands);
+        commandFactory.GetServiceArea("account_list").Returns("storage");
+
+        var commandFactoryToolLoader = new CommandFactoryToolLoader(
+            commandFactory,
+            configuration,
+            Substitute.For<ILogger<CommandFactoryToolLoader>>());
+        var registryDiscovery = Substitute.For<IMcpDiscoveryStrategy>();
+        var toolLoader = new SingleProxyToolLoader(
+            commandFactoryToolLoader,
+            registryDiscovery,
+            Substitute.For<ILogger<SingleProxyToolLoader>>(),
+            configuration,
+            CreateServerConfigurationOptions());
+        var request = McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?>
+        {
+            ["intent"] = "List storage accounts",
+            ["tool"] = "storage",
+            ["command"] = "account_list",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError, string.Join(Environment.NewLine, result.Content.OfType<TextContentBlock>().Select(content => content.Text)));
+        Assert.Contains("In-process result", Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+        await command.Received(1).ExecuteAsync(
+            Arg.Any<CommandContext>(),
+            Arg.Any<ParseResult>(),
+            TestContext.Current.CancellationToken);
+        await registryDiscovery.DidNotReceive().GetOrCreateClientAsync(
+            Arg.Any<string>(),
+            Arg.Any<McpClientOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task CallToolHandler_WithNullParams_ReturnsGuidanceMessage()
     {
         // Arrange
@@ -277,7 +354,7 @@ public class SingleProxyToolLoaderTests
         var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration() { ReadOnly = true });
         var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
 
-        var toolLoader = new SingleProxyToolLoader(discoveryStrategy, logger, configuration, CreateServerConfigurationOptions());
+        var toolLoader = new SingleProxyToolLoader(CreateCommandFactoryToolLoader(configuration), discoveryStrategy, logger, configuration, CreateServerConfigurationOptions());
         var request = McpTestUtilities.CreateToolCallRequest("storage");
 
         // Act
@@ -320,7 +397,7 @@ public class SingleProxyToolLoaderTests
         var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration() { Transport = TransportTypes.Http });
         var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
 
-        var toolLoader = new SingleProxyToolLoader(discoveryStrategy, logger, configuration, CreateServerConfigurationOptions());
+        var toolLoader = new SingleProxyToolLoader(CreateCommandFactoryToolLoader(configuration), discoveryStrategy, logger, configuration, CreateServerConfigurationOptions());
         var request = McpTestUtilities.CreateToolCallRequest("storage");
 
         // Act
@@ -372,12 +449,14 @@ public class SingleProxyToolLoaderTests
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
         var serverConfigurationOptions = CreateServerConfigurationOptions();
+        var commandFactoryToolLoader = CreateCommandFactoryToolLoader(configuration);
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(null!, logger, configuration, serverConfigurationOptions));
-        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(discoveryStrategy, null!, configuration, serverConfigurationOptions));
-        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(discoveryStrategy, logger, null!, serverConfigurationOptions));
-        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(discoveryStrategy, logger, configuration, null!));
+        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(null!, discoveryStrategy, logger, configuration, serverConfigurationOptions));
+        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(commandFactoryToolLoader, null!, logger, configuration, serverConfigurationOptions));
+        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(commandFactoryToolLoader, discoveryStrategy, null!, configuration, serverConfigurationOptions));
+        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(commandFactoryToolLoader, discoveryStrategy, logger, null!, serverConfigurationOptions));
+        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(commandFactoryToolLoader, discoveryStrategy, logger, configuration, null!));
     }
 
     #region Execution-Time Mode Enforcement Tests
@@ -392,7 +471,12 @@ public class SingleProxyToolLoaderTests
         var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
         var runtimeConfiguration = Microsoft.Extensions.Options.Options.Create(configuration);
 
-        return new SingleProxyToolLoader(discoveryStrategy, logger, runtimeConfiguration, CreateServerConfigurationOptions());
+        return new SingleProxyToolLoader(
+            CreateCommandFactoryToolLoader(runtimeConfiguration),
+            discoveryStrategy,
+            logger,
+            runtimeConfiguration,
+            CreateServerConfigurationOptions());
     }
 
     private static RequestContext<CallToolRequestParams> CreateCallToolRequestWithToolAndCommand(

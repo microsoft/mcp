@@ -59,8 +59,7 @@ public class ServiceCollectionExtensionsTests
         // Verify common services are registered
         var provider = services.BuildServiceProvider();
 
-        // Verify base discovery strategies
-        Assert.NotNull(provider.GetService<CommandGroupDiscoveryStrategy>());
+        // Verify registry discovery for external MCP servers.
         Assert.NotNull(provider.GetService<RegistryDiscoveryStrategy>());
 
         // Verify base tool loaders
@@ -95,7 +94,7 @@ public class ServiceCollectionExtensionsTests
 
         // Verify discovery strategy is registered
         Assert.NotNull(provider.GetService<IMcpDiscoveryStrategy>());
-        Assert.IsType<CompositeDiscoveryStrategy>(provider.GetService<IMcpDiscoveryStrategy>());
+        Assert.IsType<RegistryDiscoveryStrategy>(provider.GetService<IMcpDiscoveryStrategy>());
     }
 
     [Fact]
@@ -116,7 +115,7 @@ public class ServiceCollectionExtensionsTests
         var provider = services.BuildServiceProvider();
 
         // Verify the correct tool loader is registered
-        // In namespace mode, we now use CompositeToolLoader that includes NamespaceToolLoader
+        // Namespace mode combines internal command-factory tools with external registry tools.
         Assert.NotNull(provider.GetService<IToolLoader>());
         Assert.IsType<CompositeToolLoader>(provider.GetService<IToolLoader>());
 
@@ -156,7 +155,7 @@ public class ServiceCollectionExtensionsTests
         var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
-            // Define proxy as "single" to prevent CompositeDiscoveryStrategy error
+            // Define proxy as "single" to exercise the single-tool registration.
             Mode = "single"
         };
 
@@ -335,7 +334,7 @@ public class ServiceCollectionExtensionsTests
     }
 
     [Fact]
-    public void AddAzureMcpServer_WithNullProxy_UsesDefaultLoader()
+    public void AddAzureMcpServer_WithNullMode_UsesNamespaceLoader()
     {
         // Arrange
         var services = SetupBaseServices();
@@ -351,8 +350,9 @@ public class ServiceCollectionExtensionsTests
         // Assert
         var provider = services.BuildServiceProvider();
 
-        Assert.Null(provider.GetService<IToolLoader>());
-        Assert.Null(provider.GetService<IMcpDiscoveryStrategy>());
+        Assert.IsType<CompositeToolLoader>(provider.GetRequiredService<IToolLoader>());
+        Assert.IsType<RegistryDiscoveryStrategy>(provider.GetRequiredService<IMcpDiscoveryStrategy>());
+        Assert.Equal(ModeTypes.NamespaceProxy, provider.GetRequiredService<ServerRuntimeConfiguration>().Mode);
     }
 
     [Fact]

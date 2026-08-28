@@ -32,7 +32,9 @@ public class CommandFactoryToolLoaderTests
     {
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
-        var runtimeConfiguration = Microsoft.Extensions.Options.Options.Create(configuration ?? new ServerRuntimeConfiguration());
+        configuration ??= new ServerRuntimeConfiguration();
+        configuration.Mode = ModeTypes.All;
+        var runtimeConfiguration = Microsoft.Extensions.Options.Options.Create(configuration);
 
         var toolLoader = new CommandFactoryToolLoader(commandFactory, runtimeConfiguration, Substitute.For<ILogger<CommandFactoryToolLoader>>());
         return (toolLoader, commandFactory);
@@ -661,7 +663,7 @@ public class CommandFactoryToolLoaderTests
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
-        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Mode = ModeTypes.All });
 
         var fakeCommand = CreateFakeCommand(toolName, new());
         OptionBinder.RegisterOptions<EnumSchemaTestOptions>(fakeCommand.GetCommand());
@@ -748,7 +750,7 @@ public class CommandFactoryToolLoaderTests
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
-        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Mode = ModeTypes.All });
 
         // Create a fake command factory that includes a command with secret metadata
         var fakeCommand = CreateFakeCommand(toolName, new() { Secret = true });

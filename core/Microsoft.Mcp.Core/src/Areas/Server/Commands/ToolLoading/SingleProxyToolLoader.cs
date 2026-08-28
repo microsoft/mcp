@@ -19,11 +19,13 @@ using ModelContextProtocol.Server;
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 public sealed class SingleProxyToolLoader(
+    CommandFactoryToolLoader commandFactoryToolLoader,
     IMcpDiscoveryStrategy discoveryStrategy,
     ILogger<SingleProxyToolLoader> logger,
     IOptions<ServerRuntimeConfiguration> configuration,
     IOptions<McpServerConfiguration> serverConfiguration) : BaseToolLoader(logger)
 {
+    private readonly CommandFactoryToolLoader _commandFactoryToolLoader = commandFactoryToolLoader ?? throw new ArgumentNullException(nameof(commandFactoryToolLoader));
     private readonly IMcpDiscoveryStrategy _discoveryStrategy = discoveryStrategy ?? throw new ArgumentNullException(nameof(discoveryStrategy));
     private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     private readonly string _toolName = serverConfiguration?.Value.ShortName ?? throw new ArgumentNullException(nameof(serverConfiguration));
@@ -191,8 +193,15 @@ public sealed class SingleProxyToolLoader(
             return;
         }
 
+        var tools = _commandFactoryToolLoader.GetCommandGroupTools()
+            .Select(tool => new Tool
+            {
+                Name = tool.Name,
+                Description = tool.Description,
+            })
+            .ToList();
+
         var serverList = await _discoveryStrategy.DiscoverServersAsync(cancellationToken);
-        var tools = new List<Tool>(serverList.Count());
         foreach (var server in serverList)
         {
             var serverMetadata = server.CreateMetadata();
@@ -221,8 +230,11 @@ public sealed class SingleProxyToolLoader(
             return cached;
         }
 
-        var listTools = await GetMcpClientToolListAsync(request, tool, cancellationToken);
-        var commands = listTools.Select(t => new ToolCommandInfo(t.ProtocolTool, true)).ToList();
+        var commands = _commandFactoryToolLoader.ContainsCommandGroup(tool)
+            ? _commandFactoryToolLoader.GetChildToolList(tool).Select(command => new ToolCommandInfo(command, true)).ToList()
+            : (await GetMcpClientToolListAsync(request, tool, cancellationToken))
+                .Select(command => new ToolCommandInfo(command.ProtocolTool, true))
+                .ToList();
         var json = JsonSerializer.Serialize(commands, ServerJsonContext.Default.IEnumerableToolCommandInfo);
         _cachedToolCommands[tool] = (commands, json);
 
@@ -330,6 +342,24 @@ public sealed class SingleProxyToolLoader(
     {
         // Here the parameters are now those for the tool call, instead of being the single parameters.
         Activity.Current?.SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(parameters.Keys));
+
+        if (_commandFactoryToolLoader.ContainsCommandGroup(tool))
+        {
+            var commandParameters = parameters.ToDictionary(
+                parameter => parameter.Key,
+                parameter => parameter.Value is JsonElement element
+                    ? element
+                    : throw new InvalidOperationException($"The parameter '{parameter.Key}' is not valid JSON."));
+
+            return await _commandFactoryToolLoader.InvokeChildCommandAsync(
+                request,
+                intent,
+                tool,
+                command,
+                commandParameters,
+                cancellationToken);
+        }
+
         McpClient? client;
 
         try

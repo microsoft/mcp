@@ -252,7 +252,7 @@ When a newly registered command appears in `all` mode but is missing from consol
     ```powershell
     dotnet build servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj
     servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe tools list --namespace <service> --mode all
-    dotnet test core/Azure.Mcp.Core/tests/Azure.Mcp.Core.Tests/Azure.Mcp.Core.Tests.csproj -- --filter-class '*ConsolidatedToolDiscoveryStrategyTests'
+    dotnet test core/Azure.Mcp.Core/tests/Azure.Mcp.Core.Tests/Azure.Mcp.Core.Tests.csproj -- --filter-class '*CommandFactoryToolLoaderConsolidatedTests'
     ```
 
 See the [new command guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md#consolidated-mode-requirements) for the complete authoring checklist.

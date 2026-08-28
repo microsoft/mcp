@@ -63,60 +63,27 @@ public static partial class ServiceCollectionExtensions
         services.AddSingleton<CommandFactoryToolLoader>();
         services.AddSingleton<RegistryToolLoader>();
 
-        services.AddSingleton<SingleProxyToolLoader>();
-        services.AddSingleton<CompositeToolLoader>();
-        services.AddSingleton<ServerToolLoader>();
-        services.AddSingleton<NamespaceToolLoader>();
-
         // Register server discovery strategies
-        services.AddSingleton<CommandGroupDiscoveryStrategy>();
-        services.AddSingleton<CompositeDiscoveryStrategy>();
         services.AddSingleton<RegistryDiscoveryStrategy>();
-        services.AddSingleton<ConsolidatedToolDiscoveryStrategy>();
 
         // Register MCP runtimes
         services.AddSingleton<IMcpRuntime, McpRuntime>();
 
         // Register MCP discovery strategies based on proxy mode
-        if (serverStartOptions.Mode == ModeTypes.SingleToolProxy)
+        if (serverRuntimeConfiguration.Mode is ModeTypes.SingleToolProxy or
+            ModeTypes.NamespaceProxy or
+            ModeTypes.ConsolidatedProxy or
+            ModeTypes.All)
         {
-            services.AddSingleton<IMcpDiscoveryStrategy>(sp =>
-            {
-                var discoveryStrategies = new List<IMcpDiscoveryStrategy>
-                {
-                    sp.GetRequiredService<RegistryDiscoveryStrategy>(),
-                    sp.GetRequiredService<CommandGroupDiscoveryStrategy>(),
-                };
-
-                var logger = sp.GetRequiredService<ILogger<CompositeDiscoveryStrategy>>();
-                return new CompositeDiscoveryStrategy(discoveryStrategies, logger);
-            });
-        }
-        else if (serverStartOptions.Mode == ModeTypes.NamespaceProxy)
-        {
-            services.AddSingleton<IMcpDiscoveryStrategy, RegistryDiscoveryStrategy>();
-        }
-        else if (serverStartOptions.Mode == ModeTypes.ConsolidatedProxy)
-        {
-            services.AddSingleton<IMcpDiscoveryStrategy>(sp =>
-            {
-                var discoveryStrategies = new List<IMcpDiscoveryStrategy>
-                {
-                    sp.GetRequiredService<RegistryDiscoveryStrategy>(),
-                    sp.GetRequiredService<ConsolidatedToolDiscoveryStrategy>(),
-                };
-
-                var logger = sp.GetRequiredService<ILogger<CompositeDiscoveryStrategy>>();
-                return new CompositeDiscoveryStrategy(discoveryStrategies, logger);
-            });
+            services.AddSingleton<IMcpDiscoveryStrategy>(sp => sp.GetRequiredService<RegistryDiscoveryStrategy>());
         }
 
         // Configure tool loading based on mode
-        if (serverStartOptions.Mode == ModeTypes.SingleToolProxy)
+        if (serverRuntimeConfiguration.Mode == ModeTypes.SingleToolProxy)
         {
             services.AddSingleton<IToolLoader, SingleProxyToolLoader>();
         }
-        else if (serverStartOptions.Mode == ModeTypes.NamespaceProxy)
+        else if (serverRuntimeConfiguration.Mode == ModeTypes.NamespaceProxy)
         {
             services.AddSingleton<IToolLoader>(sp =>
             {
@@ -129,50 +96,18 @@ public static partial class ServiceCollectionExtensions
                         sp.GetRequiredService<IOptions<ServerRuntimeConfiguration>>(),
                         loggerFactory.CreateLogger<ServerToolLoader>()
                     ),
-                    // NamespaceToolLoader enables direct in-process execution for tools in Azure namespaces
-                    sp.GetRequiredService<NamespaceToolLoader>(),
+                    // CommandFactoryToolLoader exposes Azure namespaces and executes their commands in-process.
+                    sp.GetRequiredService<CommandFactoryToolLoader>(),
                 };
-
-                // Always add utility commands (subscription, group) in namespace mode
-                // so they are available regardless of which namespaces are loaded
-                var additionalIncludedTools = new List<string>(DiscoveryConstants.UtilityNamespaces);
-
-                // Append extension commands when no other namespaces are specified.
-                // Extension commands aren't included in the NamespaceToolLoader.
-                if (serverStartOptions.Namespace == null || serverStartOptions.Namespace.Length == 0)
-                {
-                    additionalIncludedTools.Add("extension");
-                }
-
-                var additionalToolsServerRuntimeConfiguration = new ServerRuntimeConfiguration
-                {
-                    Namespace = [.. additionalIncludedTools],
-                    ReadOnly = serverRuntimeConfiguration.ReadOnly,
-                    DangerouslyDisableElicitation = serverRuntimeConfiguration.DangerouslyDisableElicitation,
-                    Tool = serverRuntimeConfiguration.Tool,
-                    Transport = serverRuntimeConfiguration.Transport,
-                    Mode = serverRuntimeConfiguration.Mode,
-                    Cloud = serverRuntimeConfiguration.Cloud
-                };
-
-                toolLoaders.Add(new CommandFactoryToolLoader(
-                    sp.GetRequiredService<ICommandFactory>(),
-                    Options.Create(additionalToolsServerRuntimeConfiguration),
-                    loggerFactory.CreateLogger<CommandFactoryToolLoader>()
-                ));
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });
         }
-        else if (serverStartOptions.Mode == ModeTypes.ConsolidatedProxy)
+        else if (serverRuntimeConfiguration.Mode == ModeTypes.ConsolidatedProxy)
         {
             services.AddSingleton<IToolLoader>(sp =>
             {
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-                var consolidatedStrategy = sp.GetRequiredService<ConsolidatedToolDiscoveryStrategy>();
-
-                // Create a new CommandFactory with consolidated command groups
-                var consolidatedCommandFactory = consolidatedStrategy.CreateConsolidatedCommandFactory();
 
                 var toolLoaders = new List<IToolLoader>
                 {
@@ -182,21 +117,15 @@ public static partial class ServiceCollectionExtensions
                         sp.GetRequiredService<IOptions<ServerRuntimeConfiguration>>(),
                         loggerFactory.CreateLogger<ServerToolLoader>()
                     ),
-                    // NamespaceToolLoader enables direct in-process execution for consolidated tools
-                    new NamespaceToolLoader(
-                        consolidatedCommandFactory,
-                        sp.GetRequiredService<IOptions<ServerRuntimeConfiguration>>(),
-                        loggerFactory.CreateLogger<NamespaceToolLoader>(),
-                        false
-                    ),
+                    // CommandFactoryToolLoader exposes and executes consolidated tools in-process.
+                    sp.GetRequiredService<CommandFactoryToolLoader>(),
                 };
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });
         }
-        else if (serverStartOptions.Mode == ModeTypes.All)
+        else if (serverRuntimeConfiguration.Mode == ModeTypes.All)
         {
-            services.AddSingleton<IMcpDiscoveryStrategy, RegistryDiscoveryStrategy>();
             services.AddSingleton<IToolLoader>(sp =>
             {
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();

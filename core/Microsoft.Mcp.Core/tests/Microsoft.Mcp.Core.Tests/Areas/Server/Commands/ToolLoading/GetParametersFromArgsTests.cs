@@ -8,7 +8,7 @@ using Xunit;
 namespace Microsoft.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
 /// <summary>
-/// Tests for <see cref="NamespaceToolLoader.GetParametersFromArgs"/>,
+/// Tests for <see cref="CommandFactoryToolLoader.GetParametersFromArgs"/>,
 /// specifically the flat argument fallback when the <c>parameters</c> key is missing
 /// for Codex model compatibility.
 /// </summary>
@@ -18,7 +18,7 @@ public sealed class GetParametersFromArgsTests
     public void GetParametersFromArgs_NullArgs_ReturnsEmptyDictionary()
     {
         // Act
-        var result = NamespaceToolLoader.GetParametersFromArgs(null);
+        var result = CommandFactoryToolLoader.GetParametersFromArgs(null);
 
         // Assert
         Assert.NotNull(result);
@@ -32,7 +32,7 @@ public sealed class GetParametersFromArgsTests
         var args = new Dictionary<string, JsonElement>();
 
         // Act
-        var result = NamespaceToolLoader.GetParametersFromArgs(args);
+        var result = CommandFactoryToolLoader.GetParametersFromArgs(args);
 
         // Assert
         Assert.NotNull(result);
@@ -58,7 +58,7 @@ public sealed class GetParametersFromArgsTests
             .ToDictionary(p => p.Name, p => p.Value);
 
         // Act
-        var result = NamespaceToolLoader.GetParametersFromArgs(args);
+        var result = CommandFactoryToolLoader.GetParametersFromArgs(args);
 
         // Assert
         Assert.Equal(2, result.Count);
@@ -85,7 +85,7 @@ public sealed class GetParametersFromArgsTests
             .ToDictionary(p => p.Name, p => p.Value);
 
         // Act
-        var result = NamespaceToolLoader.GetParametersFromArgs(args);
+        var result = CommandFactoryToolLoader.GetParametersFromArgs(args);
 
         // Assert
         Assert.Equal(2, result.Count);
@@ -111,7 +111,7 @@ public sealed class GetParametersFromArgsTests
             .ToDictionary(p => p.Name, p => p.Value);
 
         // Act
-        var result = NamespaceToolLoader.GetParametersFromArgs(args);
+        var result = CommandFactoryToolLoader.GetParametersFromArgs(args);
 
         // Assert
         Assert.Single(result);
@@ -137,7 +137,7 @@ public sealed class GetParametersFromArgsTests
             .ToDictionary(p => p.Name, p => p.Value);
 
         // Act
-        var result = NamespaceToolLoader.GetParametersFromArgs(args);
+        var result = CommandFactoryToolLoader.GetParametersFromArgs(args);
 
         // Assert
         Assert.Single(result);
@@ -163,7 +163,7 @@ public sealed class GetParametersFromArgsTests
             .ToDictionary(p => p.Name, p => p.Value);
 
         // Act
-        var result = NamespaceToolLoader.GetParametersFromArgs(args);
+        var result = CommandFactoryToolLoader.GetParametersFromArgs(args);
 
         // Assert
         Assert.Empty(result);
@@ -184,7 +184,7 @@ public sealed class GetParametersFromArgsTests
             .ToDictionary(p => p.Name, p => p.Value);
 
         // Act
-        var result = NamespaceToolLoader.GetParametersFromArgs(args);
+        var result = CommandFactoryToolLoader.GetParametersFromArgs(args);
 
         // Assert — should fall back to flat extraction, excluding "parameters" as meta key
         Assert.Single(result);

@@ -242,7 +242,7 @@ public class CommandFactory : ICommandFactory
         var groupTokenizedPath = GetPrefix(parentTokenizedPrefix, group.Name);
 
         // Guard against the same Command object being processed by a second CommandFactory instance
-        // (e.g. ConsolidatedToolDiscoveryStrategy reuses the same IAreaSetup/CommandGroup objects).
+        // (e.g. callers may reuse the same IAreaSetup/CommandGroup objects).
         // HasFactoryInjectedLearnOption checks whether the --learn on this command was created by
         // us (via _factoryInjectedLearnOptions) rather than by a command author, so we skip
         // re-validation and re-injection only when we own the existing option.
