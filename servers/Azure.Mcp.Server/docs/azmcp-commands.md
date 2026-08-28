@@ -4202,12 +4202,11 @@ azmcp sreagent agents create --subscription <subscription> \
                              --resource-group <resource-group> \
                              --agent <agent-name>
 
-# Delete an SRE Agent resource (requires --confirm true)
+# Delete an SRE Agent resource
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent agents delete --subscription <subscription> \
                              --resource-group <resource-group> \
-                             --agent <agent-name> \
-                             --confirm true
+                             --agent <agent-name>
 ```
 
 #### Agent Tools
@@ -4250,13 +4249,12 @@ azmcp sreagent skills create --subscription <subscription> \
                              --name <skill-name> \
                              --content <skill-content>
 
-# Delete a skill from an SRE Agent resource (requires --confirm true)
+# Delete a skill from an SRE Agent resource
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent skills delete --subscription <subscription> \
                              --resource-group <resource-group> \
                              --agent <agent-name> \
-                             --name <skill-name> \
-                             --confirm true
+                             --name <skill-name>
 ```
 
 #### Connectors
@@ -4298,13 +4296,12 @@ azmcp sreagent connectors test --subscription <subscription> \
                                --agent <agent-name> \
                                --name <connector-name>
 
-# Delete a connector (requires --confirm true)
+# Delete a connector
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent connectors delete --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --agent <agent-name> \
-                                 --name <connector-name> \
-                                 --confirm true
+                                 --name <connector-name>
 ```
 
 #### Hooks
@@ -4323,13 +4320,12 @@ azmcp sreagent hooks get --subscription <subscription> \
                          --agent <agent-name> \
                          --name <hook-name>
 
-# Delete a hook (requires --confirm true)
+# Delete a hook
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent hooks delete --subscription <subscription> \
                             --resource-group <resource-group> \
                             --agent <agent-name> \
-                            --name <hook-name> \
-                            --confirm true
+                            --name <hook-name>
 
 # List hooks activated for a thread
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4384,13 +4380,12 @@ azmcp sreagent threads send-message --subscription <subscription> \
                                     --thread <thread-id> \
                                     --message <message>
 
-# Delete a thread (requires --confirm true)
+# Delete a thread
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent threads delete --subscription <subscription> \
                               --resource-group <resource-group> \
                               --agent <agent-name> \
-                              --thread <thread-id> \
-                              --confirm true
+                              --thread <thread-id>
 
 # Run an investigation prompt
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4432,13 +4427,13 @@ azmcp sreagent scheduledtasks get --subscription <subscription> \
                                   --agent <agent-name> \
                                   --task <task-id>
 
-# Pause / resume / delete (delete requires --confirm true)
+# Pause / resume / delete
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent scheduledtasks pause  --subscription <subscription> --resource-group <rg> --agent <agent> --task <task-id>
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent scheduledtasks resume --subscription <subscription> --resource-group <rg> --agent <agent> --task <task-id>
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent scheduledtasks delete --subscription <subscription> --resource-group <rg> --agent <agent> --task <task-id> --confirm true
+azmcp sreagent scheduledtasks delete --subscription <subscription> --resource-group <rg> --agent <agent> --task <task-id>
 ```
 
 #### Incidents
@@ -4516,7 +4511,7 @@ azmcp sreagent docs memories search --subscription <s> --resource-group <rg> --a
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent docs memories add    --subscription <s> --resource-group <rg> --agent <a> --name <doc> --content <body>
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent docs memories delete --subscription <s> --resource-group <rg> --agent <a> --name <doc> --confirm true
+azmcp sreagent docs memories delete --subscription <s> --resource-group <rg> --agent <a> --name <doc>
 
 # Trigger a full reindex of the knowledge base
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4533,7 +4528,7 @@ azmcp sreagent commonprompts get    --subscription <s> --resource-group <rg> --a
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent commonprompts create --subscription <s> --resource-group <rg> --agent <a> --name <prompt-name> --content <body>
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent commonprompts delete --subscription <s> --resource-group <rg> --agent <a> --name <prompt-name> --confirm true
+azmcp sreagent commonprompts delete --subscription <s> --resource-group <rg> --agent <a> --name <prompt-name>
 ```
 
 ### Azure Storage Operations

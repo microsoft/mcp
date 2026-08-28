@@ -32,12 +32,12 @@ public class MemoriesDeleteCommandTests : SubscriptionCommandUnitTestsBase<Memor
         Assert.NotNull(command.Options);
         var optionNames = command.Options.Select(o => o.Name).ToList();
         Assert.Contains("--name", optionNames);
-        Assert.Contains("--confirm", optionNames);
+        Assert.DoesNotContain("--confirm", optionNames);
     }
 
     [Theory]
-    [InlineData("--subscription sub --agent myagent --name memory.md --confirm", true)]
-    [InlineData("--subscription sub --agent myagent --name memory.md", false)]
+    [InlineData("--subscription sub --agent myagent --name memory.md", true)]
+    [InlineData("--subscription sub --agent myagent --name memory.md --confirm", false)]
     [InlineData("--subscription sub --agent myagent", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -89,33 +89,14 @@ public class MemoriesDeleteCommandTests : SubscriptionCommandUnitTestsBase<Memor
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent", "--name", "memory.md", "--confirm");
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent", "--name", "memory.md");
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
     }
 
     [Fact]
-    public async Task ExecuteAsync_RequiresConfirmFlag()
-    {
-        Service.GetAgentAsync(
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" });
-
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent", "--name", "memory.md");
-
-        Assert.NotEqual(HttpStatusCode.OK, response.Status);
-        var result = ValidateAndDeserializeResponse(response, SreAgentJsonContext.Default.SreAgentTextResult, response.Status);
-        Assert.Contains("confirm", result.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_DeletesWhenConfirmed()
+    public async Task ExecuteAsync_Deletes()
     {
         Service.GetAgentAsync(
             Arg.Any<string>(),
@@ -132,7 +113,7 @@ public class MemoriesDeleteCommandTests : SubscriptionCommandUnitTestsBase<Memor
             Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent", "--name", "memory.md", "--confirm");
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent", "--name", "memory.md");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).DeleteMemoryAsync(

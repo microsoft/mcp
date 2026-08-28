@@ -21,19 +21,20 @@ public class ServerDeleteCommandTests : SubscriptionCommandUnitTestsBase<ServerD
         Assert.Equal("delete", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
+        Assert.DoesNotContain(command.Options, option => option.Name == "--force");
     }
 
     [Theory]
-    [InlineData("--subscription sub --resource-group rg --server testserver --force", true)]
-    [InlineData("--subscription sub --resource-group rg --server testserver", true)] // Should show warning without force
-    [InlineData("--subscription sub --resource-group rg --force", false)] // Missing server
-    [InlineData("--subscription sub --server testserver --force", false)] // Missing resource group
-    [InlineData("--resource-group rg --server testserver --force", false)] // Missing subscription
+    [InlineData("--subscription sub --resource-group rg --server testserver", true)]
+    [InlineData("--subscription sub --resource-group rg --server testserver --force", false)]
+    [InlineData("--subscription sub --resource-group rg", false)] // Missing server
+    [InlineData("--subscription sub --server testserver", false)] // Missing resource group
+    [InlineData("--resource-group rg --server testserver", false)] // Missing subscription
     [InlineData("", false)] // Missing all required parameters
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Arrange
-        if (shouldSucceed && args.Contains("--force"))
+        if (shouldSucceed)
         {
             Service.DeleteServerAsync(
                 Arg.Any<string>(),
@@ -59,22 +60,6 @@ public class ServerDeleteCommandTests : SubscriptionCommandUnitTestsBase<ServerD
     }
 
     [Fact]
-    public async Task ExecuteAsync_WhenForceNotSpecified_ReturnsWarning()
-    {
-        // Arrange & Act
-        var response = await ExecuteCommandAsync(
-            "--subscription", "sub",
-            "--resource-group", "rg",
-            "--server", "testserver");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Contains("WARNING", response.Message);
-        Assert.Contains("permanently delete", response.Message);
-        Assert.Contains("--force", response.Message);
-    }
-
-    [Fact]
     public async Task ExecuteAsync_WhenServerDeletedSuccessfully_ReturnsSuccess()
     {
         // Arrange
@@ -90,8 +75,7 @@ public class ServerDeleteCommandTests : SubscriptionCommandUnitTestsBase<ServerD
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--resource-group", "rg",
-            "--server", "testserver",
-            "--force");
+            "--server", "testserver");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -115,8 +99,7 @@ public class ServerDeleteCommandTests : SubscriptionCommandUnitTestsBase<ServerD
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--resource-group", "rg",
-            "--server", "testserver",
-            "--force");
+            "--server", "testserver");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -139,8 +122,7 @@ public class ServerDeleteCommandTests : SubscriptionCommandUnitTestsBase<ServerD
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--resource-group", "rg",
-            "--server", "testserver",
-            "--force");
+            "--server", "testserver");
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -165,8 +147,7 @@ public class ServerDeleteCommandTests : SubscriptionCommandUnitTestsBase<ServerD
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--resource-group", "rg",
-            "--server", "testserver",
-            "--force");
+            "--server", "testserver");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -191,8 +172,7 @@ public class ServerDeleteCommandTests : SubscriptionCommandUnitTestsBase<ServerD
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--resource-group", "rg",
-            "--server", "testserver",
-            "--force");
+            "--server", "testserver");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);

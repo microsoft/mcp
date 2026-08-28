@@ -32,13 +32,12 @@ public class SkillsDeleteCommandTests : SubscriptionCommandUnitTestsBase<SkillsD
         Assert.NotNull(command.Options);
         Assert.True(command.Options.Any(o => o.Name == "--agent"), "Missing --agent option");
         Assert.True(command.Options.Any(o => o.Name == "--name"), "Missing --name option");
-        Assert.True(command.Options.Any(o => o.Name == "--confirm"), "Missing --confirm option");
+        Assert.DoesNotContain(command.Options, o => o.Name == "--confirm");
     }
 
     [Theory]
-    [InlineData("--subscription sub --agent myagent --name myskill --confirm true", true)]
-    [InlineData("--subscription sub --agent myagent --name myskill --confirm false", false)]
-    [InlineData("--subscription sub --agent myagent --name myskill", false)]
+    [InlineData("--subscription sub --agent myagent --name myskill", true)]
+    [InlineData("--subscription sub --agent myagent --name myskill --confirm true", false)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -81,7 +80,7 @@ public class SkillsDeleteCommandTests : SubscriptionCommandUnitTestsBase<SkillsD
             Arg.Any<CancellationToken>())
             .Returns(deleteResult);
 
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent", "--name", "testskill", "--confirm", "true");
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent", "--name", "testskill");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         var result = ValidateAndDeserializeResponse(response, SreAgentJsonContext.Default.SkillsDeleteCommandResult);
@@ -98,7 +97,7 @@ public class SkillsDeleteCommandTests : SubscriptionCommandUnitTestsBase<SkillsD
         Service.DeleteSkillAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent", "--name", "testskill", "--confirm", "true");
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent", "--name", "testskill");
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
@@ -117,7 +116,7 @@ public class SkillsDeleteCommandTests : SubscriptionCommandUnitTestsBase<SkillsD
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentDeleteResult("testskill", "Skill", true));
 
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent", "--name", "testskill", "--confirm", "true");
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent", "--name", "testskill");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).DeleteSkillAsync(
