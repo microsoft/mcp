@@ -47,7 +47,6 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
                     options.HostpoolResourceId,
                     options.Sessionhost,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else if (!string.IsNullOrEmpty(options.ResourceGroup))
@@ -58,7 +57,6 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
                     options.Hostpool!,
                     options.Sessionhost,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else
@@ -68,7 +66,6 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
                     options.Hostpool!,
                     options.Sessionhost,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
 
