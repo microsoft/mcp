@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Optimization.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Optimization.Services;
 
@@ -17,7 +16,6 @@ public interface IOptimizationService
         string subscription,
         int top,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -29,7 +27,6 @@ public interface IOptimizationService
         string recommendationTypeId,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -43,6 +40,5 @@ public interface IOptimizationService
         UtilizationView view,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

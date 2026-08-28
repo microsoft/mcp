@@ -100,7 +100,6 @@ public sealed class RecommendationExplainCommand(
                 view,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

@@ -81,7 +81,6 @@ public sealed class RecommendationAlternativesCommand(
                 recommendationTypeId,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             var recommendations = filters.Apply(parsed);

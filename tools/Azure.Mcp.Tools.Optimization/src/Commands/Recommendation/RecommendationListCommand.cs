@@ -59,7 +59,6 @@ public sealed class RecommendationListCommand(
                 options.Subscription!,
                 top,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

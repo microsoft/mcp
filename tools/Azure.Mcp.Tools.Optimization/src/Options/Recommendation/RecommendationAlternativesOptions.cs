@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Optimization.Services;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Optimization.Options.Recommendation;
 
@@ -43,7 +42,4 @@ public class RecommendationAlternativesOptions : ISubscriptionOption
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
-
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

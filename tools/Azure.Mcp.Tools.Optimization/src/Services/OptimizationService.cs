@@ -8,7 +8,6 @@ using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Optimization.Services;
 
@@ -29,14 +28,13 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
         string subscription,
         int top,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
 
         var query = $"{OptimizationKqlQueries.TopCostSavingsQuery}\n| limit {top}";
         var (rows, truncated) = await QueryResourceGraphAsync(
-            query, subscription, tenant, retryPolicy, cancellationToken);
+            query, subscription, tenant, cancellationToken);
 
         var recommendations = rows.Select(ConvertToCostSavings).ToList();
         return new ResourceQueryResults<CostSavingsRecommendation>(recommendations, truncated);
@@ -47,7 +45,6 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
         string recommendationTypeId,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(resourceId);
@@ -58,7 +55,7 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
         resourceId = ArmResourceId.StripAdvisorRecommendationSuffix(resourceId);
 
         var query = $"{OptimizationKqlQueries.BuildAlternativesQuery(resourceId, recommendationTypeId)}\n| limit {AlternativesLimit}";
-        var (rows, _) = await QueryResourceGraphAsync(query, subscription, tenant, retryPolicy, cancellationToken);
+        var (rows, _) = await QueryResourceGraphAsync(query, subscription, tenant, cancellationToken);
 
         return AlternativeRecommendationsArgParser.Parse(rows, resourceId);
     }
@@ -70,7 +67,6 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
         UtilizationView view,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(resourceId);
@@ -81,7 +77,7 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
         resourceId = ArmResourceId.StripAdvisorRecommendationSuffix(resourceId);
 
         var query = $"{OptimizationKqlQueries.BuildAdvisorRecommendationQuery(resourceId, recommendationTypeId)}\n| limit {ExplanationLimit}";
-        var (rows, _) = await QueryResourceGraphAsync(query, subscription, tenant, retryPolicy, cancellationToken);
+        var (rows, _) = await QueryResourceGraphAsync(query, subscription, tenant, cancellationToken);
 
         if (rows.Count == 0)
         {
@@ -93,7 +89,7 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
         // When no target SKU is supplied, derive it from the top alternative resize recommendation so
         // the caller can invoke this tool directly without a separate 'alternatives' round-trip.
         var resolvedTargetSku = string.IsNullOrWhiteSpace(targetSku)
-            ? await ResolveTargetSkuAsync(resourceId, recommendationTypeId, subscription, tenant, retryPolicy, cancellationToken)
+            ? await ResolveTargetSkuAsync(resourceId, recommendationTypeId, subscription, tenant, cancellationToken)
             : targetSku;
 
         var credential = await GetCredential(tenant, cancellationToken);
@@ -184,11 +180,10 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
         string recommendationTypeId,
         string subscription,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         var alternatives = await GetAlternativesAsync(
-            resourceId, recommendationTypeId, subscription, tenant, retryPolicy, cancellationToken);
+            resourceId, recommendationTypeId, subscription, tenant, cancellationToken);
 
         var targetSku = alternatives
             .Where(a => !string.IsNullOrWhiteSpace(a.ProposedSku))
@@ -214,11 +209,10 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
         string query,
         string subscription,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         var (subscriptionId, subscriptionTenantId) = await ResolveSubscriptionAsync(
-            subscription, tenant, retryPolicy, cancellationToken);
+            subscription, tenant, cancellationToken);
         var tenantResource = await GetTenantResourceAsync(subscriptionTenantId, cancellationToken);
 
         var queryContent = new ResourceQueryContent(query)
@@ -252,7 +246,6 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
     private async Task<(string SubscriptionId, Guid? TenantId)> ResolveSubscriptionAsync(
         string subscription,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         var tenantId = Guid.TryParse(tenant, out var parsedTenant) ? parsedTenant : (Guid?)null;

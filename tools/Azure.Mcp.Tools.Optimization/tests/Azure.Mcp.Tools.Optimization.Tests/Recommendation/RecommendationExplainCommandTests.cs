@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Optimization.Commands;
 using Azure.Mcp.Tools.Optimization.Commands.Recommendation;
 using Azure.Mcp.Tools.Optimization.Models;
 using Azure.Mcp.Tools.Optimization.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -46,7 +45,6 @@ public class RecommendationExplainCommandTests
                 Arg.Any<UtilizationView>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(EmptyResult());
         }
@@ -66,7 +64,6 @@ public class RecommendationExplainCommandTests
             Arg.Any<UtilizationView>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new RecommendationExplanationResult(
                 OptimizationStrings.ExplanationRenderingInstructions,
@@ -98,7 +95,6 @@ public class RecommendationExplainCommandTests
             Arg.Any<UtilizationView>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
