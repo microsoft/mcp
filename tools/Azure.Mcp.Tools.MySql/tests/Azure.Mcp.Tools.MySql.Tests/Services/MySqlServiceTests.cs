@@ -38,7 +38,7 @@ public class MySqlServiceTests
     public async Task ListServersAsync_WhenAzureServiceThrows_RethrowsException()
     {
         var exception = new InvalidOperationException("Resource group not found");
-        _azureService.GetResourceGroupResource("sub123", "rg1", Arg.Any<string>(), null, Arg.Any<CancellationToken>()).ThrowsAsync(exception);
+        _azureService.GetResourceGroupResource("sub123", "rg1", Arg.Any<string>(), Arg.Any<CancellationToken>()).ThrowsAsync(exception);
 
         var thrownException = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _mysqlService.ListServersAsync("sub123", "rg1", TestContext.Current.CancellationToken));
@@ -50,7 +50,7 @@ public class MySqlServiceTests
     public async Task ListServersInSubscriptionAsync_WhenAzureServiceThrows_RethrowsException()
     {
         var exception = new InvalidOperationException("Subscription not found");
-        _azureService.GetSubscription("sub123", Arg.Any<string>(), null, Arg.Any<CancellationToken>()).ThrowsAsync(exception);
+        _azureService.GetSubscription("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>()).ThrowsAsync(exception);
 
         var thrownException = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _mysqlService.ListServersInSubscriptionAsync("sub123", TestContext.Current.CancellationToken));
@@ -61,7 +61,7 @@ public class MySqlServiceTests
     [Fact]
     public async Task ListServersAsync_WhenResourceGroupNotFound_ThrowsKeyNotFoundException()
     {
-        _azureService.GetResourceGroupResource("sub123", "missing-rg", Arg.Any<string>(), null, Arg.Any<CancellationToken>())
+        _azureService.GetResourceGroupResource("sub123", "missing-rg", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<Azure.ResourceManager.Resources.ResourceGroupResource?>(null));
 
         var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
@@ -73,7 +73,7 @@ public class MySqlServiceTests
     [Fact]
     public async Task GetServerConfigAsync_WhenResourceGroupNotFound_ThrowsKeyNotFoundException()
     {
-        _azureService.GetResourceGroupResource("sub123", "missing-rg", Arg.Any<string>(), null, Arg.Any<CancellationToken>())
+        _azureService.GetResourceGroupResource("sub123", "missing-rg", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<Azure.ResourceManager.Resources.ResourceGroupResource?>(null));
 
         var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
@@ -85,7 +85,7 @@ public class MySqlServiceTests
     [Fact]
     public async Task GetServerParameterAsync_WhenResourceGroupNotFound_ThrowsKeyNotFoundException()
     {
-        _azureService.GetResourceGroupResource("sub123", "missing-rg", Arg.Any<string>(), null, Arg.Any<CancellationToken>())
+        _azureService.GetResourceGroupResource("sub123", "missing-rg", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<Azure.ResourceManager.Resources.ResourceGroupResource?>(null));
 
         var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
@@ -97,7 +97,7 @@ public class MySqlServiceTests
     [Fact]
     public async Task SetServerParameterAsync_WhenResourceGroupNotFound_ThrowsKeyNotFoundException()
     {
-        _azureService.GetResourceGroupResource("sub123", "missing-rg", Arg.Any<string>(), null, Arg.Any<CancellationToken>())
+        _azureService.GetResourceGroupResource("sub123", "missing-rg", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<Azure.ResourceManager.Resources.ResourceGroupResource?>(null));
 
         var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>

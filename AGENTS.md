@@ -515,6 +515,21 @@ internal partial class StorageJsonContext : JsonSerializerContext;
 context.Response.Results = ResponseResult.Create(new(results), StorageJsonContext.Default.StorageAccountGetCommandResult);
 ```
 
+### Long-running operations
+
+Long-running operations (at this time) don't offer the ability to configure polling intervals, and even if they were
+able to there is a limit on how small of a polling interval can be used. Due to this, to prevent long-running operations
+with a significant number of polls from wasting CPU time waiting during testing, all long-running operations should use
+a two call pattern. The first call is the service method starting the polling operation, that should pass
+`WaitUntil.Started` to simply begin the operation. Then waiting for completion should call
+`BaseAzureService.WaitForLroCompletionAsync` to wait for completion in a way that testing can ignore the polling
+interval to prevent CPU wait loops that aren't necessary when playback testing.
+
+```csharp
+var lroOperation = Service.LroAsync(WaitUntil.Started, cancellationToken);
+await WaitForLroCompletionAsync(lroOperation, cancellationToken);
+```
+
 ## Adding New Commands and Services
 
 ### Development Process

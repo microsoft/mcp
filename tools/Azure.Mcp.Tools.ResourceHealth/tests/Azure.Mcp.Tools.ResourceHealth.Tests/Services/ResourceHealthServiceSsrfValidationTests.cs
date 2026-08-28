@@ -49,7 +49,7 @@ public class ResourceHealthServiceSsrfValidationTests
 
         var subscriptionResource = Substitute.For<SubscriptionResource>();
         subscriptionResource.Id.Returns(SubscriptionResource.CreateResourceIdentifier(subscriptionId));
-        _azureService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), null, Arg.Any<CancellationToken>())
+        _azureService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(subscriptionResource);
 
         // Mock HttpClientFactory

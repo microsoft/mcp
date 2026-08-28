@@ -52,7 +52,6 @@ public sealed class AksService(IAzureService azureService, ICacheService cacheSe
                 "Microsoft.ContainerService/managedClusters",
                 resourceGroup,
                 subscription,
-                null,
                 ConvertToClusterFromJson,
                 tenant: tenant,
                 cancellationToken: cancellationToken);
@@ -88,7 +87,6 @@ public sealed class AksService(IAzureService azureService, ICacheService cacheSe
                 "Microsoft.ContainerService/managedClusters",
                 resourceGroup,
                 subscription,
-                null,
                 ConvertToClusterFromJson,
                 additionalFilter: $"name =~ '{EscapeKqlString(clusterName!)}'",
                 tenant: tenant,
