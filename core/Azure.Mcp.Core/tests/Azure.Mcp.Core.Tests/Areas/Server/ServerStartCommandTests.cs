@@ -129,6 +129,26 @@ public class ServerStartCommandTests
     }
 
     [Theory]
+    [InlineData("duplicated", StructuredOutputMode.Duplicated)]
+    [InlineData("compact", StructuredOutputMode.Compact)]
+    public void StructuredOutputModeOption_ParsesCaseInsensitiveValues(
+        string value,
+        StructuredOutputMode expected)
+    {
+        var options = BindOptions(new[] { "--structured-output-mode", value });
+
+        Assert.Equal(expected, options.StructuredOutputMode);
+    }
+
+    [Fact]
+    public void StructuredOutputModeOption_DefaultsToDisabled()
+    {
+        var options = BindOptions();
+
+        Assert.Null(options.StructuredOutputMode);
+    }
+
+    [Theory]
     [InlineData("azmcp_storage_account_get")]
     [InlineData("azmcp_keyvault_secret_get")]
     [InlineData("azmcp_storage_account_get", "azmcp_keyvault_secret_get")]
