@@ -41,7 +41,6 @@ public sealed class EntraAdminListCommand(ISqlService sqlService, ILogger<EntraA
                 options.Server,
                 options.ResourceGroup,
                 options.Subscription!,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(administrators ?? []), SqlJsonContext.Default.EntraAdminListResult);

@@ -42,7 +42,6 @@ public sealed class DrillEndCommandTests : CommandUnitTestsBase<DrillEndCommand,
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns("operation-id");
         }
@@ -69,7 +68,7 @@ public sealed class DrillEndCommandTests : CommandUnitTestsBase<DrillEndCommand,
     [Fact]
     public async Task ExecuteAsync_EndsDrillAndReturnsOperation()
     {
-        Service.EndDrillAsync("sg1", "drill1", "Failed", "test notes", null, null, Arg.Any<CancellationToken>())
+        Service.EndDrillAsync("sg1", "drill1", "Failed", "test notes", null, Arg.Any<CancellationToken>())
             .Returns("operation-id");
 
         var response = await ExecuteCommandAsync(
@@ -98,7 +97,6 @@ public sealed class DrillEndCommandTests : CommandUnitTestsBase<DrillEndCommand,
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 

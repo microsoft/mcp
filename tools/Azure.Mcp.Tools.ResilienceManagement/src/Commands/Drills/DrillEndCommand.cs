@@ -44,7 +44,6 @@ public sealed class DrillEndCommand(ILogger<DrillEndCommand> logger, IResilience
                 DrillActionValidation.NormalizeAttestation(options.Attestation),
                 options.AttestationNotes,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

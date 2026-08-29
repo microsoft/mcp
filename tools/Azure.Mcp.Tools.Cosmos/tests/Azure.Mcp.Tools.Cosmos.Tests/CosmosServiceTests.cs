@@ -91,7 +91,7 @@ public class CosmosServiceTests : IAsyncDisposable
         // Verify no fallback to key auth: GetSubscription is only called for key-based auth
         // (to look up the account and retrieve master keys)
         await _azureService.DidNotReceive()
-            .GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), null, Arg.Any<CancellationToken>());
+            .GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -112,7 +112,7 @@ public class CosmosServiceTests : IAsyncDisposable
 
         // Verify no fallback to key auth
         await _azureService.DidNotReceive()
-            .GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), null, Arg.Any<CancellationToken>());
+            .GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -215,7 +215,7 @@ public class CosmosServiceTests : IAsyncDisposable
     {
         // Arrange: the resource group lookup returns a 404, which should surface as a not-found.
         var subscriptionResource = Substitute.For<SubscriptionResource>();
-        _azureService.GetSubscription("sub123", Arg.Any<string?>(), null, Arg.Any<CancellationToken>())
+        _azureService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(subscriptionResource);
         subscriptionResource.GetResourceGroupAsync("missing-rg", Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Resource group not found"));
@@ -237,7 +237,7 @@ public class CosmosServiceTests : IAsyncDisposable
             .Returns(default(List<string>));
 
         var subscriptionResource = Substitute.For<SubscriptionResource>();
-        _azureService.GetSubscription("sub123", Arg.Any<string?>(), null, Arg.Any<CancellationToken>())
+        _azureService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(subscriptionResource);
         subscriptionResource.GetResourceGroupAsync("missing-rg", Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Resource group not found"));

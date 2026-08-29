@@ -43,7 +43,6 @@ public sealed class DrillRunGetCommand(ILogger<DrillRunGetCommand> logger, IResi
                     options.ServiceGroup,
                     options.Drill,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new DrillRunGetCommandResult(DrillRuns: drillRuns.ToList());
             }
@@ -54,7 +53,6 @@ public sealed class DrillRunGetCommand(ILogger<DrillRunGetCommand> logger, IResi
                     options.Drill,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new DrillRunGetCommandResult(DrillRun: drillRun);
             }

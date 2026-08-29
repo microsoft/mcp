@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -27,7 +26,7 @@ public class RecoveryResourceGetCommandTests : CommandUnitTestsBase<RecoveryReso
     public async Task ExecuteAsync_ListsRecoveryResources_WhenNameOmitted()
     {
         var expected = new List<ResourceSummary> { new("id1", "member1"), new("id2", "member2") };
-        Service.ListRecoveryResourcesAsync(ServiceGroup, RecoveryPlan, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListRecoveryResourcesAsync(ServiceGroup, RecoveryPlan, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan);
@@ -40,7 +39,7 @@ public class RecoveryResourceGetCommandTests : CommandUnitTestsBase<RecoveryReso
     [Fact]
     public async Task ExecuteAsync_GetsRecoveryResource_WhenNameProvided()
     {
-        Service.GetRecoveryResourceAsync(ServiceGroup, RecoveryPlan, "member1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetRecoveryResourceAsync(ServiceGroup, RecoveryPlan, "member1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Element("member1"));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan, "--name", "member1");
@@ -54,7 +53,7 @@ public class RecoveryResourceGetCommandTests : CommandUnitTestsBase<RecoveryReso
     public async Task ExecuteAsync_HandlesException()
     {
         var expectedError = "Test error";
-        Service.ListRecoveryResourcesAsync(ServiceGroup, RecoveryPlan, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListRecoveryResourcesAsync(ServiceGroup, RecoveryPlan, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan);

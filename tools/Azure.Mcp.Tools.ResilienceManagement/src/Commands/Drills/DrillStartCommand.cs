@@ -43,7 +43,6 @@ public sealed class DrillStartCommand(ILogger<DrillStartCommand> logger, IResili
                 options.Drill,
                 DrillActionValidation.NormalizeMode(options.Mode),
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
