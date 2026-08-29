@@ -61,7 +61,10 @@ public static partial class ServiceCollectionExtensions
 
         // Register tool loader strategies
         services.AddSingleton<CommandFactoryToolLoader>();
-        services.AddSingleton<RegistryToolLoader>();
+        if (!serverStartOptions.DisableProxyTools)
+        {
+            services.AddSingleton<RegistryToolLoader>();
+        }
 
         services.AddSingleton<SingleProxyToolLoader>();
         services.AddSingleton<CompositeToolLoader>();
@@ -71,7 +74,10 @@ public static partial class ServiceCollectionExtensions
         // Register server discovery strategies
         services.AddSingleton<CommandGroupDiscoveryStrategy>();
         services.AddSingleton<CompositeDiscoveryStrategy>();
-        services.AddSingleton<RegistryDiscoveryStrategy>();
+        if (!serverStartOptions.DisableProxyTools)
+        {
+            services.AddSingleton<RegistryDiscoveryStrategy>();
+        }
         services.AddSingleton<ConsolidatedToolDiscoveryStrategy>();
 
         // Register MCP runtimes
