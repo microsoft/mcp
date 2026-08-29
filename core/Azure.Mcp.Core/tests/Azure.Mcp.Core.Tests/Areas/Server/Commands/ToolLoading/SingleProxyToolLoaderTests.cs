@@ -209,7 +209,17 @@ public class SingleProxyToolLoaderTests
         Assert.Equal("tool-list", result.StructuredContent.Value.GetProperty("kind").GetString());
         Assert.Equal("storage", result.StructuredContent.Value.GetProperty("tools")[0].GetProperty("tool").GetString());
         var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
-        Assert.Equal(expectsCompactContent, text == StructuredOutputHelper.CompactContentMessage);
+        var toolsJson = result.StructuredContent.Value.GetProperty("tools").GetRawText();
+        Assert.Equal(
+            expectsCompactContent
+                ? StructuredOutputHelper.CompactContentMessage
+                : $"""
+                  Here are the available tools.
+                  Next, identify the tool you want to learn about and run again with the "learn" argument and the "tool" name to get a list of available commands and their parameters.
+
+                  {toolsJson}
+                  """,
+            text);
     }
 
     [Fact]
@@ -364,7 +374,9 @@ public class SingleProxyToolLoaderTests
             42,
             proxiedResult.GetProperty("structuredContent").GetProperty("value").GetInt32());
         var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
-        Assert.Equal(expectsCompactContent, text == StructuredOutputHelper.CompactContentMessage);
+        Assert.Equal(
+            expectsCompactContent ? StructuredOutputHelper.CompactContentMessage : "Listed accounts",
+            text);
     }
 
     [Fact]

@@ -204,6 +204,12 @@ public class OptionSchemaGeneratorTests
     }
 
     [Fact]
+    public void CreateOutputSchema_WithNullTypeInfo_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => OptionSchemaGenerator.CreateOutputSchema(null!));
+    }
+
+    [Fact]
     public void CreateOutputSchema_ArrayResult_IsWrappedUnderValue()
     {
         var schema = OptionSchemaGenerator.CreateOutputSchema(OutputSchemaTestJsonContext.Default.StringArray);

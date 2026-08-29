@@ -129,8 +129,8 @@ public class ServerStartCommandTests
     }
 
     [Theory]
-    [InlineData("duplicated", StructuredOutputMode.Duplicated)]
-    [InlineData("compact", StructuredOutputMode.Compact)]
+    [InlineData("DuPlIcAtEd", StructuredOutputMode.Duplicated)]
+    [InlineData("COMPACT", StructuredOutputMode.Compact)]
     public void StructuredOutputModeOption_ParsesCaseInsensitiveValues(
         string value,
         StructuredOutputMode expected)

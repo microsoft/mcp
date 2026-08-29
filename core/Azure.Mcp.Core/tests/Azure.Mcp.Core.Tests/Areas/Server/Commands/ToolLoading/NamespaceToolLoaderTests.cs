@@ -273,7 +273,8 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             StructuredOutputMode = mode
         });
         var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
-        var request = McpTestUtilities.CreateToolCallRequest(GetFirstAvailableNamespace(), new Dictionary<string, object?>
+        var namespaceName = GetFirstAvailableNamespace();
+        var request = McpTestUtilities.CreateToolCallRequest(namespaceName, new Dictionary<string, object?>
         {
             ["learn"] = true,
             ["intent"] = "list resources"
@@ -292,7 +293,16 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         }
         else
         {
-            Assert.Contains("available command", text, StringComparison.OrdinalIgnoreCase);
+            var toolsJson = result.StructuredContent.Value.GetProperty("tools").GetRawText();
+            Assert.Equal(
+                $"""
+                Here are the available commands and their input schema for '{namespaceName}' tool.
+                If you do not find a suitable "command", run again with the "learn=true" to get a list of available commands and their parameters.
+                Next, identify the command you want to execute and run again with the "command" and "parameters" arguments, respecting "required" parameters if present.
+
+                {toolsJson}
+                """,
+                text);
         }
     }
 
@@ -452,7 +462,11 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         Assert.False(result.IsError);
         Assert.True(result.StructuredContent.HasValue);
         var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
-        Assert.Equal(expectsCompactContent, text == StructuredOutputHelper.CompactContentMessage);
+        Assert.Equal(
+            expectsCompactContent
+                ? StructuredOutputHelper.CompactContentMessage
+                : JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse),
+            text);
         var structuredContent = result.StructuredContent.Value;
         Assert.Equal("tool-result", structuredContent.GetProperty("kind").GetString());
         Assert.Equal("read-cmd", structuredContent.GetProperty("command").GetString());
