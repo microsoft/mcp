@@ -45,6 +45,7 @@ $goalAssignmentName = $DeploymentOutputs['GOALASSIGNMENTNAME']
 $recoveryPlanName = $DeploymentOutputs['RECOVERYPLANNAME']
 $drillName = $DeploymentOutputs['DRILLNAME']
 $storageAccountId = $DeploymentOutputs['STORAGEACCOUNTID']
+$vmId = $DeploymentOutputs['VMID']
 $location = $DeploymentOutputs['LOCATION']
 
 $serviceGroupApiVersion = '2024-02-01-preview'
@@ -73,12 +74,33 @@ function Invoke-ResilienceRestPut {
 function Invoke-ResilienceRestPost {
     param(
         [string] $Path,
-        [hashtable] $Body
+        [hashtable] $Body,
+        [string] $OperationId
     )
 
     Write-Host "POST $Path"
-    if ($Body) {
-        $payload = $Body | ConvertTo-Json -Depth 20 -Compress
+    $payload = if ($Body) { $Body | ConvertTo-Json -Depth 20 -Compress } else { $null }
+
+    # This api-version requires the operation id as an 'operation-id' request header.
+    # Invoke-AzRestMethod cannot set custom headers, so fall back to Invoke-WebRequest with an ARM token.
+    if ($OperationId) {
+        $token = Get-AzAccessToken -ResourceUrl 'https://management.azure.com/' -AsSecureString
+        $bearer = [System.Net.NetworkCredential]::new('', $token.Token).Password
+        $headers = @{ Authorization = "Bearer $bearer"; 'operation-id' = $OperationId }
+        $uri = "https://management.azure.com$Path"
+        try {
+            if ($payload) {
+                return Invoke-WebRequest -Method POST -Uri $uri -Headers $headers -Body $payload -ContentType 'application/json'
+            }
+            return Invoke-WebRequest -Method POST -Uri $uri -Headers $headers
+        }
+        catch {
+            $status = $_.Exception.Response.StatusCode.value__
+            throw "POST $Path failed with status $status`: $($_.ErrorDetails.Message)"
+        }
+    }
+
+    if ($payload) {
         $response = Invoke-AzRestMethod -Method POST -Path $Path -Payload $payload
     }
     else {
@@ -138,7 +160,18 @@ function Add-RecoveryContributorRole {
     $assignment = Get-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionName $roleName -ErrorAction SilentlyContinue
     if (!$assignment) {
         Write-Host "Assigning $roleName to test identity at $Scope"
-        New-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionName $roleName | Out-Null
+        try {
+            New-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionName $roleName | Out-Null
+        }
+        catch {
+            # The lookup can miss an existing assignment due to eventual consistency; treat Conflict as success.
+            if ($_.Exception.Message -match 'Conflict|already exists|RoleAssignmentExists') {
+                Write-Host "Role assignment already exists at $Scope; continuing."
+            }
+            else {
+                throw
+            }
+        }
     }
 }
 
@@ -298,6 +331,9 @@ else {
 # 8) Create a drill. The service creates its drillResources from the service-group membership.
 $drillPath = "$serviceGroupResilienceBase/drills/$drillName`?api-version=$resilienceApiVersion"
 $recoveryPlanId = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName"
+# Chaos workspaces (required by the drill) aren't available in every region (e.g. westus); pick a supported one.
+$chaosSupportedRegions = @('eastus2', 'westus2', 'northeurope', 'swedencentral', 'uksouth', 'japaneast', 'westcentralus', 'switzerlandnorth')
+$drillRegion = if ($chaosSupportedRegions -contains $location) { $location } else { 'eastus2' }
 $existingDrill = Invoke-AzRestMethod -Method GET -Path $drillPath
 if ($existingDrill.StatusCode -eq 404) {
     Invoke-ResilienceRestPut -Path $drillPath -Body @{
@@ -307,17 +343,16 @@ if ($existingDrill.StatusCode -eq 404) {
         properties = @{
             drillType               = 'Zonal'
             rbacSetupMode           = 'AutomatedBuiltinRoles'
-            metricsProperties       = @{
-                identity       = @{ type = 'SystemAssigned' }
-                metricsToTrack = @()
-            }
             recoveryPlanProperties  = @{
                 recoveryPlanId = $recoveryPlanId
                 identity       = @{ type = 'SystemAssigned' }
             }
+            monitoringProperties    = @{
+                identity = @{ type = 'SystemAssigned' }
+            }
             drillAssetProperties    = @{
                 subscription  = $subscriptionId
-                region        = $location
+                region        = $drillRegion
                 resourceGroup = $ResourceGroupName
             }
             chaosResourceProperties = @{
@@ -333,11 +368,9 @@ elseif ($existingDrill.StatusCode -eq 200) {
     if ($drill.properties.drillType -ne 'Zonal' -or
         $drill.properties.rbacSetupMode -ne 'AutomatedBuiltinRoles' -or
         $drill.properties.drillAssetProperties.subscription -ne $subscriptionId -or
-        $drill.properties.drillAssetProperties.region -ne $location -or
+        $drill.properties.drillAssetProperties.region -ne $drillRegion -or
         $drill.properties.drillAssetProperties.resourceGroup -ne $ResourceGroupName -or
         $drill.properties.recoveryPlanProperties.recoveryPlanId -ne $recoveryPlanId -or
-        -not $drill.properties.metricsProperties.identity -or
-        $drill.properties.metricsProperties.metricsToTrack.Count -ne 0 -or
         $drill.properties.provisioningState -ne 'Succeeded') {
         throw "Existing drill '$drillName' does not match the requested test configuration."
     }
@@ -347,7 +380,9 @@ else {
     throw "GET $drillPath failed with status $($existingDrill.StatusCode): $($existingDrill.Content)"
 }
 
-# Wait for the drill resource created from the storage-account service-group member.
+# Wait for the drill resource created from the VM service-group member.
+# The VM (unlike storage/load balancers on this stamp) has a native zonal shutdown fault, so it
+# can be included in the Zonal drill and used to start a drill run.
 $drillResourcesPath = "$serviceGroupResilienceBase/drills/$drillName/drillResources`?api-version=$resilienceApiVersion"
 $drillResource = $null
 $deadline = (Get-Date).AddSeconds(600)
@@ -359,22 +394,22 @@ while (-not $drillResource -and (Get-Date) -lt $deadline) {
 
     $drillResources = ($response.Content | ConvertFrom-Json).value
     $drillResource = $drillResources | Where-Object {
-        $_.properties.targetResourceId -eq $storageAccountId
+        $_.properties.resourceId -eq $vmId
     } | Select-Object -First 1
 
     if (-not $drillResource) {
-        Write-Host "  waiting for the storage account drill resource to appear..."
+        Write-Host "  waiting for the VM drill resource to appear..."
         Start-Sleep -Seconds 15
     }
 }
 
 if (-not $drillResource) {
-    throw "No drill resource was created for storage account $storageAccountId."
+    throw "No drill resource was created for VM $vmId."
 }
 
 $DeploymentOutputs['DRILLRESOURCENAME'] = $drillResource.name
 
-# 9) Include the storage account in the drill, preserving the faults discovered by the service.
+# 9) Include the VM in the drill, preserving the faults discovered by the service.
 $includeResource = @{
     id = $drillResource.id
 }
@@ -382,8 +417,8 @@ if ($drillResource.properties.faultProperties) {
     $includeResource['faultProperties'] = $drillResource.properties.faultProperties
 }
 
-$addResourcesPath = "$serviceGroupResilienceBase/drills/$drillName/addOrUpdateResources`?api-version=$resilienceApiVersion&operationId=$((New-Guid).Guid)"
-Invoke-ResilienceRestPost -Path $addResourcesPath -Body @{
+$addResourcesPath = "$serviceGroupResilienceBase/drills/$drillName/addOrUpdateResources`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPost -Path $addResourcesPath -OperationId ((New-Guid).Guid) -Body @{
     faultDurationInMin = 1
     forceInclusionAndUpdate = 'Enable'
     resourceLists = @{
@@ -422,8 +457,8 @@ if ($existingRunsResponse.StatusCode -lt 400) {
     $existingRunIds = @((($existingRunsResponse.Content | ConvertFrom-Json).value).id)
 }
 
-$startPath = "$serviceGroupResilienceBase/drills/$drillName/start`?api-version=$resilienceApiVersion&operationId=$((New-Guid).Guid)"
-Invoke-ResilienceRestPost -Path $startPath -Body @{
+$startPath = "$serviceGroupResilienceBase/drills/$drillName/start`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPost -Path $startPath -OperationId ((New-Guid).Guid) -Body @{
     mode = 'Failover'
 } | Out-Null
 

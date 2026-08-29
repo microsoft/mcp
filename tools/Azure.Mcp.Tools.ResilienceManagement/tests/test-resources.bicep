@@ -13,8 +13,15 @@ var lifecycleServiceGroupName = take('sgl${uniqueSuffix}', 24)
 var goalTemplateName = take('gt${uniqueSuffix}', 24)
 var goalAssignmentName = take('ga${uniqueSuffix}', 24)
 var recoveryPlanName = take('rp${uniqueSuffix}', 24)
-var drillName = take('dr${uniqueSuffix}', 24)
+var drillName = take('drd${uniqueSuffix}', 24)
 var storageAccountName = toLower(take('st${uniqueSuffix}', 24))
+var vnetName = take('vnet${uniqueSuffix}', 24)
+var nicName = take('nic${uniqueSuffix}', 24)
+var vmName = take('vm${uniqueSuffix}', 15)
+// westus has no availability zones; a Zonal drill needs a zonal target, so place the VM and its
+// network in a zone-capable, Chaos-supported region.
+var vmLocation = 'eastus2'
+var vmAdminPassword = 'Pw1!${uniqueString(resourceGroup().id, baseName)}'
 
 // The test identity is automatically granted access to this resource group by the
 // test harness (New-TestResources.ps1), so no explicit role assignment is created here.
@@ -54,6 +61,89 @@ resource usagePlan 'Microsoft.AzureResilienceManagement/usagePlans@2026-04-01-pr
   }
 }
 
+// The drill is Zonal, so it needs a zonal target with a real native Chaos fault. A zonal VM
+// (Microsoft.Compute/virtualMachines) is the simplest such target: it has the native shutdown
+// fault (no agent required), so it can be force-included in the drill and used to start a run.
+resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
+  name: vnetName
+  location: vmLocation
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.0.0.0/16'
+      ]
+    }
+    subnets: [
+      {
+        name: 'default'
+        properties: {
+          addressPrefix: '10.0.0.0/24'
+        }
+      }
+    ]
+  }
+}
+
+resource nic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
+  name: nicName
+  location: vmLocation
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          subnet: {
+            id: '${vnet.id}/subnets/default'
+          }
+          privateIPAllocationMethod: 'Dynamic'
+        }
+      }
+    ]
+  }
+}
+
+resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
+  name: vmName
+  location: vmLocation
+  zones: [
+    '1'
+  ]
+  properties: {
+    hardwareProfile: {
+      vmSize: 'Standard_D2als_v6'
+    }
+    osProfile: {
+      computerName: vmName
+      adminUsername: 'azureuser'
+      adminPassword: vmAdminPassword
+      linuxConfiguration: {
+        disablePasswordAuthentication: false
+      }
+    }
+    storageProfile: {
+      imageReference: {
+        publisher: 'Canonical'
+        offer: '0001-com-ubuntu-server-jammy'
+        sku: '22_04-lts-gen2'
+        version: 'latest'
+      }
+      osDisk: {
+        createOption: 'FromImage'
+        managedDisk: {
+          storageAccountType: 'Standard_LRS'
+        }
+      }
+    }
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: nic.id
+        }
+      ]
+    }
+  }
+}
+
 output usagePlanName string = usagePlanName
 output enrollmentName string = enrollmentName
 output serviceGroupName string = serviceGroupName
@@ -65,4 +155,6 @@ output recoveryPlanName string = recoveryPlanName
 output drillName string = drillName
 output storageAccountName string = storageAccountName
 output storageAccountId string = storageAccount.id
+output vmName string = vmName
+output vmId string = vm.id
 output location string = resourceGroup().location
