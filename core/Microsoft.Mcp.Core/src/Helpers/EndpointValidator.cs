@@ -41,6 +41,10 @@ public static class EndpointValidator
     private static readonly FrozenDictionary<string, AllowedSuffixManager[]> s_allowedDomainSuffixes = new Dictionary<string, AllowedSuffixManager[]>
     {
         ["acr"] = [new AllowedSuffixManager(Public: ".azurecr.io", China: ".azurecr.cn", UsGov: ".azurecr.us", Germany: ".azurecr.de")],
+        ["adme"] = [
+            new AllowedSuffixManager(Public: ".energy.azure.com", China: ".energy.azure.com", UsGov: ".energy.azure.com", Germany: ".energy.azure.com"),
+            new AllowedSuffixManager(Public: ".oep.ppe.azure-int.net", China: ".oep.ppe.azure-int.net", UsGov: ".oep.ppe.azure-int.net", Germany: ".oep.ppe.azure-int.net")
+        ],
         ["appconfig"] = [new AllowedSuffixManager(Public: ".azconfig.io", China: ".azconfig.azure.cn", UsGov: ".azconfig.azure.us", Germany: ".azconfig.azure.de")],
         ["azure-openai"] = [
             new AllowedSuffixManager(Public: ".openai.azure.com", China: ".openai.azure.cn", UsGov: ".openai.azure.us", Germany: ".openai.azure.de"),
