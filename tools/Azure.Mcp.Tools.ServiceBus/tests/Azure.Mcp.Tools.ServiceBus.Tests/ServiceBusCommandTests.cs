@@ -74,7 +74,6 @@ public class ServiceBusCommandTests(ITestOutputHelper output, TestProxyFixture f
             "servicebus_queue_details",
             new()
             {
-                { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
                 { ServiceBusOptionDefinitions.QueueName, QueueName },
                 { ServiceBusOptionDefinitions.NamespaceName, $"{Settings.ResourceBaseName}.servicebus.windows.net"},
             });
@@ -90,7 +89,6 @@ public class ServiceBusCommandTests(ITestOutputHelper output, TestProxyFixture f
             "servicebus_topic_details",
             new()
             {
-                { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
                 { ServiceBusOptionDefinitions.TopicName, TopicName },
                 { ServiceBusOptionDefinitions.NamespaceName, $"{Settings.ResourceBaseName}.servicebus.windows.net"},
             });
@@ -106,7 +104,6 @@ public class ServiceBusCommandTests(ITestOutputHelper output, TestProxyFixture f
             "servicebus_topic_subscription_details",
             new()
             {
-                { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
                 { ServiceBusOptionDefinitions.TopicName, TopicName },
                 { ServiceBusOptionDefinitions.SubscriptionName, SubscriptionName },
                 { ServiceBusOptionDefinitions.NamespaceName, $"{Settings.ResourceBaseName}.servicebus.windows.net"},

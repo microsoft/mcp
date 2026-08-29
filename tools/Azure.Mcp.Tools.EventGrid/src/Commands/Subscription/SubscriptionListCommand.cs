@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Mcp.Tools.EventGrid.Options.Subscription;
@@ -25,13 +26,13 @@ namespace Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 public sealed class SubscriptionListCommand(
     ILogger<SubscriptionListCommand> logger,
     IEventGridService eventGridService,
-    ISubscriptionService subscriptionService,
+    IAzureService azureService,
     ISubscriptionResolver subscriptionResolver)
     : AuthenticatedCommand<SubscriptionListOptions, SubscriptionListCommand.SubscriptionListCommandResult>
 {
     private readonly ILogger<SubscriptionListCommand> _logger = logger;
     private readonly IEventGridService _eventGridService = eventGridService;
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
+    private readonly IAzureService _azureService = azureService;
     private readonly ISubscriptionResolver _subscriptionResolver = subscriptionResolver;
 
     public override void PostBindOptions(SubscriptionListOptions options)
@@ -71,7 +72,7 @@ public sealed class SubscriptionListCommand(
             {
                 // Iterate all subscriptions and aggregate
                 // TODO (alzimmer): Listing all subscriptions should be done in the IEventGridService implementation.
-                var allSubs = await _subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
+                var allSubs = await _azureService.GetSubscriptions(options.Tenant, cancellationToken: cancellationToken);
                 var aggregate = new List<EventGridSubscriptionInfo>();
                 foreach (var sub in allSubs)
                 {
@@ -83,8 +84,7 @@ public sealed class SubscriptionListCommand(
                             options.Topic, // bare name
                             options.Location,
                             options.Tenant,
-                            options.RetryPolicy,
-                            cancellationToken);
+                            cancellationToken: cancellationToken);
                         if (found?.Count > 0)
                         {
                             aggregate.AddRange(found);
@@ -106,8 +106,7 @@ public sealed class SubscriptionListCommand(
                     options.Topic,
                     options.Location,
                     options.Tenant,
-                    options.RetryPolicy,
-                    cancellationToken);
+                    cancellationToken: cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(subscriptions ?? []), EventGridJsonContext.Default.SubscriptionListCommandResult);
             }

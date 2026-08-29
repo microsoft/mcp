@@ -34,8 +34,7 @@
                     "description": "When true, the request can be retried. Use the `Retry-After` response header to determine the delay, if available.",
                     "readOnly": true
                 }
-            },
-            "readOnly": true
+            }
         },
         "ErrorResponseDetails": {
             "description": "The error response details.",
@@ -74,8 +73,7 @@
                     "description": "The type of the resource that's involved in the error.",
                     "readOnly": true
                 }
-            },
-            "readOnly": true
+            }
         },
         "Principal": {
             "description": "Represents an identity or a Microsoft Entra group.",
@@ -130,8 +128,7 @@
                         "description": "Principal represents all tenant users."
                     }
                 ]
-            },
-            "readOnly": false
+            }
         },
         "UserPrincipal": {
             "description": "Represents a Microsoft Entra user principal.",
@@ -263,7 +260,7 @@
       "ItemType": {
         "description": "The type of the item. Additional item types may be added over time.",
         "type": "string",
-        "enum": [ "Dashboard", "Report", "SemanticModel", "PaginatedReport", "Datamart", "Lakehouse", "Eventhouse", "Environment", "KQLDatabase", "KQLQueryset", "KQLDashboard", "DataPipeline", "Notebook", "SparkJobDefinition", "MLExperiment", "MLModel", "Warehouse", "Eventstream", "SQLEndpoint", "MirroredWarehouse", "MirroredDatabase", "Reflex", "GraphQLApi", "MountedDataFactory", "SQLDatabase", "CopyJob", "VariableLibrary", "Dataflow", "ApacheAirflowJob", "WarehouseSnapshot", "DigitalTwinBuilder", "DigitalTwinBuilderFlow", "MirroredAzureDatabricksCatalog", "Map", "AnomalyDetector", "UserDataFunction", "GraphModel", "GraphQuerySet", "SnowflakeDatabase", "OperationsAgent", "CosmosDBDatabase", "Ontology", "EventSchemaSet", "DataAgent", "MirroredCatalog", "AppBackend", "OrgApp", "OrgAppAudience", "DataBuildToolJob", "AzureDatabricksStorage" ],
+        "enum": [ "Dashboard", "Report", "SemanticModel", "PaginatedReport", "Datamart", "Lakehouse", "Eventhouse", "Environment", "KQLDatabase", "KQLQueryset", "KQLDashboard", "DataPipeline", "Notebook", "SparkJobDefinition", "MLExperiment", "MLModel", "Warehouse", "Eventstream", "SQLEndpoint", "MirroredWarehouse", "MirroredDatabase", "Reflex", "GraphQLApi", "MountedDataFactory", "SQLDatabase", "CopyJob", "VariableLibrary", "Dataflow", "ApacheAirflowJob", "WarehouseSnapshot", "DigitalTwinBuilder", "DigitalTwinBuilderFlow", "MirroredAzureDatabricksCatalog", "Map", "AnomalyDetector", "UserDataFunction", "GraphModel", "GraphQuerySet", "SnowflakeDatabase", "OperationsAgent", "CosmosDBDatabase", "Ontology", "EventSchemaSet", "DataAgent", "MirroredCatalog", "AppBackend", "OrgApp", "OrgAppAudience", "DataBuildToolJob", "AzureDatabricksStorage", "Plan" ],
         "x-ms-enum": {
           "name": "ItemType",
           "modelAsString": true,
@@ -467,10 +464,13 @@
             {
               "value": "AzureDatabricksStorage",
               "description": "A OneLake-backed storage item for Azure Databricks."
+            },
+            {
+              "value": "Plan",
+              "description": "A plan."
             }
           ]
-        },
-        "readOnly": false
+        }
       },
         "WorkspaceRole": {
             "type": "string",
@@ -520,8 +520,7 @@
                         "description": "Admin monitoring workspace. Contains admin reports such as the audit report and the usage and adoption report."
                     }
                 ]
-            },
-            "readOnly": true
+            }
         },
         "ItemPermissions": {
             "type": "string",
@@ -567,8 +566,7 @@
                         "description": "Inline Base 64."
                     }
                 ]
-            },
-            "readOnly": false
+            }
         },
         "PaginatedResponse": {
             "properties": {

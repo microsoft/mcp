@@ -99,7 +99,6 @@ public sealed class SecurityConfigureEncryptionCommand(ILogger<SecurityConfigure
                 options.UserAssignedIdentityId,
                 options.VaultType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

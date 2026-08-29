@@ -49,7 +49,6 @@ public sealed class ImportJobGetCommand(IManagedLustreService service, ILogger<I
                     options.FilesystemName,
                     options.JobName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(result, null), ManagedLustreJsonContext.Default.ImportJobGetResult);
@@ -62,7 +61,6 @@ public sealed class ImportJobGetCommand(IManagedLustreService service, ILogger<I
                     options.ResourceGroup,
                     options.FilesystemName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, results), ManagedLustreJsonContext.Default.ImportJobGetResult);

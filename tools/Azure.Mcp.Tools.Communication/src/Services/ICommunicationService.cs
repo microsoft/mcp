@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Communication.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Communication.Services;
 
@@ -16,7 +15,6 @@ public interface ICommunicationService
         bool enableDeliveryReport = false,
         string? tag = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -32,7 +30,6 @@ public interface ICommunicationService
     /// <param name="cc">Optional CC recipient email addresses.</param>
     /// <param name="bcc">Optional BCC recipient email addresses.</param>
     /// <param name="replyTo">Optional reply-to addresses.</param>
-    /// <param name="retryPolicy">Optional retry policy options.</param>
     /// <returns>The result of the email send operation.</returns>
     Task<EmailSendResult> SendEmailAsync(
         string endpoint,
@@ -46,6 +43,5 @@ public interface ICommunicationService
         string[]? bcc = null,
         string[]? replyTo = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

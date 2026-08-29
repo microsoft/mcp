@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Table;
 using Azure.Mcp.Tools.Monitor.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -42,7 +41,6 @@ public sealed class TableListCommandTests : SubscriptionCommandUnitTestsBase<Tab
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(testTables);
         }
@@ -80,7 +78,6 @@ public sealed class TableListCommandTests : SubscriptionCommandUnitTestsBase<Tab
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedTables);
 
@@ -98,7 +95,6 @@ public sealed class TableListCommandTests : SubscriptionCommandUnitTestsBase<Tab
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.TableListCommandResult);
@@ -121,7 +117,6 @@ public sealed class TableListCommandTests : SubscriptionCommandUnitTestsBase<Tab
             _knownWorkspace,
             _knownTableType,
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedTables);
 
@@ -140,7 +135,6 @@ public sealed class TableListCommandTests : SubscriptionCommandUnitTestsBase<Tab
             _knownWorkspace,
             _knownTableType,
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -154,7 +148,6 @@ public sealed class TableListCommandTests : SubscriptionCommandUnitTestsBase<Tab
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -180,7 +173,6 @@ public sealed class TableListCommandTests : SubscriptionCommandUnitTestsBase<Tab
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

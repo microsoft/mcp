@@ -5,26 +5,19 @@ using System.Text.Json;
 using Azure.Containers.ContainerRegistry;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Acr.Models;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Acr.Services;
 
-public sealed class AcrService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AcrService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), IAcrService
+public sealed class AcrService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IAcrService
 {
-    private readonly ILogger<AcrService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
     public async Task<ResourceQueryResults<AcrRegistryInfo>> ListRegistries(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
@@ -33,7 +26,6 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
             "Microsoft.ContainerRegistry/registries",
             resourceGroup,
             subscription,
-            retryPolicy,
             ConvertToAcrRegistryInfoModel,
             tenant: tenant,
             cancellationToken: cancellationToken);
@@ -46,40 +38,38 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         string registry,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(registry), registry));
 
-        var registrie = await ExecuteSingleResourceQueryAsync(
+        var registries = await ExecuteSingleResourceQueryAsync(
             "Microsoft.ContainerRegistry/registries",
             resourceGroup: resourceGroup,
             subscription: subscription,
-            retryPolicy: retryPolicy,
             converter: ConvertToAcrRegistryInfoModel,
             additionalFilter: $"name =~ '{EscapeKqlString(registry)}'",
             tenant: tenant,
             cancellationToken: cancellationToken);
 
-        if (registrie == null)
+        if (registries == null)
         {
             throw new KeyNotFoundException($"Container registry '{registry}' not found for subscription '{subscription}'.");
         }
-        return registrie;
+        return registries;
     }
 
-    private async Task<List<string>> AddRepositoriesForRegistryAsync(AcrRegistryInfo reg, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    private async Task<List<string>> AddRepositoriesForRegistryAsync(AcrRegistryInfo reg, string? tenant, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrEmpty(reg.LoginServer))
         {
             var acrEndpointString = $"https://{reg.LoginServer}";
-            EndpointValidator.ValidateAzureServiceEndpoint(acrEndpointString, "acr", TenantService.CloudConfiguration.ArmEnvironment);
+            EndpointValidator.ValidateAzureServiceEndpoint(acrEndpointString, "acr", AzureService.CloudConfiguration.ArmEnvironment);
         }
 
         // Build data-plane client for this login server
         var credential = await GetCredential(tenant, cancellationToken);
-        var options = ConfigureRetryPolicy(AddDefaultPolicies(new ContainerRegistryClientOptions()), retryPolicy);
-        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        var options = AddDefaultPolicies(new ContainerRegistryClientOptions());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
         options.Audience = GetAcrAudience();
         var acrEndpoint = new Uri($"https://{reg.LoginServer}");
         var client = new ContainerRegistryClient(acrEndpoint, credential, options);
@@ -101,7 +91,6 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         string? resourceGroup = null,
         string? registry = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
@@ -110,21 +99,21 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
 
         if (string.IsNullOrWhiteSpace(registry))
         {
-            var registries = await ListRegistries(subscription, resourceGroup, tenant, retryPolicy, cancellationToken);
+            var registries = await ListRegistries(subscription, resourceGroup, tenant, cancellationToken);
             foreach (var reg in registries.Results)
             {
                 if (!string.IsNullOrWhiteSpace(reg.Name) && !string.IsNullOrWhiteSpace(reg.LoginServer))
                 {
-                    result[reg.Name] = await AddRepositoriesForRegistryAsync(reg, tenant, retryPolicy, cancellationToken);
+                    result[reg.Name] = await AddRepositoriesForRegistryAsync(reg, tenant, cancellationToken);
                 }
             }
         }
         else
         {
-            var reg = await GetRegistry(subscription, registry, resourceGroup, tenant, retryPolicy, cancellationToken);
+            var reg = await GetRegistry(subscription, registry, resourceGroup, tenant, cancellationToken);
             if (!string.IsNullOrWhiteSpace(reg.Name) && !string.IsNullOrWhiteSpace(reg.LoginServer))
             {
-                result[reg.Name] = await AddRepositoriesForRegistryAsync(reg, tenant, retryPolicy, cancellationToken);
+                result[reg.Name] = await AddRepositoriesForRegistryAsync(reg, tenant, cancellationToken);
             }
         }
 
@@ -151,7 +140,7 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
 
     private ContainerRegistryAudience GetAcrAudience()
     {
-        return TenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => ContainerRegistryAudience.AzureResourceManagerPublicCloud,
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => ContainerRegistryAudience.AzureResourceManagerChina,

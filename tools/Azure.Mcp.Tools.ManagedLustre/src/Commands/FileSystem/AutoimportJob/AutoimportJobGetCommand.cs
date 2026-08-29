@@ -51,7 +51,6 @@ public sealed class AutoimportJobGetCommand(IManagedLustreService service, ILogg
                     options.FilesystemName,
                     options.JobName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(result, null), ManagedLustreJsonContext.Default.AutoimportJobGetResult);
@@ -64,7 +63,6 @@ public sealed class AutoimportJobGetCommand(IManagedLustreService service, ILogg
                     options.ResourceGroup,
                     options.FilesystemName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, results ?? []), ManagedLustreJsonContext.Default.AutoimportJobGetResult);

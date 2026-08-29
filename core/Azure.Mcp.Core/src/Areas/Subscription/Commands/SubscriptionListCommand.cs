@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Areas.Subscription.Models;
 using Azure.Mcp.Core.Areas.Subscription.Options;
-using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -23,19 +23,19 @@ namespace Azure.Mcp.Core.Areas.Subscription.Commands;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger, ISubscriptionService subscriptionService)
+public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger, IAzureService azureService)
     : AuthenticatedCommand<SubscriptionListOptions, SubscriptionListCommand.SubscriptionListCommandResult>()
 {
     private readonly ILogger<SubscriptionListCommand> _logger = logger;
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
+    private readonly IAzureService _azureService = azureService;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SubscriptionListOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            var subscriptions = await _subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
+            var subscriptions = await _azureService.GetSubscriptions(options.Tenant, cancellationToken);
 
-            var defaultSubscriptionId = _subscriptionService.GetDefaultSubscriptionId();
+            var defaultSubscriptionId = _azureService.GetDefaultSubscriptionId();
             var subscriptionInfos = MapToSubscriptionInfos(subscriptions, defaultSubscriptionId);
 
             context.Response.Results = ResponseResult.Create(

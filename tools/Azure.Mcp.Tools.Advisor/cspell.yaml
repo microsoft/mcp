@@ -1,0 +1,41 @@
+# Spell-check overrides for this toolset/server.
+# Inherits the global config at the repo root.
+#
+# Add words that only appear in this folder here, in alphabetical order.
+# Cross-cutting terms should go in the root cspell.yaml instead.
+version: "0.2"
+import:
+  - ../../.vscode/cspell.json
+words:
+  - advisorresources
+  - applicationgatewaywebapplicationfirewallpolicies
+  - aseries
+  - connectedclusters
+  - containerregistry
+  - databaseaccounts
+  - domainservices
+  - dpsv
+  - expressrouteports
+  - famsv
+  - fasv
+  - flexibleservers
+  - frontdoorwebapplicationfirewallpolicies
+  - highavailability
+  - isnotnull
+  - isolatedv
+  - kubernetesconfiguration
+  - lasv
+  - machinelearningservices
+  - managedinstances
+  - rdma
+  - scom
+  - serviceupgradeandretirement
+  - startofday
+  - staticsites
+  - subtag
+  - todatetime
+  - tolower
+  - undercount
+  - urity
+  - virtualmachinescalesets
+

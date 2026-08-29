@@ -247,15 +247,14 @@
     <Project Path="../../tools/Azure.Mcp.Tools.Insights/src/Azure.Mcp.Tools.Insights.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Insights/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.Insights/tests/Azure.Mcp.Tools.Insights.UnitTests/Azure.Mcp.Tools.Insights.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.Insights/tests/Azure.Mcp.Tools.Insights.Tests/Azure.Mcp.Tools.Insights.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.IoTHub/" />
   <Folder Name="/tools/Azure.Mcp.Tools.IoTHub/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.IoTHub/src/Azure.Mcp.Tools.IoTHub.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.IoTHub/tests/">
-    <Project Path="../../tools/Azure.Mcp.Tools.IoTHub/tests/Azure.Mcp.Tools.IoTHub.LiveTests/Azure.Mcp.Tools.IoTHub.LiveTests.csproj" />
-    <Project Path="../../tools/Azure.Mcp.Tools.IoTHub/tests/Azure.Mcp.Tools.IoTHub.UnitTests/Azure.Mcp.Tools.IoTHub.UnitTests.csproj" />
+    <Project Path="../../tools/Azure.Mcp.Tools.IoTHub/tests/Azure.Mcp.Tools.IoTHub.Tests/Azure.Mcp.Tools.IoTHub.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.KeyVault/" />
   <Folder Name="/tools/Azure.Mcp.Tools.KeyVault/src/">

@@ -38,7 +38,6 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorag
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new AccountGetCommandResult(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false), StorageJsonContext.Default.AccountGetCommandResult);

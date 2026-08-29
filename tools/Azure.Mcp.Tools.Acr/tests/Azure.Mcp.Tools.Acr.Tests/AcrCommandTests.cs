@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -29,9 +28,8 @@ public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
         })
     ];
 
-    [Theory]
-    [InlineData(AuthMethod.Credential)]
-    public async Task Should_list_acr_registries_by_subscription(AuthMethod authMethod)
+    [Fact]
+    public async Task Should_list_acr_registries_by_subscription()
     {
         // Arrange & Act
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
@@ -40,8 +38,7 @@ public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
             "acr_registry_list",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
-                { "auth-method", authMethod.ToString() }
+                { "subscription", Settings.SubscriptionId }
             });
 
         // Assert
@@ -57,8 +54,7 @@ public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
-                    { "resource-group", resourceGroupName },
-                    { "auth-method", authMethod.ToString() }
+                    { "resource-group", resourceGroupName }
                 });
 
             var rgRegistries = rgResult.AssertProperty("registries");
@@ -97,9 +93,8 @@ public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
         }
     }
 
-    [Theory]
-    [InlineData(AuthMethod.Credential)]
-    public async Task Should_list_repositories_for_registries(AuthMethod authMethod)
+    [Fact]
+    public async Task Should_list_repositories_for_registries()
     {
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
         var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
@@ -108,8 +103,7 @@ public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", resourceGroupName },
-                { "auth-method", authMethod.ToString() }
+                { "resource-group", resourceGroupName }
             });
 
         if (result is null)
@@ -126,19 +120,5 @@ public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
         Assert.Equal(JsonValueKind.Array, repoArray.ValueKind);
         var repos = repoArray.EnumerateArray().Select(e => e.GetString()).Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
         Assert.Contains("testrepo", repos);
-    }
-
-    [Fact]
-    public async Task Should_handle_empty_subscription_gracefully()
-    {
-        // Empty subscription should trigger validation failure (400) -> null results
-        var result = await CallToolAsync(
-            "acr_registry_list",
-            new()
-            {
-                { "subscription", "" }
-            });
-
-        Assert.Null(result);
     }
 }

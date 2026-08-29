@@ -5,14 +5,9 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
-using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -23,36 +18,16 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
 /// Implementation of the MCP runtime that delegates tool discovery and invocation to a tool loader.
 /// Provides logging and configuration support for the MCP server.
 /// </summary>
-public sealed class McpRuntime : IMcpRuntime
+/// <remarks>
+/// Initializes a new instance of the McpRuntime class.
+/// </remarks>
+/// <param name="toolLoader">The tool loader responsible for discovering and loading tools.</param>
+/// <param name="telemetry">The telemetry service used for logging and tracing tool invocations.</param>
+/// <exception cref="ArgumentNullException">Thrown if any required dependencies are null.</exception>
+public sealed class McpRuntime(IToolLoader toolLoader, ITelemetryService telemetry) : IMcpRuntime
 {
-    private readonly IToolLoader _toolLoader;
-    private readonly IOptions<ServerStartOptions> _options;
-    private readonly ILogger<McpRuntime> _logger;
-
-    private readonly ITelemetryService _telemetry;
-
-    /// <summary>
-    /// Initializes a new instance of the McpRuntime class.
-    /// </summary>
-    /// <param name="toolLoader">The tool loader responsible for discovering and loading tools.</param>
-    /// <param name="options">Configuration options for the MCP server.</param>
-    /// <param name="logger">Logger for runtime operations.</param>
-    /// <exception cref="ArgumentNullException">Thrown if any required dependencies are null.</exception>
-    public McpRuntime(
-        IToolLoader toolLoader,
-        IOptions<ServerStartOptions> options,
-        ITelemetryService telemetry,
-        ILogger<McpRuntime> logger)
-    {
-        _toolLoader = toolLoader ?? throw new ArgumentNullException(nameof(toolLoader));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-        _telemetry = telemetry ?? throw new ArgumentNullException(nameof(telemetry));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-        _logger.LogInformation("McpRuntime initialized with tool loader of type {ToolLoaderType}.", _toolLoader.GetType().Name);
-        _logger.LogInformation("ReadOnly mode is set to {ReadOnly}.", _options.Value.ReadOnly ?? false);
-        _logger.LogInformation("Namespace is set to {Namespace}.", string.Join(",", _options.Value.Namespace ?? []));
-    }
+    private readonly IToolLoader _toolLoader = toolLoader ?? throw new ArgumentNullException(nameof(toolLoader));
+    private readonly ITelemetryService _telemetry = telemetry ?? throw new ArgumentNullException(nameof(telemetry));
 
     /// <summary>
     /// Delegates tool invocation requests to the configured tool loader.
@@ -102,7 +77,7 @@ public sealed class McpRuntime : IMcpRuntime
 
         try
         {
-            CallToolResult callTool = await _toolLoader.CallToolHandler(request!, cancellationToken);
+            CallToolResult callTool = await _toolLoader.CallToolHandler(request, cancellationToken);
 
             var isSuccessful = !callTool.IsError.HasValue || !callTool.IsError.Value;
             if (isSuccessful)
@@ -214,7 +189,9 @@ public sealed class McpRuntime : IMcpRuntime
 
         try
         {
-            var result = await _toolLoader.ListToolsHandler(request!, cancellationToken);
+            var result = await _toolLoader.ListToolsHandler(request, cancellationToken);
+            result.CacheScope = CacheScope.Public; // ListTools results are safe to cache publicly, as they contain no sensitive information.
+            result.TimeToLive = TimeSpan.FromHours(1); // Cache ListTools results for 1 hour to reduce load on the tool loader.
             activity?.SetStatus(ActivityStatusCode.Ok);
 
             return result;

@@ -199,7 +199,8 @@ Added new Foundry tools:
 
 **File:** `eng/scripts/Compile-Changelog.ps1`
 
-Compiles all YAML entries into CHANGELOG.md.
+Compiles all YAML entries into CHANGELOG.md, syncs the release to the VS Code
+extension changelog, and replaces the `(Unreleased)` placeholder with today's date.
 
 **Usage:**
 
@@ -207,21 +208,23 @@ Compiles all YAML entries into CHANGELOG.md.
 # Preview what will be compiled (dry run)
 ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DryRun
 
-# Compile entries into CHANGELOG.md
+# Compile entries, sync the VS Code changelog, and finalize the release date
 ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md"
 
-# Compile to a specific version
-./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -Version "<version>"
+# Compile to a specific version with an explicit VS Code version
+./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -Version "3.0.0-beta.27" -VsCodeVersion "3.0.27"
 
-# Compile and remove YAML files after successful compilation
-./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DeleteFiles
+# Compile only the main changelog and keep the YAML files
+./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -SkipVsCode -KeepFiles
 ```
 
 **Parameters:**
 - `-ChangelogPath`: Required. Path to the CHANGELOG.md file (e.g., `servers/Azure.Mcp.Server/CHANGELOG.md`)
 - `-Version`: Optional. Target version section to compile into. If not specified, compiles to "Unreleased" section
+- `-VsCodeVersion`: Optional. VS Code version; derived automatically when omitted (for example, `3.0.0-beta.27` becomes `3.0.27`)
 - `-DryRun`: Preview compilation without modifying files
-- `-DeleteFiles`: Remove YAML files after successful compilation
+- `-KeepFiles`: Keep YAML files instead of deleting them after successful compilation
+- `-SkipVsCode`: Skip updating the VS Code extension changelog
 
 **Features:**
 - Reads all YAML files from `changelog-entries/`
@@ -229,7 +232,11 @@ Compiles all YAML entries into CHANGELOG.md.
 - Groups entries by section, then by subsection
 - Formats entries as markdown with PR links
 - Inserts compiled entries into CHANGELOG.md
-- Optional deletion of YAML files after compilation
+- Syncs the release to the VS Code extension changelog
+- Marks beta VS Code releases as `(pre-release)` while leaving stable releases unmarked
+- Replaces the `(Unreleased)` placeholder with the current date
+- Deletes compiled YAML files by default, with an option to keep them
+- Supports opting out of the VS Code changelog update
 - Error handling for missing/invalid files
 - Summary output
 
@@ -243,7 +250,7 @@ Compiles all YAML entries into CHANGELOG.md.
 6. Generate markdown format with PR links
 7. Find the target version section in CHANGELOG.md (or "Unreleased")
 8. Insert compiled entries under appropriate section headers
-9. Optionally delete YAML files if `-DeleteFiles` flag is set
+9. Delete YAML files unless `-KeepFiles` is specified
 
 ---
 
@@ -277,27 +284,22 @@ Before tagging a release:
    # Preview to Unreleased section
    ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DryRun
    
-   # Or preview to a specific version
-   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -Version "<version>" -DryRun
+   # Or preview with explicit main and VS Code versions
+   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -Version "<version>" -VsCodeVersion "<simplified-version>" -DryRun
    ```
 
 2. **Compile and clean up:**
    ```powershell
-   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DeleteFiles
+   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md"
    ```
 
-3. **Sync VS Code extension CHANGELOG (if applicable):**
-   ```powershell
-   ./eng/scripts/Sync-VsCodeChangelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md"
-   ```
+3. **Review both changelogs:**
+   - Confirm the entries are reader-friendly
+   - Format commands and code references with backticks
 
-4. **Update version in CHANGELOG.md:**
-   - Change "Unreleased" to actual version number
-   - Add release date
+4. **Commit the compiled changelogs**
 
-5. **Commit the compiled changelog**
-
-6. **Tag the release**
+5. **Tag the release**
 
 ---
 
@@ -477,7 +479,7 @@ No. Only include entries for changes worth mentioning to users (new features, br
 
 ### Q: What happens to the YAML files after release?
 
-They're deleted by the release manager using `Compile-Changelog.ps1 -DeleteFiles` after compilation.
+They're deleted automatically after successful compilation. Use `-KeepFiles` to retain them.
 
 ---
 

@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -40,7 +39,6 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
             Service.SummarizeRecommendationsAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<string>(),
                 Arg.Any<RecommendationFilters?>(),
                 Arg.Any<string?>(),
@@ -64,7 +62,6 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
         await Service.DidNotReceive().SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
             Arg.Any<string?>(),
@@ -78,7 +75,6 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Do<string>(g => captured = g),
             Arg.Any<RecommendationFilters?>(),
             Arg.Any<string?>(),
@@ -101,7 +97,6 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Do<string>(g => captured = g),
             Arg.Any<RecommendationFilters?>(),
             Arg.Any<string?>(),
@@ -121,7 +116,6 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
             Arg.Do<RecommendationFilters?>(f => captured = f),
             Arg.Any<string?>(),
@@ -152,7 +146,6 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
             Arg.Do<RecommendationFilters?>(f => captured = f),
             Arg.Any<string?>(),
@@ -184,7 +177,6 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
             Arg.Any<string?>(),
@@ -208,7 +200,6 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
             Arg.Any<string?>(),
@@ -238,7 +229,6 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
             Arg.Any<string?>(),
@@ -278,7 +268,6 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
             Arg.Any<string?>(),
@@ -312,7 +301,6 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
             Arg.Any<string?>(),

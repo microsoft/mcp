@@ -43,7 +43,6 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger, IAppC
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             SetResult(context, new(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false));

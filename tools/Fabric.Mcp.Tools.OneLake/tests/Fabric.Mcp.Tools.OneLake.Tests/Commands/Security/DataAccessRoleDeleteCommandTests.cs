@@ -4,6 +4,7 @@
 using Fabric.Mcp.Tools.OneLake.Commands.Security;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Tests.Client;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Security;
 
@@ -12,7 +13,7 @@ public class DataAccessRoleDeleteCommandTests : CommandUnitTestsBase<DataAccessR
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("delete_data_access_role", Command.Name);
+        Assert.Equal("delete-data-access-role", Command.Name);
         Assert.Equal("Delete OneLake Data Access Role", Command.Title);
         Assert.Contains("Delete a single data access role", Command.Description);
         Assert.False(Command.Metadata.ReadOnly);
@@ -23,7 +24,7 @@ public class DataAccessRoleDeleteCommandTests : CommandUnitTestsBase<DataAccessR
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("delete_data_access_role", CommandDefinition.Name);
+        Assert.Equal("delete-data-access-role", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);
     }

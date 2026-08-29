@@ -38,7 +38,6 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchServ
             var indexes = await _searchService.GetIndexDetails(
                 options.Service,
                 options.Index,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(indexes ?? []), SearchJsonContext.Default.IndexGetCommandResult);

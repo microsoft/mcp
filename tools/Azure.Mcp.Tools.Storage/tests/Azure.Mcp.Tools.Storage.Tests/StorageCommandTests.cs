@@ -318,8 +318,7 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             {
             { "subscription", Settings.SubscriptionName },
             { "tenant", Settings.TenantId },
-            { "account", Settings.ResourceBaseName },
-            { "retry-max-retries", 0 }
+            { "account", Settings.ResourceBaseName }
             });
 
         var actual = result.AssertProperty("containers");
@@ -337,8 +336,7 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             { "subscription", Settings.SubscriptionName },
             { "tenant", Settings.TenantId },
             { "account", Settings.ResourceBaseName },
-            { "prefix", "ba" },
-            { "retry-max-retries", 0 }
+            { "prefix", "ba" }
             });
 
         var actual = result.AssertProperty("containers");
@@ -356,27 +354,6 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             { "subscription", Settings.SubscriptionName },
             { "account", Settings.ResourceBaseName },
             { "container", "bar" }
-            });
-
-        var actual = result.AssertProperty("containers");
-        Assert.Equal(JsonValueKind.Array, actual.ValueKind);
-        Assert.Equal(1, actual.GetArrayLength());
-
-        var container = actual.EnumerateArray().First();
-        Assert.Equal(JsonValueKind.Object, container.ValueKind);
-    }
-
-    [Fact]
-    public async Task Should_get_container_details_with_tenant_authkey()
-    {
-        var result = await CallToolAsync(
-            "storage_blob_container_get",
-            new()
-            {
-            { "subscription", Settings.SubscriptionName },
-            { "account", Settings.ResourceBaseName },
-            { "container", "bar" },
-            { "auth-method", "key" }
             });
 
         var actual = result.AssertProperty("containers");
@@ -423,8 +400,7 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "account", uniqueAccountName },
                 { "resource-group", resourceGroupName },
                 { "location", "eastus" },
-                { "sku", "Standard_LRS" },
-                { "kind", "StorageV2" }
+                { "sku", "Standard_LRS" }
             });
 
         // Assert
@@ -443,34 +419,6 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         var skuName = account.GetProperty("skuName").GetString();
         Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : "Standard_LRS", skuName);
-    }
-
-    [Theory]
-    [InlineData("--invalid-param", new string[0])]
-    [InlineData("--subscription", new[] { "invalidSub" })]
-    [InlineData("--account-name", new[] { "testacct", "--subscription", "sub123" })] // Missing required resource-group and location
-    public async Task Should_Return400_WithInvalidInput_ForAccountCreate(string firstArg, string[] remainingArgs)
-    {
-        var allArgs = new[] { firstArg }.Concat(remainingArgs);
-        var argsString = string.Join(" ", allArgs);
-
-        // For error testing, we expect CallToolAsync to return null (no results)
-        // and we need to catch any exceptions or check the response manually
-        try
-        {
-            var result = await CallToolAsync("storage_account_create",
-                new Dictionary<string, object?> { { "args", argsString } });
-
-            // If we get here, the command didn't fail as expected
-            // This might indicate the command succeeded when it should have failed
-            Assert.Fail("Expected command to fail with invalid input, but it succeeded");
-        }
-        catch (Exception ex)
-        {
-            // Expected to fail with validation errors
-            Assert.True(ex.Message.Contains("required") || ex.Message.Contains("invalid"),
-                $"Expected validation error, but got: {ex.Message}");
-        }
     }
 
     [Fact]

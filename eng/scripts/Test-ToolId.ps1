@@ -15,7 +15,6 @@ $ErrorActionPreference = 'Stop'
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 $ToolsDirectory = Join-Path $RepoRoot "tools"
-$ServersDirectory = Join-Path $RepoRoot "servers"
 
 $CommandFiles = Get-ChildItem -Path $ToolsDirectory -Recurse -Filter *Command.cs
 

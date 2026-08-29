@@ -4,19 +4,17 @@
 using System.Globalization;
 using System.Xml;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.ResourceManager.Monitor;
 using Azure.ResourceManager.Monitor.Models;
-using Microsoft.Mcp.Core.Options;
 using MetricDefinition = Azure.Mcp.Tools.Monitor.Models.MetricDefinition;
 using MetricNamespace = Azure.Mcp.Tools.Monitor.Models.MetricNamespace;
 using MetricResult = Azure.Mcp.Tools.Monitor.Models.MetricResult;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorMetricsService(IResourceResolverService resourceResolverService, ITenantService tenantService)
-    : BaseAzureService(tenantService), IMonitorMetricsService
+public class MonitorMetricsService(IResourceResolverService resourceResolverService, IAzureService azureService)
+    : BaseAzureService(azureService), IMonitorMetricsService
 {
     private readonly IResourceResolverService _resourceResolverService = resourceResolverService ?? throw new ArgumentNullException(nameof(resourceResolverService));
 
@@ -33,19 +31,18 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         string? aggregation = null,
         string? filter = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName), (nameof(metricNamespace), metricNamespace));
         ArgumentNullException.ThrowIfNull(metricNames);
 
-        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
+        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, cancellationToken);
         if (string.IsNullOrEmpty(resourceId))
         {
             throw new ArgumentException($"Resource '{resourceName}' not found or could not be resolved.");
         }
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         // Parse time range
         DateTimeOffset? startTimeOffset = null;
@@ -214,17 +211,16 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         string? metricNamespace = null,
         string? searchString = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
-        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
+        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, cancellationToken);
         if (string.IsNullOrEmpty(resourceId))
         {
             throw new ArgumentException($"Resource '{resourceName}' not found or could not be resolved.");
         }
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         // List metric definitions using the new API
         var definitionsPageable = armClient.GetMonitorMetricDefinitionsAsync(
@@ -286,17 +282,16 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         string resourceName,
         string? searchString = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
-        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
+        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, cancellationToken);
         if (string.IsNullOrEmpty(resourceId))
         {
             throw new ArgumentException($"Resource '{resourceName}' not found or could not be resolved.");
         }
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         // List metric namespaces using the new API
         var namespacesPageable = armClient.GetMonitorMetricNamespacesAsync(new(resourceId!), cancellationToken: cancellationToken);

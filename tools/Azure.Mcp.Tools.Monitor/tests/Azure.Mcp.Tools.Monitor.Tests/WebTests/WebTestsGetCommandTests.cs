@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -97,7 +96,7 @@ public class WebTestsGetCommandTests : SubscriptionCommandUnitTestsBase<WebTests
             Id = "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Insights/webtests/webtest1"
         };
 
-        Service.GetWebTest("sub1", "rg1", "webtest1", null, Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetWebTest("sub1", "rg1", "webtest1", null, Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
@@ -107,7 +106,7 @@ public class WebTestsGetCommandTests : SubscriptionCommandUnitTestsBase<WebTests
             "--webtest-resource", "webtest1");
 
         // Assert
-        await Service.Received(1).GetWebTest("sub1", "rg1", "webtest1", null, Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).GetWebTest("sub1", "rg1", "webtest1", null, Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -133,7 +132,7 @@ public class WebTestsGetCommandTests : SubscriptionCommandUnitTestsBase<WebTests
             AppInsightsComponentId = "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Insights/components/appinsights1"
         };
 
-        Service.GetWebTest("sub1", "rg1", "webtest1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetWebTest("sub1", "rg1", "webtest1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
@@ -163,7 +162,6 @@ public class WebTestsGetCommandTests : SubscriptionCommandUnitTestsBase<WebTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Error retrieving details for web test 'nonexistent'"));
 
@@ -188,7 +186,7 @@ public class WebTestsGetCommandTests : SubscriptionCommandUnitTestsBase<WebTests
             Location = "eastus"
         };
 
-        Service.GetWebTest(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetWebTest(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
@@ -198,7 +196,7 @@ public class WebTestsGetCommandTests : SubscriptionCommandUnitTestsBase<WebTests
             "--webtest-resource", "webtest1");
 
         // Assert
-        await Service.Received(1).GetWebTest("sub1", "rg1", "webtest1", null, Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).GetWebTest("sub1", "rg1", "webtest1", null, Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -244,7 +242,7 @@ public class WebTestsGetCommandTests : SubscriptionCommandUnitTestsBase<WebTests
             }
         };
 
-        Service.ListWebTests("sub1", null, Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListWebTests("sub1", null, Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
         // Act
@@ -273,7 +271,7 @@ public class WebTestsGetCommandTests : SubscriptionCommandUnitTestsBase<WebTests
             }
         };
 
-        Service.ListWebTests("sub1", "rg1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListWebTests("sub1", "rg1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
         // Act
@@ -292,14 +290,14 @@ public class WebTestsGetCommandTests : SubscriptionCommandUnitTestsBase<WebTests
     public async Task ExecuteAsync_ListCallsServiceWithCorrectParameters()
     {
         // Arrange
-        Service.ListWebTests(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListWebTests(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
         await ExecuteCommandAsync("--subscription", "sub1", "--resource-group", "rg1");
 
         // Assert
-        await Service.Received(1).ListWebTests("sub1", "rg1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListWebTests("sub1", "rg1", Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -316,7 +314,6 @@ public class WebTestsGetCommandTests : SubscriptionCommandUnitTestsBase<WebTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(expectedException);
 
@@ -342,7 +339,6 @@ public class WebTestsGetCommandTests : SubscriptionCommandUnitTestsBase<WebTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(expectedException);
 

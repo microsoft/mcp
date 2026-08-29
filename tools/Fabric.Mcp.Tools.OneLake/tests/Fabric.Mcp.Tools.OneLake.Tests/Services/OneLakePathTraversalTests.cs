@@ -4,6 +4,7 @@
 using Azure.Core;
 using Fabric.Mcp.Tools.OneLake.Services;
 using NSubstitute;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Services;
 

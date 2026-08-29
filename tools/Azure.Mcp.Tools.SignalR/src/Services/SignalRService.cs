@@ -2,14 +2,11 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.SignalR.Models;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.SignalR;
 using Azure.ResourceManager.SignalR.Models;
 using Microsoft.Mcp.Core.Models.Identity;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.SignalR.Services;
@@ -17,14 +14,9 @@ namespace Azure.Mcp.Tools.SignalR.Services;
 /// <summary>
 /// Service for Azure SignalR operations using Resource Graph API.
 /// </summary>
-public sealed class SignalRService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ICacheService cacheService) : BaseAzureService(tenantService), ISignalRService
+public sealed class SignalRService(IAzureService azureService, ICacheService cacheService)
+    : BaseAzureService(azureService), ISignalRService
 {
-    private readonly ISubscriptionService _subscriptionService =
-        subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
 
     private const string CacheGroup = "signalr";
@@ -35,11 +27,10 @@ public sealed class SignalRService(
         string? resourceGroup,
         string? signalRName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var runtimes = new List<Runtime>();
         if (string.IsNullOrEmpty(signalRName))
         {

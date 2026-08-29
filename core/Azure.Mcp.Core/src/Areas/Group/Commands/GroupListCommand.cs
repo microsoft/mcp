@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Areas.Group.Options;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -27,20 +27,19 @@ namespace Azure.Mcp.Core.Areas.Group.Commands;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class GroupListCommand(ILogger<GroupListCommand> logger, IResourceGroupService resourceGroupService, ISubscriptionResolver subscriptionResolver)
+public sealed class GroupListCommand(ILogger<GroupListCommand> logger, IAzureService azureService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<BaseGroupOptions, GroupListCommand.Result>(subscriptionResolver)
 {
     private readonly ILogger<GroupListCommand> _logger = logger;
-    private readonly IResourceGroupService _resourceGroupService = resourceGroupService;
+    private readonly IAzureService _azureService = azureService;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseGroupOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            var groups = await _resourceGroupService.GetResourceGroups(
+            var groups = await _azureService.GetResourceGroups(
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(groups ?? []), GroupJsonContext.Default.Result);

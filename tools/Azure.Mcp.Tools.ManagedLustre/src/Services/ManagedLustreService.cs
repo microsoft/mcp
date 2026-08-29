@@ -3,33 +3,23 @@
 
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.StorageCache;
 using Azure.ResourceManager.StorageCache.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Services;
 
-public sealed class ManagedLustreService(
-    ISubscriptionService subscriptionService,
-    IResourceGroupService resourceGroupService,
-    ITenantService tenantService,
-    ILogger<ManagedLustreService> logger) : BaseAzureService(tenantService), IManagedLustreService
+public sealed class ManagedLustreService(IAzureService azureService, ILogger<ManagedLustreService> logger)
+    : BaseAzureService(azureService), IManagedLustreService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-    private readonly IResourceGroupService _resourceGroupService = resourceGroupService;
     private readonly ILogger<ManagedLustreService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<LustreFileSystem>> ListFileSystemsAsync(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
@@ -37,7 +27,7 @@ public sealed class ManagedLustreService(
         var results = new List<LustreFileSystem>();
         if (!string.IsNullOrWhiteSpace(resourceGroup))
         {
-            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+            var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken) ?? throw new Exception($"Resource group '{resourceGroup}' not found");
             foreach (var fs in rg.GetAmlFileSystems())
             {
                 results.Add(Map(fs));
@@ -46,7 +36,7 @@ public sealed class ManagedLustreService(
         }
         else
         {
-            var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken) ?? throw new Exception($"Subscription '{subscription}' not found");
+            var sub = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken) ?? throw new Exception($"Subscription '{subscription}' not found");
             await foreach (var fs in sub.GetAmlFileSystemsAsync(cancellationToken))
             {
                 results.Add(Map(fs));
@@ -310,10 +300,9 @@ public sealed class ManagedLustreService(
         string sku,
         int size,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken) ?? throw new Exception($"Subscription '{subscription}' not found");
+        var sub = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken) ?? throw new Exception($"Subscription '{subscription}' not found");
         var fileSystemSizeContent = new RequiredAmlFileSystemSubnetsSizeContent
         {
             SkuName = sku,
@@ -329,12 +318,11 @@ public sealed class ManagedLustreService(
         string subscription,
         string? tenant = null,
         string? location = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken) ?? throw new Exception($"Subscription '{subscription}' not found");
+        var sub = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken) ?? throw new Exception($"Subscription '{subscription}' not found");
 
         var results = new List<ManagedLustreSkuInfo>();
 
@@ -387,7 +375,6 @@ public sealed class ManagedLustreService(
         string? sourceVaultId = null,
         string? userAssignedIdentityId = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription),
@@ -397,9 +384,9 @@ public sealed class ManagedLustreService(
             (nameof(sku), sku),
             (nameof(subnetId), subnetId));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
+        var sub = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Subscription '{subscription}' not found");
 
         var data = new AmlFileSystemData(new(location))
@@ -477,12 +464,11 @@ public sealed class ManagedLustreService(
         long? squashUid = null,
         long? squashGid = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(name), name));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         var fs = await rg.GetAmlFileSystemAsync(name, cancellationToken);
@@ -519,12 +505,11 @@ public sealed class ManagedLustreService(
         string subnetId,
         string location,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(sku), sku), (nameof(subnetId), subnetId), (nameof(location), location));
 
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken) ?? throw new Exception($"Subscription '{subscription}' not found");
+        var sub = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken) ?? throw new Exception($"Subscription '{subscription}' not found");
         var content = new AmlFileSystemSubnetContent
         {
             FilesystemSubnet = subnetId,
@@ -559,7 +544,6 @@ public sealed class ManagedLustreService(
         string? autoexportPrefix = null,
         string? adminStatus = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -567,7 +551,7 @@ public sealed class ManagedLustreService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(filesystemName), filesystemName));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
@@ -621,7 +605,6 @@ public sealed class ManagedLustreService(
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -630,7 +613,7 @@ public sealed class ManagedLustreService(
             (nameof(filesystemName), filesystemName),
             (nameof(jobName), jobName));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         try
@@ -667,7 +650,6 @@ public sealed class ManagedLustreService(
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -679,7 +661,7 @@ public sealed class ManagedLustreService(
         try
         {
             // Get the resource group
-            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken);
+            var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken);
 
             // Get the filesystem
             var fs = await rg.GetAmlFileSystems().GetAsync(filesystemName, cancellationToken: cancellationToken);
@@ -701,7 +683,6 @@ public sealed class ManagedLustreService(
         string resourceGroup,
         string filesystemName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -712,7 +693,7 @@ public sealed class ManagedLustreService(
         try
         {
             // Get the resource group
-            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken);
+            var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken);
 
             // Get the filesystem
             var fs = await rg.GetAmlFileSystems().GetAsync(filesystemName, cancellationToken: cancellationToken);
@@ -739,7 +720,6 @@ public sealed class ManagedLustreService(
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -748,7 +728,7 @@ public sealed class ManagedLustreService(
             (nameof(filesystemName), filesystemName),
             (nameof(jobName), jobName));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         try
@@ -783,7 +763,6 @@ public sealed class ManagedLustreService(
         bool? enableDeletions = null,
         long? maximumErrors = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -791,7 +770,7 @@ public sealed class ManagedLustreService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(filesystemName), filesystemName));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
@@ -868,7 +847,6 @@ public sealed class ManagedLustreService(
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -877,7 +855,7 @@ public sealed class ManagedLustreService(
             (nameof(filesystemName), filesystemName),
             (nameof(jobName), jobName));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         try
@@ -916,7 +894,6 @@ public sealed class ManagedLustreService(
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -928,7 +905,7 @@ public sealed class ManagedLustreService(
         try
         {
             // Get the resource group
-            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken);
+            var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken);
 
             // Get the filesystem
             var fs = await rg.GetAmlFileSystems().GetAsync(filesystemName, cancellationToken: cancellationToken);
@@ -950,7 +927,6 @@ public sealed class ManagedLustreService(
         string resourceGroup,
         string filesystemName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -961,7 +937,7 @@ public sealed class ManagedLustreService(
         try
         {
             // Get the resource group
-            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken);
+            var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken);
 
             // Get the filesystem
             var fs = await rg.GetAmlFileSystems().GetAsync(filesystemName, cancellationToken: cancellationToken);
@@ -988,7 +964,6 @@ public sealed class ManagedLustreService(
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -997,7 +972,7 @@ public sealed class ManagedLustreService(
             (nameof(filesystemName), filesystemName),
             (nameof(jobName), jobName));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         try
@@ -1030,7 +1005,6 @@ public sealed class ManagedLustreService(
         string[]? importPrefixes = null,
         long? maximumErrors = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -1038,7 +1012,7 @@ public sealed class ManagedLustreService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(filesystemName), filesystemName));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
@@ -1096,7 +1070,6 @@ public sealed class ManagedLustreService(
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -1105,7 +1078,7 @@ public sealed class ManagedLustreService(
             (nameof(filesystemName), filesystemName),
             (nameof(jobName), jobName));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         try
@@ -1135,7 +1108,6 @@ public sealed class ManagedLustreService(
         string resourceGroup,
         string filesystemName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -1144,7 +1116,7 @@ public sealed class ManagedLustreService(
             (nameof(filesystemName), filesystemName));
 
         // Get the resource group
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         // Get the filesystem
@@ -1170,7 +1142,6 @@ public sealed class ManagedLustreService(
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -1180,7 +1151,7 @@ public sealed class ManagedLustreService(
              (nameof(jobName), jobName));
 
         // Get the resource group
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         // Get the filesystem
@@ -1202,7 +1173,6 @@ public sealed class ManagedLustreService(
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -1211,7 +1181,7 @@ public sealed class ManagedLustreService(
             (nameof(filesystemName), filesystemName),
             (nameof(jobName), jobName));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         try
@@ -1247,5 +1217,172 @@ public sealed class ManagedLustreService(
             throw;
         }
     }
-}
 
+    private static Models.ExpansionJob MapExpansionJob(AmlFileSystemExpansionJobResource job)
+    {
+        var data = job.Data;
+        return new()
+        {
+            Name = data.Name,
+            Id = data.Id?.ToString(),
+            Type = data.ResourceType.ToString(),
+            Location = data.Location.ToString(),
+            Properties = new()
+            {
+                ProvisioningState = data.ProvisioningState?.ToString(),
+                NewStorageCapacityTiB = data.NewStorageCapacityTiB,
+                Status = new()
+                {
+                    State = data.State?.ToString(),
+                    StatusCode = data.StatusCode,
+                    StatusMessage = data.StatusMessage,
+                    PercentComplete = data.PercentComplete,
+                    StartTimeUTC = data.StartedOn?.UtcDateTime,
+                    CompletionTimeUTC = data.CompletedOn?.UtcDateTime
+                }
+            }
+        };
+    }
+
+    public async Task<string> CreateExpansionJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        float newSizeTiB,
+        string? jobName = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName));
+
+        var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+        if (fs?.Value == null)
+        {
+            throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+        }
+
+        jobName ??= $"expansion-{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+        var expansionJobData = new AmlFileSystemExpansionJobData(fs.Value.Data.Location)
+        {
+            NewStorageCapacityTiB = newSizeTiB
+        };
+
+        var createOperation = await fs.Value.GetAmlFileSystemExpansionJobs().CreateOrUpdateAsync(
+            WaitUntil.Started,
+            jobName,
+            expansionJobData,
+            cancellationToken);
+        await WaitForLroCompletionAsync(createOperation, cancellationToken);
+
+        return createOperation.Value.Data.Name;
+    }
+
+    public async Task<Models.ExpansionJob> GetExpansionJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName),
+            (nameof(jobName), jobName));
+
+        var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+        if (fs?.Value == null)
+        {
+            throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+        }
+
+        try
+        {
+            var job = await fs.Value.GetAmlFileSystemExpansionJobs().GetAsync(jobName, cancellationToken: cancellationToken);
+            return MapExpansionJob(job.Value);
+        }
+        catch (RequestFailedException rfe) when (rfe.Status == 404)
+        {
+            _logger.LogWarning(rfe, "Expansion job '{JobName}' not found for filesystem '{FileSystemName}' in resource group '{ResourceGroup}'.", jobName, filesystemName, resourceGroup);
+            throw;
+        }
+    }
+
+    public async Task<List<Models.ExpansionJob>> ListExpansionJobsAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName));
+
+        var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+        if (fs?.Value == null)
+        {
+            throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+        }
+
+        var results = new List<Models.ExpansionJob>();
+        await foreach (var job in fs.Value.GetAmlFileSystemExpansionJobs().GetAllAsync(cancellationToken: cancellationToken))
+        {
+            results.Add(MapExpansionJob(job));
+        }
+
+        return results;
+    }
+
+    public async Task<bool> DeleteExpansionJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName),
+            (nameof(jobName), jobName));
+
+        var rg = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+        if (fs?.Value == null)
+        {
+            throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+        }
+
+        try
+        {
+            var job = await fs.Value.GetAmlFileSystemExpansionJobs().GetAsync(jobName, cancellationToken: cancellationToken);
+            var deleteOperation = await job.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
+            return true;
+        }
+        catch (RequestFailedException rfe) when (rfe.Status == 404)
+        {
+            _logger.LogDebug(rfe, "Expansion job '{JobName}' not found for filesystem '{FileSystemName}'.", jobName, filesystemName);
+            return false;
+        }
+    }
+}
