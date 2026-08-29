@@ -19,21 +19,22 @@ internal static class StructuredOutputHelper
     {
         using var document = JsonDocument.Parse(jsonResponse);
 
-        if (!document.RootElement.TryGetProperty("results", out var results))
+        if (!document.RootElement.TryGetProperty(StructuredOutputJson.ResultsPropertyName, out var results))
         {
             return null;
         }
 
-        switch (results.ValueKind)
+        if (StructuredOutputJson.IsObjectRoot(results))
         {
-            case JsonValueKind.Object:
-                return results.Clone();
-            case JsonValueKind.Null:
-            case JsonValueKind.Undefined:
-                return null;
-            default:
-                var wrapper = new JsonObject { ["value"] = JsonNode.Parse(results.GetRawText()) };
-                return JsonSerializer.SerializeToElement(wrapper, ServerJsonContext.Default.JsonObject);
+            return results.Clone();
         }
+
+        if (results.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+        {
+            return null;
+        }
+
+        var wrapper = StructuredOutputJson.WrapValue(JsonNode.Parse(results.GetRawText()));
+        return JsonSerializer.SerializeToElement(wrapper, ServerJsonContext.Default.JsonObject);
     }
 }

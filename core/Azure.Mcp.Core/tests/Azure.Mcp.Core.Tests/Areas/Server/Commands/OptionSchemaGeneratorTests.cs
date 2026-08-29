@@ -2,8 +2,12 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
+using Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Xunit;
 
@@ -215,6 +219,51 @@ public class OptionSchemaGeneratorTests
         AssertWrappedValue(schema, expectedInnerType: "integer");
     }
 
+    [Fact]
+    public void CreateOutputSchema_KeyValueSetWithoutLabel_MatchesSerializedPayload()
+    {
+        AssertOmittedLabelConforms(
+            new KeyValueSetCommand.KeyValueSetCommandResult("mykey", "myval", null),
+            OutputSchemaTestJsonContext.Default.KeyValueSetCommandResult);
+    }
+
+    [Fact]
+    public void CreateOutputSchema_KeyValueDeleteWithoutLabel_MatchesSerializedPayload()
+    {
+        AssertOmittedLabelConforms(
+            new KeyValueDeleteCommand.KeyValueDeleteCommandResult("mykey", null, true, "Deleted."),
+            OutputSchemaTestJsonContext.Default.KeyValueDeleteCommandResult);
+    }
+
+    [Fact]
+    public void CreateOutputSchema_KeyValueLockSetWithoutLabel_MatchesSerializedPayload()
+    {
+        AssertOmittedLabelConforms(
+            new KeyValueLockSetCommand.KeyValueLockSetCommandResult("mykey", null, true),
+            OutputSchemaTestJsonContext.Default.KeyValueLockSetCommandResult);
+    }
+
+    private static void AssertOmittedLabelConforms<T>(T result, JsonTypeInfo<T> typeInfo)
+    {
+        var schema = OptionSchemaGenerator.CreateOutputSchema(typeInfo);
+        var payload = JsonSerializer.SerializeToElement(result, typeInfo);
+
+        Assert.False(payload.TryGetProperty("label", out _));
+
+        if (schema["required"] is not JsonArray required)
+        {
+            return;
+        }
+
+        foreach (var requiredProperty in required)
+        {
+            var propertyName = Assert.IsAssignableFrom<JsonValue>(requiredProperty).GetValue<string>();
+            Assert.True(
+                payload.TryGetProperty(propertyName, out _),
+                $"Serialized payload omitted required output property '{propertyName}'.");
+        }
+    }
+
     // MCP requires the outputSchema root to be an object, so a non-object export (array or scalar) must be
     // wrapped as { "type": "object", "properties": { "value": <inner> }, "required": ["value"] }.
     private static void AssertWrappedValue(JsonObject schema, string expectedInnerType)
@@ -238,7 +287,12 @@ public class OptionSchemaGeneratorTests
 internal sealed record OutputSchemaSampleResult(string Name, int Count);
 
 [JsonSerializable(typeof(OutputSchemaSampleResult))]
+[JsonSerializable(typeof(KeyValueSetCommand.KeyValueSetCommandResult))]
+[JsonSerializable(typeof(KeyValueDeleteCommand.KeyValueDeleteCommandResult))]
+[JsonSerializable(typeof(KeyValueLockSetCommand.KeyValueLockSetCommandResult))]
 [JsonSerializable(typeof(string[]))]
 [JsonSerializable(typeof(int))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal sealed partial class OutputSchemaTestJsonContext : JsonSerializerContext;

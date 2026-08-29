@@ -128,21 +128,71 @@ internal static class OptionSchemaGenerator
 
         var schema = JsonSchemaExporter.GetJsonSchemaAsNode(resultTypeInfo, ExporterOptions);
 
-        if (schema is JsonObject rootObject && IsObjectRoot(rootObject))
+        if (schema is JsonObject rootObject && StructuredOutputJson.IsObjectRoot(rootObject))
         {
+            ReconcileRequiredProperties(rootObject, resultTypeInfo.Options.DefaultIgnoreCondition);
             return rootObject;
         }
 
         return new JsonObject
         {
             ["type"] = "object",
-            ["properties"] = new JsonObject { ["value"] = schema },
-            ["required"] = new JsonArray { (JsonNode)"value" },
+            ["properties"] = StructuredOutputJson.WrapValue(schema),
+            ["required"] = new JsonArray { (JsonNode)StructuredOutputJson.ValuePropertyName },
         };
     }
 
-    private static bool IsObjectRoot(JsonObject schema)
-        => schema["type"] is JsonValue typeValue
-            && typeValue.TryGetValue<string>(out var typeName)
-            && typeName == "object";
+    private static void ReconcileRequiredProperties(JsonObject schema, JsonIgnoreCondition defaultIgnoreCondition)
+    {
+        if (schema["required"] is not JsonArray required
+            || schema["properties"] is not JsonObject properties
+            || defaultIgnoreCondition is not (JsonIgnoreCondition.WhenWritingNull or JsonIgnoreCondition.WhenWritingDefault))
+        {
+            return;
+        }
+
+        for (var index = required.Count - 1; index >= 0; index--)
+        {
+            var propertyName = required[index]?.GetValue<string>();
+            if (propertyName is null || !properties.TryGetPropertyValue(propertyName, out var propertySchema))
+            {
+                continue;
+            }
+
+            if (defaultIgnoreCondition == JsonIgnoreCondition.WhenWritingDefault || AllowsNull(propertySchema))
+            {
+                required.RemoveAt(index);
+            }
+        }
+
+        if (required.Count == 0)
+        {
+            schema.Remove("required");
+        }
+    }
+
+    private static bool AllowsNull(JsonNode? schema)
+    {
+        if (schema is not JsonObject schemaObject)
+        {
+            return false;
+        }
+
+        if (schemaObject["type"] is JsonValue typeValue
+            && typeValue.TryGetValue<string>(out var typeName))
+        {
+            return typeName == "null";
+        }
+
+        if (schemaObject["type"] is JsonArray types
+            && types.Any(type => type?.GetValue<string>() == "null"))
+        {
+            return true;
+        }
+
+        return AllowsNullInUnion(schemaObject["anyOf"]) || AllowsNullInUnion(schemaObject["oneOf"]);
+    }
+
+    private static bool AllowsNullInUnion(JsonNode? union) =>
+        union is JsonArray variants && variants.Any(AllowsNull);
 }

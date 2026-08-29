@@ -23,7 +23,8 @@ internal static class AggregateStructuredOutput
     {
         var root = JsonNode.Parse(toolsJson)
             ?? throw new JsonException("The serialized tool list was empty.");
-        var toolsNode = root is JsonObject rootObject && rootObject["tools"] is JsonNode nestedTools
+        var toolsNode = root is JsonObject rootObject
+            && rootObject[StructuredOutputJson.ToolsPropertyName] is JsonNode nestedTools
             ? nestedTools
             : root;
 
@@ -49,8 +50,8 @@ internal static class AggregateStructuredOutput
     {
         var envelope = new JsonObject
         {
-            ["kind"] = "message",
-            ["message"] = message
+            [StructuredOutputJson.KindPropertyName] = StructuredOutputJson.MessageKind,
+            [StructuredOutputJson.MessagePropertyName] = message
         };
         return JsonSerializer.SerializeToElement(envelope, ServerJsonContext.Default.JsonObject);
     }
@@ -64,8 +65,8 @@ internal static class AggregateStructuredOutput
 
         var envelope = new JsonObject
         {
-            ["kind"] = "tool-list",
-            ["tools"] = tools.DeepClone()
+            [StructuredOutputJson.KindPropertyName] = StructuredOutputJson.ToolListKind,
+            [StructuredOutputJson.ToolsPropertyName] = tools.DeepClone()
         };
         return JsonSerializer.SerializeToElement(envelope, ServerJsonContext.Default.JsonObject);
     }
@@ -74,14 +75,14 @@ internal static class AggregateStructuredOutput
     {
         var envelope = new JsonObject
         {
-            ["kind"] = "tool-result",
-            ["command"] = command,
-            ["result"] = result?.DeepClone()
+            [StructuredOutputJson.KindPropertyName] = StructuredOutputJson.ToolResultKind,
+            [StructuredOutputJson.CommandPropertyName] = command,
+            [StructuredOutputJson.ResultPropertyName] = result?.DeepClone()
         };
 
         if (tool is not null)
         {
-            envelope["tool"] = tool;
+            envelope[StructuredOutputJson.ToolPropertyName] = tool;
         }
 
         return JsonSerializer.SerializeToElement(envelope, ServerJsonContext.Default.JsonObject);
@@ -91,17 +92,20 @@ internal static class AggregateStructuredOutput
     {
         var toolResultProperties = new JsonObject
         {
-            ["kind"] = new JsonObject { ["const"] = "tool-result" },
-            ["command"] = new JsonObject { ["type"] = "string" },
-            ["result"] = new JsonObject()
+            [StructuredOutputJson.KindPropertyName] = new JsonObject { ["const"] = StructuredOutputJson.ToolResultKind },
+            [StructuredOutputJson.CommandPropertyName] = new JsonObject { ["type"] = "string" },
+            [StructuredOutputJson.ResultPropertyName] = new JsonObject()
         };
-        var toolResultRequired = new JsonArray("kind", "command", "result");
+        var toolResultRequired = new JsonArray(
+            StructuredOutputJson.KindPropertyName,
+            StructuredOutputJson.CommandPropertyName,
+            StructuredOutputJson.ResultPropertyName);
 
         if (requireTool)
         {
-            toolResultProperties["tool"] = new JsonObject { ["type"] = "string" };
-            toolResultProperties["result"] = new JsonObject { ["type"] = "object" };
-            toolResultRequired.Insert(1, "tool");
+            toolResultProperties[StructuredOutputJson.ToolPropertyName] = new JsonObject { ["type"] = "string" };
+            toolResultProperties[StructuredOutputJson.ResultPropertyName] = new JsonObject { ["type"] = "object" };
+            toolResultRequired.Insert(1, StructuredOutputJson.ToolPropertyName);
         }
 
         var toolListSchema = new JsonObject
@@ -109,14 +113,14 @@ internal static class AggregateStructuredOutput
             ["type"] = "object",
             ["properties"] = new JsonObject
             {
-                ["kind"] = new JsonObject { ["const"] = "tool-list" },
-                ["tools"] = new JsonObject
+                [StructuredOutputJson.KindPropertyName] = new JsonObject { ["const"] = StructuredOutputJson.ToolListKind },
+                [StructuredOutputJson.ToolsPropertyName] = new JsonObject
                 {
                     ["type"] = "array",
                     ["items"] = new JsonObject { ["type"] = "object" }
                 }
             },
-            ["required"] = new JsonArray("kind", "tools"),
+            ["required"] = new JsonArray(StructuredOutputJson.KindPropertyName, StructuredOutputJson.ToolsPropertyName),
             ["additionalProperties"] = false
         };
         var toolResultSchema = new JsonObject
@@ -131,10 +135,10 @@ internal static class AggregateStructuredOutput
             ["type"] = "object",
             ["properties"] = new JsonObject
             {
-                ["kind"] = new JsonObject { ["const"] = "message" },
-                ["message"] = new JsonObject { ["type"] = "string" }
+                [StructuredOutputJson.KindPropertyName] = new JsonObject { ["const"] = StructuredOutputJson.MessageKind },
+                [StructuredOutputJson.MessagePropertyName] = new JsonObject { ["type"] = "string" }
             },
-            ["required"] = new JsonArray("kind", "message"),
+            ["required"] = new JsonArray(StructuredOutputJson.KindPropertyName, StructuredOutputJson.MessagePropertyName),
             ["additionalProperties"] = false
         };
         var schema = new JsonObject
