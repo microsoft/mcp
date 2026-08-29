@@ -24,7 +24,7 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
   - [Getting Started](#getting-started)
   - [What can you do with the Fabric MCP Server?](#what-can-you-do-with-the-fabric-mcp-server)
     - [Catalog Discovery](#catalog-discovery)
-    - [Fabric Workloads & APIs](#fabric-workloads--apis)
+    - [Fabric Item Types & APIs](#fabric-item-types--apis)
     - [Resource Definitions & Schemas](#resource-definitions--schemas)
     - [Best Practices & Examples](#best-practices--examples)
     - [Development Workflows](#development-workflows)
@@ -50,7 +50,7 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
 **Microsoft Fabric MCP Server** gives your AI agents the knowledge they need to generate robust, production-ready code for Microsoft Fabric—all without directly accessing your environment.
 
 Key capabilities:
-- **Complete API Context**: Full OpenAPI specifications for all supported Fabric workloads
+- **Complete API Context**: Full OpenAPI specifications for all supported Fabric item types
 - **Item Definition Knowledge**: JSON schemas for every Fabric item type (Lakehouses, pipelines, semantic models, notebooks, etc.)
 - **Built-in Best Practices**: Embedded guidance on pagination, error handling, and recommended patterns
 - **Local-First Security**: Runs entirely on your machine—never connects to your Fabric environment
@@ -181,7 +181,7 @@ Use one of the following options to configure your `mcp.json`:
 1. Open GitHub Copilot in [VS Code](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode) and switch to Agent mode.
 1. Click `refresh` on the tools list
     - You should see the Fabric MCP Server in the list of tools
-1. Try a prompt that uses Fabric context, such as `What Fabric workload types are available?`
+1. Try a prompt that uses Fabric context, such as `What Fabric item types are available?`
     - The agent should be able to use the Fabric MCP Server tools to complete your query
 1. Check out the [Microsoft Fabric documentation](https://learn.microsoft.com/fabric/) and review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md) for commonly asked questions
 1. We're building this in the open. Your feedback is much appreciated!
@@ -198,9 +198,9 @@ The Fabric MCP Server supercharges your agents with Microsoft Fabric context. He
 * "Discover all Report items in the catalog and show which workspace they live in"
 * "Filter the catalog to Warehouse and Notebook items"
 
-### Fabric Workloads & APIs
+### Fabric Item Types & APIs
 
-* "What are the available Fabric workload types I can work with?"
+* "What are the available Fabric item types I can work with?"
 * "Show me the OpenAPI operations for 'notebook' and give a sample creation body"
 * "Get the platform-level API specifications for Microsoft Fabric"
 * "List all supported Fabric item types"
@@ -237,12 +237,12 @@ The Fabric MCP Server exposes tools organized into three categories:
 
 | Tool Name | Description |
 |-----------|-------------|
-| `docs_workloads` | Lists Fabric workload types that have public API specifications available. |
-| `docs_workload-api-spec` | Retrieves the complete OpenAPI specification for a specific Fabric workload. |
+| `docs_list-item-types` | Lists the Fabric item types that have public API specifications available, plus the non-item API areas (platform, admin, spark, realTimeIntelligence). |
+| `docs_item-api-spec` | Retrieves the complete OpenAPI specification for a specific Fabric item type. |
 | `docs_platform-api-spec` | Retrieves the OpenAPI specification for core Fabric platform APIs. |
-| `docs_item-definitions` | Retrieves JSON schema definitions for items in a Fabric workload API. |
+| `docs_item-definitions` | Retrieves the JSON schema definition for a Fabric item type. |
 | `docs_best-practices` | Retrieves best practice documentation and guidance for a specific topic. |
-| `docs_api-examples` | Retrieves example API request/response files for a specific workload. |
+| `docs_api-examples` | Retrieves example API request/response files for a specific item type. |
 
 ### OneLake Data Operations
 

@@ -37,37 +37,27 @@ public static partial class ServiceCollectionExtensions
     /// Adds the Azure MCP server services to the specified <see cref="IServiceCollection"/>.
     /// </summary>
     /// <param name="services">The service collection to add services to.</param>
-    /// <param name="serviceStartOptions">The options for configuring the server.</param>
+    /// <param name="serverStartOptions">The options for configuring the server.</param>
     /// <returns>The service collection with MCP server services added.</returns>
-    public static IServiceCollection AddAzureMcpServer(this IServiceCollection services, ServerStartOptions serviceStartOptions)
+    public static IServiceCollection AddAzureMcpServer(this IServiceCollection services, ServerStartOptions serverStartOptions)
     {
         // Register HTTP client services
         services.AddHttpClientServices();
 
-        // Register options for service start
-        services.AddSingleton(serviceStartOptions);
-        services.AddSingleton(Options.Create(serviceStartOptions));
-
-        // Register default tool loader options from service start options
-        var defaultToolLoaderOptions = new ToolLoaderOptions
+        // Register ServerRuntimeConfiguration
+        var serverRuntimeConfiguration = new ServerRuntimeConfiguration()
         {
-            Namespace = serviceStartOptions.Namespace,
-            ReadOnly = serviceStartOptions.ReadOnly ?? false,
-            DangerouslyDisableElicitation = serviceStartOptions.DangerouslyDisableElicitation,
-            Tool = serviceStartOptions.Tool,
-            IsHttpMode = serviceStartOptions.IsHttpMode
+            Transport = serverStartOptions.Transport,
+            Mode = serverStartOptions.Mode ?? ModeTypes.Default,
+            Namespace = serverStartOptions.Namespace,
+            Tool = serverStartOptions.Tool,
+            ReadOnly = serverStartOptions.ReadOnly ?? false,
+            DangerouslyDisableElicitation = serverStartOptions.DangerouslyDisableElicitation,
+            Cloud = serverStartOptions.Cloud
         };
 
-        if (serviceStartOptions.Mode == ModeTypes.NamespaceProxy)
-        {
-            if (defaultToolLoaderOptions.Namespace == null || defaultToolLoaderOptions.Namespace.Length == 0)
-            {
-                defaultToolLoaderOptions = defaultToolLoaderOptions with { Namespace = ["extension"] };
-            }
-        }
-
-        services.AddSingleton(defaultToolLoaderOptions);
-        services.AddSingleton(Options.Create(defaultToolLoaderOptions));
+        services.AddSingleton(serverRuntimeConfiguration);
+        services.AddSingleton(Options.Create(serverRuntimeConfiguration));
 
         // Register tool loader strategies
         services.AddSingleton<CommandFactoryToolLoader>();
@@ -88,12 +78,12 @@ public static partial class ServiceCollectionExtensions
         services.AddSingleton<IMcpRuntime, McpRuntime>();
 
         // Register MCP discovery strategies based on proxy mode
-        if (serviceStartOptions.Mode == ModeTypes.SingleToolProxy)
+        if (serverStartOptions.Mode == ModeTypes.SingleToolProxy)
         {
             services.AddSingleton<IMcpDiscoveryStrategy>(sp =>
             {
                 var discoveryStrategies = new List<IMcpDiscoveryStrategy>();
-                if (!serviceStartOptions.DisableProxyTools)
+                if (!serverStartOptions.DisableProxyTools)
                 {
                     discoveryStrategies.Add(sp.GetRequiredService<RegistryDiscoveryStrategy>());
                 }
@@ -104,17 +94,16 @@ public static partial class ServiceCollectionExtensions
                 return new CompositeDiscoveryStrategy(discoveryStrategies, logger);
             });
         }
-        else if (serviceStartOptions.Mode == ModeTypes.NamespaceProxy &&
-            !serviceStartOptions.DisableProxyTools)
+        else if (serverStartOptions.Mode == ModeTypes.NamespaceProxy && !serverStartOptions.DisableProxyTools)
         {
             services.AddSingleton<IMcpDiscoveryStrategy, RegistryDiscoveryStrategy>();
         }
-        else if (serviceStartOptions.Mode == ModeTypes.ConsolidatedProxy)
+        else if (serverStartOptions.Mode == ModeTypes.ConsolidatedProxy)
         {
             services.AddSingleton<IMcpDiscoveryStrategy>(sp =>
             {
                 var discoveryStrategies = new List<IMcpDiscoveryStrategy>();
-                if (!serviceStartOptions.DisableProxyTools)
+                if (!serverStartOptions.DisableProxyTools)
                 {
                     discoveryStrategies.Add(sp.GetRequiredService<RegistryDiscoveryStrategy>());
                 }
@@ -127,24 +116,23 @@ public static partial class ServiceCollectionExtensions
         }
 
         // Configure tool loading based on mode
-        if (serviceStartOptions.Mode == ModeTypes.SingleToolProxy)
+        if (serverStartOptions.Mode == ModeTypes.SingleToolProxy)
         {
             services.AddSingleton<IToolLoader, SingleProxyToolLoader>();
         }
-        else if (serviceStartOptions.Mode == ModeTypes.NamespaceProxy)
+        else if (serverStartOptions.Mode == ModeTypes.NamespaceProxy)
         {
             services.AddSingleton<IToolLoader>(sp =>
             {
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
                 var toolLoaders = new List<IToolLoader>();
-                if (!serviceStartOptions.DisableProxyTools)
+                if (!serverStartOptions.DisableProxyTools)
                 {
                     // If proxy tools are enabled, ServerToolLoader with RegistryDiscoveryStrategy creates proxy tools for external MCP servers.
                     toolLoaders.Add(new ServerToolLoader(
                         sp.GetRequiredService<RegistryDiscoveryStrategy>(),
-                        sp.GetRequiredService<IOptions<ToolLoaderOptions>>(),
-                        loggerFactory.CreateLogger<ServerToolLoader>()
-                    ));
+                        sp.GetRequiredService<IOptions<ServerRuntimeConfiguration>>(),
+                        loggerFactory.CreateLogger<ServerToolLoader>()));
                 }
 
                 // NamespaceToolLoader enables direct in-process execution for tools in Azure namespaces
@@ -152,30 +140,35 @@ public static partial class ServiceCollectionExtensions
 
                 // Always add utility commands (subscription, group) in namespace mode
                 // so they are available regardless of which namespaces are loaded
-                var utilityToolLoaderOptions = new ToolLoaderOptions(
-                    Namespace: DiscoveryConstants.UtilityNamespaces,
-                    ReadOnly: defaultToolLoaderOptions.ReadOnly,
-                    DangerouslyDisableElicitation: defaultToolLoaderOptions.DangerouslyDisableElicitation,
-                    Tool: defaultToolLoaderOptions.Tool,
-                    IsHttpMode: defaultToolLoaderOptions.IsHttpMode
-                );
+                var additionalIncludedTools = new List<string>(DiscoveryConstants.UtilityNamespaces);
+
+                // Append extension commands when no other namespaces are specified.
+                // Extension commands aren't included in the NamespaceToolLoader.
+                if (serverStartOptions.Namespace == null || serverStartOptions.Namespace.Length == 0)
+                {
+                    additionalIncludedTools.Add("extension");
+                }
+
+                var additionalToolsServerRuntimeConfiguration = new ServerRuntimeConfiguration
+                {
+                    Namespace = [.. additionalIncludedTools],
+                    ReadOnly = serverRuntimeConfiguration.ReadOnly,
+                    DangerouslyDisableElicitation = serverRuntimeConfiguration.DangerouslyDisableElicitation,
+                    Tool = serverRuntimeConfiguration.Tool,
+                    Transport = serverRuntimeConfiguration.Transport,
+                    Mode = serverRuntimeConfiguration.Mode,
+                    Cloud = serverRuntimeConfiguration.Cloud
+                };
 
                 toolLoaders.Add(new CommandFactoryToolLoader(
                     sp.GetRequiredService<ICommandFactory>(),
-                    Options.Create(utilityToolLoaderOptions),
-                    loggerFactory.CreateLogger<CommandFactoryToolLoader>()
-                ));
-
-                // Append extension commands when no other namespaces are specified.
-                if (defaultToolLoaderOptions.Namespace?.SequenceEqual(["extension"]) == true)
-                {
-                    toolLoaders.Add(sp.GetRequiredService<CommandFactoryToolLoader>());
-                }
+                    Options.Create(additionalToolsServerRuntimeConfiguration),
+                    loggerFactory.CreateLogger<CommandFactoryToolLoader>()));
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });
         }
-        else if (serviceStartOptions.Mode == ModeTypes.ConsolidatedProxy)
+        else if (serverStartOptions.Mode == ModeTypes.ConsolidatedProxy)
         {
             services.AddSingleton<IToolLoader>(sp =>
             {
@@ -186,29 +179,28 @@ public static partial class ServiceCollectionExtensions
                 var consolidatedCommandFactory = consolidatedStrategy.CreateConsolidatedCommandFactory();
 
                 var toolLoaders = new List<IToolLoader>();
-                if (!serviceStartOptions.DisableProxyTools)
+                if (!serverStartOptions.DisableProxyTools)
                 {
                     // If proxy tools are enabled, ServerToolLoader with RegistryDiscoveryStrategy creates proxy tools for external MCP servers.
                     toolLoaders.Add(new ServerToolLoader(
                         sp.GetRequiredService<RegistryDiscoveryStrategy>(),
-                        sp.GetRequiredService<IOptions<ToolLoaderOptions>>(),
-                        loggerFactory.CreateLogger<ServerToolLoader>()
-                    ));
+                        sp.GetRequiredService<IOptions<ServerRuntimeConfiguration>>(),
+                        loggerFactory.CreateLogger<ServerToolLoader>()));
                 }
 
                 // NamespaceToolLoader enables direct in-process execution for consolidated tools
                 toolLoaders.Add(new NamespaceToolLoader(
                     consolidatedCommandFactory,
-                    sp.GetRequiredService<IOptions<ServerStartOptions>>(),
+                    sp.GetRequiredService<IOptions<ServerRuntimeConfiguration>>(),
                     loggerFactory.CreateLogger<NamespaceToolLoader>(),
                     false));
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });
         }
-        else if (serviceStartOptions.Mode == ModeTypes.All)
+        else if (serverStartOptions.Mode == ModeTypes.All)
         {
-            if (!serviceStartOptions.DisableProxyTools)
+            if (!serverStartOptions.DisableProxyTools)
             {
                 services.AddSingleton<IMcpDiscoveryStrategy, RegistryDiscoveryStrategy>();
             }
@@ -216,7 +208,7 @@ public static partial class ServiceCollectionExtensions
             {
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
                 var toolLoaders = new List<IToolLoader>();
-                if (!serviceStartOptions.DisableProxyTools)
+                if (!serverStartOptions.DisableProxyTools)
                 {
                     toolLoaders.Add(sp.GetRequiredService<RegistryToolLoader>());
                 }
@@ -254,7 +246,7 @@ public static partial class ServiceCollectionExtensions
 
         var mcpServerBuilder = services.AddMcpServer();
 
-        if (serviceStartOptions.Transport == TransportTypes.Http)
+        if (serverStartOptions.Transport == TransportTypes.Http)
         {
             mcpServerBuilder.WithHttpTransport();
         }
@@ -276,7 +268,7 @@ public static partial class ServiceCollectionExtensions
         services.AddSingleton(GetConfiguration());
 
         services.AddOptions<McpServerConfiguration>()
-            .Configure<IConfiguration, IOptions<ServerStartOptions>>((options, rootConfiguration, serviceStartOptions) =>
+            .Configure<IConfiguration, IOptions<ServerStartOptions>>((options, rootConfiguration, serverStartOptions) =>
             {
                 // Use a scoped IConfiguration for loading server settings.
                 var scopedConfiguration = GetConfiguration(assembly);
@@ -317,7 +309,7 @@ public static partial class ServiceCollectionExtensions
                 // Disable telemetry when support logging is enabled to prevent sensitive data from being sent
                 // to telemetry endpoints. Support logging captures debug-level information that may contain
                 // sensitive data, so we disable all telemetry as a safety measure.
-                if (!string.IsNullOrWhiteSpace(serviceStartOptions.Value.DangerouslyWriteSupportLogsToDir))
+                if (!string.IsNullOrWhiteSpace(serverStartOptions.Value.DangerouslyWriteSupportLogsToDir))
                 {
                     options.IsTelemetryEnabled = false;
                     return;

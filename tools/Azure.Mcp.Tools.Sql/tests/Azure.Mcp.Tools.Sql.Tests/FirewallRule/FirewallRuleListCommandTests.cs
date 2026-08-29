@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -39,7 +38,6 @@ public class FirewallRuleListCommandTests : SubscriptionCommandUnitTestsBase<Fir
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns([]);
         }
@@ -75,7 +73,6 @@ public class FirewallRuleListCommandTests : SubscriptionCommandUnitTestsBase<Fir
             "testserver",
             "testrg",
             "testsub",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(firewallRules);
 
@@ -99,7 +96,6 @@ public class FirewallRuleListCommandTests : SubscriptionCommandUnitTestsBase<Fir
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -123,7 +119,6 @@ public class FirewallRuleListCommandTests : SubscriptionCommandUnitTestsBase<Fir
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -148,7 +143,6 @@ public class FirewallRuleListCommandTests : SubscriptionCommandUnitTestsBase<Fir
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 
@@ -172,7 +166,6 @@ public class FirewallRuleListCommandTests : SubscriptionCommandUnitTestsBase<Fir
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 
@@ -199,7 +192,6 @@ public class FirewallRuleListCommandTests : SubscriptionCommandUnitTestsBase<Fir
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -214,45 +206,7 @@ public class FirewallRuleListCommandTests : SubscriptionCommandUnitTestsBase<Fir
             serverName,
             resourceGroup,
             subscription,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public async Task ExecuteAsync_WithRetryPolicyOptions()
-    {
-        // Arrange
-        var firewallRules = new List<SqlServerFirewallRule>
-        {
-            new("TestRule", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Sql/servers/server/firewallRules/TestRule",
-                "Microsoft.Sql/servers/firewallRules", "10.0.0.1", "10.0.0.10")
-        };
-
-        Service.ListFirewallRulesAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(firewallRules);
-
-        // Act
-        var response = await ExecuteCommandAsync(
-            "--subscription", "testsub",
-            "--resource-group", "testrg",
-            "--server", "testserver",
-            "--retry-max-retries", "3");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        // Verify the service was called with retry policy
-        await Service.Received(1).ListFirewallRulesAsync(
-            "testserver",
-            "testrg",
-            "testsub",
-            Arg.Is<RetryPolicyOptions?>(r => r != null && r.MaxRetries == 3),
-            Arg.Any<CancellationToken>());
-    }
 }

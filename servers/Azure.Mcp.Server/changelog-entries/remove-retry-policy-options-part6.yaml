@@ -1,0 +1,3 @@
+changes:
+  - section: Breaking Changes
+    description: Removed custom retry policy options from Load Testing, Managed Lustre, Marketplace, Monitor, Policy, and Postgres tools.

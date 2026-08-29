@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.Cosmos.Commands;
 using Azure.Mcp.Tools.Cosmos.Commands.Item;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -33,7 +32,7 @@ public class ItemTextSearchCommandTests : SubscriptionCommandUnitTestsBase<ItemT
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(5), Arg.Is("sub"),
             Arg.Any<AuthMethod>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(items);
 
         var response = await ExecuteCommandAsync(

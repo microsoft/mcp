@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Improved Event Grid performance by looking up a topic or system topic directly by name when a resource group is supplied, instead of enumerating every topic in the resource group."

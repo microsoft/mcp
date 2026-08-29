@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Commands.Index;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.Mcp.Tools.Search.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -27,7 +26,6 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Is("service123"),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedIndexes);
 
@@ -44,7 +42,6 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Any<string>(),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -64,7 +61,6 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -87,7 +83,6 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is(indexName),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([expectedDefinition]);
 
@@ -113,7 +108,6 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is(indexName),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -137,7 +131,6 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is(indexName),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
