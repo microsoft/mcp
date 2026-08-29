@@ -12,11 +12,6 @@ The following options are available for most commands:
 | `--subscription` | No | Environment variable `AZURE_SUBSCRIPTION_ID` | Azure subscription ID for target resources |
 | `--tenant-id` | No | - | Azure tenant ID for authentication |
 | `--auth-method` | No | 'credential' | Authentication method ('credential', 'key', 'connectionString') |
-| `--retry-max-retries` | No | 3 | Maximum retry attempts for failed operations |
-| `--retry-delay` | No | 2 | Delay between retry attempts (seconds) |
-| `--retry-max-delay` | No | 10 | Maximum delay between retries (seconds) |
-| `--retry-mode` | No | 'exponential' | Retry strategy ('fixed' or 'exponential') |
-| `--retry-network-timeout` | No | 100 | Network operation timeout (seconds) |
 | `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
 
 ### Discovery with `--learn`
@@ -355,18 +350,32 @@ azmcp advisor recommendation summary --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation apply --resource <resource>
 
-# List the catalog of Advisor recommendation types — every recommendation Advisor can generate, with its category,
-# impact, target resource type, and sub-category. Results sorted by impact (High → Medium → Low). Use for greenfield
-# (empty environments) or brownfield (onboarding a new resource type into an existing subscription) scenarios.
+# List the global Azure Advisor recommendation metadata catalog (also called recommendation types) from Azure Resource
+# Graph. Use it in greenfield environments with no generated recommendations, or filter by supported resource type
+# during brownfield onboarding. Supports service-retirement filtering by Service Health tracking ID and retirement
+# date expression. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting
+# subcategory filters are rejected. Results are ordered High, Medium, Low.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation-type list [--resource-type <resource-type>] \
-                                       [--impact <High|Medium|Low>] \
-                                       [--category <category>]
+azmcp advisor metadata list [--language <language>] \
+                            [--resource-type <resource-type>] \
+                            [--impact <High|Medium|Low>] \
+                            [--category <Cost|HighAvailability|Security|Performance|OperationalExcellence>] \
+                            [--sub-category <sub-category>] \
+                            [--tracking-id <tracking-id>] \
+                            [--retirement-date <eq|lt|le|gt|ge>:<yyyy-MM-dd>]
+
+# Get Azure Advisor metadata for a specific recommendation type id. Explains what an Advisor
+# recommendation type means, including its display name, category, sub-category, impact,
+# supported resource type, description, potential benefits, and remediation actions.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor metadata get --recommendation-type-id <recommendation-type-id> \
+                           [--language <language>]
 ```
 
 ### Azure AI Search Operations
 
 ```bash
+
 # Get detailed properties of AI Search indexes
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp search index get --service <service> \
@@ -377,7 +386,9 @@ azmcp search index get --service <service> \
 azmcp search index query --subscription <subscription> \
                          --service <service> \
                          --index <index> \
-                         --query <query>
+                         --query <query> \
+                         [--query-type <simple|full|semantic>] \
+                         [--semantic-configuration <semantic-configuration>]
 
 # Get AI Search knowledge bases (all or a specific one)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -558,12 +569,14 @@ azmcp appconfig kv set --subscription <subscription> \
 
 ```bash
 # Diagnose resource using Azure App Lens
+# Only --resource and --question are required; --subscription, --resource-group, and --resource-type are optional and used to narrow down results when multiple resources share the same name; --tenant is optional
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp applens resource diagnose --question <question> \
-                                --resource <resource> \
+azmcp applens resource diagnose --resource <resource> \
+                                --question <question> \
                                 [--subscription <subscription>] \
                                 [--resource-group <resource-group>] \
-                                [--resource-type <resource-type>]
+                                [--resource-type <resource-type>] \
+                                [--tenant <tenant>]
 ```
 
 ### Azure Application Insights Operations
@@ -864,12 +877,13 @@ azmcp azurebackup vault create --subscription <subscription> \
                                [--sku <sku>] \
                                [--storage-type <storage-type>]
 
-# Retrieves backup vault information. When --vault and --resource-group are specified, returns detailed information about a single vault including type, location, SKU, and storage redundancy. When omitted, lists all backup vaults (RSV and Backup vaults) in the subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or --resource-group to narrow the listing results.
+# Retrieves backup vault information. When --vault and --resource-group are specified, returns detailed information about a single vault including type, location, SKU, and storage redundancy. When omitted, lists all backup vaults (RSV and Backup vaults) in the subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or --resource-group to narrow the listing results. Use --expand to include extended posture fields: 'security' (encryption key URI and cross-region restore state; DPP vaults additionally return encryption state — RSV vaults omit it because the vault GET API does not return an explicit state field), 'mua' (Multi-User Authorization / Resource Guard link), or 'all'.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup vault get --subscription <subscription> \
                             [--resource-group <resource-group>] \
                             [--vault <vault>] \
-                            [--vault-type <vault-type>]
+                            [--vault-type <vault-type>] \
+                            [--expand <expand>]
 
 # Updates vault-level settings including soft delete, immutability, and managed identity.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -883,6 +897,58 @@ azmcp azurebackup vault update --subscription <subscription> \
                                [--identity-type <identity-type>] \
                                [--tags <tags>] \
                                [--redundancy <redundancy>]
+```
+
+#### Private Endpoint (RSV only)
+
+```bash
+# Creates a Private Endpoint (v2 experience) for a Recovery Services vault in a customer VNet subnet.
+# Provisions the Microsoft.Network/privateEndpoints resource and, when --auto-approve is true, approves
+# the resulting Private Endpoint Connection on the vault. Backup vaults (DPP) are not supported. The
+# vault must have no protected items. --group-id must be 'AzureBackup' (primary region) or
+# 'AzureBackup_secondary' (paired region / CRR).
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault privateendpoint create --subscription <subscription> \
+                                               --resource-group <resource-group> \
+                                               --vault <vault> \
+                                               --private-endpoint-name <private-endpoint-name> \
+                                               --vnet-subnet-id <vnet-subnet-id> \
+                                               [--vault-type <vault-type>] \
+                                               [--group-id <AzureBackup|AzureBackup_secondary>] \
+                                               [--location <location>] \
+                                               [--auto-approve <true|false>]
+
+# Retrieves Private Endpoint Connections on a Recovery Services vault. When --private-endpoint-name is
+# specified, returns that single connection; when omitted, lists every PEC on the vault. Backup vaults
+# (DPP) are not supported.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault privateendpoint get --subscription <subscription> \
+                                            --resource-group <resource-group> \
+                                            --vault <vault> \
+                                            [--vault-type <vault-type>] \
+                                            [--private-endpoint-name <private-endpoint-name>]
+
+# Deletes a Private Endpoint Connection from a Recovery Services vault. This removes the vault-side
+# connection object only; the Microsoft.Network/privateEndpoints resource must be deleted separately.
+# Backup vaults (DPP) are not supported.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault privateendpoint delete --subscription <subscription> \
+                                               --resource-group <resource-group> \
+                                               --vault <vault> \
+                                               --private-endpoint-name <private-endpoint-name> \
+                                               [--vault-type <vault-type>]
+
+# Approves or rejects a pending Private Endpoint Connection on a Recovery Services vault. If the
+# connection is already in the target state, returns it unchanged. Approve requires
+# Microsoft.RecoveryServices/vaults/privateEndpointConnectionsApproval/action on the vault.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault privateendpoint approve-reject --subscription <subscription> \
+                                                       --resource-group <resource-group> \
+                                                       --vault <vault> \
+                                                       --private-endpoint-name <private-endpoint-name> \
+                                                       --action <approve|reject> \
+                                                       [--vault-type <vault-type>] \
+                                                       [--description <description>]
 ```
 
 #### Policy
@@ -1099,14 +1165,24 @@ azmcp azurebackup disasterrecovery enable-crr --subscription <subscription> \
 #### Security
 
 ```bash
-# Configures Multi-User Authorization (MUA) on a vault by linking or unlinking a Resource Guard.
-# Provide --resource-guard-id to enable MUA. Omit to disable MUA (protected operation).
+# Enables Multi-User Authorization (MUA) on a vault by linking a Resource Guard.
+# --resource-guard-id is required. To disable MUA, use 'security disable-mua'.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp azurebackup security configure-mua --subscription <subscription> \
-                                         --resource-group <resource-group> \
-                                         --vault <vault> \
-                                         [--vault-type <vault-type>] \
-                                         [--resource-guard-id <resource-guard-id>]
+azmcp azurebackup security enable-mua --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --vault <vault> \
+                                      --resource-guard-id <resource-guard-id> \
+                                      [--vault-type <vault-type>]
+```
+
+```bash
+# Disables Multi-User Authorization (MUA) on a vault by unlinking the Resource Guard.
+# Critical operations will no longer require approval after this call.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup security disable-mua --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --vault <vault> \
+                                       [--vault-type <vault-type>]
 ```
 
 ```bash
@@ -1122,6 +1198,38 @@ azmcp azurebackup security configure-encryption --subscription <subscription> \
                                                 [--vault-type <vault-type>] \
                                                 [--key-version <key-version>] \
                                                 [--user-assigned-identity-id <user-assigned-identity-id>]
+```
+
+#### Resource Guard
+
+```bash
+# Creates a Resource Guard for Multi-User Authorization (MUA). Once a vault is linked to this
+# Resource Guard, protected operations (disable soft delete, remove immutability, stop protection,
+# disable MUA) will require approval from a security admin with Backup MUA Admin role on the guard.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup resourceguard create --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-guard <resource-guard> \
+                                       --location <location> \
+                                       [--excluded-operations <excluded-operations>] \
+                                       [--tags <tags>]
+```
+
+```bash
+# Gets a Resource Guard by name, or lists Resource Guards in a resource group or subscription.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup resourceguard get --subscription <subscription> \
+                                    [--resource-group <resource-group>] \
+                                    [--resource-guard <resource-guard>]
+```
+
+```bash
+# Deletes a Resource Guard. Any vaults still linked to this guard will no longer be protected
+# by MUA after deletion.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup resourceguard delete --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-guard <resource-guard>
 ```
 
 ### Azure CLI Operations
@@ -1194,7 +1302,7 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
 
 **Options:**
 -   `--endpoint`: Azure Communication Services endpoint URL (required)
--   `--sender`: Email address to send from, must be from a verified domain (required)
+-   `--from`: Email address to send from, must be from a verified domain (required)
 -   `--to`: Recipient email address(es), comma-separated for multiple recipients (required)
 -   `--subject`: Email subject line (required)
 -   `--message`: Email content body (required)
@@ -2684,12 +2792,12 @@ azmcp foundryextensions openai models-list \
     --resource-group <resource-group> \
     --resource-name <resource-name>
 
-# Get details of Microsoft Foundry (AI) resources in a subscription or resource group
+# List or get Microsoft Foundry resource details (endpoint, SKU, location). --resource-group is required when --resource-name is specified.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundryextensions resource get \
     --subscription <subscription> \
     [--resource-group <resource-group>] \
-    [--resource-name <resource-name>]
+    [--resource-name <resource-name>]   # --resource-group required when --resource-name is provided
 ```
 
 ### Azure Function App Operations
@@ -2942,6 +3050,20 @@ azmcp loadtesting testrun createorupdate --subscription <subscription> \
 azmcp grafana list --subscription <subscription> \
                   [--resource-group <resource-group>]
 ```
+### Azure IoT Hub Operations
+
+#### Device Registry Operations
+
+```bash
+# List devices in an IoT Hub
+# Returns one page of device identities. --max-count sets the page size (default 100, maximum 100); values less than 1 or greater than 100 are rejected.
+# When the hub has more devices than were returned, the response sets truncated=true with an explanatory message.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub device list --subscription <subscription> \
+                         --resource-group <resource-group> \
+                         --hub-name <iot-hub-name> \
+                         [--max-count <max-count>]
+```
 
 ### Azure Marketplace Operations
 
@@ -2980,9 +3102,10 @@ azmcp get azure bestpractices get --resource <resource> --action <action>
 #   general        - General Azure best practices
 #   azurefunctions - Azure Functions specific best practices
 #   static-web-app - Azure Static Web Apps specific best practices
+#   coding-agent   - Coding Agent configuration best practices
 #
 # Action options:
-#   all             - Best practices for both code generation and deployment (only for static-web-app)
+#   all             - Best practices for both code generation and deployment (only for static-web-app and coding-agent)
 #   code-generation - Best practices for code generation (for general and azurefunctions)
 #   deployment      - Best practices for deployment (for general and azurefunctions)
 
@@ -3174,62 +3297,38 @@ azmcp monitor metrics query --subscription <subscription> \
 #### Web Tests (Availability Tests)
 
 ```bash
-# Create a new web test in Azure Monitor
-azmcp monitor webtests create --subscription <subscription> \
-                              --resource-group <resource-group> \
-                              --webtest-resource <webtest-resource-name> \
-                              --appinsights-component <component-name> \
-                              --location <location> \
-                              --webtest-locations <locations> \
-                              --request-url <url> \
-                              [--webtest <display-name>] \
-                              [--description <description>] \
-                              [--enabled <true|false>] \
-                              [--expected-status-code <code>] \
-                              [--follow-redirects <true|false>] \
-                              [--frequency <seconds>] \
-                              [--headers <key=value,key2=value2>] \
-                              [--http-verb <get|post|..>] \
-                              [--ignore-status-code <true|false>] \
-                              [--parse-requests <true|false>] \
-                              [--request-body <body>] \
-                              [--retry-enabled <true|false>] \
-                              [--ssl-check <true|false>] \
-                              [--ssl-lifetime-check <days>] \
-                              [--timeout <seconds>]
+# Create or update a web test in Azure Monitor
+# When creating a new web test, --appinsights-component, --location, --webtest-locations, and --request-url are required.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor webtests createorupdate --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --webtest-resource <webtest-resource-name> \
+                                      [--appinsights-component <component-resource-id>] \
+                                      [--location <location>] \
+                                      [--webtest-locations <locations>] \
+                                      [--request-url <url>] \
+                                      [--webtest <display-name>] \
+                                      [--description <description>] \
+                                      [--enabled <true|false>] \
+                                      [--expected-status-code <code>] \
+                                      [--follow-redirects <true|false>] \
+                                      [--frequency <seconds>] \
+                                      [--headers <key=value,key2=value2>] \
+                                      [--http-verb <get|post|..>] \
+                                      [--ignore-status-code <true|false>] \
+                                      [--parse-requests <true|false>] \
+                                      [--request-body <body>] \
+                                      [--retry-enabled <true|false>] \
+                                      [--ssl-check <true|false>] \
+                                      [--ssl-lifetime-check <days>] \
+                                      [--timeout <seconds>]
 
-# Get details for a specific web test
+# Get details for a specific web test, or list web tests when --webtest-resource is omitted
+# When --webtest-resource is provided, --resource-group is required.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests get --subscription <subscription> \
-                          --resource-group <resource-group> \
-                          --webtest-resource <webtest-resource-name>
-
-# List all web tests in a subscription or optionally, within a resource group
-azmcp monitor webtests list --subscription <subscription> [--resource-group <resource-group>]
-
-# Update an existing web test in Azure Monitor
-azmcp monitor webtests update --subscription <subscription> \
-                              --resource-group <resource-group> \
-                              --webtest-resource <webtest-resource-name> \
-                              [--appinsights-component <component-name>] \
-                              [--location <location>] \
-                              [--webtest-locations <locations>] \
-                              [--request-url <url>] \
-                              [--webtest <display-name>] \
-                              [--description <description>] \
-                              [--enabled <true|false>] \
-                              [--expected-status-code <code>] \
-                              [--follow-redirects <true|false>] \
-                              [--frequency <seconds>] \
-                              [--headers <key=value,key2=value2>] \
-                              [--http-verb <get|post|..>] \
-                              [--ignore-status-code <true|false>] \
-                              [--parse-requests <true|false>] \
-                              [--request-body <body>] \
-                              [--retry-enabled <true|false>] \
-                              [--ssl-check <true|false>] \
-                              [--ssl-lifetime-check <days>] \
-                              [--timeout <seconds>]
+                          [--resource-group <resource-group>] \
+                          [--webtest-resource <webtest-resource-name>]
 
 ```
 
@@ -3325,6 +3424,28 @@ azmcp managedlustre fs subnetsize validate --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre fs sku get --subscription <subscription> \
                                             --location <location>
+
+# Create an expansion job to increase the storage capacity of an Azure Managed Lustre filesystem
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs expansion create --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --filesystem-name <filesystem-name> \
+                                        --new-size <new-size-tib> \
+                                        [--expansion-job-name <expansion-job-name>]
+
+# Get expansion job details for an Azure Managed Lustre filesystem. Returns a specific job if expansion-job-name is provided, otherwise lists all expansion jobs.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs expansion get --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --filesystem-name <filesystem-name> \
+                                     [--expansion-job-name <expansion-job-name>]
+
+# Delete an expansion job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs expansion delete --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --filesystem-name <filesystem-name> \
+                                        --expansion-job-name <expansion-job-name>
 
 # Create an autoexport job for an Azure Managed Lustre filesystem
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -3668,20 +3789,17 @@ azmcp redis list --subscription <subscription>
 ```bash
 # Get a resilience goal template, or list all goal templates in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience goal template get --subscription <subscription> \
-                                   --service-group <service-group> \
+azmcp resilience goal template get --service-group <service-group> \
                                    [--name <name>]
 
 # Get a resilience goal assignment, or list all goal assignments in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience goal assignment get --subscription <subscription> \
-                                     --service-group <service-group> \
+azmcp resilience goal assignment get --service-group <service-group> \
                                      [--name <name>]
 
 # Get a resource (member) of a goal assignment, or list all resources of the assignment (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience goal resource get --subscription <subscription> \
-                                   --service-group <service-group> \
+azmcp resilience goal resource get --service-group <service-group> \
                                    --goal-assignment <goal-assignment> \
                                    [--name <name>]
 
@@ -3691,6 +3809,13 @@ azmcp resilience usageplan get --subscription <subscription> \
                                [--resource-group <resource-group>] \
                                [--name <name>]
 
+# Create a resilience usage plan in a resource group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan create --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --usage-plan <usage-plan> \
+                                  --plan-type <plan-type>
+
 # Get a usage plan enrollment, or list all enrollments of a usage plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience usageplan enrollment get --subscription <subscription> \
@@ -3698,33 +3823,140 @@ azmcp resilience usageplan enrollment get --subscription <subscription> \
                                           --usage-plan <usage-plan> \
                                           [--name <name>]
 
+# Create or update an enrollment under a resilience usage plan, associating it with a service group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan enrollment create --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --usage-plan <usage-plan> \
+                                             --enrollment <enrollment> \
+                                             --service-group <service-group>
+
 # Get a resilience recovery plan, or list all recovery plans in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recovery plan get --subscription <subscription> \
-                                   --service-group <service-group> \
+azmcp resilience recoveryplan get --service-group <service-group> \
                                    [--name <name>]
+
+# Create or update a Zonal resilience recovery plan's identity, recovery group structure, and recovery group pre/post actions. Use recoveryplan resource update instead for recovery resource membership and protection settings. Ask the customer to select an identity type; do not assume SystemAssigned or another default. Identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description must be 5 to 50 characters and is required on create; it is preserved when omitted on update. Additional groups and group actions are preserved when omitted and replaced when supplied.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan create --service-group <service-group> \
+                                      --recovery-plan <recovery-plan> \
+                                      --plan-type Zonal \
+                                      [--plan-description <plan-description>] \
+                                      --identity-type <SystemAssigned|UserAssigned|SystemAndUserAssigned> \
+                                      [--user-assigned-identity <user-assigned-identity-resource-id>] \
+                                      [--default-group-description <default-group-description>] \
+                                      [--default-group-pre-actions '<json-array>'] \
+                                      [--default-group-post-actions '<json-array>'] \
+                                      [--additional-groups '<json-array>']
+
+# Provide --user-assigned-identity when --identity-type is UserAssigned or SystemAndUserAssigned.
+# Directly replacing one user-assigned identity with another is not currently supported.
+# Additional group orderId values must be unique and sequential starting at 1. groupUniqueId is optional.
+# Additional group objects may contain preActions and postActions arrays. Default group actions use the dedicated options above.
+# Before adding an action, collect and explain each value to the customer:
+# 1. type: ManualAction pauses for a person to complete a step; CustomRunbook runs an Azure Automation runbook.
+# 2. name: a 3 to 24 character customer-facing action name containing only letters, numbers, or hyphens.
+# 3. description: optional action instructions up to 100 characters; an empty value is allowed.
+# 4. timeoutInMinutes: a positive whole number defining how long the action may run.
+# 5. actionResourceId: required only for CustomRunbook; use the full Microsoft.Automation/automationAccounts/runbooks resource ID.
+# 6. parameters: optional for CustomRunbook; use a JSON object whose values are strings.
+# ManualAction example: [{"type":"ManualAction","name":"Confirm-dependencies","description":"Verify dependencies are ready","timeoutInMinutes":30}]
+# CustomRunbook example: [{"type":"CustomRunbook","name":"Start-dependencies","description":"Start application dependencies","timeoutInMinutes":30,"actionResourceId":"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Automation/automationAccounts/{account}/runbooks/{runbook}","parameters":{"environment":"production"}}]
+# Omit an action option or property to preserve existing actions. Specify [] to clear that action list.
+
+# Delete a resilience recovery plan. Returns deleted=false when the plan does not exist.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan delete --service-group <service-group> \
+                                      --recovery-plan <recovery-plan>
+
+# Validate which recovery-plan resources are qualified for failover from the specified source locations.
+# Optionally limit validation to selected full recovery-resource IDs and provide execution consent.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan validateforfailover --service-group <service-group> \
+                                                   --recovery-plan <recovery-plan> \
+                                                   --source-locations <source-location> [<source-location> ...] \
+                                                   [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
+                                                   [--user-consent <Unspecified|Allowed>]
+
+# Configure recovery-plan resource inclusions, exclusions, removals, recovery groups, identities, and protection settings. At least one JSON array is required.
+# First inclusion requires matching protection type and settings. CustomRunbook requires failover and reprotect runbook resource IDs.
+# AzureSiteRecovery is supported for virtual machines and requires disk reprotect details. Existing configuration is preserved on sparse updates.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan resource update --service-group <service-group> \
+                                                --recovery-plan <recovery-plan> \
+                                                [--resources-to-update '<json-array>'] \
+                                                [--resources-to-remove '<json-array>']
+
+# Discover and assess whether a recovery plan and its protected resources are ready for recovery operations. Waits for the readiness job to finish and returns its status, errors, failed tasks, and failed resources.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan checkreadiness --service-group <service-group> \
+                                              --recovery-plan <recovery-plan>
 
 # Get a resource (member) of a recovery plan, or list all resources of the plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recovery plan resource get --subscription <subscription> \
-                                            --service-group <service-group> \
+azmcp resilience recoveryplan resource get --service-group <service-group> \
                                             --recovery-plan <recovery-plan> \
                                             [--name <name>]
 
 # Get a recovery job, or list all recovery jobs of a recovery plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recovery job get --subscription <subscription> \
-                                  --service-group <service-group> \
-                                  --recovery-plan <recovery-plan> \
-                                  [--name <name>]
+azmcp resilience recoveryjob get --service-group <service-group> \
+                                 --recovery-plan <recovery-plan> \
+                                 [--name <name>]
 
 # Get a resource (target) of a recovery job, or list all resources of the job (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recovery job resource get --subscription <subscription> \
-                                           --service-group <service-group> \
-                                           --recovery-plan <recovery-plan> \
-                                           --recovery-job <recovery-job> \
-                                           [--name <name>]
+azmcp resilience recoveryjob resource get --service-group <service-group> \
+                                          --recovery-plan <recovery-plan> \
+                                          --recovery-job <recovery-job> \
+                                          [--name <name>]
+
+# Create or update a resilience drill in a service group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill create --service-group <service-group> \
+                              --drill <drill> \
+                              --subscription <subscription> \
+                              --region <region> \
+                              --drill-type <drill-type> \
+                              --rbac-setup-mode <rbac-setup-mode> \
+                              [--resource-group <resource-group>] \
+                              [--recovery-plan <recovery-plan>]
+
+# Get a resilience drill, or list all drills in a service group (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill get --service-group <service-group> \
+                           [--name <name>]
+
+# Update mutable properties of a resilience drill
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill update --service-group <service-group> \
+                              --drill <drill> \
+                              [--subscription <subscription> --region <region>] \
+                              [--rbac-setup-mode <AutomatedCustomRole|AutomatedBuiltinRoles|Manual>] \
+                              [--recovery-plan <recovery-plan>]
+# Delete a resilience drill from a service group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill delete --service-group <service-group> \
+                              --drill <drill>
+
+# Get a resource (target) of a drill, or list all resources of the drill (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill resource get --service-group <service-group> \
+                                    --drill <drill> \
+                                    [--name <name>]
+
+# Get a run of a drill, or list all runs of the drill (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run get --service-group <service-group> \
+                               --drill <drill> \
+                               [--name <name>]
+
+# Get a resource (target) of a drill run, or list all resources of the run (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run resource get --service-group <service-group> \
+                                        --drill <drill> \
+                                        --drill-run <drill-run> \
+                                        [--name <name>]
 ```
 
 ### Azure Resource Group Operations
@@ -3959,12 +4191,11 @@ azmcp sreagent agents create --subscription <subscription> \
                              --resource-group <resource-group> \
                              --agent <agent-name>
 
-# Delete an SRE Agent resource (requires --confirm true)
+# Delete an SRE Agent resource
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent agents delete --subscription <subscription> \
                              --resource-group <resource-group> \
-                             --agent <agent-name> \
-                             --confirm true
+                             --agent <agent-name>
 ```
 
 #### Agent Tools
@@ -4007,13 +4238,12 @@ azmcp sreagent skills create --subscription <subscription> \
                              --name <skill-name> \
                              --content <skill-content>
 
-# Delete a skill from an SRE Agent resource (requires --confirm true)
+# Delete a skill from an SRE Agent resource
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent skills delete --subscription <subscription> \
                              --resource-group <resource-group> \
                              --agent <agent-name> \
-                             --name <skill-name> \
-                             --confirm true
+                             --name <skill-name>
 ```
 
 #### Connectors
@@ -4055,13 +4285,12 @@ azmcp sreagent connectors test --subscription <subscription> \
                                --agent <agent-name> \
                                --name <connector-name>
 
-# Delete a connector (requires --confirm true)
+# Delete a connector
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent connectors delete --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --agent <agent-name> \
-                                 --name <connector-name> \
-                                 --confirm true
+                                 --name <connector-name>
 ```
 
 #### Hooks
@@ -4080,13 +4309,12 @@ azmcp sreagent hooks get --subscription <subscription> \
                          --agent <agent-name> \
                          --name <hook-name>
 
-# Delete a hook (requires --confirm true)
+# Delete a hook
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent hooks delete --subscription <subscription> \
                             --resource-group <resource-group> \
                             --agent <agent-name> \
-                            --name <hook-name> \
-                            --confirm true
+                            --name <hook-name>
 
 # List hooks activated for a thread
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4141,13 +4369,12 @@ azmcp sreagent threads send-message --subscription <subscription> \
                                     --thread <thread-id> \
                                     --message <message>
 
-# Delete a thread (requires --confirm true)
+# Delete a thread
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent threads delete --subscription <subscription> \
                               --resource-group <resource-group> \
                               --agent <agent-name> \
-                              --thread <thread-id> \
-                              --confirm true
+                              --thread <thread-id>
 
 # Run an investigation prompt
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4189,13 +4416,13 @@ azmcp sreagent scheduledtasks get --subscription <subscription> \
                                   --agent <agent-name> \
                                   --task <task-id>
 
-# Pause / resume / delete (delete requires --confirm true)
+# Pause / resume / delete
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent scheduledtasks pause  --subscription <subscription> --resource-group <rg> --agent <agent> --task <task-id>
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent scheduledtasks resume --subscription <subscription> --resource-group <rg> --agent <agent> --task <task-id>
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent scheduledtasks delete --subscription <subscription> --resource-group <rg> --agent <agent> --task <task-id> --confirm true
+azmcp sreagent scheduledtasks delete --subscription <subscription> --resource-group <rg> --agent <agent> --task <task-id>
 ```
 
 #### Incidents
@@ -4273,7 +4500,7 @@ azmcp sreagent docs memories search --subscription <s> --resource-group <rg> --a
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent docs memories add    --subscription <s> --resource-group <rg> --agent <a> --name <doc> --content <body>
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent docs memories delete --subscription <s> --resource-group <rg> --agent <a> --name <doc> --confirm true
+azmcp sreagent docs memories delete --subscription <s> --resource-group <rg> --agent <a> --name <doc>
 
 # Trigger a full reindex of the knowledge base
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4290,7 +4517,7 @@ azmcp sreagent commonprompts get    --subscription <s> --resource-group <rg> --a
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent commonprompts create --subscription <s> --resource-group <rg> --agent <a> --name <prompt-name> --content <body>
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent commonprompts delete --subscription <s> --resource-group <rg> --agent <a> --name <prompt-name> --confirm true
+azmcp sreagent commonprompts delete --subscription <s> --resource-group <rg> --agent <a> --name <prompt-name>
 ```
 
 ### Azure Storage Operations
@@ -4304,10 +4531,26 @@ azmcp storage account create --subscription <subscription> \
                              --account <unique-account-name> \
                              --resource-group <resource-group> \
                              --location <location> \
-                             --sku <sku> \
-                             --access-tier <access-tier> \
-                             --enable-hierarchical-namespace false
+                             [--sku <sku>] \
+                             [--access-tier <access-tier>] \
+                             [--enable-hierarchical-namespace <true|false>] \
+                             [--tenant <tenant>]
+```
 
+#### Storage Account Create Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID or display name. |
+| `--account` | Yes | Globally unique storage account name using 3-24 lowercase letters and numbers. |
+| `--resource-group` | Yes | Resource group name. |
+| `--location` | Yes | Azure region, such as `eastus` or `westus2`. |
+| `--sku` | No | Storage account SKU for StorageV2 accounts. Valid values: `Standard_LRS`, `Standard_GRS`, `Standard_RAGRS`, `Standard_ZRS`, `Premium_LRS`, `Premium_ZRS`, `Standard_GZRS`, `Standard_RAGZRS`. Defaults to `Standard_LRS`. |
+| `--access-tier` | No | Default access tier for blob storage. Valid values: `Hot`, `Cool`, `Cold`, `Premium`. Defaults to `Hot`. |
+| `--enable-hierarchical-namespace` | No | Whether to enable the Azure Data Lake Storage Gen2 hierarchical namespace. Defaults to `false`. |
+| `--tenant` | No | Azure tenant ID or name. |
+
+```bash
 # Get detailed properties of Storage accounts
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage account get --subscription <subscription> \

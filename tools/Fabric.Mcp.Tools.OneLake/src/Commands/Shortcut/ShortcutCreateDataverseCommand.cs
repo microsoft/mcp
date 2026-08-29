@@ -12,7 +12,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 
 [CommandMetadata(
     Id = "a1b2c3d4-2001-4000-8000-000000000016",
-    Name = "create_shortcut_dataverse",
+    Name = "create-shortcut-dataverse",
     Title = "Create OneLake Shortcut (Dataverse Target)",
     Description = """
         Create a shortcut pointing to a Dataverse environment. Requires the

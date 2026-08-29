@@ -3,17 +3,16 @@
 
 using System.Net;
 using Azure.Mcp.Core.Areas.Group.Commands;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Microsoft.Mcp.Core.Models.Resource;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Group;
 
-public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<ResourceListCommand, IResourceGroupService>
+public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<ResourceListCommand, IAzureService>
 {
     [Fact]
     public async Task ExecuteAsync_WithValidParameters_ReturnsResources()
@@ -31,7 +30,6 @@ public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<Resourc
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResources.ToAsyncEnumerable());
 
@@ -54,7 +52,6 @@ public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<Resourc
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -74,7 +71,6 @@ public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<Resourc
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Is(tenantId),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResources.ToAsyncEnumerable());
 
@@ -91,7 +87,6 @@ public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<Resourc
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Is(tenantId),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -105,7 +100,6 @@ public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<Resourc
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(AsyncEnumerable.Empty<GenericResourceInfo>());
 
@@ -128,7 +122,6 @@ public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<Resourc
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Throws(new Exception(expectedError));
 

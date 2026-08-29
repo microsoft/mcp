@@ -9,13 +9,13 @@ using Fabric.Mcp.Tools.Docs.Models;
 namespace Fabric.Mcp.Tools.Docs.Commands;
 
 
-[JsonSerializable(typeof(FabricWorkloadPublicApi))]
-[JsonSerializable(typeof(ListWorkloadsCommand.ItemListCommandResult))]
+[JsonSerializable(typeof(FabricPublicApi))]
+[JsonSerializable(typeof(ListItemTypesCommand.ItemTypeListCommandResult))]
 [JsonSerializable(typeof(GetExamplesCommand.ExampleFileResult))]
 [JsonSerializable(typeof(GetBestPracticesCommand.GetBestPracticesCommandResult))]
-[JsonSerializable(typeof(GetWorkloadDefinitionCommand.GetWorkloadDefinitionCommandResult))]
+[JsonSerializable(typeof(GetItemDefinitionCommand.GetItemDefinitionCommandResult))]
 [JsonSerializable(typeof(GetPlatformApisCommand.GetPlatformApisCommandResult))]
-[JsonSerializable(typeof(GetWorkloadApisCommand.GetWorkloadApisCommandResult))]
+[JsonSerializable(typeof(GetItemApisCommand.GetItemApisCommandResult))]
 public partial class FabricJsonContext : JsonSerializerContext
 {
 }

@@ -12,7 +12,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 
 [CommandMetadata(
     Id = "a1b2c3d4-2001-4000-8000-000000000001",
-    Name = "list_shortcuts",
+    Name = "list-shortcuts",
     Title = "List OneLake Shortcuts",
     Description = """
         List shortcuts defined within an item, recursing through subfolders.

@@ -14,6 +14,7 @@ using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
+using Microsoft.Mcp.Tests;
 using NSubstitute;
 using Xunit;
 
@@ -138,7 +139,9 @@ public class ToolsListCommandTests
         var result = DeserializeCommandsResults(response);
 
         Assert.NotNull(result.Commands);
-        Assert.DoesNotContain(result.Commands, cmd => cmd.Name == "list" && cmd.Command.Contains("tool"));
+        // CommandInfo.Command is the full command path, e.g., "tool list" or "tool get"
+        // Make sure we don't have any hidden commands.
+        Assert.DoesNotContain(result.Commands, cmd => cmd.Name == "list" && cmd.Command == "tool list");
         Assert.Contains(result.Commands, cmd => !string.IsNullOrEmpty(cmd.Name));
     }
 
@@ -435,17 +438,17 @@ public class ToolsListCommandTests
         var jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
 
         // Verify that only the "names" property exists
-        Assert.True(jsonElement.TryGetProperty("names", out _), "Response should contain 'names' property");
+        jsonElement.AssertProperty("names");
 
         // Count the number of properties - should only be 1 (names)
         var propertyCount = jsonElement.EnumerateObject().Count();
         Assert.Equal(1, propertyCount);
 
         // Explicitly verify that description and command fields are not present
-        Assert.False(jsonElement.TryGetProperty("description", out _), "Response should not contain 'description' property when using --name-only option");
-        Assert.False(jsonElement.TryGetProperty("command", out _), "Response should not contain 'command' property when using --name-only option");
-        Assert.False(jsonElement.TryGetProperty("options", out _), "Response should not contain 'options' property when using --name-only option");
-        Assert.False(jsonElement.TryGetProperty("metadata", out _), "Response should not contain 'metadata' property when using --name-only option");
+        jsonElement.AssertPropertyDoesNotExist("description");
+        jsonElement.AssertPropertyDoesNotExist("command");
+        jsonElement.AssertPropertyDoesNotExist("options");
+        jsonElement.AssertPropertyDoesNotExist("metadata");
 
         // Verify that all names are properly formatted tokenized names
         foreach (var name in result.Names)
@@ -662,7 +665,7 @@ public class ToolsListCommandTests
         var jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
 
         // Verify that only the "names" property exists
-        Assert.True(jsonElement.TryGetProperty("names", out _), "Response should contain 'names' property");
+        jsonElement.AssertProperty("names");
 
         // Count the number of properties - should only be 1 (names)
         var propertyCount = jsonElement.EnumerateObject().Count();

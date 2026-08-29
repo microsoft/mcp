@@ -8,6 +8,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Settings;
 
@@ -16,7 +17,7 @@ public class ImmutabilityPolicyModifyCommandTests : CommandUnitTestsBase<Immutab
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("modify_immutability_policy", Command.Name);
+        Assert.Equal("modify-immutability-policy", Command.Name);
         Assert.Equal("Modify OneLake Immutability Policy", Command.Title);
         Assert.Contains("Modify the workspace-level OneLake immutability policy", Command.Description);
         Assert.False(Command.Metadata.ReadOnly);
@@ -27,7 +28,7 @@ public class ImmutabilityPolicyModifyCommandTests : CommandUnitTestsBase<Immutab
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("modify_immutability_policy", CommandDefinition.Name);
+        Assert.Equal("modify-immutability-policy", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);
     }

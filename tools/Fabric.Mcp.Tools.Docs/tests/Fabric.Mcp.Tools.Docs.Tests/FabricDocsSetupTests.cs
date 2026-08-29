@@ -4,6 +4,8 @@
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.Docs.Tests;
 
@@ -49,8 +51,8 @@ public class FabricDocsSetupTests
         Assert.NotNull(docsGroup);
 
         // Verify all 6 commands are registered with noun-based naming
-        Assert.Contains("workloads", docsGroup.Commands.Keys);
-        Assert.Contains("workload-api-spec", docsGroup.Commands.Keys);
+        Assert.Contains("list-item-types", docsGroup.Commands.Keys);
+        Assert.Contains("item-api-spec", docsGroup.Commands.Keys);
         Assert.Contains("platform-api-spec", docsGroup.Commands.Keys);
         Assert.Contains("item-definitions", docsGroup.Commands.Keys);
         Assert.Contains("best-practices", docsGroup.Commands.Keys);

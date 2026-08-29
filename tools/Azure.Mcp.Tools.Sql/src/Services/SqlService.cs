@@ -5,22 +5,18 @@ using System.Net;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.ResourceManager.Sql;
 using Azure.ResourceManager.Sql.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 using DatabaseReadScaleOption = Azure.Mcp.Tools.Sql.Options.Database.DatabaseReadScale;
 using SdkDatabaseReadScale = Azure.ResourceManager.Sql.Models.DatabaseReadScale;
 
 namespace Azure.Mcp.Tools.Sql.Services;
 
-public class SqlService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<SqlService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), ISqlService
+public class SqlService(IAzureService azureService, ILogger<SqlService> logger)
+    : BaseAzureResourceService(azureService), ISqlService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ILogger<SqlService> _logger = logger;
 
     /// <summary>
@@ -29,17 +25,15 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// behavior for ID-based callers.
     /// </summary>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>The resolved subscription ID</returns>
     private async Task<string> ResolveSubscriptionIdAsync(
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
-        return _subscriptionService.IsSubscriptionId(subscription)
+        return AzureService.IsSubscriptionId(subscription)
             ? subscription
-            : await _subscriptionService.GetSubscriptionIdByName(subscription, null, retryPolicy, cancellationToken);
+            : await AzureService.GetSubscriptionIdByName(subscription, cancellationToken: cancellationToken);
     }
 
     /// <summary>
@@ -48,17 +42,15 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="serverName">The name of the SQL server</param>
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>The SQL Server resource</returns>
     private async Task<SqlServerResource> GetSqlServerResourceAsync(
         string serverName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, cancellationToken: cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
         return await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName, cancellationToken: cancellationToken);
@@ -71,7 +63,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="databaseName">The name of the database to retrieve</param>
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>The SQL database if found, otherwise throws KeyNotFoundException</returns>
     /// <exception cref="KeyNotFoundException">Thrown when the specified database is not found</exception>
@@ -81,7 +72,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string databaseName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -92,8 +82,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
         try
         {
-            var subscriptionId = await ResolveSubscriptionIdAsync(subscription, retryPolicy, cancellationToken);
-            var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, retryPolicy, cancellationToken);
+            var subscriptionId = await ResolveSubscriptionIdAsync(subscription, cancellationToken);
+            var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, cancellationToken);
             var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
 
             return ConvertToSqlDatabaseModel(databaseResource.Value);
@@ -119,7 +109,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="elasticPoolName">Optional elastic pool name to assign the database to</param>
     /// <param name="zoneRedundant">Optional zone redundancy setting</param>
     /// <param name="readScale">Optional read scale setting</param>
-    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>The created SQL database information</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
@@ -136,7 +125,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string? elasticPoolName = null,
         bool? zoneRedundant = null,
         DatabaseReadScaleOption? readScale = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -145,7 +133,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(subscription), subscription),
             (nameof(databaseName), databaseName));
 
-        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, cancellationToken);
         var databaseData = new SqlDatabaseData(sqlServerResource.Data.Location);
 
         // Configure SKU if provided
@@ -223,7 +211,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="elasticPoolName">Optional elastic pool name to assign the database to</param>
     /// <param name="zoneRedundant">Optional zone redundancy setting</param>
     /// <param name="readScale">Optional read scale setting</param>
-    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>The updated SQL database information</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
@@ -240,7 +227,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string? elasticPoolName = null,
         bool? zoneRedundant = null,
         DatabaseReadScaleOption? readScale = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -249,7 +235,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(subscription), subscription),
             (nameof(databaseName), databaseName));
 
-        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, cancellationToken);
         var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
         var databaseData = databaseResource.Value.Data;
 
@@ -327,7 +313,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="newDatabaseName">The desired new database name</param>
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>The renamed SQL database information</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
@@ -337,7 +322,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string newDatabaseName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -347,9 +331,9 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(subscription), subscription),
             (nameof(newDatabaseName), newDatabaseName));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, cancellationToken: cancellationToken);
         var subscriptionId = subscriptionResource.Data.SubscriptionId;
-        var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(cancellationToken: cancellationToken);
         var currentDatabaseId = SqlDatabaseResource.CreateResourceIdentifier(
             subscriptionId,
             resourceGroup,
@@ -380,7 +364,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="serverName">The name of the SQL server to list databases from</param>
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>A list of SQL databases on the specified server</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
@@ -388,7 +371,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string serverName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -396,8 +378,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var subscriptionId = await ResolveSubscriptionIdAsync(subscription, retryPolicy, cancellationToken);
-        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, retryPolicy, cancellationToken);
+        var subscriptionId = await ResolveSubscriptionIdAsync(subscription, cancellationToken);
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, cancellationToken);
         var databases = new List<SqlDatabase>();
 
         await foreach (var database in sqlServerResource.GetSqlDatabases().GetAllAsync(cancellationToken: cancellationToken))
@@ -419,7 +401,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="serverName">The name of the SQL server to get administrators for</param>
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>A list of Entra ID administrators configured for the SQL server</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
@@ -427,7 +408,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string serverName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -435,7 +415,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, cancellationToken);
         var administrators = new List<SqlServerEntraAdministrator>();
 
         await foreach (var admin in sqlServerResource.GetSqlServerAzureADAdministrators().GetAllAsync(cancellationToken))
@@ -466,7 +446,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="serverName">The name of the SQL server to get elastic pools from</param>
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>A list of elastic pools configured on the SQL server</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
@@ -474,7 +453,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string serverName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -482,8 +460,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var subscriptionId = await ResolveSubscriptionIdAsync(subscription, retryPolicy, cancellationToken);
-        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, retryPolicy, cancellationToken);
+        var subscriptionId = await ResolveSubscriptionIdAsync(subscription, cancellationToken);
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscriptionId, cancellationToken);
         var elasticPools = new List<SqlElasticPool>();
 
         await foreach (var elasticPool in sqlServerResource.GetElasticPools().GetAllAsync(cancellationToken: cancellationToken))
@@ -505,7 +483,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="serverName">The name of the SQL server to get firewall rules for</param>
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>A list of firewall rules configured on the SQL server</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
@@ -513,7 +490,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string serverName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -521,7 +497,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, cancellationToken);
         var firewallRules = new List<SqlServerFirewallRule>();
 
         await foreach (var firewallRule in sqlServerResource.GetSqlFirewallRules().GetAllAsync(cancellationToken))
@@ -552,7 +528,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="firewallRuleName">The name of the firewall rule to create</param>
     /// <param name="startIpAddress">The start IP address of the firewall rule range</param>
     /// <param name="endIpAddress">The end IP address of the firewall rule range</param>
-    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>The created firewall rule</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
@@ -563,7 +538,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string firewallRuleName,
         string startIpAddress,
         string endIpAddress,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -574,7 +548,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(startIpAddress), startIpAddress),
             (nameof(endIpAddress), endIpAddress));
 
-        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, cancellationToken);
         var firewallRuleData = new SqlFirewallRuleData()
         {
             StartIPAddress = startIpAddress,
@@ -606,7 +580,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="firewallRuleName">The name of the firewall rule to delete</param>
-    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>True if the firewall rule was successfully deleted</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
@@ -615,7 +588,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string resourceGroup,
         string subscription,
         string firewallRuleName,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -626,7 +598,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
         try
         {
-            var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+            var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, cancellationToken);
             var firewallRuleResource = await sqlServerResource.GetSqlFirewallRules().GetAsync(firewallRuleName, cancellationToken);
             var deleteOperation = await firewallRuleResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
 
@@ -660,7 +632,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="administratorPassword">The administrator password for the SQL server</param>
     /// <param name="version">The version of SQL Server to create (optional, defaults to latest)</param>
     /// <param name="publicNetworkAccess">Whether public network access is enabled (optional)</param>
-    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>The created SQL server</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
@@ -673,7 +644,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string administratorPassword,
         string? version,
         string? publicNetworkAccess,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -685,7 +655,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(administratorPassword), administratorPassword));
 
         // Resolve the subscription (supports both subscription IDs and names) before navigating to the resource group
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, cancellationToken: cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serverData = new SqlServerData(location)
         {
@@ -728,7 +698,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="serverName">The name of the SQL server</param>
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>The SQL server if found, otherwise throws KeyNotFoundException</returns>
     /// <exception cref="KeyNotFoundException">Thrown when the specified server is not found</exception>
@@ -737,7 +706,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string serverName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -745,7 +713,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var server = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+        var server = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, cancellationToken);
         var tags = server.Data.Tags?.ToDictionary() ?? [];
 
         return new(
@@ -766,21 +734,19 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// </summary>
     /// <param name="resourceGroup">The name of the resource group containing the servers</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>A list of SQL servers found in the specified resource group</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
     public async Task<List<SqlServer>> ListServersAsync(
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, cancellationToken: cancellationToken);
 
         ResourceManager.Resources.ResourceGroupResource resourceGroupResource;
 
@@ -811,7 +777,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string serverName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -821,7 +786,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
         try
         {
-            var serverResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+            var serverResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, cancellationToken);
             var operation = await serverResource.DeleteAsync(WaitUntil.Started, cancellationToken);
 
             await WaitForLroCompletionAsync(operation, cancellationToken);
@@ -844,7 +809,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     /// <param name="databaseName">The name of the database to delete</param>
     /// <param name="resourceGroup">The name of the resource group containing the server</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
     /// <param name="cancellationToken">Token to observe for cancellation requests</param>
     /// <returns>True if the database was successfully deleted</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
@@ -853,7 +817,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string databaseName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -864,7 +827,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
         try
         {
-            var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
+            var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, cancellationToken);
             var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
             var deleteOperation = await databaseResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
 

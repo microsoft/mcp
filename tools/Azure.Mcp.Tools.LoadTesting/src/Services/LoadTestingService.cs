@@ -6,8 +6,6 @@ using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Developer.LoadTesting;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
@@ -16,29 +14,23 @@ using Azure.ResourceManager.LoadTesting;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.LoadTesting.Services;
 
-public class LoadTestingService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ILogger<LoadTestingService> logger)
-    : BaseAzureService(tenantService), ILoadTestingService
+public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingService> logger)
+    : BaseAzureService(azureService), ILoadTestingService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
     public async Task<List<TestResource>> GetLoadTestResourcesAsync(
         string subscription,
         string? resourceGroup = null,
         string? testResourceName = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
-        var subscriptionId = (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+        var subscriptionId = (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
 
-        var client = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var client = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         if (!string.IsNullOrEmpty(testResourceName))
         {
             var resourceId = LoadTestingResource.CreateResourceIdentifier(subscriptionId, resourceGroup, testResourceName);
@@ -86,13 +78,12 @@ public class LoadTestingService(
         string resourceGroup,
         string? testResourceName = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup));
-        var subscriptionId = (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+        var subscriptionId = (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
 
-        var client = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var client = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rgResource = client.GetResourceGroupResource(ResourceGroupResource.CreateResourceIdentifier(subscriptionId, resourceGroup));
         if (testResourceName == null)
         {
@@ -126,13 +117,12 @@ public class LoadTestingService(
         string testRunId,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(testResourceName), testResourceName), (nameof(testRunId), testRunId));
-        var subscriptionId = (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+        var subscriptionId = (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
 
-        var loadTestResource = await GetLoadTestResourcesAsync(subscriptionId, resourceGroup, testResourceName, tenant, retryPolicy, cancellationToken)
+        var loadTestResource = await GetLoadTestResourcesAsync(subscriptionId, resourceGroup, testResourceName, tenant, cancellationToken)
             ?? throw new Exception($"Load Test '{testResourceName}' not found in subscription '{subscriptionId}' and resource group '{resourceGroup}'.");
         var dataPlaneUri = loadTestResource[0]?.DataPlaneUri;
         if (string.IsNullOrEmpty(dataPlaneUri))
@@ -141,7 +131,7 @@ public class LoadTestingService(
         }
 
         var credential = await GetCredential(tenant, cancellationToken);
-        var loadTestClient = new LoadTestRunClient(new($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
+        var loadTestClient = new LoadTestRunClient(new($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions());
 
         var loadTestRunResponse = await loadTestClient.GetTestRunAsync(testRunId, new() { CancellationToken = cancellationToken });
         if (loadTestRunResponse == null || loadTestRunResponse.IsError)
@@ -159,12 +149,11 @@ public class LoadTestingService(
         string testId,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(testResourceName), testResourceName), (nameof(testId), testId));
-        var subscriptionId = (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
-        var loadTestResource = await GetLoadTestResourcesAsync(subscriptionId, resourceGroup, testResourceName, tenant, retryPolicy, cancellationToken)
+        var subscriptionId = (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
+        var loadTestResource = await GetLoadTestResourcesAsync(subscriptionId, resourceGroup, testResourceName, tenant, cancellationToken)
             ?? throw new Exception($"Load Test '{testResourceName}' not found in subscription '{subscriptionId}' and resource group '{resourceGroup}'.");
         var dataPlaneUri = loadTestResource[0]?.DataPlaneUri;
         if (string.IsNullOrEmpty(dataPlaneUri))
@@ -173,7 +162,7 @@ public class LoadTestingService(
         }
 
         var credential = await GetCredential(tenant, cancellationToken);
-        var loadTestClient = new LoadTestRunClient(new($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
+        var loadTestClient = new LoadTestRunClient(new($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions());
 
         var loadTestRunResponse = loadTestClient.GetTestRunsAsync(testId: testId)
             ?? throw new Exception($"Failed to retrieve Azure Load Test Run.");
@@ -206,13 +195,12 @@ public class LoadTestingService(
         string? displayName = null,
         string? description = null,
         bool? debugMode = false,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(testResourceName), testResourceName), (nameof(testRunId), testRunId));
-        var subscriptionId = (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+        var subscriptionId = (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
 
-        var loadTestResource = await GetLoadTestResourcesAsync(subscriptionId, resourceGroup, testResourceName, tenant, retryPolicy, cancellationToken)
+        var loadTestResource = await GetLoadTestResourcesAsync(subscriptionId, resourceGroup, testResourceName, tenant, cancellationToken)
             ?? throw new Exception($"Load Test '{testResourceName}' not found in subscription '{subscriptionId}' and resource group '{resourceGroup}'.");
         var dataPlaneUri = loadTestResource[0]?.DataPlaneUri;
         if (string.IsNullOrEmpty(dataPlaneUri))
@@ -221,7 +209,7 @@ public class LoadTestingService(
         }
 
         var credential = await GetCredential(tenant, cancellationToken);
-        var loadTestClient = new LoadTestRunClient(new($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
+        var loadTestClient = new LoadTestRunClient(new($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions());
 
         TestRunRequest requestBody = new()
         {
@@ -253,12 +241,11 @@ public class LoadTestingService(
         string testId,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(testResourceName), testResourceName), (nameof(testId), testId));
-        var subscriptionId = (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
-        var loadTestResource = await GetLoadTestResourcesAsync(subscriptionId, resourceGroup, testResourceName, tenant, retryPolicy, cancellationToken)
+        var subscriptionId = (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
+        var loadTestResource = await GetLoadTestResourcesAsync(subscriptionId, resourceGroup, testResourceName, tenant, cancellationToken)
             ?? throw new Exception($"Load Test '{testResourceName}' not found in subscription '{subscriptionId}' and resource group '{resourceGroup}'.");
         var dataPlaneUri = loadTestResource[0]?.DataPlaneUri;
         if (string.IsNullOrEmpty(dataPlaneUri))
@@ -267,7 +254,7 @@ public class LoadTestingService(
         }
 
         var credential = await GetCredential(tenant, cancellationToken);
-        var loadTestClient = new LoadTestAdministrationClient(new Uri($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
+        var loadTestClient = new LoadTestAdministrationClient(new Uri($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions());
 
         var loadTestResponse = await loadTestClient.GetTestAsync(testId, new RequestContext { CancellationToken = cancellationToken });
         if (loadTestResponse == null || loadTestResponse.IsError)
@@ -290,7 +277,6 @@ public class LoadTestingService(
         int? rampUpTime = 1,
         string? endpointUrl = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(testResourceName), testResourceName), (nameof(testId), testId));
@@ -300,9 +286,9 @@ public class LoadTestingService(
             EndpointValidator.ValidatePublicTargetUrl(endpointUrl, logger);
         }
 
-        var subscriptionId = (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+        var subscriptionId = (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
 
-        var loadTestResource = await GetLoadTestResourcesAsync(subscriptionId, resourceGroup, testResourceName, tenant, retryPolicy, cancellationToken)
+        var loadTestResource = await GetLoadTestResourcesAsync(subscriptionId, resourceGroup, testResourceName, tenant, cancellationToken)
             ?? throw new Exception($"Load Test '{testResourceName}' not found in subscription '{subscriptionId}' and resource group '{resourceGroup}'.");
         var dataPlaneUri = loadTestResource[0]?.DataPlaneUri;
         if (string.IsNullOrEmpty(dataPlaneUri))
@@ -311,7 +297,7 @@ public class LoadTestingService(
         }
 
         var credential = await GetCredential(tenant, cancellationToken);
-        var loadTestClient = new LoadTestAdministrationClient(new($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
+        var loadTestClient = new LoadTestAdministrationClient(new($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions());
         OptionalLoadTestConfig optionalLoadTestConfig = new()
         {
             Duration = (duration ?? 20) * 60, // Convert minutes to seconds
@@ -341,10 +327,10 @@ public class LoadTestingService(
         return JsonSerializer.Deserialize(loadTest, LoadTestJsonContext.Default.Test) ?? new();
     }
 
-    private LoadTestingClientOptions CreateLoadTestingClientOptions(RetryPolicyOptions? retryPolicy)
+    private LoadTestingClientOptions CreateLoadTestingClientOptions()
     {
-        var clientOptions = ConfigureRetryPolicy(AddDefaultPolicies(new LoadTestingClientOptions()), retryPolicy);
-        clientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
+        var clientOptions = AddDefaultPolicies(new LoadTestingClientOptions());
+        clientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
         return clientOptions;
     }
 }

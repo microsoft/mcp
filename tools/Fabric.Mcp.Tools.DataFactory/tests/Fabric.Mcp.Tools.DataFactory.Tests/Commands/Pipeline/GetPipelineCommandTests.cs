@@ -6,6 +6,7 @@ using Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
 using global::DataFactory.MCP.Handlers.Pipeline;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.DataFactory.Tests.Commands.Pipeline;
 

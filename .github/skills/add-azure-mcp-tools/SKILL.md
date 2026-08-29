@@ -66,7 +66,7 @@ return $"Request failed: {requestFailedException.Message}"; // may include auth 
 ### Safe Downstream Interactions
 - **Never concatenate user input directly without prior validation** into URLs, shell commands, resource identifiers, query strings, etc.
 - Use `EndpointValidator` from `Microsoft.Mcp.Core.Helpers` to guard all endpoint usage — choose the method that matches your scenario:
-  - **Azure service data-plane endpoint** (endpoint derived from a resource name, e.g. storage account, ACR, App Config): call `EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, TenantService.CloudConfiguration.ArmEnvironment)` before constructing the client. This enforces the correct per-cloud domain suffix (e.g. `.blob.core.windows.net` / `.blob.core.chinacloudapi.cn`) and HTTPS.
+  - **Azure service data-plane endpoint** (endpoint derived from a resource name, e.g. storage account, ACR, App Config): call `EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, AzureService.CloudConfiguration.ArmEnvironment)` before constructing the client. This enforces the correct per-cloud domain suffix (e.g. `.blob.core.windows.net` / `.blob.core.chinacloudapi.cn`) and HTTPS.
   - **User-supplied URL to a known external service** (e.g. a GitHub URL the user provides): call `EndpointValidator.ValidateExternalUrl(url, allowedHosts)` with an explicit allowlist of permitted hosts.
   - **User-supplied target URL with no known domain** (e.g. a load-test target the user controls): call `EndpointValidator.ValidatePublicTargetUrl(url)`, which enforces HTTPS/HTTP-only schemes, rejects private/reserved IP ranges, rejects reserved hostnames, and resolves DNS to catch hostnames that map to internal IPs.
 - For services that *construct* the endpoint internally (not from user input), use the cloud-type switch pattern (see [Phase 1c: Service Implementation](#1c-service-interface-and-implementation)) — `EndpointValidator` is not required in that case but `ValidateAzureServiceEndpoint` can be added as a defense-in-depth layer.
@@ -81,7 +81,7 @@ return $"Request failed: {requestFailedException.Message}"; // may include auth 
 | Input abuse (oversized/malformed names) | Override `ValidateOptions` with resource-specific length and format checks using deterministic validation first (length bounds, allowed-value sets, character/category checks). For query inputs, use a dedicated validator class — see `CosmosQueryValidator.EnsureReadOnlySelect` (`tools/Azure.Mcp.Tools.Cosmos/src/Validation/CosmosQueryValidator.cs`) as a reference for length cap, keyword blocking, and injection pattern detection. |
 | Injection into downstream systems | For user-supplied queries: use a validator class that enforces a single read-only statement, caps length, strips/blocks dangerous tokens, and detects tautology patterns. Do not interpolate user input into query strings directly — prefer parameterized APIs where available. For blob/resource URIs: call `EndpointValidator.ValidateAzureServiceEndpoint` before constructing any client (see `tools/Azure.Mcp.Tools.Compute/src/Services/ComputeService.cs` blob URI handling as a reference). |
 | Secret leakage via logs or error responses | Log only individually named, non-sensitive fields: `options.Subscription`, `options.ResourceGroup`, `Name`. Never use `{@Options}` or log connection strings, keys, or endpoint values. Override `GetErrorMessage` to return actionable but non-revealing messages — strip raw `RequestFailedException` bodies that may contain tokens or account metadata. |
-| Cross-tenant/resource confusion | `SubscriptionCommand` base class enforces that `--subscription` is always present and resolved via `ISubscriptionResolver` before `ExecuteAsync` is called. Pass `options.Tenant` to all service calls so `ITenantService` can validate tenant context per-request. Fail explicitly if tenant context is ambiguous — do not fall back silently. |
+| Cross-tenant/resource confusion | `SubscriptionCommand` base class enforces that `--subscription` is always present and resolved via `ISubscriptionResolver` before `ExecuteAsync` is called. Pass `options.Tenant` to all service calls so `IAzureService` can validate tenant context per-request. Fail explicitly if tenant context is ambiguous — do not fall back silently. |
 | SSRF-like endpoint misuse | Use `EndpointValidator` from `Microsoft.Mcp.Core.Helpers`: `ValidateAzureServiceEndpoint(endpoint, serviceType, armEnvironment)` for Azure data-plane endpoints, `ValidateExternalUrl(url, allowedHosts)` for user-supplied URLs to known hosts, `ValidatePublicTargetUrl(url)` for arbitrary user-controlled targets (DNS-resolves and blocks private/reserved IPs). |
 
 ### Using AI to Generate Tool Code
@@ -181,24 +181,22 @@ public class {Resource}{Operation}Options : ISubscriptionOption
 
     [Option(OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
-
-    [Option(Name = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 ```
 
 Rules:
 - Implement `ISubscriptionOption` for commands that need subscription resolution
 - Use `[Option("description")]` for the description — property name auto-converts to `--kebab-case`
-- Use `[Option(Name = "custom")]` only when the default kebab-case conversion is wrong (e.g., `RetryPolicy` → `--retry` not `--retry-policy`)
+- Use `[Option(Name = "custom")]` only when the default kebab-case conversion is wrong (e.g., when property is named `FooBar` and has `[Option(Name = "foobar")]` you get `--foobar` instead of `--foo-bar`)
 - Use `[Option(OptionDescriptions.X)]` for shared descriptions (`Subscription`, `Tenant`, `ResourceGroup`, `AuthMethod`)
+- Use `[OptionContainer(Prefix = "prefix")]` for model types which contain nested parameters. `"prefix"` will be prepended to the `[Option]`s in the model type (e.g., when `[OptionContainer(Prefix = "foo")]`'s model contains `[Option(Name = "bar")]` the parameter name is `--foo-bar`).
 - Use `subscription` (never `subscriptionId`) — supports both IDs and names
 - Use `resourceGroup` (never `resourceGroupName`)
 - Use singular nouns for resources (`server` not `serverName`)
 - Remove unnecessary `name` suffixes (`Account` / `--account` not `AccountName` / `--account-name`)
 - Use `required` on required options; use nullable types (`?`) for optional options.
 - Non-nullable value types (e.g., `public int Count { get; set; }`) are always valid without `required` — they default to `0`. Use `required` if the caller must explicitly provide a value, or use `int?` if the parameter should be truly optional.
-- Order: command-specific options first, then `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`, `RetryPolicy`
+- Order: command-specific options first, then `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`
 - Keep parameter names consistent with Azure SDK parameters when possible
 
  > **Note:** Options are defined entirely via `[Option]` attributes.
@@ -222,7 +220,6 @@ public interface I{Toolset}Service
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     // Data plane operation (returns simple List)
@@ -230,7 +227,6 @@ public interface I{Toolset}Service
         string resourceName,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }
 ```
@@ -246,22 +242,21 @@ Choose base class:
  > need ARG querying functionality.
 
 ```csharp
-public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), I{Toolset}Service
+public class {Toolset}Service(IAzureService azureService)
+    : BaseAzureResourceService(azureService), I{Toolset}Service
 {
     public async Task<ResourceQueryResults<MyModel>> GetResourcesAsync(
         string? myOption,
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         return await ExecuteResourceQueryAsync(
             "Microsoft.{Provider}/{resourceType}",
             resourceGroup,
             subscription,
-            retryPolicy,
+            null,
             ConvertToModel,
             tenant: tenant,
             cancellationToken: cancellationToken);
@@ -282,21 +277,17 @@ public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantS
 
 For **write operations** (using direct ARM clients):
 ```csharp
-public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureService(tenantService), I{Toolset}Service
+public class {Toolset}Service(IAzureService azureService)
+    : BaseAzureService(azureService), I{Toolset}Service
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService
-        ?? throw new ArgumentNullException(nameof(subscriptionService));
-
     public async Task<MyResource> CreateResourceAsync(
         string resourceName,
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 
         // CRITICAL: Use GetResourceGroupAsync with await
         var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -310,24 +301,23 @@ public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantS
 
 Sovereign cloud rules:
 - ARM/Resource Graph operations: cloud-aware automatically, no extra work
-- Data plane endpoints: use `TenantService.CloudConfiguration.CloudType` switch — never hardcode URLs
+- Data plane endpoints: use `AzureService.CloudConfiguration.CloudType` switch — never hardcode URLs
 
 **Data plane endpoint pattern** (required for services like Storage, Cosmos, Search):
 
 ```csharp
-public class MyService(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), IMyService
+public class MyService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IMyService
 {
 
     private async Task<MyDataPlaneClient> CreateDataPlaneClientAsync(
         string resourceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         var endpoint = GetResourceEndpoint(resourceName);
-        var options = ConfigureRetryPolicy(AddDefaultPolicies(new MyClientOptions()), retryPolicy);
-        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        var options = AddDefaultPolicies(new MyClientOptions());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new MyDataPlaneClient(
             new Uri(endpoint),
             await GetCredential(tenant, cancellationToken),
@@ -336,7 +326,7 @@ public class MyService(ISubscriptionService subscriptionService, ITenantService 
 
     private string GetResourceEndpoint(string resourceName)
     {
-        return TenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
                 $"https://{resourceName}.service.core.windows.net",
@@ -365,7 +355,22 @@ var client = new BlobServiceClient(new(endpoint), credential, options);
 
 Reference implementations: `StorageService`, `CosmosService`, `SearchService`, `ConfidentialLedgerService`.
 
-### 1d. Command Class
+### 1d. Long-running operations
+
+Long-running operations (at this time) don't offer the ability to configure polling intervals, and even if they were
+able to there is a limit on how small of a polling interval can be used. Due to this, to prevent long-running operations
+with a significant number of polls from wasting CPU time waiting during testing, all long-running operations should use
+a two call pattern. The first call is the service method starting the polling operation, that should pass
+`WaitUntil.Started` to simply begin the operation. Then waiting for completion should call
+`BaseAzureService.WaitForLroCompletionAsync` to wait for completion in a way that testing can ignore the polling
+interval to prevent CPU wait loops that aren't necessary when playback testing.
+
+```csharp
+var lroOperation = Service.LroAsync(WaitUntil.Started, cancellationToken);
+await WaitForLroCompletionAsync(lroOperation, cancellationToken);
+```
+
+### 1e. Command Class
 
 File: `src/Commands/{Resource}/{Resource}{Operation}Command.cs`
 
@@ -414,7 +419,6 @@ public sealed class {Resource}{Operation}Command(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
@@ -501,7 +505,7 @@ public abstract class Base{Toolset}Command<
 }
 ```
 
-### 1e. JSON Serialization Context
+### 1f. JSON Serialization Context
 
 File: `src/Commands/{Toolset}JsonContext.cs`
 
@@ -521,7 +525,7 @@ Guidelines:
 - Filename must match class name (`{Toolset}JsonContext.cs`)
 - Use `{Toolset}JsonContext.Default.{CommandResult}` when serializing — never `JsonSerializer.Deserialize<T>()` without a context
 
-### 1f. Register Command
+### 1g. Register Command
 
 File: `src/{Toolset}Setup.cs`
 
@@ -629,8 +633,10 @@ public class {Resource}{Operation}CommandTests
         if (shouldSucceed)
         {
             Service.GetResourcesAsync(
-                Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new ResourceQueryResults<MyModel>([], false));
         }
@@ -646,8 +652,10 @@ public class {Resource}{Operation}CommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         Service.GetResourcesAsync(
-            Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<MyModel>([], false));
 
@@ -662,8 +670,10 @@ public class {Resource}{Operation}CommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         Service.GetResourcesAsync(
-            Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -678,8 +688,10 @@ public class {Resource}{Operation}CommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         Service.GetResourcesAsync(
-            Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Resource not found"));
 
@@ -954,7 +966,7 @@ dotnet test tools/Azure.Mcp.Tools.{Toolset}/tests
 .\eng\common\spelling\Invoke-Cspell.ps1
 
 # 5. Full verification
-./eng/scripts/Build-Local.ps1 -UsePaths -VerifyNpx
+./eng/scripts/Build-Local.ps1 -VerifyNpx
 
 # 6. AOT/Native build (required for AOT-compatible toolsets)
 ./eng/scripts/Build-Local.ps1 -BuildNative
@@ -1148,7 +1160,7 @@ Before creating the PR, verify all of these:
 - [ ] Resource access patterns use collections (e.g., `.GetSqlServers().GetAsync()`)
 - [ ] `CancellationToken` passed to all async SDK calls
 - [ ] Subscription resolution uses `ISubscriptionResolver` (injected in constructor)
-- [ ] Service constructor includes `ISubscriptionService` injection
+- [ ] Service constructor includes `IAzureService` injection
 
 ### Documentation
 - [ ] `azmcp-commands.md` updated with command documentation
@@ -1404,11 +1416,11 @@ var vms = await vmssResource.Value
 ### Subscription Resolution
 
 ```csharp
-// ✅ Correct: use ISubscriptionService
-var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+// ✅ Correct: use IAzureService
+var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, cancellationToken);
 
 // ❌ Wrong: manual ARM client creation
-var armClient = await CreateArmClientAsync(tenant, retryPolicy);
+var armClient = await CreateArmClientAsync(tenant, cancellationToken);
 var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{subscription}"));
 ```
 
@@ -1736,17 +1748,15 @@ catch (Exception ex)
 Task<List<string>> GetStorageAccounts(
     string subscription,
     string? tenant = null,
-    RetryPolicyOptions? retryPolicy = null,
     CancellationToken cancellationToken = default);
 
 // ❌ Incorrect: all on single line
-Task<List<string>> GetStorageAccounts(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null);
+Task<List<string>> GetStorageAccounts(string subscription, string? tenant = null, CancellationToken? cancellationToken = default);
 
 // ❌ Incorrect: missing CancellationToken
 Task<List<string>> GetStorageAccounts(
     string subscription,
-    string? tenant = null,
-    RetryPolicyOptions? retryPolicy = null);
+    string? tenant = null);
 ```
 
 Rules:
@@ -1973,7 +1983,7 @@ var credential = await _tokenCredentialProvider.GetTokenCredentialAsync(tenant, 
 **✅ DO:**
 ```csharp
 // Authentication provider handles all transport scenarios
-var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
 // Options are pre-bound by framework, no shared state
 // (In ExecuteAsync, 'options' parameter is already bound)
@@ -2006,10 +2016,11 @@ private MyOptions? _currentOptions;      // Race condition!
 
 ```csharp
 public async Task<List<Resource>> GetResourcesAsync(
-    string subscription, string? tenant, RetryPolicyOptions? retryPolicy,
+    string subscription,
+    string? tenant,
     CancellationToken cancellationToken)
 {
-    // ITenantService handles tenant resolution for all modes:
+    // IAzureService handles tenant resolution for all modes:
     // - OBO mode: Validates tenant matches user's token
     // - Hosting environment: Uses provided tenant or default
     // - Stdio mode: Uses Azure CLI/VS Code default tenant

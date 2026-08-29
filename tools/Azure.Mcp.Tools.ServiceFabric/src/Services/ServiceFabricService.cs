@@ -4,34 +4,24 @@
 using System.Text;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ServiceFabric.Commands;
 using Azure.Mcp.Tools.ServiceFabric.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Services;
 
-public sealed class ServiceFabricService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    IHttpClientFactory httpClientFactory) : BaseAzureService(tenantService), IServiceFabricService
+public sealed class ServiceFabricService(IAzureService azureService)
+    : BaseAzureService(azureService), IServiceFabricService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-
     private const string ApiVersion = "2024-04-01";
 
     private string GetManagementBaseUrl() =>
-        _tenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
+        AzureService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
 
     public async Task<List<ManagedClusterNode>> ListManagedClusterNodes(
         string subscription,
         string resourceGroup,
         string clusterName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -39,12 +29,12 @@ public sealed class ServiceFabricService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(clusterName), clusterName));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
         var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
-        var client = _httpClientFactory.CreateClient();
+        var client = AzureService.GetClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
 
         var requestUrl = $"{GetManagementBaseUrl()}/subscriptions/{subscriptionId}/resourceGroups/{Uri.EscapeDataString(resourceGroup)}/providers/Microsoft.ServiceFabric/managedClusters/{Uri.EscapeDataString(clusterName)}/nodes?api-version={ApiVersion}";
@@ -77,7 +67,6 @@ public sealed class ServiceFabricService(
         string clusterName,
         string nodeName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -86,12 +75,12 @@ public sealed class ServiceFabricService(
             (nameof(clusterName), clusterName),
             (nameof(nodeName), nodeName));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
         var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
-        var client = _httpClientFactory.CreateClient();
+        var client = AzureService.GetClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
 
         var requestUrl = $"{GetManagementBaseUrl()}/subscriptions/{subscriptionId}/resourceGroups/{Uri.EscapeDataString(resourceGroup)}/providers/Microsoft.ServiceFabric/managedClusters/{Uri.EscapeDataString(clusterName)}/nodes/{Uri.EscapeDataString(nodeName)}?api-version={ApiVersion}";
@@ -112,7 +101,6 @@ public sealed class ServiceFabricService(
         string[] nodes,
         UpdateType updateType = UpdateType.Default,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -127,12 +115,12 @@ public sealed class ServiceFabricService(
             throw new ArgumentException("At least one node name must be specified.", nameof(nodes));
         }
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
         var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
-        var client = _httpClientFactory.CreateClient();
+        var client = AzureService.GetClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
 
         var requestUrl = $"{GetManagementBaseUrl()}/subscriptions/{subscriptionId}/resourceGroups/{Uri.EscapeDataString(resourceGroup)}/providers/Microsoft.ServiceFabric/managedClusters/{Uri.EscapeDataString(clusterName)}/nodeTypes/{Uri.EscapeDataString(nodeType)}/restart?api-version={ApiVersion}";

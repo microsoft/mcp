@@ -13,7 +13,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 [CommandMetadata(
     Id = "0aa3f887-0085-4141-8e34-f0cf1ed44f71",
-    Name = "delete_file",
+    Name = "delete-file",
     Title = "Delete OneLake File",
     Description = "Deletes a file from OneLake storage. Use this when the user wants to remove a specific file. Permanently removes the file at the specified path.",
     Destructive = true,

@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Monitor.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -14,7 +13,7 @@ namespace Azure.Mcp.Tools.Monitor.Tests.Metrics;
 public class MonitorMetricsServiceTests
 {
     private readonly IResourceResolverService _resourceResolverService;
-    private readonly ITenantService _tenantService;
+    private readonly IAzureService _azureService;
     private readonly MonitorMetricsService _service;
 
     private const string TestSubscription = "12345678-1234-1234-1234-123456789012";
@@ -27,8 +26,8 @@ public class MonitorMetricsServiceTests
     public MonitorMetricsServiceTests()
     {
         _resourceResolverService = Substitute.For<IResourceResolverService>();
-        _tenantService = Substitute.For<ITenantService>();
-        _service = new MonitorMetricsService(_resourceResolverService, _tenantService);
+        _azureService = Substitute.For<IAzureService>();
+        _service = new MonitorMetricsService(_resourceResolverService, _azureService);
 
         // Setup default behaviors
         _resourceResolverService.ResolveResourceIdAsync(
@@ -37,7 +36,6 @@ public class MonitorMetricsServiceTests
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceIdentifier(TestResourceId));
     }
@@ -55,7 +53,7 @@ public class MonitorMetricsServiceTests
     public void Constructor_WithNullResourceResolverService_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new MonitorMetricsService(null!, _tenantService));
+        Assert.Throws<ArgumentNullException>(() => new MonitorMetricsService(null!, _azureService));
     }
     #endregion
 
@@ -193,7 +191,6 @@ public class MonitorMetricsServiceTests
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Resource not found"));
 

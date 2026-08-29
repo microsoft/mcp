@@ -146,6 +146,7 @@ public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetComm
     [InlineData(SupportedLanguages.CSharp)]
     [InlineData(SupportedLanguages.JavaScript)]
     [InlineData(SupportedLanguages.PowerShell)]
+    [InlineData(SupportedLanguages.Go)]
     public async Task ExecuteAsync_ReturnsTemplateForAllLanguages(SupportedLanguages language)
     {
         // Arrange - use representative mocked data per language

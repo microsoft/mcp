@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.Threads;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -33,12 +32,12 @@ public class ThreadsDeleteCommandTests : SubscriptionCommandUnitTestsBase<Thread
         Assert.NotEmpty(command.Options);
         Assert.Contains(command.Options, o => o.Name == "--agent");
         Assert.Contains(command.Options, o => o.Name == "--thread-id");
-        Assert.Contains(command.Options, o => o.Name == "--confirm");
+        Assert.DoesNotContain(command.Options, o => o.Name == "--confirm");
     }
 
     [Theory]
-    [InlineData("--subscription sub --agent test-agent --thread-id thread1 --confirm true", true)]
-    [InlineData("--subscription sub --agent test-agent --thread-id thread1 --confirm false", false)]
+    [InlineData("--subscription sub --agent test-agent --thread-id thread1", true)]
+    [InlineData("--subscription sub --agent test-agent --thread-id thread1 --confirm true", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
@@ -48,7 +47,6 @@ public class ThreadsDeleteCommandTests : SubscriptionCommandUnitTestsBase<Thread
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
@@ -62,10 +60,14 @@ public class ThreadsDeleteCommandTests : SubscriptionCommandUnitTestsBase<Thread
 
         var response = await ExecuteCommandAsync(args);
 
-        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.UnprocessableEntity, response.Status);
         if (shouldSucceed)
         {
+            Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
+        }
+        else
+        {
+            Assert.NotEqual(HttpStatusCode.OK, response.Status);
         }
     }
 
@@ -77,7 +79,6 @@ public class ThreadsDeleteCommandTests : SubscriptionCommandUnitTestsBase<Thread
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
@@ -88,7 +89,7 @@ public class ThreadsDeleteCommandTests : SubscriptionCommandUnitTestsBase<Thread
             Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "test-agent", "--thread-id", "thread1", "--confirm", "true");
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "test-agent", "--thread-id", "thread1");
 
         var result = ValidateAndDeserializeResponse(
             response,
@@ -106,7 +107,6 @@ public class ThreadsDeleteCommandTests : SubscriptionCommandUnitTestsBase<Thread
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
@@ -117,7 +117,7 @@ public class ThreadsDeleteCommandTests : SubscriptionCommandUnitTestsBase<Thread
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "test-agent", "--thread-id", "thread1", "--confirm", "true");
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "test-agent", "--thread-id", "thread1");
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
@@ -131,7 +131,6 @@ public class ThreadsDeleteCommandTests : SubscriptionCommandUnitTestsBase<Thread
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
@@ -142,7 +141,7 @@ public class ThreadsDeleteCommandTests : SubscriptionCommandUnitTestsBase<Thread
             Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "test-agent", "--thread-id", "thread1", "--confirm", "true");
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "test-agent", "--thread-id", "thread1");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).DeleteThreadAsync(

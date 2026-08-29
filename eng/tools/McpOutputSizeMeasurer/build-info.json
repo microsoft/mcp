@@ -1,0 +1,66 @@
+{
+  "servers": [
+    {
+      "name": "McpOutputSizeMeasurer",
+      "path": "eng/tools/McpOutputSizeMeasurer/src/McpOutputSizeMeasurer.csproj",
+      "version": "1.0.0",
+      "cliName": "McpOutputSizeMeasurer",
+      "platforms": [
+        {
+          "name": "win-x64",
+          "dotnetOs": "win",
+          "architecture": "x64",
+          "artifactPath": "win-x64",
+          "native": false,
+          "trimmed": false,
+          "extension": ".exe"
+        },
+        {
+          "name": "win-arm64",
+          "dotnetOs": "win",
+          "architecture": "arm64",
+          "artifactPath": "win-arm64",
+          "native": false,
+          "trimmed": false,
+          "extension": ".exe"
+        },
+        {
+          "name": "linux-x64",
+          "dotnetOs": "linux",
+          "architecture": "x64",
+          "artifactPath": "linux-x64",
+          "native": false,
+          "trimmed": false,
+          "extension": ""
+        },
+        {
+          "name": "linux-arm64",
+          "dotnetOs": "linux",
+          "architecture": "arm64",
+          "artifactPath": "linux-arm64",
+          "native": false,
+          "trimmed": false,
+          "extension": ""
+        },
+        {
+          "name": "osx-x64",
+          "dotnetOs": "osx",
+          "architecture": "x64",
+          "artifactPath": "osx-x64",
+          "native": false,
+          "trimmed": false,
+          "extension": ""
+        },
+        {
+          "name": "osx-arm64",
+          "dotnetOs": "osx",
+          "architecture": "arm64",
+          "artifactPath": "osx-arm64",
+          "native": false,
+          "trimmed": false,
+          "extension": ""
+        }
+      ]
+    }
+  ]
+}

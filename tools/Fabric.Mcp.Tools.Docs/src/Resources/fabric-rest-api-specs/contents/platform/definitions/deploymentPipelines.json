@@ -144,8 +144,7 @@
                     },
                     "readOnly": false
                 }
-            },
-            "readOnly": false
+            }
         },
         "DeploymentPipelineStageRequest": {
             "type": "object",
@@ -214,8 +213,7 @@
                     "description": "The ID of the capacity that the new workspace will be assigned to. If unspecified and the API caller has permissions for the source stage workspace capacity, then that capacity will be used. Otherwise, Fabric will select a capacity that the API caller has permissions for.",
                     "readOnly": false
                 }
-            },
-            "readOnly": false
+            }
         },
         "DeploymentPipelineOperationNote": {
             "description": "A note describing the deployment.",
@@ -232,8 +230,7 @@
                     "description": "Indicates whether the note content is truncated. True - the note content is truncated, False - the note content isn't truncated. Default value is false.",
                     "readOnly": false
                 }
-            },
-            "readOnly": false
+            }
         },
         "ItemPreDeploymentDiffState": {
             "type": "string",
@@ -256,8 +253,7 @@
                         "description": "Before deployment, the item in the source stage was identical to the one in the target stage."
                     }
                 ]
-            },
-            "readOnly": true
+            }
         },
         "DeploymentSourceAndTarget": {
             "required": ["sourceItemId"],
@@ -290,8 +286,7 @@
                     "$ref": "../../Common/definitions.json#/definitions/ItemType",
                     "readOnly": true
                 }
-            },
-            "readOnly": true
+            }
         },
         "DeploymentExecutionStep": {
             "required": ["index", "description", "status", "sourceAndTarget"],
@@ -347,8 +342,7 @@
                     "description": "The error details. Only applicable if the deployment pipeline operation failed.",
                     "$ref": "../../common/definitions.json#/definitions/ErrorResponse"
                 }
-            },
-            "readOnly": true
+            }
         },
         "DeploymentExecutionPlan": {
             "description": "A deployment execution plan.",
@@ -362,8 +356,7 @@
                     },
                     "readOnly": true
                 }
-            },
-            "readOnly": true
+            }
         },
         "PreDeploymentDiffInformation": {
             "required": [
@@ -389,8 +382,7 @@
                     "description": "The number of identical deployed items in the source and target stages, before deployment.",
                     "readOnly": true
                 }
-            },
-            "readOnly": true
+            }
         },
         "DeploymentPipelineOperation": {
             "required": ["id", "type", "status", "lastUpdatedTime"],
@@ -548,8 +540,7 @@
                     "description": "The last deployment date and time of the Fabric item.",
                     "readOnly": true
                 }
-            },
-            "readOnly": false
+            }
         },
         "DeploymentPipelineStages": {
             "description": "A collection of Fabric deployment pipeline stages.",
@@ -567,8 +558,7 @@
                 {
                     "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
                 }
-            ],
-            "readOnly": false
+            ]
         },
         "DeploymentPipelineOperations": {
             "description": "A collection of Fabric deployment pipeline operations.",
@@ -656,8 +646,7 @@
                         "description": "Enables administrative access to the deployment pipeline."
                     }
                 ]
-            },
-            "readOnly": false
+            }
         },
         "DeploymentPipelineRoleAssignments": {
             "required": ["value"],
@@ -697,8 +686,7 @@
                     "$ref": "../../Common/definitions.json#/definitions/ItemType",
                     "readOnly": false
                 }
-            },
-            "readOnly": false
+            }
         },
         "DeploymentOptions": {
             "description": "Deployment configuration options for the deployment.",
@@ -709,8 +697,7 @@
                     "description": "Indicates whether cross region deployment is enabled. True - enabled, False - disabled. Default value is false.",
                     "readOnly": false
                 }
-            },
-            "readOnly": false
+            }
         },
         "DeployRequest": {
             "required": ["sourceStageId", "targetStageId"],

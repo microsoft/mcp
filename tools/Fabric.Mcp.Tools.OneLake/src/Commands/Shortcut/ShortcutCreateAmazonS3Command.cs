@@ -12,7 +12,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 
 [CommandMetadata(
     Id = "a1b2c3d4-2001-4000-8000-000000000012",
-    Name = "create_shortcut_amazon_s3",
+    Name = "create-shortcut-amazon-s3",
     Title = "Create OneLake Shortcut (Amazon S3 Target)",
     Description = """
         Create a shortcut pointing to an Amazon S3 location. Requires a connection

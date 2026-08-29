@@ -3,6 +3,7 @@
 
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests;
 
@@ -44,36 +45,36 @@ public class FabricOneLakeSetupTests
         // Act
         var rootGroup = setup.RegisterCommands(provider);
 
-        // Assert - flat structure with verb_object naming
-        Assert.True(rootGroup.Commands.ContainsKey("list_workspaces"), "Should have list_workspaces command");
-        Assert.True(rootGroup.Commands.ContainsKey("list_items"), "Should have list_items command");
-        Assert.True(rootGroup.Commands.ContainsKey("list_items_dfs"), "Should have list_items_dfs command");
-        Assert.True(rootGroup.Commands.ContainsKey("list_files"), "Should have list_files command");
-        Assert.True(rootGroup.Commands.ContainsKey("download_file"), "Should have download_file command");
-        Assert.True(rootGroup.Commands.ContainsKey("upload_file"), "Should have upload_file command");
-        Assert.True(rootGroup.Commands.ContainsKey("delete_file"), "Should have delete_file command");
-        Assert.True(rootGroup.Commands.ContainsKey("create_directory"), "Should have create_directory command");
-        Assert.True(rootGroup.Commands.ContainsKey("delete_directory"), "Should have delete_directory command");
+        // Assert - flat structure with kebab-case verb-object naming
+        Assert.True(rootGroup.Commands.ContainsKey("list-workspaces"), "Should have list-workspaces command");
+        Assert.True(rootGroup.Commands.ContainsKey("list-items"), "Should have list-items command");
+        Assert.True(rootGroup.Commands.ContainsKey("list-items-dfs"), "Should have list-items-dfs command");
+        Assert.True(rootGroup.Commands.ContainsKey("list-files"), "Should have list-files command");
+        Assert.True(rootGroup.Commands.ContainsKey("download-file"), "Should have download-file command");
+        Assert.True(rootGroup.Commands.ContainsKey("upload-file"), "Should have upload-file command");
+        Assert.True(rootGroup.Commands.ContainsKey("delete-file"), "Should have delete-file command");
+        Assert.True(rootGroup.Commands.ContainsKey("create-directory"), "Should have create-directory command");
+        Assert.True(rootGroup.Commands.ContainsKey("delete-directory"), "Should have delete-directory command");
 
         // Table commands
-        Assert.True(rootGroup.Commands.ContainsKey("get_table_config"), "Should have get_table_config command");
-        Assert.True(rootGroup.Commands.ContainsKey("list_tables"), "Should have list_tables command");
-        Assert.True(rootGroup.Commands.ContainsKey("get_table"), "Should have get_table command");
-        Assert.True(rootGroup.Commands.ContainsKey("list_table_namespaces"), "Should have list_table_namespaces command");
-        Assert.True(rootGroup.Commands.ContainsKey("get_table_namespace"), "Should have get_table_namespace command");
+        Assert.True(rootGroup.Commands.ContainsKey("get-table-config"), "Should have get-table-config command");
+        Assert.True(rootGroup.Commands.ContainsKey("list-tables"), "Should have list-tables command");
+        Assert.True(rootGroup.Commands.ContainsKey("get-table"), "Should have get-table command");
+        Assert.True(rootGroup.Commands.ContainsKey("list-table-namespaces"), "Should have list-table-namespaces command");
+        Assert.True(rootGroup.Commands.ContainsKey("get-table-namespace"), "Should have get-table-namespace command");
 
         // Shortcut commands
-        Assert.True(rootGroup.Commands.ContainsKey("list_shortcuts"), "Should have list_shortcuts command");
-        Assert.True(rootGroup.Commands.ContainsKey("get_shortcut"), "Should have get_shortcut command");
-        Assert.True(rootGroup.Commands.ContainsKey("delete_shortcut"), "Should have delete_shortcut command");
-        Assert.True(rootGroup.Commands.ContainsKey("reset_shortcut_cache"), "Should have reset_shortcut_cache command");
-        Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_onelake"), "Should have create_shortcut_onelake command");
-        Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_adls_gen2"), "Should have create_shortcut_adls_gen2 command");
-        Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_amazon_s3"), "Should have create_shortcut_amazon_s3 command");
-        Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_azure_blob"), "Should have create_shortcut_azure_blob command");
-        Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_gcs"), "Should have create_shortcut_gcs command");
-        Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_s3_compatible"), "Should have create_shortcut_s3_compatible command");
-        Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_dataverse"), "Should have create_shortcut_dataverse command");
-        Assert.True(rootGroup.Commands.ContainsKey("create_shortcut_onedrive_sharepoint"), "Should have create_shortcut_onedrive_sharepoint command");
+        Assert.True(rootGroup.Commands.ContainsKey("list-shortcuts"), "Should have list-shortcuts command");
+        Assert.True(rootGroup.Commands.ContainsKey("get-shortcut"), "Should have get-shortcut command");
+        Assert.True(rootGroup.Commands.ContainsKey("delete-shortcut"), "Should have delete-shortcut command");
+        Assert.True(rootGroup.Commands.ContainsKey("reset-shortcut-cache"), "Should have reset-shortcut-cache command");
+        Assert.True(rootGroup.Commands.ContainsKey("create-shortcut-onelake"), "Should have create-shortcut-onelake command");
+        Assert.True(rootGroup.Commands.ContainsKey("create-shortcut-adls-gen2"), "Should have create-shortcut-adls-gen2 command");
+        Assert.True(rootGroup.Commands.ContainsKey("create-shortcut-amazon-s3"), "Should have create-shortcut-amazon-s3 command");
+        Assert.True(rootGroup.Commands.ContainsKey("create-shortcut-azure-blob"), "Should have create-shortcut-azure-blob command");
+        Assert.True(rootGroup.Commands.ContainsKey("create-shortcut-gcs"), "Should have create-shortcut-gcs command");
+        Assert.True(rootGroup.Commands.ContainsKey("create-shortcut-s3-compatible"), "Should have create-shortcut-s3-compatible command");
+        Assert.True(rootGroup.Commands.ContainsKey("create-shortcut-dataverse"), "Should have create-shortcut-dataverse command");
+        Assert.True(rootGroup.Commands.ContainsKey("create-shortcut-onedrive-sharepoint"), "Should have create-shortcut-onedrive-sharepoint command");
     }
 }

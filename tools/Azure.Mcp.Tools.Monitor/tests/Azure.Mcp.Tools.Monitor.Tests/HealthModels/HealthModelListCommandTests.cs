@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.HealthModels;
 using Azure.Mcp.Tools.Monitor.Models.HealthModels;
 using Azure.Mcp.Tools.Monitor.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -26,7 +25,7 @@ public class HealthModelListCommandTests : SubscriptionCommandUnitTestsBase<Heal
             new() { Id = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.CloudHealth/healthmodels/hm-one", Name = "hm-one", ResourceGroup = "rg1", Location = "eastus2", ProvisioningState = "Succeeded" },
             new() { Id = "/subscriptions/sub123/resourceGroups/rg2/providers/Microsoft.CloudHealth/healthmodels/hm-two", Name = "hm-two", ResourceGroup = "rg2", Location = "westus2", ProvisioningState = "Provisioning" },
         ];
-        Service.ListHealthModels(TestSubscription, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListHealthModels(TestSubscription, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(summaries);
 
         var response = await ExecuteCommandAsync("--subscription", TestSubscription);
@@ -53,12 +52,12 @@ public class HealthModelListCommandTests : SubscriptionCommandUnitTestsBase<Heal
     [Fact]
     public async Task ExecuteAsync_ForwardsResourceGroup_WhenProvided()
     {
-        Service.ListHealthModels(Arg.Any<string>(), Arg.Is(TestResourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListHealthModels(Arg.Any<string>(), Arg.Is(TestResourceGroup), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         var response = await ExecuteCommandAsync("--subscription", TestSubscription, "--resource-group", TestResourceGroup);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await Service.Received(1).ListHealthModels(Arg.Any<string>(), Arg.Is(TestResourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListHealthModels(Arg.Any<string>(), Arg.Is(TestResourceGroup), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

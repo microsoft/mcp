@@ -6,9 +6,6 @@ using System.Data.Common;
 using System.Net;
 using System.Runtime.CompilerServices;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
@@ -21,15 +18,9 @@ using Npgsql;
 
 namespace Azure.Mcp.Tools.Postgres.Services;
 
-public class PostgresService(
-    IResourceGroupService resourceGroupService,
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    IEntraTokenProvider entraTokenAuth,
-    IDbProvider dbProvider) : BaseAzureService(tenantService), IPostgresService
+public class PostgresService(IAzureService azureService, IEntraTokenProvider entraTokenAuth, IDbProvider dbProvider)
+    : BaseAzureService(azureService), IPostgresService
 {
-    private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly IEntraTokenProvider _entraTokenAuth = entraTokenAuth;
     private readonly IDbProvider _dbProvider = dbProvider;
 
@@ -37,7 +28,7 @@ public class PostgresService(
 
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
-        var tokenCredential = await GetCredential(cancellationToken);
+        var tokenCredential = await GetCredential(null, cancellationToken);
         var accessToken = await _entraTokenAuth.GetEntraToken(tokenCredential, cancellationToken);
 
         return accessToken.Token;
@@ -54,7 +45,7 @@ public class PostgresService(
     {
         if (!server.Contains('.'))
         {
-            return TenantService.CloudConfiguration.CloudType switch
+            return AzureService.CloudConfiguration.CloudType switch
             {
                 AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
                     server + ".postgres.database.azure.com",
@@ -236,14 +227,14 @@ public class PostgresService(
         if (string.IsNullOrEmpty(resourceGroup))
         {
             // List all Flexible Servers across the entire subscription
-            var subscription = await _subscriptionService.GetSubscription(subscriptionId, cancellationToken: cancellationToken);
+            var subscription = await AzureService.GetSubscription(subscriptionId, cancellationToken: cancellationToken);
             await foreach (var name in ListSubscriptionServerNamesAsync(subscription, cancellationToken))
                 serverList.Add(name);
         }
         else
         {
             // List Flexible Servers scoped to the given resource group
-            var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken);
+            var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken);
             if (rg == null)
                 throw new Exception($"Resource group '{resourceGroup}' not found.");
             await foreach (var name in ListResourceGroupServerNamesAsync(rg, cancellationToken))
@@ -276,10 +267,9 @@ public class PostgresService(
         string user,
         string server,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
 
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);
@@ -301,10 +291,9 @@ public class PostgresService(
         string server,
         string param,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
 
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);
@@ -325,10 +314,9 @@ public class PostgresService(
         string param,
         string value,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
 
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);

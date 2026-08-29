@@ -8,8 +8,10 @@ using Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Shortcut;
 

@@ -12,7 +12,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 
 [CommandMetadata(
     Id = "a1b2c3d4-2001-4000-8000-000000000010",
-    Name = "create_shortcut_onelake",
+    Name = "create-shortcut-onelake",
     Title = "Create OneLake Shortcut (OneLake Target)",
     Description = """
         Create a shortcut pointing to another OneLake location. Specify the target

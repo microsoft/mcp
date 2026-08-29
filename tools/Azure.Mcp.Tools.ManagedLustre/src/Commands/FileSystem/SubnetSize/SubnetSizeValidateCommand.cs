@@ -56,7 +56,6 @@ public sealed class SubnetSizeValidateCommand(IManagedLustreService service, ILo
                 options.SubnetId,
                 options.Location,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(subnetIsValid), ManagedLustreJsonContext.Default.FileSystemCheckSubnetResult);

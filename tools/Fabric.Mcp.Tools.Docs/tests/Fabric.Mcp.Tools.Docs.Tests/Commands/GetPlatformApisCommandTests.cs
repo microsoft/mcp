@@ -9,6 +9,7 @@ using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.Docs.Tests.Commands;
 
@@ -34,9 +35,9 @@ public class GetPlatformApisCommandTests : CommandUnitTestsBase<GetPlatformApisC
     public async Task GetPlatformApiSpecCommand_ExecuteAsync_ReturnsPlatformApis()
     {
         // Arrange
-        var expectedApi = new FabricWorkloadPublicApi("api-spec", new Dictionary<string, string> { { "model1", "definition1" } });
+        var expectedApi = new FabricPublicApi("api-spec", new Dictionary<string, string> { { "model1", "definition1" } });
 
-        Service.GetWorkloadPublicApis("platform", Arg.Any<CancellationToken>()).Returns(expectedApi);
+        Service.GetPublicApis("platform", Arg.Any<CancellationToken>()).Returns(expectedApi);
 
         // Act
         var result = await ExecuteCommandAsync([]);
@@ -47,14 +48,14 @@ public class GetPlatformApisCommandTests : CommandUnitTestsBase<GetPlatformApisC
             FabricJsonContext.Default.GetPlatformApisCommandResult);
         Assert.Equal(expectedApi.apiSpecification, response.PublicApi.apiSpecification);
         Assert.Equal(expectedApi.apiModelDefinitions, response.PublicApi.apiModelDefinitions);
-        await Service.Received(1).GetWorkloadPublicApis("platform", Arg.Any<CancellationToken>());
+        await Service.Received(1).GetPublicApis("platform", Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetPlatformApiSpecCommand_ExecuteAsync_HandlesException()
     {
         // Arrange
-        Service.GetWorkloadPublicApis("platform", Arg.Any<CancellationToken>()).ThrowsAsync(new InvalidOperationException("Service error"));
+        Service.GetPublicApis("platform", Arg.Any<CancellationToken>()).ThrowsAsync(new InvalidOperationException("Service error"));
 
         // Act
         var result = await ExecuteCommandAsync([]);

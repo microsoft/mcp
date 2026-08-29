@@ -160,7 +160,8 @@ public sealed class LanguageListCommandTests : CommandUnitTestsBase<LanguageList
                 ["JavaScript"] = new RuntimeVersionInfo { Supported = ["20", "22"], Preview = ["24"], Default = "22" },
                 ["Java"] = new RuntimeVersionInfo { Supported = ["8", "11", "17", "21"], Preview = ["25"], Default = "21" },
                 ["CSharp"] = new RuntimeVersionInfo { Supported = ["8", "9", "10"], FrameworkSupported = ["4.8.1"], Default = "8" },
-                ["PowerShell"] = new RuntimeVersionInfo { Supported = ["7.4"], Default = "7.4" }
+                ["PowerShell"] = new RuntimeVersionInfo { Supported = ["7.4"], Default = "7.4" },
+                ["Go"] = new RuntimeVersionInfo { Supported = [], Preview = ["1.0"], Default = "1.0" }
             }
         };
         mockManifestService.FetchManifestAsync(Arg.Any<CancellationToken>()).Returns(manifest);
@@ -180,7 +181,7 @@ public sealed class LanguageListCommandTests : CommandUnitTestsBase<LanguageList
         // Assert
         var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.LanguageListResult);
         Assert.Equal("4.x", result.FunctionsRuntimeVersion);
-        Assert.Equal(6, result.Languages.Count);
+        Assert.Equal(7, result.Languages.Count);
 
         // Verify all expected languages are present
         var languageNames = result.Languages.Select(l => l.Language).ToList();
@@ -190,5 +191,6 @@ public sealed class LanguageListCommandTests : CommandUnitTestsBase<LanguageList
         Assert.Contains("java", languageNames);
         Assert.Contains("csharp", languageNames);
         Assert.Contains("powershell", languageNames);
+        Assert.Contains("go", languageNames);
     }
 }

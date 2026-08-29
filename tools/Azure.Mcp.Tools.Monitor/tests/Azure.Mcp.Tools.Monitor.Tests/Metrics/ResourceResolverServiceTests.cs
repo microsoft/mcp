@@ -5,11 +5,9 @@ using System.ClientModel.Primitives;
 using System.Text;
 using System.Text.Json;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Monitor.Services;
 using Azure.ResourceManager.Resources;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -17,19 +15,17 @@ namespace Azure.Mcp.Tools.Monitor.Tests.Metrics;
 
 public class ResourceResolverServiceTests
 {
-    private readonly ISubscriptionService _subscriptionService;
-    private readonly ITenantService _tenantService;
+    private readonly IAzureService _azureService;
     private readonly ResourceResolverService _service;
 
     private readonly SubscriptionResource _subscriptionResource = Substitute.For<SubscriptionResource>();
 
     public ResourceResolverServiceTests()
     {
-        _subscriptionService = Substitute.For<ISubscriptionService>();
-        _tenantService = Substitute.For<ITenantService>();
-        _service = new ResourceResolverService(_subscriptionService, _tenantService);
+        _azureService = Substitute.For<IAzureService>();
+        _service = new ResourceResolverService(_azureService);
 
-        _subscriptionService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), cancellationToken: Arg.Any<CancellationToken>())
+        _azureService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>())
             .Returns(_subscriptionResource);
     }
 
@@ -39,15 +35,15 @@ public class ResourceResolverServiceTests
     public void Constructor_WithValidParameters_Succeeds()
     {
         // Act & Assert - Constructor should not throw
-        var service = new ResourceResolverService(_subscriptionService, _tenantService);
+        var service = new ResourceResolverService(_azureService);
         Assert.NotNull(service);
     }
 
     [Fact]
-    public void Constructor_WithNullSubscriptionService_ThrowsArgumentNullException()
+    public void Constructor_WithNullAzureService_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new ResourceResolverService(null!, _tenantService));
+        Assert.Throws<ArgumentNullException>(() => new ResourceResolverService(null!));
     }
 
     #endregion
@@ -67,7 +63,7 @@ public class ResourceResolverServiceTests
         // Assert
         Assert.Equal(fullResourceId, result.ToString());
         // Verify that subscription service was not called since we're passing a full resource ID
-        await _subscriptionService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await _azureService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -86,7 +82,7 @@ public class ResourceResolverServiceTests
 
         // Assert
         Assert.Equal(expectedResourceId, result);
-        await _subscriptionService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await _azureService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -153,7 +149,7 @@ public class ResourceResolverServiceTests
         var resourcesAsyncPageable = CreateAsyncPageableWithItems(resource);
 
         subscriptionResource.GetGenericResourcesAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns(resourcesAsyncPageable);
-        _subscriptionService.GetSubscription(subscription, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        _azureService.GetSubscription(subscription, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(subscriptionResource);
 
         // Act
