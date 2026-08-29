@@ -36,14 +36,6 @@ public class ResilienceManagementCommandTests(
         new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("operation-id")
         {
             Value = "sanitized"
-        }),
-        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("Location")
-        {
-            Value = ""
-        }),
-        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("Azure-AsyncOperation")
-        {
-            Value = ""
         })
     ];
 
