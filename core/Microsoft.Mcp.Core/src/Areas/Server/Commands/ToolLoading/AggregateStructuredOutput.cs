@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol.Protocol;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
@@ -12,12 +13,6 @@ internal static class AggregateStructuredOutput
     internal static JsonElement NamespaceOutputSchema { get; } = CreateOutputSchema(requireTool: false);
 
     internal static JsonElement SingleOutputSchema { get; } = CreateOutputSchema(requireTool: true);
-
-    internal static JsonElement CreateToolList(IEnumerable<Tool> tools)
-    {
-        var toolsNode = JsonSerializer.SerializeToNode(tools, ServerJsonContext.Default.IEnumerableTool);
-        return CreateToolList(toolsNode);
-    }
 
     internal static JsonElement CreateToolList(string toolsJson)
     {
@@ -31,13 +26,20 @@ internal static class AggregateStructuredOutput
         return CreateToolList(toolsNode);
     }
 
-    internal static JsonElement CreateToolResult(string command, string jsonResponse)
+    internal static JsonElement? CreateToolResult(string command, CommandResponse response)
     {
-        using var document = JsonDocument.Parse(jsonResponse);
-        JsonNode? result = null;
-        if (document.RootElement.TryGetProperty("results", out var results))
+        var result = response.Results?.ToJsonNode();
+        if (result is null)
         {
-            result = JsonNode.Parse(results.GetRawText());
+            if (string.IsNullOrEmpty(response.Message))
+            {
+                return null;
+            }
+
+            result = new JsonObject
+            {
+                [StructuredOutputJson.MessagePropertyName] = response.Message
+            };
         }
 
         return BuildToolResult(tool: null, command, result);

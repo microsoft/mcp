@@ -160,29 +160,6 @@ public sealed class NamespaceToolLoader(
         return ValueTask.FromResult(allToolsResponse);
     }
 
-    private CallToolResult CreateNamespaceCallResult(
-        string contentText,
-        Func<JsonElement> structuredContentFactory,
-        bool isError)
-    {
-        var useStructuredContent = !isError && StructuredOutputEnabled;
-        return new CallToolResult
-        {
-            Content =
-            [
-                new TextContentBlock
-                {
-                    Text = useStructuredContent
-                        && StructuredOutputMode.Compact == _configuration.Value.StructuredOutputMode
-                        ? StructuredOutputHelper.CompactContentMessage
-                        : contentText
-                }
-            ],
-            StructuredContent = useStructuredContent ? structuredContentFactory() : null,
-            IsError = isError
-        };
-    }
-
     private static bool AllToolsInGroupMatch(Predicate<ToolMetadata> predicate, CommandGroup group)
     {
         foreach (var command in group.Commands)
@@ -317,8 +294,9 @@ public sealed class NamespaceToolLoader(
             Run again with the "learn" argument to get a list of available tools and their parameters.
             To learn about a specific tool, use the "command" argument with the name of the tool.
             """;
-        return CreateNamespaceCallResult(
-            helpMessage,
+        return StructuredOutputHelper.CreateCallToolResult(
+            _configuration.Value.StructuredOutputMode,
+            () => helpMessage,
             () => AggregateStructuredOutput.CreateMessage(helpMessage),
             isError: false);
     }
@@ -495,11 +473,11 @@ public sealed class NamespaceToolLoader(
                 .SetTag(TagName.IsServerCommandInvoked, true);
 
             var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
-            var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
-            if (jsonResponse.Contains("Missing required options", StringComparison.OrdinalIgnoreCase))
+            if (commandResponse.Message.Contains("Missing required options", StringComparison.OrdinalIgnoreCase))
             {
+                var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
                 var childTool = GetChildToolList(request, namespaceName)
                     .First(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase));
                 var childToolSpecJson = JsonSerializer.Serialize(new ToolCommandInfo(childTool), ServerJsonContext.Default.ToolCommandInfo);
@@ -538,9 +516,10 @@ public sealed class NamespaceToolLoader(
                 };
             }
 
-            var result = CreateNamespaceCallResult(
-                jsonResponse,
-                () => AggregateStructuredOutput.CreateToolResult(command, jsonResponse),
+            var result = StructuredOutputHelper.CreateCallToolResult(
+                _configuration.Value.StructuredOutputMode,
+                () => JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse),
+                () => AggregateStructuredOutput.CreateToolResult(command, commandResponse),
                 isError);
             return McpHelper.InjectToolIdMetadata(result, cmd.Id);
         }
@@ -584,8 +563,9 @@ public sealed class NamespaceToolLoader(
 
             {learnToolsJson}
             """;
-        var learnResponse = CreateNamespaceCallResult(
-            contentText,
+        var learnResponse = StructuredOutputHelper.CreateCallToolResult(
+            _configuration.Value.StructuredOutputMode,
+            () => contentText,
             () => AggregateStructuredOutput.CreateToolList(learnToolsJson),
             isError: false);
         var response = learnResponse;

@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
@@ -34,6 +35,8 @@ public sealed class ResponseResult(object? result, JsonTypeInfo typeInfo)
     public static ResponseResult Create<T>(T result, JsonTypeInfo<T> typeInfo) => new(result, typeInfo);
 
     public void Write(Utf8JsonWriter writer) => JsonSerializer.Serialize(writer, _result, _typeInfo);
+
+    internal JsonNode? ToJsonNode() => JsonSerializer.SerializeToNode(_result, _typeInfo);
 }
 
 public class ResultConverter : JsonConverter<ResponseResult>

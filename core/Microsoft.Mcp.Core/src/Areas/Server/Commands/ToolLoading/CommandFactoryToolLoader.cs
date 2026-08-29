@@ -227,26 +227,15 @@ public sealed class CommandFactoryToolLoader(
         {
             activity?.SetTag(TagName.IsServerCommandInvoked, true);
             var commandResponse = await command.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
-            var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
-            var structuredContent = !isError && StructuredOutputEnabled && command.ResultTypeInfo != null
-                ? StructuredOutputHelper.TryBuildStructuredContent(jsonResponse)
-                : null;
-            var contentText = structuredContent != null && StructuredOutputMode.Compact == _configuration.Value.StructuredOutputMode
-                ? StructuredOutputHelper.CompactContentMessage
-                : jsonResponse;
-
-            var callToolResult = new CallToolResult
-            {
-                Content = [
-                    new TextContentBlock {
-                        Text = contentText
-                    }
-                ],
-                StructuredContent = structuredContent,
-                IsError = isError
-            };
+            var callToolResult = StructuredOutputHelper.CreateCallToolResult(
+                _configuration.Value.StructuredOutputMode,
+                () => JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse),
+                command.ResultTypeInfo is null
+                    ? null
+                    : () => StructuredOutputHelper.TryBuildStructuredContent(commandResponse.Results),
+                isError);
 
             return McpHelper.InjectToolIdMetadata(callToolResult, command.Id);
         }

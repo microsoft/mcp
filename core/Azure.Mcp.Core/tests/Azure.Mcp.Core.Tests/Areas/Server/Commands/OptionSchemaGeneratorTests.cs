@@ -290,6 +290,7 @@ internal sealed record OutputSchemaSampleResult(string Name, int Count);
 [JsonSerializable(typeof(KeyValueSetCommand.KeyValueSetCommandResult))]
 [JsonSerializable(typeof(KeyValueDeleteCommand.KeyValueDeleteCommandResult))]
 [JsonSerializable(typeof(KeyValueLockSetCommand.KeyValueLockSetCommandResult))]
+[JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(string[]))]
 [JsonSerializable(typeof(int))]
 [JsonSourceGenerationOptions(

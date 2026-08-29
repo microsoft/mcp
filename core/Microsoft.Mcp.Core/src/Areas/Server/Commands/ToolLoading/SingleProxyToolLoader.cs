@@ -172,8 +172,9 @@ public sealed class SingleProxyToolLoader(
             Run again with the "learn" argument to get a list of available tools and their parameters.
             To learn about a specific tool, use the "tool" argument with the name of the tool.
             """;
-        return CreateAggregateCallResult(
-            helpMessage,
+        return StructuredOutputHelper.CreateCallToolResult(
+            _configuration.Value.StructuredOutputMode,
+            () => helpMessage,
             () => AggregateStructuredOutput.CreateMessage(helpMessage));
     }
 
@@ -262,8 +263,9 @@ public sealed class SingleProxyToolLoader(
 
             {_cachedTools!.Value.Json}
             """;
-        var learnResponse = CreateAggregateCallResult(
-            contentText,
+        var learnResponse = StructuredOutputHelper.CreateCallToolResult(
+            _configuration.Value.StructuredOutputMode,
+            () => contentText,
             () => AggregateStructuredOutput.CreateToolList(_cachedTools!.Value.Json));
         var response = learnResponse;
         if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
@@ -297,8 +299,9 @@ public sealed class SingleProxyToolLoader(
 
             {result.Json}
             """;
-        var learnResponse = CreateAggregateCallResult(
-            contentText,
+        var learnResponse = StructuredOutputHelper.CreateCallToolResult(
+            _configuration.Value.StructuredOutputMode,
+            () => contentText,
             () => AggregateStructuredOutput.CreateToolList(result.Json));
 
         var response = learnResponse;
@@ -425,26 +428,6 @@ public sealed class SingleProxyToolLoader(
                 ]
             };
         }
-    }
-
-    private CallToolResult CreateAggregateCallResult(
-        string contentText,
-        Func<JsonElement> structuredContentFactory)
-    {
-        return new CallToolResult
-        {
-            Content =
-            [
-                new TextContentBlock
-                {
-                    Text = StructuredOutputEnabled
-                        && StructuredOutputMode.Compact == _configuration.Value.StructuredOutputMode
-                        ? StructuredOutputHelper.CompactContentMessage
-                        : contentText
-                }
-            ],
-            StructuredContent = StructuredOutputEnabled ? structuredContentFactory() : null
-        };
     }
 
     private static async Task NotifyProgressAsync(RequestContext<CallToolRequestParams> request, string message, CancellationToken cancellationToken)

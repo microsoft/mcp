@@ -484,6 +484,35 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     }
 
     [Fact]
+    public async Task CallToolHandler_CompactMessageOnlyChildPreservesMessage()
+    {
+        var response = new CommandResponse
+        {
+            Status = System.Net.HttpStatusCode.OK,
+            Message = "Use zone-redundant storage for production workloads."
+        };
+        var loader = CreateLoaderWithCommand(ModeTypes.NamespaceProxy, StructuredOutputMode.Compact, response);
+        var request = McpTestUtilities.CreateToolCallRequest("storage", new Dictionary<string, object?>
+        {
+            ["intent"] = "get guidance",
+            ["command"] = "read-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.Equal(
+            StructuredOutputHelper.CompactContentMessage,
+            Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+        var structuredContent = Assert.IsType<JsonElement>(result.StructuredContent);
+        Assert.Equal("tool-result", structuredContent.GetProperty("kind").GetString());
+        Assert.Equal(
+            response.Message,
+            structuredContent.GetProperty("result").GetProperty("message").GetString());
+    }
+
+    [Fact]
     public async Task CallToolHandler_ParsesHierarchicalStructure()
     {
         // Arrange

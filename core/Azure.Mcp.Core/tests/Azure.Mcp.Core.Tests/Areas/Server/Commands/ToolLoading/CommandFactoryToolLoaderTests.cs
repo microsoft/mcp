@@ -880,11 +880,11 @@ public class CommandFactoryToolLoaderTests
         // An object-root command result already satisfies MCP's "structuredContent must be an object" rule,
         // so it included as-is: its own properties are surfaced directly rather than nested under a
         // wrapper. This stays aligned with CreateOutputSchema, which leaves object roots unwrapped.
-        var json = SerializeResponse(ResponseResult.Create(
+        var result = ResponseResult.Create(
             new OutputSchemaSampleResult("alpha", 3),
-            OutputSchemaTestJsonContext.Default.OutputSchemaSampleResult));
+            OutputSchemaTestJsonContext.Default.OutputSchemaSampleResult);
 
-        var structuredContent = StructuredOutputHelper.TryBuildStructuredContent(json);
+        var structuredContent = StructuredOutputHelper.TryBuildStructuredContent(result);
 
         Assert.NotNull(structuredContent);
         var value = structuredContent!.Value;
@@ -900,11 +900,11 @@ public class CommandFactoryToolLoaderTests
         // A non-object payload (array) cannot be the structuredContent root, so it is wrapped under a single
         // 'value' property, matching the wrapping CreateOutputSchema applies to the advertised schema so the
         // payload validates against it.
-        var json = SerializeResponse(ResponseResult.Create(
+        var result = ResponseResult.Create(
             new[] { "one", "two" },
-            OutputSchemaTestJsonContext.Default.StringArray));
+            OutputSchemaTestJsonContext.Default.StringArray);
 
-        var structuredContent = StructuredOutputHelper.TryBuildStructuredContent(json);
+        var structuredContent = StructuredOutputHelper.TryBuildStructuredContent(result);
 
         Assert.NotNull(structuredContent);
         var value = structuredContent!.Value;
@@ -919,11 +919,11 @@ public class CommandFactoryToolLoaderTests
     {
         // A scalar payload likewise cannot be the root object, so it is wrapped under 'value' to match the
         // advertised schema.
-        var json = SerializeResponse(ResponseResult.Create(
+        var result = ResponseResult.Create(
             42,
-            OutputSchemaTestJsonContext.Default.Int32));
+            OutputSchemaTestJsonContext.Default.Int32);
 
-        var structuredContent = StructuredOutputHelper.TryBuildStructuredContent(json);
+        var structuredContent = StructuredOutputHelper.TryBuildStructuredContent(result);
 
         Assert.NotNull(structuredContent);
         var value = structuredContent!.Value;
@@ -935,21 +935,17 @@ public class CommandFactoryToolLoaderTests
     [Fact]
     public void TryBuildStructuredContent_NoResult_ReturnsNull()
     {
-        // A command that sets no result serializes without a 'results' property (JsonIgnore-when-null), so
-        // there is no payload to set as structuredContent.
-        var json = SerializeResponse(results: null);
-
-        var structuredContent = StructuredOutputHelper.TryBuildStructuredContent(json);
+        var structuredContent = StructuredOutputHelper.TryBuildStructuredContent(null);
 
         Assert.Null(structuredContent);
     }
 
     [Fact]
-    public void TryBuildStructuredContent_NullResultsProperty_ReturnsNull()
+    public void TryBuildStructuredContent_NullResult_ReturnsNull()
     {
-        // Even if a 'results' property is present but null, there is no payload to set as structuredContent.
-        // The realistic serializer path omits null results, so this uses a hand-built response to exercise it.
-        var structuredContent = StructuredOutputHelper.TryBuildStructuredContent("{\"results\":null}");
+        var result = ResponseResult.Create<string?>(null, OutputSchemaTestJsonContext.Default.String);
+
+        var structuredContent = StructuredOutputHelper.TryBuildStructuredContent(result);
 
         Assert.Null(structuredContent);
     }
@@ -1129,14 +1125,6 @@ public class CommandFactoryToolLoaderTests
                 Arguments = arguments ?? new Dictionary<string, JsonElement>()
             },
             mockServer);
-    }
-
-    // Serializes a CommandResponse exactly as CallToolHandler does, so the structuredContent tests exercise
-    // the real 'results' property name and shape rather than a hand-rolled approximation.
-    private static string SerializeResponse(ResponseResult? results)
-    {
-        var response = new CommandResponse { Status = HttpStatusCode.OK, Results = results };
-        return JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse);
     }
 
     // A self-contained enum + options POCO used only by ListToolsHandler_EnumOption_IsExportedAsStringType.
