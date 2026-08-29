@@ -2,7 +2,6 @@ changes:
   - section: "Breaking Changes"
     description: |
       Normalized result payloads for the following tools:
-      - `tools list` now returns either `{ commands }` or `{ names }`, omitting the inactive field.
       - `advisor recommendation apply` now returns the resulting rules in a `{ rules }` object.
       - `azurebestpractices get`, `azurebestpractices ai_app`, and `azureterraformbestpractices get` now return the resulting best practices in a `{ bestPractices }` object.
       - `functions language list` and `functions project get` now return the resulting singleton values as direct objects.

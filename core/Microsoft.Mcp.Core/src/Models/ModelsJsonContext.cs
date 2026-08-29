@@ -14,6 +14,6 @@ namespace Microsoft.Mcp.Core.Models;
 [JsonSerializable(typeof(CommandResponse))]
 [JsonSerializable(typeof(ETag), TypeInfoPropertyName = "McpETag")]
 [JsonSerializable(typeof(ToolMetadata))]
-[JsonSerializable(typeof(ToolsListCommand.ToolsListCommandResult))]
+[JsonSerializable(typeof(ToolsListCommand.ToolsListResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 public sealed partial class ModelsJsonContext : JsonSerializerContext;

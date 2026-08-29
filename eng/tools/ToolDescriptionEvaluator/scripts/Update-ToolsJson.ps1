@@ -134,19 +134,7 @@ try {
         # Try to parse the JSON to verify it's valid
         try {
             $json = Get-Content $jsonFile -Raw | ConvertFrom-Json
-            $commandsProperty = $json.results.PSObject.Properties['commands']
-            $toolCount = if ($null -ne $commandsProperty) {
-                $commandsProperty.Value.Count
-            }
-            elseif ($null -ne $json.results) {
-                $json.results.Count
-            }
-            elseif ($null -ne $json.tools) {
-                $json.tools.Count
-            }
-            else {
-                $null
-            }
+            $toolCount = if ($null -ne $json.results) { $json.results.Count } elseif ($null -ne $json.tools) { $json.tools.Count } else { $null }
 
             if ($null -ne $toolCount) {
                 Write-Host "Contains $toolCount tools" -ForegroundColor Cyan

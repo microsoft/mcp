@@ -123,10 +123,7 @@ try {
 # Build a dictionary of command -> metadata
 Write-Host "Building command metadata dictionary..." -ForegroundColor Yellow
 $commandMetadata = @{}
-$commandsProperty = $toolsData.results.PSObject.Properties['commands']
-$tools = if ($null -ne $commandsProperty) { $commandsProperty.Value } else { $toolsData.results }
-
-foreach ($tool in $tools) {
+foreach ($tool in $toolsData.results) {
     if ($tool.command -and $tool.metadata) {
         $commandMetadata[$tool.command] = $tool.metadata
     }

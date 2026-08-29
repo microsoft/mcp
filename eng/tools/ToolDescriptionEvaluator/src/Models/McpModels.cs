@@ -125,14 +125,7 @@ public class ListToolsResult
     public string? Message { get; set; }
 
     [JsonPropertyName("results")]
-    public ListToolsPayload? Results { get; set; }
-
-    [JsonIgnore]
-    public List<Tool>? Tools
-    {
-        get => Results?.Commands;
-        set => Results = value is null ? null : new(value);
-    }
+    public List<Tool>? Tools { get; set; }
 
     [JsonPropertyName("consolidated_tools")]
     public List<Tool>? ConsolidatedTools { get; set; }

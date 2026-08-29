@@ -42,23 +42,23 @@ public class ToolsListCommandTests
     /// <summary>
     /// Helper method to deserialize response results to CommandInfo list
     /// </summary>
-    private static ToolsListCommand.ToolsListCommandResult DeserializeCommandsResults(CommandResponse response) =>
-        DeserializeJson(response);
+    private static ToolsListCommand.ToolsListResult DeserializeCommandsResults(CommandResponse response) =>
+        DeserializeJson(response, () => new([], null));
 
     /// <summary>
     /// Helper method to deserialize response results to ToolNamesResult
     /// </summary>
-    private static ToolsListCommand.ToolsListCommandResult DeserializeResult(CommandResponse response) =>
-        DeserializeJson(response);
+    private static ToolsListCommand.ToolsListResult DeserializeResult(CommandResponse response) =>
+        DeserializeJson(response, () => new(null, []));
 
-    private static ToolsListCommand.ToolsListCommandResult DeserializeJson(CommandResponse response)
+    private static ToolsListCommand.ToolsListResult DeserializeJson(CommandResponse response, Func<ToolsListCommand.ToolsListResult> defaultValueFactory)
     {
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ModelsJsonContext.Default.ToolsListCommandResult);
+        var result = JsonSerializer.Deserialize(json, ModelsJsonContext.Default.ToolsListResult) ?? defaultValueFactory();
 
         Assert.NotNull(result);
         return result;
@@ -80,12 +80,6 @@ public class ToolsListCommandTests
 
         Assert.NotNull(result.Commands);
         Assert.NotEmpty(result.Commands);
-        Assert.Null(result.Names);
-
-        var json = JsonSerializer.SerializeToElement(response.Results);
-        Assert.Equal(JsonValueKind.Object, json.ValueKind);
-        Assert.True(json.TryGetProperty("commands", out _));
-        Assert.False(json.TryGetProperty("names", out _));
 
         foreach (var command in result.Commands)
         {
@@ -121,7 +115,7 @@ public class ToolsListCommandTests
         var json = JsonSerializer.Serialize(response.Results);
 
         // Verify JSON round-trip preserves all data
-        var serializedJson = JsonSerializer.Serialize(result, ModelsJsonContext.Default.ToolsListCommandResult);
+        var serializedJson = JsonSerializer.Serialize(result, ModelsJsonContext.Default.ToolsListResult);
         Assert.Equal(json, serializedJson);
     }
 

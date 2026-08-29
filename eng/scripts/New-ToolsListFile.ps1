@@ -51,10 +51,7 @@ try
 
         # Parse, sort options within each tool by name, and re-serialize
         $json = $outLines -join "`n" | ConvertFrom-Json
-        $commandsProperty = $json.results.PSObject.Properties['commands']
-        $tools = if ($null -ne $commandsProperty) { $commandsProperty.Value } else { $json.results }
-
-        foreach ($tool in $tools) {
+        foreach ($tool in $json.results) {
             if ($tool.option) {
                 $tool.option = @($tool.option | Sort-Object -Property name)
             }

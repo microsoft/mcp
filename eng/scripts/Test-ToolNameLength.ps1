@@ -142,8 +142,7 @@ foreach ($serverInfo in $serversToTest) {
         }
 
         $toolsResult = $toolsJson | ConvertFrom-Json
-        $commandsProperty = $toolsResult.results.PSObject.Properties['commands']
-        $tools = if ($null -ne $commandsProperty) { $commandsProperty.Value } else { $toolsResult.results }
+        $tools = $toolsResult.results
 
         if ($null -eq $tools) {
             Write-Warning "Server [$currentServerName] 'tools list' command did not return any tools - skipping"
