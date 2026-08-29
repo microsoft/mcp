@@ -388,6 +388,33 @@ public class SingleProxyToolLoaderTests
     }
 
     [Fact]
+    public async Task CallToolHandler_ClientExceptionReturnsErrorResult()
+    {
+        var client = LoopbackMcpClient.Create(_ => throw new InvalidOperationException("Transport failed."));
+        var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+        discoveryStrategy.GetOrCreateClientAsync(
+                "storage",
+                Arg.Any<McpClientOptions?>(),
+                Arg.Any<CancellationToken>())
+            .Returns(client);
+        var loader = new SingleProxyToolLoader(
+            discoveryStrategy,
+            Substitute.For<ILogger<SingleProxyToolLoader>>(),
+            Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration()),
+            CreateServerConfigurationOptions());
+
+        var result = await loader.CallToolHandler(
+            CreateCallToolRequestWithToolAndCommand("storage", "account_list"),
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.Contains(
+            "Transport failed.",
+            Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task GetChildToolList_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
     {
         // Arrange

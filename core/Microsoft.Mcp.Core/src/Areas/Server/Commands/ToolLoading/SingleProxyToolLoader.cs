@@ -425,7 +425,8 @@ public sealed class SingleProxyToolLoader(
                             Run again with the "learn" argument and the "tool" name to get a list of available tools and their parameters.
                             """
                     }
-                ]
+                ],
+                IsError = true
             };
         }
     }
