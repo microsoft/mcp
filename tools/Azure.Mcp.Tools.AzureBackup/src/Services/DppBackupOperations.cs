@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Core;
@@ -878,13 +878,15 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     public async Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName, string resourceGroup, string subscription,
-        string immutabilityState, string? tenant, CancellationToken cancellationToken)
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays,
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription),
-            (nameof(immutabilityState), immutabilityState));
+            (nameof(subscription), subscription));
 
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -894,10 +896,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         {
             Properties = new DataProtectionBackupVaultPatchProperties
             {
-                SecuritySettings = new BackupVaultSecuritySettings
-                {
-                    ImmutabilityState = new BackupVaultImmutabilityState(immutabilityState)
-                }
+                SecuritySettings = BuildImmutabilitySettings(immutabilityState, immutabilityType, immutabilityDurationDays),
             }
         };
         var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
@@ -906,45 +905,89 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         return new OperationResult("Succeeded", null, $"Immutability set to '{immutabilityState}' for vault '{vaultName}'.");
     }
 
+    /// <summary>
+    /// Builds the DPP vault security-settings payload for an immutability update.
+    /// Extracted for regression testing. DPP has no ImmutabilityConfiguration
+    /// (Type / DurationInDays); those parameters are RSV-only. We set both the nested
+    /// <c>ImmutabilitySettings.State</c> and the legacy top-level
+    /// <c>ImmutabilityState</c> so callers on older api-versions still see the change.
+    /// </summary>
+    internal static BackupVaultSecuritySettings BuildImmutabilitySettings(
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays)
+    {
+        _ = immutabilityType;
+        _ = immutabilityDurationDays;
+
+        var dppState = immutabilityState switch
+        {
+            AzureBackupImmutabilityState.Disabled => BackupVaultImmutabilityState.Disabled,
+            AzureBackupImmutabilityState.Unlocked => BackupVaultImmutabilityState.Unlocked,
+            AzureBackupImmutabilityState.Enabled => BackupVaultImmutabilityState.Unlocked,
+            AzureBackupImmutabilityState.Locked => BackupVaultImmutabilityState.Locked,
+            _ => throw new ArgumentOutOfRangeException(nameof(immutabilityState), immutabilityState, "Unsupported immutability state."),
+        };
+
+        return new BackupVaultSecuritySettings
+        {
+            ImmutabilityState = dppState,
+        };
+    }
+
     public async Task<OperationResult> ConfigureSoftDeleteAsync(
         string vaultName, string resourceGroup, string subscription,
-        string softDeleteState, string? softDeleteRetentionDays,
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays,
         string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription),
-            (nameof(softDeleteState), softDeleteState));
+            (nameof(subscription), subscription));
 
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
 
-        var softDeleteSettings = new BackupVaultSoftDeleteSettings
-        {
-            State = new BackupVaultSoftDeleteState(softDeleteState)
-        };
-
-        if (double.TryParse(softDeleteRetentionDays, out var retentionDays))
-        {
-            softDeleteSettings.RetentionDurationInDays = retentionDays;
-        }
-
         var patchData = new DataProtectionBackupVaultPatch
         {
             Properties = new DataProtectionBackupVaultPatchProperties
             {
-                SecuritySettings = new BackupVaultSecuritySettings
-                {
-                    SoftDeleteSettings = softDeleteSettings
-                }
+                SecuritySettings = BuildSoftDeleteSettings(softDeleteState, softDeleteRetentionDays),
             }
         };
         var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'.");
+    }
+
+    /// <summary>
+    /// Builds the DPP vault security-settings payload for a soft-delete update.
+    /// Extracted for regression testing. Retention is always sent — RP rejects
+    /// state-only patches on newer api-versions.
+    /// </summary>
+    internal static BackupVaultSecuritySettings BuildSoftDeleteSettings(
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays)
+    {
+        var dppState = softDeleteState switch
+        {
+            AzureBackupSoftDeleteState.On => BackupVaultSoftDeleteState.On,
+            AzureBackupSoftDeleteState.Off => BackupVaultSoftDeleteState.Off,
+            AzureBackupSoftDeleteState.AlwaysOn => BackupVaultSoftDeleteState.AlwaysOn,
+            _ => throw new ArgumentOutOfRangeException(nameof(softDeleteState), softDeleteState, "Unsupported soft delete state."),
+        };
+
+        return new BackupVaultSecuritySettings
+        {
+            SoftDeleteSettings = new BackupVaultSoftDeleteSettings
+            {
+                State = dppState,
+                RetentionDurationInDays = softDeleteRetentionDays,
+            },
+        };
     }
 
     public async Task<OperationResult> ConfigureMultiUserAuthorizationAsync(

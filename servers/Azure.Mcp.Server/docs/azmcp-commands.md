@@ -1134,21 +1134,29 @@ azmcp azurebackup governance find-unprotected --subscription <subscription> \
                                               [--tag-filter <tag-filter>]
 
 # Configures the immutability state for a backup vault.
+# --immutability-state: Disabled | Unlocked | Locked (Enabled is a backward-compat alias for Unlocked).
+# --immutability-type: AsPerPolicy | TimeBased. TimeBased additionally requires --immutability-duration-days (30-36135).
+# WARNING: Locked is IRREVERSIBLE and cannot be relaxed by any subsequent call.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup governance immutability --subscription <subscription> \
                                           --resource-group <resource-group> \
                                           --vault <vault> \
                                           --immutability-state <immutability-state> \
+                                          --immutability-type <immutability-type> \
+                                          [--immutability-duration-days <immutability-duration-days>] \
                                           [--vault-type <vault-type>]
 
 # Configures the soft delete settings for a backup vault.
+# --soft-delete: On | Off | AlwaysOn. WARNING: AlwaysOn is IRREVERSIBLE.
+# --soft-delete-retention-days: required, 14-180. Sent on every PATCH — api-version
+# 2026-02-01+ rejects state-only updates.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup governance soft-delete --subscription <subscription> \
                                          --resource-group <resource-group> \
                                          --vault <vault> \
                                          --soft-delete <soft-delete> \
-                                         [--vault-type <vault-type>] \
-                                         [--soft-delete-retention-days <soft-delete-retention-days>]
+                                         --soft-delete-retention-days <soft-delete-retention-days> \
+                                         [--vault-type <vault-type>]
 ```
 
 #### Disaster Recovery

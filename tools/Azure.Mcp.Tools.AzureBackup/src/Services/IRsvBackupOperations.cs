@@ -161,7 +161,9 @@ public interface IRsvBackupOperations
         string vaultName,
         string resourceGroup,
         string subscription,
-        string immutabilityState,
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays,
         string? tenant,
         CancellationToken cancellationToken);
 
@@ -169,8 +171,8 @@ public interface IRsvBackupOperations
         string vaultName,
         string resourceGroup,
         string subscription,
-        string softDeleteState,
-        string? softDeleteRetentionDays,
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays,
         string? tenant,
         CancellationToken cancellationToken);
 

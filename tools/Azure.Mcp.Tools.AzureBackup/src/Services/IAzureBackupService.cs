@@ -39,8 +39,8 @@ public interface IAzureBackupService
 
     // Governance
     Task<List<UnprotectedResourceInfo>> FindUnprotectedResourcesAsync(string subscription, string? resourceTypeFilter = null, string? resourceGroup = null, string? tagFilter = null, string? tenant = null, CancellationToken cancellationToken = default);
-    Task<OperationResult> ConfigureImmutabilityAsync(string vaultName, string resourceGroup, string subscription, string immutabilityState, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
-    Task<OperationResult> ConfigureSoftDeleteAsync(string vaultName, string resourceGroup, string subscription, string softDeleteState, string? vaultType = null, string? softDeleteRetentionDays = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<OperationResult> ConfigureImmutabilityAsync(string vaultName, string resourceGroup, string subscription, AzureBackupImmutabilityState immutabilityState, AzureBackupImmutabilityType immutabilityType, int? immutabilityDurationDays = null, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<OperationResult> ConfigureSoftDeleteAsync(string vaultName, string resourceGroup, string subscription, AzureBackupSoftDeleteState softDeleteState, int softDeleteRetentionDays, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
 
     // DR
     Task<OperationResult> ConfigureCrossRegionRestoreAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);

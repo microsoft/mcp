@@ -576,12 +576,36 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         // since RSV vault patch only supports identity and tag updates.
         if (!string.IsNullOrEmpty(softDelete))
         {
-            await ConfigureSoftDeleteAsync(vaultName, resourceGroup, subscription, softDelete, softDeleteRetentionDays, tenant, cancellationToken);
+            if (!Enum.TryParse<AzureBackupSoftDeleteState>(softDelete, ignoreCase: true, out var softDeleteEnum))
+            {
+                throw new ArgumentException(
+                    $"Invalid soft delete state '{softDelete}'. Valid values: Off, On, AlwaysOn.",
+                    nameof(softDelete));
+            }
+            if (!int.TryParse(softDeleteRetentionDays, out var retentionDays) || retentionDays < 14 || retentionDays > 180)
+            {
+                throw new ArgumentException(
+                    "Soft delete retention days is required (14-180) when updating soft delete state via 'vault update'.",
+                    nameof(softDeleteRetentionDays));
+            }
+            await ConfigureSoftDeleteAsync(vaultName, resourceGroup, subscription, softDeleteEnum, retentionDays, tenant, cancellationToken);
         }
 
         if (!string.IsNullOrEmpty(immutabilityState))
         {
-            await ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, immutabilityState, tenant, cancellationToken);
+            if (!Enum.TryParse<AzureBackupImmutabilityState>(immutabilityState, ignoreCase: true, out var immutabilityEnum))
+            {
+                throw new ArgumentException(
+                    $"Invalid immutability state '{immutabilityState}'. Valid values: Disabled, Unlocked, Enabled, Locked.",
+                    nameof(immutabilityState));
+            }
+            var normalizedImmutability = immutabilityEnum == AzureBackupImmutabilityState.Enabled
+                ? AzureBackupImmutabilityState.Unlocked
+                : immutabilityEnum;
+            // 'vault update' does not currently plumb immutability-type / duration; default to
+            // AsPerPolicy which is safe for both Disabled and Unlocked. Users needing TimeBased
+            // should use 'governance immutability' instead.
+            await ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedImmutability, AzureBackupImmutabilityType.AsPerPolicy, immutabilityDurationDays: null, tenant, cancellationToken);
         }
 
         return new OperationResult("Succeeded", null, $"Vault '{vaultName}' updated successfully.");
@@ -844,84 +868,146 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName, string resourceGroup, string subscription,
-        string immutabilityState, string? tenant, CancellationToken cancellationToken)
-    {
-        ValidateRequiredParameters(
-            (nameof(vaultName), vaultName),
-            (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription),
-            (nameof(immutabilityState), immutabilityState));
-
-        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
-        var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
-        var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
-        var vault = await vaultResource.GetAsync(cancellationToken);
-
-        var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
-        {
-            Properties = new RecoveryServicesVaultProperties
-            {
-                SecuritySettings = new RecoveryServicesSecuritySettings
-                {
-                    ImmutabilityState = new ImmutabilityState(immutabilityState)
-                }
-            }
-        };
-        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
-
-        return new OperationResult("Succeeded", null, $"Immutability set to '{immutabilityState}' for vault '{vaultName}'");
-    }
-
-    public async Task<OperationResult> ConfigureSoftDeleteAsync(
-        string vaultName, string resourceGroup, string subscription,
-        string softDeleteState, string? softDeleteRetentionDays,
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays,
         string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription),
-            (nameof(softDeleteState), softDeleteState));
+            (nameof(subscription), subscription));
 
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
 
-        var rsvSoftDeleteState = softDeleteState.ToUpperInvariant() switch
+        var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
         {
-            "ON" => RecoveryServicesSoftDeleteState.Enabled,
-            "OFF" => RecoveryServicesSoftDeleteState.Disabled,
-            "ALWAYSON" => RecoveryServicesSoftDeleteState.AlwaysON,
-            _ => new RecoveryServicesSoftDeleteState(softDeleteState)
+            Properties = new RecoveryServicesVaultProperties
+            {
+                SecuritySettings = BuildImmutabilitySettings(immutabilityState, immutabilityType, immutabilityDurationDays),
+            }
+        };
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        return new OperationResult("Succeeded", null, $"Immutability set to '{immutabilityState}' for vault '{vaultName}'.");
+    }
+
+    /// <summary>
+    /// Builds the RSV vault security-settings payload for an immutability update.
+    /// Extracted for regression testing: api-version 2026-05-01+ requires
+    /// <c>ImmutabilitySettings.Configuration.Type</c> whenever the state is not <c>Disabled</c>.
+    /// </summary>
+    internal static RecoveryServicesSecuritySettings BuildImmutabilitySettings(
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays)
+    {
+        var immutabilitySettings = new ImmutabilitySettings
+        {
+            State = immutabilityState.ToString() switch
+            {
+                nameof(AzureBackupImmutabilityState.Disabled) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Disabled,
+                nameof(AzureBackupImmutabilityState.Unlocked) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Unlocked,
+                nameof(AzureBackupImmutabilityState.Locked) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Locked,
+                // 'Enabled' should have been normalised to 'Unlocked' upstream; guard here just in case.
+                nameof(AzureBackupImmutabilityState.Enabled) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Unlocked,
+                _ => throw new ArgumentOutOfRangeException(nameof(immutabilityState), immutabilityState, "Unsupported immutability state."),
+            },
         };
 
-        var softDeleteSettings = new RecoveryServicesSoftDeleteSettings()
+        // api-version 2026-05-01+ requires ImmutabilityConfiguration whenever state != Disabled.
+        // For Disabled, omit Configuration so we don't send a nonsensical Type/Duration pair.
+        if (immutabilityState != AzureBackupImmutabilityState.Disabled)
         {
-            SoftDeleteState = rsvSoftDeleteState,
-        };
-
-        if (int.TryParse(softDeleteRetentionDays, out var retentionDays))
-        {
-            softDeleteSettings.SoftDeleteRetentionPeriodInDays = retentionDays;
+            immutabilitySettings.Configuration = new ImmutabilityConfiguration
+            {
+                Type = immutabilityType switch
+                {
+                    AzureBackupImmutabilityType.AsPerPolicy => ImmutabilityType.AsPerPolicy,
+                    AzureBackupImmutabilityType.TimeBased => ImmutabilityType.TimeBased,
+                    _ => throw new ArgumentOutOfRangeException(nameof(immutabilityType), immutabilityType, "Unsupported immutability type."),
+                },
+                DurationInDays = immutabilityType == AzureBackupImmutabilityType.TimeBased ? immutabilityDurationDays : null,
+            };
         }
+
+        return new RecoveryServicesSecuritySettings
+        {
+            ImmutabilitySettings = immutabilitySettings,
+        };
+    }
+
+    public async Task<OperationResult> ConfigureSoftDeleteAsync(
+        string vaultName, string resourceGroup, string subscription,
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
+        var vault = await vaultResource.GetAsync(cancellationToken);
 
         var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
         {
             Properties = new RecoveryServicesVaultProperties
             {
-                SecuritySettings = new RecoveryServicesSecuritySettings
-                {
-                    SoftDeleteSettings = softDeleteSettings
-                }
+                SecuritySettings = BuildSoftDeleteSettings(softDeleteState, softDeleteRetentionDays),
             }
         };
 
         var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
-        return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'");
+        return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'.");
+    }
+
+    /// <summary>
+    /// Builds the RSV vault security-settings payload for a soft-delete update.
+    /// Extracted for regression testing: api-version 2026-02-01+ requires both
+    /// <c>SoftDeleteRetentionPeriodInDays</c> and <c>EnhancedSecurityState</c> to be set
+    /// whenever the state changes; RP rejects state-only patches.
+    /// </summary>
+    internal static RecoveryServicesSecuritySettings BuildSoftDeleteSettings(
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays)
+    {
+        var rsvSoftDeleteState = softDeleteState switch
+        {
+            AzureBackupSoftDeleteState.On => RecoveryServicesSoftDeleteState.Enabled,
+            AzureBackupSoftDeleteState.Off => RecoveryServicesSoftDeleteState.Disabled,
+            AzureBackupSoftDeleteState.AlwaysOn => RecoveryServicesSoftDeleteState.AlwaysON,
+            _ => throw new ArgumentOutOfRangeException(nameof(softDeleteState), softDeleteState, "Unsupported soft delete state."),
+        };
+
+        // Mirror EnhancedSecurityState from SoftDeleteState. api-version 2026-02-01+ rejects
+        // updates missing this field. AlwaysON is IRREVERSIBLE — mirror it exactly.
+        var enhancedSecurityState = softDeleteState switch
+        {
+            AzureBackupSoftDeleteState.On => RecoveryServicesEnhancedSecurityState.Enabled,
+            AzureBackupSoftDeleteState.Off => RecoveryServicesEnhancedSecurityState.Disabled,
+            AzureBackupSoftDeleteState.AlwaysOn => RecoveryServicesEnhancedSecurityState.AlwaysON,
+            _ => throw new ArgumentOutOfRangeException(nameof(softDeleteState), softDeleteState, "Unsupported soft delete state."),
+        };
+
+        return new RecoveryServicesSecuritySettings
+        {
+            SoftDeleteSettings = new RecoveryServicesSoftDeleteSettings
+            {
+                SoftDeleteState = rsvSoftDeleteState,
+                SoftDeleteRetentionPeriodInDays = softDeleteRetentionDays,
+                EnhancedSecurityState = enhancedSecurityState,
+            },
+        };
     }
 
     public async Task<OperationResult> ConfigureCrossRegionRestoreAsync(

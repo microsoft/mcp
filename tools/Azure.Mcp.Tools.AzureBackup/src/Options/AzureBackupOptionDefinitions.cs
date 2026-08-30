@@ -13,9 +13,11 @@ public static class AzureBackupOptionDefinitions
     internal const string Policy = "The name of the backup policy.";
     internal const string Location = "The Azure region (e.g., 'eastus', 'westus2').";
     internal const string DatasourceId = "The datasource identifier. For VM/FileShare/DPP workloads, use the ARM resource ID (e.g., '/subscriptions/.../virtualMachines/myvm'). For RSV in-guest workloads (SQL/SAPHANA), use the protectable item name from 'protectableitem list' (e.g., 'SAPHanaDatabase;instance;dbname').";
-    internal const string ImmutabilityState = "Immutability state: 'Disabled', 'Enabled', or 'Locked' (irreversible).";
-    internal const string SoftDelete = "Soft delete state: 'AlwaysOn', 'On', or 'Off'.";
-    internal const string SoftDeleteRetentionDays = "Soft delete retention period (14-180 days).";
+    internal const string ImmutabilityState = "Vault immutability state. 'Disabled' turns immutability off. 'Unlocked' turns it on but can still be reversed by a vault admin ('Enabled' is accepted as a backward-compatible alias for 'Unlocked'). 'Locked' is IRREVERSIBLE - once locked, immutability cannot be disabled.";
+    internal const string ImmutabilityType = "Immutability duration mode. Required when '--immutability-state' is not 'Disabled'. 'AsPerPolicy' derives retention from the backup policy (typical for most workloads). 'TimeBased' pins retention to a fixed number of days from '--immutability-duration-days'.";
+    internal const string ImmutabilityDurationDays = "Fixed immutability duration in days (30-36135). Required when '--immutability-type' is 'TimeBased'; ignored when 'AsPerPolicy'.";
+    internal const string SoftDelete = "Vault soft delete state. 'Off' disables soft delete. 'On' enables soft delete for the configured retention period. 'AlwaysOn' is IRREVERSIBLE - once set, soft delete cannot be disabled.";
+    internal const string SoftDeleteRetentionDays = "Soft delete retention period in days (14-180). Required - the Recovery Services API rejects state-only updates on api-version 2026-02-01 and later.";
     internal const string WorkloadType = "Workload type: VM, SQL, SAPHANA, SAPASE, AzureFileShare (RSV types); AzureDisk, AzureBlob, AKS, ElasticSAN, PostgreSQLFlexible, ADLS, CosmosDB (DPP types). Also accepts aliases like AzureVM, SQLDatabase, etc.";
     public const string WorkloadTypeName = "workload-type";
     internal const string DailyRetentionDays = "Daily recovery point retention in days. Defaults to datasource-specific value if omitted.";

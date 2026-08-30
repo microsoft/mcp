@@ -183,10 +183,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> | investigation-required |
 | azurebackup_governance_find-unprotected | Find unprotected SQL databases and file shares discovered by backup vaults in my subscription | investigation-required |
 | azurebackup_governance_find-unprotected | Find all resources and sub-resources in resource group <resource_group> that are not protected by Azure Backup | investigation-required |
-| azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_governance_immutability | Set immutability to Enabled on vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_governance_soft-delete | Configure soft delete on Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_governance_soft-delete | Set soft delete state to AlwaysOn for vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_governance_immutability | Configure immutability state Unlocked with type AsPerPolicy on vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_governance_immutability | Set immutability to Unlocked with policy-based type on vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_governance_immutability | Enable time-based immutability on vault <vault_name> with 90 days retention in resource group <resource_group> | investigation-required |
+| azurebackup_governance_soft-delete | Turn on soft delete with 14 day retention on Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_governance_soft-delete | Enable soft delete with 30 days retention for vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_governance_soft-delete | Set soft delete state to AlwaysOn with 14 days retention for vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_job_get | Get backup job <job_id> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_job_get | Show me the status of backup job <job_id> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_create | Create a backup policy named <policy_name> for AzureIaasVM in vault <vault_name> in resource group <resource_group> | investigation-required |
