@@ -5,6 +5,7 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
+using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Services;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -28,8 +29,10 @@ public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<Ap
         string expectedValue)
     {
         // Arrange
+        var updateType = Enum.Parse<AppSettingUpdateType>(settingUpdateType, ignoreCase: true);
+
         // Set up the mock to return success for any arguments
-        Service.UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName, settingUpdateType,
+        Service.UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName, updateType,
             settingValue, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedValue);
 
@@ -51,7 +54,7 @@ public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<Ap
         // Assert
         // Verify that the mock was called with the expected parameters
         await Service.Received(1).UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName,
-            settingUpdateType, settingValue, Arg.Any<string?>(),
+            updateType, settingValue, Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.AppSettingsUpdateResult);
@@ -88,7 +91,7 @@ public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<Ap
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<AppSettingUpdateType>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
@@ -113,7 +116,7 @@ public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<Ap
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<AppSettingUpdateType>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
@@ -126,7 +129,8 @@ public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<Ap
     public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse(string settingUpdateType, string settingName, string? settingValue)
     {
         // Arrange
-        Service.UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName, settingUpdateType,
+        var updateType = Enum.Parse<AppSettingUpdateType>(settingUpdateType, ignoreCase: true);
+        Service.UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName, updateType,
             settingValue, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
@@ -150,7 +154,7 @@ public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<Ap
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
 
         await Service.Received(1).UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName,
-            settingUpdateType, settingValue, Arg.Any<string?>(),
+            updateType, settingValue, Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 }

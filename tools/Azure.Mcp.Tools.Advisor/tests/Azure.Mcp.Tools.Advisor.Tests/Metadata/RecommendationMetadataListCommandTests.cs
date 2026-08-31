@@ -122,8 +122,8 @@ public class RecommendationMetadataListCommandTests
             "en",
             Arg.Is<RecommendationMetadataFilters>(filters =>
                 filters.ResourceType == "microsoft.compute/virtualmachines" &&
-                filters.Impact == "High" &&
-                filters.Category == "HighAvailability" &&
+                filters.Impact == AdvisorImpact.High &&
+                filters.Category == AdvisorCategory.HighAvailability &&
                 filters.SubCategory == "ServiceUpgradeAndRetirement" &&
                 filters.TrackingId == "QNY1-HB8" &&
                 filters.RetirementDateOperator == "ge" &&
@@ -166,7 +166,7 @@ public class RecommendationMetadataListCommandTests
         await Service.Received(1).ListRecommendationMetadataAsync(
             "en",
             Arg.Is<RecommendationMetadataFilters>(filters =>
-                filters.Impact == "Medium"),
+                filters.Impact == AdvisorImpact.Medium),
             Arg.Any<CancellationToken>());
     }
 
@@ -194,7 +194,7 @@ public class RecommendationMetadataListCommandTests
         var response = await ExecuteCommandAsync("--impact", "Critical");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Allowed values", response.Message);
+        Assert.Contains("Must be one of", response.Message);
         await Service.DidNotReceive().ListRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<RecommendationMetadataFilters?>(),

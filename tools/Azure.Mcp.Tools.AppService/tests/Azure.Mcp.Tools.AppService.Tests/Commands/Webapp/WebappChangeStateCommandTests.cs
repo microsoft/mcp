@@ -5,6 +5,7 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp;
+using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Services;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -24,9 +25,10 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
     {
         // Arrange
         var expected = $"Web app state change '{stateChange}' initiated successfully.";
+        var expectedStateChange = Enum.Parse<WebappStateChange>(stateChange, ignoreCase: true);
 
         // Set up the mock to return success for any arguments
-        Service.ChangeWebAppStateAsync("sub123", "rg1", "test-app", stateChange, softRestart,
+        Service.ChangeWebAppStateAsync("sub123", "rg1", "test-app", expectedStateChange, softRestart,
             waitForCompletion, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -45,7 +47,7 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
 
         // Assert
         // Verify that the mock was called with the expected parameters
-        await Service.Received(1).ChangeWebAppStateAsync("sub123", "rg1", "test-app", stateChange,
+        await Service.Received(1).ChangeWebAppStateAsync("sub123", "rg1", "test-app", expectedStateChange,
             softRestart, waitForCompletion, Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
 
@@ -85,7 +87,7 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<WebappStateChange>(),
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
@@ -110,7 +112,7 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<WebappStateChange>(),
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
@@ -126,7 +128,8 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
     public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse(string stateChange, bool softRestart, bool waitForCompletion)
     {
         // Arrange
-        Service.ChangeWebAppStateAsync("sub123", "rg1", "test-app", stateChange, softRestart,
+        var expectedStateChange = Enum.Parse<WebappStateChange>(stateChange, ignoreCase: true);
+        Service.ChangeWebAppStateAsync("sub123", "rg1", "test-app", expectedStateChange, softRestart,
             waitForCompletion, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
@@ -144,7 +147,7 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
         var response = await ExecuteCommandAsync(unparsedArgs.ToArray());
 
         // Assert
-        await Service.Received(1).ChangeWebAppStateAsync("sub123", "rg1", "test-app", stateChange,
+        await Service.Received(1).ChangeWebAppStateAsync("sub123", "rg1", "test-app", expectedStateChange,
             softRestart, waitForCompletion, Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
 

@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
+using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Services;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -191,8 +192,8 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(captured);
-        Assert.Equal("Security", captured!.Category);
-        Assert.Equal("High", captured.Impact);
+        Assert.Equal(AdvisorCategory.Security, captured!.Category);
+        Assert.Equal(AdvisorImpact.High, captured.Impact);
         Assert.Equal("Microsoft.Storage/storageAccounts", captured.ResourceType);
         Assert.Equal("mystorage", captured.Resource);
         Assert.Equal("encryption", captured.Search);

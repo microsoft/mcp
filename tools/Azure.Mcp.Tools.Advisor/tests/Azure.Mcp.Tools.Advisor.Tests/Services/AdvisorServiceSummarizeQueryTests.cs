@@ -10,11 +10,11 @@ namespace Azure.Mcp.Tools.Advisor.Tests.Services;
 public class AdvisorServiceSummarizeQueryTests
 {
     [Theory]
-    [InlineData("category")]
-    [InlineData("impact")]
-    [InlineData("recommendation-type")]
-    [InlineData("resource-type")]
-    public void BuildSummarizeQuery_AllGroupByValues_ProduceValidQuery(string groupBy)
+    [InlineData(RecommendationGroupBy.Category)]
+    [InlineData(RecommendationGroupBy.Impact)]
+    [InlineData(RecommendationGroupBy.RecommendationType)]
+    [InlineData(RecommendationGroupBy.ResourceType)]
+    public void BuildSummarizeQuery_AllGroupByValues_ProduceValidQuery(RecommendationGroupBy groupBy)
     {
         var query = AdvisorService.BuildSummarizeQuery(groupBy, null, null);
 
@@ -27,43 +27,43 @@ public class AdvisorServiceSummarizeQueryTests
     [Fact]
     public void BuildSummarizeQuery_Category_UsesCorrectField()
     {
-        var query = AdvisorService.BuildSummarizeQuery("category", null, null);
+        var query = AdvisorService.BuildSummarizeQuery(RecommendationGroupBy.Category, null, null);
         Assert.Contains("properties.category", query);
     }
 
     [Fact]
     public void BuildSummarizeQuery_Impact_UsesCorrectField()
     {
-        var query = AdvisorService.BuildSummarizeQuery("impact", null, null);
+        var query = AdvisorService.BuildSummarizeQuery(RecommendationGroupBy.Impact, null, null);
         Assert.Contains("properties.impact", query);
     }
 
     [Fact]
     public void BuildSummarizeQuery_RecommendationType_UsesCorrectField()
     {
-        var query = AdvisorService.BuildSummarizeQuery("recommendation-type", null, null);
+        var query = AdvisorService.BuildSummarizeQuery(RecommendationGroupBy.RecommendationType, null, null);
         Assert.Contains("properties.shortDescription.problem", query);
     }
 
     [Fact]
     public void BuildSummarizeQuery_ResourceType_UsesExtractOnResourceId()
     {
-        var query = AdvisorService.BuildSummarizeQuery("resource-type", null, null);
+        var query = AdvisorService.BuildSummarizeQuery(RecommendationGroupBy.ResourceType, null, null);
         Assert.Contains("extract(@'/providers/([^/]+/[^/]+)', 1, tostring(properties.resourceMetadata.resourceId))", query);
     }
 
     [Fact]
     public void BuildSummarizeQuery_WithResourceGroup_AddsFilter()
     {
-        var query = AdvisorService.BuildSummarizeQuery("category", "myRg", null);
+        var query = AdvisorService.BuildSummarizeQuery(RecommendationGroupBy.Category, "myRg", null);
         Assert.Contains("resourceGroup =~ 'myRg'", query);
     }
 
     [Fact]
     public void BuildSummarizeQuery_WithFilters_AddsFilterClauses()
     {
-        var filters = new RecommendationFilters(Category: "Security", Impact: "High");
-        var query = AdvisorService.BuildSummarizeQuery("category", null, filters);
+        var filters = new RecommendationFilters(Category: AdvisorCategory.Security, Impact: AdvisorImpact.High);
+        var query = AdvisorService.BuildSummarizeQuery(RecommendationGroupBy.Category, null, filters);
 
         Assert.Contains("properties.category", query);
         Assert.Contains("'Security'", query);
@@ -74,7 +74,7 @@ public class AdvisorServiceSummarizeQueryTests
     [Fact]
     public void BuildSummarizeQuery_NoFilters_StillRestrictsToActiveRecommendations()
     {
-        var query = AdvisorService.BuildSummarizeQuery("category", null, null);
+        var query = AdvisorService.BuildSummarizeQuery(RecommendationGroupBy.Category, null, null);
 
         // Even with no user filters, the query always restricts to active ('New') recommendations.
         Assert.Contains("properties.recommendationStatus", query);
@@ -84,16 +84,16 @@ public class AdvisorServiceSummarizeQueryTests
     [Fact]
     public void BuildSummarizeQuery_UnsupportedGroupBy_Throws()
     {
-        Assert.Throws<ArgumentException>(
-            () => AdvisorService.BuildSummarizeQuery("nonsense", null, null));
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => AdvisorService.BuildSummarizeQuery((RecommendationGroupBy)999, null, null));
     }
 
     [Theory]
-    [InlineData("category")]
-    [InlineData("impact")]
-    [InlineData("recommendation-type")]
-    [InlineData("resource-type")]
-    public void MapGroupByToKqlField_AllValues_HandleEmptyWithUnknown(string groupBy)
+    [InlineData(RecommendationGroupBy.Category)]
+    [InlineData(RecommendationGroupBy.Impact)]
+    [InlineData(RecommendationGroupBy.RecommendationType)]
+    [InlineData(RecommendationGroupBy.ResourceType)]
+    public void MapGroupByToKqlField_AllValues_HandleEmptyWithUnknown(RecommendationGroupBy groupBy)
     {
         var field = AdvisorService.MapGroupByToKqlField(groupBy);
         Assert.Contains("'Unknown'", field);
@@ -103,15 +103,15 @@ public class AdvisorServiceSummarizeQueryTests
     [Fact]
     public void MapGroupByToKqlField_UnsupportedValue_Throws()
     {
-        var ex = Assert.Throws<ArgumentException>(
-            () => AdvisorService.MapGroupByToKqlField("invalid"));
-        Assert.Contains("invalid", ex.Message);
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(
+            () => AdvisorService.MapGroupByToKqlField((RecommendationGroupBy)999));
+        Assert.Contains("999", ex.Message);
     }
 
     [Fact]
     public void BuildSummarizeQuery_ResourceGroupWithSpecialChars_IsEscaped()
     {
-        var query = AdvisorService.BuildSummarizeQuery("category", "rg'inject", null);
+        var query = AdvisorService.BuildSummarizeQuery(RecommendationGroupBy.Category, "rg'inject", null);
         Assert.Contains("rg''inject", query);
     }
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.AppService.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AppService.Options.Database;
@@ -11,8 +12,8 @@ public sealed class DatabaseAddOptions : ISubscriptionOption
     [Option(Description = AppServiceOptionDefinitions.App)]
     public required string App { get; set; }
 
-    [Option(Description = "The type of database (e.g., SqlServer, MySQL, PostgreSQL, CosmosDB).")]
-    public required string DatabaseType { get; set; }
+    [Option(Description = "The type of database.")]
+    public required DatabaseType DatabaseType { get; set; }
 
     [Option(Description = "The server name or endpoint for the database (e.g., myserver.database.windows.net).")]
     public required string DatabaseServer { get; set; }

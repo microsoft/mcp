@@ -2,17 +2,18 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Advisor.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
 
 public class RecommendationListOptions : ISubscriptionOption
 {
-    [Option(Description = "Filter recommendations by category (e.g., 'Security', 'Cost', 'Performance', 'HighAvailability', 'OperationalExcellence'). Case-insensitive exact match.")]
-    public string? Category { get; set; }
+    [Option(Description = "Filter recommendations by category.")]
+    public AdvisorCategory? Category { get; set; }
 
-    [Option(Description = "Filter recommendations by business impact ('High', 'Medium', or 'Low'). Case-insensitive exact match.")]
-    public string? Impact { get; set; }
+    [Option(Description = "Filter recommendations by business impact.")]
+    public AdvisorImpact? Impact { get; set; }
 
     [Option(Description = "Filter recommendations by impacted Azure resource type (e.g., 'Microsoft.Storage/storageAccounts'). Case-insensitive exact match.")]
     public string? ResourceType { get; set; }

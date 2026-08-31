@@ -31,6 +31,7 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
         var subscription = "sub123";
         var resourceGroup = "rg1";
         var appName = "test-app";
+        var expectedDatabaseType = Enum.Parse<DatabaseType>(databaseType, ignoreCase: true);
 
         var expectedConnection = new DatabaseConnectionInfo
         {
@@ -47,7 +48,7 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
         Service.AddDatabaseAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<DatabaseType>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -60,7 +61,7 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
         var connectionInfo = await Service.AddDatabaseAsync(
             appName,
             resourceGroup,
-            databaseType,
+            expectedDatabaseType,
             databaseServer,
             databaseName,
             connectionString ?? string.Empty,
@@ -78,7 +79,7 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
         await Service.Received(1).AddDatabaseAsync(
             Arg.Is(appName),
             Arg.Is(resourceGroup),
-            Arg.Is(databaseType),
+            Arg.Is(expectedDatabaseType),
             Arg.Is(databaseServer),
             Arg.Is(databaseName),
             Arg.Any<string>(),
@@ -105,7 +106,7 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
         await Service.DidNotReceive().AddDatabaseAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<DatabaseType>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -184,14 +185,14 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
         var subscription = "sub123";
         var resourceGroup = "rg1";
         var appName = "test-app";
-        var databaseType = "SqlServer";
+        var databaseType = DatabaseType.SqlServer;
         var databaseServer = "test-server.database.windows.net";
         var databaseName = "test-db";
 
         Service.AddDatabaseAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<DatabaseType>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -205,7 +206,7 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--app", appName,
-            "--database-type", databaseType,
+            "--database-type", databaseType.ToString(),
             "--database-server", databaseServer,
             "--database", databaseName);
 

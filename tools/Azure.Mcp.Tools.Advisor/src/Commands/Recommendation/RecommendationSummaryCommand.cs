@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Extensions.Logging;
@@ -20,7 +21,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "This is the CORRECT tool whenever the user asks 'how many', 'top N <something>', 'which <X> has the most', " +
         "'breakdown by <field>', 'distribution of', 'count of', or any ranking/comparison question over the recommendation set. " +
         "Do not try to answer such questions by calling 'list' and counting client-side — 'list' is capped at 100 items and will undercount. " +
-        "Optional: --group-by (one of 'recommendation-type', 'category', 'impact', 'resource-type'); defaults to 'category' when omitted, " +
+        "--group-by defaults to 'category' when omitted, " +
         "which surfaces the high-level themes (Cost, Security, Reliability, etc.) so prompts like 'summarize the key themes from my Advisor recommendations' work without naming a field. " +
         "Only active recommendations (status 'New') are aggregated; dismissed and postponed ones are excluded. " +
         "Optional filters (same semantics as 'list'): --category, --impact, --resource-type, --resource, --search — applied BEFORE aggregation. " +
@@ -39,31 +40,9 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
     private readonly IAdvisorService _advisorService = advisorService;
     private readonly ILogger<RecommendationSummaryCommand> _logger = logger;
 
-    public override void ValidateOptions(RecommendationSummaryOptions options, ValidationResult validationResult)
-    {
-        base.ValidateOptions(options, validationResult);
-
-        if (options.GroupBy != null)
-        {
-            // --group-by is optional; when omitted we default to 'category' in ExecuteAsync.
-            var normalized = options.GroupBy.Trim();
-            if (string.IsNullOrEmpty(normalized) ||
-                !AdvisorService.AllowedGroupBy.Contains(normalized, StringComparer.OrdinalIgnoreCase))
-            {
-                validationResult.Errors.Add(
-                    $"Invalid --group-by value '{options.GroupBy}'. Allowed values: {string.Join(", ", AdvisorService.AllowedGroupBy)}.");
-            }
-        }
-    }
-
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecommendationSummaryOptions options, CancellationToken cancellationToken)
     {
-        // Validator in RegisterOptions guarantees that when --group-by is supplied it is one of
-        // AllowedGroupBy (case-insensitive). When omitted, default to 'category' — the most useful
-        // high-level "key themes" view. Normalize to lowercase so the service receives the canonical bucket name.
-        var groupBy = string.IsNullOrWhiteSpace(options.GroupBy)
-            ? AdvisorService.GroupByCategory
-            : options.GroupBy.Trim().ToLowerInvariant();
+        var groupBy = options.GroupBy ?? RecommendationGroupBy.Category;
 
         try
         {
