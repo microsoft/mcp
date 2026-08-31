@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Options;
 using Azure.Mcp.Tools.Adme.Services;
 using Microsoft.Mcp.Core.Commands;
@@ -38,7 +39,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.HealthCheck;
     LocalRequired = false,
     Secret = false)]
 public sealed class HealthCheckCommand(IHealthService healthService)
-    : BaseCommand<HealthCheckOptions, HealthCheckCommand.HealthCheckCommandResult>
+    : BaseCommand<HealthCheckOptions, HealthCheckResult>
 {
     private readonly IHealthService _healthService = healthService;
 
@@ -69,13 +70,8 @@ public sealed class HealthCheckCommand(IHealthService healthService)
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new HealthCheckCommandResult(
-                    result.AuthOk,
-                    result.AuthError,
-                    result.ConnectivityOk,
-                    result.ConnectivityError,
-                    result.ConnectivityStatusCode),
-                AdmeJsonContext.Default.HealthCheckCommandResult);
+                result,
+                AdmeJsonContext.Default.HealthCheckResult);
         }
         catch (Exception ex)
         {
@@ -84,14 +80,4 @@ public sealed class HealthCheckCommand(IHealthService healthService)
 
         return context.Response;
     }
-
-    /// <summary>
-    /// Represents the outcome of ADME authentication and connectivity checks.
-    /// </summary>
-    public sealed record HealthCheckCommandResult(
-        bool AuthOk,
-        string? AuthError,
-        bool ConnectivityOk,
-        string? ConnectivityError,
-        int? ConnectivityStatusCode);
 }

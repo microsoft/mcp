@@ -31,7 +31,7 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
 
         var result = ValidateAndDeserializeResponse(
             response,
-            AdmeJsonContext.Default.HealthCheckCommandResult);
+            AdmeJsonContext.Default.HealthCheckResult);
         Assert.True(result.AuthOk);
         Assert.True(result.ConnectivityOk);
         Assert.Equal(200, result.ConnectivityStatusCode);

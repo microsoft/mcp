@@ -3,7 +3,7 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Tools.Adme.Commands.HealthCheck;
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Schema;
 
 namespace Azure.Mcp.Tools.Adme;
@@ -11,7 +11,7 @@ namespace Azure.Mcp.Tools.Adme;
 /// <summary>
 /// Provides source-generated JSON metadata for ADME responses.
 /// </summary>
-[JsonSerializable(typeof(HealthCheckCommand.HealthCheckCommandResult))]
+[JsonSerializable(typeof(HealthCheckResult))]
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(SchemaListResponse))]
 [JsonSourceGenerationOptions(
