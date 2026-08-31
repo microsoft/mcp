@@ -23,15 +23,15 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// </summary>
 public sealed class CommandFactoryToolLoader(
     ICommandFactory commandFactory,
-    IOptions<ToolLoaderOptions> options,
+    IOptions<ServerRuntimeConfiguration> configuration,
     ILogger<CommandFactoryToolLoader> logger) : BaseToolLoader(logger)
 {
     private readonly ICommandFactory _commandFactory = commandFactory;
-    private readonly IOptions<ToolLoaderOptions> _options = options;
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration;
     private IReadOnlyDictionary<string, IBaseCommand> _toolCommands =
-        (options.Value.Namespace == null || options.Value.Namespace.Length == 0)
+        (configuration.Value.Namespace == null || configuration.Value.Namespace.Length == 0)
             ? commandFactory.AllCommands
-            : commandFactory.GroupCommands(options.Value.Namespace);
+            : commandFactory.GroupCommands(configuration.Value.Namespace);
 
     /// <summary>
     /// Lists all tools available from the command factory.
@@ -44,18 +44,18 @@ public sealed class CommandFactoryToolLoader(
         var visibleCommands = CommandFactory.GetVisibleCommands(_toolCommands);
 
         // Filter by specific tools if provided
-        if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
+        if (_configuration.Value.Tool != null && _configuration.Value.Tool.Length > 0)
         {
             visibleCommands = visibleCommands.Where(kvp =>
             {
                 var toolKey = kvp.Key;
-                return _options.Value.Tool.Any(tool => tool.Contains(toolKey, StringComparison.OrdinalIgnoreCase));
+                return _configuration.Value.Tool.Any(tool => tool.Contains(toolKey, StringComparison.OrdinalIgnoreCase));
             });
         }
 
         var tools = visibleCommands
-            .Where(kvp => !_options.Value.ReadOnly || kvp.Value.Metadata.ReadOnly)
-            .Where(kvp => !_options.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
+            .Where(kvp => !_configuration.Value.ReadOnly || kvp.Value.Metadata.ReadOnly)
+            .Where(kvp => !_configuration.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
             .Select(kvp => GetTool(kvp.Key, kvp.Value))
             .ToList();
 
@@ -89,18 +89,18 @@ public sealed class CommandFactoryToolLoader(
         }
 
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
-            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request));
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params.Arguments?.Keys));
 
         var toolName = request.Params.Name;
 
         // Check if tool filtering is enabled and validate the requested tool
-        if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
+        if (_configuration.Value.Tool != null && _configuration.Value.Tool.Length > 0)
         {
-            if (!_options.Value.Tool.Any(tool => tool.Contains(toolName, StringComparison.OrdinalIgnoreCase)))
+            if (!_configuration.Value.Tool.Any(tool => tool.Contains(toolName, StringComparison.OrdinalIgnoreCase)))
             {
                 var content = new TextContentBlock
                 {
-                    Text = $"Tool '{toolName}' is not available. This server is configured to only expose the tools: {string.Join(", ", _options.Value.Tool.Select(t => $"'{t}'"))}",
+                    Text = $"Tool '{toolName}' is not available. This server is configured to only expose the tools: {string.Join(", ", _configuration.Value.Tool.Select(t => $"'{t}'"))}",
                 };
 
                 return new CallToolResult
@@ -132,7 +132,7 @@ public sealed class CommandFactoryToolLoader(
             .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(command));
 
         // Enforce read-only mode at execution time
-        if (_options.Value.ReadOnly && !command.Metadata.ReadOnly)
+        if (_configuration.Value.ReadOnly && !command.Metadata.ReadOnly)
         {
             var content = new TextContentBlock
             {
@@ -148,7 +148,7 @@ public sealed class CommandFactoryToolLoader(
         }
 
         // Enforce HTTP mode restrictions at execution time
-        if (_options.Value.IsHttpMode && command.Metadata.LocalRequired)
+        if (_configuration.Value.IsHttpMode && command.Metadata.LocalRequired)
         {
             var content = new TextContentBlock
             {
@@ -174,7 +174,7 @@ public sealed class CommandFactoryToolLoader(
             request,
             toolName,
             command,
-            _options.Value.DangerouslyDisableElicitation,
+            _configuration.Value.DangerouslyDisableElicitation,
             _logger,
             cancellationToken);
 

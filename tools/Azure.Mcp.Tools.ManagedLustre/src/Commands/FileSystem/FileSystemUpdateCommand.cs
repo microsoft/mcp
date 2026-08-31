@@ -63,7 +63,6 @@ public sealed class FileSystemUpdateCommand(IManagedLustreService service, ILogg
                 options.SquashUid,
                 options.SquashGid,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(fs), ManagedLustreJsonContext.Default.FileSystemUpdateResult);

@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -59,7 +58,6 @@ public class ResourceGetCommandTests : SubscriptionCommandUnitTestsBase<Resource
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResources);
 
@@ -93,7 +91,6 @@ public class ResourceGetCommandTests : SubscriptionCommandUnitTestsBase<Resource
             Arg.Any<string>(),
             Arg.Is("test-rg"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResources);
 
@@ -138,7 +135,6 @@ public class ResourceGetCommandTests : SubscriptionCommandUnitTestsBase<Resource
             Arg.Is("test-rg"),
             Arg.Is("test-resource"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResource);
 
@@ -163,7 +159,6 @@ public class ResourceGetCommandTests : SubscriptionCommandUnitTestsBase<Resource
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -182,7 +177,6 @@ public class ResourceGetCommandTests : SubscriptionCommandUnitTestsBase<Resource
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -203,7 +197,6 @@ public class ResourceGetCommandTests : SubscriptionCommandUnitTestsBase<Resource
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -227,7 +220,6 @@ public class ResourceGetCommandTests : SubscriptionCommandUnitTestsBase<Resource
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -236,7 +228,6 @@ public class ResourceGetCommandTests : SubscriptionCommandUnitTestsBase<Resource
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new AiResourceInformation());
 
@@ -289,7 +280,6 @@ public class ResourceGetCommandTests : SubscriptionCommandUnitTestsBase<Resource
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(resourceWithDeployments);
 

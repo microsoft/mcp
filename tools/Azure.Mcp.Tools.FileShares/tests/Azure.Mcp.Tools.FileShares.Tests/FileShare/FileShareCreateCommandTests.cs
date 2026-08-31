@@ -5,7 +5,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.FileShares.Commands.FileShare;
 using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -107,7 +106,6 @@ public class FileShareCreateCommandTests : SubscriptionCommandUnitTestsBase<File
                 Arg.Any<string[]>(),
                 Arg.Any<Dictionary<string, string>>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedShare);
         }
@@ -155,7 +153,6 @@ public class FileShareCreateCommandTests : SubscriptionCommandUnitTestsBase<File
             Arg.Any<string[]>(),
             Arg.Any<Dictionary<string, string>>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedShare);
 
@@ -186,7 +183,6 @@ public class FileShareCreateCommandTests : SubscriptionCommandUnitTestsBase<File
             Arg.Any<string[]>(),
             Arg.Any<Dictionary<string, string>>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -228,7 +224,6 @@ public class FileShareCreateCommandTests : SubscriptionCommandUnitTestsBase<File
             Arg.Any<string[]>(),
             Arg.Any<Dictionary<string, string>>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedShare);
 
@@ -265,7 +260,6 @@ public class FileShareCreateCommandTests : SubscriptionCommandUnitTestsBase<File
             Arg.Any<string[]>(),
             Arg.Any<Dictionary<string, string>>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

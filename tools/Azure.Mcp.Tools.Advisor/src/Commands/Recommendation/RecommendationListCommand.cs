@@ -77,7 +77,6 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
             var recommendations = await _advisorService.ListRecommendationsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
-                options.RetryPolicy,
                 filters,
                 top,
                 options.Tenant,

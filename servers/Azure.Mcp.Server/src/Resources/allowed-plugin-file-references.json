@@ -1,5 +1,15 @@
 {
   "references": {
+    "azure-kusto-graph-skills": [
+      "azure-kusto-graph\\references\\EXAMPLES.md",
+      "azure-kusto-graph\\references\\KUSTO_EXPLORER_LAUNCH.md",
+      "azure-kusto-graph\\references\\SCENARIOS.md",
+      "azure-kusto-irql-graph\\references\\DEPLOY_IRQL_FUNCTIONS.md",
+      "azure-kusto-irql-graph\\references\\EXAMPLES.md",
+      "azure-kusto-irql-graph\\references\\KUSTO_EXPLORER_LAUNCH.md",
+      "azure-kusto-irql\\references\\EXAMPLES.md",
+      "azure-kusto-irql\\references\\KUSTO_EXPLORER_LAUNCH.md"
+    ],
     "azure-skills": [
       "airunway-aks-setup\\references\\gpu-profiles.md",
       "airunway-aks-setup\\references\\model-sizing.md",
@@ -282,6 +292,8 @@
       "azure-diagnostics\\scripts\\appservice-diagnostics.sh",
       "azure-diagnostics\\scripts\\containerapp-diagnostics.ps1",
       "azure-diagnostics\\scripts\\containerapp-diagnostics.sh",
+      "azure-diagnostics\\scripts\\pod-evidence.ps1",
+      "azure-diagnostics\\scripts\\pod-evidence.sh",
       "azure-diagnostics\\scripts\\run-ig.ps1",
       "azure-diagnostics\\scripts\\run-ig.sh",
       "azure-diagnostics\\scripts\\test-messaging-connectivity.ps1",
@@ -341,6 +353,7 @@
       "azure-enterprise-infra-planner\\references\\phases\\5-verify.md",
       "azure-enterprise-infra-planner\\references\\phases\\6-generate-iac.md",
       "azure-enterprise-infra-planner\\references\\phases\\7-deploy.md",
+      "azure-enterprise-infra-planner\\references\\referenced-workload.md",
       "azure-enterprise-infra-planner\\references\\resources\\README.md",
       "azure-enterprise-infra-planner\\references\\resources\\ai-ml.md",
       "azure-enterprise-infra-planner\\references\\resources\\compute-apps.md",
@@ -729,11 +742,13 @@
       "microsoft-foundry\\foundry-agent\\create\\create-prompt.md",
       "microsoft-foundry\\foundry-agent\\create\\quick-start-hosted.md",
       "microsoft-foundry\\foundry-agent\\create\\references\\enable-incoming-a2a.md",
+      "microsoft-foundry\\foundry-agent\\create\\references\\foundry-model.md",
       "microsoft-foundry\\foundry-agent\\create\\references\\foundry-tool-catalog.md",
       "microsoft-foundry\\foundry-agent\\create\\references\\guardrails\\guardrail-api-create.md",
       "microsoft-foundry\\foundry-agent\\create\\references\\guardrails\\guardrail-attach.md",
       "microsoft-foundry\\foundry-agent\\create\\references\\guardrails\\guardrail-manage.md",
       "microsoft-foundry\\foundry-agent\\create\\references\\local-run.md",
+      "microsoft-foundry\\foundry-agent\\create\\references\\re-host.md",
       "microsoft-foundry\\foundry-agent\\create\\references\\sdk-operations.md",
       "microsoft-foundry\\foundry-agent\\create\\references\\skills\\skill-attach.md",
       "microsoft-foundry\\foundry-agent\\create\\references\\skills\\skill-manage.md",
@@ -819,6 +834,11 @@
       "microsoft-foundry\\foundry-agent\\trace\\references\\tracing-insights-api.md",
       "microsoft-foundry\\foundry-agent\\trace\\trace.md",
       "microsoft-foundry\\foundry-agent\\troubleshoot\\troubleshoot.md",
+      "microsoft-foundry\\foundry-agent\\validate\\references\\default-rules.yaml",
+      "microsoft-foundry\\foundry-agent\\validate\\references\\report-schema.json",
+      "microsoft-foundry\\foundry-agent\\validate\\references\\report-template.md",
+      "microsoft-foundry\\foundry-agent\\validate\\references\\rules-schema.json",
+      "microsoft-foundry\\foundry-agent\\validate\\validate.md",
       "microsoft-foundry\\models\\deploy-model\\TEST_PROMPTS.md",
       "microsoft-foundry\\models\\deploy-model\\capacity\\scripts\\discover_and_rank.ps1",
       "microsoft-foundry\\models\\deploy-model\\capacity\\scripts\\discover_and_rank.sh",
@@ -873,16 +893,6 @@
       "python-appservice-deploy\\scripts\\generate-app-name.sh",
       "python-appservice-deploy\\scripts\\retry-az-create.ps1",
       "python-appservice-deploy\\scripts\\retry-az-create.sh"
-    ],
-    "azure-kusto-graph-skills": [
-      "azure-kusto-graph\\references\\EXAMPLES.md",
-      "azure-kusto-graph\\references\\KUSTO_EXPLORER_LAUNCH.md",
-      "azure-kusto-graph\\references\\SCENARIOS.md",
-      "azure-kusto-irql-graph\\references\\DEPLOY_IRQL_FUNCTIONS.md",
-      "azure-kusto-irql-graph\\references\\EXAMPLES.md",
-      "azure-kusto-irql-graph\\references\\KUSTO_EXPLORER_LAUNCH.md",
-      "azure-kusto-irql\\references\\EXAMPLES.md",
-      "azure-kusto-irql\\references\\KUSTO_EXPLORER_LAUNCH.md"
     ]
   }
 }

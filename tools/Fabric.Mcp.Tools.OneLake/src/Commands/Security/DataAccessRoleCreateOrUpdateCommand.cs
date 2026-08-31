@@ -13,7 +13,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
 
 [CommandMetadata(
     Id = "a1b2c3d4-1001-4000-8000-000000000003",
-    Name = "create_or_update_data_access_role",
+    Name = "create-or-update-data-access-role",
     Title = "Create or Update OneLake Data Access Role",
     Description = """
         Upsert a single data access role on a single item. Use flat options (--name,

@@ -13,20 +13,19 @@ using Azure.ResourceManager.Network.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Compute.Services;
 
 public class ComputeService(
     IAzureService azureService,
     ILogger<ComputeService> logger,
-    IOptions<ServerStartOptions> serviceStartOptions)
+    IOptions<ServerRuntimeConfiguration> configuration)
     : BaseAzureResourceService(azureService), IComputeService
 {
     private readonly ILogger<ComputeService> _logger = logger;
-    private readonly IOptions<ServerStartOptions> _serviceStartOptions = serviceStartOptions;
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration;
 
     // Default VM size (D-series v5, approximately 2 vCPU and 8 GB RAM)
     private const string DefaultVmSize = "Standard_D2s_v5";
@@ -84,10 +83,9 @@ public class ComputeService(
         int? osDiskSizeGb = null,
         string? osDiskType = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -512,10 +510,9 @@ public class ComputeService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -532,10 +529,9 @@ public class ComputeService(
         string? resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -565,10 +561,9 @@ public class ComputeService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -588,10 +583,9 @@ public class ComputeService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -613,10 +607,9 @@ public class ComputeService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -633,10 +626,9 @@ public class ComputeService(
         string? resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -666,10 +658,9 @@ public class ComputeService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -694,10 +685,9 @@ public class ComputeService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -733,10 +723,9 @@ public class ComputeService(
         int? osDiskSizeGb = null,
         string? osDiskType = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -903,10 +892,9 @@ public class ComputeService(
         string? scaleInPolicy = null,
         string? tags = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -1019,10 +1007,9 @@ public class ComputeService(
         string? bootDiagnostics = null,
         string? userData = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -1134,10 +1121,9 @@ public class ComputeService(
         string subscription,
         bool? forceDeletion = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -1169,10 +1155,9 @@ public class ComputeService(
         bool noWait = false,
         bool skipShutdown = false,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -1228,10 +1213,9 @@ public class ComputeService(
         string subscription,
         bool? forceDeletion = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -1452,10 +1436,9 @@ public class ComputeService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
@@ -1468,12 +1451,11 @@ public class ComputeService(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(
                 SubscriptionResource.CreateResourceIdentifier(subscription));
             var disks = new List<DiskInfo>();
@@ -1566,10 +1548,9 @@ public class ComputeService(
         long? uploadSizeBytes = null,
         string? securityType = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
         var rgResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
@@ -1699,10 +1680,9 @@ public class ComputeService(
         string? diskAccessId = null,
         string? tier = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
         var rgResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
@@ -1835,12 +1815,11 @@ public class ComputeService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(
                 SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
@@ -1880,7 +1859,7 @@ public class ComputeService(
 
     private string ResolveSshPublicKey(string sshPublicKey)
     {
-        if (!_serviceStartOptions.Value.IsHttpMode)
+        if (!_configuration.Value.IsHttpMode)
         {
             // In stdio mode, allow resolving file paths for convenience
             if (File.Exists(sshPublicKey))

@@ -51,7 +51,6 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
                     options.ResourceGroup,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 var singleResult = consumerGroup != null ? [consumerGroup] : new List<Models.ConsumerGroup>();
@@ -66,7 +65,6 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
                     options.ResourceGroup,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(consumerGroups ?? []), EventHubsJsonContext.Default.ConsumerGroupGetCommandResult);

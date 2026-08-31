@@ -61,7 +61,4 @@ public class RecommendationListOptions : ISubscriptionOption
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
-
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

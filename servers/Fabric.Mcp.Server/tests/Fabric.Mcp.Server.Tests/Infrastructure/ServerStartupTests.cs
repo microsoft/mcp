@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Text.Json.Nodes;
+using ModelContextProtocol.Protocol;
 using Xunit;
 
 namespace Fabric.Mcp.Server.Tests.Infrastructure;
@@ -74,12 +75,12 @@ public class ServerStartupTests
             using var client = new HttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
             {
-                Content = CreateStateless2026RequestContent("tools/list")
+                Content = CreateStateless2026RequestContent(RequestMethods.ToolsList)
             };
             request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
             request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", StatelessProtocolVersion);
-            request.Headers.TryAddWithoutValidation("Mcp-Method", "tools/list");
-            request.Headers.TryAddWithoutValidation("Mcp-Name", "tools/list");
+            request.Headers.TryAddWithoutValidation("Mcp-Method", RequestMethods.ToolsList);
+            request.Headers.TryAddWithoutValidation("Mcp-Name", RequestMethods.ToolsList);
 
             var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);
             var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);

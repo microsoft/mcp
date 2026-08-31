@@ -4,7 +4,6 @@
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.EventHub;
 using Azure.Mcp.Tools.EventHubs.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -29,7 +28,6 @@ public class EventHubDeleteCommandTests : SubscriptionCommandUnitTestsBase<Event
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(true);
         }
@@ -60,7 +58,6 @@ public class EventHubDeleteCommandTests : SubscriptionCommandUnitTestsBase<Event
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Namespace 'test-namespace' not found in resource group 'test-rg'"));
 
@@ -86,7 +83,6 @@ public class EventHubDeleteCommandTests : SubscriptionCommandUnitTestsBase<Event
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Authentication failed"));
 
@@ -112,7 +108,6 @@ public class EventHubDeleteCommandTests : SubscriptionCommandUnitTestsBase<Event
             Arg.Is("test-rg"),
             Arg.Is("test-subscription"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -138,7 +133,6 @@ public class EventHubDeleteCommandTests : SubscriptionCommandUnitTestsBase<Event
             Arg.Is("test-rg"),
             Arg.Is("test-subscription"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(false);
 

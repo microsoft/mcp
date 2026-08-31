@@ -68,7 +68,10 @@ words:
   - platformlandingzone
   - precheck
   - prereq
+  - privateendpoint
   - registeredserver
+  - reprotect
+  - reprotection
   - scheduledtasks
   - serviceaccount
   - servicefabric
@@ -81,6 +84,7 @@ words:
   - syncgroup
   - targetdir
   - tcount
+  - testcontainer
   - toolsets
   - toplist
   - webjobs

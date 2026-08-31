@@ -9,7 +9,6 @@ using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.Insights.Services;
@@ -49,14 +48,13 @@ public sealed class InsightsService(IAzureService azureService, ICacheService ca
     public async Task<SubscriptionAggregation> AggregateSubscriptionAsync(
         string subscription,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken,
         IProgress<string>? progress = null,
         bool noCache = false)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 
         // Cache ARG data by subscription ID
         var cacheKey = $"sub:{subscriptionResource.Data.SubscriptionId}";
@@ -102,12 +100,11 @@ public sealed class InsightsService(IAzureService azureService, ICacheService ca
 
     public async Task<SubscriptionAggregation> AggregateTenantAsync(
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken,
         IProgress<string>? progress = null,
         bool noCache = false)
     {
-        var subscriptions = await AzureService.GetSubscriptions(tenant, retryPolicy, cancellationToken);
+        var subscriptions = await AzureService.GetSubscriptions(tenant, cancellationToken: cancellationToken);
         if (subscriptions.Count == 0)
         {
             throw new InvalidOperationException("No accessible subscriptions were found in the tenant.");
