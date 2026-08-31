@@ -323,8 +323,6 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         return results;
     }
 
-    private const int MaxBatchResources = 50;
-
     public async Task<List<ResourceMetricsResult>> QueryMetricsBatchAsync(
         string subscription,
         string? resourceGroup,
@@ -342,6 +340,8 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
+        // The resource count bounds and start/end time/interval formats are validated up front by
+        // MetricsBatchQueryCommand.ValidateOptions, before any resource-resolution or ARM calls are made.
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(metricNamespace), metricNamespace));
         ArgumentNullException.ThrowIfNull(resources);
         ArgumentNullException.ThrowIfNull(metricNames);
@@ -350,11 +350,6 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         if (resourceNames.Count == 0)
         {
             throw new ArgumentException("At least one resource must be specified.", nameof(resources));
-        }
-
-        if (resourceNames.Count > MaxBatchResources)
-        {
-            throw new ArgumentException($"A maximum of {MaxBatchResources} resources can be queried in a single batch request. Provided: {resourceNames.Count}.", nameof(resources));
         }
 
         // Resolve each resource name (or already-valid resource ID) to a full resource identifier.
@@ -388,32 +383,17 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
 
         if (!string.IsNullOrEmpty(startTime))
         {
-            if (!DateTimeOffset.TryParse(startTime, out var start))
-            {
-                throw new ArgumentException($"Invalid start time format: {startTime}");
-            }
-            queryOptions.StartTime = start;
+            queryOptions.StartTime = DateTimeOffset.Parse(startTime);
         }
 
         if (!string.IsNullOrEmpty(endTime))
         {
-            if (!DateTimeOffset.TryParse(endTime, out var end))
-            {
-                throw new ArgumentException($"Invalid end time format: {endTime}");
-            }
-            queryOptions.EndTime = end;
+            queryOptions.EndTime = DateTimeOffset.Parse(endTime);
         }
 
         if (!string.IsNullOrEmpty(interval))
         {
-            try
-            {
-                queryOptions.Granularity = XmlConvert.ToTimeSpan(interval);
-            }
-            catch (Exception ex)
-            {
-                throw new ArgumentException($"Invalid interval format: {ex}.", ex);
-            }
+            queryOptions.Granularity = XmlConvert.ToTimeSpan(interval);
         }
 
         if (!string.IsNullOrEmpty(aggregation))

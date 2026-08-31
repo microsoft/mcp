@@ -30,6 +30,8 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
 public sealed class MetricsBatchQueryCommand(ILogger<MetricsBatchQueryCommand> logger, IMonitorMetricsService metricsService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<MetricsBatchQueryOptions, MetricsBatchQueryCommand.MetricsBatchQueryCommandResult>(subscriptionResolver)
 {
+    private const int MaxBatchResources = 50;
+
     private readonly ILogger<MetricsBatchQueryCommand> _logger = logger;
     private readonly IMonitorMetricsService _metricsService = metricsService;
 
@@ -37,30 +39,62 @@ public sealed class MetricsBatchQueryCommand(ILogger<MetricsBatchQueryCommand> l
     {
         base.ValidateOptions(options, validationResult);
 
-        if (string.IsNullOrWhiteSpace(options.Resources))
+        // '--resources' and '--metric-names' are required options, so the framework already rejects null,
+        // empty, or whitespace-only values before this runs. Empty/whitespace-only entries within the
+        // comma-delimited list are implicitly ignored (consistent with how other commands handle comma-delimited
+        // values); only reject when nothing usable remains after splitting (e.g. the value was just ",").
+        string[] resources = options.Resources.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (resources.Length == 0)
         {
             validationResult.Errors.Add($"Invalid format for '--resources'. Provide a comma-separated list of resource names or resource IDs to query (e.g. resource1,resource2).");
         }
-        else
+        else if (resources.Length > MaxBatchResources)
         {
-            string[] resources = [.. options.Resources.Split(',').Select(t => t.Trim())];
-            if (resources.Length == 0 || resources.Any(s => string.IsNullOrWhiteSpace(s)))
-            {
-                validationResult.Errors.Add($"Invalid format for '--resources'. Provide a comma-separated list of resource names or resource IDs to query (e.g. resource1,resource2).");
-            }
+            validationResult.Errors.Add($"A maximum of {MaxBatchResources} resources can be queried in a single batch request. Provided: {resources.Length}.");
         }
 
-        if (string.IsNullOrWhiteSpace(options.MetricNames))
+        if (options.MetricNames.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length == 0)
         {
             validationResult.Errors.Add($"Invalid format for '--metric-names'. Provide a comma-separated list of metric names to query (e.g. CPU,memory).");
         }
-        else
-        {
-            string[] metricNames = [.. options.MetricNames.Split(',').Select(t => t.Trim())];
 
-            if (metricNames.Length == 0 || metricNames.Any(s => string.IsNullOrWhiteSpace(s)))
+        // Validate the start/end time formats up front instead of letting the service throw once the request
+        // is already in flight (PostBindOptions guarantees these are always populated by the time this runs).
+        bool validStartTime = DateTimeOffset.TryParse(options.StartTime, out var startTime);
+        if (!validStartTime)
+        {
+            validationResult.Errors.Add($"Invalid format for '--start-time': '{options.StartTime}'. Provide a valid date/time (e.g. 2023-01-01T00:00:00Z).");
+        }
+
+        bool validEndTime = DateTimeOffset.TryParse(options.EndTime, out var endTime);
+        if (!validEndTime)
+        {
+            validationResult.Errors.Add($"Invalid format for '--end-time': '{options.EndTime}'. Provide a valid date/time (e.g. 2023-01-01T00:00:00Z).");
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.Interval))
+        {
+            if (!TryParseIsoDuration(options.Interval, out var interval) || interval <= TimeSpan.Zero)
             {
-                validationResult.Errors.Add($"Invalid format for '--metric-names'. Provide a comma-separated list of metric names to query (e.g. CPU,memory).");
+                validationResult.Errors.Add($"Invalid format for '--interval': '{options.Interval}'. Provide an ISO 8601 duration (e.g. PT1H, PT5M).");
+            }
+            else if (validStartTime && validEndTime)
+            {
+                // The number of time buckets can be derived directly from the start/end time range, so reject
+                // requests that would clearly exceed the bucket limit before calling the service. When no
+                // interval is specified, Azure Monitor selects the granularity automatically, so the actual
+                // bucket count can only be verified after the query executes (see the check in ExecuteAsync).
+                int maxBuckets = options.MaxBuckets ?? 50;
+                int expectedBucketCount = (int)Math.Ceiling((endTime - startTime) / interval);
+
+                if (expectedBucketCount > maxBuckets)
+                {
+                    validationResult.Errors.Add(
+                        $"The requested time range ('--start-time' to '--end-time') combined with '--interval' of '{options.Interval}' would produce " +
+                        $"approximately {expectedBucketCount} time buckets, which exceeds the maximum allowed limit of {maxBuckets}. " +
+                        $"To resolve this issue, either query a smaller time range, increase the interval size (e.g., use PT1H instead of PT5M), " +
+                        $"or increase the '--max-buckets' parameter.");
+                }
             }
         }
     }
@@ -72,12 +106,26 @@ public sealed class MetricsBatchQueryCommand(ILogger<MetricsBatchQueryCommand> l
         options.EndTime ??= DateTime.UtcNow.ToString("o"); // Default to now if not specified
     }
 
+    private static bool TryParseIsoDuration(string value, out TimeSpan result)
+    {
+        try
+        {
+            result = System.Xml.XmlConvert.ToTimeSpan(value);
+            return true;
+        }
+        catch (FormatException)
+        {
+            result = TimeSpan.Zero;
+            return false;
+        }
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, MetricsBatchQueryOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            string[] resources = [.. options.Resources.Split(',').Select(t => t.Trim())];
-            string[] metricNames = [.. options.MetricNames.Split(',').Select(t => t.Trim())];
+            string[] resources = options.Resources.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            string[] metricNames = options.MetricNames.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
             var results = await _metricsService.QueryMetricsBatchAsync(
                 options.Subscription!,
@@ -96,7 +144,9 @@ public sealed class MetricsBatchQueryCommand(ILogger<MetricsBatchQueryCommand> l
                 options.Tenant,
                 cancellationToken);
 
-            // Validate bucket count limit
+            // When '--interval' isn't specified, Azure Monitor selects the granularity automatically, so the
+            // resulting bucket count can't be predicted ahead of time (see ValidateOptions for the case where
+            // '--interval' is explicit). Validate the actual results here as a fallback for that scenario.
             if (results?.Count > 0)
             {
                 int maxBuckets = options.MaxBuckets ?? 50; // Use provided value or default to 50

@@ -103,7 +103,7 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
             "--filter", "dimension eq 'value'",
             "--order-by", "total asc",
             "--top", "5",
-            "--max-buckets", "100");
+            "--max-buckets", "2000");
 
         // Assert
         await Service.Received(1).QueryMetricsBatchAsync(
@@ -181,8 +181,8 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
     [InlineData("sa1,sa2", true)]
     [InlineData("sa1, sa2, sa3", true)]
     [InlineData(",", false)]
-    [InlineData("sa1,", false)]
-    [InlineData(",sa1", false)]
+    [InlineData("sa1,", true)]
+    [InlineData(",sa1", true)]
     public async Task Validate_Resources_ValidatesCorrectly(string resources, bool shouldBeValid)
     {
         // Arrange & Act
@@ -210,7 +210,7 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
     [InlineData("CPU", true)]
     [InlineData("CPU,Memory", true)]
     [InlineData(",", false)]
-    [InlineData("CPU,", false)]
+    [InlineData("CPU,", true)]
     public async Task Validate_MetricNames_ValidatesCorrectly(string metricNames, bool shouldBeValid)
     {
         // Arrange & Act
@@ -421,6 +421,254 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("exceeds the maximum allowed limit", response.Message);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_IntervalWouldExceedBucketLimit_ReturnsBadRequestWithoutCallingService()
+    {
+        // Act
+        // 24 hours at PT1M granularity is 1440 buckets, which exceeds the default limit of 50.
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--resources", "sa1",
+            "--metric-names", "CPU",
+            "--metric-namespace", "microsoft.compute/virtualmachines",
+            "--start-time", "2023-01-01T00:00:00Z",
+            "--end-time", "2023-01-02T00:00:00Z",
+            "--interval", "PT1M");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("exceeds the maximum allowed limit of 50", response.Message);
+        await Service.DidNotReceive().QueryMetricsBatchAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_IntervalWithinBucketLimit_CallsService()
+    {
+        // Arrange
+        // 2 hours at PT1H granularity is 2 buckets, well within the default limit of 50.
+        Service.QueryMetricsBatchAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--resources", "sa1",
+            "--metric-names", "CPU",
+            "--metric-namespace", "microsoft.compute/virtualmachines",
+            "--start-time", "2023-01-01T00:00:00Z",
+            "--end-time", "2023-01-01T02:00:00Z",
+            "--interval", "PT1H");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_NoIntervalSpecified_SkipsUpfrontBucketValidation()
+    {
+        // Arrange
+        // With no interval specified, the expected bucket count can't be derived from the inputs alone
+        // (Azure Monitor selects the granularity automatically), so the up-front check must not run and
+        // the service should still be called even though the time range spans multiple days.
+        Service.QueryMetricsBatchAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--resources", "sa1",
+            "--metric-names", "CPU",
+            "--metric-namespace", "microsoft.compute/virtualmachines",
+            "--start-time", "2023-01-01T00:00:00Z",
+            "--end-time", "2023-01-31T00:00:00Z");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    #endregion
+
+    #region ExecuteAsync Tests - Resource Count and Time Range Validation
+
+    [Fact]
+    public async Task ExecuteAsync_TooManyResources_ReturnsBadRequestWithoutCallingService()
+    {
+        // Arrange
+        var resources = string.Join(',', Enumerable.Range(1, 51).Select(i => $"sa{i}"));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--resources", resources,
+            "--metric-names", "CPU",
+            "--metric-namespace", "microsoft.compute/virtualmachines");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("A maximum of 50 resources can be queried", response.Message);
+        await Service.DidNotReceive().QueryMetricsBatchAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_InvalidStartTime_ReturnsBadRequestWithoutCallingService()
+    {
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--resources", "sa1",
+            "--metric-names", "CPU",
+            "--metric-namespace", "microsoft.compute/virtualmachines",
+            "--start-time", "not-a-date");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Invalid format for '--start-time'", response.Message);
+        await Service.DidNotReceive().QueryMetricsBatchAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_InvalidEndTime_ReturnsBadRequestWithoutCallingService()
+    {
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--resources", "sa1",
+            "--metric-names", "CPU",
+            "--metric-namespace", "microsoft.compute/virtualmachines",
+            "--end-time", "not-a-date");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Invalid format for '--end-time'", response.Message);
+        await Service.DidNotReceive().QueryMetricsBatchAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_InvalidInterval_ReturnsBadRequestWithoutCallingService()
+    {
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--resources", "sa1",
+            "--metric-names", "CPU",
+            "--metric-namespace", "microsoft.compute/virtualmachines",
+            "--interval", "5 minutes");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Invalid format for '--interval'", response.Message);
+        await Service.DidNotReceive().QueryMetricsBatchAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    #endregion
+
+    #region ExecuteAsync Tests - Service Error Handling
 
     [Fact]
     public async Task ExecuteAsync_ServiceThrowsException_HandlesError()
