@@ -66,15 +66,18 @@ public sealed class SchemaGetCommandTests : CommandUnitTestsBase<SchemaGetComman
     }
 
     [Theory]
-    [InlineData("osdu:wks:Well")]
-    [InlineData("osdu:wks:Well:1.0")]
-    [InlineData("osdu:wks:Well:1.*.0")]
-    [InlineData("osdu:wks:Well:1.0.0:extra")]
-    public async Task Execute_WithInvalidKind_DoesNotCallService(string kind)
+    [InlineData("--endpoint", "not-a-uri")]
+    [InlineData("--endpoint", "https://example.com")]
+    [InlineData("--data-partition", " ")]
+    public async Task Execute_WithInvalidTarget_DoesNotCallService(string option, string value)
     {
+        const string kind = "osdu:wks:master-data--Well:1.0.0";
+        var endpoint = option == "--endpoint" ? value : "https://sample.energy.azure.com";
+        var dataPartition = option == "--data-partition" ? value : "opendes";
+
         var response = await ExecuteCommandAsync(
-            "--endpoint", "https://sample.energy.azure.com",
-            "--data-partition", "opendes",
+            "--endpoint", endpoint,
+            "--data-partition", dataPartition,
             "--kind", kind);
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);

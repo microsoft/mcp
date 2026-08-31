@@ -17,8 +17,8 @@ namespace Azure.Mcp.Tools.Adme.Commands.Schema;
     Name = "get",
     Title = "Get ADME Schema",
     Description = """
-        Get the full JSON schema definition for one OSDU kind - its fields, types, and structure - from an
-        Azure Data Manager for Energy (ADME) data partition.
+        Get the full JSON schema definition for one OSDU kind - its fields, types, and structure - from a data
+        partition.
 
         Required: --kind, --endpoint, and --data-partition.
 
@@ -40,12 +40,7 @@ public sealed class SchemaGetCommand(ISchemaService schemaService)
     public override void ValidateOptions(SchemaGetOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-
-        if (!AdmeServiceHelper.IsFullyQualifiedKind(options.Kind))
-        {
-            validationResult.Errors.Add(
-                "--kind must use the fully-qualified format 'authority:source:type:major.minor.patch'.");
-        }
+        AdmeServiceHelper.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
     }
 
     /// <summary>

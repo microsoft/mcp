@@ -39,21 +39,21 @@ public sealed class AdmeSetup : IAreaSetup
     {
         var adme = new CommandGroup(
             Name,
-            "Azure Data Manager for Energy (ADME) operations. ADME hosts the OSDU data platform; commands "
-                + "target a specific ADME endpoint and data partition and cover platform health checks and "
+            "Azure Data Manager for Energy operations for the OSDU data platform. Commands target a specific "
+                + "endpoint and data partition and cover platform health checks and "
                 + "OSDU schema discovery.",
             Title);
 
         var health = new CommandGroup(
             "health",
-            "Verify Microsoft Entra authentication and connectivity to an ADME endpoint and data partition. "
-                + "Use these first when other ADME commands fail.");
+            "Verify Microsoft Entra authentication and connectivity to an endpoint and data partition. "
+                + "Use these first when other commands fail.");
         health.AddCommand<HealthCheckCommand>(serviceProvider);
         adme.AddSubGroup(health);
 
         var schema = new CommandGroup(
             "schema",
-            "Discover and inspect OSDU schemas (kinds) in an ADME data partition. List enumerates which "
+            "Discover and inspect OSDU schemas (kinds) in a data partition. List enumerates which "
                 + "kinds and versions exist; get returns a kind's full field definitions.");
         schema.AddCommand<SchemaGetCommand>(serviceProvider);
         schema.AddCommand<SchemaListCommand>(serviceProvider);

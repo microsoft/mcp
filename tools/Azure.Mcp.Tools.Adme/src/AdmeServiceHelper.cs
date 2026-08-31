@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Json.Serialization.Metadata;
 using Azure.Core;
 using Azure.ResourceManager;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
@@ -21,6 +22,35 @@ internal static class AdmeServiceHelper
     public const string HttpClientName = "adme";
     public const string AuthScope = "https://energy.azure.com/.default";
 
+    public static void ValidateTarget(
+        string endpoint,
+        string dataPartition,
+        ValidationResult validationResult)
+    {
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var endpointUri))
+        {
+            validationResult.Errors.Add(
+                "--endpoint must be an absolute HTTPS Azure Data Manager for Energy endpoint.");
+        }
+        else
+        {
+            try
+            {
+                ValidateEndpoint(endpointUri);
+            }
+            catch (Exception)
+            {
+                validationResult.Errors.Add(
+                    "--endpoint must be an HTTPS Azure Data Manager for Energy endpoint hosted on an allowed domain.");
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(dataPartition))
+        {
+            validationResult.Errors.Add("--data-partition must not be empty.");
+        }
+    }
+
     /// <summary>
     /// Validates an ADME service endpoint URI.
     /// </summary>
@@ -28,24 +58,6 @@ internal static class AdmeServiceHelper
     {
         EndpointValidator.ValidateAzureServiceEndpoint(endpoint.AbsoluteUri, "adme", ArmEnvironment.AzurePublicCloud);
         return endpoint;
-    }
-
-    public static bool IsFullyQualifiedKind(string? kind)
-    {
-        if (string.IsNullOrWhiteSpace(kind) || kind.Length > 256 || kind.Any(char.IsWhiteSpace))
-        {
-            return false;
-        }
-
-        var segments = kind.Split(':');
-        if (segments.Length != 4 || segments.Any(string.IsNullOrWhiteSpace))
-        {
-            return false;
-        }
-
-        var version = segments[3].Split('.');
-        return version.Length == 3 && version.All(component =>
-            component.Length > 0 && component.All(char.IsAsciiDigit) && int.TryParse(component, out _));
     }
 
     public static async Task<T> SendAsync<T>(

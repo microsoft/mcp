@@ -17,9 +17,9 @@ namespace Azure.Mcp.Tools.Adme.Commands.Schema;
     Name = "list",
     Title = "List ADME Schemas",
     Description = """
-        List OSDU schemas (which kinds/versions exist) in an Azure Data Manager for Energy (ADME) data
-        partition, optionally filtered. Returns lightweight descriptors (id, entityType, version, status,
-        scope) - NOT the full field definitions; use 'azmcp adme schema get' for those.
+        List OSDU schemas (which kinds/versions exist) in a data partition, optionally filtered. Returns
+        lightweight descriptors (id, entityType, version, status, scope) - NOT the full field definitions;
+        use 'azmcp adme schema get' for those.
 
         Required: --endpoint and --data-partition.
 
@@ -28,6 +28,9 @@ namespace Azure.Mcp.Tools.Adme.Commands.Schema;
         'INTERNAL' = tenant/partition-defined); --schema-version-major/minor/patch; --latest-version to
         return only the newest version per entity; --offset and --limit for paging (the response carries
         offset and totalCount).
+
+        When --latest-version is true, supply version filters in order: major, then minor, then patch.
+        A minor version without a major version, or a patch version without a minor version, is invalid.
 
         --status defaults to 'PUBLISHED', which is what you usually want when enumerating usable kinds.
         With no status filter, results mix PUBLISHED/DEVELOPMENT/OBSOLETE; prefer status='PUBLISHED'
@@ -47,31 +50,7 @@ public sealed class SchemaListCommand(ISchemaService schemaService)
     public override void ValidateOptions(SchemaListOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-
-        if (options.Offset < 0)
-        {
-            validationResult.Errors.Add("--offset must be greater than or equal to 0.");
-        }
-
-        if (options.Limit is <= 0 or > 1000)
-        {
-            validationResult.Errors.Add("--limit must be between 1 and 1000.");
-        }
-
-        if (options.SchemaVersionMajor < 0 || options.SchemaVersionMinor < 0 || options.SchemaVersionPatch < 0)
-        {
-            validationResult.Errors.Add("Schema version components must be greater than or equal to 0.");
-        }
-
-        if (options.SchemaVersionMinor.HasValue && !options.SchemaVersionMajor.HasValue)
-        {
-            validationResult.Errors.Add("--schema-version-minor requires --schema-version-major.");
-        }
-
-        if (options.SchemaVersionPatch.HasValue && !options.SchemaVersionMinor.HasValue)
-        {
-            validationResult.Errors.Add("--schema-version-patch requires --schema-version-minor.");
-        }
+        AdmeServiceHelper.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
     }
 
     /// <summary>

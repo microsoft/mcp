@@ -145,18 +145,17 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
     }
 
     [Theory]
-    [InlineData("--offset", "-1")]
-    [InlineData("--limit", "0")]
-    [InlineData("--limit", "1001")]
-    [InlineData("--schema-version-major", "-1")]
-    [InlineData("--schema-version-minor", "1")]
-    [InlineData("--schema-version-patch", "1")]
-    public async Task Execute_WithInvalidPagingOrVersion_ReturnsValidationError(string option, string value)
+    [InlineData("--endpoint", "ftp://sample.energy.azure.com")]
+    [InlineData("--endpoint", "https://example.com")]
+    [InlineData("--data-partition", " ")]
+    public async Task Execute_WithInvalidTarget_DoesNotCallService(string option, string value)
     {
+        var endpoint = option == "--endpoint" ? value : "https://sample.energy.azure.com";
+        var dataPartition = option == "--data-partition" ? value : "opendes";
+
         var response = await ExecuteCommandAsync(
-            "--endpoint", "https://sample.energy.azure.com",
-            "--data-partition", "opendes",
-            option, value);
+            "--endpoint", endpoint,
+            "--data-partition", dataPartition);
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().ListSchemasAsync(

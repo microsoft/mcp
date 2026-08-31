@@ -117,7 +117,7 @@ public sealed class SchemaRecordedTests(
     {
         var allArguments = CreateArguments();
         allArguments["source"] = WksSource;
-        allArguments["limit"] = 1000;
+        allArguments["limit"] = 100;
         var publishedArguments = new Dictionary<string, object?>(allArguments)
         {
             ["status"] = "PUBLISHED",

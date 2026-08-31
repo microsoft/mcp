@@ -29,25 +29,25 @@ public sealed class SchemaListOptions
     [Option(Description = "Filter by schema major version, for example 1. When combined with --latest-version, supply version filters in order (major, then minor).")]
     public int? SchemaVersionMajor { get; set; }
 
-    [Option(Description = "Filter by schema minor version, for example 0. Requires --schema-version-major to be meaningful.")]
+    [Option(Description = "Filter by schema minor version, for example 0. When --latest-version is true, requires --schema-version-major.")]
     public int? SchemaVersionMinor { get; set; }
 
-    [Option(Description = "Filter by schema patch version, for example 0. Requires --schema-version-major and --schema-version-minor to be meaningful.")]
+    [Option(Description = "Filter by schema patch version, for example 0. When --latest-version is true, requires --schema-version-major and --schema-version-minor.")]
     public int? SchemaVersionPatch { get; set; }
 
-    [Option(Description = "Return only the newest version of each schema entity, collapsing duplicates across scopes. Use this to avoid paging through every historical version.")]
+    [Option(Description = "Return only the newest version of each schema entity, collapsing duplicates across scopes. When filtering by version, supply components in order: major, then minor, then patch.")]
     public bool LatestVersion { get; set; }
 
     [Option(Description = "The starting offset for paging. Defaults to 0; compare with the response's totalCount to decide whether to fetch further pages.")]
     public int Offset { get; set; }
 
-    [Option(Description = "The maximum number of schema descriptors to return in one page. Defaults to 100.")]
+    [Option(Description = "The number of schema descriptors to return in one page, from 0 through 100. Defaults to 100.")]
     public int? Limit { get; set; }
 
-    [Option(Description = "The Azure Data Manager for Energy endpoint, for example 'https://contoso.energy.azure.com'.")]
+    [Option(Description = "The service endpoint, for example 'https://contoso.energy.azure.com'.")]
     public required string Endpoint { get; set; }
 
-    [Option(Description = "The ADME data partition to target, for example 'contoso-dp1'.")]
+    [Option(Description = "The data partition to target, for example 'contoso-dp1'.")]
     public required string DataPartition { get; set; }
 
 }

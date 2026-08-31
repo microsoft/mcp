@@ -16,19 +16,19 @@ namespace Azure.Mcp.Tools.Adme.Commands.HealthCheck;
     Name = "check",
     Title = "Check ADME Health",
     Description = """
-        Check Microsoft Entra authentication and platform connectivity for an Azure Data Manager for Energy
-        (ADME) endpoint and data partition. Use this first when other ADME tools fail, to tell a sign-in or
-        token problem apart from a wrong endpoint, wrong data partition, or blocked network path.
+        Check Microsoft Entra authentication and platform connectivity for an endpoint and data partition.
+        Use this first when other tools fail, to tell a sign-in or token problem apart from a wrong endpoint,
+        wrong data partition, or blocked network path.
 
         Required: --endpoint and --data-partition.
         Optional: --include-auth, --include-connectivity
 
-        --include-auth acquires a token for the ADME scope. --include-connectivity calls the ADME storage
+        --include-auth acquires a token for the platform scope. --include-connectivity calls the storage
         info endpoint with that token, so it implies the auth check and is skipped when auth fails. Specify
         at least one of the two; with neither, no checks are performed.
 
         Returns: authOk plus authError, connectivityOk plus connectivityError, and the HTTP
-        connectivityStatusCode returned by ADME (401/403 points at auth or entitlements, 404 usually means a
+        connectivityStatusCode returned by the service (401/403 points at auth or entitlements, 404 usually means a
         bad endpoint, and other 4xx often means an unknown data partition).
         """,
     Destructive = false,
@@ -45,6 +45,7 @@ public sealed class HealthCheckCommand(IHealthService healthService)
     public override void ValidateOptions(HealthCheckOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        AdmeServiceHelper.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
 
         if (!options.IncludeAuth && !options.IncludeConnectivity)
         {

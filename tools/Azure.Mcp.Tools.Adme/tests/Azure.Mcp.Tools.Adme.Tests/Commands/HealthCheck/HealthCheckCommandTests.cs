@@ -85,4 +85,23 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
         await Service.DidNotReceiveWithAnyArgs().CheckHealthAsync(
             default!, default!, default, default, TestContext.Current.CancellationToken);
     }
+
+    [Theory]
+    [InlineData("--endpoint", "http://sample.energy.azure.com")]
+    [InlineData("--endpoint", "https://example.com")]
+    [InlineData("--data-partition", " ")]
+    public async Task Execute_WithInvalidTarget_DoesNotCallService(string option, string value)
+    {
+        var endpoint = option == "--endpoint" ? value : "https://sample.energy.azure.com";
+        var dataPartition = option == "--data-partition" ? value : "opendes";
+
+        var response = await ExecuteCommandAsync(
+            "--endpoint", endpoint,
+            "--data-partition", dataPartition,
+            "--include-auth");
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
+        await Service.DidNotReceiveWithAnyArgs().CheckHealthAsync(
+            default!, default!, default, default, TestContext.Current.CancellationToken);
+    }
 }

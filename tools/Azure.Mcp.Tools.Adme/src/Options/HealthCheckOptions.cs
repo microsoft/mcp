@@ -10,15 +10,15 @@ namespace Azure.Mcp.Tools.Adme.Options;
 /// </summary>
 public sealed class HealthCheckOptions
 {
-    [Option(Description = "The Azure Data Manager for Energy endpoint, for example 'https://contoso.energy.azure.com'.")]
+    [Option(Description = "The service endpoint, for example 'https://contoso.energy.azure.com'.")]
     public required string Endpoint { get; set; }
 
-    [Option(Description = "The ADME data partition to target, for example 'contoso-dp1'.")]
+    [Option(Description = "The data partition to target, for example 'contoso-dp1'.")]
     public required string DataPartition { get; set; }
 
-    [Option(Description = "Verify Microsoft Entra authentication by acquiring an access token for the ADME scope. Reports authOk and authError.")]
+    [Option(Description = "Verify Microsoft Entra authentication by acquiring an access token for the platform scope. Reports authOk and authError.")]
     public bool IncludeAuth { get; set; }
 
-    [Option(Description = "Verify connectivity by calling the ADME storage info endpoint with an access token. Implies the auth check and is skipped if it fails. Reports connectivityOk, connectivityError, and connectivityStatusCode.")]
+    [Option(Description = "Verify connectivity by calling the storage info endpoint with an access token. Implies the auth check and is skipped if it fails. Reports connectivityOk, connectivityError, and connectivityStatusCode.")]
     public bool IncludeConnectivity { get; set; }
 }
