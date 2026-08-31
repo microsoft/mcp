@@ -12,7 +12,7 @@ public partial class DatadogService(IAzureService azureService)
 {
     public async Task<List<string>> ListMonitoredResources(string resourceGroup, string subscription, string datadogResource, CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenantIdOrName: null, retryPolicy: null, armClientOptions: null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenantIdOrName: null, armClientOptions: null, cancellationToken);
 
         var resourceId = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Datadog/monitors/{datadogResource}";
 

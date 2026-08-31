@@ -220,8 +220,7 @@
         },
         "libraryuris": {
             "description": "The fully qualified path of libraries.",
-            "type": "string",
-            "readOnly": false
+            "type": "string"
         },
         "SparkJobDefinitionFormat": {
             "type": "string",

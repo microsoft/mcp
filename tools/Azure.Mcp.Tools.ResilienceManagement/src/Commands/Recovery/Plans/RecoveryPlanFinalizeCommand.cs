@@ -41,7 +41,7 @@ public sealed class RecoveryPlanFinalizeCommand(
     {
         try
         {
-            RecoveryPlanFinalizeResult result = await _resilienceManagementService.FinalizeRecoveryPlanAsync(options.ServiceGroup, options.RecoveryPlan, options.Tenant, options.RetryPolicy, cancellationToken);
+            RecoveryPlanFinalizeResult result = await _resilienceManagementService.FinalizeRecoveryPlanAsync(options.ServiceGroup, options.RecoveryPlan, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(result, ResilienceManagementJsonContext.Default.RecoveryPlanFinalizeResult);
         }
         catch (Exception ex)

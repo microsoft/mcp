@@ -72,7 +72,6 @@ public sealed class OpenAiChatCompletionsCreateCommand(IFoundryExtensionsService
                 options.User,
                 options.Tenant,
                 options.AuthMethod ?? AuthMethod.Credential,
-                options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

@@ -47,7 +47,7 @@ public sealed class RecoveryJobResumeCommand(
     {
         try
         {
-            RecoveryJobResumeResult result = await _resilienceManagementService.ResumeRecoveryJobAsync(options.ServiceGroup, options.RecoveryPlan, options.RecoveryJob, options.Description, options.Tenant, options.RetryPolicy, cancellationToken);
+            RecoveryJobResumeResult result = await _resilienceManagementService.ResumeRecoveryJobAsync(options.ServiceGroup, options.RecoveryPlan, options.RecoveryJob, options.Description, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(result, ResilienceManagementJsonContext.Default.RecoveryJobResumeResult);
         }
         catch (Exception ex)

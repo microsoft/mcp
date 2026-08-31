@@ -64,7 +64,7 @@ public sealed class RecoveryPlanFailoverCommand(
         {
             RecoveryPlanFailoverResult result = await _resilienceManagementService.FailoverRecoveryPlanAsync(
                 options.ServiceGroup, options.RecoveryPlan, options.SourceLocations ?? [], options.SelectedResourceIds,
-                options.UserConsent, options.Tenant, options.RetryPolicy, cancellationToken);
+                options.UserConsent, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(result, ResilienceManagementJsonContext.Default.RecoveryPlanFailoverResult);
         }
         catch (Exception ex)

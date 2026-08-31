@@ -46,7 +46,6 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
             "plan1",
             Arg.Is<RecoveryOperationNames>(value => value.ToString() == operationName),
             null,
-            null,
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -72,7 +71,7 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("must be Failover", response.Message, StringComparison.OrdinalIgnoreCase);
         await Service.DidNotReceiveWithAnyArgs().ValidateRecoveryPlanForOperationAsync(
-            default!, default!, default, default, default, TestContext.Current.CancellationToken);
+            default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -88,7 +87,6 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
             "sg1",
             "plan1",
             Arg.Is<RecoveryOperationNames>(value => value == RecoveryOperationNames.Reprotect),
-            null,
             null,
             Arg.Any<CancellationToken>())
             .Returns(expected);
@@ -118,7 +116,6 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
             Arg.Any<string>(),
             Arg.Any<RecoveryOperationNames>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
@@ -141,7 +138,6 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
             Arg.Any<string>(),
             Arg.Any<RecoveryOperationNames>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new TimeoutException(internalDetails));
 

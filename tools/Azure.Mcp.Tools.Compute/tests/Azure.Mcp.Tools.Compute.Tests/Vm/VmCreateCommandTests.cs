@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -81,7 +80,6 @@ public class VmCreateCommandTests : SubscriptionCommandUnitTestsBase<VmCreateCom
                 Arg.Any<int?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(createResult);
         }
@@ -139,7 +137,6 @@ public class VmCreateCommandTests : SubscriptionCommandUnitTestsBase<VmCreateCom
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -205,7 +202,6 @@ public class VmCreateCommandTests : SubscriptionCommandUnitTestsBase<VmCreateCom
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(conflictException);
 
@@ -251,7 +247,6 @@ public class VmCreateCommandTests : SubscriptionCommandUnitTestsBase<VmCreateCom
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 
@@ -307,7 +302,6 @@ public class VmCreateCommandTests : SubscriptionCommandUnitTestsBase<VmCreateCom
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 

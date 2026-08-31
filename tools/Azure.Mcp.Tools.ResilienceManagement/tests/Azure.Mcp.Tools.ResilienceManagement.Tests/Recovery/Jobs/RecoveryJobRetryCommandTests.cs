@@ -30,7 +30,7 @@ public sealed class RecoveryJobRetryCommandTests : CommandUnitTestsBase<Recovery
     public async Task ExecuteAsync_ForwardsFailedJobAndReturnsOperationId()
     {
         var expected = new RecoveryJobRetryResult("11111111-1111-1111-1111-111111111111");
-        Service.RetryRecoveryJobAsync("sg1", "plan1", RecoveryJob, null, null, Arg.Any<CancellationToken>()).Returns(expected);
+        Service.RetryRecoveryJobAsync("sg1", "plan1", RecoveryJob, null, Arg.Any<CancellationToken>()).Returns(expected);
 
         var response = await ExecuteCommandAsync("--service-group", "sg1", "--recoveryplan", "plan1", "--recovery-job", RecoveryJob);
 
@@ -41,7 +41,7 @@ public sealed class RecoveryJobRetryCommandTests : CommandUnitTestsBase<Recovery
     [Fact]
     public async Task ExecuteAsync_ExplainsFailedStatePrecondition()
     {
-        Service.RetryRecoveryJobAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), null, null, Arg.Any<CancellationToken>())
+        Service.RetryRecoveryJobAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.PreconditionFailed, "provider details"));
 
         var response = await ExecuteCommandAsync("--service-group", "sg1", "--recoveryplan", "plan1", "--recovery-job", RecoveryJob);

@@ -42,7 +42,7 @@ public sealed class RecoveryPlanReprotectCommand(
     {
         try
         {
-            RecoveryPlanReprotectResult result = await _resilienceManagementService.ReprotectRecoveryPlanAsync(options.ServiceGroup, options.RecoveryPlan, options.SelectedResourceIds, options.Tenant, options.RetryPolicy, cancellationToken);
+            RecoveryPlanReprotectResult result = await _resilienceManagementService.ReprotectRecoveryPlanAsync(options.ServiceGroup, options.RecoveryPlan, options.SelectedResourceIds, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(result, ResilienceManagementJsonContext.Default.RecoveryPlanReprotectResult);
         }
         catch (Exception ex)

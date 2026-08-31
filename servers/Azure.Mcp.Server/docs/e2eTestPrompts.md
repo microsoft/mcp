@@ -759,25 +759,29 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| managedlustre_fs_create | Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time> | none |
-| managedlustre_fs_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> | none |
-| managedlustre_fs_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> | none |
-| managedlustre_fs_sku_get | List the Azure Managed Lustre SKUs available in location <location> | none |
-| managedlustre_fs_blob_autoexport_create | Create an autoexport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_autoexport_cancel | Cancel the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
+| managedlustre_fs_blob_autoexport_create | Create an autoexport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
+| managedlustre_fs_blob_autoexport_delete | Delete the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_autoexport_get | Get the details of autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_autoexport_get | Show the list of autoexport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
-| managedlustre_fs_blob_autoexport_delete | Delete the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
-| managedlustre_fs_blob_autoimport_create | Create an autoimport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_autoimport_cancel | Cancel the autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
+| managedlustre_fs_blob_autoimport_create | Create an autoimport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_autoimport_delete | Delete the autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_autoimport_get | Get the details of autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_autoimport_get | Get the details of all the autoimport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
+| managedlustre_fs_blob_import_cancel | Cancel the one-time import job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_import_create | Create a one-time import job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
+| managedlustre_fs_blob_import_delete | Delete the one-time import job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_import_get | Get the details of import job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_import_get | List all one-time import jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
-| managedlustre_fs_blob_import_cancel | Cancel the one-time import job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
-| managedlustre_fs_blob_import_delete | Delete the one-time import job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
+| managedlustre_fs_create | Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time> | none |
+| managedlustre_fs_expansion_create | Create an expansion job to increase the storage capacity of the Azure Managed Lustre filesystem <filesystem_name> to <new_size_tib> TiB in resource group <resource_group_name> | none |
+| managedlustre_fs_expansion_delete | Delete the expansion job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
+| managedlustre_fs_expansion_get | Get the details of expansion job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
+| managedlustre_fs_expansion_get | List all expansion jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
+| managedlustre_fs_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> | none |
+| managedlustre_fs_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> | none |
+| managedlustre_fs_sku_get | List the Azure Managed Lustre SKUs available in location <location> | none |
 | managedlustre_fs_subnetsize_ask | Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> | none |
 | managedlustre_fs_subnetsize_validate | Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> | none |
 | managedlustre_fs_update | Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time> | none |
@@ -966,6 +970,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_recoveryplan_create | Set up a Zonal recovery plan named <recoveryplan_name> in service group <service_group>. Use a system-assigned managed identity, description <plan_description>, and default recovery group description <default_group_description> | none |
 | resilience_recoveryplan_create | Create Zonal recovery plan <recoveryplan_name> in service group <service_group> and attach user-assigned managed identity <user_assigned_identity_resource_id>. Use <plan_description> for the plan description and <default_group_description> for the default recovery group | none |
 | resilience_recoveryplan_create | Change recovery plan <recoveryplan_name> in service group <service_group> to a system-assigned managed identity and description <plan_description>. Keep its Zonal plan type and existing recovery groups | none |
+| resilience_recoveryplan_create | Split recovery plan <recoveryplan_name> in service group <service_group> into its default recovery group and one additional group described as <additional_group_description>. Preserve its existing plan type and managed identity | none |
+| resilience_recoveryplan_create | Update recovery plan <recoveryplan_name> in service group <service_group>. Add a manual pre-action named <manual_action_name> with timeout <timeout_minutes> to the default group, and add a post-action script using Automation runbook <runbook_resource_id> to additional recovery group <recovery_group_id>. Preserve its existing plan type and managed identity | none |
+| resilience_recoveryplan_create | Add a pre-action to the default group of recovery plan <recoveryplan_name> in service group <service_group>. I have not chosen the action values yet. Explain the accepted values and ask me for the action type, name, optional description, timeout, and any runbook-specific values one at a time before updating the plan. Preserve its existing plan type and managed identity | none |
 | resilience_recoveryplan_create | Change a system-assigned recovery plan <recoveryplan_name> in service group <service_group> to use a user-assigned managed identity | clarification-required |
 | resilience_recoveryplan_create | Update recovery plan <recoveryplan_name> in service group <service_group> to use both its system-assigned identity and user-assigned managed identity <user_assigned_identity_resource_id>. Preserve its existing plan settings | none |
 | resilience_recoveryplan_checkreadiness | Check whether recovery plan <recoveryplan_name> and its protected resources are ready for recovery operations in service group <service_group> | none |
@@ -1193,7 +1200,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | sreagent_docs_memories_list | Get a complete list of all indexed knowledge base documents stored in SRE Agent <agent_name> memory without filtering | none |
 | sreagent_docs_memories_search | Search the SRE Agent knowledge base for <text> | none |
 | sreagent_docs_memories_add | Add a document called <name> to the SRE Agent knowledge base | none |
-| sreagent_docs_memories_delete | Confirm and delete knowledge base document <name> from SRE Agent <agent_name> | none |
+| sreagent_docs_memories_delete | Delete knowledge base document <name> from SRE Agent <agent_name> | none |
 | sreagent_docs_memories_reindex | Reindex the knowledge base documents for SRE Agent <agent_name> | none |
 | sreagent_architecture_plan | Use SRE Agent architecture planning for these requirements: <requirements> | investigation-required |
 | sreagent_commonprompts_list | List the common prompts on SRE Agent <agent_name> | none |

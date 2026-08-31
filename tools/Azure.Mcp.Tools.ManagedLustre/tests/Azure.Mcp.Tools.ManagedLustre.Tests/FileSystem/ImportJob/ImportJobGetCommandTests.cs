@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -42,7 +41,7 @@ public class ImportJobGetCommandTests : SubscriptionCommandUnitTestsBase<ImportJ
 
             Service.GetImportJobAsync(
                 Arg.Is(Sub), Arg.Is(Rg), Arg.Is(Name), Arg.Is(JobName),
-                Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(importJob);
         }
 
@@ -81,7 +80,7 @@ public class ImportJobGetCommandTests : SubscriptionCommandUnitTestsBase<ImportJ
 
         Service.GetImportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(importJob);
 
         var args = $"--subscription {Sub} --resource-group {Rg} --filesystem-name {Name} --job-name {JobName}";
@@ -93,7 +92,7 @@ public class ImportJobGetCommandTests : SubscriptionCommandUnitTestsBase<ImportJ
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.DidNotReceive().ListImportJobsAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -108,7 +107,7 @@ public class ImportJobGetCommandTests : SubscriptionCommandUnitTestsBase<ImportJ
 
         Service.ListImportJobsAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(importJobs);
 
         var args = $"--subscription {Sub} --resource-group {Rg} --filesystem-name {Name}";
@@ -126,7 +125,7 @@ public class ImportJobGetCommandTests : SubscriptionCommandUnitTestsBase<ImportJ
         // Arrange
         Service.ListImportJobsAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
         var args = $"--subscription {Sub} --resource-group {Rg} --filesystem-name {Name}";
@@ -150,7 +149,7 @@ public class ImportJobGetCommandTests : SubscriptionCommandUnitTestsBase<ImportJ
 
         Service.ListImportJobsAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(importJobs);
 
         // Act

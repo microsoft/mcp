@@ -53,7 +53,6 @@ public sealed class RecoveryPlanValidateForOperationCommand(
                 options.RecoveryPlan,
                 operationName,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

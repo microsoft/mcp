@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Services;
 using Azure.Mcp.Tools.Storage.Table.Commands;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -28,7 +27,6 @@ public class TableListCommandTests : SubscriptionCommandUnitTestsBase<TableListC
             Arg.Is(_knownStorageAccount),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedTables);
 
@@ -51,7 +49,6 @@ public class TableListCommandTests : SubscriptionCommandUnitTestsBase<TableListC
             Arg.Is(_knownStorageAccount),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -89,7 +86,6 @@ public class TableListCommandTests : SubscriptionCommandUnitTestsBase<TableListC
             Arg.Is(_knownStorageAccount),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
