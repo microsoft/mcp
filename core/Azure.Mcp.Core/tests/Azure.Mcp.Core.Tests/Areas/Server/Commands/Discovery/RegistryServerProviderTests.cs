@@ -190,7 +190,7 @@ public class RegistryServerProviderTests
     }
 
     [Fact]
-    public async Task CreateClientAsync_HttpWithOAuthScopes_NonHttpsUrl_ThrowsForHttps()
+    public async Task CreateClientAsync_HttpWithOAuthScopes_NonHttpsUrl_Throws()
     {
         // Arrange - MCP 2026-07-28 requires OAuth-protected registry endpoints to use HTTPS so
         // that Azure Identity bearer tokens are never sent over plaintext HTTP.

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// cSpell:ignore XVCJ
-
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
