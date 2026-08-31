@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -20,7 +19,7 @@ public class KeyValueDeleteCommandTests : SubscriptionCommandUnitTestsBase<KeyVa
     {
         // Arrange
         Service.DeleteKeyValue(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(true);
 
         // Act
@@ -35,7 +34,6 @@ public class KeyValueDeleteCommandTests : SubscriptionCommandUnitTestsBase<KeyVa
             "my-key",
             "sub123",
             null,
-            Arg.Any<RetryPolicyOptions>(),
             null,
             Arg.Any<CancellationToken>());
 
@@ -51,7 +49,7 @@ public class KeyValueDeleteCommandTests : SubscriptionCommandUnitTestsBase<KeyVa
     {
         // Arrange
         Service.DeleteKeyValue(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(true);
 
         // Act
@@ -66,7 +64,6 @@ public class KeyValueDeleteCommandTests : SubscriptionCommandUnitTestsBase<KeyVa
             "account1",
             "my-key",
             "sub123", null,
-            Arg.Any<RetryPolicyOptions>(),
             "prod",
             Arg.Any<CancellationToken>());
 
@@ -83,7 +80,7 @@ public class KeyValueDeleteCommandTests : SubscriptionCommandUnitTestsBase<KeyVa
     {
         // Arrange — service returns false indicating the key did not exist
         Service.DeleteKeyValue(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(false);
 
         // Act
@@ -109,7 +106,6 @@ public class KeyValueDeleteCommandTests : SubscriptionCommandUnitTestsBase<KeyVa
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Failed to delete key-value"));

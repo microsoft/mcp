@@ -73,7 +73,6 @@ public sealed class DrillCreateCommand(ILogger<DrillCreateCommand> logger, IResi
                 options.RbacSetupMode,
                 options.RecoveryPlan,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

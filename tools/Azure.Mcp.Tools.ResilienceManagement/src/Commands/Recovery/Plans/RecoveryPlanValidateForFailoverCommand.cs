@@ -73,7 +73,6 @@ public sealed class RecoveryPlanValidateForFailoverCommand(
                 options.SelectedResourceIds,
                 options.UserConsent,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

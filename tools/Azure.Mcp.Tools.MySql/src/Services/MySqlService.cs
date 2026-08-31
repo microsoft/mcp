@@ -319,7 +319,7 @@ public sealed class MySqlService(IAzureService azureService)
 
     public async Task<List<string>> ListServersAsync(string subscriptionId, string resourceGroup, CancellationToken cancellationToken)
     {
-        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, cancellationToken)
             ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var serverList = new List<string>();
@@ -364,7 +364,7 @@ public sealed class MySqlService(IAzureService azureService)
 
     public async Task<string> GetServerConfigAsync(string subscriptionId, string resourceGroup, string server, CancellationToken cancellationToken)
     {
-        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, cancellationToken)
             ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server, cancellationToken);
@@ -384,7 +384,7 @@ public sealed class MySqlService(IAzureService azureService)
 
     public async Task<string> GetServerParameterAsync(string subscriptionId, string resourceGroup, string server, string param, CancellationToken cancellationToken)
     {
-        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, cancellationToken)
             ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server, cancellationToken);
@@ -399,7 +399,7 @@ public sealed class MySqlService(IAzureService azureService)
 
     public async Task<string> SetServerParameterAsync(string subscriptionId, string resourceGroup, string server, string param, string value, CancellationToken cancellationToken)
     {
-        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, cancellationToken)
             ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server, cancellationToken);

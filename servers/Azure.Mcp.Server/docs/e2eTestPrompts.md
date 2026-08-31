@@ -1194,7 +1194,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | sreagent_docs_memories_list | Get a complete list of all indexed knowledge base documents stored in SRE Agent <agent_name> memory without filtering | none |
 | sreagent_docs_memories_search | Search the SRE Agent knowledge base for <text> | none |
 | sreagent_docs_memories_add | Add a document called <name> to the SRE Agent knowledge base | none |
-| sreagent_docs_memories_delete | Confirm and delete knowledge base document <name> from SRE Agent <agent_name> | none |
+| sreagent_docs_memories_delete | Delete knowledge base document <name> from SRE Agent <agent_name> | none |
 | sreagent_docs_memories_reindex | Reindex the knowledge base documents for SRE Agent <agent_name> | none |
 | sreagent_architecture_plan | Use SRE Agent architecture planning for these requirements: <requirements> | investigation-required |
 | sreagent_commonprompts_list | List the common prompts on SRE Agent <agent_name> | none |

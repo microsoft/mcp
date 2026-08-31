@@ -5,7 +5,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Disk;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -59,7 +58,6 @@ public class DiskGetCommandTests : SubscriptionCommandUnitTestsBase<DiskGetComma
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisks);
 
@@ -100,7 +98,6 @@ public class DiskGetCommandTests : SubscriptionCommandUnitTestsBase<DiskGetComma
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisks);
 
@@ -141,7 +138,6 @@ public class DiskGetCommandTests : SubscriptionCommandUnitTestsBase<DiskGetComma
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -183,7 +179,6 @@ public class DiskGetCommandTests : SubscriptionCommandUnitTestsBase<DiskGetComma
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -246,7 +241,6 @@ public class DiskGetCommandTests : SubscriptionCommandUnitTestsBase<DiskGetComma
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisks);
 
@@ -306,7 +300,6 @@ public class DiskGetCommandTests : SubscriptionCommandUnitTestsBase<DiskGetComma
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisks);
 
@@ -359,7 +352,6 @@ public class DiskGetCommandTests : SubscriptionCommandUnitTestsBase<DiskGetComma
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisks);
 

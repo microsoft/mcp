@@ -6,6 +6,7 @@
 - Always put new classes and interfaces in separate files
 - Always make members static if they can be
 - All generated code needs to be AOT safe
+- Never expose `RetryPolicyOptions` through tool options or service contracts; use Azure SDK retry defaults
 - Always review your own code for consistency, maintainability, and testability
 - Always ask for clarifications if the request is ambiguous or lacks sufficient context.
 

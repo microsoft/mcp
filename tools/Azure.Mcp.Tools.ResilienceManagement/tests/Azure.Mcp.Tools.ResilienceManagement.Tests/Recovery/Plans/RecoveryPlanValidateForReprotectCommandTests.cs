@@ -39,7 +39,6 @@ public sealed class RecoveryPlanValidateForReprotectCommandTests : CommandUnitTe
             "plan1",
             null,
             null,
-            null,
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -75,7 +74,6 @@ public sealed class RecoveryPlanValidateForReprotectCommandTests : CommandUnitTe
             "sg1",
             "plan1",
             Arg.Is<IReadOnlyList<string>>(resourceIds => resourceIds.SequenceEqual(new[] { RecoveryResourceId })),
-            null,
             null,
             Arg.Any<CancellationToken>())
             .Returns(expected);
@@ -119,7 +117,6 @@ public sealed class RecoveryPlanValidateForReprotectCommandTests : CommandUnitTe
             Arg.Any<string>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
@@ -141,7 +138,6 @@ public sealed class RecoveryPlanValidateForReprotectCommandTests : CommandUnitTe
             Arg.Any<string>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new TimeoutException(internalDetails));
 
