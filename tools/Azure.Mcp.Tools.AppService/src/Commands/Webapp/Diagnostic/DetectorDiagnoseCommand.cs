@@ -62,7 +62,6 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
                 options.EndTime,
                 options.Interval,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(diagnoses), AppServiceJsonContext.Default.DetectorDiagnoseResult);

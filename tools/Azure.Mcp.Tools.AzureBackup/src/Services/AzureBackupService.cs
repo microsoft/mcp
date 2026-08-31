@@ -5,12 +5,13 @@ using System.Text.RegularExpressions;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AzureBackup.Models;
+using Azure.ResourceManager.DataProtectionBackup;
+using Azure.ResourceManager.DataProtectionBackup.Models;
 using Azure.ResourceManager.RecoveryServicesBackup;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 
 using SdkBackupStatusResult = Azure.ResourceManager.RecoveryServicesBackup.Models.BackupStatusResult;
 
@@ -27,14 +28,14 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     /// This preserves the documented contract that <c>--subscription</c> accepts both IDs and names.
     /// </summary>
     private async Task<string> ResolveSubscriptionIdAsync(
-        string subscription, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string subscription, string? tenant, CancellationToken cancellationToken)
     {
         if (Guid.TryParse(subscription, out _))
         {
             return subscription;
         }
 
-        var resource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var resource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         return resource.Data.SubscriptionId;
     }
 
@@ -96,44 +97,44 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string vaultType,
         string location, string? sku, string? storageType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         // Perform validations that don't require a network call first so invalid input
         // fails fast without going through ResolveSubscriptionIdAsync (which may call ARM).
         VaultTypeResolver.ValidateVaultType(vaultType);
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
 
         return VaultTypeResolver.IsRsv(vaultType)
-            ? await rsvOps.CreateVaultAsync(vaultName, resourceGroup, subscription, location, sku, storageType, tenant, retryPolicy, cancellationToken)
-            : await dppOps.CreateVaultAsync(vaultName, resourceGroup, subscription, location, sku, storageType, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.CreateVaultAsync(vaultName, resourceGroup, subscription, location, sku, storageType, tenant, cancellationToken)
+            : await dppOps.CreateVaultAsync(vaultName, resourceGroup, subscription, location, sku, storageType, tenant, cancellationToken);
     }
 
     public async Task<BackupVaultInfo> GetVaultAsync(
         string vaultName, string resourceGroup, string subscription,
         string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken,
+        CancellationToken cancellationToken,
         VaultExpand expand = VaultExpand.None)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
         if (VaultTypeResolver.IsVaultTypeSpecified(vaultType))
         {
             return VaultTypeResolver.IsRsv(vaultType)
-                ? await rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken, expand)
-                : await dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken, expand);
+                ? await rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken, expand)
+                : await dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken, expand);
         }
 
         return await AutoDetectAndExecuteAsync(
-            () => rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken, expand),
-            () => dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken, expand),
+            () => rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken, expand),
+            () => dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken, expand),
             vaultName);
     }
 
     public async Task<List<BackupVaultInfo>> ListVaultsAsync(
         string subscription, string? resourceGroup, string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken,
+        CancellationToken cancellationToken,
         VaultExpand expand = VaultExpand.None)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
         List<BackupVaultInfo> FilterByResourceGroup(List<BackupVaultInfo> vaults) =>
             string.IsNullOrEmpty(resourceGroup)
                 ? vaults
@@ -141,16 +142,16 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
         if (VaultTypeResolver.IsRsv(vaultType))
         {
-            return FilterByResourceGroup(await rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken, expand));
+            return FilterByResourceGroup(await rsvOps.ListVaultsAsync(subscription, tenant, cancellationToken, expand));
         }
 
         if (VaultTypeResolver.IsDpp(vaultType))
         {
-            return FilterByResourceGroup(await dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken, expand));
+            return FilterByResourceGroup(await dppOps.ListVaultsAsync(subscription, tenant, cancellationToken, expand));
         }
 
-        var rsvTask = rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken, expand);
-        var dppTask = dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken, expand);
+        var rsvTask = rsvOps.ListVaultsAsync(subscription, tenant, cancellationToken, expand);
+        var dppTask = dppOps.ListVaultsAsync(subscription, tenant, cancellationToken, expand);
 
         try
         {
@@ -201,132 +202,132 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         string? aksLabelSelectors, string? aksIncludeClusterScopeResources,
         string? aksSnapshotResourceGroup,
         string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
 
         return VaultTypeResolver.IsRsv(resolvedType)
-            ? await rsvOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, containerName, datasourceType, tenant, retryPolicy, cancellationToken)
-            : await dppOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, datasourceType, aksIncludedNamespaces, aksExcludedNamespaces, aksLabelSelectors, aksIncludeClusterScopeResources, aksSnapshotResourceGroup, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, containerName, datasourceType, tenant, cancellationToken)
+            : await dppOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, datasourceType, aksIncludedNamespaces, aksExcludedNamespaces, aksLabelSelectors, aksIncludeClusterScopeResources, aksSnapshotResourceGroup, tenant, cancellationToken);
     }
 
     public async Task<ProtectedItemInfo> GetProtectedItemAsync(
         string vaultName, string resourceGroup, string subscription,
         string protectedItemName, string? vaultType, string? containerName,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
 
         return VaultTypeResolver.IsRsv(resolvedType)
-            ? await rsvOps.GetProtectedItemAsync(vaultName, resourceGroup, subscription, protectedItemName, containerName, tenant, retryPolicy, cancellationToken)
-            : await dppOps.GetProtectedItemAsync(vaultName, resourceGroup, subscription, protectedItemName, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.GetProtectedItemAsync(vaultName, resourceGroup, subscription, protectedItemName, containerName, tenant, cancellationToken)
+            : await dppOps.GetProtectedItemAsync(vaultName, resourceGroup, subscription, protectedItemName, tenant, cancellationToken);
     }
 
     public async Task<List<ProtectedItemInfo>> ListProtectedItemsAsync(
         string vaultName, string resourceGroup, string subscription,
         string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
 
         return VaultTypeResolver.IsRsv(resolvedType)
-            ? await rsvOps.ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken)
-            : await dppOps.ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken)
+            : await dppOps.ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
     }
 
     public async Task<OperationResult> UndeleteProtectedItemAsync(
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string? vaultType, string? containerName,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
 
         return VaultTypeResolver.IsRsv(resolvedType)
-            ? await rsvOps.UndeleteProtectedItemAsync(vaultName, resourceGroup, subscription, datasourceId, containerName, tenant, retryPolicy, cancellationToken)
-            : await dppOps.UndeleteProtectedItemAsync(vaultName, resourceGroup, subscription, datasourceId, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.UndeleteProtectedItemAsync(vaultName, resourceGroup, subscription, datasourceId, containerName, tenant, cancellationToken)
+            : await dppOps.UndeleteProtectedItemAsync(vaultName, resourceGroup, subscription, datasourceId, tenant, cancellationToken);
     }
 
     public async Task<BackupPolicyInfo> GetPolicyAsync(
         string vaultName, string resourceGroup, string subscription,
         string policyName, string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
 
         return VaultTypeResolver.IsRsv(resolvedType)
-            ? await rsvOps.GetPolicyAsync(vaultName, resourceGroup, subscription, policyName, tenant, retryPolicy, cancellationToken)
-            : await dppOps.GetPolicyAsync(vaultName, resourceGroup, subscription, policyName, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.GetPolicyAsync(vaultName, resourceGroup, subscription, policyName, tenant, cancellationToken)
+            : await dppOps.GetPolicyAsync(vaultName, resourceGroup, subscription, policyName, tenant, cancellationToken);
     }
 
     public async Task<List<BackupPolicyInfo>> ListPoliciesAsync(
         string vaultName, string resourceGroup, string subscription,
         string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
 
         return VaultTypeResolver.IsRsv(resolvedType)
-            ? await rsvOps.ListPoliciesAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken)
-            : await dppOps.ListPoliciesAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.ListPoliciesAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken)
+            : await dppOps.ListPoliciesAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
     }
 
     public async Task<BackupJobInfo> GetJobAsync(
         string vaultName, string resourceGroup, string subscription,
         string jobId, string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
 
         return VaultTypeResolver.IsRsv(resolvedType)
-            ? await rsvOps.GetJobAsync(vaultName, resourceGroup, subscription, jobId, tenant, retryPolicy, cancellationToken)
-            : await dppOps.GetJobAsync(vaultName, resourceGroup, subscription, jobId, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.GetJobAsync(vaultName, resourceGroup, subscription, jobId, tenant, cancellationToken)
+            : await dppOps.GetJobAsync(vaultName, resourceGroup, subscription, jobId, tenant, cancellationToken);
     }
 
     public async Task<List<BackupJobInfo>> ListJobsAsync(
         string vaultName, string resourceGroup, string subscription,
         string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
 
         return VaultTypeResolver.IsRsv(resolvedType)
-            ? await rsvOps.ListJobsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken)
-            : await dppOps.ListJobsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.ListJobsAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken)
+            : await dppOps.ListJobsAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
     }
 
     public async Task<RecoveryPointInfo> GetRecoveryPointAsync(
         string vaultName, string resourceGroup, string subscription,
         string protectedItemName, string recoveryPointId, string? vaultType,
         string? containerName, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
 
         return VaultTypeResolver.IsRsv(resolvedType)
-            ? await rsvOps.GetRecoveryPointAsync(vaultName, resourceGroup, subscription, protectedItemName, recoveryPointId, containerName, tenant, retryPolicy, cancellationToken)
-            : await dppOps.GetRecoveryPointAsync(vaultName, resourceGroup, subscription, protectedItemName, recoveryPointId, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.GetRecoveryPointAsync(vaultName, resourceGroup, subscription, protectedItemName, recoveryPointId, containerName, tenant, cancellationToken)
+            : await dppOps.GetRecoveryPointAsync(vaultName, resourceGroup, subscription, protectedItemName, recoveryPointId, tenant, cancellationToken);
     }
 
     public async Task<List<RecoveryPointInfo>> ListRecoveryPointsAsync(
         string vaultName, string resourceGroup, string subscription,
         string protectedItemName, string? vaultType, string? containerName,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
 
         return VaultTypeResolver.IsRsv(resolvedType)
-            ? await rsvOps.ListRecoveryPointsAsync(vaultName, resourceGroup, subscription, protectedItemName, containerName, tenant, retryPolicy, cancellationToken)
-            : await dppOps.ListRecoveryPointsAsync(vaultName, resourceGroup, subscription, protectedItemName, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.ListRecoveryPointsAsync(vaultName, resourceGroup, subscription, protectedItemName, containerName, tenant, cancellationToken)
+            : await dppOps.ListRecoveryPointsAsync(vaultName, resourceGroup, subscription, protectedItemName, tenant, cancellationToken);
     }
 
 
@@ -335,50 +336,50 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         string? vaultType, string? redundancy, string? softDelete,
         string? softDeleteRetentionDays, string? immutabilityState,
         string? identityType, string? tags, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
         return VaultTypeResolver.IsRsv(resolved)
-            ? await rsvOps.UpdateVaultAsync(vaultName, resourceGroup, subscription, redundancy, softDelete, softDeleteRetentionDays, immutabilityState, identityType, tags, tenant, retryPolicy, cancellationToken)
-            : await dppOps.UpdateVaultAsync(vaultName, resourceGroup, subscription, redundancy, softDelete, softDeleteRetentionDays, immutabilityState, identityType, tags, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.UpdateVaultAsync(vaultName, resourceGroup, subscription, redundancy, softDelete, softDeleteRetentionDays, immutabilityState, identityType, tags, tenant, cancellationToken)
+            : await dppOps.UpdateVaultAsync(vaultName, resourceGroup, subscription, redundancy, softDelete, softDeleteRetentionDays, immutabilityState, identityType, tags, tenant, cancellationToken);
     }
 
     public async Task<OperationResult> CreatePolicyAsync(
         Policy.PolicyCreateRequest request,
         string vaultName, string resourceGroup, string subscription,
         string? vaultType,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
         return VaultTypeResolver.IsRsv(resolved)
-            ? await rsvOps.CreatePolicyAsync(request, vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken)
-            : await dppOps.CreatePolicyAsync(request, vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.CreatePolicyAsync(request, vaultName, resourceGroup, subscription, tenant, cancellationToken)
+            : await dppOps.CreatePolicyAsync(request, vaultName, resourceGroup, subscription, tenant, cancellationToken);
     }
 
     public async Task<OperationResult> UpdatePolicyAsync(
         string vaultName, string resourceGroup, string subscription,
         string policyName, string? vaultType,
         string? scheduleTime, string? dailyRetentionDays,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
         if (!VaultTypeResolver.IsRsv(resolved))
         {
             throw new ArgumentException("Update is only supported for RSV (Recovery Services vault) policies. DPP policies do not support update.");
         }
 
-        return await rsvOps.UpdatePolicyAsync(vaultName, resourceGroup, subscription, policyName, scheduleTime, dailyRetentionDays, tenant, retryPolicy, cancellationToken);
+        return await rsvOps.UpdatePolicyAsync(vaultName, resourceGroup, subscription, policyName, scheduleTime, dailyRetentionDays, tenant, cancellationToken);
     }
 
     public async Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
         string vaultName, string resourceGroup, string subscription,
         string? workloadType, string? containerName, string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
         if (VaultTypeResolver.IsDpp(vaultType))
         {
             throw new ArgumentException("Protectable item discovery is only supported for Recovery Services (RSV) vaults. DPP datasources are protected by their ARM resource ID directly.");
@@ -387,7 +388,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         // Auto-detect vault type when not explicitly specified to avoid routing DPP vaults to RSV
         if (!VaultTypeResolver.IsVaultTypeSpecified(vaultType))
         {
-            var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+            var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
             if (VaultTypeResolver.IsDpp(resolved))
             {
                 throw new ArgumentException(
@@ -396,14 +397,14 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             }
         }
 
-        return await rsvOps.ListProtectableItemsAsync(vaultName, resourceGroup, subscription, workloadType, containerName, tenant, retryPolicy, cancellationToken);
+        return await rsvOps.ListProtectableItemsAsync(vaultName, resourceGroup, subscription, workloadType, containerName, tenant, cancellationToken);
     }
 
     public async Task<Models.BackupStatusResult> GetBackupStatusAsync(
         string datasourceId, string subscription, string location,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
         ResourceIdentifier resourceId;
         try
         {
@@ -433,7 +434,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         if (datasourceType != null)
         {
             // RSV-supported resource types use the BackupStatus API
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
             var subId = SubscriptionResource.CreateResourceIdentifier(subscription);
             var subResource = armClient.GetSubscriptionResource(subId);
 
@@ -457,7 +458,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         }
 
         // DPP-only resource types (disks, blobs, AKS, etc.) - search across DPP vaults
-        return await GetDppBackupStatusAsync(datasourceId, subscription, tenant, retryPolicy, cancellationToken);
+        return await GetDppBackupStatusAsync(datasourceId, subscription, tenant, cancellationToken);
     }
 
     /// <summary>
@@ -466,15 +467,15 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     /// </summary>
     private async Task<Models.BackupStatusResult> GetDppBackupStatusAsync(
         string datasourceId, string subscription, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        var dppVaults = await dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var dppVaults = await dppOps.ListVaultsAsync(subscription, tenant, cancellationToken);
 
         foreach (var vault in dppVaults.Where(v => v.Name is not null && v.ResourceGroup is not null))
         {
             try
             {
-                var items = await dppOps.ListProtectedItemsAsync(vault.Name!, vault.ResourceGroup!, subscription, tenant, retryPolicy, cancellationToken);
+                var items = await dppOps.ListProtectedItemsAsync(vault.Name!, vault.ResourceGroup!, subscription, tenant, cancellationToken);
                 var match = items.FirstOrDefault(i =>
                     string.Equals(i.DatasourceId, datasourceId, StringComparison.OrdinalIgnoreCase));
                 if (match != null)
@@ -527,12 +528,12 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     public async Task<List<UnprotectedResourceInfo>> FindUnprotectedResourcesAsync(
         string subscription, string? resourceTypeFilter, string? resourceGroup,
         string? tagFilter, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
         // Step 1: List all vaults (RSV + DPP) in the subscription (parallelized)
-        var rsvVaultsTask = rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var dppVaultsTask = dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var rsvVaultsTask = rsvOps.ListVaultsAsync(subscription, tenant, cancellationToken);
+        var dppVaultsTask = dppOps.ListVaultsAsync(subscription, tenant, cancellationToken);
 
         try
         {
@@ -578,7 +579,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
                 try
                 {
                     return await rsvOps.ListProtectedItemsAsync(
-                        v.Name!, v.ResourceGroup!, subscription, tenant, retryPolicy, cancellationToken);
+                        v.Name!, v.ResourceGroup!, subscription, tenant, cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -610,7 +611,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
                 try
                 {
                     return await dppOps.ListProtectedItemsAsync(
-                        v.Name!, v.ResourceGroup!, subscription, tenant, retryPolicy, cancellationToken);
+                        v.Name!, v.ResourceGroup!, subscription, tenant, cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -636,7 +637,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         }
 
         // Step 3: List all resources of protectable types in the subscription
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subId = SubscriptionResource.CreateResourceIdentifier(subscription);
         var subResource = armClient.GetSubscriptionResource(subId);
 
@@ -720,7 +721,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
                 try
                 {
                     return (Vault: v, Items: await rsvOps.ListDiscoveredProtectableItemsAsync(
-                        v.Name!, v.ResourceGroup!, subscription, tenant, retryPolicy, cancellationToken));
+                        v.Name!, v.ResourceGroup!, subscription, tenant, cancellationToken));
                 }
                 catch (OperationCanceledException)
                 {
@@ -783,16 +784,16 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     public async Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName, string resourceGroup, string subscription,
         string immutabilityState, string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
         ArgumentException.ThrowIfNullOrWhiteSpace(immutabilityState, nameof(immutabilityState));
 
         var normalizedState = NormalizeImmutabilityState(immutabilityState);
-        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
         return VaultTypeResolver.IsRsv(resolved)
-            ? await rsvOps.ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedState, tenant, retryPolicy, cancellationToken)
-            : await dppOps.ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedState, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedState, tenant, cancellationToken)
+            : await dppOps.ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedState, tenant, cancellationToken);
     }
 
     /// <summary>
@@ -815,51 +816,51 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     public async Task<OperationResult> ConfigureSoftDeleteAsync(
         string vaultName, string resourceGroup, string subscription,
         string softDeleteState, string? vaultType, string? softDeleteRetentionDays,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
         return VaultTypeResolver.IsRsv(resolved)
-            ? await rsvOps.ConfigureSoftDeleteAsync(vaultName, resourceGroup, subscription, softDeleteState, softDeleteRetentionDays, tenant, retryPolicy, cancellationToken)
-            : await dppOps.ConfigureSoftDeleteAsync(vaultName, resourceGroup, subscription, softDeleteState, softDeleteRetentionDays, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.ConfigureSoftDeleteAsync(vaultName, resourceGroup, subscription, softDeleteState, softDeleteRetentionDays, tenant, cancellationToken)
+            : await dppOps.ConfigureSoftDeleteAsync(vaultName, resourceGroup, subscription, softDeleteState, softDeleteRetentionDays, tenant, cancellationToken);
     }
 
     public async Task<OperationResult> ConfigureCrossRegionRestoreAsync(
         string vaultName, string resourceGroup, string subscription,
         string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
         if (VaultTypeResolver.IsRsv(resolved))
         {
-            return await rsvOps.ConfigureCrossRegionRestoreAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+            return await rsvOps.ConfigureCrossRegionRestoreAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
         }
-        return await dppOps.ConfigureCrossRegionRestoreAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+        return await dppOps.ConfigureCrossRegionRestoreAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
     }
 
     public async Task<OperationResult> ConfigureMultiUserAuthorizationAsync(
         string vaultName, string resourceGroup, string subscription,
         string resourceGuardId, string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
         return VaultTypeResolver.IsRsv(resolved)
-            ? await rsvOps.ConfigureMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, resourceGuardId, tenant, retryPolicy, cancellationToken)
-            : await dppOps.ConfigureMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, resourceGuardId, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.ConfigureMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, resourceGuardId, tenant, cancellationToken)
+            : await dppOps.ConfigureMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, resourceGuardId, tenant, cancellationToken);
     }
 
     public async Task<OperationResult> DisableMultiUserAuthorizationAsync(
         string vaultName, string resourceGroup, string subscription,
         string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
         return VaultTypeResolver.IsRsv(resolved)
-            ? await rsvOps.DisableMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken)
-            : await dppOps.DisableMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.DisableMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken)
+            : await dppOps.DisableMultiUserAuthorizationAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
     }
 
     public async Task<OperationResult> ConfigureEncryptionAsync(
@@ -867,12 +868,180 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         string keyVaultUri, string keyName, string identityType,
         string? keyVersion, string? userAssignedIdentityId,
         string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
         return VaultTypeResolver.IsRsv(resolved)
-            ? await rsvOps.ConfigureEncryptionAsync(vaultName, resourceGroup, subscription, keyVaultUri, keyName, identityType, keyVersion, userAssignedIdentityId, tenant, retryPolicy, cancellationToken)
-            : await dppOps.ConfigureEncryptionAsync(vaultName, resourceGroup, subscription, keyVaultUri, keyName, identityType, keyVersion, userAssignedIdentityId, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.ConfigureEncryptionAsync(vaultName, resourceGroup, subscription, keyVaultUri, keyName, identityType, keyVersion, userAssignedIdentityId, tenant, cancellationToken)
+            : await dppOps.ConfigureEncryptionAsync(vaultName, resourceGroup, subscription, keyVaultUri, keyName, identityType, keyVersion, userAssignedIdentityId, tenant, cancellationToken);
+    }
+
+    // ---------------------------------------------------------------------
+    // Resource Guard (Microsoft.DataProtection/resourceGuards) operations.
+    // Resource Guards are subscription/RG-scoped, not vault-scoped. They are
+    // referenced by vaults (RSV or DPP) via Multi-User Authorization (MUA).
+    // ---------------------------------------------------------------------
+
+    private static readonly HashSet<string> s_mandatoryResourceGuardOps = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "disableSoftDelete",
+        "disableMultiUserAuthorization",
+        "removeMUAProtection",
+        "disableSecurityFeatures"
+    };
+
+    private static ResourceGuardInfo ToResourceGuardInfo(ResourceGuardData data)
+    {
+        var id = data.Id;
+        var name = data.Name;
+        var location = data.Location.ToString();
+        // ARM ID: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DataProtection/resourceGuards/{name}
+        var resourceGroup = id?.ResourceGroupName ?? string.Empty;
+
+        var exclusions = data.Properties?.VaultCriticalOperationExclusionList is { } excl
+            ? excl.ToList()
+            : new List<string>();
+
+        var protectedOps = data.Properties?.ResourceGuardOperations is { } ops
+            ? ops.Select(o => o.VaultCriticalOperation ?? string.Empty).Where(s => !string.IsNullOrEmpty(s)).ToList()
+            : new List<string>();
+
+        var tags = data.Tags is { Count: > 0 }
+            ? data.Tags.ToDictionary(kv => kv.Key, kv => kv.Value)
+            : null;
+
+        return new ResourceGuardInfo(
+            id?.ToString() ?? string.Empty,
+            name,
+            location,
+            resourceGroup,
+            exclusions,
+            protectedOps,
+            tags,
+            data.Properties?.ProvisioningState?.ToString(),
+            data.Properties?.Description);
+    }
+
+    public async Task<ResourceGuardInfo> CreateResourceGuardAsync(
+        string resourceGuardName, string resourceGroup, string subscription, string location,
+        IReadOnlyList<string>? excludedOperations, IReadOnlyDictionary<string, string>? tags,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(resourceGuardName), resourceGuardName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(location), location));
+
+        if (excludedOperations is not null)
+        {
+            var conflicts = excludedOperations
+                .Where(o => s_mandatoryResourceGuardOps.Contains(o))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            if (conflicts.Count > 0)
+            {
+                throw new ArgumentException(
+                    $"The following operations cannot be excluded from a Resource Guard because they are mandatory: {string.Join(", ", conflicts)}. " +
+                    $"Remove them from --excluded-operations. Typical valid RSV exclusion values are: deleteProtection, getSecurityPIN, updatePolicy, updateProtection.");
+            }
+        }
+
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+        var collection = rgResource.GetResourceGuards();
+
+        var data = new ResourceGuardData(new AzureLocation(location))
+        {
+            Properties = new ResourceGuardProperties()
+        };
+        if (excludedOperations is not null)
+        {
+            foreach (var op in excludedOperations)
+            {
+                data.Properties.VaultCriticalOperationExclusionList.Add(op);
+            }
+        }
+        if (tags is not null)
+        {
+            foreach (var kv in tags)
+            {
+                data.Tags[kv.Key] = kv.Value;
+            }
+        }
+
+        var operation = await collection.CreateOrUpdateAsync(WaitUntil.Started, resourceGuardName, data, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+        return ToResourceGuardInfo(operation.Value.Data);
+    }
+
+    public async Task<ResourceGuardInfo> GetResourceGuardAsync(
+        string resourceGuardName, string resourceGroup, string subscription,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(resourceGuardName), resourceGuardName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var id = ResourceGuardResource.CreateResourceIdentifier(subscription, resourceGroup, resourceGuardName);
+        var resource = armClient.GetResourceGuardResource(id);
+        var response = await resource.GetAsync(cancellationToken);
+        return ToResourceGuardInfo(response.Value.Data);
+    }
+
+    public async Task<List<ResourceGuardInfo>> ListResourceGuardsAsync(
+        string subscription, string? resourceGroup, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription));
+
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+
+        var results = new List<ResourceGuardInfo>();
+        if (!string.IsNullOrEmpty(resourceGroup))
+        {
+            var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+            var rgResource = armClient.GetResourceGroupResource(rgId);
+            var collection = rgResource.GetResourceGuards();
+            await foreach (var item in collection.GetAllAsync(cancellationToken))
+            {
+                results.Add(ToResourceGuardInfo(item.Data));
+            }
+        }
+        else
+        {
+            var subId = SubscriptionResource.CreateResourceIdentifier(subscription);
+            var subResource = armClient.GetSubscriptionResource(subId);
+            await foreach (var item in subResource.GetResourceGuardsAsync(cancellationToken))
+            {
+                results.Add(ToResourceGuardInfo(item.Data));
+            }
+        }
+        return results;
+    }
+
+    public async Task<OperationResult> DeleteResourceGuardAsync(
+        string resourceGuardName, string resourceGroup, string subscription,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(resourceGuardName), resourceGuardName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var id = ResourceGuardResource.CreateResourceIdentifier(subscription, resourceGroup, resourceGuardName);
+        var resource = armClient.GetResourceGuardResource(id);
+        var operation = await resource.DeleteAsync(WaitUntil.Started, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+        return new OperationResult("Succeeded", null, $"Resource Guard '{resourceGuardName}' deleted from resource group '{resourceGroup}'.");
     }
 
     // Private endpoint operations. RSV-only in the v2 experience described in
@@ -884,65 +1053,65 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         string privateEndpointName, string vnetSubnetId, string groupId,
         string? location, bool autoApprove,
         string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken));
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken));
         return await rsvOps.CreatePrivateEndpointAsync(
             vaultName, resourceGroup, subscription, privateEndpointName, vnetSubnetId,
             string.IsNullOrWhiteSpace(groupId) ? "AzureBackup" : groupId,
-            location, autoApprove, tenant, retryPolicy, cancellationToken);
+            location, autoApprove, tenant, cancellationToken);
     }
 
     public async Task<PrivateEndpointConnectionInfo> GetPrivateEndpointAsync(
         string vaultName, string resourceGroup, string subscription,
         string privateEndpointConnectionName, string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken));
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken));
         return await rsvOps.GetPrivateEndpointAsync(
             vaultName, resourceGroup, subscription, privateEndpointConnectionName,
-            tenant, retryPolicy, cancellationToken);
+            tenant, cancellationToken);
     }
 
     public async Task<List<PrivateEndpointConnectionInfo>> ListPrivateEndpointsAsync(
         string vaultName, string resourceGroup, string subscription,
         string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken));
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken));
         return await rsvOps.ListPrivateEndpointsAsync(
-            vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+            vaultName, resourceGroup, subscription, tenant, cancellationToken);
     }
 
     public async Task<OperationResult> DeletePrivateEndpointAsync(
         string vaultName, string resourceGroup, string subscription,
         string privateEndpointConnectionName, string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken));
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken));
         return await rsvOps.DeletePrivateEndpointAsync(
             vaultName, resourceGroup, subscription, privateEndpointConnectionName,
-            tenant, retryPolicy, cancellationToken);
+            tenant, cancellationToken);
     }
 
     public async Task<PrivateEndpointConnectionInfo> SetPrivateEndpointConnectionStateAsync(
         string vaultName, string resourceGroup, string subscription,
         string privateEndpointConnectionName, PrivateEndpointConnectionAction action,
         string? description, string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, retryPolicy, cancellationToken);
-        EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken));
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken));
         var targetStatus = action == PrivateEndpointConnectionAction.Approve
             ? PrivateEndpointConnectionStatus.Approved
             : PrivateEndpointConnectionStatus.Rejected;
         return await rsvOps.SetPrivateEndpointConnectionStateAsync(
             vaultName, resourceGroup, subscription, privateEndpointConnectionName,
-            targetStatus, description, tenant, retryPolicy, cancellationToken);
+            targetStatus, description, tenant, cancellationToken);
     }
 
     private static void EnsurePrivateEndpointVaultType(string resolvedVaultType)
@@ -958,7 +1127,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     private async Task<string> ResolveVaultTypeAsync(
         string vaultName, string resourceGroup, string subscription,
         string? vaultType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         if (VaultTypeResolver.IsVaultTypeSpecified(vaultType))
         {
@@ -967,7 +1136,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
         try
         {
-            await rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+            await rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
             return VaultTypeResolver.Rsv;
         }
         catch (RequestFailedException ex) when (ex.Status is 401 or 403)
@@ -981,7 +1150,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
         try
         {
-            await dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+            await dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
             return VaultTypeResolver.Dpp;
         }
         catch (RequestFailedException ex) when (ex.Status is 401 or 403)

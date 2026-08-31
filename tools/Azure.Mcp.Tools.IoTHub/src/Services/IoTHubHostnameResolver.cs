@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.IoTHub.Services;
@@ -24,7 +23,6 @@ public class IoTHubHostnameResolver(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         var cacheKey = $"{subscription}/{resourceGroup}/{hubName}";
@@ -34,7 +32,12 @@ public class IoTHubHostnameResolver(
             return cached;
         }
 
-        var hub = await _ioTHubService.GetIoTHub(hubName, resourceGroup, subscription, tenant: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+        var hub = await _ioTHubService.GetIoTHub(
+            hubName,
+            resourceGroup,
+            subscription,
+            tenant: tenant,
+            cancellationToken: cancellationToken);
         var hostname = hub.HostName ?? throw new InvalidOperationException("IoT Hub hostname is null");
 
         await _cacheService.SetAsync(HostnameCacheGroup, cacheKey, hostname, s_cacheDuration, cancellationToken);

@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 using Azure.Mcp.Tools.Sql.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -47,7 +46,6 @@ public class FirewallRuleDeleteCommandTests : SubscriptionCommandUnitTestsBase<F
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(true);
         }
@@ -76,7 +74,6 @@ public class FirewallRuleDeleteCommandTests : SubscriptionCommandUnitTestsBase<F
             "testrg",
             "testsub",
             "TestRule",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -102,7 +99,6 @@ public class FirewallRuleDeleteCommandTests : SubscriptionCommandUnitTestsBase<F
             "testrg",
             "testsub",
             "NonExistentRule",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(false);
 
@@ -128,7 +124,6 @@ public class FirewallRuleDeleteCommandTests : SubscriptionCommandUnitTestsBase<F
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -155,7 +150,6 @@ public class FirewallRuleDeleteCommandTests : SubscriptionCommandUnitTestsBase<F
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 
@@ -181,7 +175,6 @@ public class FirewallRuleDeleteCommandTests : SubscriptionCommandUnitTestsBase<F
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 
@@ -211,7 +204,6 @@ public class FirewallRuleDeleteCommandTests : SubscriptionCommandUnitTestsBase<F
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -228,42 +220,6 @@ public class FirewallRuleDeleteCommandTests : SubscriptionCommandUnitTestsBase<F
             resourceGroup,
             subscription,
             ruleName,
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithRetryPolicyOptions()
-    {
-        // Arrange
-        Service.DeleteFirewallRuleAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(true);
-
-        // Act
-        var response = await ExecuteCommandAsync(
-            "--subscription", "testsub",
-            "--resource-group", "testrg",
-            "--server", "testserver",
-            "--firewall-rule-name", "TestRule",
-            "--retry-max-retries", "3");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        // Verify the service was called with retry policy
-        await Service.Received(1).DeleteFirewallRuleAsync(
-            "testserver",
-            "testrg",
-            "testsub",
-            "TestRule",
-            Arg.Is<RetryPolicyOptions?>(r => r != null && r.MaxRetries == 3),
             Arg.Any<CancellationToken>());
     }
 
@@ -281,7 +237,6 @@ public class FirewallRuleDeleteCommandTests : SubscriptionCommandUnitTestsBase<F
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -302,7 +257,6 @@ public class FirewallRuleDeleteCommandTests : SubscriptionCommandUnitTestsBase<F
             "testrg",
             "testsub",
             ruleName,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -316,7 +270,6 @@ public class FirewallRuleDeleteCommandTests : SubscriptionCommandUnitTestsBase<F
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(argumentException);
 
@@ -342,7 +295,6 @@ public class FirewallRuleDeleteCommandTests : SubscriptionCommandUnitTestsBase<F
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 

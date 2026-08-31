@@ -9,7 +9,6 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Services.Azure;
 
@@ -69,7 +68,6 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
     /// <param name="resourceType">The Azure resource type to query for (e.g., "Microsoft.Sql/servers/databases")</param>
     /// <param name="resourceGroup">The resource group name to filter by (null to query all resource groups)</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="converter">Function to convert JsonElement to the target type</param>
     /// <param name="tableName">Optional table name to query (default: "resources")</param>
     /// <param name="additionalFilter">Optional additional KQL filter condition</param>
@@ -81,7 +79,6 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
         string resourceType,
         string? resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         Func<JsonElement, T> converter,
         string? tableName = "resources",
         string? additionalFilter = null,
@@ -101,7 +98,7 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
 
         var results = new List<T>();
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
         var tenantResource = await GetTenantResourceAsync(subscriptionResource!.Data.TenantId, cancellationToken);
 
         var queryFilter = $"{tableName} | where type =~ '{EscapeKqlString(resourceType)}'";
@@ -152,7 +149,6 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
     /// <param name="resourceType">The Azure resource type to query for (e.g., "Microsoft.Sql/servers/databases")</param>
     /// <param name="resourceGroup">The resource group name to filter by (null to query all resource groups)</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="converter">Function to convert JsonElement to the target type</param>
     /// <param name="additionalFilter">Optional additional KQL filter condition</param>
     /// <param name="cancellationToken">Cancellation token</param>
@@ -161,14 +157,13 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
         string resourceType,
         string? resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         Func<JsonElement, T> converter,
         string? tableName = "resources",
         string? additionalFilter = null,
         string? tenant = null,
         CancellationToken cancellationToken = default) where T : class
     {
-        var result = await ExecuteResourceQueryAsync(resourceType, resourceGroup, subscription, retryPolicy, converter,
+        var result = await ExecuteResourceQueryAsync(resourceType, resourceGroup, subscription, converter,
             tableName, additionalFilter, 1, cancellationToken, tenant).ConfigureAwait(false);
         return result.Results.FirstOrDefault();
     }
@@ -180,18 +175,16 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
     /// <param name="resourceTypeForApiVersion">The resource type token used by the SDK to set a specific API version, e.g. "Microsoft.CognitiveServices/accounts/deployments".</param>
     /// <param name="apiVersion">The API version to set for the specified resource type.</param>
     /// <param name="tenant">Optional tenant to use when creating the client.</param>
-    /// <param name="retryPolicy">Optional retry policy used by token acquisition.</param>
     /// <returns>An initialized <see cref="ArmClient"/> configured with the requested API version.</returns>
     protected async Task<ArmClient> CreateArmClientWithApiVersionAsync(
         string resourceTypeForApiVersion,
         string apiVersion,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         var options = new ArmClientOptions();
         options.SetApiVersion(resourceTypeForApiVersion, apiVersion);
-        return await CreateArmClientAsync(tenant, retryPolicy, options, cancellationToken).ConfigureAwait(false);
+        return await CreateArmClientAsync(tenant, options, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>

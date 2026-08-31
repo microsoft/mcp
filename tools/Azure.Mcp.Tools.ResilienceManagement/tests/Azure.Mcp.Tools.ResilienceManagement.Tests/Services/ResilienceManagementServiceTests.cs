@@ -116,6 +116,21 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public void CreateReadinessError_UsesEmptyRecommendationsWhenProviderOmitsThem()
+    {
+        JobErrorInfo error = ModelReaderWriter.Read<JobErrorInfo>(BinaryData.FromObjectAsJson(new
+        {
+            errorCode = "NotReady",
+            errorMessage = "Resource requires attention."
+        }))!;
+
+        RecoveryPlanReadinessError result = Assert.IsType<RecoveryPlanReadinessError>(
+            ResilienceManagementService.CreateReadinessError(error));
+
+        Assert.Empty(result.Recommendations);
+    }
+
+    [Fact]
     public async Task ExecuteWithTimeoutAsync_TimesOutOperation()
     {
         TimeoutException exception = await Assert.ThrowsAsync<TimeoutException>(() =>
@@ -293,6 +308,116 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public void CreateRecoveryGroupsSetting_WithAdditionalGroups_ReplacesGroupsAndPreservesIdByOrder()
+    {
+        var existingDefaultGroup = CreateGroup("7f35c9f5-bec2-455d-8161-c904b2532e5d", 0, "Existing default group");
+        var existingAdditionalGroup = CreateGroup("ddcfddaf-d15d-44fe-8472-0f3ee9f0179d", 1, "Existing additional group");
+        var existingGroups = new RecoveryGroupsSetting(existingDefaultGroup);
+        existingGroups.AdditionalGroups.Add(existingAdditionalGroup);
+        RecoveryPlanGroupInput[] requestedGroups =
+        [
+            new(null, 1, "Updated additional group"),
+            new(null, 2, "New additional group")
+        ];
+
+        RecoveryGroupsSetting result = ResilienceManagementService.CreateRecoveryGroupsSetting(existingGroups, null, requestedGroups);
+
+        Assert.Equal(2, result.AdditionalGroups.Count);
+        Assert.Same(existingAdditionalGroup, result.AdditionalGroups[0]);
+        Assert.Equal("ddcfddaf-d15d-44fe-8472-0f3ee9f0179d", result.AdditionalGroups[0].Properties?.GroupUniqueId);
+        Assert.Equal("Updated additional group", result.AdditionalGroups[0].Properties?.Description);
+        Assert.True(Guid.TryParse(result.AdditionalGroups[1].Properties?.GroupUniqueId, out _));
+        Assert.Equal(2, result.AdditionalGroups[1].Properties?.OrderId);
+    }
+
+    [Fact]
+    public void CreateRecoveryGroupsSetting_WithEmptyAdditionalGroups_RemovesExistingGroups()
+    {
+        var existingDefaultGroup = CreateGroup("7f35c9f5-bec2-455d-8161-c904b2532e5d", 0, "Existing default group");
+        var existingGroups = new RecoveryGroupsSetting(existingDefaultGroup);
+        existingGroups.AdditionalGroups.Add(CreateGroup("ddcfddaf-d15d-44fe-8472-0f3ee9f0179d", 1, "Existing additional group"));
+
+        RecoveryGroupsSetting result = ResilienceManagementService.CreateRecoveryGroupsSetting(existingGroups, null, []);
+
+        Assert.Empty(result.AdditionalGroups);
+    }
+
+    [Fact]
+    public void CreateRecoveryGroupsSetting_WithActions_MapsManualAndCustomRunbookActions()
+    {
+        const string runbookId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Automation/automationAccounts/account/runbooks/runbook";
+        RecoveryPlanGroupActionInput[] preActions =
+        [
+            new(RecoveryPlanGroupActionKind.ManualAction, "Confirm failover", "Wait for approval", 60, null, null)
+        ];
+        RecoveryPlanGroupActionInput[] postActions =
+        [
+            new(RecoveryPlanGroupActionKind.CustomRunbook, "Prepare database", "Run preparation", 30, runbookId, new Dictionary<string, string> { ["mode"] = "safe" })
+        ];
+
+        RecoveryGroupsSetting result = ResilienceManagementService.CreateRecoveryGroupsSetting(null, null, null, preActions, postActions);
+
+        var manualAction = Assert.IsType<RecoveryGroupManualAction>(Assert.Single(result.DefaultGroup.Properties!.PreActions));
+        Assert.Equal("Confirm failover", manualAction.Name);
+        Assert.Equal("Wait for approval", manualAction.Description);
+        Assert.Equal(60, manualAction.TimeoutInMinutes);
+        var runbookAction = Assert.IsType<RecoveryGroupCustomRunbookAction>(Assert.Single(result.DefaultGroup.Properties.PostActions));
+        Assert.Equal("Prepare database", runbookAction.Name);
+        Assert.Equal("Run preparation", runbookAction.Description);
+        Assert.Equal(runbookId, runbookAction.ActionResourceId.ToString());
+        Assert.Equal("safe", runbookAction.Parameters["mode"]);
+    }
+
+    [Fact]
+    public void CreateRecoveryGroupsSetting_WithOmittedActions_PreservesExistingActions()
+    {
+        var existingDefaultGroup = CreateGroup("7f35c9f5-bec2-455d-8161-c904b2532e5d", 0, "Existing default group");
+        var existingAction = new RecoveryGroupManualAction("Existing action", 10);
+        existingDefaultGroup.Properties!.PreActions.Add(existingAction);
+        var existingGroups = new RecoveryGroupsSetting(existingDefaultGroup);
+
+        RecoveryGroupsSetting result = ResilienceManagementService.CreateRecoveryGroupsSetting(existingGroups, null);
+
+        Assert.Same(existingAction, Assert.Single(result.DefaultGroup.Properties.PreActions));
+    }
+
+    [Fact]
+    public void CreateRecoveryGroupsSetting_RejectsAdditionalGroupIdMatchingDefaultGroupId()
+    {
+        const string defaultGroupId = "7f35c9f5-bec2-455d-8161-c904b2532e5d";
+        var existingDefaultGroup = CreateGroup(defaultGroupId, 0, "Existing default group");
+        var existingGroups = new RecoveryGroupsSetting(existingDefaultGroup);
+        RecoveryPlanGroupInput[] additionalGroups =
+        [
+            new(defaultGroupId, 1, "Additional recovery group", null, null)
+        ];
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(() =>
+            ResilienceManagementService.CreateRecoveryGroupsSetting(existingGroups, null, additionalGroups));
+
+        Assert.Contains("cannot match the default recovery group", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void CreateRecoveryGroupsSetting_RejectsProvidedIdMatchingIdPreservedByOrder()
+    {
+        const string existingAdditionalGroupId = "ddcfddaf-d15d-44fe-8472-0f3ee9f0179d";
+        var existingDefaultGroup = CreateGroup("7f35c9f5-bec2-455d-8161-c904b2532e5d", 0, "Existing default group");
+        var existingGroups = new RecoveryGroupsSetting(existingDefaultGroup);
+        existingGroups.AdditionalGroups.Add(CreateGroup(existingAdditionalGroupId, 1, "Existing additional group"));
+        RecoveryPlanGroupInput[] additionalGroups =
+        [
+            new(null, 1, "Preserve existing group by order", null, null),
+            new(existingAdditionalGroupId, 2, "Reuse existing group by ID", null, null)
+        ];
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(() =>
+            ResilienceManagementService.CreateRecoveryGroupsSetting(existingGroups, null, additionalGroups));
+
+        Assert.Contains("groupUniqueId values must be unique", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void ResolveRecoveryPlanDescription_ForUpdate_PreservesExistingDescription()
     {
         string result = ResilienceManagementService.ResolveRecoveryPlanDescription(null, "Existing description");
@@ -337,6 +462,138 @@ public sealed class ResilienceManagementServiceTests
         Assert.Equal(failedResource.Properties.ResourceId.ToString(), failedResult.AzureResourceId);
         Assert.Equal("InvalidConfiguration", failedResult.Error?.Code);
         Assert.Equal("The recovery resource configuration is invalid.", failedResult.Error?.Message);
+    }
+
+    [Fact]
+    public void CreateReadinessError_DefaultsMissingRecommendationsToEmptyList()
+    {
+        JobErrorInfo providerError = ModelReaderWriter.Read<JobErrorInfo>(BinaryData.FromObjectAsJson(new
+        {
+            errorCode = "NotReady",
+            errorMessage = "The recovery plan is not ready."
+        }))!;
+
+        RecoveryPlanReadinessError? result = ResilienceManagementService.CreateReadinessError(providerError);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Recommendations);
+    }
+
+    [Fact]
+    public void CreateRecoveryPlanValidateForFailoverResult_MapsQualificationDetails()
+    {
+        ValidateForRecoveryOperationBaseResult sdkResult = ModelReaderWriter.Read<ValidateForRecoveryOperationBaseResult>(BinaryData.FromObjectAsJson(new
+        {
+            recoveryResourceQualifications = new[]
+            {
+                new
+                {
+                    recoveryResource = new
+                    {
+                        id = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/12345678-9012-3456-7890-123456789012",
+                        name = "12345678-9012-3456-7890-123456789012",
+                        type = "Microsoft.AzureResilienceManagement/recoveryPlans/recoveryResources",
+                        properties = new
+                        {
+                            recoveryResourceUniqueId = "12345678-9012-3456-7890-123456789012",
+                            resourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm",
+                            resourceLocation = "eastus",
+                            resourcePhysicalZones = new[] { "eastus-az1" },
+                            inclusionState = "Included",
+                            protectionStatus = "Protected",
+                            needsAttention = true,
+                            attentionReasons = new[] { "Replication lag" }
+                        }
+                    },
+                    operationQualificationDetails = new
+                    {
+                        qualificationState = "NotQualified",
+                        notQualifiedReasons = new[] { "ProtectionNotComplete" }
+                    }
+                }
+            }
+        }))!;
+
+        RecoveryPlanValidateForFailoverResult result = ResilienceManagementService.CreateRecoveryPlanValidateForFailoverResult(
+            "11111111-1111-1111-1111-111111111111",
+            sdkResult.RecoveryResourceQualifications);
+
+        Assert.Equal("11111111-1111-1111-1111-111111111111", result.OperationId);
+        RecoveryPlanFailoverQualification qualification = Assert.Single(result.RecoveryResourceQualifications);
+        Assert.Equal("12345678-9012-3456-7890-123456789012", qualification.RecoveryResourceUniqueId);
+        Assert.Equal("eastus", qualification.AzureResourceLocation);
+        Assert.Equal("NotQualified", qualification.QualificationState);
+        Assert.Equal(["ProtectionNotComplete"], qualification.NotQualifiedReasons);
+        Assert.Equal(["eastus-az1"], qualification.ResourcePhysicalZones);
+        Assert.Equal("Included", qualification.InclusionState);
+        Assert.Equal("Protected", qualification.ProtectionStatus);
+        Assert.True(qualification.IsAttentionRequired);
+        Assert.Equal(["Replication lag"], qualification.AttentionReasons);
+    }
+
+    [Fact]
+    public void CreateRecoveryPlanValidateForFailoverResult_ParsesOperationStatusProperties()
+    {
+        BinaryData operationResponse = BinaryData.FromObjectAsJson(new
+        {
+            status = "Succeeded",
+            properties = """
+                {"recoveryResourceQualifications":[{"recoveryResource":{"id":"/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/resource1","name":"resource1","properties":{"recoveryResourceUniqueId":"resource1"}},"operationQualificationDetails":{"qualificationState":"Qualified","notQualifiedReasons":[]}}]}
+                """
+        });
+
+        RecoveryPlanValidateForFailoverResult result = ResilienceManagementService.CreateRecoveryPlanValidateForFailoverResult(
+            "11111111-1111-1111-1111-111111111111",
+            operationResponse,
+            []);
+
+        RecoveryPlanFailoverQualification qualification = Assert.Single(result.RecoveryResourceQualifications);
+        Assert.Equal("resource1", qualification.RecoveryResourceUniqueId);
+        Assert.Equal("Qualified", qualification.QualificationState);
+    }
+
+    [Fact]
+    public void CreateRecoveryPlanValidateForFailoverResult_HandlesMissingQualifications()
+    {
+        RecoveryPlanValidateForFailoverResult result = ResilienceManagementService.CreateRecoveryPlanValidateForFailoverResult(
+            "11111111-1111-1111-1111-111111111111",
+            null);
+
+        Assert.Empty(result.RecoveryResourceQualifications);
+    }
+
+    [Fact]
+    public void CreateRecoveryPlanValidateForFailoverResult_HandlesMissingQualificationDetails()
+    {
+        ValidateForRecoveryOperationBaseResult sdkResult = ModelReaderWriter.Read<ValidateForRecoveryOperationBaseResult>(BinaryData.FromObjectAsJson(new
+        {
+            recoveryResourceQualifications = new[]
+            {
+                new
+                {
+                    recoveryResource = new
+                    {
+                        id = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/12345678-9012-3456-7890-123456789012",
+                        name = "12345678-9012-3456-7890-123456789012",
+                        type = "Microsoft.AzureResilienceManagement/recoveryPlans/recoveryResources",
+                        properties = new
+                        {
+                            recoveryResourceUniqueId = "12345678-9012-3456-7890-123456789012"
+                        }
+                    }
+                }
+            }
+        }))!;
+
+        RecoveryPlanValidateForFailoverResult result = ResilienceManagementService.CreateRecoveryPlanValidateForFailoverResult(
+            "11111111-1111-1111-1111-111111111111",
+            sdkResult.RecoveryResourceQualifications);
+
+        RecoveryPlanFailoverQualification qualification = Assert.Single(result.RecoveryResourceQualifications);
+        Assert.Equal("Unknown", qualification.QualificationState);
+        Assert.Empty(qualification.NotQualifiedReasons);
+        Assert.Empty(qualification.ResourcePhysicalZones);
+        Assert.Empty(qualification.AttentionReasons);
     }
 
     [Fact]

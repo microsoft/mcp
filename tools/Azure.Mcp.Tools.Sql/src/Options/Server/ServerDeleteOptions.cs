@@ -10,12 +10,6 @@ namespace Azure.Mcp.Tools.Sql.Options.Server;
 /// </summary>
 public sealed class ServerDeleteOptions : BaseSqlOptions
 {
-    /// <summary>
-    /// Gets or sets whether to force delete the server without confirmation.
-    /// </summary>
-    [Option(Description = "Force delete the server without confirmation prompts.")]
-    public bool Force { get; set; }
-
     [Option(Description = SqlOptionDescriptions.Server)]
     public required string Server { get; set; }
 }

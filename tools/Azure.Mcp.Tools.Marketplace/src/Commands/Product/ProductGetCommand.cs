@@ -48,7 +48,6 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarket
                 options.SkuId,
                 options.IncludeServiceInstructionTemplates,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             // Set results

@@ -41,7 +41,6 @@ public sealed class SyncGroupDeleteCommand(ILogger<SyncGroupDeleteCommand> logge
                 options.Name,
                 options.SyncGroupName,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Message = "Sync group deleted successfully";

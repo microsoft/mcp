@@ -54,7 +54,6 @@ public sealed class SubnetSizeAskCommand(IManagedLustreService service, ILogger<
                 options.Sku,
                 options.Size,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result), ManagedLustreJsonContext.Default.FileSystemSubnetSizeResult);
         }

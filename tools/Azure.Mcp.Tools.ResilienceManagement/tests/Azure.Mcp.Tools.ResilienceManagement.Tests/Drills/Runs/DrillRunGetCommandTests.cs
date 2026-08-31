@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -38,7 +37,7 @@ public class DrillRunGetCommandTests : CommandUnitTestsBase<DrillRunGetCommand, 
     public async Task ExecuteAsync_ListsDrillRuns_WhenNameOmitted()
     {
         var expected = new List<ResourceSummary> { new("id1", "run1"), new("id2", "run2") };
-        Service.ListDrillRunsAsync(ServiceGroup, Drill, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListDrillRunsAsync(ServiceGroup, Drill, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill);
@@ -51,7 +50,7 @@ public class DrillRunGetCommandTests : CommandUnitTestsBase<DrillRunGetCommand, 
     [Fact]
     public async Task ExecuteAsync_GetsDrillRun_WhenNameProvided()
     {
-        Service.GetDrillRunAsync(ServiceGroup, Drill, "run1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetDrillRunAsync(ServiceGroup, Drill, "run1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Element("run1"));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill, "--name", "run1");
@@ -65,7 +64,7 @@ public class DrillRunGetCommandTests : CommandUnitTestsBase<DrillRunGetCommand, 
     public async Task ExecuteAsync_HandlesException()
     {
         const string expectedError = "Test error";
-        Service.ListDrillRunsAsync(ServiceGroup, Drill, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListDrillRunsAsync(ServiceGroup, Drill, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill);

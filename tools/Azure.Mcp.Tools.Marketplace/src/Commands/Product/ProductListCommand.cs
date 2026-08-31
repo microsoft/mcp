@@ -45,7 +45,6 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMark
                 options.NextCursor,
                 options.Expand,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             // Set results

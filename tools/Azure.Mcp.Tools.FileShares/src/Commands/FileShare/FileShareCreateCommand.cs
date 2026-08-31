@@ -73,7 +73,6 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
                 allowedSubnets,
                 tags,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(fileShare), FileSharesJsonContext.Default.FileShareCreateCommandResult);

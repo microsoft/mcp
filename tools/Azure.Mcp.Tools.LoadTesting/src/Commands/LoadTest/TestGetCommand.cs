@@ -43,7 +43,6 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger, ILoadTestingS
                 options.TestId,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             // Set results if any were returned

@@ -51,7 +51,6 @@ public sealed class PrivateEndpointDeleteCommand(
                 options.PrivateEndpointName,
                 options.VaultType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
