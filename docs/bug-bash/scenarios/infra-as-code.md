@@ -27,13 +27,13 @@
 
 ### Step 1: Get Bicep Schema with Azure MCP Server
 
-**1.1 Get storage account schema** (uses `azmcp_bicepschema_get`):
+**1.1 Get storage account schema** (uses `bicepschema_get`):
 ```
 Show me the Bicep schema for Azure Storage Account resource type
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_bicepschema_get`
+- [ ] Tool invoked: `bicepschema_get`
 - [ ] Schema definition returned
 - [ ] Resource properties documented
 - [ ] Property types shown
@@ -60,13 +60,13 @@ Get the Bicep schema for Azure SQL Database
 
 ### Step 2: Get IaC Generation Rules with Azure MCP Server
 
-**2.1 Get rules for Storage Account** (uses `azmcp_deploy_iac_rules_get`):
+**2.1 Get rules for Storage Account** (uses `deploy_iac_rules_get`):
 ```
 Show me the IaC generation rules for Azure Storage Account using Bicep
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_deploy_iac_rules_get`
+- [ ] Tool invoked: `deploy_iac_rules_get`
 - [ ] Best practices provided
 - [ ] Recommended parameters shown
 - [ ] Configuration guidance included
@@ -118,32 +118,32 @@ az deployment group create \
 
 ### Step 5: Verify Deployment with Azure MCP Server
 
-**5.1 List storage accounts** (uses `azmcp_storage_account_get`):
+**5.1 List storage accounts** (uses `storage_account_get`):
 ```
 List all storage accounts in my subscription
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_storage_account_get`
+- [ ] Tool invoked: `storage_account_get`
 - [ ] Your deployed storage account appears
 - [ ] Account properties match template
 
-**5.2 List blob containers** (uses `azmcp_storage_blob_container_get`):
+**5.2 List blob containers** (uses `storage_blob_container_get`):
 ```
 List all containers in storage account '<account-name>'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_storage_blob_container_get`
+- [ ] Tool invoked: `storage_blob_container_get`
 - [ ] Container from template is listed
 
-**5.3 Get App Service details** (uses `azmcp_appservice_get`):
+**5.3 Get App Service details** (uses `appservice_webapp_get`):
 ```
 Show me details for App Service '<app-name>' in resource group 'bugbash-iac-rg'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_appservice_get`
+- [ ] Tool invoked: `appservice_webapp_get`
 - [ ] App Service configuration shown
 - [ ] Properties match template specification
 
@@ -194,19 +194,19 @@ When logging issues, include:
 ## Quick Reference: Supported MCP Tools
 
 ### Bicep Support
-- `azmcp_bicepschema_get` - Get Bicep schema for resource types
+- `bicepschema_get` - Get Bicep schema for resource types
 
 ### IaC Guidance
-- `azmcp_deploy_iac_rules_get` - Get IaC generation rules for resource types
-- `azmcp_azureterraformbestpractices_get` - Get Terraform best practices
-- `azmcp_bestpractices_get` - Get general Azure best practices
+- `deploy_iac_rules_get` - Get IaC generation rules for resource types
+- `azureterraformbestpractices_get` - Get Terraform best practices
+- `get_azure_bestpractices_get` - Get general Azure best practices
 
 ### Resource Verification
-- `azmcp_storage_account_get` - List storage accounts
-- `azmcp_storage_blob_container_get` - List blob containers
-- `azmcp_appservice_get` - Get App Service details
-- `azmcp_sql_server_list` - List SQL servers
-- `azmcp_cosmos_account_list` - List Cosmos DB accounts
+- `storage_account_get` - List storage accounts
+- `storage_blob_container_get` - List blob containers
+- `appservice_webapp_get` - Get App Service details
+- `sql_server_get` - List SQL servers
+- `cosmos_list` - List Cosmos DB accounts
 
 ---
 

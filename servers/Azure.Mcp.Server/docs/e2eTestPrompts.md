@@ -465,10 +465,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | mysql_list | List all MySQL servers in my subscription | none |
 | mysql_list | Show me my MySQL servers | none |
 | mysql_list | Show me the MySQL servers in my subscription | none |
-| mysql_list | List all MySQL databases in server \<server> | none |
-| mysql_list | Show me the MySQL databases in server \<server> | none |
-| mysql_list | List all tables in the MySQL database \<database> in server \<server> | none |
-| mysql_list | Show me the tables in the MySQL database \<database> in server \<server> | none |
+| mysql_list | List all MySQL databases in server \<server> | clarification-required |
+| mysql_list | Show me the MySQL databases in server \<server> | clarification-required |
+| mysql_list | List all tables in the MySQL database \<database> in server \<server> | clarification-required |
+| mysql_list | Show me the tables in the MySQL database \<database> in server \<server> | clarification-required |
 | mysql_database_query | Show me all items that contain the word \<search_term> in the MySQL database \<database> in server \<server> | none |
 | mysql_server_config_get | Show me the configuration of MySQL server \<server> | none |
 | mysql_server_param_get | Show me the value of connection timeout in seconds in my MySQL server \<server> | none |
@@ -482,11 +482,11 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | postgres_list | List all PostgreSQL servers in my subscription | none |
 | postgres_list | Show me my PostgreSQL servers | none |
 | postgres_list | Show me the PostgreSQL servers in my subscription | none |
-| postgres_list | List all PostgreSQL databases in server \<server> | none |
-| postgres_list | Show me the PostgreSQL databases in server \<server> | none |
-| postgres_list | List all tables in the PostgreSQL database \<database> in server \<server> | none |
-| postgres_list | Show me the tables in the PostgreSQL database \<database> in server \<server> | none |
-| postgres_list | List all tables in the \<schema> schema of the PostgreSQL database \<database> in server \<server> | none |
+| postgres_list | List all PostgreSQL databases in server \<server> | clarification-required |
+| postgres_list | Show me the PostgreSQL databases in server \<server> | clarification-required |
+| postgres_list | List all tables in the PostgreSQL database \<database> in server \<server> | clarification-required |
+| postgres_list | Show me the tables in the PostgreSQL database \<database> in server \<server> | clarification-required |
+| postgres_list | List all tables in the \<schema> schema of the PostgreSQL database \<database> in server \<server> | clarification-required |
 | postgres_database_query | Show me all items that contain the word \<search_term> in the PostgreSQL database \<database> in server \<server> | none |
 | postgres_server_config_get | Show me the configuration of PostgreSQL server \<server> | none |
 | postgres_server_param_get | Show me if the parameter my PostgreSQL server \<server> has replication enabled | none |

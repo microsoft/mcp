@@ -60,13 +60,13 @@ npm pkg set scripts.start="node index.js"
 
 ### Step 2: Get Deployment Plan with Azure MCP Server
 
-**2.1 Request deployment plan** (uses `azmcp_deploy_plan_get`):
+**2.1 Request deployment plan** (uses `deploy_plan_get`):
 ```
 I have a Node.js Express application in folder 'bugbash-deploy-app'. Create a deployment plan to deploy this to Azure App Service.
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_deploy_plan_get`
+- [ ] Tool invoked: `deploy_plan_get`
 - [ ] Deployment plan includes App Service target
 - [ ] Runtime configuration identified (Node.js)
 - [ ] Provisioning tool recommendation provided (Bicep, Terraform, or azd)
@@ -79,13 +79,13 @@ Show me how to deploy my Node.js app in 'bugbash-deploy-app' to Azure
 
 ### Step 3: Get CI/CD Pipeline Guidance with Azure MCP Server
 
-**3.1 Get pipeline guidance** (uses `azmcp_deploy_pipeline_guidance_get`):
+**3.1 Get pipeline guidance** (uses `deploy_pipeline_guidance_get`):
 ```
 How do I set up a CI/CD pipeline to automatically deploy my application to Azure App Service?
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_deploy_pipeline_guidance_get`
+- [ ] Tool invoked: `deploy_pipeline_guidance_get`
 - [ ] GitHub Actions workflow guidance provided
 - [ ] Azure DevOps pipeline guidance included
 - [ ] Deployment credentials setup explained
@@ -134,13 +134,13 @@ az webapp deployment source config-zip \
 
 ### Step 5: View Application Logs with Azure MCP Server
 
-**5.1 Get application logs** (uses `azmcp_deploy_app_logs_get`):
+**5.1 Get application logs** (uses `deploy_app_logs_get`):
 ```
 Show me the logs for my application in Azure environment 'bugbash-deploy-rg'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_deploy_app_logs_get`
+- [ ] Tool invoked: `deploy_app_logs_get`
 - [ ] Application logs retrieved
 - [ ] Log timestamps shown
 - [ ] Log content is readable
@@ -157,13 +157,13 @@ Show me the last 50 log entries for my deployed application
 
 ### Step 6: Get Architecture Diagram with Azure MCP Server
 
-**6.1 Generate architecture diagram** (uses `azmcp_deploy_architecture_diagram_generate`):
+**6.1 Generate architecture diagram** (uses `deploy_architecture_diagram_generate`):
 ```
 Generate a Mermaid architecture diagram for my deployment showing the App Service, application topology, and resource dependencies
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_deploy_architecture_diagram_generate`
+- [ ] Tool invoked: `deploy_architecture_diagram_generate`
 - [ ] Mermaid diagram generated
 - [ ] Components clearly shown
 - [ ] Relationships between resources displayed
@@ -232,13 +232,13 @@ EOF
 
 ### Step 2: Get IaC Generation Rules with Azure MCP Server
 
-**2.1 Request IaC rules for resources** (uses `azmcp_deploy_iac_rules_get`):
+**2.1 Request IaC rules for resources** (uses `deploy_iac_rules_get`):
 ```
 Show me the infrastructure-as-code generation rules for deploying Azure App Service and Azure SQL Database using Bicep
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_deploy_iac_rules_get`
+- [ ] Tool invoked: `deploy_iac_rules_get`
 - [ ] Bicep rules provided for App Service
 - [ ] Bicep rules provided for Azure SQL Database
 - [ ] Best practices included
@@ -256,13 +256,13 @@ Show me the IaC rules for Azure Storage Account and Cosmos DB using Terraform
 
 ### Step 3: Get Deployment Plan for Multi-Service App with Azure MCP Server
 
-**3.1 Request deployment plan** (uses `azmcp_deploy_plan_get`):
+**3.1 Request deployment plan** (uses `deploy_plan_get`):
 ```
 I have a full-stack application with a React frontend in 'frontend' folder and Node.js API in 'backend' folder. Create a deployment plan for Azure with Static Web App for frontend and App Service for backend.
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_deploy_plan_get`
+- [ ] Tool invoked: `deploy_plan_get`
 - [ ] Frontend deployment to Static Web App recommended
 - [ ] Backend deployment to App Service recommended
 - [ ] Service communication strategy included
@@ -270,13 +270,13 @@ I have a full-stack application with a React frontend in 'frontend' folder and N
 
 ### Step 4: Get Pipeline Guidance for Full-Stack App with Azure MCP Server
 
-**4.1 Request CI/CD guidance** (uses `azmcp_deploy_pipeline_guidance_get`):
+**4.1 Request CI/CD guidance** (uses `deploy_pipeline_guidance_get`):
 ```
 How do I set up a CI/CD pipeline for my full-stack application with separate build and deployment for frontend and backend?
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_deploy_pipeline_guidance_get`
+- [ ] Tool invoked: `deploy_pipeline_guidance_get`
 - [ ] Multi-stage pipeline guidance provided
 - [ ] Frontend build process explained
 - [ ] Backend build process explained
@@ -323,13 +323,13 @@ az webapp create \
 
 ### Step 6: Verify Deployment Guidance with Azure MCP Server
 
-**6.1 Get architecture diagram** (uses `azmcp_deploy_architecture_diagram_generate`):
+**6.1 Get architecture diagram** (uses `deploy_architecture_diagram_generate`):
 ```
 Generate a Mermaid architecture diagram showing my full-stack application with Static Web App frontend, App Service backend, and their connectivity
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_deploy_architecture_diagram_generate`
+- [ ] Tool invoked: `deploy_architecture_diagram_generate`
 - [ ] Both services shown in diagram
 - [ ] Communication flow displayed
 - [ ] Azure resources clearly labeled
@@ -385,15 +385,15 @@ When logging issues, include:
 ## 💡 Quick Reference: Supported MCP Tools
 
 ### Deployment Planning
-- `azmcp_deploy_plan_get` - Get deployment plan for a project
-- `azmcp_deploy_iac_rules_get` - Get IaC generation rules for resource types
-- `azmcp_deploy_architecture_diagram_generate` - Generate Mermaid architecture diagram
+- `deploy_plan_get` - Get deployment plan for a project
+- `deploy_iac_rules_get` - Get IaC generation rules for resource types
+- `deploy_architecture_diagram_generate` - Generate Mermaid architecture diagram
 
 ### CI/CD Guidance
-- `azmcp_deploy_pipeline_guidance_get` - Get CI/CD pipeline setup guidance
+- `deploy_pipeline_guidance_get` - Get CI/CD pipeline setup guidance
 
 ### Application Logs
-- `azmcp_deploy_app_logs_get` - Get application service logs for azd environment
+- `deploy_app_logs_get` - Get application service logs for azd environment
 
 ---
 

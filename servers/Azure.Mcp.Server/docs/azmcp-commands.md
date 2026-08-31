@@ -1,18 +1,17 @@
 # Azure MCP CLI Command Reference
 
 > [!IMPORTANT]
-> The Azure MCP Server has two modes: MCP Server mode and CLI mode.  When you start the MCP Server with `azmcp server start` that will expose an endpoint for MCP Client communication. The `azmcp` CLI also exposes all of the tools via a command line interface, i.e. `azmcp subscription list`.  In this document, "command" refers to CLI commands (e.g., `azmcp storage account list`), while "tool" refers to MCP server tools that can be invoked by MCP clients.
+> The Azure MCP Server has two modes: MCP Server mode and CLI mode. When you start the MCP Server with `azmcp server start`, it exposes an endpoint for MCP client communication. The `azmcp` CLI also exposes the tools through commands such as `azmcp subscription list`. In this document, "command" refers to CLI commands (for example, `azmcp storage account get`), while "tool" refers to MCP server tools invoked by MCP clients.
 
-## Global Options
+## Common Options
 
-The following options are available for most commands:
+Availability is command-specific and shown by `--learn`. Common Azure command options include:
 
 | Option | Required | Default | Description |
 |-----------|----------|---------|-------------|
-| `--subscription` | No | Environment variable `AZURE_SUBSCRIPTION_ID` | Azure subscription ID for target resources |
-| `--tenant-id` | No | - | Azure tenant ID for authentication |
-| `--auth-method` | No | 'credential' | Authentication method ('credential', 'key', 'connectionString') |
-| `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
+| `--subscription` | No | Azure CLI profile or `AZURE_SUBSCRIPTION_ID` | Azure subscription ID or display name for target resources |
+| `--tenant` | No | - | Microsoft Entra tenant ID or display name for authentication |
+| `--learn` | No | false | Discover available subcommands and their parameters without executing an Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
 
 ### Discovery with `--learn`
 
@@ -26,7 +25,8 @@ azmcp storage --learn
 azmcp storage account --learn
 
 # Show the options for a specific command without executing it
-azmcp storage account list --learn
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage account get --learn
 ```
 
 The output is a JSON `CommandResponse` containing a list of `CommandInfo` objects with the command name, description, full CLI path, and all supported options. This is equivalent to the `learn` parameter supported by the Azure MCP server tools in namespace mode.
@@ -39,13 +39,15 @@ To see logs while running a CLI command:
 
 ```powershell
 # Show logs in terminal alongside JSON output (PowerShell / bash)
-azmcp storage account list --subscription <sub> 2>&1
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage account get --subscription <sub> 2>&1
 
 # Capture JSON silently, discard logs (PowerShell)
-$json = azmcp storage account list --subscription <sub> 2>$null
+$json = azmcp storage account get --subscription <sub> 2>$null
 
 # Write logs to a file while JSON goes to stdout
-azmcp storage account list --subscription <sub> 2>azmcp.log
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage account get --subscription <sub> 2>azmcp.log
 ```
 
 ## Available Commands
@@ -169,17 +171,17 @@ Exposes only specific tools by name, providing the finest level of granularity. 
 ```bash
 # Start MCP Server with default mode and only subscription and resource group tools
 azmcp server start \
-    --tool azmcp_subscription_list \
-    --tool azmcp_group_list \
+    --tool subscription_list \
+    --tool group_list \
     [--transport <transport>] \
     [--read-only]
 
 # Start MCP Server with all mode and essential storage management tools
 azmcp server start \
     --mode all \
-    --tool azmcp_storage_account_get \
-    --tool azmcp_storage_account_create \
-    --tool azmcp_storage_blob_get \
+    --tool storage_account_get \
+    --tool storage_account_create \
+    --tool storage_blob_get \
     [--transport <transport>] \
     [--read-only]
 ```
@@ -208,7 +210,7 @@ azmcp server start \
     [--read-only]
 ```
 
-**Configuration file location**: The consolidated tool definitions are maintained in `core/Azure.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json`. Each definition includes:
+**Configuration file location**: The consolidated tool definitions are maintained in `servers/Azure.Mcp.Server/src/Resources/consolidated-tools.json`. Each definition includes:
 - Tool name and description optimized for AI agent selection
 - List of mapped individual commands
 - Matching toolMetadata (destructive, idempotent, readOnly, secret, etc.)
@@ -253,7 +255,7 @@ The `azmcp server start` command supports the following options:
 | `--transport` | No | `stdio` | Transport mechanism to use. Valid values: `stdio` (default, supported in all distributions) or `http` (supported only in the Docker image distribution and other builds with HTTP enabled; may not be available in local CLI builds). |
 | `--mode` | No | `namespace` | Server mode: `namespace` (default), `consolidated`, `all`, or `single` |
 | `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all existing modes to filter tools. |
-| `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
+| `--tool` | No | All tools | Expose specific tools by name (e.g., 'storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
 | `--dangerously-disable-http-incoming-auth` | No | false | Dangerously disable HTTP incoming authentication |
@@ -565,7 +567,7 @@ azmcp appconfig kv set --subscription <subscription> \
 ### Azure App Lens Operations
 
 > [!NOTE]
-> The `applens resource diagnose` command does not support `--auth-method` or any `--retry-*` options.
+> The `applens resource diagnose` command uses credential authentication and does not expose `--auth-method`.
 
 ```bash
 # Diagnose resource using Azure App Lens
@@ -2946,7 +2948,7 @@ azmcp keyvault secret get --subscription <subscription> \
 ### Azure Kubernetes Service (AKS) Operations
 
 > [!NOTE]
-> The `aks cluster get` and `aks nodepool get` commands do not support `--auth-method` (the `--retry-*` options are still supported).
+> The `aks cluster get` and `aks nodepool get` commands use credential authentication and do not expose `--auth-method`.
 
 ```bash
 # Gets Azure Kubernetes Service (AKS) cluster details
@@ -4773,7 +4775,7 @@ azmcp storagesync serverendpoint update --subscription <subscription> \
 # Returns subscriptionId, displayName, state, tenantId, and isDefault for each subscription
 # The isDefault field is true for the default subscription set via 'az account set' or AZURE_SUBSCRIPTION_ID env var
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp subscription list [--tenant-id <tenant-id>]
+azmcp subscription list [--tenant <tenant-id-or-name>]
 ```
 
 ### Azure Terraform Best Practices
@@ -4991,7 +4993,7 @@ azmcp bicepschema get --resource-type <resource-type> \
 ### Cloud Architect
 
 > [!NOTE]
-> The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant-id`, `--auth-method`, or any `--retry-*` options.
+> The `cloudarchitect design` command is a local, stateless tool and does not expose `--subscription`, `--tenant`, or `--auth-method`.
 
 ```bash
 # Design Azure cloud architectures through guided questions

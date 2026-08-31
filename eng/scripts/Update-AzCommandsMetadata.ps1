@@ -8,10 +8,10 @@
     each tool command. Maintains the existing format, schema, and order.
     
 .PARAMETER AzmcpPath
-    Path to the azmcp.exe executable. Default: ..\..\servers\Azure.Mcp.Server\src\bin\Debug\net10.0\azmcp.exe
+    Path to the azmcp.exe executable. Defaults to the Debug server output under the repository root.
     
 .PARAMETER DocsPath
-    Path to the azmcp-commands.md file. Default: ..\..\servers\Azure.Mcp.Server\docs\azmcp-commands.md
+    Path to the azmcp-commands.md file. Defaults to the Azure MCP Server command reference.
     
 .EXAMPLE
     .\Update-AzCommandsMetadata.ps1
@@ -22,11 +22,19 @@
 
 [CmdletBinding()]
 param(
-    [string]$AzmcpPath = "..\..\servers\Azure.Mcp.Server\src\bin\Debug\net10.0\azmcp.exe",
-    [string]$DocsPath = "..\..\servers\Azure.Mcp.Server\docs\azmcp-commands.md"
+    [string]$AzmcpPath,
+    [string]$DocsPath
 )
 
 $ErrorActionPreference = "Stop"
+
+if ([string]::IsNullOrEmpty($AzmcpPath)) {
+    $AzmcpPath = Join-Path $PSScriptRoot "../../servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe"
+}
+
+if ([string]::IsNullOrEmpty($DocsPath)) {
+    $DocsPath = Join-Path $PSScriptRoot "../../servers/Azure.Mcp.Server/docs/azmcp-commands.md"
+}
 
 function Get-MetadataLine {
     param(
@@ -115,7 +123,8 @@ try {
         Write-Error "Failed to get tools list. Status: $($toolsData.status), Message: $($toolsData.message)"
         exit 1
     }
-} catch {
+}
+catch {
     Write-Error "Failed to parse tools list output as JSON: $_"
     exit 1
 }

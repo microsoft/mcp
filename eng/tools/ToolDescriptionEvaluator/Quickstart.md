@@ -39,12 +39,17 @@ Or copy `.env.example` to `.env` and fill in your credentials.
    - For Fabric tools: `servers/Fabric.Mcp.Server/docs/e2eTestPrompts.md`
 3. Run the analyzer using PowerShell
 
+  From `eng/tools/ToolDescriptionEvaluator`:
+
     ```pwsh
     # For Azure MCP Server (default)
     ./scripts/Run-ToolDescriptionEvaluator.ps1
 
-    # For Fabric MCP Server
-    ./scripts/Run-ToolDescriptionEvaluator.ps1 -Area "Acr"
+  # For an Azure service area
+  ./scripts/Run-ToolDescriptionEvaluator.ps1 -Area "acr"
+
+  # For Fabric MCP Server (the wrapper is Azure-only)
+  dotnet run --project src -- --server "Fabric"
 
     # Build the Azure.Mcp.Server as part of the run
     ./scripts/Run-ToolDescriptionEvaluator.ps1 -BuildAzureMcp
@@ -59,12 +64,12 @@ When developing a new tool, you can test its description directly without adding
 
 ```bash
 # Test a single tool description against one prompt
-dotnet run -- --test-single-tool \
+dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- --test-single-tool \
   --tool-description "Lists all storage accounts in a subscription" \
   --prompt "show me my storage accounts"
 
 # Test against multiple prompts
-dotnet run -- --test-single-tool \
+dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- --test-single-tool \
   --tool-description "Retrieves secrets from Azure Key Vault" \
   --prompt "get my secret from Key Vault" \
   --prompt "show me secrets in my vault" \

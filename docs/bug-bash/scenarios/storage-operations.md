@@ -1,6 +1,6 @@
 # Storage Operations Testing Scenario
 
-> **IMPORTANT**: Azure MCP Server provides **read-only inspection and querying** of Azure Storage accounts. It **cannot create, modify, upload, or delete** storage resources. This scenario guides you through creating resources externally (Azure CLI or Portal) and then using Azure MCP Server to inspect them.
+> **IMPORTANT**: The Storage toolset supports storage account creation, blob container creation, blob upload, and read operations. This scenario uses Azure CLI for deterministic setup and focuses on validating the read/get workflows.
 
 ## Objectives
 
@@ -28,7 +28,7 @@
 
 #### Step 1: Create Storage Account (External - Not MCP)
 
-> **External Setup Required**: Azure MCP Server cannot create resources. Use GitHub Copilot Chat to run Azure CLI commands or use Azure Portal.
+> **Deterministic external setup**: Use these Azure CLI commands or the Azure portal to create a known test fixture. The MCP write tools can be tested separately.
 
 **Option A: Prompt GitHub Copilot Chat** (Recommended):
 ```
@@ -40,7 +40,7 @@ Create an Azure resource group 'bugbash-storage-rg' in eastus, create a storage 
 # Set variables
 RG_NAME="bugbash-storage-rg"
 LOCATION="eastus"
-STORAGE_ACCOUNT="bugbashstorage$(Get-Random -Maximum 9999)"
+STORAGE_ACCOUNT="bugbashstorage$RANDOM"
 
 # Create resource group
 az group create --name $RG_NAME --location $LOCATION
@@ -92,7 +92,7 @@ Show me all storage accounts in my subscription
 ```
 
 **Tool Verification**:
-- [ ] Tool invoked: `azmcp_storage_account_get`
+- [ ] Tool invoked: `storage_account_get`
 - [ ] Returns list of storage accounts
 - [ ] Includes your new storage account
 
@@ -102,10 +102,9 @@ Show me details for storage account '<storage-account-name>' in resource group '
 ```
 
 **Tool Verification**:
-- [ ] Tool invoked: `azmcp_storage_account_get` with `--account` and `--resource-group` parameters
+- [ ] Tool invoked: `storage_account_get` with `--account` and `--resource-group` parameters
 - [ ] Returns single storage account
 - [ ] Shows SKU as Standard_LRS
-- [ ] Shows access tier as Hot
 - [ ] Shows hierarchical namespace enabled
 - [ ] Shows location as eastus
 
@@ -117,7 +116,7 @@ List all blob containers in storage account '<storage-account-name>'
 ```
 
 **Tool Verification**:
-- [ ] Tool invoked: `azmcp_storage_container_list`
+- [ ] Tool invoked: `storage_blob_container_get`
 - [ ] Returns both containers (test-data, public-data)
 - [ ] Shows public access levels correctly
 
@@ -129,7 +128,7 @@ Show me all blobs in container 'test-data' from storage account '<storage-accoun
 ```
 
 **Tool Verification**:
-- [ ] Tool invoked: `azmcp_storage_blob_list`
+- [ ] Tool invoked: `storage_blob_get`
 - [ ] Returns test-file.txt blob
 - [ ] Shows blob size
 - [ ] Shows last modified date
@@ -140,7 +139,7 @@ Get details for blob 'test-file.txt' in container 'test-data' from storage accou
 ```
 
 **Tool Verification**:
-- [ ] Tool invoked: `azmcp_storage_blob_get`
+- [ ] Tool invoked: `storage_blob_get`
 - [ ] Returns blob metadata
 - [ ] Shows content type
 - [ ] Shows blob properties
@@ -153,7 +152,7 @@ Show me all storage accounts in resource group 'bugbash-storage-rg'
 ```
 
 **Tool Verification**:
-- [ ] Tool invoked: `azmcp_storage_account_get` with `--resource-group` parameter
+- [ ] Tool invoked: `storage_account_get` with `--resource-group` parameter
 - [ ] Returns only storage accounts in specified resource group
 - [ ] Excludes storage accounts from other resource groups
 
@@ -180,7 +179,7 @@ az group delete --name bugbash-storage-rg --yes --no-wait
 
 #### Step 1: Create Storage Account with Multiple Containers (External - Not MCP)
 
-> **External Setup Required**: Azure MCP Server cannot create resources. Use GitHub Copilot Chat to run Azure CLI commands or use Azure Portal.
+> **Deterministic external setup**: Use these Azure CLI commands or the Azure portal to create a known test fixture. The MCP write tools can be tested separately.
 
 **Option A: Prompt GitHub Copilot Chat** (Recommended):
 ```
@@ -192,7 +191,7 @@ Create an Azure resource group 'bugbash-multicontainer-rg' in westus2, create a 
 # Set variables
 RG_NAME="bugbash-multicontainer-rg"
 LOCATION="westus2"
-STORAGE_ACCOUNT="bugbashmulti$(Get-Random -Maximum 9999)"
+STORAGE_ACCOUNT="bugbashmulti$RANDOM"
 
 # Create resource group and storage account
 az group create --name $RG_NAME --location $LOCATION
@@ -238,7 +237,7 @@ az storage blob upload --account-name $STORAGE_ACCOUNT --container-name shared-d
 
 ### Azure MCP Server Prompts
 
-#### Step 2: Discover Storage Account with Cool Tier
+#### Step 2: Discover Storage Account
 
 **Prompt 2a**: Get storage account details
 ```
@@ -246,9 +245,8 @@ Show me the storage account '<storage-account-name>' in resource group 'bugbash-
 ```
 
 **Tool Verification**:
-- [ ] Tool invoked: `azmcp_storage_account_get`
+- [ ] Tool invoked: `storage_account_get`
 - [ ] Shows SKU as Standard_GRS
-- [ ] Shows access tier as Cool
 - [ ] Shows location as westus2
 
 #### Step 3: List All Containers and Their Access Levels
@@ -259,7 +257,7 @@ List all blob containers in storage account '<storage-account-name>' and show th
 ```
 
 **Tool Verification**:
-- [ ] Tool invoked: `azmcp_storage_container_list`
+- [ ] Tool invoked: `storage_blob_container_get`
 - [ ] Returns three containers: private-documents, public-images, shared-data
 - [ ] Shows correct public access level for each:
   - [ ] private-documents: None/Off
@@ -274,7 +272,7 @@ Show me all blobs in the 'private-documents' container from storage account '<st
 ```
 
 **Tool Verification**:
-- [ ] Tool invoked: `azmcp_storage_blob_list` with `--container` parameter
+- [ ] Tool invoked: `storage_blob_get` with `--container` parameter
 - [ ] Returns document.txt
 - [ ] Shows blob size and last modified date
 
@@ -284,7 +282,7 @@ List all blobs in container 'shared-data' from storage account '<storage-account
 ```
 
 **Tool Verification**:
-- [ ] Tool invoked: `azmcp_storage_blob_list`
+- [ ] Tool invoked: `storage_blob_get`
 - [ ] Returns both blobs: data.json, index.html
 - [ ] Shows correct content types for each blob
 
@@ -294,21 +292,21 @@ Get details for blob 'data.json' in container 'shared-data' from storage account
 ```
 
 **Tool Verification**:
-- [ ] Tool invoked: `azmcp_storage_blob_get`
+- [ ] Tool invoked: `storage_blob_get`
 - [ ] Shows content type as application/json
 - [ ] Shows blob properties and metadata
 
-#### Step 5: Test Cross-Subscription Discovery (if available)
+#### Step 5: Test Default Subscription Resolution
 
-**Prompt 5a**: List storage accounts across all accessible subscriptions
+**Prompt 5a**: List storage accounts without naming a subscription
 ```
-Show me all storage accounts I have access to across all my subscriptions
+Show me all storage accounts in my default subscription
 ```
 
 **Tool Verification**:
-- [ ] Tool invoked: `azmcp_storage_account_get` without subscription filter
-- [ ] Returns storage accounts from multiple subscriptions (if you have access)
-- [ ] Groups results by subscription
+- [ ] Tool invoked: `storage_account_get` without an explicit subscription
+- [ ] The command resolves the Azure CLI profile or `AZURE_SUBSCRIPTION_ID` default
+- [ ] Results are limited to the resolved subscription
 
 ### Cleanup
 
@@ -342,7 +340,7 @@ az group delete --name bugbash-multicontainer-rg --yes --no-wait
 
 When logging issues, include:
 - [ ] Exact prompt used
-- [ ] Tool invoked (from MCP tool output: `azmcp_storage_account_get`, `azmcp_storage_container_list`, `azmcp_storage_blob_list`, etc.)
+- [ ] Tool invoked (from MCP tool output: `storage_account_get`, `storage_blob_container_get`, `storage_blob_get`, etc.)
 - [ ] Expected vs actual results
 - [ ] Error messages (if any)
 - [ ] Storage account name and resource group
@@ -363,27 +361,27 @@ When logging issues, include:
 ## Quick Reference: Supported MCP Tools
 
 ### Storage Account Operations
-- `azmcp_storage_account_get` - Get storage account details (list all or specific account)
+- `storage_account_get` - Get storage account details (list all or specific account)
   - Parameters: `--subscription`, `--resource-group`, `--account`
-  - Returns: Storage account properties (SKU, access tier, location, hierarchical namespace)
+  - Returns: Storage account properties (SKU, location, kind, hierarchical namespace, HTTPS-only, and blob public-access settings)
 
 ### Container Operations
-- `azmcp_storage_container_list` - List blob containers in a storage account
+- `storage_blob_container_get` - List blob containers in a storage account
   - Parameters: `--account`, `--resource-group`
   - Returns: Container names and public access levels
 
 ### Blob Operations
-- `azmcp_storage_blob_list` - List blobs in a container
+- `storage_blob_get` - List blobs in a container
   - Parameters: `--account`, `--container`, `--resource-group`
   - Returns: Blob names, sizes, last modified dates
   
-- `azmcp_storage_blob_get` - Get specific blob details
+- `storage_blob_get` - Get specific blob details
   - Parameters: `--account`, `--container`, `--blob`, `--resource-group`
   - Returns: Blob metadata, content type, properties
 
 ### Important Notes
-- **Read-Only**: All MCP tools are read-only inspection tools
-- **No Write Operations**: Cannot create, upload, modify, or delete resources
+- **Read workflow in this scenario**: `storage_account_get`, `storage_blob_container_get`, and `storage_blob_get`
+- **Available write tools**: `storage_account_create`, `storage_blob_container_create`, and `storage_blob_upload`
 - **Authentication**: Requires Azure RBAC permissions (Reader or Storage Blob Data Reader minimum)
 - **Filtering**: Supports filtering by subscription, resource group, and specific resource names
 

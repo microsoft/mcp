@@ -1,6 +1,6 @@
 ---
 name: azurebackup-add-tool
-description: 'Add a new tool/command to the Azure Backup MCP toolset. Covers the full lifecycle: command implementation, option definitions, service layer, input validation, unit tests, live tests, recorded test playback, CI validation, spell check, changelog entry, tool description evaluation, and PR checklist. USE WHEN: add new backup command, create backup tool, implement backup operation, new azurebackup command, add MCP tool for backup, new vault operation, new policy command, new governance command.'
+description: 'Add a new tool/command to the Azure Backup MCP toolset. Covers the full lifecycle: command implementation, options, service layer, input validation, unit tests, live tests, recorded test playback, CI validation, spell check, changelog entry, tool description evaluation, and PR checklist. USE WHEN: add new backup command, create backup tool, implement backup operation, new azurebackup command, add MCP tool for backup, new vault operation, new policy command, new governance command.'
 argument-hint: 'Describe the new Azure Backup tool to add (e.g., "add security configure-mua command")'
 ---
 
@@ -31,22 +31,32 @@ ensuring it passes all validation gates before PR submission.
 Follow [`/.github/skills/add-azure-mcp-tools/SKILL.md`](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md) as the authoritative guide.
 The Azure Backup toolset lives in `tools/Azure.Mcp.Tools.AzureBackup/`.
 
-#### 1a. Create Option Definitions
+#### 1a. Create Options
 
 File: `src/Options/{Group}/{Resource}{Operation}Options.cs`
 
 ```csharp
-// Inherit from the appropriate base options class
-public class MyNewOptions : BaseAzureBackupOptions
+public sealed class MyNewOptions : ISubscriptionOption
 {
-    public string? MyParam { get; set; }
+  [Option(Description = "The command-specific value.")]
+  public required string MyParam { get; set; }
+
+  [Option(Description = OptionDescriptions.ResourceGroup)]
+  public required string ResourceGroup { get; set; }
+
+  [Option(Description = OptionDescriptions.Subscription)]
+  public string? Subscription { get; set; }
+
+  [Option(Description = OptionDescriptions.Tenant)]
+  public string? Tenant { get; set; }
 }
 ```
 
-- Use `OptionDefinitions.Common.*` for shared options (subscription, resourceGroup)
-- Use `AzureBackupOptionDefinitions.Vault` and `AzureBackupOptionDefinitions.VaultType` for vault options
-- Add new options to `AzureBackupOptionDefinitions` if reusable across commands
-- Use `.AsRequired()` / `.AsOptional()` extension methods
+- Put `[Option(Description = ...)]` on every exposed property
+- Use `OptionDescriptions` for common descriptions and `AzureBackupOptionDefinitions` for reusable Azure Backup descriptions or explicit option-name constants
+- Use the C# `required` modifier for required command options; use nullable properties for optional values
+- Implement `ISubscriptionOption`; `SubscriptionCommand` resolves subscription IDs or names
+- New commands should use flat options. Existing inherited options classes are transitional code and do not require new commands to add more inheritance.
 
 #### 1b. Add Service Method
 
@@ -64,10 +74,13 @@ File: `src/Commands/{Group}/{Resource}{Operation}Command.cs`
 Required patterns:
 - Use `[CommandMetadata(...)]` attribute (not property overrides)
 - Sealed class with primary constructor
-- Inject `ILogger<T>` and `IAzureBackupService`
-- Override `RegisterOptions`, `BindOptions`, `ExecuteAsync`
+- Inject `ILogger<T>`, `IAzureBackupService`, and `ISubscriptionResolver`
+- Inherit from `SubscriptionCommand<TOptions, TResult>`; use `BaseAzureBackupCommand<TOptions, TResult>` only when deliberately extending its existing shared vault-type validation
+- Override `ExecuteAsync` and, when semantic validation is needed, `ValidateOptions`
+- Do not implement `RegisterOptions` or `BindOptions`; `OptionBinder` handles attributed options
 - Add telemetry tags via `AzureBackupTelemetryTags.AddVaultTags(context.Activity, ...)`
 - Call `HandleException(context, ex)` in catch blocks
+- Keep the public sealed result record nested in the command class and register it in `AzureBackupJsonContext`
 
 #### 1d. Register the Command
 
@@ -88,11 +101,12 @@ File: `src/Commands/AzureBackupJsonContext.cs`
 Before writing tests, validate all inputs are handled correctly:
 
 **Checklist:**
-- [ ] Required parameters throw `ArgumentException` with clear message when missing
-- [ ] Subscription format validated (GUID only) via `ValidateSubscriptionFormat`
+- [ ] Required command options use the C# `required` modifier
+- [ ] Semantic and conditional rules are implemented in `ValidateOptions`
+- [ ] Subscription is delegated to `ISubscriptionResolver`; do not require GUID format because subscription names are supported
 - [ ] Vault type normalized correctly (rsv/dpp case-insensitive)
 - [ ] Enum/string parameters validated against allowed values with helpful error listing
-- [ ] Null/empty strings handled with `ArgumentException.ThrowIfNullOrWhiteSpace`
+- [ ] Service entry points validate required values defensively when they can be called outside a command
 - [ ] ARM resource IDs parsed safely with try-catch on `new ResourceIdentifier(...)`
 - [ ] Error messages are actionable (tell user what to provide, not just what failed)
 
@@ -103,19 +117,18 @@ File: `tests/Azure.Mcp.Tools.AzureBackup.Tests/{Group}/{Resource}{Operation}Comm
 #### Required Test Methods
 
 ```csharp
-public sealed class MyNewCommandTests : CommandUnitTestsBase<MyNewCommand, IAzureBackupService>
+public class MyNewCommandTests : SubscriptionCommandUnitTestsBase<MyNewCommand, IAzureBackupService>
 {
     [Fact] public void Constructor_InitializesCommandCorrectly()
-    [Fact] public void BindOptions_BindsOptionsCorrectly()
     [Fact] public async Task ExecuteAsync_ValidInput_ReturnsExpectedResult()
     [Fact] public async Task ExecuteAsync_HandlesServiceErrors()
     [Fact] public async Task ExecuteAsync_DeserializationValidation()
 
-    // Add per-parameter validation tests:
+  // Add missing/invalid option tests through the command parser:
     [Theory]
-    [InlineData(null)]
     [InlineData("")]
-    public async Task ExecuteAsync_InvalidVault_ThrowsArgumentException(string? vault)
+  [InlineData("--subscription sub123")]
+  public async Task ExecuteAsync_MissingRequiredOptions_ReturnsBadRequest(string args)
 
     // Add edge case tests specific to the command
 }
@@ -124,9 +137,8 @@ public sealed class MyNewCommandTests : CommandUnitTestsBase<MyNewCommand, IAzur
 #### Run Unit Tests
 
 ```powershell
-dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.Tests `
-  /p:NuGetAudit=false `
-  --filter "Category!=Live&FullyQualifiedName~MyNewCommandTests"
+dotnet test tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.Tests `
+  --filter "FullyQualifiedName~MyNewCommandTests"
 ```
 
 Verify **all tests pass** before proceeding.
@@ -145,74 +157,66 @@ There is no `[RecordedTest]` attribute in this toolset.
 public async Task MyNewCommand_RsvVault()
 {
     var result = await CallToolAsync(
-        "azurebackup", "mygroup", "myop",
-        new Dictionary<string, object>
+      "azurebackup_mygroup_myop",
+      new()
         {
-            ["subscription"] = SubscriptionId,
-            ["resourceGroup"] = ResourceGroupName,
-            ["vault"] = DeploymentOutputs["AZUREBACKUP_RSV_VAULT_NAME"],
+        { "subscription", Settings.SubscriptionId },
+        { "resource-group", Settings.ResourceGroupName },
+        { "vault", $"{Settings.ResourceBaseName}-rsv" },
             // add other params
         });
 
-    Assert.NotNull(result);
-    // assert on result content
+    var value = result.AssertProperty("{result-property}");
+    // Assert the recorded response structure and stable values.
 }
 ```
 
 - Use `[Fact]` for all live tests (not `[RecordedTest]` — that attribute is not used in Azure Backup)
 - Use `[LiveTestOnly]` alongside `[Fact]` for long-running E2E tests that cannot reliably replay
-- Use test resource values from `DeploymentOutputs` (set in `test-resources-post.ps1`)
+- Use `Settings.ResourceBaseName` and `Settings.ResourceGroupName` for common deployed names
+- Use `RegisterOrRetrieveDeploymentOutputVariable` for Bicep outputs needed during playback
+- Wrap generated names and timestamps with `RegisterOrRetrieveVariable`
 
 #### 4b. Update Test Infrastructure (if needed)
 
 If the new command requires new Azure resources:
 
 1. Edit `tests/test-resources.bicep` to add the resource
-2. Edit `tests/test-resources-post.ps1` to output new deployment values
-3. Deploy: `./eng/scripts/Deploy-TestResources.ps1 -Paths AzureBackup`
+2. Edit `tests/test-resources-post.ps1` when deterministic data seeding or post-deployment setup is needed
+3. Deploy: `./eng/scripts/Deploy-TestResources.ps1 -Paths "AzureBackup"`
 
 #### 4c. Record Live Tests
 
 ```powershell
-# Set to Record mode
-$settings = @{
-    TestMode = "Record"
-    SubscriptionId = "<your-sub>"
-    TenantId = "<your-tenant>"
-    ResourceGroupName = "<your-rg>"
-    ResourceBaseName = "<your-base>"
-} | ConvertTo-Json
-$settings | Set-Content "tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.Tests\.testsettings.json"
+# Deploy resources and generate .testsettings.json
+./eng/scripts/Deploy-TestResources.ps1 -Paths "AzureBackup"
 
-# Kill any stale proxy/server processes
-Stop-Process -Name "Azure.Sdk.Tools.TestProxy","azmcp" -Force -ErrorAction SilentlyContinue
+# Change TestMode in the generated .testsettings.json from Live to Record.
 
 # Run tests in Record mode
-dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.Tests `
-  /p:NuGetAudit=false --filter "FullyQualifiedName~MyNewCommand"
+dotnet test tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.Tests `
+  --filter "FullyQualifiedName~MyNewCommand"
 ```
 
 #### 4d. Push Recordings
 
 ```powershell
 # Push recorded sessions to azure-sdk-assets
-.proxy\Azure.Sdk.Tools.TestProxy push `
-  -a tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.Tests\assets.json
+./.proxy/Azure.Sdk.Tools.TestProxy.exe push `
+  -a tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.Tests/assets.json
 ```
+
+On Unix, omit the `.exe` suffix.
 
 This updates the `Tag` field in `assets.json`. **Commit the updated `assets.json`.**
 
 #### 4e. Verify Playback
 
 ```powershell
-# Switch to Playback mode
-$settings = @{ TestMode = "Playback"; SubscriptionId = "..."; TenantId = "..."; ResourceGroupName = "..."; ResourceBaseName = "..." } | ConvertTo-Json
-$settings | Set-Content "tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.Tests\.testsettings.json"
+# Change TestMode in .testsettings.json from Record to Playback, then rerun.
 
-Stop-Process -Name "Azure.Sdk.Tools.TestProxy","azmcp" -Force -ErrorAction SilentlyContinue
-
-dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.Tests `
-  /p:NuGetAudit=false --filter "FullyQualifiedName~MyNewCommand"
+dotnet test tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.Tests `
+  --filter "FullyQualifiedName~MyNewCommand"
 ```
 
 All recorded tests **must pass in Playback mode**.
@@ -245,13 +249,13 @@ dotnet format Microsoft.Mcp.slnx `
 #### 5c. Full Unit Tests
 
 ```powershell
-dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.Tests /p:NuGetAudit=false
+./eng/scripts/Test-Code.ps1 -TestType Unit -Paths "AzureBackup"
 ```
 
 #### 5d. Full Live Tests (Playback)
 
 ```powershell
-dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.Tests /p:NuGetAudit=false
+./eng/scripts/Test-Code.ps1 -TestType Recorded -Paths "AzureBackup"
 ```
 
 #### 5e. Spell Check
@@ -276,8 +280,8 @@ Azure Backup is marked `IsAotCompatible=true`, so also validate native compilati
 ./eng/scripts/Build-Local.ps1 -BuildNative
 ```
 
-If this fails for a new Azure SDK dependency, the toolset may need to be excluded
-from native builds (see `docs/aot-compatibility.md`).
+If this fails, follow `docs/aot-compatibility.md`. Do not modify the fixed
+`#if !BUILD_NATIVE` block or conditionally remove the toolset from native builds.
 
 ### Phase 6: Tool Description Evaluation
 
@@ -287,8 +291,10 @@ Run the ToolDescriptionEvaluator to verify the new tool's description is discove
 $env:AOAI_ENDPOINT = "<your-aoai-endpoint>"
 $env:TEXT_EMBEDDING_API_KEY = "<your-key>"
 
-dotnet run --project eng/tools/ToolDescriptionEvaluator/src/ToolDescriptionEvaluator.csproj `
-  -- --tool-name "azurebackup_<group>_<operation>"
+dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- --test-single-tool `
+  --tool-description "<the CommandMetadata description>" `
+  --prompt "<a representative user request>" `
+  --prompt "<an alternate user request>"
 ```
 
 **Target:** Top 3 ranking with confidence score >= 0.4.
@@ -317,7 +323,7 @@ This is required for CI validation.
 
 File: `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
 
-Add 2-3 natural language prompts that should trigger the new tool, in alphabetical order.
+Add 2-3 natural language prompts that should trigger the new tool, in alphabetical order. Include the `Interaction` column using the values defined at the top of that file.
 
 #### 7c. Create Changelog Entry
 
@@ -340,7 +346,7 @@ Before creating the PR, verify:
 - [ ] **Command registered** in `AzureBackupSetup.cs`
 - [ ] **JSON context registered** for AOT safety
 - [ ] **Telemetry tags added** via `AzureBackupTelemetryTags`
-- [ ] **Documentation updated** (commands.md, e2eTestPrompts.md, changelog, README.md, eng/vscode/README.md)
+- [ ] **Documentation updated** (`azmcp-commands.md`, `e2eTestPrompts.md`, changelog entry, and `servers/Azure.Mcp.Server/README.md` when applicable)
 - [ ] **Commands metadata regenerated** via `Update-AzCommandsMetadata.ps1`
 - [ ] **AOT/native build passes** (`Build-Local.ps1 -BuildNative`)
 - [ ] **One tool per PR** (don't bundle unrelated changes)
@@ -348,7 +354,7 @@ Before creating the PR, verify:
 #### Create the PR
 
 ```powershell
-git add tools/Azure.Mcp.Tools.AzureBackup/ servers/Azure.Mcp.Server/ README.md eng/vscode/README.md
+git add <changed-files>
 git commit -m "feat(azurebackup): Add <group> <operation> command
 
 <description of what the command does>"
@@ -365,7 +371,7 @@ tools/Azure.Mcp.Tools.AzureBackup/
 │   │   ├── AzureBackupJsonContext.cs                  # AOT registration
 │   │   └── {Group}/{Resource}{Operation}Command.cs    # Command impl
 │   ├── Options/
-│   │   ├── AzureBackupOptionDefinitions.cs            # Shared options
+│   │   ├── AzureBackupOptionDefinitions.cs            # Shared descriptions and explicit option names
 │   │   └── {Group}/{Resource}{Operation}Options.cs    # Command options
 │   ├── Services/
 │   │   ├── IAzureBackupService.cs                     # Interface

@@ -60,7 +60,7 @@ Use the `--namespace` option to expose only tools for specific Azure services:
   "servers": {
     "Azure Storage": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -70,7 +70,7 @@ Use the `--namespace` option to expose only tools for specific Azure services:
     },
     "Azure KeyVault": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
@@ -90,28 +90,28 @@ Use the `--tool` option to expose only specific tools by name. This provides the
   "servers": {
     "Azure Storage Accounts Only": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
         "--tool",
-        "azmcp_storage_account_get",
+        "storage_account_get",
         "--tool",
-        "azmcp_storage_account_create"
+        "storage_account_create"
       ]
     },
     "Essential Azure Tools": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net10.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": [
         "server",
         "start",
         "--tool",
-        "azmcp_subscription_list",
+        "subscription_list",
         "--tool",
-        "azmcp_group_list",
+        "group_list",
         "--tool",
-        "azmcp_storage_account_get"
+        "storage_account_get"
       ]
     }
   }
@@ -172,7 +172,7 @@ Configure targeted MCP servers for specific needs instead of loading all tools:
   }
 }
 ```
-*Result: ~15-20 tools total instead of 128+*
+*Result: one routing tool per selected namespace, plus tools from other configured servers.*
 
 *Available Azure Services for `--namespace` flag:*
 See the complete list of [Available Azure MCP Servers](https://github.com/microsoft/mcp/blob/main/README.md#-available-azure-mcp-servers) in the README.
@@ -235,7 +235,7 @@ The Azure MCP Server can run in multiple modes. Review your MCP configuration to
 
 - `azmcp server start` - Launches an MCP server with namespace proxy mode (default - one tool per Azure service namespace)
 - `azmcp server start --mode consolidated` - Launches an MCP server with consolidated tools (curated tools grouping related operations, optimized for AI agents)
-- `azmcp server start --mode all` - Launches an MCP server with all ~800+ individual tools exposed separately
+- `azmcp server start --mode all` - Launches an MCP server with every individual tool exposed separately
 - `azmcp server start --namespace <service-name>` - Launches an MCP server with tools for the specified service (e.g., `storage`, `keyvault`)
 - `azmcp server start --mode single` - Launches an MCP server with a single `azure` tool that performs internal dynamic proxy and tool selection
 - `azmcp server start --mode namespace` - Explicitly use namespace proxy mode (same as default)
@@ -251,7 +251,7 @@ When a newly registered command appears in `all` mode but is missing from consol
 
     ```powershell
     dotnet build servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj
-    servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe tools list --namespace <service> --mode all
+    servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe tools list --name-only --namespace <service>
     dotnet test core/Azure.Mcp.Core/tests/Azure.Mcp.Core.Tests/Azure.Mcp.Core.Tests.csproj -- --filter-class '*ConsolidatedToolDiscoveryStrategyTests'
     ```
 

@@ -1,15 +1,15 @@
 # Tool Rename Checklist
 
-This document defines the steps required when renaming an existing MCP tool (i.e., changing the value returned by a command's `Name` property or its parent group name). Tool names form part of the MCP protocol surface, they are how AI agents discover and invoke capabilities, so renames are **breaking changes** and must be handled carefully.
+This document defines the steps required when renaming an existing MCP tool (that is, changing `CommandMetadata.Name` or a parent group name). Tool names form part of the MCP protocol surface, they are how AI agents discover and invoke capabilities, so renames are **breaking changes** and must be handled carefully.
 
 > **Note:** If you are adding a *new* tool rather than renaming an existing one, follow [`.github/skills/add-azure-mcp-tools/SKILL.md`](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md) instead.
 
 ## What counts as a tool rename?
 
-A tool name is the underscore-separated string exposed to MCP clients (e.g. `azmcp_storage_account_list`, `azmcp_sql_db_get`). It is derived from the command hierarchy: each group and leaf command's `Name` property is joined with `_` and prefixed with `azmcp_`. Changing *any* segment of that hierarchy, the service group, resource group, or operation leaf is a rename.
+A tool name is the underscore-separated string exposed to MCP clients (for example, `storage_account_get` or `sql_db_get`). It is derived from the command hierarchy: each group name and the leaf command's `CommandMetadata.Name` are joined with `_`. Changing *any* segment of that hierarchy, the service group, resource group, or operation leaf is a rename.
 Examples:
-- `azmcp_sql_db_get` → `azmcp_sql_database_get` — rename
-- Splitting a combined get/list command into `azmcp_sql_database_get` and `azmcp_sql_database_list` — rename (old name disappears)
+- `sql_db_get` → `sql_database_get` — rename
+- Splitting a combined get/list command into `sql_database_get` and `sql_database_list` — rename (old name disappears)
 - Updating `Description` or `Title` only — **not** a rename
 
 ---
@@ -18,21 +18,21 @@ Examples:
 
 ### 1. Source code
 
-- [ ] Update the `Name` property on the command class (and parent group command if the group is also changing).
+- [ ] Update `Name` in the command's `[CommandMetadata]` attribute (and the parent `CommandGroup` name if that segment is changing).
 - [ ] Update any hardcoded group name string literals in the toolset's `*Setup.cs` `RegisterCommands` method (e.g. `new CommandGroup("db", ...)` → `new CommandGroup("database", ...)`). Group segment names are **not** derived from a command's `Name` property — they must be changed here explicitly.
-- [ ] Update the `Id` property to a new unique GUID if the semantic meaning of the tool has changed materially (not required for pure name-only fixes).
+- [ ] Update `Id` in `[CommandMetadata]` to a new unique GUID if the semantic meaning changed materially (not required for a pure name-only fix).
 - [ ] Update the command class filename and any references to match the new name (`{Resource}{Operation}Command.cs`).
-- [ ] Update the `Title` constant to reflect the new name (used in logs and telemetry).
+- [ ] Update `Title` in `[CommandMetadata]` when the human-readable title should change.
 - [ ] Update the `Description` to remove any references to the old tool name or old CLI equivalent.
-- [ ] Update option definitions and binding if parameter names are changing alongside the rename.
+- [ ] Update attributed options properties (`[Option]`) and affected call sites if parameter names are changing alongside the rename.
 - [ ] Run `dotnet build` and resolve all compiler errors before proceeding.
 
 ### 2. Docs
 
 - [ ] Update [`servers/Azure.Mcp.Server/docs/azmcp-commands.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md) — rename the entry and update any cross-references to the old name.
 - [ ] Update [`servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md) — update or add test prompts that reference the old tool name.
-- [ ] Update `core/Microsoft.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json` — if the renamed tool appears in any `mappedToolList` array, replace the old tool name with the new one. Also review the `description` field of the parent consolidated tool entry to ensure it still accurately describes the grouped capabilities.
-- [ ] Search the entire repo for the old tool name string (e.g. `grep -r "old_tool_name"`) and update any remaining documentation, README files, or code comments found.
+- [ ] Update `servers/Azure.Mcp.Server/src/Resources/consolidated-tools.json` — if the renamed tool appears in any `mappedToolList` array, replace the old tool name with the new one. Also review the `description` field of the parent consolidated tool entry to ensure it still accurately describes the grouped capabilities.
+- [ ] Search the entire repo for the old tool name string (for example, `rg "old_tool_name"`) and update any remaining documentation, README files, or code comments found.
 
 ### 3. Recordings
 

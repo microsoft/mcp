@@ -6,7 +6,7 @@ This document provides practical troubleshooting steps for the Microsoft Fabric 
 - Verify .NET 10.x SDK: `dotnet --version`
 - Build the server: `dotnet build servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj`
 - Test server startup: `dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- --help`
-- Verify available commands: `dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis list`
+- Verify available item types: `dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- docs list-item-types`
 
 ## Common Issues
 
@@ -40,7 +40,7 @@ ls tools/Fabric.Mcp.Tools.OneLake/src/Resources/
 
 **Common causes:**
 - SDK version mismatch with `global.json`
-- Missing resource files in `tools/Fabric.Mcp.Tools.PublicApi/src/Resources/`
+- Missing resource files in `tools/Fabric.Mcp.Tools.Docs/src/Resources/`
 - Missing resource files in `tools/Fabric.Mcp.Tools.OneLake/src/Resources/`
 
 ### Server Starts But Tools Aren't Available
@@ -53,10 +53,10 @@ ls tools/Fabric.Mcp.Tools.OneLake/src/Resources/
 2. **Test available commands:**
    ```bash
    # List available item types
-   dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis list
+  dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- docs list-item-types
    
    # Get item type details
-   dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis get --item-type notebook
+  dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- docs item-api-spec --item-type notebook
    ```
 
 3. **Check MCP client configuration** matches your server setup
@@ -70,7 +70,7 @@ ls tools/Fabric.Mcp.Tools.OneLake/src/Resources/
 
 VS Code Copilot has a 128-tool limit per request. The Fabric MCP Server is designed to stay well within this limit by organizing tools into logical groups.
 
-**Current tool count:** ~15-20 tools (well below the limit)
+**Tool count:** Namespace mode groups tools by area to stay below the client limit. Check the MCP client tool list for the current count.
 
 If you're hitting the limit with multiple MCP servers, prefer one of the following approaches:
 
@@ -87,21 +87,21 @@ If you're hitting the limit with multiple MCP servers, prefer one of the followi
 }
 ```
 
-**Option 2: Use server commands to retrieve specific context**
-- Instead of exposing all item types at once, use the server's `publicapis` commands to fetch an item type's OpenAPI or examples on-demand (for example, use `publicapis list` to discover item types and `publicapis get --item-type <name>` to fetch an item type's spec).
+**Option 2: Use documentation commands to retrieve specific context**
+- Use `docs list-item-types` to discover item types and `docs item-api-spec --item-type <name>` to fetch a specific OpenAPI document on demand.
 
 **Option 3: Client-side filtering or multiple chat modes**
 - Use client-side grouping or separate chat modes to restrict the number of tools presented to the assistant for a given task.
 
-> Key point: avoid relying on unverified CLI flags in documentation. Confirm available commands for your build with `--help` and prefer code-driven commands such as `publicapis list` and `publicapis get --item-type <name>` for reproducible automation.
+> Key point: confirm available commands for your build with `--help` and prefer code-driven commands such as `docs list-item-types` and `docs item-api-spec --item-type <name>` for reproducible automation.
 
 ### VS Code only shows a subset of tools available
 
 The Fabric MCP Server provides different tool sets based on configuration:
 
-- **Default mode**: All Fabric tools (~15-20 tools)
-- **Platform mode**: Only platform APIs (~8 tools)
-- **Best practices mode**: Only examples and guidance (~5 tools)
+- **All mode (VSIX default)**: Every Fabric tool is exposed individually
+- **Namespace mode**: One routing tool is exposed per enabled Fabric namespace
+- **Single mode**: One routing tool provides access to all enabled namespaces
 
 Verify your MCP configuration matches your expectations.
 
@@ -201,7 +201,7 @@ chmod +x bin/Release/net10.0/{your-rid}/publish/Fabric.Mcp.Server
 ```
 
 **Verification:**
-- Confirm resource files exist: `ls tools/Fabric.Mcp.Tools.PublicApi/src/Resources/`
+- Confirm resource files exist: `ls tools/Fabric.Mcp.Tools.Docs/src/Resources/`
 - Confirm resource files exist: `ls tools/Fabric.Mcp.Tools.OneLake/src/Resources/`
 - Test server startup with `--help` flag
 
@@ -223,13 +223,13 @@ To see what Fabric item types are available in your build:
 
 ```bash
 # List all item types  
-dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis list
+dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- docs list-item-types
 
 # Get specific item type details
-dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis get --item-type notebook
+dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- docs item-api-spec --item-type notebook
 
 # Get platform APIs
-dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis platform get
+dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- docs platform-api-spec
 ```
 
 > **Note:** Always verify commands with `--help` first. Available commands are code-driven and may change between builds.
@@ -258,7 +258,7 @@ When opening an issue, include:
 # Include this output in your bug report
 dotnet --version
 dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- --help
-dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis list
+dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- docs list-item-types
 ```
 
 ---

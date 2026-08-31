@@ -100,7 +100,7 @@ dotnet run -- onelake shortcut list --workspace-id "47242da5-ff3b-46fb-a94f-9779
 
 ## Available Commands
 
-**Note:** All commands support additional global options for authentication, retry policies, and tenant configuration. Use `--help` with any command to see the full list of options.
+**Note:** Options are command-specific. Use `--help` with a command to see its current option list.
 
 ### Workspace Operations
 

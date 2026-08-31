@@ -1,4 +1,4 @@
-<!-- Copyright (c) Microsoft Corporation.
+<!-- Copyright (c) Microsoft Corporation. -->
 <!-- Licensed under the MIT License. -->
 
 # Implementing a New Command in Azure MCP
@@ -20,11 +20,11 @@ This keeps all code, options, models, JSON serialization contexts, and tests for
 
 ### **Azure Service Commands (REQUIRE Test Infrastructure and Live Tests)**
 If your command interacts with Azure resources (storage accounts, databases, VMs, etc.):
-- ✅ **MUST create** `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`
-- ✅ **MUST create** `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources-post.ps1` (required even if basic template)
+- ✅ **MUST have** `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep` (create it if absent; otherwise extend it when the command needs new resources or RBAC)
+- ✅ **MUST have** `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources-post.ps1` (create it if absent; otherwise reuse or extend it for deterministic data seeding)
 - ✅ **MUST include** RBAC role assignments for test application
 - ✅ **MUST validate** with `az bicep build --file tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`
-- ✅ **MUST test deployment** with `./eng/scripts/Deploy-TestResources.ps1 -Tool 'Azure.Mcp.Tools.{Toolset}'`
+- ✅ **MUST test deployment** with `./eng/scripts/Deploy-TestResources.ps1 -Paths "{Toolset}"`
 - ✅ **MUST include** live tests in `Azure.Mcp.Tools.{Toolset}/tests/`
 - ✅ **MUST record** live tests for playback using `RecordedCommandTestsBase` (see [`/docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md))
 
@@ -56,26 +56,26 @@ If your command is a wrapper/utility (CLI tools, best practices, documentation):
     All commands implement the layered hierarchy:
      ```
      IBaseCommand
-     └── BaseCommand
-         └── GlobalCommand<TOptions>
-             └── SubscriptionCommand<TOptions>
-                 └── Service-specific base commands (e.g., BaseSqlCommand)
-                     └── Resource-specific commands (e.g., SqlIndexRecommendCommand)
+     └── BaseCommand<TOptions, TResult>
+         └── AuthenticatedCommand<TOptions, TResult>
+             └── SubscriptionCommand<TOptions, TResult>
+                 └── Optional service/resource base commands
+                     └── Concrete command (sealed)
      ```
 
    IMPORTANT:
    - Commands use primary constructors with ILogger and service interface injection
    - Classes are always sealed unless explicitly intended for inheritance
    - Commands inheriting from `SubscriptionCommand` must handle subscription parameters
-   - Service-specific base commands should add service-wide options
-   - Commands return `ToolMetadata` property to define their behavioral characteristics
+    - Add a service-specific base command only for real shared behavior, using interface constraints to access flat options
+    - Concrete commands declare `[CommandMetadata]`; `BaseCommand<TOptions, TResult>` exposes it through `IBaseCommand.Metadata`
 
 3. **Command Pattern**
     Commands follow the Model-Context-Protocol (MCP) pattern with this execution naming convention:
    ```
    azmcp <azure service> <resource> <operation>
    ```
-   Example: `azmcp storage container get`
+    Example: `azmcp storage blob container get`
 
    Where:
    - `azure service`: Azure service name (lowercase, e.g., storage, cosmos, kusto)
@@ -99,26 +99,25 @@ If your command is a wrapper/utility (CLI tools, best practices, documentation):
    **AVOID ANTI-PATTERNS**: When designing commands, keep resource names separated from operation names. Use proper command group hierarchy:
    - ✅ Good: `azmcp postgres server param set` (command groups: server → param, operation: set)
    - ❌ Bad: `azmcp postgres server setparam` (mixed operation `setparam` at same level as resource operations)
-   - ✅ Good: `azmcp storage blob upload permission set`
-   - ❌ Bad: `azmcp storage blobupload`
+    - ✅ Good: `azmcp storage blob container get`
+    - ❌ Bad: `azmcp storage container get` (omits the registered `blob` parent group)
 
    This pattern improves discoverability, maintains consistency, and allows for better grouping of related operations.
 
 ### Required Files
 
-Every new command (whether purely computational or Azure-resource backed) requires the following elements:
+Every new command requires command-specific files plus updates to shared toolset files. Existing toolsets normally share their service, JSON context, recorded test class, and test infrastructure.
 
-1. OptionDefinitions static class: `tools/Azure.Mcp.Tools.{Toolset}/src/Options/{Toolset}OptionDefinitions.cs`
-2. Options class: `tools/Azure.Mcp.Tools.{Toolset}/src/Options/{Resource}/{Operation}Options.cs`
-3. Command class: `tools/Azure.Mcp.Tools.{Toolset}/src/Commands/{Resource}/{Resource}{Operation}Command.cs`
-4. Service interface: `tools/Azure.Mcp.Tools.{Toolset}/src/Services/I{ServiceName}Service.cs`
-5. Service implementation: `tools/Azure.Mcp.Tools.{Toolset}/src/Services/{ServiceName}Service.cs`
+1. Options class: `tools/Azure.Mcp.Tools.{Toolset}/src/Options/{Resource}/{Operation}Options.cs`
+2. Command class: `tools/Azure.Mcp.Tools.{Toolset}/src/Commands/{Resource}/{Resource}{Operation}Command.cs`
+3. Service interface update: `tools/Azure.Mcp.Tools.{Toolset}/src/Services/I{ServiceName}Service.cs` (when the command needs a service operation)
+4. Service implementation update: `tools/Azure.Mcp.Tools.{Toolset}/src/Services/{ServiceName}Service.cs`
     - Most toolsets have one primary service; some may have multiple where domain boundaries justify separation
-6. Unit test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/{Resource}/{Resource}{Operation}CommandTests.cs`
-7. Live test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/{Toolset}CommandTests.cs`
-8. Command registration in RegisterCommands(): `tools/Azure.Mcp.Tools.{Toolset}/src/{Toolset}Setup.cs`
-9. Toolset registration in RegisterAreas(): `servers/Azure.Mcp.Server/src/Program.cs`
-10. **Live test infrastructure** (for Azure service commands):
+5. Unit test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/{Resource}/{Resource}{Operation}CommandTests.cs`
+6. Recorded test scenario in the shared `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/{Toolset}CommandTests.cs`
+7. Command registration in RegisterCommands(): `tools/Azure.Mcp.Tools.{Toolset}/src/{Toolset}Setup.cs`
+8. Toolset registration in RegisterAreas(): `servers/Azure.Mcp.Server/src/Program.cs`
+9. **Toolset-level live test infrastructure** (for Azure service commands; create or extend as needed):
    - Bicep template: `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`
    - Post-deployment script: `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources-post.ps1` (required, even if basic template)
 
@@ -133,20 +132,20 @@ Where:
 
 Acceptable Operation Forms:
 - Standard verbs (`List`, `Get`, `Set`, `Show`, `Delete`)
-- Domain-calculation nouns treated as operations when producing computed output (e.g., `SubnetSize` in `FileSystemSubnetSizeCommand` producing required size calculation)
+- Domain intent verbs (`Ask`, `Validate`, `Recommend`, `Calculate`) for computational tools
 
 Examples:
-- ✅ `ServerListCommand`
+- ✅ `AccountGetCommand`
 - ✅ `ServerConfigGetCommand`
 - ✅ `ServerParamSetCommand`
 - ✅ `TableSchemaGetCommand`
 - ✅ `DatabaseListCommand`
-- ✅ `FileSystemSubnetSizeCommand` (computational operation on a resource)
+- ✅ `SubnetSizeAskCommand` (computational operation on a resource)
 
 Avoid:
 - ❌ `GetConfigCommand` (missing resource)
 - ❌ `ListServerCommand` (verb precedes resource)
-- ❌ `FileSystemRequiredSubnetSizeCommand` (overly verbose – prefer concise subresource `SubnetSize`)
+- ❌ `FileSystemRequiredSubnetSizeCommand` (overly verbose and lacks an operation verb)
 
 Apply pattern consistently to:
 - Command classes & filenames: `FileSystemListCommand.cs`
@@ -163,11 +162,11 @@ Rationale:
 - Models, base commands, and option definitions follow the established patterns
 - JSON serialization context includes all new model types
 - Service registration in the toolset setup ConfigureServices method
-- **Live test infrastructure**: Add Bicep template to `tools/Azure.Mcp.Tools.{Toolset}/tests`
+- **Live test infrastructure**: Ensure the toolset Bicep template covers the command's resources and RBAC
 - **Test resource deployment**: Ensure resources are properly configured with RBAC for test application
 - **Resource naming**: Follow consistent naming patterns - many services use just `baseName`, while others may need suffixes for disambiguation (e.g., `{baseName}-suffix`)
-- **Solution file integration**: Add new projects to `Microsoft.Mcp.slnx` and `Azure.Mcp.Server.slnx`
-- **Program.cs registration**: Register the new toolset in `Program.cs` `RegisterAreas()` method in alphabetical order (see `Program.cs` `IAreaSetup[] RegisterAreas()`)
+- **Solution file integration**: Run `./eng/scripts/Update-Solution.ps1 -All` to regenerate `Microsoft.Mcp.slnx` and the server solution files
+- **Program.cs registration**: Register the new toolset in the Azure service area list in `Program.cs` `RegisterAreas()` (see `Program.cs` `IAreaSetup[] RegisterAreas()`)
 
 ## Implementation Guidelines
 
@@ -193,8 +192,10 @@ For **Resource Write Operations**:
 **Service Base Class Selection:**
 Choose the appropriate base class for your service based on the operations needed:
 
-1. **For Azure Resource Read Operations** (recommended for resource management operations):
-   - Inherit from `BaseAzureResourceService` for services that need to query Azure Resource Graph
+Use Azure SDK retry defaults for both base classes. Do not expose `RetryPolicyOptions` through command options or service contracts.
+
+1. **For services that query Azure Resource Graph**:
+    - Inherit from `BaseAzureResourceService`
    - Automatically provides `ExecuteResourceQueryAsync<T>()` and `ExecuteSingleResourceQueryAsync<T>()` methods
    - Handles subscription resolution, tenant lookup, and Resource Graph query execution
    - Example:
@@ -212,7 +213,6 @@ Choose the appropriate base class for your service based on the operations neede
                "Microsoft.MyService/resources",
                resourceGroup,
                subscription,
-               null,
                ConvertToMyResourceModel,
                tenant: tenant,
                cancellationToken: cancellationToken);
@@ -229,7 +229,6 @@ Choose the appropriate base class for your service based on the operations neede
                "Microsoft.MyService/resources",
                resourceGroup,
                subscription,
-               null,
                ConvertToMyResourceModel,
                additionalFilter: $"name =~ '{EscapeKqlString(resourceName)}'",
                tenant: tenant,
@@ -248,9 +247,9 @@ Choose the appropriate base class for your service based on the operations neede
    }
    ```
 
-2. **For Azure Resource Write Operations**:
-   - Inherit from `BaseAzureService` for services that use ARM clients directly
-   - Use when you need direct ARM resource manipulation (create, update, delete)
+2. **For services that do not need Resource Graph helpers**:
+    - Inherit from `BaseAzureService`
+    - This includes direct ARM reads and writes as well as data-plane operations
    - Example:
    ```csharp
    public class MyService(IAzureService azureService)
@@ -312,7 +311,6 @@ var resources = await ExecuteResourceQueryAsync(
     "Microsoft.Sql/servers/databases",
     resourceGroup,
     subscription,
-    null,
     ConvertToSqlDatabaseModel,
     additionalFilter: $"name =~ '{EscapeKqlString(databaseName)}'",
     tenant: tenant,
@@ -394,7 +392,6 @@ public class MyService(IAzureService azureService)
             "Microsoft.MyService/resources",
             resourceGroup,
             subscription,
-            null,
             ConvertToModel,
             tenant: tenant,
             cancellationToken: cancellationToken);
@@ -406,12 +403,14 @@ public class MyService(IAzureService azureService)
 
 Some Azure services use data plane SDKs that require an explicit endpoint URL (e.g., Blob Storage, Table Storage, Cosmos DB, Azure Search). In these cases, **never hardcode the endpoint**. Instead, resolve it from `IAzureService.CloudConfiguration.CloudType` using a switch expression:
 
+Validate `resourceName` against the target service's exact naming rules before calling the endpoint helper. The helper below assumes that validation has already succeeded.
+
 1. Ensure `IAzureService` is available in the service (it is already a dependency when inheriting from `BaseAzureService` or `BaseAzureResourceService`).
 2. Add a private method that switches on `CloudType` and returns the cloud-correct URL.
 
 ```csharp
 public class MyService(IAzureService azureService)
-    : BaseAzureResourceService(azureService), IMyService
+    : BaseAzureService(azureService), IMyService
 {
     private async Task<MyDataPlaneClient> CreateDataPlaneClientAsync(
         string resourceName,
@@ -449,10 +448,21 @@ public class MyService(IAzureService azureService)
 |----------|-------------|
 | Resource Graph or ARM operations (via `BaseAzureResourceService`) | ✅ Cloud-aware automatically — no extra steps |
 | ARM write operations (via `CreateArmClientWithApiVersionAsync`) | ✅ Cloud-aware automatically — no extra steps |
-| Data plane SDK requiring an explicit URL | ✅ Use `_azureService.CloudConfiguration.CloudType` switch |
+| Data plane SDK requiring an explicit URL | ✅ Use `AzureService.CloudConfiguration.CloudType` switch |
 | Any hardcoded `*.windows.net`, `*.azure.com`, `*.chinacloudapi.cn`, etc. | ❌ **Not allowed** — always use the switch pattern |
 
 **Reference implementations**: `StorageService` (blob and table endpoints), `CosmosService`, `SearchService`, and `ConfidentialLedgerService`.
+
+#### Endpoint Validation
+
+Use `EndpointValidator` from `Microsoft.Mcp.Core.Helpers` according to where the endpoint comes from:
+
+- Azure data-plane endpoint supplied by a user or discovered from a service response: call `EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, AzureService.CloudConfiguration.ArmEnvironment)` before constructing the client.
+- User-supplied URL for a known external service: call `EndpointValidator.ValidateExternalUrl(url, allowedHosts)` with an explicit host allowlist.
+- Arbitrary user-controlled public target: call `EndpointValidator.ValidatePublicTargetUrl(url)` to reject unsupported schemes and private/reserved targets.
+- Endpoint constructed internally from a resource name: validate the resource name using that service's exact naming rules and select the sovereign-cloud suffix with a `CloudType` switch. `ValidateAzureServiceEndpoint` may also be used as defense in depth.
+
+Control-plane operations through typed ARM clients do not need endpoint validation.
 
 #### Anti-Patterns to Avoid
 
@@ -492,8 +502,8 @@ public class {Resource}{Operation}Options : ISubscriptionOption
 
 IMPORTANT:
 - Options classes are **flat** — no inheritance hierarchy. Implement `ISubscriptionOption` if the command needs subscription support.
-- `OptionBinder` discovers all public writable properties on the options class and handles registration and binding automatically. The `[Option]` attribute is used to override name, description, or hidden — but properties are discovered regardless of whether `[Option]` is present.
-- **Required vs optional** is determined entirely by nullability: non-nullable types = required; `?` = optional. The `required` keyword is a C# compile-time aid to suppress uninitialized warnings but does not affect CLI validation.
+- `OptionBinder` registers only public writable properties marked with `[Option]` or `[OptionContainer]`; un-attributed properties are ignored.
+- **Required vs optional** is determined by the C# `required` modifier (`RequiredMemberAttribute`). Use `required` when the caller must provide the option. Nullable properties without `required` are optional.
 - Only define properties that correspond to actually exposed CLI options for that specific command.
 - Use consistent parameter names across services:
   - **CRITICAL**: Always use `subscription` (never `subscriptionId`) for subscription parameters - this allows the parameter to accept both subscription IDs and subscription names, which are resolved internally by `ISubscriptionResolver`
@@ -511,8 +521,8 @@ The `[Option]` attribute drives automatic option registration and binding via `O
 
 **Key Principles:**
 - Options classes are **flat POCOs** — no class inheritance. Each command has its own options class.
-- `OptionBinder` discovers **all public writable properties** on the concrete class and handles both registration (adding to the CLI parser) and binding (populating from parse results) automatically. The `[Option]` attribute is only needed to override name, description, or hidden status — un-attributed properties are still discovered and bound.
-- **Required vs optional** is determined entirely by nullability: non-nullable types = required; `?` = optional. The `required` keyword suppresses C# compiler warnings about uninitialized non-nullable reference properties but does **not** drive CLI validation — only nullability matters to `OptionBinder`.
+- `OptionBinder` discovers **public writable properties marked with `[Option]` or `[OptionContainer]`** and handles both registration and binding. Every exposed scalar property therefore needs `[Option(Description = ...)]`.
+- **Required vs optional** is determined by the C# `required` modifier. `OptionBinder` reads `RequiredMemberAttribute`; nullability alone does not make an option required.
 - **No shared state**: Each command gets its own options instance per request — thread-safe by design.
 - **Implement `ISubscriptionOption`** if the command needs optional `string? Subscription`. This enables post-processing by `SubscriptionCommand` and `ISubscriptionResolver`. Note: `ISubscriptionOption` only provides `Subscription` — add a separate `Tenant` property if the command accepts `--tenant`.
 - **Implement additional option interfaces** (e.g., `IStorageAccountOption`) only when base command classes need type-safe access to specific properties for shared behavior like validation.
@@ -690,7 +700,7 @@ public class StorageAccountListOptions : ISubscriptionOption
 - **Automatic**: `OptionBinder` handles registration and binding — no manual `RegisterOptions`/`BindOptions`
 - **Type-safe**: `required` keyword enforces required options at compile time; `OptionBinder` validates presence at runtime
 - **Consistent**: Same pattern as `SubscriptionCommand` using `ISubscriptionOption`
-- **Per-command accuracy**: Each options class declares exactly what that command needs — nullability reflects actual usage, not shared base class compromises
+- **Per-command accuracy**: Each options class declares exactly what that command needs; `required` and nullable declarations reflect actual usage rather than shared base-class compromises
 
 ### 4. Command Class
 
@@ -713,10 +723,9 @@ using Microsoft.Mcp.Core.Models.Command;
     Name = "operation",
     Title = "Human Readable Title",
     Description = """
-        Detailed description of what the command does.
-        Returns description of return format.
-          Required options:
-        - list required options
+                Describe what the command does, when to use it, and what it returns.
+                Mention defaults, conditional requirements, and important exclusions when
+                they affect tool selection. Ordinary requiredness is in the input schema.
         """,
     Destructive = false,    // Set to true for tools that modify resources
     OpenWorld = true,       // Set to false for tools whose domain of interaction is closed and well-defined
@@ -738,7 +747,7 @@ public sealed class {Resource}{Operation}Command(
     // Optional: Override ValidateOptions for custom validation beyond required/optional checks
     public override void ValidateOptions({Resource}{Operation}Options options, ValidationResult validationResult)
     {
-        base.ValidateOptions(options, validationResult);  // checks --subscription
+        base.ValidateOptions(options, validationResult);  // ensures a subscription was resolved
         // Add custom validation if needed
     }
 
@@ -748,8 +757,6 @@ public sealed class {Resource}{Operation}Command(
         // Options are already bound and validated — just use them directly
         try
         {
-            context.Activity?.WithSubscriptionTag(options);
-
             // Call service operation(s) with required parameters
             var results = await _service.{Operation}(
                 options.RequiredOption,   // Required options are non-nullable (no ! needed)
@@ -778,20 +785,12 @@ public sealed class {Resource}{Operation}Command(
         Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Resource not found. Verify the resource exists and you have access.",
         Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Authorization failed accessing the resource. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx => reqEx.Message,
+            "Authorization failed. Verify that the active identity has the required RBAC role.",
         _ => base.GetErrorMessage(ex)
     };
 
-    // Implementation-specific status code retrieval, only implement if this differs from base class behavior
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
     // Strongly-typed result records
-    internal record {Resource}{Operation}CommandResult(List<ResultType> Results);
+    public sealed record {Resource}{Operation}CommandResult(List<ResultType> Results);
 }
 ```
 
@@ -936,14 +935,14 @@ public class <Toolset>Service(IAzureService azureService, ICacheService cacheSer
 All interface methods should follow consistent formatting with proper line breaks and parameter alignment. All async methods must include a `CancellationToken` parameter as the final method argument:
 
 ```csharp
-// Correct formatting - parameters aligned with line breaks
+// Wrap longer signatures with one parameter per line
 Task<List<string>> GetStorageAccounts(
     string subscription,
     string? tenant = null,
     CancellationToken cancellationToken = default);
 
-// Incorrect formatting - all parameters on single line
-Task<List<string>> GetStorageAccounts(string subscription, string? tenant = null, CancellationToken cancellationToken = default);
+// Short signatures may remain on one line
+Task<bool> ExistsAsync(string name, CancellationToken cancellationToken = default);
 
 // Incorrect - missing CancellationToken parameter
 Task<List<string>> GetStorageAccounts(
@@ -952,8 +951,8 @@ Task<List<string>> GetStorageAccounts(
 ```
 
 **Formatting Rules:**
-- Parameters indented and aligned
-- Add blank lines between method declarations for visual separation
+- Keep short signatures on one line when readable; wrap longer signatures consistently
+- Add blank lines between multiline method declarations when it improves readability
 - Maintain consistent indentation across all methods in the interface
 
 #### CancellationToken Requirements
@@ -981,8 +980,8 @@ public interface IMyService
 - Pass the `CancellationToken` parameter to all async method calls
 - Use `cancellationToken: cancellationToken` when calling Azure SDK methods
 - Use `.WithCancellation(cancellationToken)` when iterating over async enumerables with `await foreach`
-- Always include `CancellationToken cancellationToken` as the final parameter (only use a default value if and only if other parameters have default values)
-- Force callers to explicitly provide a CancellationToken
+- Always include `CancellationToken cancellationToken` as the final service method parameter; `= default` is common, but match the surrounding interface's convention
+- Pass the current token explicitly at production call sites even though the service signature supplies a default
 - Never pass `CancellationToken.None` or `default` as a value to a `CancellationToken` method parameter
 
 **Example - Async Enumerable Pattern:**
@@ -1038,7 +1037,11 @@ a two call pattern. The first call is the service method starting the polling op
 interval to prevent CPU wait loops that aren't necessary when playback testing.
 
 ```csharp
-var lroOperation = Service.LroAsync(WaitUntil.Started, cancellationToken);
+var lroOperation = await resourceCollection.CreateOrUpdateAsync(
+    WaitUntil.Started,
+    resourceName,
+    resourceData,
+    cancellationToken);
 await WaitForLroCompletionAsync(lroOperation, cancellationToken);
 ```
 
@@ -1253,22 +1256,17 @@ Live tests **must** inherit from `RecordedCommandTestsBase` and use test fixture
 public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
-    [Theory]
-    [InlineData(AuthMethod.Credential)]
-    [InlineData(AuthMethod.Key)]
-    public async Task Should_{Operation}_{Resource}_WithAuth(AuthMethod authMethod)
+    [Fact]
+    public async Task Should_{Operation}_{Resource}()
     {
-        // Arrange
         var result = await CallToolAsync(
-            "azmcp_{Toolset}_{resource}_{operation}",
+            "{toolset}_{resource}_{operation}",
             new()
             {
-                { "subscription", Settings.Subscription },
-                { "resource-group", Settings.ResourceGroup },
-                { "auth-method", authMethod.ToString().ToLowerInvariant() }
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName }
             });
 
-        // Assert
         var items = result.AssertProperty("items");
         Assert.Equal(JsonValueKind.Array, items.ValueKind);
 
@@ -1287,25 +1285,14 @@ public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fi
             }
         }
     }
-
-    [Theory]
-    [InlineData("--invalid-param")]
-    [InlineData("--subscription invalidSub")]
-    public async Task Should_Return400_WithInvalidInput(string args)
-    {
-        var result = await CallToolAsync(
-            $"azmcp_{Toolset}_{resource}_{operation} {args}");
-
-        Assert.Equal(400, result.GetProperty("status").GetInt32());
-        Assert.Contains("required",
-            result.GetProperty("message").GetString()!.ToLower());
-    }
 }
 ```
 
 Guidelines:
 - When validating JSON for an expected property use `JsonElement.AssertProperty`.
 - When validating JSON for a conditional property use `JsonElement.TryGetProperty` in an if-clause.
+- MCP tool names passed to `CallToolAsync` do not include an `azmcp_` prefix.
+- Cover parser validation and missing/invalid options in command unit tests. Recorded tests should exercise the deployed Azure integration and response shape.
 
 ### 9. Command Registration
 
@@ -1329,7 +1316,7 @@ private CommandGroup RegisterCommands(IServiceProvider serviceProvider)
 
 ### 10. Toolset Registration
 ```csharp
-private static IToolsetSetup[] RegisterAreas()
+private static IAreaSetup[] RegisterAreas()
 {
     return [
         // Register core toolsets
@@ -1343,7 +1330,7 @@ private static IToolsetSetup[] RegisterAreas()
 }
 ```
 
-The area/toolset list in `RegisterAreas()` must remain alphabetically sorted (excluding the fixed conditional AOT exclusion block guarded by `#if !BUILD_NATIVE`).
+Add the setup to the existing Azure service area list. Do not modify the fixed `#if !BUILD_NATIVE` block; see `docs/aot-compatibility.md` if the native build fails.
 
 ### 11. JSON Serialization Context
 
@@ -1362,7 +1349,7 @@ using Azure.Mcp.Tools.{Toolset}.Models;
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
 )]
-internal partial class {Toolset}JsonContext : JsonSerializerContext;
+internal sealed partial class {Toolset}JsonContext : JsonSerializerContext;
 ```
 
 Usage inside a command when assigning results:
@@ -1383,19 +1370,26 @@ Guidelines:
 Commands in Azure MCP follow a standardized error handling approach using the base `HandleException` method inherited from `BaseCommand`. Here are the key aspects:
 
 ### 1. Status Code Mapping
-The base implementation returns InternalServerError for all exceptions by default:
+The base implementation maps common exception types before falling back to `InternalServerError`:
 ```csharp
-protected virtual HttpStatusCode GetStatusCode(Exception ex) => HttpStatusCode.InternalServerError;
+protected virtual HttpStatusCode GetStatusCode(Exception ex) => ex switch
+{
+    ArgumentException => HttpStatusCode.BadRequest,
+    InvalidOperationException => HttpStatusCode.UnprocessableEntity,
+    HttpRequestException httpEx => httpEx.StatusCode ?? HttpStatusCode.ServiceUnavailable,
+    RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
+    MsalServiceException msalEx => (HttpStatusCode)msalEx.StatusCode,
+    _ => HttpStatusCode.InternalServerError
+};
 ```
 
-Commands should override this to provide appropriate status codes:
+Override only additional domain-specific mappings:
 ```csharp
 protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
 {
-    Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,  // Use Azure-reported status
-    Azure.Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,   // Unauthorized
-    ValidationException => HttpStatusCode.BadRequest,    // Bad request
-    _ => base.GetStatusCode(ex) // Fall back to InternalServerError
+    Azure.Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
+    ValidationException => HttpStatusCode.BadRequest,
+    _ => base.GetStatusCode(ex)
 };
 ```
 
@@ -1414,32 +1408,13 @@ protected override string GetErrorMessage(Exception ex) => ex switch
     Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
         "Resource not found. Verify the resource name and that you have access.",
     Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-        $"Access denied. Ensure you have appropriate RBAC permissions. Details: {reqEx.Message}",
-    Azure.RequestFailedException reqEx => reqEx.Message,
+        "Access denied. Ensure the active identity has the appropriate RBAC permissions.",
     _ => base.GetErrorMessage(ex)
 };
 ```
 
 ### 3. Response Format
-The base `HandleException` method in BaseCommand handles the response formatting:
-```csharp
-protected virtual void HandleException(CommandContext context, Exception ex)
-{
-    context.Activity?.SetStatus(ActivityStatusCode.Error);
-
-    var response = context.Response;
-    var result = new ExceptionResult(
-        Message: ex.Message,
-        StackTrace: ex.StackTrace,
-        Type: ex.GetType().Name);
-
-    response.Status = GetStatusCode(ex);
-    response.Message = GetErrorMessage(ex) + ". To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
-    response.Results = ResponseResult.Create(result, JsonSourceGenerationContext.Default.ExceptionResult);
-}
-```
-
-Commands should call `HandleException(context, ex)` in their catch blocks.
+`BaseCommand.HandleException` handles command-validation failures separately, tags the activity, maps the status through `GetStatusCode`, appends the troubleshooting URL, and serializes exception details with `CoreJsonContext`. Stack traces are included only in debug builds. Commands should call `HandleException(context, ex)` in their catch blocks rather than copying the base implementation.
 
 ### 4. Service-Specific Errors
 Commands should override error handlers to add service-specific mappings:
@@ -1567,8 +1542,8 @@ param baseName string = resourceGroup().name
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string = deployer().objectId
 
-// The test infrastructure will only provide baseName and testApplicationOid.
-// Any additional parameters are for local deployments only and require default values.
+// Match the common parameters used by nearby toolsets. Give any toolset-specific
+// parameters defaults unless the deployment harness explicitly supplies them.
 
 @description('The location of the resource. By default, this is the same as the resource group.')
 param location string = resourceGroup().location
@@ -1638,45 +1613,28 @@ output testResourceName string = serviceResource::testResource.name
 
 **2. Required: Post-Deployment Script (`tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources-post.ps1`)**
 
-All Azure service commands must include this script, even if it contains only the basic template. Create with the standard template and add custom setup logic if needed:
+Every Azure service toolset must have this script, even if it only writes `.testsettings.json`. Reuse the existing script or create it from this template, adding deterministic setup logic when needed:
 
 ```powershell
-#!/usr/bin/env pwsh
-
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-
-#Requires -Version 6.0
-#Requires -PSEdition Core
-
-[CmdletBinding()]
-param (
-    [Parameter(Mandatory)]
+param(
+    [string] $TenantId,
+    [string] $TestApplicationId,
+    [string] $ResourceGroupName,
+    [string] $BaseName,
     [hashtable] $DeploymentOutputs,
-
-    [Parameter(Mandatory)]
     [hashtable] $AdditionalParameters
 )
 
-Write-Host "Running {Toolset} post-deployment setup..."
+$ErrorActionPreference = "Stop"
 
-try {
-    # Extract outputs from deployment
-    $serviceName = $DeploymentOutputs['{Toolset}']['serviceResourceName']['value']
-    $resourceGroup = $AdditionalParameters['ResourceGroupName']
+. "$PSScriptRoot/../../../eng/common/scripts/common.ps1"
+. "$PSScriptRoot/../../../eng/scripts/helpers/TestResourcesHelpers.ps1"
 
-    # Perform additional setup (e.g., create sample data, configure settings)
-    Write-Host "Setting up test data for $serviceName..."
+$testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 
-    # Example: Run Azure CLI commands for additional setup
-    # az {service} {operation} --name $serviceName --resource-group $resourceGroup
+# Add deterministic data seeding or other post-deployment setup here.
 
-    Write-Host "{Toolset} post-deployment setup completed successfully."
-}
-catch {
-    Write-Error "Failed to complete {Toolset} post-deployment setup: $_"
-    throw
-}
+Write-Host "{Toolset} post-deployment setup completed successfully."
 ```
 
 **3. Update Live Tests to Use Deployed Resources**
@@ -1684,8 +1642,8 @@ catch {
 Integration tests should use the deployed infrastructure:
 
 ```csharp
-public class {Toolset}CommandTests(ITestOutputHelper output)
-    : CommandTestsBase(output)
+public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     [Fact]
     public async Task Should_Get{Resource}_Successfully()
@@ -1695,7 +1653,7 @@ public class {Toolset}CommandTests(ITestOutputHelper output)
         var resourceName = "test{resource}";
 
         var result = await CallToolAsync(
-            "azmcp_{Toolset}_{resource}_show",
+            "{toolset}_{resource}_show",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -1713,25 +1671,6 @@ public class {Toolset}CommandTests(ITestOutputHelper output)
         Assert.Equal(resourceName, name);
     }
 
-    [Theory]
-    [InlineData("--invalid-param", new string[0])]
-    [InlineData("--subscription", new[] { "invalidSub" })]
-    [InlineData("--subscription", new[] { "sub", "--resource-group", "rg" })]  // Missing required params
-    public async Task Should_Return400_WithInvalidInput(string firstArg, string[] remainingArgs)
-    {
-        var allArgs = new[] { firstArg }.Concat(remainingArgs);
-        var argsString = string.Join(" ", allArgs);
-
-        var result = await CallToolAsync(
-            "azmcp_{Toolset}_{resource}_show",
-            new()
-            {
-                { "args", argsString }
-            });
-
-        // Should return validation error
-        Assert.NotEqual(HttpStatusCode.OK, result.Status);
-    }
 }
 ```
 
@@ -1741,53 +1680,27 @@ Use the deployment script with your toolset:
 
 ```powershell
 # Deploy test resources for your toolset
-./eng/scripts/Deploy-TestResources.ps1 -Tools "{Toolset}"
+./eng/scripts/Deploy-TestResources.ps1 -Paths "{Toolset}"
 
 # Run live tests
-pushd 'tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests'
-dotnet test --filter "Category=Live"
+dotnet test 'tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests' `
+    --filter "FullyQualifiedName~{Toolset}CommandTests"
 ```
 
-Live test scenarios should include:
-```csharp
-[Theory]
-[InlineData(AuthMethod.Credential)]  // Default auth
-[InlineData(AuthMethod.Key)]         // Key based auth
-public async Task Should_HandleAuth(AuthMethod method)
-{
-    var result = await CallCommand(new()
-    {
-        { "auth-method", method.ToString() }
-    });
-    // Verify auth worked
-    Assert.Equal(HttpStatusCode.OK, result.Status);
-}
-
-[Theory]
-[InlineData("--invalid-value")]    // Bad input
-[InlineData("--missing-required")] // Missing params
-public async Task Should_Return400_ForInvalidInput(string args)
-{
-    var result = await CallCommand(args);
-    Assert.Equal(HttpStatusCode.BadRequest, result.Status);
-    Assert.Contains("validation", result.Message.ToLower());
-}
-```
-
-If your live test class needs to implement `IAsyncLifetime` or override `Dispose`, you must call `Dispose` on your base class:
+If a recorded test class overrides `DisposeAsync`, it must await the base implementation so the proxy session and recording are finalized:
 ```cs
-public class MyCommandTests(ITestOutputHelper output)
-    : CommandTestsBase(output), IAsyncLifetime
+public class MyCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
-    public ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
-        base.Dispose();
-        return ValueTask.CompletedTask;
+        await base.DisposeAsync();
+        // Dispose subclass-owned resources.
     }
 }
 ```
 
-Failure to call `base.Dispose()` will prevent request and response data from `CallCommand` from being written to failing test results.
+Failure to call `base.DisposeAsync()` can prevent the proxy session from stopping and recordings from being finalized.
 
 ## Code Quality and Unused Using Statements
 
@@ -1903,46 +1816,13 @@ AOT (Ahead-of-Time) compilation is required for all new toolsets to ensure compa
 ./eng/scripts/Build-Local.ps1 -BuildNative
 ```
 
-**Expected Outcome**: If your toolset is properly implemented, the build should succeed. However, if AOT compilation fails (which is very likely for new toolsets), follow these steps:
-**3. AOT Compilation Issue Resolution:**
+**Expected outcome:** The native build succeeds. If it fails, follow `docs/aot-compatibility.md`:
 
-When AOT compilation fails for your new toolset, you need to exclude it from native builds:
+1. Fix violations in code you own, including reflection and runtime JSON serialization.
+2. Use an AOT-compatible version or alternative for external dependencies.
+3. For violations in a new `Azure.ResourceManager.*` dependency, follow the escalation process in the AOT guide and wait for a compatible package before merging.
 
-**Step 1: Move toolset setup under BuildNative condition in Program.cs**
-```csharp
-// Find your toolset setup call in Program.cs
-// Move it inside the #if !BUILD_NATIVE block
-
-#if !BUILD_NATIVE
-    // ... other toolset setups ...
-    builder.Services.Add{YourToolset}Setup();  // ← Move this line here
-#endif
-```
-
-**Step 2: Add ProjectReference-Remove condition in Azure.Mcp.Server.csproj**
-```xml
-<!-- Add this to servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj -->
-<ItemGroup Condition="'$(BuildNative)' == 'true'">
-  <ProjectReference Remove="..\..\tools\Azure.Mcp.Tools.{Toolset}\src\Azure.Mcp.Tools.{Toolset}.csproj" />
-</ItemGroup>
-```
-
-**Step 3: Verify the fix**
-```powershell
-# Test that AOT compilation now succeeds
-./eng/scripts/Build-Local.ps1 -BuildNative
-
-# Verify regular build still works
-dotnet build
-```
-
-**Why AOT Compilation Often Fails:**
-- Azure SDK libraries may not be fully AOT-compatible
-- Reflection-based operations in service implementations
-- Third-party dependencies that don't support AOT
-- Dynamic JSON serialization without source generators
-
-**Important**: This is a common and expected issue for new Azure service toolsets. The exclusion pattern is the standard solution and doesn't impact regular builds or functionality.
+Do not add the toolset to the fixed `#if !BUILD_NATIVE` block and do not conditionally remove its project or package references. The server source explicitly reserves that block and all new contributions must remain available in native builds.
 
 ## Common Implementation Issues and Solutions
 
@@ -1965,7 +1845,7 @@ Task<List<ResourceModel>> GetResources(
 - **Pattern**:
 ```csharp
 // Correct pattern
-var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
+var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 ```
 
 ### Command Option Patterns
@@ -2003,7 +1883,7 @@ public sealed class MyCommand(ILogger<MyCommand> logger, IMyService service, ISu
         // ...
     }
 
-    internal record MyResult(string Value);
+    public sealed record MyResult(string Value);
 }
 ```
 
@@ -2063,7 +1943,7 @@ catch (Exception ex)
 
 4. Documentation:
    - Clear command description without repeating the service name (e.g., use "List and manage clusters" instead of "AKS operations - List and manage AKS clusters")
-   - List all required options
+    - Let the generated input schema express ordinary required options; call out conditional requirements or choices the agent must ask the user to make
    - Describe return format
    - Include examples in description
    - **Maintain alphabetical sorting in e2eTestPrompts.md**: Insert new test prompts in correct alphabetical position by Tool Name within each service section
@@ -2073,18 +1953,20 @@ catch (Exception ex)
 
       - **Single prompt validation** (test one description against one prompt):
 
-        ```bash
-        dotnet run -- --validate --tool-description "Your command description here" --prompt "typical user request"
+        ```powershell
+        dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- --test-single-tool `
+            --tool-description "Your command description here" `
+            --prompt "typical user request"
         ```
 
       - **Multiple prompt validation** (test one description against multiple prompts):
 
-        ```bash
-        dotnet run -- --validate \
-        --tool-description "Lists all storage accounts in a subscription" \
-        --prompt "show me my storage accounts" \
-        --prompt "list storage accounts" \
-        --prompt "what storage do I have"
+        ```powershell
+        dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- --test-single-tool `
+            --tool-description "Lists all storage accounts in a subscription" `
+            --prompt "show me my storage accounts" `
+            --prompt "list storage accounts" `
+            --prompt "what storage accounts do I have"
         ```
 
       - **Custom tools and prompts files** (use your own files for comprehensive testing):
@@ -2092,18 +1974,18 @@ catch (Exception ex)
         ```bash
         # Prompts:
         # Use markdown format (same as servers/Azure.Mcp.Server/docs/e2eTestPrompts.md):
-        dotnet run -- --prompts-file my-prompts.md
+        dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- --prompts-file my-prompts.md
 
         # Use JSON format:
-        dotnet run -- --prompts-file my-prompts.json
+        dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- --prompts-file my-prompts.json
 
         # Tools:
         # Use JSON format (same as eng/tools/ToolDescriptionEvaluator/tools.json):
-        dotnet run -- --tools-file my-tools.json
+        dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- --tools-file my-tools.json
 
         # Combine both:
         # Use custom tools and prompts files together:
-        dotnet run -- --tools-file my-tools.json --prompts-file my-prompts.md
+        dotnet run --project eng/tools/ToolDescriptionEvaluator/src -- --tools-file my-tools.json --prompts-file my-prompts.md
         ```
 
     - Quality assessment guidelines:
@@ -2117,17 +1999,17 @@ catch (Exception ex)
       - **Markdown format**: Use same table format as `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`:
 
         ```markdown
-        | Tool Name | Test Prompt |
-        |:----------|:----------|
-        | azmcp-your-command | Your test prompt |
-        | azmcp-your-command | Another test prompt |
+        | Tool Name | Test Prompt | Interaction |
+        |:----------|:------------|:------------|
+        | yourservice_resource_operation | Your test prompt | none |
+        | yourservice_resource_operation | Another test prompt | clarification-required |
         ```
 
       - **JSON format**: Tool name as key, array of prompts as value:
 
         ```json
         {
-            "azmcp-your-command": [
+            "yourservice_resource_operation": [
             "Your test prompt",
             "Another test prompt"
             ]
@@ -2154,9 +2036,8 @@ catch (Exception ex)
    - **CRITICAL**: Use options class inheritance hierarchies - Options classes should be flat POCOs implementing `ISubscriptionOption`
    - **CRITICAL**: Skip live test infrastructure for Azure service commands - Create `test-resources.bicep` template early in development
    - **CRITICAL**: Use `CommandUnitTestsBase` for subscription commands - Use `SubscriptionCommandUnitTestsBase` to register `ISubscriptionResolver`
-   - Use readonly option fields in commands
-   - Skip base.Dispose() call
-   - Use hardcoded option strings
+    - Define `System.CommandLine.Option<T>` fields or manually register options for a new command
+    - Skip `base.DisposeAsync()` when a recorded test overrides `DisposeAsync`
    - Return different response formats
    - Leave command unregistered
    - Skip error handling
@@ -2164,10 +2045,10 @@ catch (Exception ex)
    - Deploy overly expensive test resources
    - Forget to assign RBAC permissions to test application
    - Hard-code resource names in live tests
-   - Use dashes in command group names
+   - Use underscores or uppercase characters in command group names
 
 2. Always:
-   - **For options**: Use flat POCOs with `[Option]` attributes implementing `ISubscriptionOption`
+   - **For options**: Use flat POCOs with `[Option]` attributes; implement `ISubscriptionOption` for subscription commands
    - **For commands**: Extend `SubscriptionCommand<TOptions, TResult>` and inject `ISubscriptionResolver`
    - **For `ExecuteAsync`**: Use the `(CommandContext, TOptions, CancellationToken)` signature — options are pre-bound
    - **For validation**: Override `ValidateOptions(TOptions, ValidationResult)` for custom validation
@@ -2182,7 +2063,7 @@ catch (Exception ex)
    - Include live test infrastructure for Azure services
    - Use consistent resource naming patterns (check existing `test-resources.bicep` files)
    - Output resource identifiers from Bicep templates
-   - Use concatenated all lowercase names for command groups (no dashes)
+    - Use lowercase concatenated or kebab-case names for command groups; never use underscores
 
 ### Troubleshooting Common Issues
 
@@ -2198,15 +2079,15 @@ catch (Exception ex)
 
 **Issue: Missing live test infrastructure for Azure service commands**
 - **Cause**: Forgetting to create `test-resources.bicep` template during development
-- **Solution**: Create Bicep template early in development process, not as an afterthought
-- **Fix**: Create `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep` following established patterns
+- **Solution**: Inspect the toolset Bicep template early; create it if absent or extend it for new resources and RBAC
+- **Fix**: Create or update `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep` following established patterns
 - **Prevention**: Check "Test Infrastructure Requirements" section at top of this document before starting implementation
 - **Validation**: Run `az bicep build --file tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep` to validate template
 
 **Issue: Pipeline fails with "SelfContainedPostScript is not supported if there is no test-resources-post.ps1"**
 - **Cause**: Missing required `test-resources-post.ps1` file for Azure service commands
-- **Solution**: Create the post-deployment script file, even if it contains only the basic template
-- **Fix**: Create `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources-post.ps1` using the standard template from existing toolsets
+- **Solution**: Ensure the post-deployment script exists, even if it only contains the standard test-settings bootstrap
+- **Fix**: Create or update `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources-post.ps1` using the standard template from existing toolsets
 - **Prevention**: All Azure service commands must include this file - it's required by the test infrastructure
 - **Note**: The file is mandatory even if no custom post-deployment logic is needed
 
@@ -2229,7 +2110,7 @@ catch (Exception ex)
 - **Pattern**:
 ```csharp
 // Correct - use service
-var subscriptionResource = await _azureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
+var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 
 // Wrong - manual creation
 var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
@@ -2279,7 +2160,7 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
 - **Cause**: Parameter constraints, resource naming conflicts, or invalid configurations
 - **Solution**:
   - Review deployment logs and error messages
-  - Use `./eng/scripts/Deploy-TestResources.ps1 -Toolset {Toolset} -Debug` for verbose deployment logs including resource provider errors.
+    - Run `./eng/scripts/Deploy-TestResources.ps1 -Paths "{Toolset}"`; the script surfaces the underlying deployment error details.
 
 ### Live Test Project Configuration Issues
 
@@ -2291,23 +2172,32 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
   ```xml
   <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-      <ImplicitUsings>enable</ImplicitUsings>
-      <Nullable>enable</Nullable>
-      <IsPackable>false</IsPackable>
       <IsTestProject>true</IsTestProject>
       <OutputType>Exe</OutputType>
+          <HasLiveTests>true</HasLiveTests>
+          <HasUnitTests>true</HasUnitTests>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\Azure.Mcp.Tools.{Toolset}\src\Azure.Mcp.Tools.{Toolset}.csproj" />
-      <ProjectReference Include="..\..\..\..\servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj" />
+          <ProjectReference Include="..\..\src\Azure.Mcp.Tools.{Toolset}.csproj" />
+          <ProjectReference Include="$(RepoRoot)servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj" />
+          <ProjectReference Include="$(RepoRoot)core\Azure.Mcp.Core\tests\Azure.Mcp.Tests\Azure.Mcp.Tests.csproj" />
+        </ItemGroup>
+
+        <ItemGroup>
+          <PackageReference Include="NSubstitute" />
+          <PackageReference Include="NSubstitute.Analyzers.CSharp" />
+          <PackageReference Include="xunit.v3.mtp-v2" />
+          <PackageReference Include="coverlet.MTP" />
     </ItemGroup>
   </Project>
   ```
 - **Key Requirements**:
   - `OutputType=Exe` - Required for live test execution
   - `IsTestProject=true` - Marks as test project
+    - `HasLiveTests=true` and `HasUnitTests=true` - Enables the repository test targets
   - Reference to `Azure.Mcp.Server.csproj` - Provides the executable for MCP server
+    - Reference to `Azure.Mcp.Tests.csproj` - Provides command unit-test and recorded-test infrastructure
   - Reference to toolset project - Provides the commands to test
 - **Common fixes**:
   - Adjust `@minLength`/`@maxLength` for service naming limits
@@ -2334,7 +2224,7 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
 
 **Issue: Toolset not registered in Program.cs**
 - **Cause**: New toolset setup not added to `RegisterAreas()` method in `Program.cs`
-- **Solution**: Add toolset registration to the array in alphabetical order
+- **Solution**: Add toolset registration to the existing Azure service area list without reordering unrelated entries
 - **Fix**: Add `new Azure.Mcp.Tools.{Toolset}.{Toolset}Setup(),` to the `RegisterAreas()` return array
 - **Prevention**: Follow the complete toolset setup checklist including Program.cs registration
 
@@ -2343,19 +2233,9 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
 - **Solution**: Always use `HandleException(context, ex)` - this is the correct signature in BaseCommand
 - **Fix**: The method signature is `HandleException(CommandContext context, Exception ex)`, not `HandleException(context.Response, ex)`
 
-**Issue: Missing AddSubscriptionInformation**
-- **Cause**: Subscription commands need telemetry context
-- **Solution**: Add `context.Activity?.WithSubscriptionTag(options);` or use `AddSubscriptionInformation(context.Activity, options);`
-
 **Issue: Service not registered in DI**
 - **Cause**: Forgot to register service in toolset setup
 - **Solution**: Add `services.AddSingleton<IServiceInterface, ServiceImplementation>();` in ConfigureServices
-
-### Base Command Class Issues
-
-**Issue: Wrong logger type in base command constructor**
-- **Example**: `ILogger<BaseSqlCommand<TOptions>>` in `BaseDatabaseCommand`
-- **Solution**: Use correct generic type: `ILogger<BaseDatabaseCommand<TOptions>>`
 
 **Issue: Missing using statements for TrimAnnotations**
 - **Solution**: Add `using Microsoft.Mcp.Core.Commands;` for `TrimAnnotations.CommandAnnotations`
@@ -2365,29 +2245,9 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
 **Issue: AOT compilation fails with runtime dependencies**
 - **Cause**: Some Azure SDK packages or dependencies are not AOT (Ahead-of-Time) compilation compatible
 - **Symptoms**: Build errors when running `./eng/scripts/Build-Local.ps1 -BuildNative`
-- **Solution**: Exclude non-AOT safe projects and packages for native builds
-- **Fix Steps**:
-  1. **Move toolset setup under conditional compilation** in `servers/Azure.Mcp.Server/src/Program.cs`:
-     ```csharp
-     #if !BUILD_NATIVE
-         new Azure.Mcp.Tools.{Toolset}.{Toolset}Setup(),
-     #endif
-     ```
-  2. **Add conditional project exclusion** in `servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj`:
-     ```xml
-     <ItemGroup Condition="'$(BuildNative)' == 'true'">
-       <ProjectReference Remove="..\..\..\tools\Azure.Mcp.Tools.{Toolset}\src\Azure.Mcp.Tools.{Toolset}.csproj" />
-     </ItemGroup>
-     ```
-  3. **Remove problematic package references** when building native (if applicable):
-     ```xml
-     <ItemGroup Condition="'$(BuildNative)' == 'true'">
-       <PackageReference Remove="ProblematicPackage" />
-     </ItemGroup>
-     ```
-- **Examples**: See Cosmos, Monitor, Postgres, Search, VirtualDesktop, and BicepSchema toolsets in Program.cs and Azure.Mcp.Server.csproj
--**Prevention**: Test AOT compilation early in development using `./eng/scripts/Build-Local.ps1 -BuildNative`
--**Note**: Toolsets excluded from AOT builds are still available in regular builds and deployments
+- **Solution**: Follow `docs/aot-compatibility.md`; fix owned code, choose an AOT-safe dependency, or follow the documented escalation for `Azure.ResourceManager.*` packages
+- **Prevention**: Set `<IsAotCompatible>true</IsAotCompatible>` on a new tool library, use source-generated JSON, and run `./eng/scripts/Build-Local.ps1 -BuildNative` early
+- **Do not** modify the fixed `#if !BUILD_NATIVE` block or add conditional project/package removals
 
 ## Remote MCP Server Considerations
 
@@ -2407,14 +2267,11 @@ Azure MCP Server supports two outgoing authentication strategies when running in
 - Server exchanges user's token for downstream Azure service tokens
 - Each Azure API call uses user's identity and permissions
 
-**Command Implementation Impact:**
+**Command implementation impact:**
 ```csharp
-// No changes needed in command code!
-// Authentication provider automatically handles OBO token acquisition
-var credential = await _tokenCredentialProvider.GetTokenCredentialAsync(tenant, cancellationToken);
-
-// This credential will use OBO flow when configured
-// User's RBAC permissions enforced on Azure resources
+// Commands call a service. Azure-facing services use BaseAzureService helpers;
+// IAzureService selects the configured OBO, hosting-identity, or stdio credential.
+var credential = await GetCredential(tenant, cancellationToken);
 ```
 
 **Testing Considerations:**
@@ -2429,16 +2286,12 @@ var credential = await _tokenCredentialProvider.GetTokenCredentialAsync(tenant, 
 **How it works:**
 - MCP server uses its own identity (Managed Identity, Service Principal, etc.)
 - All downstream Azure calls use server's credentials
-- Behaves like `DefaultAzureCredential` in local stdio mode
+- Uses the configured local credential chain in stdio mode
 
-**Command Implementation Impact:**
+**Command implementation impact:**
 ```csharp
-// No changes needed in command code!
-// Authentication provider automatically uses server's identity
-var credential = await _tokenCredentialProvider.GetTokenCredentialAsync(tenant, cancellationToken);
-
-// This credential will use server's Managed Identity when configured
-// Server's RBAC permissions apply to all users
+// The same service code is used for hosting identity and other transports.
+var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 ```
 
 **Testing Considerations:**
@@ -2451,18 +2304,18 @@ Commands should be **transport-agnostic** - they work identically in stdio and H
 
 **Good:**
 ```csharp
-public sealed class StorageAccountGetCommand(
+public sealed class AccountGetCommand(
     IStorageService storageService,
-    ILogger<StorageAccountGetCommand> logger,
+    ILogger<AccountGetCommand> logger,
     ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<StorageAccountGetOptions, StorageAccountGetCommand.StorageAccountGetResult>(subscriptionResolver)
+    : SubscriptionCommand<AccountGetOptions, AccountGetCommand.AccountGetCommandResult>(subscriptionResolver)
 {
     private readonly IStorageService _storageService = storageService;
-    private readonly ILogger<StorageAccountGetCommand> _logger = logger;
+    private readonly ILogger<AccountGetCommand> _logger = logger;
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        StorageAccountGetOptions options,
+        AccountGetOptions options,
         CancellationToken cancellationToken)
     {
         // Authentication provider handles both stdio and HTTP scenarios
@@ -2479,7 +2332,7 @@ public sealed class StorageAccountGetCommand(
         return context.Response;
     }
 
-    internal record StorageAccountGetResult(List<StorageAccount> Accounts);
+    public sealed record AccountGetCommandResult(List<StorageAccountInfo> Accounts);
 }
 ```
 
@@ -2505,7 +2358,7 @@ public override async Task<CommandResponse> ExecuteAsync(...)
 
 ### Service Layer Best Practices
 
-When implementing services that call Azure, use `IAzureTokenCredentialProvider`:
+When implementing services that call Azure, inject `IAzureService` and inherit `BaseAzureService` or `BaseAzureResourceService`. These abstractions provide the configured credential strategy, tenant resolution, sovereign-cloud configuration, ARM client creation, and proxy-aware HTTP clients:
 
 ```csharp
 public class StorageService(
@@ -2571,7 +2424,7 @@ public sealed class SqlDatabaseListCommand(
         return context.Response;
     }
 
-    internal record SqlDatabaseListResult(List<SqlDatabase> Databases);
+    public sealed record SqlDatabaseListResult(List<SqlDatabase> Databases);
 }
 ```
 
@@ -2598,7 +2451,7 @@ public sealed class BadCommand(ISubscriptionResolver subscriptionResolver)
         return _currentContext.Response;
     }
 
-    internal record BadResult(string Value);
+    public sealed record BadResult(string Value);
 }
 ```
 
@@ -2666,33 +2519,16 @@ When writing tests, consider both transport modes:
 - Validate RBAC permissions
 - Test both stdio and HTTP modes
 
-**Example Live Test Setup:**
-```csharp
-// Live tests should work in both modes by using appropriate credentials
-public class StorageCommandLiveTests : IAsyncLifetime
-{
-    private readonly TestSettings _settings;
+Use the same `RecordedCommandTestsBase` tests for both transports. The deployment helper writes the transport choice to `.testsettings.json`:
 
-    public async Task InitializeAsync()
-    {
-        _settings = TestSettings.Load();
+```powershell
+# Default stdio transport
+./eng/scripts/Deploy-TestResources.ps1 -Paths "Storage"
 
-        // Test infrastructure supports both modes:
-        // - Stdio mode: Uses Azure CLI/VS Code credentials
-        // - HTTP mode: Can simulate OBO or hosting environment identity
-    }
+# HTTP transport
+./eng/scripts/Deploy-TestResources.ps1 -Paths "Storage" -UseHttpTransport
 
-    [Fact]
-    public async Task ListStorageAccounts_ReturnsAccounts()
-    {
-        // Test works identically in both stdio and HTTP modes
-        var result = await CallToolAsync(
-            "azmcp_storage_account_list",
-            new { subscription = _settings.SubscriptionId });
-
-        Assert.NotNull(result);
-    }
-}
+dotnet test tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests
 ```
 
 ### Documentation Requirements for Remote Mode
@@ -2701,7 +2537,7 @@ When documenting new commands, include remote mode considerations:
 
 **In azmcp-commands.md:**
 ```markdown
-## azmcp storage account list
+## azmcp storage account get
 
 Lists storage accounts in a subscription.
 
@@ -2731,7 +2567,10 @@ Every new command needs to be added to the consolidated mode. Here are the instr
 - Use the following command to find out the correct tool name for your new tool
     ```
     cd servers/Azure.Mcp.Server/src/bin/Debug/net10.0
-    ./azmcp[.exe] tools list --name --namespace <tool_area>
+    # Windows
+    ./azmcp.exe tools list --name-only --namespace <tool_area>
+    # Unix
+    ./azmcp tools list --name-only --namespace <tool_area>
     ```
 
 ## Checklist
@@ -2739,9 +2578,9 @@ Every new command needs to be added to the consolidated mode. Here are the instr
 Before submitting:
 
 ### Core Implementation
-- [ ] Options class follows inheritance pattern
+- [ ] Options class is a flat POCO with `[Option]` attributes and implements the required option interfaces
 - [ ] Command class implements all required members
-- [ ] Command uses proper OptionDefinitions
+- [ ] Required options use the C# `required` modifier; optional options are nullable where appropriate
 - [ ] Service interface and implementation complete
 - [ ] All async methods include CancellationToken parameter as final argument, and rules for using CancellationToken are followed in unit tests when setting up mocks or calling product code.
 - [ ] Unit tests cover all paths
@@ -2758,15 +2597,17 @@ Before submitting:
 
 **⚠️ MANDATORY for any command that interacts with Azure resources:**
 
-- [ ] **Live test infrastructure created** (`test-resources.bicep` template in `tools/Azure.Mcp.Tools.{Toolset}/tests`)
-- [ ] **Post-deployment script created** (`test-resources-post.ps1` in `tools/Azure.Mcp.Tools.{Toolset}/tests` - required even if basic template)
+- [ ] **Live test infrastructure present and sufficient** (`test-resources.bicep` in `tools/Azure.Mcp.Tools.{Toolset}/tests`)
+- [ ] **Post-deployment script present and sufficient** (`test-resources-post.ps1` in `tools/Azure.Mcp.Tools.{Toolset}/tests` - required even if it only writes test settings)
 - [ ] **Bicep template validated** with `az bicep build --file tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`
-- [ ] **Live test resource template tested** with `./eng/scripts/Deploy-TestResources.ps1 -Toolset {Toolset}`
+- [ ] **Live test resource template tested** with `./eng/scripts/Deploy-TestResources.ps1 -Paths "{Toolset}"`
 - [ ] **RBAC permissions configured** for test application in Bicep template (use appropriate built-in roles)
 - [ ] **Live test project configuration correct**:
   - [ ] References `Azure.Mcp.Server.csproj` (not just the toolset project)
+    - [ ] References `Azure.Mcp.Tests.csproj`
   - [ ] Includes `OutputType=Exe` property
   - [ ] Includes `IsTestProject=true` property
+    - [ ] Includes `HasLiveTests=true` and `HasUnitTests=true`
 - [ ] **Live tests use deployed resources** via `Settings.ResourceBaseName` pattern
 - [ ] **Resource outputs defined** in Bicep template for test consumption
 - [ ] **Cost optimization verified** (use Basic/Standard SKUs, minimal configurations)
@@ -2774,10 +2615,10 @@ Before submitting:
 **This section is ONLY needed if your command interacts with Azure resources (e.g., Storage, KeyVault).**
 
 ### Package and Project Setup
-- [ ] Azure Resource Manager package added to both `Directory.Packages.props` and `Azure.Mcp.Tools.{Toolset}.csproj`
-- [ ] **Package version consistency**: Same version used in both `Directory.Packages.props` and project references
-- [ ] **Solution file integration**: Projects added to `Microsoft.Mcp.slnx` and `Azure.Mcp.Server.slnx`
-- [ ] **Toolset registration**: Added to `Program.cs` `RegisterAreas()` method in alphabetical order
+- [ ] Any newly required Azure Resource Manager package added to both `Directory.Packages.props` and `Azure.Mcp.Tools.{Toolset}.csproj`
+- [ ] **Central package management**: Any new package version added to `Directory.Packages.props`; project has a versionless `<PackageReference>`
+- [ ] **Solution file integration**: `./eng/scripts/Update-Solution.ps1 -All` run when adding a project
+- [ ] **Toolset registration**: For a new toolset, setup added to the Azure service area list in `Program.cs` `RegisterAreas()` without modifying the fixed native-build block
 - [ ] JSON serialization context includes all new model types
 
 ### Build and Code Quality
@@ -2805,12 +2646,11 @@ Before submitting:
 - [ ] **servers/Azure.Mcp.Server/docs/azmcp-commands.md**: Add command documentation with description, syntax, parameters, and examples
 - [ ] **Run metadata update script**: Execute `.\eng\scripts\Update-AzCommandsMetadata.ps1` to update tool metadata in azmcp-commands.md (required for CI validation)
 - [ ] **README.md**: Update the supported services table and add example prompts demonstrating the new command(s) in the appropriate toolset section
-- [ ] **eng/vscode/README.md**: Update the VSIX README with new service toolset (if applicable) and add sample prompts to showcase new command capabilities
 - [ ] **servers/Azure.Mcp.Server/docs/e2eTestPrompts.md**: Add test prompts for end-to-end validation of the new command(s)
-- [ ] **.github/CODEOWNERS**: Add new toolset to CODEOWNERS file for proper ownership and review assignments
+- [ ] **.github/CODEOWNERS**: Add an entry when introducing a new toolset
 
 **Documentation Standards**:
-- Use consistent command paths in all documentation (e.g., `azmcp sql db show`, not `azmcp sql database show`)
+- Use consistent registered command paths in all documentation (e.g., `azmcp sql db get`, not `azmcp sql database show`)
 - **Always run `.\eng\scripts\Update-AzCommandsMetadata.ps1`** after updating azmcp-commands.md to ensure tool metadata is synchronized (CI will fail if this step is skipped)
 - Organize example prompts by service in README.md under service-specific sections (e.g., `### 🗄️ Azure SQL Database`)
 - Place new commands in the appropriate toolset section, or create a new toolset section if needed
@@ -2818,10 +2658,10 @@ Before submitting:
 - Include parameter descriptions and required vs optional indicators in azmcp-commands.md
 - Keep CHANGELOG.md entries concise but descriptive of the capability added
 - Add test prompts to e2eTestPrompts.md following the established naming convention and provide multiple prompt variations
-- **eng/vscode/README.md Updates**: When adding new services or commands, update the VSIX README to maintain accurate service coverage and compelling sample prompts for marketplace visibility
+- `servers/Azure.Mcp.Server/README.md` is processed by `eng/scripts/Process-PackageReadMe.ps1` for NuGet, npm, VSIX, and PyPI; do not edit generated package copies
 - **IMPORTANT**: Maintain alphabetical sorting in e2eTestPrompts.md:
   - Service sections must be in alphabetical order by service name
   - Tool Names within each table must be sorted alphabetically
   - When adding new tools, insert them in the correct alphabetical position to maintain sort order
 
-## Add ne
+For a phased implementation workflow with explicit validation gates, see `.github/skills/add-azure-mcp-tools/SKILL.md`.

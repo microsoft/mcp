@@ -64,44 +64,43 @@ az cosmosdb sql container create \
 
 ### Step 2: Discover Database Resources with Azure MCP Server
 
-**2.1 List Cosmos DB accounts** (uses `azmcp_cosmos_account_list`):
+**2.1 List Cosmos DB accounts** (uses `cosmos_list`):
 ```
 List all Cosmos DB accounts in my subscription
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_cosmos_account_list`
+- [ ] Tool invoked: `cosmos_list`
 - [ ] Your Cosmos DB account appears
 - [ ] Account properties displayed
 
-**2.2 List databases** (uses `azmcp_cosmos_database_list`):
+**2.2 List databases** (uses `cosmos_list`):
 ```
 List all databases in Cosmos DB account '<account-name>'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_cosmos_database_list`
+- [ ] Tool invoked: `cosmos_list`
 - [ ] 'TasksDB' database listed
 
-**2.3 List containers** (uses `azmcp_cosmos_database_container_list`):
+**2.3 List containers** (uses `cosmos_list`):
 ```
 List all containers in database 'TasksDB' for Cosmos DB account '<account-name>'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_cosmos_database_container_list`
+- [ ] Tool invoked: `cosmos_list`
 - [ ] 'Tasks' container listed
-- [ ] Partition key '/category' shown
 
 ### Step 3: Query Application Data with Azure MCP Server
 
-**3.1 Query all tasks** (uses `azmcp_cosmos_database_container_item_query`):
+**3.1 Query all tasks** (uses `cosmos_database_container_item_query`):
 ```
 Query all items from container 'Tasks' in database 'TasksDB' for Cosmos DB account '<account-name>'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_cosmos_database_container_item_query`
+- [ ] Tool invoked: `cosmos_database_container_item_query`
 - [ ] All 3 sample tasks returned
 - [ ] Task properties visible (id, title, category, completed)
 
@@ -163,13 +162,13 @@ az webapp deployment source config-zip \
 
 ### Step 5: Verify Deployed Application with Azure MCP Server
 
-**5.1 Get App Service details** (uses `azmcp_appservice_get`):
+**5.1 Get App Service details** (uses `appservice_webapp_get`):
 ```
 Show me details for App Service '<webapp-name>' in resource group 'bugbash-fullstack-rg'
 ```
 
 **Verify**:
-- [ ] Tool invoked: `azmcp_appservice_get`
+- [ ] Tool invoked: `appservice_webapp_get`
 - [ ] App Service properties shown
 - [ ] Runtime and configuration visible
 - [ ] App URL displayed
@@ -182,7 +181,7 @@ Show me details for App Service '<webapp-name>' in resource group 'bugbash-fulls
 
 ### Step 6: Query Updated Data with Azure MCP Server
 
-**6.1 Query database to verify application changes** (uses `azmcp_cosmos_database_container_item_query`):
+**6.1 Query database to verify application changes** (uses `cosmos_database_container_item_query`):
 ```
 Query all items from container 'Tasks' in database 'TasksDB' to see changes made through my application
 ```
@@ -243,32 +242,25 @@ When logging issues, include:
 ## Quick Reference: Supported MCP Tools
 
 ### Cosmos DB
-- `azmcp_cosmos_account_list` - List Cosmos DB accounts
-- `azmcp_cosmos_database_list` - List databases
-- `azmcp_cosmos_database_container_list` - List containers
-- `azmcp_cosmos_database_container_item_query` - Query container items
+- `cosmos_list` - List accounts by default, databases with `--account`, or containers with `--account` and `--database`
+- `cosmos_database_container_item_query` - Query container items
 
 ### PostgreSQL
-- `azmcp_postgres_server_list` - List PostgreSQL servers
-- `azmcp_postgres_database_list` - List databases
-- `azmcp_postgres_table_list` - List tables
-- `azmcp_postgres_table_schema_get` - Get table schema
-- `azmcp_postgres_database_query` - Execute SELECT queries
+- `postgres_list` - List servers, databases, or tables based on `--server` and `--database`
+- `postgres_table_schema_get` - Get table schema
+- `postgres_database_query` - Execute SELECT queries
 
 ### MySQL
-- `azmcp_mysql_server_list` - List MySQL servers
-- `azmcp_mysql_database_list` - List databases
-- `azmcp_mysql_table_list` - List tables
-- `azmcp_mysql_table_schema_get` - Get table schema
-- `azmcp_mysql_database_query` - Execute SELECT queries
+- `mysql_list` - List servers, databases, or tables based on `--server` and `--database`
+- `mysql_table_schema_get` - Get table schema
+- `mysql_database_query` - Execute SELECT queries
 
 ### Azure SQL
-- `azmcp_sql_server_list` - List SQL servers
-- `azmcp_sql_db_list` - List databases
-- `azmcp_sql_db_show` - Get database details
+- `sql_server_get` - List servers or get one server's details
+- `sql_db_get` - List databases or get one database's details
 
 ### App Service
-- `azmcp_appservice_get` - Get App Service details
+- `appservice_webapp_get` - Get App Service details
 
 ---
 

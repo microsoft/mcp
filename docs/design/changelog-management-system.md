@@ -320,7 +320,7 @@ changes:
 pr: 1054
 changes:
   - section: "Features Added"
-    description: "Added support for speech recognition from an audio file with Fast Transcription via the command `azmcp_speech_stt_recognize`."
+    description: "Added support for speech recognition from an audio file with Fast Transcription via the tool `speech_stt_recognize`."
 ```
 
 **File:** `alzimmermsft-dependency-update.yaml`
@@ -352,7 +352,7 @@ When compiled, entries are grouped by section and subsection. Empty sections wil
 ### Features Added
 
 - Added support for User-Assigned Managed Identity via the `AZURE_CLIENT_ID` environment variable. [[#1033](https://github.com/microsoft/mcp/pull/1033)]
-- Added support for speech recognition from an audio file with Fast Transcription via the command `azmcp_speech_stt_recognize`. [[#1054](https://github.com/microsoft/mcp/pull/1054)]
+- Added support for speech recognition from an audio file with Fast Transcription via the tool `speech_stt_recognize`. [[#1054](https://github.com/microsoft/mcp/pull/1054)]
 - Added support for multiple changes per PR in changelog entries [[#1234](https://github.com/microsoft/mcp/pull/1234)]
 
 ### Bugs Fixed

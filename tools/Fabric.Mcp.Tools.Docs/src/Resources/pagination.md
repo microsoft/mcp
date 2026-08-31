@@ -56,40 +56,62 @@ Once all the records are retrieved, the `continuationUri` and `continuationToken
 ## Code example
 
 In this example, you create a client and call the [list workspaces](https://learn.microsoft.com/rest/api/fabric/admin/workspaces/list-workspaces) API. The `continuationToken` parameter is used to get the next paginated chunk of workspaces, until it returns empty or null.
-In this example, you create a client and call the [list workspaces](https://learn.microsoft.com/rest/api/fabric/admin/workspaces/list-workspaces) API. The `continuationToken` parameter is used to get the next paginated chunk of workspaces, until it returns empty or null.
 
 ```csharp
-using (HttpClient client = new HttpClient()) 
-{ 
-    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "<Your token>"); 
-    string continuationToken = null; 
-    var workspaces = new List<Workspace>(); 
-    do 
-    { 
-        var requestUrl = "https://api.fabric.microsoft.com/v1/workspaces"; 
-        if (!string.IsNullOrEmpty(continuationToken)) 
-        { 
-            requestUrl += $"?continuationToken={continuationToken}"; 
-        } 
-        HttpResponseMessage response = await client.GetAsync(requestUrl); 
-        if (response.IsSuccessStatusCode) 
-        { 
+public sealed class FabricWorkspaceClient(IHttpClientFactory httpClientFactory)
+{
+  private static readonly Uri s_workspacesUri = new("https://api.fabric.microsoft.com/v1/workspaces");
 
-            // Parse the response JSON   
-            var responseData = await response.Content.ReadAsStringAsync(); 
-            var paginatedResponse = JsonConvert.DeserializeObject<PaginatedResponse<Workspace>>(responseData); 
+  public async Task<IReadOnlyList<Workspace>> ListWorkspacesAsync(
+    string accessToken,
+    CancellationToken cancellationToken)
+  {
+    var client = httpClientFactory.CreateClient();
+    var workspaces = new List<Workspace>();
+    Uri? nextPage = s_workspacesUri;
 
-            // Append the list of workspaces in the current retrieved page 
-            workspaces.AddRange(paginatedResponse.Value); 
+    while (nextPage is not null)
+    {
+      using var request = new HttpRequestMessage(HttpMethod.Get, nextPage);
+      request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-            // Check if there are more records to retrieve 
-            continuationToken = paginatedResponse.ContinuationToken; 
-        } 
-        else 
-        { 
-            Console.WriteLine($"Error: {response.StatusCode}"); 
-            break; 
-        } 
-    } while (!string.IsNullOrEmpty(continuationToken)); 
+      using var response = await client.SendAsync(request, cancellationToken);
+      response.EnsureSuccessStatusCode();
+
+      await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+      var page = await JsonSerializer.DeserializeAsync(
+        responseStream,
+        FabricJsonContext.Default.PaginatedResponseWorkspace,
+        cancellationToken) ?? throw new InvalidOperationException("Fabric returned an empty response.");
+
+      workspaces.AddRange(page.Value);
+      nextPage = ParseContinuationUri(page.ContinuationUri);
+    }
+
+    return workspaces;
+  }
+
+  private static Uri? ParseContinuationUri(string? value)
+  {
+    if (string.IsNullOrWhiteSpace(value))
+    {
+      return null;
+    }
+
+    var uri = new Uri(value, UriKind.Absolute);
+    if (uri.Scheme != Uri.UriSchemeHttps ||
+      !uri.Host.Equals("api.fabric.microsoft.com", StringComparison.OrdinalIgnoreCase))
+    {
+      throw new InvalidOperationException("Fabric returned an unexpected continuation URI.");
+    }
+
+    return uri;
+  }
 }
+
+public sealed record PaginatedResponse<T>(List<T> Value, string? ContinuationUri);
+
+[JsonSerializable(typeof(PaginatedResponse<Workspace>))]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+internal sealed partial class FabricJsonContext : JsonSerializerContext;
 ```

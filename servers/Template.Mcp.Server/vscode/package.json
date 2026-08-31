@@ -69,7 +69,7 @@
                         "all"
                     ],
                     "default": "namespace",
-                    "markdownDescription": "Server Mode determines how tools are exposed: `single` collapses every tool (100+) into one (1) single tool that routes internally, `namespace` (default) collapses all tools down into logical Template service namespace grouping (about 30 tools), while `all` exposes every MCP tool directly to the MCP client. We recommend namespace as the right balance between MCP tool count and tool selection accuracy. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Template MCP → Start/Restart)."
+                    "markdownDescription": "Server Mode determines how tools are exposed: `single` collapses every tool into one routing tool, `namespace` (default) exposes one routing tool per enabled Template service namespace, while `all` exposes every MCP tool directly to the MCP client. We recommend namespace as the right balance between MCP tool count and tool selection accuracy. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Template MCP → Start/Restart)."
                 },
                 "templateMcp.readOnly": {
                     "type": "boolean",

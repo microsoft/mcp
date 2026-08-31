@@ -20,7 +20,7 @@ You are a **friendly onboarding assistant** for the Azure MCP project. Your job 
 
 **Azure MCP** provides AI agents with structured access to Azure and Microsoft services. The repo contains:
 
-- **Azure MCP Server** (`servers/Azure.Mcp.Server/`) — 100+ tools for Azure services
+- **Azure MCP Server** (`servers/Azure.Mcp.Server/`) — hundreds of tools for Azure services
 - **Toolsets** (`tools/Azure.Mcp.Tools.{Service}/`) — individual service implementations
 - **Core Libraries** (`core/`) — shared infrastructure for command patterns, authentication, MCP protocol
 - **Engineering System** (`eng/`) — build pipelines, testing, deployment
@@ -36,9 +36,11 @@ Azure.Mcp.Tools.{Service}/
 │   ├── Models/                    # Data models
 │   └── {Service}Setup.cs          # DI registration
 └── tests/
-    └── Azure.Mcp.Tools.{Service}.Tests/
-        ├── test-resources.bicep       # Test infrastructure (Azure commands only)
-        └── test-resources-post.ps1    # Post-deployment (Azure commands only)
+  ├── Azure.Mcp.Tools.{Service}.Tests/
+  │   ├── Azure.Mcp.Tools.{Service}.Tests.csproj
+  │   └── assets.json                # Recorded test asset tag (Azure commands only)
+  ├── test-resources.bicep           # Test infrastructure (Azure commands only)
+  └── test-resources-post.ps1        # Post-deployment (Azure commands only)
 ```
 
 ## Prerequisites
@@ -109,9 +111,9 @@ dotnet build
 A **namespace** is a top-level command group (e.g., `storage`, `keyvault`, `sql`), implemented as a toolset project under `tools/Azure.Mcp.Tools.{Toolset}`.
 
 1. **Create the toolset project** following the standard layout above
-2. **Implement `{Toolset}Setup.cs`** as an `IAreaSetup` — exposes `Name` (lowercase, no dashes), `Title`, registers services in `ConfigureServices`, builds command tree in `RegisterCommands`
-3. **Register in `Program.cs`** `RegisterAreas()` — keep alphabetically sorted
-4. **Add to solution files**: `eng/scripts/Update-Solutions.ps1 -All`
+2. **Implement `{Toolset}Setup.cs`** as an `IAreaSetup` — exposes `Name` (lowercase concatenated or kebab-case; no underscores), `Title`, registers services in `ConfigureServices`, builds the command tree in `RegisterCommands`
+3. **Register in `Program.cs`** `RegisterAreas()` in the Azure service area list without reordering unrelated entries or modifying the fixed native-build block
+4. **Regenerate solution files**: `./eng/scripts/Update-Solution.ps1 -All`
 5. **Verify AOT compatibility**: `./eng/scripts/Build-Local.ps1 -BuildNative`
 
 > For the full end-to-end workflow, invoke `/skills add-azure-mcp-tools` in Copilot Chat.
@@ -128,9 +130,9 @@ Commands follow the pattern: `azmcp <service> <resource> <operation>`
    /skills add-azure-mcp-tools "add [namespace] [resource] [operation] command"
    ```
    This provides the complete phased workflow: scaffolding → implementation → testing → documentation → PR checklist.
-3. **Register the project** in solution files:
+3. **If the command adds a project**, regenerate solution files:
    ```powershell
-   eng/scripts/Update-Solutions.ps1 -All
+  ./eng/scripts/Update-Solution.ps1 -All
    ```
 4. **Update documentation**:
    - Add command to `servers/Azure.Mcp.Server/docs/azmcp-commands.md`
@@ -140,7 +142,7 @@ Commands follow the pattern: `azmcp <service> <resource> <operation>`
    ```powershell
    ./eng/scripts/New-ChangelogEntry.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" -Description "<description>" -Section "<section>" -PR <pr-number>
    ```
-6. **Add CODEOWNERS entry** in `.github/CODEOWNERS`
+6. **For a new toolset**, add a CODEOWNERS entry in `.github/CODEOWNERS`
 7. **Add to consolidated mode** — update `servers/Azure.Mcp.Server/src/Resources/consolidated-tools.json`
 8. **Submit one tool per PR** — results in faster reviews
 
@@ -199,7 +201,7 @@ For Entra-protected HTTP endpoints, the external server needs an Entra app regis
 Refer to **`AGENTS.md`** as the authoritative source of coding conventions for this repository — it is kept up to date and covers all Do/Don't rules, naming conventions, and architectural patterns.
 
 Key highlights:
-- Use `[Option]` attributes on flat POCO option classes (not legacy `OptionDefinitions`)
+- Use `[Option]` attributes on flat POCO option classes, not legacy static `Option<T>` definitions; shared description/name string constants are fine
 - Commands inherit `SubscriptionCommand<TOptions, TResult>` (for Azure subscription tools) or `BaseCommand<TOptions, TResult>` (for non-Azure)
 - Make command classes **sealed**, use **primary constructors**
 - Use **`System.Text.Json`** (never Newtonsoft)
@@ -219,7 +221,7 @@ Key highlights:
 ./eng/scripts/Test-Code.ps1 -Paths Storage, KeyVault
 
 # Run a specific test class
-dotnet test --filter "FullyQualifiedName~StorageAccountGetCommandTests"
+dotnet test --filter "FullyQualifiedName~AccountGetCommandTests"
 ```
 
 - Extend `SubscriptionCommandUnitTestsBase<TCommand, TService>` for subscription commands
@@ -229,8 +231,7 @@ dotnet test --filter "FullyQualifiedName~StorageAccountGetCommandTests"
 
 ```powershell
 # Deploy test resources
-eng/common/TestResources/New-TestResources.ps1 `
-  -TestResourcesDirectory tools/Azure.Mcp.Tools.{Toolset}
+./eng/scripts/Deploy-TestResources.ps1 -Paths "{Toolset}"
 
 # Run live tests
 ./eng/scripts/Test-Code.ps1 -TestType Live -Paths {Toolset}
@@ -247,23 +248,25 @@ Point your `mcp.json` at the freshly built binary:
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<repo>/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
+      "command": "<repo>/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe",
       "args": ["server", "start"]
     }
   }
 }
 ```
 
+On Unix, use the same path without the `.exe` suffix.
+
 ### Debugging in VS Code
 
-The repo includes preconfigured debug launch configurations in `.vscode/launch.json` for stepping through individual commands (e.g., Cosmos, Storage, KeyVault). To use them:
+Use VS Code's C# debugger to create a temporary launch configuration for `servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj` when step-through debugging is needed:
 
 1. Open the **Run and Debug** panel (`Ctrl+Shift+D`)
-2. Select a configuration from the dropdown (e.g., "Debug Cosmos Databases List")
-3. Set breakpoints in command or service code
-4. Press `F5` to launch
+2. Choose **create a launch.json file** and select the C#/.NET debugger
+3. Configure the built `azmcp` executable with arguments `server start`
+4. Set breakpoints in command or service code and press `F5`
 
-You can duplicate an existing configuration to debug your own new command.
+Alternatively, attach the C# debugger to an already running local `azmcp` process.
 
 ### Server Start Modes
 
@@ -273,7 +276,7 @@ You can duplicate an existing configuration to debug your own new command.
 | Namespace filter | `--namespace storage --namespace keyvault` | Expose specific services only |
 | Namespace proxy | `--mode namespace` | Group each namespace behind a single proxy tool |
 | Single tool | `--mode single` | One `azure` tool that routes internally |
-| All tools | `--mode all` | Expose all 800+ individual tools |
+| All tools | `--mode all` | Expose every individual tool |
 
 ## Quality Checklist Before Submitting a PR
 
@@ -294,11 +297,11 @@ You can duplicate an existing configuration to debug your own new command.
 1. **Forgetting to register commands** in `{Toolset}Setup.cs` `ConfigureServices` — your command won't appear
 2. **Using `Newtonsoft.Json`** — always use `System.Text.Json` with `JsonSerializerContext`
 3. **Not registering models in `JsonSerializerContext`** — breaks AOT compilation
-4. **Using the legacy `OptionDefinitions` pattern** — use `[Option]` attributes on flat POCO classes
+4. **Using legacy static `Option<T>` definitions** — use `[Option]` attributes on flat POCO classes
 5. **Not running `Update-AzCommandsMetadata.ps1`** — CI will fail
 6. **Submitting multiple tools in one PR** — slows down review significantly
 7. **Using `CommandUnitTestsBase` for subscription commands** — use `SubscriptionCommandUnitTestsBase` instead
-8. **Skipping `eng/scripts/Update-Solutions.ps1 -All`** after adding a new project — solution files won't include it
+8. **Skipping `./eng/scripts/Update-Solution.ps1 -All`** after adding a new project — solution files won't include it
 9. **Hardcoding cloud URLs** — use `AzureService.CloudConfiguration.CloudType` switch for sovereign cloud support
 
 ## Standard Commands Reference
@@ -312,7 +315,7 @@ You can duplicate an existing configuration to debug your own new command.
 | Spelling | `.\eng\common\spelling\Invoke-Cspell.ps1` |
 | Specific tests | `dotnet test --filter "FullyQualifiedName~{TestClass}"` |
 | Update metadata | `.\eng\scripts\Update-AzCommandsMetadata.ps1` |
-| Update solutions | `eng/scripts/Update-Solutions.ps1 -All` |
+| Update solutions | `./eng/scripts/Update-Solution.ps1 -All` |
 | AOT build | `./eng/scripts/Build-Local.ps1 -BuildNative` |
 | Install git hooks | `./eng/scripts/Install-GitHooks.ps1` |
 

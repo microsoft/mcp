@@ -4,7 +4,7 @@ This document describes how to use `IHttpClientFactory` for HTTP requests in Azu
 
 ## Overview
 
-Azure MCP uses the standard .NET `IHttpClientFactory` for centralized HTTP client management. This provides handler pooling, automatic DNS refresh, and consistent configuration across all HTTP requests.
+Azure MCP uses the standard .NET `IHttpClientFactory` for centralized HTTP client management. Direct HTTP consumers inject the factory. Azure-facing services obtain its clients through `IAzureService.GetClient()` and assign them to Azure SDK transports.
 
 ## Key Features
 
@@ -25,7 +25,7 @@ The following environment variables are automatically applied:
 
 ## Usage
 
-### Using in Services
+### Direct HTTP Services
 
 Services should inject `IHttpClientFactory` and create clients as needed:
 
@@ -34,24 +34,43 @@ public class MyService(IHttpClientFactory httpClientFactory)
 {
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
-    public async Task MakeRequestAsync()
+    public async Task MakeRequestAsync(CancellationToken cancellationToken)
     {
         var client = _httpClientFactory.CreateClient();
-        var response = await client.GetAsync("https://api.example.com/endpoint");
+        var response = await client.GetAsync("https://api.example.com/endpoint", cancellationToken);
     }
 }
 ```
+
+### Azure SDK Services
+
+Azure SDK services inject `IAzureService`, inherit `BaseAzureService` (or `BaseAzureResourceService`), and use the factory-backed client exposed by the base service:
+
+```csharp
+public sealed class MyAzureService(IAzureService azureService)
+    : BaseAzureService(azureService)
+{
+    private MyClientOptions CreateClientOptions()
+    {
+        var options = AddDefaultPolicies(new MyClientOptions());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
+        return options;
+    }
+}
+```
+
+Do not instantiate `HttpClient` or an Azure SDK default transport directly. The factory-backed transport is required for configured proxies and recorded-test redirection.
 
 ### Setting Custom Timeout
 
 For operations requiring longer timeouts, set it on the client instance:
 
 ```csharp
-public async Task LongRunningOperationAsync()
+public async Task LongRunningOperationAsync(Uri url, CancellationToken cancellationToken)
 {
     var client = _httpClientFactory.CreateClient();
-    client.Timeout = TimeSpan.FromMinutes(5); 
-    var response = await client.GetAsync(url);
+    client.Timeout = TimeSpan.FromMinutes(5);
+    var response = await client.GetAsync(url, cancellationToken);
 }
 ```
 
@@ -68,12 +87,15 @@ var mockFactory = Substitute.For<IHttpClientFactory>();
 mockFactory.CreateClient().Returns(new HttpClient(mockHandler));
 ```
 
+For an Azure SDK service, substitute `IAzureService.GetClient()` instead.
+
 ### Live/Recorded Tests
 
-Use `TestHttpClientFactoryProvider` for tests requiring recording support:
+The MCP recorded-test host configures proxy-aware clients automatically. When a test constructs services manually, `TestHttpClientFactoryProvider.Create` returns a configured `ServiceProvider`:
 
 ```csharp
-_httpClientFactory = TestHttpClientFactoryProvider.Create(fixture);
+using var serviceProvider = TestHttpClientFactoryProvider.Create(fixture);
+var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
 ```
 
 ## Example: Proxy Configuration

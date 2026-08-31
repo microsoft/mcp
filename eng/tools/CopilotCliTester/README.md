@@ -266,7 +266,7 @@ SUMMARY
 
 1. **Exact match** on `mcpToolName` (from SDK event data)
 2. **Exact match** on `toolName`
-3. **Namespace-prefixed match** — e.g., `azure_storage_account_list` matches `storage_account_list`
+3. **Namespace-prefixed match** — e.g., `azure_storage_account_get` matches `storage_account_get`
 4. **Command argument match** — checks if `arguments.command` equals the expected tool name (for namespace/single modes)
 
 Internal tools like `report_intent` are excluded from matching.
@@ -285,7 +285,7 @@ The `--parallel` flag controls concurrent test execution using a `SemaphoreSlim`
 
 ## Namespace Examples
 
-Namespaces are derived from tool name prefixes — the first `_`-delimited segment of each tool name (e.g., `storage_account_get` → namespace `storage`). The `--namespace` option performs a **partial, case-insensitive** match against these derived prefixes, so `--namespace storage` matches tools like `storage_account_get` and `storage_blob_list`.
+Namespaces are derived from tool name prefixes — the first `_`-delimited segment of each tool name (e.g., `storage_account_get` → namespace `storage`). The `--namespace` option performs a **partial, case-insensitive** match against these derived prefixes, so `--namespace storage` matches tools like `storage_account_get` and `storage_blob_get`.
 
 Use `--list-namespaces` to see all valid namespace values from the prompts file.
 
@@ -293,10 +293,10 @@ Some example namespaces (derived from tool name prefixes in `e2eTestPrompts.md`)
 
 | Namespace | Example Tools |
 |-----------|---------------|
-| `storage` | `storage_account_get`, `storage_blob_list` |
-| `keyvault` | `keyvault_secret_get`, `keyvault_key_list` |
+| `storage` | `storage_account_get`, `storage_blob_get` |
+| `keyvault` | `keyvault_secret_get`, `keyvault_key_get` |
 | `redis` | `redis_list`, `redis_create` |
-| `sql` | `sql_database_show`, `sql_server_get` |
+| `sql` | `sql_db_get`, `sql_server_get` |
 | `cosmos` | `cosmos_database_container_item_query` |
 | `appservice` | `appservice_webapp_get` |
 | `monitor` | `monitor_metrics_query`, `monitor_workspace_log_query` |

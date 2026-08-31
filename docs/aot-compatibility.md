@@ -43,7 +43,7 @@ This section explains the Native AOT checks enforced in the `azmcp` CI and what 
 
 ### Policy & Notes
 
-- Do **not** add any external packages under the `'$(BuildNative)' == 'true'` ItemGroup in **AzureMcp.Cli.csproj**. This exception applies **only** to `Azure.ResourceManager.*` packages.
+- Do **not** add conditional package/project exclusions to `servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj` or modify the fixed `#if !BUILD_NATIVE` block in `Program.cs`. New contributions must remain available in native builds.
 - Please call out any `Azure.ResourceManager.*` usage in your PR so reviewers can track it.
 
 ## Making Your Library AOT Compatible

@@ -96,8 +96,8 @@ We encourage you to test the following areas:
 
 See [Server Mode Testing](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/installation-testing.md#server-mode-testing) for detailed instructions.
 
-- [ ] **Namespace mode** (default) - Tools grouped by Azure service (~40-50 tools)
-- [ ] **All mode** - All tools exposed individually (100+ tools)
+- [ ] **Namespace mode** (default) - One routing tool per enabled Azure service namespace
+- [ ] **All mode** - All tools exposed individually (hundreds of tools; record the observed count)
 - [ ] **Single mode** - Single unified tool with internal routing
 - [ ] **Read-only mode** - Blocks all write/destructive operations
 - [ ] **Namespace filtering** - Expose specific services only (e.g., storage, keyvault)

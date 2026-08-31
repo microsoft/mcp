@@ -36,7 +36,7 @@ Before testing installation, ensure you have:
 
 4. **Install via NuGet**
    ```powershell
-   dotnet tool install Azure.Mcp
+   dotnet tool install --global Azure.Mcp
    ```
 
 #### Verification
@@ -79,7 +79,7 @@ azmcp server start --help
 
 3. **Install via .NET Tool**
    ```bash
-   dotnet tool install Azure.Mcp
+   dotnet tool install --global Azure.Mcp
    ```
 
 #### Verification
@@ -133,7 +133,7 @@ azmcp server start --help
 
 3. **Install via .NET Tool** (Alternative)
    ```bash
-   dotnet tool install Azure.Mcp
+   dotnet tool install --global Azure.Mcp
    ```
 
 #### Verification
@@ -344,8 +344,8 @@ Different distribution mechanisms provide different ways to configure server mod
 - [ ] Default is "namespace"
 - [ ] Changing mode requires server restart (prompt shown)
 - [ ] Tool count changes after restart:
-  - namespace: ~40-50 tools
-  - all: 100+ tools
+   - namespace: one routing tool per enabled namespace
+   - all: hundreds of individual tools (record the observed count)
   - single: 1 tool
 
 #### Test 2: Toggle Read-Only Mode via UI
@@ -445,7 +445,7 @@ azmcp server start --mode namespace
 
 **Verify:**
 - [ ] Server starts successfully
-- [ ] ~40-50 namespace-level tools exposed
+- [ ] One routing tool is exposed per enabled namespace
 - [ ] Tools grouped by service
 
 **Test all mode:**
@@ -455,7 +455,7 @@ azmcp server start --mode all
 
 **Verify:**
 - [ ] Server starts successfully
-- [ ] 100+ individual tools exposed
+- [ ] Every individual tool is exposed
 - [ ] Each operation has dedicated tool
 
 **Test single mode:**
@@ -505,7 +505,7 @@ azmcp server start --namespace storage --namespace keyvault
 
 **Filter to specific tools:**
 ```bash
-azmcp server start --tool azmcp_subscription_list --tool azmcp_group_list
+azmcp server start --tool subscription_list --tool group_list
 ```
 
 **Verify:**
@@ -615,7 +615,7 @@ Based on IntelliJ's MCP configuration dialog:
 **Verify:**
 - [ ] Arguments field accepts mode flag
 - [ ] Server restarts with new configuration
-- [ ] Namespace mode applied (~40-50 tools)
+- [ ] Namespace mode applied (one routing tool per enabled namespace)
 - [ ] Tools grouped by service namespace
 
 #### Test 3: Configure Read-Only Mode via Arguments

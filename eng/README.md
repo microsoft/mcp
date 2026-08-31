@@ -83,7 +83,7 @@ To simplify the work of collection server and platform metadata in build scripts
       "hasUnitTests": false
     },
     {
-      "path": "tools/Fabric.Mcp.Tools.PublicApi",
+      "path": "tools/Fabric.Mcp.Tools.Docs",
       "testResourcesPath": null,
       "hasLiveTests": false,
       "hasTestResources": false,

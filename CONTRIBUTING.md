@@ -177,7 +177,7 @@ Do not assume the Pull Request pipeline will always ingest a missing package aut
    - Add the new command to [/servers/Azure.Mcp.Server/docs/azmcp-commands.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
    - Run `.\eng\scripts\Update-AzCommandsMetadata.ps1` to update tool metadata in azmcp-commands.md (required for CI)
    - Add test prompts for the new command in [/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
-   - Update [README.md](https://github.com/microsoft/mcp/blob/main/README.md) to mention the new command
+    - Update the [Azure MCP Server README](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md) with the capability and representative prompts when applicable
 
 6. **Create a changelog entry** (if your change is a new feature, bug fix, or breaking change):
    - Use the generator script to create a changelog entry (see `docs/changelog-entries.md` for details):
@@ -192,10 +192,10 @@ Do not assume the Pull Request pipeline will always ingest a missing package aut
    - Or manually create a YAML file in `servers/{ServerName}/changelog-entries/`
    - Not every PR needs a changelog entry - skip for internal refactoring, test-only changes, or minor updates. If unsure, add to the "Other Changes" section or ask a maintainer.
 
-7. **Add CODEOWNERS entry** in [CODEOWNERS](https://github.com/microsoft/mcp/blob/main/.github/CODEOWNERS) [(example)](https://github.com/microsoft/mcp/commit/08f73efe826d5d47c0f93be5ed9e614740e82091)
+7. **For a new toolset, add a CODEOWNERS entry** in [CODEOWNERS](https://github.com/microsoft/mcp/blob/main/.github/CODEOWNERS) [(example)](https://github.com/microsoft/mcp/commit/08f73efe826d5d47c0f93be5ed9e614740e82091)
 
 8. **Add new tool to consolidated mode**:
-   - Open `core/Azure.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json` file, where the tool grouping definition is stored for consolidated mode. In Agent mode, add it to the chat as context.
+  - Open `servers/Azure.Mcp.Server/src/Resources/consolidated-tools.json`, where the tool grouping definition is stored for consolidated mode. In Agent mode, add it to the chat as context.
    - Paste the follow prompt for Copilot to generate the change to add the new tool:
       ```txt
       I have this list of tools which haven't been matched with any consolidated tools in this file. Help me add them to the one with the best matching category and exact matching toolMetadata. Update existing consolidated tools where newly mapped tools are added. If you can't find one, suggest a new consolidated tool.
@@ -205,7 +205,10 @@ Do not assume the Pull Request pipeline will always ingest a missing package aut
    - Use the following command to find out the correct tool name for your new tool
       ```
       cd servers/Azure.Mcp.Server/src/bin/Debug/net10.0
-      ./azmcp[.exe] tools list --name --namespace <tool_area>
+      # Windows
+      ./azmcp.exe tools list --name-only --namespace <tool_area>
+      # macOS/Linux
+      ./azmcp tools list --name-only --namespace <tool_area>
       ```
    - Commit the change.
 
@@ -488,7 +491,7 @@ It honors both --read-only and --namespace switches.
     "azure-mcp-server": {
       "type": "stdio",
       "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
-      "args": ["server", "start", "--tool", "azmcp_storage_account_get", "--tool", "azmcp_subscription_list"]
+      "args": ["server", "start", "--tool", "storage_account_get", "--tool", "subscription_list"]
     }
   }
 }
@@ -500,7 +503,7 @@ It honors both --read-only and --namespace switches.
 > - **Consolidated Mode**: `--mode consolidated` - exposes consolidated tools grouping related operations, optimized for AI agents.
 > - **Namespace Mode**: `--namespace <service-name>` - expose specific services
 > - **Namespace Proxy Mode**: `--mode namespace` - collapse tools by namespace (useful for VS Code's 128 tool limit)
-> - **All Tools Mode**: `--mode all` - expose all ~800+ individual tools
+> - **All Tools Mode**: `--mode all` - expose every individual tool
 > - **Single Tool Mode**: `--mode single` - single "azure" tool with internal routing
 > - **Specific Tool Mode**: `--tool <tool-name>` - expose only specific tools by name (finest granularity)
 > - **Combined Mode**: Multiple options can be used together (`--namespace` + `--mode` etc.)
@@ -561,7 +564,10 @@ Before running live tests:
 | `SubscriptionId`    | string | Target subscription ID. If omitted, the current Azure context subscription (from `Get-AzContext`) is used.                                 |
 | `ResourceGroupName` | string | Resource group name. Defaults to `{username}-mcp{hash(username)}`.                                                                         |
 | `BaseName`          | string | Base name prefix for resources. Defaults to `mcp{hash}`.                                                                                   |
+| `Location`          | string | Optional Azure region passed to the test-resource deployment.                                                                              |
 | `Unique`            | switch | Use a unique GUID-based hash for this invocation instead of the stable username+subscription hash.                                         |
+| `Parallel`          | switch | Deploy matching test-resource paths in parallel.                                                                                            |
+| `UseHttpTransport`  | switch | Write test settings that run the MCP test server over HTTP instead of stdio.                                                               |
 | `DeleteAfterHours`  | int    | Hours after which resources are tagged for deletion. Defaults to `12`.                                                                     |
 
 Examples:
