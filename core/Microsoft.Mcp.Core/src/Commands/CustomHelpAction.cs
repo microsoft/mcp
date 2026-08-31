@@ -37,20 +37,23 @@ internal class CustomHelpAction : SynchronousCommandLineAction
         _ => category.ToString()
     };
 
+    public override bool ClearsParseErrors => _defaultHelp.ClearsParseErrors;
+
     public override int Invoke(ParseResult parseResult)
     {
-        Console.WriteLine($"{_options.Value.Name} {_options.Value.Version}{Environment.NewLine}");
+        var output = parseResult.InvocationConfiguration.Output;
+        output.WriteLine($"{_options.Value.Name} {_options.Value.Version}{Environment.NewLine}");
 
         if (_serviceAreas != null && parseResult.CommandResult.Command is RootCommand rootCommand)
         {
-            RenderGroupAreasHelp(rootCommand);
+            RenderGroupAreasHelp(rootCommand, output);
             return 0;
         }
 
         return _defaultHelp.Invoke(parseResult);
     }
 
-    private void RenderGroupAreasHelp(RootCommand rootCommand)
+    private void RenderGroupAreasHelp(RootCommand rootCommand, TextWriter output)
     {
         const int descriptionColumnWidth = 72;
 
@@ -59,20 +62,20 @@ internal class CustomHelpAction : SynchronousCommandLineAction
 
         var indent = new string(' ', commandColumnWidth + 4);
 
-        Console.WriteLine($"Description:{Environment.NewLine}  {rootCommand.Description}{Environment.NewLine}");
-        Console.WriteLine($"Usage:{Environment.NewLine}  {_options.Value.RootCommandGroupName} [command] [options]{Environment.NewLine}");
-        Console.WriteLine("Options:");
-        Console.WriteLine("  -?, -h, --help  Show help and usage information");
-        Console.WriteLine("  --version       Show version information");
+        output.WriteLine($"Description:{Environment.NewLine}  {rootCommand.Description}{Environment.NewLine}");
+        output.WriteLine($"Usage:{Environment.NewLine}  {_options.Value.RootCommandGroupName} [command] [options]{Environment.NewLine}");
+        output.WriteLine("Options:");
+        output.WriteLine("  -?, -h, --help  Show help and usage information");
+        output.WriteLine("  --version       Show version information");
 
-        Console.WriteLine($"{Environment.NewLine}Examples:");
-        Console.WriteLine($"  {_options.Value.RootCommandGroupName} storage account get --subscription \"my-sub\"");
-        Console.WriteLine($"  {_options.Value.RootCommandGroupName} server start");
+        output.WriteLine($"{Environment.NewLine}Examples:");
+        output.WriteLine($"  {_options.Value.RootCommandGroupName} storage account get --subscription \"my-sub\"");
+        output.WriteLine($"  {_options.Value.RootCommandGroupName} server start");
 
         var groupedAreas = _serviceAreas!.GroupBy(area => area.Category).OrderBy(g => (int)g.Key);
         foreach (var group in groupedAreas)
         {
-            Console.WriteLine($"\n{GetCategoryName(group.Key)}:");
+            output.WriteLine($"\n{GetCategoryName(group.Key)}:");
             foreach (var commandArea in group.OrderBy(a => a.Name))
             {
                 var subCommand = rootCommand.Subcommands.FirstOrDefault(c => c.Name.Equals(commandArea.Name));
@@ -80,7 +83,7 @@ internal class CustomHelpAction : SynchronousCommandLineAction
                 {
                     var description = subCommand.Description ?? string.Empty;
                     var wrappedDescription = WrapDescription(description, descriptionColumnWidth, indent);
-                    Console.WriteLine($"  {commandArea.Name.PadRight(commandColumnWidth)}  {wrappedDescription}");
+                    output.WriteLine($"  {commandArea.Name.PadRight(commandColumnWidth)}  {wrappedDescription}");
                 }
             }
         }
