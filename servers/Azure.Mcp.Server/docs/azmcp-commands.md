@@ -329,6 +329,7 @@ azmcp server info
 ```bash
 # List Advisor recommendations in a subscription, with optional server-side filters
 # Only active recommendations (status 'New') are returned; dismissed and postponed ones are excluded
+# Each result includes the stable recommendation ID accepted by advisor recommendation update
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation list --subscription <subscription> \
                                   [--top <top>] \

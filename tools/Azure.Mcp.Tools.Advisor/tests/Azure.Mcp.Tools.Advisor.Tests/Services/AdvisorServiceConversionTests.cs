@@ -69,7 +69,7 @@ public class AdvisorServiceConversionTests
         Assert.Equal("Security", result.Category);
         Assert.Equal("High", result.Impact);
         Assert.Equal("Microsoft.Storage/storageAccounts", result.ImpactedResourceType);
-        Assert.Null(result.RecommendationId);
+        Assert.Equal("rec1", result.RecommendationId);
         Assert.Null(result.RecommendationStatus);
         Assert.Null(result.RecommendationDismissReason);
         Assert.Null(result.PostponedUntilDateTime);

@@ -10,6 +10,7 @@ internal static class RecommendationStateUpdateValidator
     public static void AddValidationErrors(
         RecommendationStatus recommendationStatus,
         DateTimeOffset? postponedUntilDateTime,
+        RecommendationDismissReason? recommendationDismissReason,
         ICollection<string> errors)
     {
         ArgumentNullException.ThrowIfNull(errors);
@@ -25,16 +26,25 @@ internal static class RecommendationStateUpdateValidator
                 errors.Add("--postponed-until-date-time must be in the future.");
             }
         }
+
+        if (recommendationStatus != RecommendationStatus.Dismissed &&
+            recommendationDismissReason is not null)
+        {
+            errors.Add(
+                "--recommendation-dismiss-reason can only be used when --recommendation-status is Dismissed.");
+        }
     }
 
     public static void Validate(
         RecommendationStatus recommendationStatus,
-        DateTimeOffset? postponedUntilDateTime)
+        DateTimeOffset? postponedUntilDateTime,
+        RecommendationDismissReason? recommendationDismissReason)
     {
         var errors = new List<string>();
         AddValidationErrors(
             recommendationStatus,
             postponedUntilDateTime,
+            recommendationDismissReason,
             errors);
 
         if (errors.Count > 0)

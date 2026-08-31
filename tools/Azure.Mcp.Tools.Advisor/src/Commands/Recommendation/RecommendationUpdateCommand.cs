@@ -54,6 +54,7 @@ public sealed class RecommendationUpdateCommand(
         RecommendationStateUpdateValidator.AddValidationErrors(
             options.RecommendationStatus,
             options.PostponedUntilDateTime,
+            options.RecommendationDismissReason,
             validationResult.Errors);
     }
 

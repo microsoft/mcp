@@ -86,7 +86,8 @@ public class AdvisorService(IAzureService azureService)
             (nameof(recommendationId), recommendationId));
         RecommendationStateUpdateValidator.Validate(
             recommendationStatus,
-            postponedUntilDateTime);
+            postponedUntilDateTime,
+            recommendationDismissReason);
         recommendationDismissReason = RecommendationStateUpdateValidator.ResolveDismissReason(
             recommendationStatus,
             recommendationDismissReason);
@@ -577,7 +578,7 @@ public class AdvisorService(IAzureService azureService)
             Category: properties?.Category ?? "Unknown",
             Impact: properties?.Impact,
             ImpactedResourceType: ParseImpactedResourceType(resourceId),
-            RecommendationId: includeLifecycleState ? advisorRecommendation.ResourceName : null,
+            RecommendationId: advisorRecommendation.ResourceName,
             RecommendationStatus: includeLifecycleState ? properties?.RecommendationStatus : null,
             RecommendationDismissReason: includeLifecycleState ? properties?.RecommendationDismissReason : null,
             PostponedUntilDateTime: includeLifecycleState ? properties?.PostponedUntilDateTime : null);

@@ -52,6 +52,7 @@ public class RecommendationUpdateCommandTests
     [InlineData("--subscription sub1 --recommendation-id rec-1 --recommendation-status Completed", true)]
     [InlineData("--subscription sub1 --recommendation-id rec-1 --recommendation-status Dismissed --recommendation-dismiss-reason Other", true)]
     [InlineData("--subscription sub1 --recommendation-id rec-1 --recommendation-status Dismissed", true)]
+    [InlineData("--subscription sub1 --recommendation-id rec-1 --recommendation-status Completed --recommendation-dismiss-reason RiskIsAcceptable", false)]
     [InlineData("--subscription sub1 --recommendation-status Completed", false)]
     [InlineData("--subscription sub1 --recommendation-id rec-1", false)]
     [InlineData("--recommendation-id rec-1 --recommendation-status Completed", false)]
@@ -104,6 +105,21 @@ public class RecommendationUpdateCommandTests
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("must be in the future", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DismissReasonForCompleted_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--recommendation-id", "rec-1",
+            "--recommendation-status", "Completed",
+            "--recommendation-dismiss-reason", "RiskIsAcceptable");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(
+            "--recommendation-dismiss-reason can only be used when --recommendation-status is Dismissed",
+            response.Message);
     }
 
     [Fact]

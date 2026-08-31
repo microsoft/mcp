@@ -53,7 +53,7 @@ public class AdvisorRecommendationUpdateServiceTests
             "rec/1",
             RecommendationStatus.Completed,
             DateTimeOffset.UtcNow.AddDays(10),
-            RecommendationDismissReason.Other,
+            recommendationDismissReason: null,
             cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpMethod.Patch, handler.Method);
@@ -189,6 +189,25 @@ public class AdvisorRecommendationUpdateServiceTests
                 cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains("--postponed-until-date-time is required", exception.Message);
+        _azureService.DidNotReceive().GetClient(Arg.Any<string?>());
+    }
+
+    [Fact]
+    public async Task UpdateRecommendationAsync_DismissReasonForCompleted_ThrowsArgumentException()
+    {
+        var service = new AdvisorService(_azureService);
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.UpdateRecommendationAsync(
+                SubscriptionId,
+                "rec-1",
+                RecommendationStatus.Completed,
+                recommendationDismissReason: RecommendationDismissReason.RiskIsAcceptable,
+                cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Contains(
+            "--recommendation-dismiss-reason can only be used when --recommendation-status is Dismissed",
+            exception.Message);
         _azureService.DidNotReceive().GetClient(Arg.Any<string?>());
     }
 
