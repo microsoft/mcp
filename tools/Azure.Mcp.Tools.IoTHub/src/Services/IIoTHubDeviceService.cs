@@ -14,4 +14,37 @@ public interface IIoTHubDeviceService
         string? tenant = null,
         int? maxCount = null,
         CancellationToken cancellationToken = default);
+
+    Task<DeviceIdentity> GetDevice(
+        string deviceId,
+        string name,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
+    Task<DeviceTwin> GetDeviceTwin(
+        string deviceId,
+        string name,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
+    Task<IoTHubQueryPage> RunQuery(
+        string query,
+        string name,
+        string resourceGroup,
+        string subscription,
+        int? maxCount = null,
+        string? continuationToken = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
+    Task<IoTHubRegistryStatistics> GetDeviceStatistics(
+        string name,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
 }

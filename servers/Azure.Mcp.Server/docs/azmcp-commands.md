@@ -2859,6 +2859,41 @@ azmcp insights get --scope tenant \
 azmcp iothub hub get --subscription <subscription> \
                      --resource-group <resource-group> \
                      --hub-name <iot-hub-name>
+
+# Show a device identity from an IoT Hub device registry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub device show --subscription <subscription> \
+                         --resource-group <resource-group> \
+                         --hub-name <iot-hub-name> \
+                         --device-id <device-id>
+
+# Get device statistics for an IoT Hub identity registry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub device stats --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --hub-name <iot-hub-name>
+
+# Get a device twin from an IoT Hub device registry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub device twin get --subscription <subscription> \
+                             --resource-group <resource-group> \
+                             --hub-name <iot-hub-name> \
+                             --device-id <device-id>
+
+# Run an IoT Hub query and return the matching results. The tool pages through IoT Hub internally and
+# aggregates every page, so a single call returns the full result set. Provide --query (raw SQL) or
+# --filters (structured predicates; fields are auto-discovered from the twin registry, validated, then
+# compiled). Use --max-count to cap the total items returned; if more matches exist than the cap, the tool
+# returns an error indicating the max-count limit was hit. Omit --max-count to return every match.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub query run --subscription <subscription> \
+                       --resource-group <resource-group> \
+                       --hub-name <iot-hub-name> \
+                       [--query <query>] \
+                       [--filters <filters-json>] \
+                       [--from <source>] \
+                       [--logical-operator <operator>] \
+                       [--max-count <max-count>]
 ```                     
 
 ### Azure Key Vault Operations
