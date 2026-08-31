@@ -3957,7 +3957,7 @@ azmcp resilience drill resource get --service-group <service-group> \
                                     [--name <name>]
 
 # Add, update, or exclude the resources (targets) of a drill
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill resource add-or-update --service-group <service-group> \
                                               --drill <drill> \
                                               --fault-duration-minutes <fault-duration-minutes> \
@@ -3973,7 +3973,7 @@ azmcp resilience drill run get --service-group <service-group> \
                                [--name <name>]
 
 # Mark a drill run stage complete, disabling further retries on that stage
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill run mark-complete --service-group <service-group> \
                                          --drill <drill> \
                                          --drill-run <drill-run> \
