@@ -54,7 +54,7 @@
           "description": "This tool may delete or modify existing resources in its environment."
         },
         "idempotent": {
-          "value": false,
+          "value": true,
           "description": "This tool includes operations that may produce additional effects when run multiple times with the same arguments."
         },
         "openWorld": {

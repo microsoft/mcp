@@ -26,7 +26,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Resources;
         the operation and returns the operation ID.
         """,
     Destructive = true,
-    Idempotent = false,
+    Idempotent = true,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
