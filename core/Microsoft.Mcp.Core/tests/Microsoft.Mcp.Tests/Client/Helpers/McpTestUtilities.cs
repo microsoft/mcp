@@ -242,35 +242,61 @@ public static class McpTestUtilities
             output,
             disableAuthentication);
 
-        using var readinessCancellation = new CancellationTokenSource();
-        var readinessTask = WaitForServerReadinessAsync(
-            serverUrl,
-            timeoutSeconds,
-            pollIntervalMs,
-            authenticationEnabled: !disableAuthentication,
-            readinessCancellation.Token);
-        var processExitTask = process.WaitForExitAsync();
-
-        if (await Task.WhenAny(readinessTask, processExitTask) == processExitTask)
+        CancellationToken testCancellationToken = TestContext.Current.CancellationToken;
+        using var readinessCancellation = CancellationTokenSource.CreateLinkedTokenSource(testCancellationToken);
+        try
         {
-            await readinessCancellation.CancelAsync();
+            var readinessTask = WaitForServerReadinessAsync(
+                serverUrl,
+                timeoutSeconds,
+                pollIntervalMs,
+                authenticationEnabled: !disableAuthentication,
+                readinessCancellation.Token);
+            var processExitTask = process.WaitForExitAsync(testCancellationToken);
+
+            if (await Task.WhenAny(readinessTask, processExitTask) == processExitTask)
+            {
+                testCancellationToken.ThrowIfCancellationRequested();
+                await readinessCancellation.CancelAsync();
+                try
+                {
+                    await readinessTask;
+                }
+                catch (OperationCanceledException)
+                {
+                }
+
+                throw new ClientTransportClosedException(new ClientCompletionDetails
+                {
+                    Exception = new InvalidOperationException($"HTTP server process exited with code {process.ExitCode} before becoming ready.")
+                });
+            }
+
+            await readinessTask;
+
+            return process;
+        }
+        catch
+        {
             try
             {
-                await readinessTask;
+                if (!process.HasExited)
+                {
+                    process.Kill(entireProcessTree: true);
+                    await process.WaitForExitAsync(CancellationToken.None);
+                }
             }
-            catch (OperationCanceledException)
+            catch
             {
+                // Preserve the startup or test cancellation exception.
+            }
+            finally
+            {
+                process.Dispose();
             }
 
-            throw new ClientTransportClosedException(new ClientCompletionDetails
-            {
-                Exception = new InvalidOperationException($"HTTP server process exited with code {process.ExitCode} before becoming ready.")
-            });
+            throw;
         }
-
-        await readinessTask;
-
-        return process;
     }
 
     /// <summary>

@@ -140,6 +140,10 @@ public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProx
 
     private static async Task AssertMethodNotFoundAsync(Func<Task> action, string method)
     {
+        // With the C# MCP SDK 2.1.0, HTTP turns an unsupported method into an HTTP 404
+        // while stdio surfaces the JSON-RPC MethodNotFound error as McpProtocolException.
+        // This transport-dependent behavior is controlled by the SDK; if it becomes
+        // consistent across transports, these assertions can be consolidated.
         if (string.Equals(Environment.GetEnvironmentVariable("MCP_TEST_TRANSPORT"), "http", StringComparison.OrdinalIgnoreCase))
         {
             var exception = await Assert.ThrowsAsync<HttpRequestException>(action);
