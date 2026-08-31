@@ -19,6 +19,10 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// <param name="logger">Logger instance for this tool loader.</param>
 public abstract class BaseToolLoader(ILogger logger) : IToolLoader
 {
+    private const string ElicitationDecisionPropertyName = "decision";
+    private const string ElicitationAcceptDecision = "accept";
+    private const string ElicitationRejectDecision = "reject";
+
     /// <summary>
     /// Logger instance for this tool loader.
     /// </summary>
@@ -271,18 +275,18 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
                 {
                     Properties = new Dictionary<string, ElicitRequestParams.PrimitiveSchemaDefinition>
                     {
-                        ["decision"] = new ElicitRequestParams.TitledSingleSelectEnumSchema
+                        [ElicitationDecisionPropertyName] = new ElicitRequestParams.TitledSingleSelectEnumSchema
                         {
                             Title = "Decision",
                             Description = "Approve or reject this sensitive operation.",
                             OneOf = new List<ElicitRequestParams.EnumSchemaOption>
                             {
-                                new() { Title = "Approve", Const = "accept" },
-                                new() { Title = "Reject", Const = "reject" }
+                                new() { Title = "Approve", Const = ElicitationAcceptDecision },
+                                new() { Title = "Reject", Const = ElicitationRejectDecision }
                             }
                         }
                     },
-                    Required = ["decision"]
+                    Required = [ElicitationDecisionPropertyName]
                 }
             };
 
@@ -295,9 +299,10 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
             // "Reject" (their selection lives in Content["decision"]). Require the envelope
             // action to be "accept" AND the decision value to be "accept"; otherwise treat the
             // operation as not approved and do not execute it.
-            bool envelopeAccepted = string.Equals(protocolResponse.Action, "accept", StringComparison.Ordinal);
-            string? decision = TryGetElicitationDecision(protocolResponse.Content);
-            bool approved = envelopeAccepted && string.Equals(decision, "accept", StringComparison.Ordinal);
+            bool decisionProvided = TryGetElicitationDecision(protocolResponse.Content, out string? decision);
+            bool approved = protocolResponse.IsAccepted &&
+                decisionProvided &&
+                string.Equals(decision, ElicitationAcceptDecision, StringComparison.Ordinal);
 
             if (!approved)
             {
@@ -332,19 +337,19 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     /// selection when a client submits the form, so it must be inspected to honor a rejection.
     /// </summary>
     /// <param name="content">The content payload returned in the elicitation response.</param>
-    /// <returns>
-    /// The decision string (e.g. "accept" or "reject") when present as a string value; otherwise
-    /// <c>null</c>.
-    /// </returns>
-    private static string? TryGetElicitationDecision(IDictionary<string, JsonElement>? content)
+    /// <param name="decision">The decision string when present as a string value; otherwise, <c>null</c>.</param>
+    /// <returns><c>true</c> when a string decision was found; otherwise, <c>false</c>.</returns>
+    private static bool TryGetElicitationDecision(IDictionary<string, JsonElement>? content, out string? decision)
     {
         if (content != null &&
-            content.TryGetValue("decision", out var decisionElement) &&
+            content.TryGetValue(ElicitationDecisionPropertyName, out var decisionElement) &&
             decisionElement.ValueKind == JsonValueKind.String)
         {
-            return decisionElement.GetString();
+            decision = decisionElement.GetString();
+            return decision != null;
         }
 
-        return null;
+        decision = null;
+        return false;
     }
 }

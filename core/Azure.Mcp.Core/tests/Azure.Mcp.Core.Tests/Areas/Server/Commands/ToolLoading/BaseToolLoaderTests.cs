@@ -375,8 +375,10 @@ public class BaseToolLoaderTests
             Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public async Task HandleSecretElicitation_WhenUserDeclines_RejectsOperation()
+    [Theory]
+    [InlineData("decline")]
+    [InlineData("cancel")]
+    public async Task HandleSecretElicitation_WhenEnvelopeNotAcceptedWithAcceptDecision_RejectsOperation(string action)
     {
         // Arrange
         var mockServer = Substitute.For<McpServer>();
@@ -384,7 +386,14 @@ public class BaseToolLoaderTests
         var mockResponse = new JsonRpcResponse
         {
             Id = new RequestId(1),
-            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "decline" })
+            Result = JsonSerializer.SerializeToNode(new ElicitResult
+            {
+                Action = action,
+                Content = new Dictionary<string, JsonElement>
+                {
+                    ["decision"] = JsonSerializer.SerializeToElement("accept")
+                }
+            })
         };
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
             .Returns(mockResponse);
