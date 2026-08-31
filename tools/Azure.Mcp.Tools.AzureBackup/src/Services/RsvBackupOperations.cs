@@ -10,7 +10,6 @@ using Azure.ResourceManager.RecoveryServices.Models;
 using Azure.ResourceManager.RecoveryServicesBackup;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Azure.ResourceManager.Resources;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
@@ -22,7 +21,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string location,
         string? sku, string? storageType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -30,7 +29,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(subscription), subscription),
             (nameof(location), location));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var collection = rgResource.GetRecoveryServicesVaults();
@@ -58,7 +57,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<BackupVaultInfo> GetVaultAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken,
+        string? tenant, CancellationToken cancellationToken,
         VaultExpand expand = VaultExpand.None)
     {
         ValidateRequiredParameters(
@@ -66,7 +65,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
@@ -80,12 +79,12 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<List<BackupVaultInfo>> ListVaultsAsync(
         string subscription, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken,
+        CancellationToken cancellationToken,
         VaultExpand expand = VaultExpand.None)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subId = SubscriptionResource.CreateResourceIdentifier(subscription);
         var subResource = armClient.GetSubscriptionResource(subId);
 
@@ -124,7 +123,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string policyName, string? containerName,
         string? datasourceType, DiskExclusionSpec? diskExclusion, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -133,7 +132,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(datasourceId), datasourceId),
             (nameof(policyName), policyName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
@@ -276,7 +275,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<ProtectedItemInfo> GetProtectedItemAsync(
         string vaultName, string resourceGroup, string subscription,
         string protectedItemName, string? containerName, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -284,12 +283,12 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(subscription), subscription),
             (nameof(protectedItemName), protectedItemName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         if (string.IsNullOrEmpty(containerName))
         {
             // Search by both internal RSV name and friendly/datasource name
-            var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+            var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
             var found = items.FirstOrDefault(i =>
                 (!string.IsNullOrEmpty(i.Name) && i.Name.Equals(protectedItemName, StringComparison.OrdinalIgnoreCase)) ||
                 MatchesFriendlyName(i, protectedItemName));
@@ -341,14 +340,14 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<List<ProtectedItemInfo>> ListProtectedItemsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
 
@@ -364,7 +363,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<BackupPolicyInfo> GetPolicyAsync(
         string vaultName, string resourceGroup, string subscription,
         string policyName, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -372,7 +371,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(subscription), subscription),
             (nameof(policyName), policyName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var policyId = BackupProtectionPolicyResource.CreateResourceIdentifier(
             subscription, resourceGroup, vaultName, policyName);
         var policyResource = armClient.GetBackupProtectionPolicyResource(policyId);
@@ -383,14 +382,14 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<List<BackupPolicyInfo>> ListPoliciesAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
 
@@ -406,7 +405,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<BackupJobInfo> GetJobAsync(
         string vaultName, string resourceGroup, string subscription,
         string jobId, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -414,7 +413,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(subscription), subscription),
             (nameof(jobId), jobId));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var jobResourceId = BackupJobResource.CreateResourceIdentifier(
             subscription, resourceGroup, vaultName, jobId);
         var jobResource = armClient.GetBackupJobResource(jobResourceId);
@@ -425,14 +424,14 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<List<BackupJobInfo>> ListJobsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
 
@@ -448,7 +447,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<RecoveryPointInfo> GetRecoveryPointAsync(
         string vaultName, string resourceGroup, string subscription,
         string protectedItemName, string recoveryPointId, string? containerName,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -461,12 +460,12 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         {
             // Auto-discover container from protected items list
             var resolvedItem = await ResolveProtectedItemContainerAsync(
-                vaultName, resourceGroup, subscription, protectedItemName, tenant, retryPolicy, cancellationToken);
+                vaultName, resourceGroup, subscription, protectedItemName, tenant, cancellationToken);
             containerName = resolvedItem.ContainerName;
             protectedItemName = resolvedItem.Name;
         }
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rpId = BackupRecoveryPointResource.CreateResourceIdentifier(
             subscription, resourceGroup, vaultName, FabricName, containerName!, protectedItemName, recoveryPointId);
         var rpResource = armClient.GetBackupRecoveryPointResource(rpId);
@@ -478,7 +477,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<List<RecoveryPointInfo>> ListRecoveryPointsAsync(
         string vaultName, string resourceGroup, string subscription,
         string protectedItemName, string? containerName,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -490,12 +489,12 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         {
             // Auto-discover container from protected items list
             var resolvedItem = await ResolveProtectedItemContainerAsync(
-                vaultName, resourceGroup, subscription, protectedItemName, tenant, retryPolicy, cancellationToken);
+                vaultName, resourceGroup, subscription, protectedItemName, tenant, cancellationToken);
             containerName = resolvedItem.ContainerName;
             protectedItemName = resolvedItem.Name;
         }
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var itemId = BackupProtectedItemResource.CreateResourceIdentifier(
             subscription, resourceGroup, vaultName, FabricName, containerName!, protectedItemName);
         var itemResource = armClient.GetBackupProtectedItemResource(itemId);
@@ -518,9 +517,9 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     private async Task<ProtectedItemInfo> ResolveProtectedItemContainerAsync(
         string vaultName, string resourceGroup, string subscription,
         string protectedItemName, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+        var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
         var found = items.FirstOrDefault(i =>
             (!string.IsNullOrEmpty(i.Name) && i.Name.Equals(protectedItemName, StringComparison.OrdinalIgnoreCase)) ||
             MatchesFriendlyName(i, protectedItemName));
@@ -541,14 +540,14 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         string vaultName, string resourceGroup, string subscription,
         string? redundancy, string? softDelete, string? softDeleteRetentionDays,
         string? immutabilityState, string? identityType, string? tags,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
@@ -591,12 +590,12 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         // since RSV vault patch only supports identity and tag updates.
         if (!string.IsNullOrEmpty(softDelete))
         {
-            await ConfigureSoftDeleteAsync(vaultName, resourceGroup, subscription, softDelete, softDeleteRetentionDays, tenant, retryPolicy, cancellationToken);
+            await ConfigureSoftDeleteAsync(vaultName, resourceGroup, subscription, softDelete, softDeleteRetentionDays, tenant, cancellationToken);
         }
 
         if (!string.IsNullOrEmpty(immutabilityState))
         {
-            await ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, immutabilityState, tenant, retryPolicy, cancellationToken);
+            await ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, immutabilityState, tenant, cancellationToken);
         }
 
         return new OperationResult("Succeeded", null, $"Vault '{vaultName}' updated successfully.");
@@ -623,7 +622,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<OperationResult> CreatePolicyAsync(
         Policy.PolicyCreateRequest request,
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -637,7 +636,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(policyName), policyName),
             (nameof(workloadType), workloadType));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultResourceId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultResourceId);
         var vault = await vaultResource.GetAsync(cancellationToken);
@@ -691,7 +690,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         string vaultName, string resourceGroup, string subscription,
         string policyName,
         string? scheduleTime, string? dailyRetentionDays,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -699,7 +698,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(subscription), subscription),
             (nameof(policyName), policyName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var policyCollection = rgResource.GetBackupProtectionPolicies(vaultName);
@@ -859,7 +858,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName, string resourceGroup, string subscription,
-        string immutabilityState, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string immutabilityState, string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -867,7 +866,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(subscription), subscription),
             (nameof(immutabilityState), immutabilityState));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
@@ -891,7 +890,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<OperationResult> ConfigureSoftDeleteAsync(
         string vaultName, string resourceGroup, string subscription,
         string softDeleteState, string? softDeleteRetentionDays,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -899,7 +898,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(subscription), subscription),
             (nameof(softDeleteState), softDeleteState));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
@@ -941,14 +940,14 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<OperationResult> ConfigureCrossRegionRestoreAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
@@ -1006,7 +1005,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<OperationResult> ConfigureMultiUserAuthorizationAsync(
         string vaultName, string resourceGroup, string subscription,
-        string resourceGuardId, string? tenant, RetryPolicyOptions? retryPolicy,
+        string resourceGuardId, string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -1015,7 +1014,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(subscription), subscription),
             (nameof(resourceGuardId), resourceGuardId));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
@@ -1041,7 +1040,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<OperationResult> DisableMultiUserAuthorizationAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy,
+        string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -1049,7 +1048,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
@@ -1066,7 +1065,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         string vaultName, string resourceGroup, string subscription,
         string keyVaultUri, string keyName, string identityType,
         string? keyVersion, string? userAssignedIdentityId,
-        string? tenant, RetryPolicyOptions? retryPolicy,
+        string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -1096,7 +1095,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             ? $"{kvUri}/keys/{keyName}"
             : $"{kvUri}/keys/{keyName}/{keyVersion}";
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
@@ -1413,7 +1412,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<OperationResult> UndeleteProtectedItemAsync(
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string? containerName, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -1421,7 +1420,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(subscription), subscription),
             (nameof(datasourceId), datasourceId));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         // Find the soft-deleted protected item by datasource ID
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
@@ -1692,14 +1691,14 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
         string vaultName, string resourceGroup, string subscription,
         string? workloadType, string? containerName, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
@@ -1726,14 +1725,14 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<List<ProtectableItemInfo>> ListDiscoveredProtectableItemsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);

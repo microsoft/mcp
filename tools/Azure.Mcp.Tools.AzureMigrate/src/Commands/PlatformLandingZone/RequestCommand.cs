@@ -222,7 +222,6 @@ public sealed class RequestCommand(
             options.Location,
             options.Subscription!,
             options.Tenant,
-            options.RetryPolicy,
             cancellationToken);
 
         if (!result.HasData)

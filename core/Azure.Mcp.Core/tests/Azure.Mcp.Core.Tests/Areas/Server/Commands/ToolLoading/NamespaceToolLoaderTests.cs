@@ -71,6 +71,8 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         Assert.NotNull(result);
         Assert.NotNull(result.Tools);
         Assert.NotEmpty(result.Tools);
+        // We're using a real command factory, so we expect a significant number of tools to be loaded
+        Assert.True(result.Tools.Count > 50, "Expected more than 50 tools to be loaded from the command factory");
 
         // Verify hierarchical structure
         foreach (var tool in result.Tools)

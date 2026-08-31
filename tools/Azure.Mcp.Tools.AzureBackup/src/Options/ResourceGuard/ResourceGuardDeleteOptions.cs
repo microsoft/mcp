@@ -19,7 +19,4 @@ public sealed class ResourceGuardDeleteOptions : ISubscriptionOption
 
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }
-
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

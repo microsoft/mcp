@@ -20,8 +20,7 @@ public sealed partial class RsvBackupOperations
     public async Task<ProtectResult> UpdateProtectionAsync(
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string? policyName, DiskExclusionSpec? diskExclusion,
-        string? containerName, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? containerName, string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -46,7 +45,7 @@ public sealed partial class RsvBackupOperations
                 "Pass the VM ARM resource ID (e.g., '/subscriptions/.../virtualMachines/my-vm') as --datasource-id.");
         }
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);

@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -39,7 +38,6 @@ public sealed class RecoveryPlanDeleteCommandTests : CommandUnitTestsBase<Recove
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(true);
         }
@@ -63,7 +61,6 @@ public sealed class RecoveryPlanDeleteCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -80,7 +77,6 @@ public sealed class RecoveryPlanDeleteCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -92,7 +88,6 @@ public sealed class RecoveryPlanDeleteCommandTests : CommandUnitTestsBase<Recove
         Service.DeleteRecoveryPlanAsync(
             "sg1",
             "plan1",
-            null,
             null,
             Arg.Any<CancellationToken>())
             .Returns(deleted);
@@ -115,7 +110,6 @@ public sealed class RecoveryPlanDeleteCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
@@ -133,7 +127,6 @@ public sealed class RecoveryPlanDeleteCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

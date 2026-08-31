@@ -4,7 +4,6 @@
 using System.Text.Json;
 using Azure.Mcp.Tools.Cosmos.Models;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Cosmos.Services;
 
@@ -14,7 +13,6 @@ public interface ICosmosService : IAsyncDisposable
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<string>> ListDatabases(
@@ -23,7 +21,6 @@ public interface ICosmosService : IAsyncDisposable
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
         string? resourceGroup = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<string>> ListContainers(
@@ -33,7 +30,6 @@ public interface ICosmosService : IAsyncDisposable
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
         string? resourceGroup = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<JsonElement>> QueryItems(
@@ -44,7 +40,6 @@ public interface ICosmosService : IAsyncDisposable
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<ContainerSchema> GetApproximateSchema(
@@ -55,7 +50,6 @@ public interface ICosmosService : IAsyncDisposable
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<JsonElement>> GetRecentItems(
@@ -66,7 +60,6 @@ public interface ICosmosService : IAsyncDisposable
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<JsonElement?> GetItem(
@@ -78,7 +71,6 @@ public interface ICosmosService : IAsyncDisposable
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<JsonElement>> TextSearch(
@@ -92,7 +84,6 @@ public interface ICosmosService : IAsyncDisposable
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<JsonElement>> VectorSearch(
@@ -106,7 +97,6 @@ public interface ICosmosService : IAsyncDisposable
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<float[]> GenerateEmbedding(

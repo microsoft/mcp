@@ -85,7 +85,6 @@ public sealed class ProtectedItemUpdateProtectionCommand(ILogger<ProtectedItemUp
                 options.VaultType,
                 options.Container,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

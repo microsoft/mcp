@@ -35,7 +35,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
             Arg.Is<string?>("NewPolicy"),
             Arg.Is<DiskExclusionSpec?>(s => s == null),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(new ProtectResult("InProgress", "vm1-backup", "job123", "ConfigureBackup started"));
 
         // Act
@@ -62,7 +62,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
             Arg.Any<string?>(),
             Arg.Do<DiskExclusionSpec?>(s => capturedSpec = s),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(new ProtectResult("InProgress", "vm1-backup", "job123", null));
 
         // Act
@@ -92,7 +92,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
             Arg.Do<string?>(p => capturedPolicy = p),
             Arg.Do<DiskExclusionSpec?>(s => capturedSpec = s),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(new ProtectResult("InProgress", "vm1-backup", "job123", null));
 
         // Act
@@ -122,7 +122,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
             Arg.Any<string?>(),
             Arg.Do<DiskExclusionSpec?>(s => capturedSpec = s),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(new ProtectResult("InProgress", "vm1-backup", "job123", null));
 
         // Act
@@ -157,7 +157,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -180,7 +180,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new NotSupportedException("update-protection is only supported for RSV IaaS VM protected items."));
 
         // Act
@@ -204,7 +204,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "AuthorizationFailed"));
 
         // Act
@@ -228,7 +228,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "NotFound"));
 
         // Act
@@ -287,6 +287,6 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 }

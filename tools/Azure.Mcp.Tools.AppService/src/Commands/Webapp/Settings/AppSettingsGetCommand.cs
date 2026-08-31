@@ -42,7 +42,6 @@ public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger,
                 options.ResourceGroup,
                 options.App,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(appSettings), AppServiceJsonContext.Default.AppSettingsGetResult);

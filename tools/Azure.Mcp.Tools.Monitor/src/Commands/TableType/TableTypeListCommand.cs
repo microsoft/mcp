@@ -37,7 +37,6 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger, I
                 options.ResourceGroup,
                 options.Workspace,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(tableTypes ?? []), MonitorJsonContext.Default.TableTypeListCommandResult);

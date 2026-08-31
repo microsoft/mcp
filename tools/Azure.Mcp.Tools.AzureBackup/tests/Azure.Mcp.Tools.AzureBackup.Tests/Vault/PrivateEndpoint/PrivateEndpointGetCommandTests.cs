@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Vault.PrivateEndpoint;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -39,7 +38,7 @@ public class PrivateEndpointGetCommandTests : SubscriptionCommandUnitTestsBase<P
     {
         Service.GetPrivateEndpointAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("pec-1"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(SampleConnection());
 
         var response = await ExecuteCommandAsync(
@@ -58,7 +57,7 @@ public class PrivateEndpointGetCommandTests : SubscriptionCommandUnitTestsBase<P
     {
         Service.ListPrivateEndpointsAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([SampleConnection("pec-1"), SampleConnection("pec-2")]);
 
         var response = await ExecuteCommandAsync(
@@ -75,7 +74,7 @@ public class PrivateEndpointGetCommandTests : SubscriptionCommandUnitTestsBase<P
     {
         Service.ListPrivateEndpointsAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new NotSupportedException("Private Endpoints are not supported for Backup vaults (DPP)."));
 
         var response = await ExecuteCommandAsync(
@@ -93,7 +92,7 @@ public class PrivateEndpointGetCommandTests : SubscriptionCommandUnitTestsBase<P
     {
         Service.GetPrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "not found"));
 
         var response = await ExecuteCommandAsync(
