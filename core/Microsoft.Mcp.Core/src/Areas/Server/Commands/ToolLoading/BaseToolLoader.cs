@@ -288,13 +288,25 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
 
             var protocolResponse = await request.Server.ElicitAsync(protocolRequest, cancellationToken);
 
-            if (protocolResponse.Action != "accept")
+            // Determine approval from BOTH the transport-level envelope action and the user's
+            // selection carried in the response content. The elicitation schema declares a
+            // required "decision" field, so the envelope action alone is not sufficient: a
+            // client that submits the form returns Action == "accept" even when the user picked
+            // "Reject" (their selection lives in Content["decision"]). Require the envelope
+            // action to be "accept" AND the decision value to be "accept"; otherwise treat the
+            // operation as not approved and do not execute it.
+            bool envelopeAccepted = string.Equals(protocolResponse.Action, "accept", StringComparison.Ordinal);
+            string? decision = TryGetElicitationDecision(protocolResponse.Content);
+            bool approved = envelopeAccepted && string.Equals(decision, "accept", StringComparison.Ordinal);
+
+            if (!approved)
             {
-                logger.LogInformation("User {Action} the elicitation for tool '{Tool}'. Operation not executed.",
-                    protocolResponse.Action, toolName);
+                logger.LogInformation(
+                    "User did not approve the elicitation for tool '{Tool}' (action: '{Action}', decision: '{Decision}'). Operation not executed.",
+                    toolName, protocolResponse.Action, decision ?? "none");
                 return McpHelper.InjectToolIdMetadata(new CallToolResult
                 {
-                    Content = [new TextContentBlock { Text = $"Operation cancelled by user ({protocolResponse.Action})." }],
+                    Content = [new TextContentBlock { Text = "Operation cancelled by user." }],
                     IsError = true
                 }, command.Id);
             }
@@ -311,5 +323,28 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
                 IsError = true
             }, command.Id);
         }
+    }
+
+    /// <summary>
+    /// Extracts the user's approve/reject decision from an elicitation response content payload.
+    /// The elicitation schema declares a required "decision" field whose value is either
+    /// "accept" or "reject". This value—not the transport envelope action—represents the user's
+    /// selection when a client submits the form, so it must be inspected to honor a rejection.
+    /// </summary>
+    /// <param name="content">The content payload returned in the elicitation response.</param>
+    /// <returns>
+    /// The decision string (e.g. "accept" or "reject") when present as a string value; otherwise
+    /// <c>null</c>.
+    /// </returns>
+    private static string? TryGetElicitationDecision(IDictionary<string, JsonElement>? content)
+    {
+        if (content != null &&
+            content.TryGetValue("decision", out var decisionElement) &&
+            decisionElement.ValueKind == JsonValueKind.String)
+        {
+            return decisionElement.GetString();
+        }
+
+        return null;
     }
 }

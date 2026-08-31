@@ -346,7 +346,14 @@ public class BaseToolLoaderTests
         var mockResponse = new JsonRpcResponse
         {
             Id = new RequestId(1),
-            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "accept" })
+            Result = JsonSerializer.SerializeToNode(new ElicitResult
+            {
+                Action = "accept",
+                Content = new Dictionary<string, JsonElement>
+                {
+                    ["decision"] = JsonSerializer.SerializeToElement("accept")
+                }
+            })
         };
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
             .Returns(mockResponse);
@@ -393,6 +400,76 @@ public class BaseToolLoaderTests
             request, "test-tool", baseCommand, false, logger, TestContext.Current.CancellationToken);
 
         // Assert
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        Assert.Contains("cancelled by user", ((TextContentBlock)result.Content[0]).Text);
+    }
+
+    [Fact]
+    public async Task HandleSecretElicitation_WhenUserSubmitsRejectDecision_RejectsOperation()
+    {
+        // Arrange - client submits the form (envelope action "accept") but the user selected
+        // "Reject", so the selection is carried in Content["decision"]. The operation must NOT
+        // execute in this scenario.
+        var mockServer = Substitute.For<McpServer>();
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() { Form = new() } });
+        var mockResponse = new JsonRpcResponse
+        {
+            Id = new RequestId(1),
+            Result = JsonSerializer.SerializeToNode(new ElicitResult
+            {
+                Action = "accept",
+                Content = new Dictionary<string, JsonElement>
+                {
+                    ["decision"] = JsonSerializer.SerializeToElement("reject")
+                }
+            })
+        };
+        mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+            .Returns(mockResponse);
+
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool", mockServer);
+        var logger = Substitute.For<ILogger>();
+
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { Secret = true });
+
+        // Act
+        var result = await BaseToolLoader.HandleElicitationAsync(
+            request, "test-tool", baseCommand, false, logger, TestContext.Current.CancellationToken);
+
+        // Assert - a rejected decision must block the operation
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        Assert.Contains("cancelled by user", ((TextContentBlock)result.Content[0]).Text);
+    }
+
+    [Fact]
+    public async Task HandleSecretElicitation_WhenAcceptEnvelopeButNoDecision_RejectsOperation()
+    {
+        // Arrange - envelope action is "accept" but no decision value is present. The handler
+        // must treat this as not approved rather than assume approval.
+        var mockServer = Substitute.For<McpServer>();
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() { Form = new() } });
+        var mockResponse = new JsonRpcResponse
+        {
+            Id = new RequestId(1),
+            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "accept" })
+        };
+        mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+            .Returns(mockResponse);
+
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool", mockServer);
+        var logger = Substitute.For<ILogger>();
+
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { Secret = true });
+
+        // Act
+        var result = await BaseToolLoader.HandleElicitationAsync(
+            request, "test-tool", baseCommand, false, logger, TestContext.Current.CancellationToken);
+
+        // Assert - a missing decision must block the operation
         Assert.NotNull(result);
         Assert.True(result.IsError);
         Assert.Contains("cancelled by user", ((TextContentBlock)result.Content[0]).Text);
