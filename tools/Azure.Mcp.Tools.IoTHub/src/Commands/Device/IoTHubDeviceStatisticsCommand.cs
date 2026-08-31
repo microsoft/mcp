@@ -47,7 +47,6 @@ public sealed class IoTHubDeviceStatisticsCommand(
                 options.ResourceGroup,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

@@ -40,7 +40,6 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
                 options.ResourceGroup,
                 options.Registry,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(map ?? []), AcrJsonContext.Default.RegistryRepositoryListCommandResult);

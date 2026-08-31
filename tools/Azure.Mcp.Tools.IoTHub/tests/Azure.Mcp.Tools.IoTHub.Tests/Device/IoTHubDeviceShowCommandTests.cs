@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Commands.Device;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.Mcp.Tools.IoTHub.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -53,7 +52,6 @@ public class IoTHubDeviceShowCommandTests : SubscriptionCommandUnitTestsBase<IoT
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(CreateDeviceIdentity());
         }
@@ -76,7 +74,6 @@ public class IoTHubDeviceShowCommandTests : SubscriptionCommandUnitTestsBase<IoT
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(CreateDeviceIdentity());
 
@@ -106,7 +103,6 @@ public class IoTHubDeviceShowCommandTests : SubscriptionCommandUnitTestsBase<IoT
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(CreateDeviceIdentity());
 
@@ -119,7 +115,6 @@ public class IoTHubDeviceShowCommandTests : SubscriptionCommandUnitTestsBase<IoT
             "rg1",
             "sub123",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -132,7 +127,6 @@ public class IoTHubDeviceShowCommandTests : SubscriptionCommandUnitTestsBase<IoT
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Device not found"));
 
@@ -151,7 +145,6 @@ public class IoTHubDeviceShowCommandTests : SubscriptionCommandUnitTestsBase<IoT
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

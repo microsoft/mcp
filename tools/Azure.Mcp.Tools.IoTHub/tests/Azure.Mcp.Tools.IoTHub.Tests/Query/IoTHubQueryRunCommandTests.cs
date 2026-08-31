@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Commands.Query;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.Mcp.Tools.IoTHub.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -33,7 +32,6 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
         Arg.Any<int?>(),
         Arg.Any<string?>(),
         Arg.Any<string?>(),
-        Arg.Any<RetryPolicyOptions?>(),
         Arg.Any<CancellationToken>())
         .Returns(page);
 
@@ -47,7 +45,6 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
         Arg.Any<int?>(),
         Arg.Any<string?>(),
         Arg.Any<string?>(),
-        Arg.Any<RetryPolicyOptions?>(),
         Arg.Any<CancellationToken>())
         .Returns(first, rest);
 
@@ -60,7 +57,6 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
         Arg.Any<int?>(),
         Arg.Any<string?>(),
         Arg.Any<string?>(),
-        Arg.Any<RetryPolicyOptions?>(),
         Arg.Any<CancellationToken>())
         .Returns(new IoTHubQueryPage(Items(twinsJson), null));
 
@@ -73,7 +69,6 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
         Arg.Any<int?>(),
         Arg.Any<string?>(),
         Arg.Any<string?>(),
-        Arg.Any<RetryPolicyOptions?>(),
         Arg.Any<CancellationToken>())
         .Returns(page);
 
@@ -196,7 +191,6 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
             100,
             null,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -262,7 +256,6 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
             100,
             null,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, IoTHubJsonContext.Default.IoTHubQueryRunResult);
@@ -297,7 +290,6 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
             100,
             null,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, IoTHubJsonContext.Default.IoTHubQueryRunResult);
@@ -333,7 +325,6 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
             100,
             null,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, IoTHubJsonContext.Default.IoTHubQueryRunResult);
@@ -362,7 +353,6 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -401,7 +391,6 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -426,7 +415,6 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -452,7 +440,6 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -489,7 +476,6 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -504,7 +490,6 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

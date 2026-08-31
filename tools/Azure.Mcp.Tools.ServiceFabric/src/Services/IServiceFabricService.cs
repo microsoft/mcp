@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.ServiceFabric.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Services;
 
@@ -13,7 +12,6 @@ public interface IServiceFabricService
         string resourceGroup,
         string clusterName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<ManagedClusterNode> GetManagedClusterNode(
@@ -22,7 +20,6 @@ public interface IServiceFabricService
         string clusterName,
         string nodeName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<RestartNodeResponse> RestartManagedClusterNodes(
@@ -33,6 +30,5 @@ public interface IServiceFabricService
         string[] nodes,
         UpdateType updateType = UpdateType.Default,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

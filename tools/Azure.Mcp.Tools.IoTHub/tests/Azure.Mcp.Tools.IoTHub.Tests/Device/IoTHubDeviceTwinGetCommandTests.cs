@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Commands.Device;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.Mcp.Tools.IoTHub.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -57,7 +56,6 @@ public class IoTHubDeviceTwinGetCommandTests : SubscriptionCommandUnitTestsBase<
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(CreateDeviceTwin());
         }
@@ -80,7 +78,6 @@ public class IoTHubDeviceTwinGetCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(CreateDeviceTwin());
 
@@ -111,7 +108,6 @@ public class IoTHubDeviceTwinGetCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(twin);
 
@@ -137,7 +133,6 @@ public class IoTHubDeviceTwinGetCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(CreateDeviceTwin());
 
@@ -150,7 +145,6 @@ public class IoTHubDeviceTwinGetCommandTests : SubscriptionCommandUnitTestsBase<
             "rg1",
             "sub123",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -163,7 +157,6 @@ public class IoTHubDeviceTwinGetCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

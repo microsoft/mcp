@@ -43,7 +43,6 @@ public sealed class RecoveryPlanDeleteCommand(ILogger<RecoveryPlanDeleteCommand>
                 options.ServiceGroup,
                 options.RecoveryPlan,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

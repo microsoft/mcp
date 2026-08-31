@@ -122,7 +122,6 @@ public sealed class IoTHubQueryRunCommand(
                     pageSize,
                     continuationToken,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 foreach (var item in page.Items)
@@ -274,7 +273,6 @@ public sealed class IoTHubQueryRunCommand(
                 options.ResourceGroup,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
         }
         catch (Exception ex)

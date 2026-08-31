@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.Mcp.Tools.IoTHub.Services;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.IoTHub.Query;
 
@@ -17,7 +16,6 @@ public static class IoTHubQueryDiscovery
         string resourceGroup,
         string subscription,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(service);
@@ -30,7 +28,6 @@ public static class IoTHubQueryDiscovery
             IoTHubQueryLimits.MaxPageSize,
             null,
             tenant,
-            retryPolicy,
             cancellationToken);
 
         return IoTHubQueryFieldDiscoverer.Discover(samplePage.Items);

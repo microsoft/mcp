@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Commands.Device;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.Mcp.Tools.IoTHub.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -38,7 +37,6 @@ public class IoTHubDeviceStatisticsCommandTests : SubscriptionCommandUnitTestsBa
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new IoTHubRegistryStatistics(1, 4, 5));
         }
@@ -60,7 +58,6 @@ public class IoTHubDeviceStatisticsCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new IoTHubRegistryStatistics(1, 4, 5));
 
@@ -80,7 +77,6 @@ public class IoTHubDeviceStatisticsCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new IoTHubRegistryStatistics(1, 4, 5));
 
@@ -92,7 +88,6 @@ public class IoTHubDeviceStatisticsCommandTests : SubscriptionCommandUnitTestsBa
             "rg1",
             "sub123",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -104,7 +99,6 @@ public class IoTHubDeviceStatisticsCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

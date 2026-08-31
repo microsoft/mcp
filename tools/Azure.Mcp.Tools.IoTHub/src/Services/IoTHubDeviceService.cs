@@ -13,7 +13,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.IoTHub.Services;
 
@@ -57,16 +56,6 @@ public class IoTHubDeviceService(
         }
     }
 
-    private static TimeSpan GetOperationTimeout(RetryPolicyOptions? retryPolicy, TimeSpan defaultTimeout)
-    {
-        if (retryPolicy?.HasNetworkTimeoutSeconds == true && retryPolicy.NetworkTimeoutSeconds > 0)
-        {
-            return TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds.Value);
-        }
-
-        return defaultTimeout;
-    }
-
     // Resolve the hub's data-plane hostname (briefly cached control-plane lookup) and mint a fresh
     // Entra ID bearer token for the operation. Data-plane calls authenticate with the caller's Entra
     // ID token and RBAC role assignments; no shared access keys are fetched, held, or cached.
@@ -75,20 +64,19 @@ public class IoTHubDeviceService(
         string resourceGroup,
         string subscription,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
-        var hostname = await _hostnameResolver.GetHostnameAsync(hubName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+        var hostname = await _hostnameResolver.GetHostnameAsync(hubName, resourceGroup, subscription, tenant, cancellationToken);
         var credential = await GetCredential(tenant, cancellationToken);
         var accessToken = await credential.GetTokenAsync(new TokenRequestContext([IoTHubTokenScope]), cancellationToken);
         return (hostname, accessToken.Token);
     }
 
-    // Build an Azure.Core pipeline for a data-plane call so the caller's RetryPolicyOptions govern
-    // transient-failure retries (408/429/5xx and network errors), consistent with the ARM control-plane.
-    private static HttpPipeline BuildDataPlanePipeline(RetryPolicyOptions? retryPolicy, HttpClient httpClient)
+    // Build an Azure.Core pipeline for a data-plane call, applying the default transient-failure
+    // retry policies (408/429/5xx and network errors), consistent with the ARM control-plane.
+    private static HttpPipeline BuildDataPlanePipeline(HttpClient httpClient)
     {
-        var clientOptions = ConfigureRetryPolicy(AddDefaultPolicies(new IoTHubClientOptions()), retryPolicy);
+        var clientOptions = AddDefaultPolicies(new IoTHubClientOptions());
         clientOptions.Transport = new HttpClientTransport(httpClient);
         return HttpPipelineBuilder.Build(clientOptions);
     }
@@ -118,7 +106,6 @@ public class IoTHubDeviceService(
         string subscription,
         string? tenant = null,
         int? maxCount = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -128,7 +115,7 @@ public class IoTHubDeviceService(
 
         return await ExecuteWithTimeoutAsync(async ct =>
         {
-            var (hostname, token) = await ResolveHubAccessAsync(hubName, resourceGroup, subscription, tenant, retryPolicy, ct);
+            var (hostname, token) = await ResolveHubAccessAsync(hubName, resourceGroup, subscription, tenant, ct);
 
             // The registry API has no continuation token, so fetch one more than the requested max
             // (top = maxCount + 1). If the hub returns the extra device we know more devices exist
@@ -138,7 +125,7 @@ public class IoTHubDeviceService(
             var requestUri = $"https://{hostname}/devices?api-version={RegistryApiVersion}{maxCountParam}";
 
             using var httpClient = _httpClientFactory.CreateClient();
-            var pipeline = BuildDataPlanePipeline(retryPolicy, httpClient);
+            var pipeline = BuildDataPlanePipeline(httpClient);
 
             using var request = pipeline.CreateRequest();
             request.Method = RequestMethod.Get;
@@ -170,7 +157,6 @@ public class IoTHubDeviceService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -181,10 +167,10 @@ public class IoTHubDeviceService(
 
         return await ExecuteWithTimeoutAsync(async ct =>
         {
-            var (hostname, token) = await ResolveHubAccessAsync(name, resourceGroup, subscription, tenant, retryPolicy, ct);
+            var (hostname, token) = await ResolveHubAccessAsync(name, resourceGroup, subscription, tenant, ct);
 
             using var httpClient = _httpClientFactory.CreateClient();
-            var pipeline = BuildDataPlanePipeline(retryPolicy, httpClient);
+            var pipeline = BuildDataPlanePipeline(httpClient);
             var requestUri = $"https://{hostname}/devices/{Uri.EscapeDataString(deviceId)}?api-version={RegistryApiVersion}";
 
             using var request = pipeline.CreateRequest();
@@ -206,7 +192,6 @@ public class IoTHubDeviceService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -217,10 +202,10 @@ public class IoTHubDeviceService(
 
         return await ExecuteWithTimeoutAsync(async ct =>
         {
-            var (hostname, token) = await ResolveHubAccessAsync(name, resourceGroup, subscription, tenant, retryPolicy, ct);
+            var (hostname, token) = await ResolveHubAccessAsync(name, resourceGroup, subscription, tenant, ct);
 
             using var httpClient = _httpClientFactory.CreateClient();
-            var pipeline = BuildDataPlanePipeline(retryPolicy, httpClient);
+            var pipeline = BuildDataPlanePipeline(httpClient);
             var requestUri = $"https://{hostname}/twins/{Uri.EscapeDataString(deviceId)}?api-version={RegistryApiVersion}";
 
             using var request = pipeline.CreateRequest();
@@ -244,7 +229,6 @@ public class IoTHubDeviceService(
         int? maxCount = null,
         string? continuationToken = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -263,11 +247,11 @@ public class IoTHubDeviceService(
                 maxCount,
                 !string.IsNullOrEmpty(continuationToken));
 
-            var (hostname, token) = await ResolveHubAccessAsync(name, resourceGroup, subscription, tenant, retryPolicy, ct);
+            var (hostname, token) = await ResolveHubAccessAsync(name, resourceGroup, subscription, tenant, ct);
             _logger.LogInformation("IoT Hub query connection resolved. Hub={HubName}, ElapsedMs={ElapsedMs}.", name, stopwatch.ElapsedMilliseconds);
 
             using var httpClient = _httpClientFactory.CreateClient();
-            var pipeline = BuildDataPlanePipeline(retryPolicy, httpClient);
+            var pipeline = BuildDataPlanePipeline(httpClient);
             var requestUri = $"https://{hostname}/devices/query?api-version={RegistryApiVersion}";
 
             var queryObject = new IoTHubQueryRequest(query);
@@ -319,7 +303,7 @@ public class IoTHubDeviceService(
                 stopwatch.ElapsedMilliseconds);
 
             return new IoTHubQueryPage(items, nextContinuationToken);
-        }, "query run", cancellationToken, GetOperationTimeout(retryPolicy, s_queryRunTimeout));
+        }, "query run", cancellationToken, s_queryRunTimeout);
     }
 
     public async Task<IoTHubRegistryStatistics> GetDeviceStatistics(
@@ -327,7 +311,6 @@ public class IoTHubDeviceService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -337,10 +320,10 @@ public class IoTHubDeviceService(
 
         return await ExecuteWithTimeoutAsync(async ct =>
         {
-            var (hostname, token) = await ResolveHubAccessAsync(name, resourceGroup, subscription, tenant, retryPolicy, ct);
+            var (hostname, token) = await ResolveHubAccessAsync(name, resourceGroup, subscription, tenant, ct);
 
             using var httpClient = _httpClientFactory.CreateClient();
-            var pipeline = BuildDataPlanePipeline(retryPolicy, httpClient);
+            var pipeline = BuildDataPlanePipeline(httpClient);
             var requestUri = $"https://{hostname}/statistics/devices?api-version={RegistryApiVersion}";
 
             using var request = pipeline.CreateRequest();

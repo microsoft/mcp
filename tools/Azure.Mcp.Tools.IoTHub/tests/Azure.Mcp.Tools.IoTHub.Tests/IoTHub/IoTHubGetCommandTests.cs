@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Commands.IoTHub;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.Mcp.Tools.IoTHub.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -38,7 +37,6 @@ public class IoTHubGetCommandTests : SubscriptionCommandUnitTestsBase<IoTHubGetC
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new IoTHubDescription(
                     Id: "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Devices/IotHubs/hub1",
@@ -93,7 +91,6 @@ public class IoTHubGetCommandTests : SubscriptionCommandUnitTestsBase<IoTHubGetC
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new IoTHubDescription(
                 Id: "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Devices/IotHubs/hub1",
@@ -122,7 +119,6 @@ public class IoTHubGetCommandTests : SubscriptionCommandUnitTestsBase<IoTHubGetC
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -141,7 +137,6 @@ public class IoTHubGetCommandTests : SubscriptionCommandUnitTestsBase<IoTHubGetC
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Resource not found"));
 
