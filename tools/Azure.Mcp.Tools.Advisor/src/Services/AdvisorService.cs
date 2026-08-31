@@ -54,7 +54,7 @@ public class AdvisorService(IAzureService azureService)
         CancellationToken cancellationToken = default)
     {
         Dictionary<string, RecommendationMetadata>? metadataByTypeId =
-            await ResolveMetadataFilterMatchesAsync(filters, cancellationToken);
+            await ResolveMetadataFilterMatchesAsync(filters, tenant, cancellationToken);
 
         if (metadataByTypeId is { Count: 0 })
         {
@@ -85,6 +85,7 @@ public class AdvisorService(IAzureService azureService)
             await GetRecommendationMetadataByTypeIdsAsync(
                 recommendations.Results.Select(r => r.Properties.RecommendationTypeId),
                 MetadataJoinLanguage,
+                tenant,
                 cancellationToken));
 
         return new(
@@ -98,6 +99,8 @@ public class AdvisorService(IAzureService azureService)
         filters?.RetirementDate is not null ||
         !string.IsNullOrWhiteSpace(filters?.RetirementDateOperator);
 
+    // Resolve these filters against metadata so category and impact match the enriched values returned.
+    // This adds a catalog lookup and can produce a broad recommendationTypeId predicate.
     internal static bool HasMetadataFilters(RecommendationFilters? filters) =>
         !IsSecurityCategory(filters?.Category) &&
         (HasMetadataOnlyFilters(filters) ||
@@ -117,6 +120,7 @@ public class AdvisorService(IAzureService azureService)
     /// </summary>
     private async Task<Dictionary<string, RecommendationMetadata>?> ResolveMetadataFilterMatchesAsync(
         RecommendationFilters? filters,
+        string? tenant,
         CancellationToken cancellationToken)
     {
         if (!HasMetadataFilters(filters))
@@ -134,6 +138,7 @@ public class AdvisorService(IAzureService azureService)
                 TrackingIds: filters.TrackingIds,
                 RetirementDateOperator: filters.RetirementDateOperator,
                 RetirementDate: filters.RetirementDate),
+            tenant,
             cancellationToken);
 
         return BuildMetadataLookup(matchingMetadata);
@@ -175,9 +180,10 @@ public class AdvisorService(IAzureService azureService)
                 {
                     Category = metadata.Category,
                     Impact = metadata.Impact,
-                    ShortDescription = new RecommendationShortDescription(
-                        metadata.DisplayName ?? recommendation.Properties.ShortDescription?.Problem,
-                        metadata.DisplayName ?? recommendation.Properties.ShortDescription?.Solution),
+                    ShortDescription = recommendation.Properties.ShortDescription ??
+                        (metadata.DisplayName is null
+                            ? null
+                            : new RecommendationShortDescription(metadata.DisplayName, metadata.DisplayName)),
                     Description = metadata.DetailedDescription ?? recommendation.Properties.Description,
                     Label = metadata.Label ?? recommendation.Properties.Label,
                     LearnMoreLink = metadata.LearnMoreLink ?? recommendation.Properties.LearnMoreLink,
@@ -187,7 +193,6 @@ public class AdvisorService(IAzureService azureService)
                             recommendation.Properties.ExtendedProperties,
                             metadata.ServiceRetirement),
                         metadata.SubCategory),
-                    ResourceMetadata = recommendation.Properties.ResourceMetadata,
                 },
             });
         }
@@ -198,6 +203,7 @@ public class AdvisorService(IAzureService azureService)
     private async Task<List<RecommendationMetadata>> GetRecommendationMetadataByTypeIdsAsync(
         IEnumerable<string?> recommendationTypeIds,
         string language,
+        string? tenant,
         CancellationToken cancellationToken)
     {
         var distinctIds = recommendationTypeIds
@@ -213,6 +219,7 @@ public class AdvisorService(IAzureService azureService)
 
         return await ExecuteMetadataQueryAsync(
             BuildMetadataByTypeIdsQuery(distinctIds, language),
+            tenant,
             cancellationToken);
     }
 
@@ -255,10 +262,11 @@ public class AdvisorService(IAzureService azureService)
     private async Task<List<RecommendationMetadata>> ListAllRecommendationMetadataAsync(
         string language,
         RecommendationMetadataFilters? filters,
+        string? tenant,
         CancellationToken cancellationToken)
     {
         var query = BuildMetadataListQuery(language, filters);
-        var tenantResource = await GetTenantResourceAsync(cancellationToken);
+        var tenantResource = await GetTenantResourceAsync(tenant, cancellationToken);
         var results = new List<RecommendationMetadata>();
         results.AddRange(await CollectMetadataPagesAsync(
             (skipToken, token) => ExecuteMetadataPageAsync(
@@ -357,9 +365,10 @@ public class AdvisorService(IAzureService azureService)
 
     private async Task<List<RecommendationMetadata>> ExecuteMetadataQueryAsync(
         string query,
+        string? tenant,
         CancellationToken cancellationToken)
     {
-        var tenantResource = await GetTenantResourceAsync(cancellationToken);
+        var tenantResource = await GetTenantResourceAsync(tenant, cancellationToken);
 
         ResourceQueryResult result = await tenantResource.GetResourcesAsync(
             new ResourceQueryContent(query),
@@ -370,19 +379,7 @@ public class AdvisorService(IAzureService azureService)
             return [];
         }
 
-        var results = new List<RecommendationMetadata>();
-        using var jsonDocument = JsonDocument.Parse(result.Data);
-        if (jsonDocument.RootElement.ValueKind != JsonValueKind.Array)
-        {
-            throw new JsonException("Azure Resource Graph returned an invalid recommendation metadata payload.");
-        }
-
-        foreach (var item in jsonDocument.RootElement.EnumerateArray())
-        {
-            results.Add(ConvertToRecommendationMetadataModel(item));
-        }
-
-        return results;
+        return ParseMetadata(result.Data);
     }
 
     internal static string BuildMetadataListQuery(
@@ -559,6 +556,11 @@ public class AdvisorService(IAzureService azureService)
             BladeName: action.BladeName);
 
     private async Task<TenantResource> GetTenantResourceAsync(CancellationToken cancellationToken)
+        => await GetTenantResourceAsync(null, cancellationToken);
+
+    private async Task<TenantResource> GetTenantResourceAsync(
+        string? tenant,
+        CancellationToken cancellationToken)
     {
         var tenants = await AzureService.GetTenants(cancellationToken);
         if (tenants.Count == 0)
@@ -566,7 +568,16 @@ public class AdvisorService(IAzureService azureService)
             throw new InvalidOperationException("No accessible Azure tenants were found.");
         }
 
-        return tenants[0];
+        if (string.IsNullOrWhiteSpace(tenant))
+        {
+            return tenants[0];
+        }
+
+        var resolvedTenantId = await AzureService.ResolveTenantIdAsync(tenant, cancellationToken)
+            ?? throw new InvalidOperationException($"Could not resolve tenant '{tenant}'.");
+        var tenantId = Guid.Parse(resolvedTenantId);
+        return tenants.FirstOrDefault(candidate => candidate.Data.TenantId == tenantId)
+            ?? throw new InvalidOperationException($"No accessible tenant found for tenant '{tenant}'.");
     }
 
     public async Task<RecommendationMetadata?> GetRecommendationMetadataAsync(

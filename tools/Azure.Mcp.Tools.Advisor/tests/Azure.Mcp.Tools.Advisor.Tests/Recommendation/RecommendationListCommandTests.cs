@@ -115,7 +115,6 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
-
         // Act
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
@@ -123,6 +122,34 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
 
         Assert.Empty(result.Recommendations);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithTenant_PassesTenantToService()
+    {
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            "tenant456",
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--tenant", "tenant456");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListRecommendationsAsync(
+            "sub123",
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            "tenant456",
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

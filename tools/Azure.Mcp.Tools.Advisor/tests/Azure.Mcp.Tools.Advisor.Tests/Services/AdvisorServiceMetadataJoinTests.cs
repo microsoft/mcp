@@ -293,8 +293,8 @@ public class AdvisorServiceMetadataJoinTests
             result.Properties.ResourceMetadata!.ResourceId);
         Assert.Equal("Type-A", result.Properties.RecommendationTypeId);
         Assert.Equal("New", result.Properties.RecommendationStatus);
-        Assert.Equal("Metadata display name", result.Properties.ShortDescription!.Problem);
-        Assert.Equal("Metadata display name", result.Properties.ShortDescription.Solution);
+        Assert.Equal("Instance problem", result.Properties.ShortDescription!.Problem);
+        Assert.Equal("Instance solution", result.Properties.ShortDescription.Solution);
 
         // Metadata-owned fields are overridden.
         Assert.Equal("Security", result.Properties.Category);
@@ -319,7 +319,7 @@ public class AdvisorServiceMetadataJoinTests
     }
 
     [Fact]
-    public void JoinWithMetadata_MissingDetailedDescription_UsesDisplayNameForBothFields()
+    public void JoinWithMetadata_InstanceShortDescription_PreservesInstanceFields()
     {
         var recommendation = new Models.Recommendation(
             new Models.RecommendationProperties(
@@ -335,8 +335,41 @@ public class AdvisorServiceMetadataJoinTests
 
         var shortDescription = Assert.Single(joined).Properties.ShortDescription;
         Assert.NotNull(shortDescription);
+        Assert.Equal("Instance problem", shortDescription.Problem);
+        Assert.Equal("Instance solution", shortDescription.Solution);
+    }
+
+    [Fact]
+    public void JoinWithMetadata_MissingInstanceShortDescription_UsesMetadataFields()
+    {
+        var recommendation = new Models.Recommendation(
+            new Models.RecommendationProperties(
+                Category: "Cost",
+                RecommendationTypeId: "Type-A"));
+
+        var joined = AdvisorService.JoinWithMetadata(
+            [recommendation],
+            AdvisorService.BuildMetadataLookup([CreateMetadata("Type-A")]));
+
+        var shortDescription = Assert.Single(joined).Properties.ShortDescription;
+        Assert.NotNull(shortDescription);
         Assert.Equal("Metadata display name", shortDescription.Problem);
         Assert.Equal("Metadata display name", shortDescription.Solution);
+    }
+
+    [Fact]
+    public void JoinWithMetadata_MissingShortDescriptionAndDisplayName_LeavesShortDescriptionNull()
+    {
+        var recommendation = new Models.Recommendation(
+            new Models.RecommendationProperties(
+                Category: "Cost",
+                RecommendationTypeId: "Type-A"));
+
+        var joined = AdvisorService.JoinWithMetadata(
+            [recommendation],
+            AdvisorService.BuildMetadataLookup([CreateMetadata("Type-A", displayName: null)]));
+
+        Assert.Null(Assert.Single(joined).Properties.ShortDescription);
     }
 
     [Fact]
