@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
         Changes may require 'update-instances' to roll out to existing VMs.
         Do not use this to create, deploy, or provision a new VMSS (use VMSS create instead) or to update a single VM (use VM update).
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

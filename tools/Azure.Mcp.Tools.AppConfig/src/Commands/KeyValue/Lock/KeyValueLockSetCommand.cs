@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
         and key. Optionally, you can specify a label to lock or unlock a specific labeled version of the key-value.
         Default is unlocking the key-value.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

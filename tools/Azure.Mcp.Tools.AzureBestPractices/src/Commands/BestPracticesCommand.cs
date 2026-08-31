@@ -26,6 +26,7 @@ namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
         when you are confident the user is discussing Azure. If this tool needs to be categorized,
         it belongs to the Azure Best Practices category.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -15,6 +15,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Name = "create-item",
     Title = "Create Fabric Item",
     Description = "Creates a new item in a Fabric workspace. Use this when the user wants to create a Lakehouse, Notebook, or other Fabric item type. Requires workspace ID, item name, and item type.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     LocalRequired = false,

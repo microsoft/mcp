@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
         When updating: Modifies descriptive information (display name, description) of a completed or in-progress test run for better organization and documentation. Update operations are idempotent - repeated calls with same values produce the same result.
         This does not modify the test plan configuration or create a new test/resource - only manages test run executions.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

@@ -32,6 +32,7 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
         - Modify tags for resource management
         - Enable/disable zone redundancy (Premium SKU only)
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Collections.Concurrent;
@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Name = "apply",
     Description = "This tool helps in applying advisor recommendations on IaaC files (like ARM, Terraform) for Azure resources. It returns the rules that can be applied to the IaaC file.",
     Title = "Apply Advisor Recommendations",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

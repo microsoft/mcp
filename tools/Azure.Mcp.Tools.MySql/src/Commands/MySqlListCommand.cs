@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.MySql.Commands;
     Name = "list",
     Title = "List MySQL Resources",
     Description = "List MySQL servers, databases, or tables in your subscription. Returns all servers in the subscription by default, or servers in a resource group when --resource-group is specified. Specify --server to list databases on that server, or --server and --database to list tables in a specific database.",
+    OperationPlane = ToolOperationPlane.Both,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

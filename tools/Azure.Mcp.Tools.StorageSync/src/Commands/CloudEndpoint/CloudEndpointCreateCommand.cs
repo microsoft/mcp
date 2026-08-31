@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
     Name = "create",
     Title = "Create Cloud Endpoint",
     Description = "Add a cloud endpoint to a sync group by connecting an Azure File Share. Cloud endpoints represent the Azure storage side of the sync relationship.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

@@ -18,6 +18,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
         List shortcuts defined within an item, recursing through subfolders.
         Returns each shortcut's path and target. Requires OneLake.Read.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

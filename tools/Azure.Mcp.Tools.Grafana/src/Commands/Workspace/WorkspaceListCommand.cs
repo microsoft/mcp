@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.Grafana.Commands.Workspace;
         List all Grafana workspace resources in a specified subscription. Returns an array of Grafana workspace details.
         Use this command to explore which Grafana workspace resources are available in your subscription.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

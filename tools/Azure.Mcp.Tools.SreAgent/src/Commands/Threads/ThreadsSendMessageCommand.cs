@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
     Name = "send_message",
     Title = "Send Thread Message",
     Description = "Send a message to an existing SRE Agent thread.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = true,

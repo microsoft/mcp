@@ -14,6 +14,7 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Table;
     Name = "get",
     Title = "Get PostgreSQL Table Schema",
     Description = "Retrieves the schema of a specified table in a PostgreSQL database.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Security;
         permissions on the Resource Guard. Omit --resource-guard-id to disable MUA (this itself is a
         protected operation requiring Backup MUA Operator role on the Resource Guard).
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

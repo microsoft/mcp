@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
     Name = "update",
     Title = "Update Storage Sync Service",
     Description = "Update properties of an existing Azure Storage Sync service.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

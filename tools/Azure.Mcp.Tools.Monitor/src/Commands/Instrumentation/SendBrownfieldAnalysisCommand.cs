@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
         For sections that do not exist in the codebase, pass an empty/default object (e.g. found: false, hasCustomSampling: false) rather than null.
         After this call succeeds, continue with orchestrator-next as usual.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

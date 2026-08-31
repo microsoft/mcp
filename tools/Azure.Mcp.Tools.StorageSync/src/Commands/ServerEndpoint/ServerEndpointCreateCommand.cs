@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
     Name = "create",
     Title = "Create Server Endpoint",
     Description = "Add a server endpoint to a sync group by specifying a local server path to sync. Server endpoints represent the on-premises side of the sync relationship and include cloud tiering configuration.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

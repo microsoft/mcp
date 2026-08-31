@@ -27,6 +27,7 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob;
         Returns: blob name, size, lastModified, contentType, contentHash, metadata, and blob properties.
         Do not use this tool to list containers in the storage account.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

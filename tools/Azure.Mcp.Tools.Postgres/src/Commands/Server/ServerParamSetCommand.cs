@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Server;
     Name = "set",
     Title = "Set PostgreSQL Server Parameter",
     Description = "Configures PostgreSQL server settings including replication, connection limits, and other parameters.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

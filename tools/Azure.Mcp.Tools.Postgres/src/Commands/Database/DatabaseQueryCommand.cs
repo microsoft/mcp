@@ -15,6 +15,7 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Database;
     Name = "query",
     Title = "Query PostgreSQL Database",
     Description = "Executes a SQL query on an Azure Database for PostgreSQL server to search for specific terms, retrieve records, or perform SELECT operations.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

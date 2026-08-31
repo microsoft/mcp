@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Log;
         When to use: User asks for logs from a specific resource by name or ID.
         When NOT to use: User asks for general workspace-wide logs without mentioning a specific resource.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -24,6 +24,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
         Use --format=raw to get the unprocessed OneLake DFS API response for debugging and analysis.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

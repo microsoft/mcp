@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
     Name = "delete",
     Title = "Delete Thread",
     Description = "Delete an SRE Agent thread. Requires confirm=true.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

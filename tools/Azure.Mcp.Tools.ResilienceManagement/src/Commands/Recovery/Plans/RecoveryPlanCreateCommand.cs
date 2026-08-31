@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
         group ID, additional recovery groups, and omitted plan or default group descriptions. Plan descriptions must be 5 to 50
         characters. A user-assigned identity update must include the existing identity's full resource ID; ask for it when omitted.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

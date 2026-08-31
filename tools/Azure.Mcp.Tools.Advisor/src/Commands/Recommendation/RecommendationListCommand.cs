@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "Only active recommendations (status 'New') are returned; dismissed and postponed ones are excluded. " +
         "Supports optional filters: --category, --impact, --resource-type, --resource, --search. " +
         "--top caps the number of returned items (default 50, max 100).",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -48,21 +48,45 @@ Commands declare their classification alongside their existing metadata:
 
 ### Classification
 
+A command's plane is determined by its **deliverable call**: the request that produces the result the user asked for.
+
 | Value | Meaning |
 |---|---|
-| `Data` | The command operates against an Azure service data-plane API. |
-| `Control` | The command operates against Azure Resource Manager or another management-plane API. |
-| `Both` | The command directly uses both control-plane and data-plane APIs. |
+| `Data` | The deliverable is a workload call against a service data-plane API. |
+| `Control` | The deliverable is a call against Azure Resource Manager or another management-plane API. |
+| `Both` | The command has two genuine user-facing deliverables, one on each plane. |
 | `NotApplicable` | The command does not perform an Azure service-plane operation, such as `tools list`, `server start`, or a local-only utility. |
-| `Unspecified` | The command has not yet been reviewed and classified. This is a migration state, not a final classification. |
+| `Unspecified` | The command has not been classified. This is an unset marker, not a valid answer. |
 
-`NotApplicable` is an explicit classification. `Unspecified` identifies migration debt.
+`NotApplicable` is a deliberate classification meaning "reviewed, and no Azure plane applies". `Unspecified` means "not yet reviewed" and fails validation for Azure service commands.
+
+#### Addressing does not count
+
+Resolving a subscription, tenant, resource ID, or service endpoint is **addressing**, not a deliverable. It never contributes a plane.
+
+This exclusion is what makes the annotation useful. Nearly every data-plane command resolves its target through ARM before it can issue the workload call, so if addressing counted as control-plane work, almost every command would be `Both` and the label would stop discriminating.
+
+`azmcp eventgrid events publish` is the worked example. It calls ARM to look up the topic and read its endpoint, then sends the events to that endpoint. The ARM traffic exists only to find where to publish, so the command is `Data`.
+
+Applying the rule:
+
+| Command | Deliverable | Plane |
+|---|---|---|
+| `eventgrid topic list` | The ARM enumeration is the answer. | `Control` |
+| `eventgrid subscription list` | The ARM enumeration is the answer. | `Control` |
+| `eventgrid events publish` | The publish is the answer; the ARM lookup is addressing. | `Data` |
+
+#### When `Both` applies
+
+`Both` is reserved for a command that performs two distinct operations the user asked for, on different planes. Creating a topic and publishing a seed event to it in a single call would qualify: the user wants the topic *and* the event, and neither call is addressing for the other.
+
+`Both` is expected to be rare. A command that merely reaches ARM on its way to a data-plane call is `Data`, not `Both`.
 
 ### Default
 
-`OperationPlane` defaults to `Unspecified`.
+`OperationPlane` defaults to `Unspecified`, which is a validation failure for Azure service commands rather than a shipping state.
 
-Defaulting existing commands to `Data` would silently misclassify ARM-based commands. An explicit migration state keeps the change source-compatible without publishing incorrect documentation. Once existing commands have been classified, repository validation can reject `Unspecified` for Azure service commands.
+Defaulting to `Data` would silently misclassify the many ARM-based commands. Making the default an unset marker instead means a command that is never classified fails validation loudly rather than publishing a wrong answer.
 
 ## JSON representation
 
@@ -107,13 +131,14 @@ Tool families are not aggregated at runtime. A documentation generator holding t
 
 Keeping aggregation in the consumer avoids duplicating the rule across the namespace, consolidated, proxy, and single-tool loading paths for a value none of them currently expose.
 
-## Initial rollout
+## Rollout
 
 1. Add the enum, the attribute property, and the CLI JSON serialization.
-2. Classify Event Grid commands to validate data-, control-, and mixed-plane commands.
-3. Classify remaining Azure commands incrementally with service-owner review.
-4. Add repository validation requiring a non-`Unspecified` classification after migration.
-5. Update documentation generation to display the classification and derive tool-family coverage.
+2. Classify every command in the repository against the deliverable rule.
+3. Add repository validation rejecting `Unspecified` for Azure service commands, so a new command cannot be added without a classification.
+4. Update documentation generation to display the classification and derive tool-family coverage.
+
+Classifying everything in one pass, rather than incrementally, keeps `Unspecified` from becoming a permanent resting state and means the annotation is useful the day it ships.
 
 ## Compatibility
 

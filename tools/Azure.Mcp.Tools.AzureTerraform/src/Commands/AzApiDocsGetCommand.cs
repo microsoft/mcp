@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
         Optionally specify --api-version to target a specific API version.
         This tool reuses Azure Bicep type definitions to generate accurate AzAPI schemas.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = true,

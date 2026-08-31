@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.BicepSchema.Commands;
     Name = "get",
     Title = "Get Bicep Schema for a resource",
     Description = "Provides the Bicep schema definition of any Azure resource type (latest service version). Use this to get the schema needed to write Bicep IaC (infrastructure as code) for Azure resources such as AI models, storage accounts, databases, virtual machines, app services, key vaults, and more. Do not use this tool for resource deployment, deployment guidelines, or getting best practices.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

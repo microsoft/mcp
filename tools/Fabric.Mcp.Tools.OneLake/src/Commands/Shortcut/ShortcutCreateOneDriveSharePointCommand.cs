@@ -19,6 +19,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
         Requires a connection ID and target URL. Optionally updates the Fabric
         item sensitivity label from the source. Requires OneLake.ReadWrite.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

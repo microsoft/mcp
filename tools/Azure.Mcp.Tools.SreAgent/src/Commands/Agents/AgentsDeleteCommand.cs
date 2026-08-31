@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Agents;
     Name = "delete",
     Title = "Delete SRE Sub-Agent",
     Description = "Deletes a sub-agent from a targeted SRE Agent resource. Required: --subscription, --agent, --name, --confirm true.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

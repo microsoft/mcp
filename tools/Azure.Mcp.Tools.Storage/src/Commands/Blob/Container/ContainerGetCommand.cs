@@ -27,6 +27,7 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
         Returns: container name, lastModified, leaseStatus, publicAccess, metadata, and container properties.
         Do not use this tool to list blobs in a container.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

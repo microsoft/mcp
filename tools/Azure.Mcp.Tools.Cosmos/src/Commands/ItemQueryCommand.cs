@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands;
     Name = "query",
     Title = "Query Cosmos DB Container",
     Description = "List items from a Cosmos DB container by specifying the account name, database name, and container name, optionally providing a custom SQL query to filter results.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

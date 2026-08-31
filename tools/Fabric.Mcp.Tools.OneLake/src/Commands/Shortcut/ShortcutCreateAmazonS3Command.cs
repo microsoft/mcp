@@ -18,6 +18,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
         Create a shortcut pointing to an Amazon S3 location. Requires a connection
         ID for authentication and a target URL. Requires OneLake.ReadWrite.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

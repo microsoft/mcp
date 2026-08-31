@@ -14,6 +14,7 @@ namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
     Name = "platform-api-spec",
     Title = "Platform API Specification",
     Description = "Retrieves the OpenAPI specification for core Fabric platform APIs. Use this when the user needs documentation for cross-cutting platform APIs like workspace management. Returns complete platform API specification.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

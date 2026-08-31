@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.Search.Commands.Index;
         Queries/searches documents in an Azure AI Search index with a given query, returning the results of the
         query/search.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

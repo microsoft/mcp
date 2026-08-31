@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.Account;
         List all App Configuration stores in a subscription. This command retrieves and displays all App Configuration
         stores available in the specified subscription. Results include store names returned as a JSON array.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

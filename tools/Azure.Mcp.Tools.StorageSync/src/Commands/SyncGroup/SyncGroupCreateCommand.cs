@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.SyncGroup;
     Name = "create",
     Title = "Create Sync Group",
     Description = "Create a sync group within an existing Storage Sync service. Sync groups define a sync topology and contain cloud endpoints (Azure File Shares) and server endpoints (local server paths) that sync together.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.Search.Commands.Index;
         description, and more. If a specific index name is not provided, the command will return details for all
         indexes.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

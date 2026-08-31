@@ -31,13 +31,25 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
     public void Command_Metadata_IsCorrect()
     {
         var metadata = Command.Metadata;
-        Assert.Equal(ToolOperationPlane.Both, metadata.OperationPlane);
+        Assert.Equal(ToolOperationPlane.Data, metadata.OperationPlane);
         Assert.False(metadata.Destructive);
         Assert.False(metadata.Idempotent);
         Assert.False(metadata.OpenWorld);
         Assert.False(metadata.ReadOnly);
         Assert.False(metadata.LocalRequired);
         Assert.False(metadata.Secret);
+    }
+
+    /// <summary>
+    /// Publishing resolves the topic through ARM to read its endpoint before sending. That lookup is
+    /// addressing, not a deliverable, so the command is Data rather than Both. See
+    /// docs/design/operation-plane-metadata.md.
+    /// </summary>
+    [Fact]
+    public void Command_OperationPlane_IgnoresArmLookupUsedOnlyForAddressing()
+    {
+        Assert.Equal(ToolOperationPlane.Data, Command.Metadata.OperationPlane);
+        Assert.NotEqual(ToolOperationPlane.Both, Command.Metadata.OperationPlane);
     }
 
     [Fact]

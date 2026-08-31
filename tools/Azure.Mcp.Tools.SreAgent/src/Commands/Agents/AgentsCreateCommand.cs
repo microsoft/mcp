@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Agents;
     Name = "create",
     Title = "Create SRE Sub-Agent",
     Description = "Creates or updates a sub-agent on a targeted SRE Agent resource. Required: --subscription, --agent, --name.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

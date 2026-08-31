@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
         Configures the soft delete settings for a backup vault. Set the state to 'AlwaysOn', 'On',
         or 'Off', and optionally specify the retention period in days (14-180).
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

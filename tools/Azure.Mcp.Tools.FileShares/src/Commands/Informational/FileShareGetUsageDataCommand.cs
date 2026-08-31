@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Informational;
     Name = "usage",
     Title = "Get File Share Usage Data",
     Description = "Get file share usage data for a subscription and location",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

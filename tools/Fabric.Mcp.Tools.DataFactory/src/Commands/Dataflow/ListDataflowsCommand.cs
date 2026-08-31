@@ -15,6 +15,7 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Dataflow;
     Name = "list-dataflows",
     Title = "List Dataflows",
     Description = "Lists all dataflows in a specified Microsoft Fabric workspace.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     ReadOnly = true,

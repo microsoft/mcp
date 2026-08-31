@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.Database;
         (show one Azure SQL database) or 'az sql db list' (list all Azure SQL databases in a server).
         Returns database information including configuration details and current status.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

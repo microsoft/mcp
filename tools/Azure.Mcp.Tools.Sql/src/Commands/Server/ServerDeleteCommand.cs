@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.Server;
         This operation permanently deletes all server data and cannot be reversed.
         Use --force to bypass confirmation.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

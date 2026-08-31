@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Informational;
     Name = "rec",
     Title = "Get File Share Provisioning Recommendation",
     Description = "Get provisioning parameter recommendations for a file share based on desired storage size",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

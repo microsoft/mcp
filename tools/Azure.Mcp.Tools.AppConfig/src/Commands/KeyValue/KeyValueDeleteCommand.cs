@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
         If a label is specified, only the labeled version is deleted. If no label is specified, the key-value with the matching
         key and the default label will be deleted.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

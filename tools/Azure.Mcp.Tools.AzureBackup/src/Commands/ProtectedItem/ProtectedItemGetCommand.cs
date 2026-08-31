@@ -27,6 +27,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
         for RSV workload items. When --protected-item is omitted, lists all protected items
         (backup instances) in the vault.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

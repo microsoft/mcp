@@ -15,6 +15,7 @@ namespace Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
     Name = "append",
     Title = "Append Confidential Ledger Entry",
     Description = "Appends a tamper-proof entry to a Confidential Ledger instance and returns the transaction identifier.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

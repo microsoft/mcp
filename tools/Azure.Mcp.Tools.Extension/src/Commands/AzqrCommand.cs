@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.Extension.Commands;
     Name = "azqr",
     Title = "Azure Quick Review CLI Command",
     Description = "Runs Azure Quick Review CLI (azqr) to scan an Azure subscription (or resource group) for compliance issues and provide compliance recommendations. Generates a compliance and security assessment report that identifies non-compliant configurations and recommends improvements for your Azure resources. Use this whenever a user wants to scan, check, review, or assess a subscription for compliance issues or compliance recommendations, or wants recommendations to fix compliance and security problems. Requires a subscription (ID or name) and optionally a resource group. Returns the generated report file paths (XLSX and JSON). Note: azqr performs compliance and security scans and is different from Azure CLI (az), from Azure Policy assignments, and from Azure Advisor recommendations for cost, security, reliability, operational excellence, and performance improvements.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

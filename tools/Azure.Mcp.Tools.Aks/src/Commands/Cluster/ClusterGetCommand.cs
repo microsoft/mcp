@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Aks.Commands.Cluster;
     Name = "get",
     Title = "Get Azure Kubernetes Service (AKS) Cluster Details",
     Description = "List/enumerate all AKS (Azure Kubernetes Service) clusters in a subscription. Get/retrieve/show the details of a specific cluster if a name is provided.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -29,6 +29,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
         For Linux VMs with SSH, read the user's public key file (e.g., ~/.ssh/id_rsa.pub) and pass its content.
         Do not use this for Virtual Machine Scale Sets with multiple identical instances (use VMSS create instead).
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

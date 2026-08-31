@@ -21,6 +21,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Settings;
         202 Accepted. Requires OneLake.ReadWrite.All. Caller must be a workspace Admin
         on the source workspace and Contributor+ on the destination workspace.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

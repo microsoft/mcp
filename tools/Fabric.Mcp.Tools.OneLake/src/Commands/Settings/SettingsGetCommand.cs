@@ -18,6 +18,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Settings;
         Get the OneLake settings for a workspace — diagnostics configuration and
         immutability policy. Requires OneLake.Read.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
         is specified, retrieves the details of that specific function app.  Returns the details of Azure Function Apps, including its name,
         location, status, and app service plan name.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

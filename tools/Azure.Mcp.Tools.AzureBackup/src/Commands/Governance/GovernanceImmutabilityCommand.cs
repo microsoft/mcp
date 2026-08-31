@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
         Configures the immutability state for a backup vault. States include 'Disabled', 'Enabled',
         or 'Locked'. Warning: 'Locked' state is irreversible.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

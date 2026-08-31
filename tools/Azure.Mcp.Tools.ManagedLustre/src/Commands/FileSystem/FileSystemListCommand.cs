@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
     Name = "list",
     Title = "List Azure Managed Lustre File Systems",
     Description = "Lists Azure Managed Lustre (AMLFS) file systems in a subscription or optional resource group including provisioning state, MGS address, tier, capacity (TiB), blob integration container, and maintenance window details. Use to inventory Azure Managed Lustre filesystems and to check their properties.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

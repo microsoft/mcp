@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
         Multiple enhancements can be selected by passing a comma-separated list (e.g. 'redis,processors').
         After this call succeeds, continue with orchestrator-next as usual.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

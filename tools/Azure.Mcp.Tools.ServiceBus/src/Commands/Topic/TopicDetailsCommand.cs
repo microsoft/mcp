@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
         Required arguments are namespace: The fully qualified Service Bus namespace host name (usually in the form <namespace>.servicebus.windows.net) and topic: Topic name to get information about.
         Do not use this to get details on Service Bus subscription- instead use servicebus_topic_subscription_details.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

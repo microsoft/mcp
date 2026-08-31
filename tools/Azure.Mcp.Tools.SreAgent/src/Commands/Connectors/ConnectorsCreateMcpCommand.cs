@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
     Name = "create_mcp",
     Title = "Create SRE Agent MCP Connector",
     Description = "Create or update an MCP connector on an Azure SRE Agent resource.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = true,

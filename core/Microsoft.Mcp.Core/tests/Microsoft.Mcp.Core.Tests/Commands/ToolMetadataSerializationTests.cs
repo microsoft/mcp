@@ -36,6 +36,14 @@ public sealed class ToolMetadataSerializationTests
     }
 
     [Fact]
+    public void Serialize_UndefinedOperationPlane_Throws()
+    {
+        var metadata = new ToolMetadata { OperationPlane = (ToolOperationPlane)int.MaxValue };
+
+        Assert.Throws<JsonException>(() => JsonSerializer.Serialize(metadata, ModelsJsonContext.Default.ToolMetadata));
+    }
+
+    [Fact]
     public void Deserialize_UnknownOperationPlane_FallsBackToUnspecified()
     {
         const string Json = """{ "operationPlane": "someFuturePlane" }""";

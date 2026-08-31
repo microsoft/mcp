@@ -15,16 +15,18 @@ namespace Microsoft.Mcp.Core.Commands;
 public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
 {
     /// <summary>
-    /// Stable serialized values for <see cref="ToolOperationPlane"/>. Unknown values read as
-    /// <see cref="ToolOperationPlane.Unspecified"/> so newer metadata remains readable.
+    /// Stable serialized values for <see cref="ToolOperationPlane"/>. Writing is strict so an enum
+    /// value added without a serialized form fails loudly instead of silently emitting
+    /// <c>unspecified</c>; reading is lenient so newer metadata remains readable by older binaries.
     /// </summary>
     private static string ToJsonValue(ToolOperationPlane operationPlane) => operationPlane switch
     {
+        ToolOperationPlane.Unspecified => "unspecified",
         ToolOperationPlane.Data => "data",
         ToolOperationPlane.Control => "control",
         ToolOperationPlane.Both => "both",
         ToolOperationPlane.NotApplicable => "notApplicable",
-        _ => "unspecified"
+        _ => throw new JsonException($"'{operationPlane}' has no serialized operation plane value.")
     };
 
     private static ToolOperationPlane FromJsonValue(string? value) => value switch

@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
         in the specified --subscription. If a resource group is specified, only hostpools in that resource group are returned.
         Results include hostpool names and are returned as a JSON array.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

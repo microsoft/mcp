@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
         Use --max-count to limit results (default 100, maximum 100). Values greater than 100 are rejected with an error; if more devices exist, truncated=true is set.
         Hub names/IDs are case-sensitive and must match exactly.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
     Name = "delete",
     Title = "Delete SRE Agent Connector",
     Description = "Delete a connector from an Azure SRE Agent resource. Required: --subscription, --agent, --name, --confirm true.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
