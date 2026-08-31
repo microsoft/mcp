@@ -86,6 +86,14 @@ public static class PolicyUpdateValidator
             return;
         }
 
+        if (!hasRelative && !hasAbsolute)
+        {
+            issues.Add(new PolicyValidationIssue(
+                $"--{AzureBackupOptionDefinitions.MonthlyRetentionDaysOfMonthName}",
+                "Monthly retention requires either the absolute scheme (--monthly-retention-days-of-month) or the relative scheme (--monthly-retention-week-of-month + --monthly-retention-days-of-week)."));
+            return;
+        }
+
         if (hasRelative && hasAbsolute)
         {
             issues.Add(new PolicyValidationIssue(
@@ -130,6 +138,14 @@ public static class PolicyUpdateValidator
             issues.Add(new PolicyValidationIssue(
                 $"--{AzureBackupOptionDefinitions.YearlyRetentionMonthsName}",
                 "Yearly retention requires --yearly-retention-months (e.g. 'January')."));
+        }
+
+        if (!hasRelative && !hasAbsolute)
+        {
+            issues.Add(new PolicyValidationIssue(
+                $"--{AzureBackupOptionDefinitions.YearlyRetentionDaysOfMonthName}",
+                "Yearly retention requires either the absolute scheme (--yearly-retention-days-of-month) or the relative scheme (--yearly-retention-week-of-month + --yearly-retention-days-of-week)."));
+            return;
         }
 
         if (hasRelative && hasAbsolute)

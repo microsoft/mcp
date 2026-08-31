@@ -694,7 +694,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var existingPolicy = await policyCollection.GetAsync(policyName, cancellationToken);
         var policyData = existingPolicy.Value.Data;
         var policyProperties = policyData.Properties as BackupGenericProtectionPolicy
-            ?? throw new ArgumentException($"Policy '{policyName}' has an unsupported properties type.", nameof(request));
+            ?? throw new ArgumentException($"Policy '{policyName}' has an unsupported properties type.", nameof(policyName));
 
         DateTimeOffset? newScheduleTime = null;
         if (!string.IsNullOrWhiteSpace(request.ScheduleTime))
@@ -754,9 +754,23 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             vmPolicy.TimeZone = req.TimeZone;
         }
 
-        // ParseScheduleTimes returns at least one entry (default 02:00 UTC) even when the caller
-        // supplies nothing, so we always have a well-defined retention time list to attach.
-        var scheduleTimes = Policy.RsvPolicyBuilder.ParseScheduleTimes(req.ScheduleTimes);
+        // Prefer the caller-supplied schedule times; otherwise use the existing policy's schedule times
+        // so retention tiers align with the current run times. Fall back to the parser default only when
+        // neither is available.
+        var existingSchedule = vmPolicy.SchedulePolicy as SimpleSchedulePolicy;
+        IList<DateTimeOffset> scheduleTimes;
+        if (!string.IsNullOrWhiteSpace(req.ScheduleTimes))
+        {
+            scheduleTimes = Policy.RsvPolicyBuilder.ParseScheduleTimes(req.ScheduleTimes);
+        }
+        else if (existingSchedule is not null && existingSchedule.ScheduleRunTimes.Count > 0)
+        {
+            scheduleTimes = new List<DateTimeOffset>(existingSchedule.ScheduleRunTimes);
+        }
+        else
+        {
+            scheduleTimes = Policy.RsvPolicyBuilder.ParseScheduleTimes(null);
+        }
 
         bool scheduleReplaced = !string.IsNullOrWhiteSpace(req.ScheduleFrequency)
             || !string.IsNullOrWhiteSpace(req.ScheduleTimes)
@@ -764,14 +778,39 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
         if (scheduleReplaced)
         {
-            var isWeekly = string.Equals(req.ScheduleFrequency?.Trim(), "Weekly", StringComparison.OrdinalIgnoreCase);
+            // Determine frequency: explicit --schedule-frequency wins; otherwise infer Weekly when
+            // days-of-week are supplied, and fall back to the existing schedule's frequency.
+            ScheduleRunType freq;
+            if (!string.IsNullOrWhiteSpace(req.ScheduleFrequency))
+            {
+                freq = string.Equals(req.ScheduleFrequency!.Trim(), "Weekly", StringComparison.OrdinalIgnoreCase)
+                    ? ScheduleRunType.Weekly
+                    : ScheduleRunType.Daily;
+            }
+            else if (!string.IsNullOrWhiteSpace(req.ScheduleDaysOfWeek))
+            {
+                freq = ScheduleRunType.Weekly;
+            }
+            else
+            {
+                freq = existingSchedule?.ScheduleRunFrequency ?? ScheduleRunType.Daily;
+            }
+
+            var isWeekly = freq == ScheduleRunType.Weekly;
             var schedule = new SimpleSchedulePolicy
             {
-                ScheduleRunFrequency = isWeekly ? ScheduleRunType.Weekly : ScheduleRunType.Daily,
+                ScheduleRunFrequency = freq,
             };
             if (isWeekly)
             {
                 var days = Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.ScheduleDaysOfWeek);
+                if (days.Count == 0 && existingSchedule is not null && existingSchedule.ScheduleRunDays.Count > 0)
+                {
+                    foreach (var d in existingSchedule.ScheduleRunDays)
+                    {
+                        days.Add(d);
+                    }
+                }
                 if (days.Count == 0)
                 {
                     days.Add(BackupDayOfWeek.Sunday);

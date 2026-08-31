@@ -64,7 +64,7 @@ public class AzureBackupPolicyUpdateParityCommandTests(
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
         var policyName = RegisterOrRetrieveVariable(
             "updateVmWeeklyRetPolicyName",
-            $"test-upd-vmwr-{Random.Shared.NextInt64()}");
+            $"test-upd-weekly-{Random.Shared.NextInt64()}");
 
         await CallToolAsync(
             "azurebackup_policy_create",
@@ -101,7 +101,7 @@ public class AzureBackupPolicyUpdateParityCommandTests(
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
         var policyName = RegisterOrRetrieveVariable(
             "updateVmMonthlyAbsPolicyName",
-            $"test-upd-vmma-{Random.Shared.NextInt64()}");
+            $"test-upd-monthly-{Random.Shared.NextInt64()}");
 
         await CallToolAsync(
             "azurebackup_policy_create",
@@ -142,7 +142,7 @@ public class AzureBackupPolicyUpdateParityCommandTests(
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
         var policyName = RegisterOrRetrieveVariable(
             "updateVmYearlyRelPolicyName",
-            $"test-upd-vmyr-{Random.Shared.NextInt64()}");
+            $"test-upd-yearly-{Random.Shared.NextInt64()}");
 
         await CallToolAsync(
             "azurebackup_policy_create",

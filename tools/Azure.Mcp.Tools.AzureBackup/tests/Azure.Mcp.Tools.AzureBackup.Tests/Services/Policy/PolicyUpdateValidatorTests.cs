@@ -251,4 +251,33 @@ public class PolicyUpdateValidatorTests
 
         Assert.True(result.IsValid);
     }
+
+    [Fact]
+    public void Validate_MonthlyMonthsWithoutScheme_Fails()
+    {
+        // Regression guard: --monthly-retention-months alone must not be accepted;
+        // callers must supply either the absolute or the relative scheme.
+        var options = BaseOptions();
+        options.MonthlyRetentionMonths = 12;
+
+        var result = PolicyUpdateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--monthly-retention-days-of-month");
+    }
+
+    [Fact]
+    public void Validate_YearlyYearsAndMonthsWithoutScheme_Fails()
+    {
+        // Regression guard: --yearly-retention-years + --yearly-retention-months must not be
+        // accepted alone; callers must supply either the absolute or the relative scheme.
+        var options = BaseOptions();
+        options.YearlyRetentionYears = 5;
+        options.YearlyRetentionMonths = "January";
+
+        var result = PolicyUpdateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--yearly-retention-days-of-month");
+    }
 }
