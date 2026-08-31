@@ -673,11 +673,13 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     }
 
     public async Task<OperationResult> UpdatePolicyAsync(
+        Policy.PolicyUpdateRequest request,
         string vaultName, string resourceGroup, string subscription,
-        string policyName,
-        string? scheduleTime, string? dailyRetentionDays,
         string? tenant, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var policyName = request.Policy;
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
@@ -692,39 +694,225 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var existingPolicy = await policyCollection.GetAsync(policyName, cancellationToken);
         var policyData = existingPolicy.Value.Data;
         var policyProperties = policyData.Properties as BackupGenericProtectionPolicy
-            ?? throw new ArgumentException($"Policy '{policyName}' has an unsupported properties type.", nameof(policyName));
+            ?? throw new ArgumentException($"Policy '{policyName}' has an unsupported properties type.", nameof(request));
 
         DateTimeOffset? newScheduleTime = null;
-        if (!string.IsNullOrWhiteSpace(scheduleTime))
+        if (!string.IsNullOrWhiteSpace(request.ScheduleTime))
         {
-            if (!DateTimeOffset.TryParse(scheduleTime, out var st))
+            if (!DateTimeOffset.TryParse(request.ScheduleTime, out var st))
             {
-                throw new ArgumentException($"Invalid schedule time '{scheduleTime}'. Provide a valid time in UTC HH:mm format (e.g., '04:00').");
+                throw new ArgumentException($"Invalid schedule time '{request.ScheduleTime}'. Provide a valid time in UTC HH:mm format (e.g., '04:00').");
             }
             newScheduleTime = st;
         }
 
         int? newRetentionDays = null;
-        if (!string.IsNullOrWhiteSpace(dailyRetentionDays))
+        if (!string.IsNullOrWhiteSpace(request.DailyRetentionDays))
         {
-            if (!int.TryParse(dailyRetentionDays, out var dd) || dd <= 0)
+            if (!int.TryParse(request.DailyRetentionDays, out var dd) || dd <= 0)
             {
-                throw new ArgumentException($"Invalid daily retention days '{dailyRetentionDays}'. Provide a positive integer.");
+                throw new ArgumentException($"Invalid daily retention days '{request.DailyRetentionDays}'. Provide a positive integer.");
             }
             newRetentionDays = dd;
         }
 
-        if (newScheduleTime is null && newRetentionDays is null)
+        if (!request.HasAnyInput())
         {
             return new OperationResult("Succeeded", null, $"No changes specified for policy '{policyName}'. Policy remains unchanged.");
         }
 
-        UpdatePolicyScheduleAndRetention(policyProperties, newScheduleTime, newRetentionDays);
+        // Extended IaasVM merger (new): applies TimeZone / schedule reshape / weekly-monthly-yearly retention.
+        if (policyProperties is IaasVmProtectionPolicy vmPolicy && request.HasIaasVmExtendedFlags())
+        {
+            MergeIaasVmExtended(vmPolicy, request);
+        }
+
+        // Legacy back-compat: single daily schedule time and/or daily retention days across policy kinds.
+        if (newScheduleTime is not null || newRetentionDays is not null)
+        {
+            UpdatePolicyScheduleAndRetention(policyProperties, newScheduleTime, newRetentionDays);
+        }
 
         var operation = await policyCollection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' updated in vault '{vaultName}'.");
+    }
+
+    /// <summary>
+    /// Applies the caller-supplied IaasVM extended flags on top of the existing policy in place.
+    /// Semantics: TimeZone is overlaid when supplied. Schedule (SimpleSchedulePolicy) is replaced when
+    /// any of frequency / times / days-of-week is supplied. Retention tiers (Weekly / Monthly / Yearly)
+    /// are individually replaced whenever the corresponding count is greater than zero — other tiers
+    /// on the existing policy are preserved untouched. Daily retention continues to be driven by the
+    /// legacy <see cref="Policy.PolicyUpdateRequest.DailyRetentionDays"/> path.
+    /// </summary>
+    internal static void MergeIaasVmExtended(IaasVmProtectionPolicy vmPolicy, Policy.PolicyUpdateRequest req)
+    {
+        if (!string.IsNullOrWhiteSpace(req.TimeZone))
+        {
+            vmPolicy.TimeZone = req.TimeZone;
+        }
+
+        // ParseScheduleTimes returns at least one entry (default 02:00 UTC) even when the caller
+        // supplies nothing, so we always have a well-defined retention time list to attach.
+        var scheduleTimes = Policy.RsvPolicyBuilder.ParseScheduleTimes(req.ScheduleTimes);
+
+        bool scheduleReplaced = !string.IsNullOrWhiteSpace(req.ScheduleFrequency)
+            || !string.IsNullOrWhiteSpace(req.ScheduleTimes)
+            || !string.IsNullOrWhiteSpace(req.ScheduleDaysOfWeek);
+
+        if (scheduleReplaced)
+        {
+            var isWeekly = string.Equals(req.ScheduleFrequency?.Trim(), "Weekly", StringComparison.OrdinalIgnoreCase);
+            var schedule = new SimpleSchedulePolicy
+            {
+                ScheduleRunFrequency = isWeekly ? ScheduleRunType.Weekly : ScheduleRunType.Daily,
+            };
+            if (isWeekly)
+            {
+                var days = Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.ScheduleDaysOfWeek);
+                if (days.Count == 0)
+                {
+                    days.Add(BackupDayOfWeek.Sunday);
+                }
+                foreach (var d in days)
+                {
+                    schedule.ScheduleRunDays.Add(d);
+                }
+            }
+            foreach (var t in scheduleTimes)
+            {
+                schedule.ScheduleRunTimes.Add(t);
+            }
+            vmPolicy.SchedulePolicy = schedule;
+        }
+
+        var retention = vmPolicy.RetentionPolicy as LongTermRetentionPolicy;
+        if (retention is null)
+        {
+            retention = new LongTermRetentionPolicy();
+            vmPolicy.RetentionPolicy = retention;
+        }
+
+        if (req.WeeklyRetentionWeeks > 0)
+        {
+            var weekly = new WeeklyRetentionSchedule
+            {
+                RetentionDuration = new RetentionDuration { Count = req.WeeklyRetentionWeeks, DurationType = RetentionDurationType.Weeks },
+            };
+            var dow = Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.WeeklyRetentionDaysOfWeek);
+            if (dow.Count == 0)
+            {
+                dow.Add(BackupDayOfWeek.Sunday);
+            }
+            foreach (var d in dow)
+            {
+                weekly.DaysOfTheWeek.Add(d);
+            }
+            foreach (var t in scheduleTimes)
+            {
+                weekly.RetentionTimes.Add(t);
+            }
+            retention.WeeklySchedule = weekly;
+        }
+
+        if (req.MonthlyRetentionMonths > 0)
+        {
+            var monthly = new MonthlyRetentionSchedule
+            {
+                RetentionDuration = new RetentionDuration { Count = req.MonthlyRetentionMonths, DurationType = RetentionDurationType.Months },
+            };
+            if (!string.IsNullOrWhiteSpace(req.MonthlyRetentionDaysOfMonth))
+            {
+                monthly.RetentionScheduleFormatType = RetentionScheduleFormat.Daily;
+                foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfMonth(req.MonthlyRetentionDaysOfMonth))
+                {
+                    monthly.RetentionScheduleDailyDaysOfTheMonth.Add(day);
+                }
+            }
+            else
+            {
+                monthly.RetentionScheduleFormatType = RetentionScheduleFormat.Weekly;
+                monthly.RetentionScheduleWeekly = new WeeklyRetentionFormat();
+                var dow = Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.MonthlyRetentionDaysOfWeek);
+                if (dow.Count == 0)
+                {
+                    dow.Add(BackupDayOfWeek.Sunday);
+                }
+                foreach (var d in dow)
+                {
+                    monthly.RetentionScheduleWeekly.DaysOfTheWeek.Add(d);
+                }
+                var weeks = Policy.RsvPolicyBuilder.ParseWeeksOfMonth(req.MonthlyRetentionWeekOfMonth);
+                if (weeks.Count == 0)
+                {
+                    weeks.Add(BackupWeekOfMonth.First);
+                }
+                foreach (var w in weeks)
+                {
+                    monthly.RetentionScheduleWeekly.WeeksOfTheMonth.Add(w);
+                }
+            }
+            foreach (var t in scheduleTimes)
+            {
+                monthly.RetentionTimes.Add(t);
+            }
+            retention.MonthlySchedule = monthly;
+        }
+
+        if (req.YearlyRetentionYears > 0)
+        {
+            var yearly = new YearlyRetentionSchedule
+            {
+                RetentionDuration = new RetentionDuration { Count = req.YearlyRetentionYears, DurationType = RetentionDurationType.Years },
+            };
+            var months = Policy.RsvPolicyBuilder.ParseMonthsOfYear(req.YearlyRetentionMonths);
+            if (months.Count == 0)
+            {
+                months.Add(BackupMonthOfYear.January);
+            }
+            foreach (var m in months)
+            {
+                yearly.MonthsOfYear.Add(m);
+            }
+            if (!string.IsNullOrWhiteSpace(req.YearlyRetentionDaysOfMonth))
+            {
+                yearly.RetentionScheduleFormatType = RetentionScheduleFormat.Daily;
+                foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfMonth(req.YearlyRetentionDaysOfMonth))
+                {
+                    yearly.RetentionScheduleDailyDaysOfTheMonth.Add(day);
+                }
+            }
+            else
+            {
+                yearly.RetentionScheduleFormatType = RetentionScheduleFormat.Weekly;
+                yearly.RetentionScheduleWeekly = new WeeklyRetentionFormat();
+                var dow = Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.YearlyRetentionDaysOfWeek);
+                if (dow.Count == 0)
+                {
+                    dow.Add(BackupDayOfWeek.Sunday);
+                }
+                foreach (var d in dow)
+                {
+                    yearly.RetentionScheduleWeekly.DaysOfTheWeek.Add(d);
+                }
+                var weeks = Policy.RsvPolicyBuilder.ParseWeeksOfMonth(req.YearlyRetentionWeekOfMonth);
+                if (weeks.Count == 0)
+                {
+                    weeks.Add(BackupWeekOfMonth.First);
+                }
+                foreach (var w in weeks)
+                {
+                    yearly.RetentionScheduleWeekly.WeeksOfTheMonth.Add(w);
+                }
+            }
+            foreach (var t in scheduleTimes)
+            {
+                yearly.RetentionTimes.Add(t);
+            }
+            retention.YearlySchedule = yearly;
+        }
     }
 
     private static void UpdatePolicyScheduleAndRetention(BackupGenericProtectionPolicy policyProperties, DateTimeOffset? newScheduleTime, int? newRetentionDays)
