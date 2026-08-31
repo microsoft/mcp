@@ -37,7 +37,7 @@ $excludedPlatforms = @(
 # Platforms outside of the standard combinations that should also be built.  Setting a "specialPurpose" allows then to
 # be targeted or excluded in packaging scripts
 $additionalPlatforms = @(
-    # Add additional builds for Docker as they use the musl runtime variant wihch differs from the default Linux builds.
+    # Add additional builds for Docker as they use the musl runtime variant which differs from the default Linux builds.
     # In the future we can evaluate if these can be moved to the standard Linux builds to remove two jobs from our
     # standard pipeline.
     @{
