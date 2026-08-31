@@ -648,14 +648,24 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 ## Azure IoT Hub
 
-| Tool Name | Test Prompt |
-|:----------|:----------|
-| iothub_device_list | List devices in IoT Hub <hub_name> in resource group <resource_group_name> |
-| iothub_device_list | Show all devices registered to IoT Hub <hub_name> |
-| iothub_device_list | Get the device registry for IoT Hub <hub_name> in subscription <subscription_id> |
-| iothub_hub_get | Get details for IoT Hub <hub_name> in resource group <resource_group_name> |
-| iothub_hub_get | Show IoT Hub <hub_name> in resource group <resource_group_name> for subscription <subscription_id> |
-| iothub_hub_get | Retrieve IoT Hub <hub_name> metadata from resource group <resource_group_name> |
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| iothub_device_list | List devices in IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_device_list | Show the registered devices in IoT Hub <hub_name> | none |
+| iothub_device_list | List the registered devices for IoT Hub <hub_name> in subscription <subscription_id> | none |
+| iothub_device_show | Show device <device_id> in IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_device_show | Get the device identity for <device_id> in IoT Hub <hub_name> | none |
+| iothub_device_stats | Show device statistics for IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_device_stats | How many devices are registered in IoT Hub <hub_name>? | none |
+| iothub_device_twin_get | Get the device twin for <device_id> in IoT Hub <hub_name> | none |
+| iothub_device_twin_get | Show desired and reported properties for device <device_id> in IoT Hub <hub_name> | none |
+| iothub_hub_get | Get details for IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_hub_get | Show IoT Hub <hub_name> in resource group <resource_group_name> for subscription <subscription_id> | none |
+| iothub_hub_get | Retrieve IoT Hub <hub_name> metadata from resource group <resource_group_name> | none |
+| iothub_query_run | Run the query "SELECT * FROM devices WHERE status = 'enabled'" against IoT Hub <hub_name> | none |
+| iothub_query_run | Query all devices in IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_query_run | Find devices in IoT Hub <hub_name> where reported batteryLevel is less than 20 | none |
+| iothub_query_run | Find devices in IoT Hub <hub_name> where tag environment equals 'production' | none |
 
 ## Azure Key Vault
 
