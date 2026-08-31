@@ -960,6 +960,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_recoveryjob_get | Get the details of recovery job <recovery_job_name> for recovery plan <recoveryplan_name> in service group <service_group> | none |
 | resilience_recoveryjob_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recovery plan <recoveryplan_name> in service group <service_group> | none |
 | resilience_recoveryjob_resource_get | Get the recovery job resource <resource_name> for recovery job <recovery_job_name> of recovery plan <recoveryplan_name> in service group <service_group> | none |
+| resilience_recoveryjob_resume | Resume paused recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> with description <description> | none |
+| resilience_recoveryjob_retry | Retry failed recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resilience_recoveryplan_create | Create a Zonal recovery plan named <recoveryplan_name> in service group <service_group> | clarification-required |
 | resilience_recoveryplan_create | Set up a Zonal recovery plan named <recoveryplan_name> in service group <service_group>. Use a system-assigned managed identity, description <plan_description>, and default recovery group description <default_group_description> | none |
 | resilience_recoveryplan_create | Create Zonal recovery plan <recoveryplan_name> in service group <service_group> and attach user-assigned managed identity <user_assigned_identity_resource_id>. Use <plan_description> for the plan description and <default_group_description> for the default recovery group | none |
@@ -970,8 +972,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_recoveryplan_checkreadiness | Discover readiness issues for the resources in recovery plan <recoveryplan_name> in service group <service_group> | none |
 | resilience_recoveryplan_delete | Delete the entire recovery plan <recoveryplan_name> from service group <service_group> | none |
 | resilience_recoveryplan_delete | Recovery plan <recoveryplan_name> is no longer needed. Delete it from resilience service group <service_group> | none |
+| resilience_recoveryplan_failover | Fail over qualified resources in recoveryplan <recoveryplan_name> from source location <source_location> in service group <service_group> | none |
+| resilience_recoveryplan_failover | Fail over recoveryplan <recoveryplan_name> in service group <service_group> without specifying source locations or recovery resources | clarification-required |
+| resilience_recoveryplan_finalize | Complete or finalize the current recoveryplan operation for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resilience_recoveryplan_get | List all resilience recovery plans in service group <service_group> | none |
 | resilience_recoveryplan_get | Get the details of recovery plan <recoveryplan_name> in service group <service_group> | none |
+| resilience_recoveryplan_reprotect | Reprotect all qualified resources after failover in recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resilience_recoveryplan_validateforfailover | Validate recovery plan <recoveryplan_name> for failover in service group <service_group>, but I have not specified a source location or selected recovery-resource ID | clarification-required |
 | resilience_recoveryplan_validateforfailover | Validate which resources in recovery plan <recoveryplan_name> in service group <service_group> can fail over from <source_location> and report blocking reasons | none |
 | resilience_recoveryplan_validateforfailover | Check whether recovery resource <recovery_resource_id> in recovery plan <recoveryplan_name> is qualified for failover without requiring a source location or executing failover | none |

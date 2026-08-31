@@ -3840,6 +3840,28 @@ azmcp resilience recoveryplan create --service-group <service-group> \
 azmcp resilience recoveryplan delete --service-group <service-group> \
                                       --recovery-plan <recovery-plan>
 
+# Start failover for qualified recoveryplan resources. Provide source locations, selected full recovery-resource IDs, or both.
+# Returns operation and recovery job IDs for tracking. Validate qualification and readiness first when unknown.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan failover --service-group <service-group> \
+                                        --recoveryplan <recoveryplan> \
+                                        [--source-locations <source-location> [<source-location> ...]] \
+                                        [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
+                                        [--user-consent <Unspecified|Allowed>]
+
+# Complete or finalize the current recoveryplan operation by validating resource permissions and updating plan state.
+# Returns an operation ID for tracking. This does not commit a completed failover.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan finalize --service-group <service-group> \
+                                        --recoveryplan <recoveryplan>
+
+# Start reprotection after failover for all qualified resources, or limit it to selected full recovery-resource IDs.
+# Returns operation and recovery job IDs for tracking.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan reprotect --service-group <service-group> \
+                                         --recoveryplan <recoveryplan> \
+                                         [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]]
+
 # Validate which recovery-plan resources are qualified for failover from the specified source locations.
 # Optionally limit validation to selected full recovery-resource IDs and provide execution consent.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -3891,6 +3913,19 @@ azmcp resilience recoveryjob get --subscription <subscription> \
                                  --service-group <service-group> \
                                  --recovery-plan <recovery-plan> \
                                  [--name <name>]
+
+# Retry an existing recovery job in the Failed state. Returns an operation ID for tracking.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryjob retry --service-group <service-group> \
+                                   --recoveryplan <recoveryplan> \
+                                   --recovery-job <recovery-job>
+
+# Resume an existing recovery job in the Paused state, optionally providing input for the paused action.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryjob resume --service-group <service-group> \
+                                    --recoveryplan <recoveryplan> \
+                                    --recovery-job <recovery-job> \
+                                    [--description <description>]
 
 # Get a resource (target) of a recovery job, or list all resources of the job (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

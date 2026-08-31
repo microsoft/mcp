@@ -41,6 +41,9 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<RecoveryPlanGetCommand>();
         services.AddSingleton<RecoveryPlanCreateCommand>();
         services.AddSingleton<RecoveryPlanDeleteCommand>();
+        services.AddSingleton<RecoveryPlanFailoverCommand>();
+        services.AddSingleton<RecoveryPlanFinalizeCommand>();
+        services.AddSingleton<RecoveryPlanReprotectCommand>();
         services.AddSingleton<RecoveryPlanValidateForFailoverCommand>();
         services.AddSingleton<RecoveryPlanValidateForReprotectCommand>();
         services.AddSingleton<RecoveryPlanValidateForOperationCommand>();
@@ -48,6 +51,8 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<RecoveryPlanCheckReadinessCommand>();
         services.AddSingleton<RecoveryResourceGetCommand>();
         services.AddSingleton<RecoveryJobGetCommand>();
+        services.AddSingleton<RecoveryJobRetryCommand>();
+        services.AddSingleton<RecoveryJobResumeCommand>();
         services.AddSingleton<RecoveryJobResourceGetCommand>();
         services.AddSingleton<DrillCreateCommand>();
         services.AddSingleton<DrillGetCommand>();
@@ -111,6 +116,9 @@ public class ResilienceManagementSetup : IAreaSetup
         recoveryPlans.AddCommand<RecoveryPlanGetCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanCreateCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanDeleteCommand>(serviceProvider);
+        recoveryPlans.AddCommand<RecoveryPlanFailoverCommand>(serviceProvider);
+        recoveryPlans.AddCommand<RecoveryPlanFinalizeCommand>(serviceProvider);
+        recoveryPlans.AddCommand<RecoveryPlanReprotectCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanValidateForFailoverCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanValidateForReprotectCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanValidateForOperationCommand>(serviceProvider);
@@ -128,6 +136,8 @@ public class ResilienceManagementSetup : IAreaSetup
         resilienceManagement.AddSubGroup(recoveryJobs);
 
         recoveryJobs.AddCommand<RecoveryJobGetCommand>(serviceProvider);
+        recoveryJobs.AddCommand<RecoveryJobRetryCommand>(serviceProvider);
+        recoveryJobs.AddCommand<RecoveryJobResumeCommand>(serviceProvider);
 
         // Create resource subgroup under recovery job
         var recoveryJobResources = new CommandGroup("resource", "Resilience recovery job resource operations - Commands for listing and getting the resources (targets) of a resilience recovery job.");
