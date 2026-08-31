@@ -229,7 +229,7 @@ public class OptionSchemaGeneratorTests
     public void CreateOutputSchema_KeyValueSetWithoutLabel_MatchesSerializedPayload()
     {
         AssertOmittedLabelConforms(
-            new KeyValueSetCommand.KeyValueSetCommandResult("mykey", "myval", null),
+            new KeyValueSetCommand.KeyValueSetCommandResult("mykey", "myvalue", null),
             OutputSchemaTestJsonContext.Default.KeyValueSetCommandResult);
     }
 

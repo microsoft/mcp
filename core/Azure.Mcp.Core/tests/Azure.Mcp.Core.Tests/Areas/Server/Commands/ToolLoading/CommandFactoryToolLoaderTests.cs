@@ -784,14 +784,14 @@ public class CommandFactoryToolLoaderTests
         var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
 
         var fakeCommand = Substitute.For<IBaseCommand>();
-        fakeCommand.GetCommand().Returns(new Command("fake-noschema-get", "A fake command with no result type."));
+        fakeCommand.GetCommand().Returns(new Command("fake-no-schema-get", "A fake command with no result type."));
         fakeCommand.Title.Returns("Fake No Schema Get");
         fakeCommand.Metadata.Returns(new ToolMetadata());
 
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
         var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
-        commandMap["fake-noschema-get"] = fakeCommand;
+        commandMap["fake-no-schema-get"] = fakeCommand;
 
         var toolLoader = new CommandFactoryToolLoader(commandFactory, toolLoaderOptions, logger);
         var request = McpTestUtilities.CreateToolListRequest();
@@ -800,7 +800,7 @@ public class CommandFactoryToolLoaderTests
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
-        var tool = result.Tools.FirstOrDefault(t => t.Name == "fake-noschema-get");
+        var tool = result.Tools.FirstOrDefault(t => t.Name == "fake-no-schema-get");
         Assert.NotNull(tool);
         Assert.Null(tool.OutputSchema);
     }
