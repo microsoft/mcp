@@ -10,7 +10,6 @@ using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Services;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
@@ -233,7 +232,6 @@ public class AdvisorRecommendationUpdateServiceTests
                 SubscriptionId,
                 "rec-1",
                 RecommendationStatus.Completed,
-                retryPolicy: new RetryPolicyOptions { MaxRetries = 0 },
                 cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal((int)HttpStatusCode.BadRequest, exception.Status);
@@ -315,79 +313,7 @@ public class AdvisorRecommendationUpdateServiceTests
     }
 
     [Fact]
-    public async Task UpdateRecommendationAsync_RetryableFailure_RetriesRequest()
-    {
-        var attempts = 0;
-        var handler = ConfigureService(
-            ArmEnvironment.AzurePublicCloud,
-            string.Empty,
-            responseFactory: () =>
-            {
-                attempts++;
-                if (attempts == 1)
-                {
-                    var retryResponse = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
-                    retryResponse.Headers.RetryAfter = new(TimeSpan.Zero);
-                    return retryResponse;
-                }
-
-                return new HttpResponseMessage(HttpStatusCode.OK)
-                {
-                    Content = new StringContent(
-                        """
-                        {
-                          "name": "rec-1",
-                          "properties": {
-                            "category": "Cost",
-                            "recommendationStatus": "Completed",
-                            "shortDescription": { "problem": "Right-size a resource" }
-                          }
-                        }
-                        """,
-                        Encoding.UTF8,
-                        "application/json")
-                };
-            });
-        var service = new AdvisorService(_azureService);
-
-        var result = await service.UpdateRecommendationAsync(
-            SubscriptionId,
-            "rec-1",
-            RecommendationStatus.Completed,
-            retryPolicy: new RetryPolicyOptions { MaxRetries = 1 },
-            cancellationToken: TestContext.Current.CancellationToken);
-
-        Assert.Equal(2, handler.CallCount);
-        Assert.Equal("Completed", result.RecommendationStatus);
-    }
-
-    [Fact]
-    public async Task UpdateRecommendationAsync_MaxRetriesAboveThree_IsCappedAtThree()
-    {
-        var handler = ConfigureService(
-            ArmEnvironment.AzurePublicCloud,
-            string.Empty,
-            responseFactory: () =>
-            {
-                var response = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
-                response.Headers.RetryAfter = new(TimeSpan.Zero);
-                return response;
-            });
-        var service = new AdvisorService(_azureService);
-
-        await Assert.ThrowsAsync<RequestFailedException>(() =>
-            service.UpdateRecommendationAsync(
-                SubscriptionId,
-                "rec-1",
-                RecommendationStatus.Completed,
-                retryPolicy: new RetryPolicyOptions { MaxRetries = 10 },
-                cancellationToken: TestContext.Current.CancellationToken));
-
-        Assert.Equal(4, handler.CallCount);
-    }
-
-    [Fact]
-    public async Task UpdateRecommendationAsync_NoRetryOptions_DefaultsToThreeRetries()
+    public async Task UpdateRecommendationAsync_RetryableFailure_UsesAzureDefaultRetryPolicy()
     {
         var handler = ConfigureService(
             ArmEnvironment.AzurePublicCloud,
@@ -426,7 +352,6 @@ public class AdvisorRecommendationUpdateServiceTests
         _azureService.GetSubscription(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(subscriptionResource);
 

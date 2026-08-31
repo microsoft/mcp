@@ -31,7 +31,6 @@ public interface IAdvisorService
         DateTimeOffset? postponedUntilDateTime = null,
         RecommendationDismissReason? recommendationDismissReason = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<ResourceQueryResults<RecommendationMetadata>> ListRecommendationMetadataAsync(

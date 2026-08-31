@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -90,7 +89,6 @@ public class RecommendationUpdateCommandTests
             Arg.Is<DateTimeOffset?>(value => value == postponedUntil),
             null,
             "tenant1",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -141,7 +139,6 @@ public class RecommendationUpdateCommandTests
             null,
             RecommendationDismissReason.RiskIsAcceptable,
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -178,7 +175,6 @@ public class RecommendationUpdateCommandTests
             Arg.Any<DateTimeOffset?>(),
             Arg.Any<RecommendationDismissReason?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)statusCode, "Backend error"));
 
@@ -208,7 +204,6 @@ public class RecommendationUpdateCommandTests
             Arg.Any<DateTimeOffset?>(),
             Arg.Any<RecommendationDismissReason?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(
                 errorCode == "RecommendationNotFound" ? 404 :
@@ -243,7 +238,6 @@ public class RecommendationUpdateCommandTests
             null,
             RecommendationDismissReason.Other,
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -256,7 +250,6 @@ public class RecommendationUpdateCommandTests
             Arg.Any<DateTimeOffset?>(),
             Arg.Any<RecommendationDismissReason?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(UpdatedRecommendation);
     }

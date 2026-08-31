@@ -20,7 +20,6 @@ public class AdvisorService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IAdvisorService
 {
     private const string RecommendationUpdateApiVersion = "2026-03-01-preview";
-    private const int MaximumRecommendationUpdateRetries = 3;
     private const string RetirementDateProperty =
         "properties.sourceProperties.serviceRetirement.retirementDate";
     private const string TrackingIdsProperty =
@@ -75,7 +74,6 @@ public class AdvisorService(IAzureService azureService)
         DateTimeOffset? postponedUntilDateTime = null,
         RecommendationDismissReason? recommendationDismissReason = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -92,7 +90,6 @@ public class AdvisorService(IAzureService azureService)
         var subscriptionResource = await AzureService.GetSubscription(
             subscription,
             tenant,
-            retryPolicy,
             cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId
             ?? throw new InvalidOperationException("The resolved Azure subscription does not have a subscription ID.");
@@ -114,7 +111,6 @@ public class AdvisorService(IAzureService azureService)
             requestUri,
             accessToken.Token,
             properties,
-            retryPolicy,
             cancellationToken);
 
         if (response.IsError)
@@ -132,16 +128,9 @@ public class AdvisorService(IAzureService azureService)
         Uri requestUri,
         string accessToken,
         RecommendationStatePatchProperties properties,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
-        var clientOptions = ConfigureRetryPolicy(
-            AddDefaultPolicies(new ArmClientOptions()),
-            retryPolicy);
-        clientOptions.Retry.MaxRetries = Math.Clamp(
-            clientOptions.Retry.MaxRetries,
-            0,
-            MaximumRecommendationUpdateRetries);
+        var clientOptions = AddDefaultPolicies(new ArmClientOptions());
         clientOptions.Transport = new HttpClientTransport(client);
 
         var pipeline = HttpPipelineBuilder.Build(clientOptions);
