@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+// cspell:ignore faultinjection
 
 using System.Net;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
