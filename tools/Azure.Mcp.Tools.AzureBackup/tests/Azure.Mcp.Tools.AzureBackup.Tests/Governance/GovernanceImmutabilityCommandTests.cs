@@ -82,6 +82,7 @@ public class GovernanceImmutabilityCommandTests : SubscriptionCommandUnitTestsBa
     [InlineData("--subscription sub --vault v --resource-group rg --immutability-state Unlocked --immutability-type TimeBased", false)] // TimeBased requires duration
     [InlineData("--subscription sub --vault v --resource-group rg --immutability-state Unlocked --immutability-type TimeBased --immutability-duration-days 5", false)] // duration below 30
     [InlineData("--subscription sub --vault v --resource-group rg --immutability-state Unlocked --immutability-type TimeBased --immutability-duration-days 90", true)]
+    [InlineData("--subscription sub --vault v --resource-group rg --immutability-state Disabled --immutability-type TimeBased", true)] // Disabled ignores duration
     [InlineData("--subscription sub --vault v --resource-group rg", false)] // Missing both required
     [InlineData("--subscription sub", false)] // Missing vault and resource-group
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)

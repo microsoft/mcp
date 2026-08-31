@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Models;
 /// </para>
 /// <para>
 /// <c>Enabled</c> — Backward-compatible alias for <c>Unlocked</c>. Older tool users
-/// requested <c>Enabled</c>; the service normalises it to <c>Unlocked</c> before calling ARM.
+/// requested <c>Enabled</c>; the service normalizes it to <c>Unlocked</c> before calling ARM.
 /// </para>
 /// <para>
 /// <c>Locked</c> — <b>Irreversible.</b> Once locked, immutability cannot be disabled and the

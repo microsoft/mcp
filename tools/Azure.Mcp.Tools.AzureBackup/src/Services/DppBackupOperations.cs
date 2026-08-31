@@ -908,9 +908,10 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
     /// <summary>
     /// Builds the DPP vault security-settings payload for an immutability update.
     /// Extracted for regression testing. DPP has no ImmutabilityConfiguration
-    /// (Type / DurationInDays); those parameters are RSV-only. We set both the nested
-    /// <c>ImmutabilitySettings.State</c> and the legacy top-level
-    /// <c>ImmutabilityState</c> so callers on older api-versions still see the change.
+    /// (Type / DurationInDays); those parameters are RSV-only and are intentionally
+    /// ignored here. Only the top-level <c>ImmutabilityState</c> is populated because
+    /// the DPP api-version does not expose a nested <c>ImmutabilitySettings.State</c>
+    /// on the security-settings surface.
     /// </summary>
     internal static BackupVaultSecuritySettings BuildImmutabilitySettings(
         AzureBackupImmutabilityState immutabilityState,

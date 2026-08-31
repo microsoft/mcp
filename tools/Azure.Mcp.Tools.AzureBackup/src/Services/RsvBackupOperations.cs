@@ -913,7 +913,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
                 nameof(AzureBackupImmutabilityState.Disabled) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Disabled,
                 nameof(AzureBackupImmutabilityState.Unlocked) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Unlocked,
                 nameof(AzureBackupImmutabilityState.Locked) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Locked,
-                // 'Enabled' should have been normalised to 'Unlocked' upstream; guard here just in case.
+                // 'Enabled' should have been normalized to 'Unlocked' upstream; guard here just in case.
                 nameof(AzureBackupImmutabilityState.Enabled) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Unlocked,
                 _ => throw new ArgumentOutOfRangeException(nameof(immutabilityState), immutabilityState, "Unsupported immutability state."),
             },

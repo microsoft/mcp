@@ -84,7 +84,7 @@ public class RsvGovernancePayloadTests
     [Fact]
     public void BuildImmutabilitySettings_EnabledAlias_MapsToUnlockedState()
     {
-        // Enabled is a backward-compat alias; dispatcher normalises to Unlocked, but
+        // Enabled is a backward-compat alias; dispatcher normalizes to Unlocked, but
         // BuildImmutabilitySettings must be defensive and map Enabled -> Unlocked as well.
         var settings = RsvBackupOperations.BuildImmutabilitySettings(
             AzureBackupImmutabilityState.Enabled,
