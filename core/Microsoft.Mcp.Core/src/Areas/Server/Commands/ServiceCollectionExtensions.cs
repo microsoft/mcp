@@ -70,7 +70,7 @@ public static partial class ServiceCollectionExtensions
 
         if (serverStartOptions.Mode == ModeTypes.SingleToolProxy)
         {
-            // Server is configured with '--mode single', configure for singel mode.
+            // Server is configured with '--mode single', configure for single mode.
             services.AddSingleton<IToolLoader, SingleProxyToolLoader>();
             // SingleToolProxy mode requires CommandGroupDiscoveryStrategy to discover tools in the microsoft/mcp project.
             services.AddSingleton<CommandGroupDiscoveryStrategy>();
