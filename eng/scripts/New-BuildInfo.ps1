@@ -37,14 +37,9 @@ $excludedPlatforms = @(
 # Platforms outside of the standard combinations that should also be built.  Setting a "specialPurpose" allows then to
 # be targeted or excluded in packaging scripts
 $additionalPlatforms = @(
-    # We currently use a prerelease version of Microsoft.Identity.Web with AOT-safe HTTP support,
-    # which allows shipping trimmed azmcp with http across all distributions (including Docker). 
-    # Previously, Docker was shipped untrimmed to enable http support, while only other distributions
-    # where trimmed without HTTP support. These additional Docker platforms are retained as a rollback safety net
-    # in case we need to revert to the non-prerelease version and limit HTTP support to Docker only.
-    # Once Microsoft.Identity.Web with AOT support reaches GA, additionalPlatforms should be removed
-    # and Docker builds should use the standard platform definitions.
-    # https://github.com/microsoft/mcp/issues/1764
+    # Add additional builds for Docker as they use the musl runtime variant wihch differs from the default Linux builds.
+    # In the future we can evaluate if these can be moved to the standard Linux builds to remove two jobs from our
+    # standard pipeline.
     @{
         name            = 'linux-musl-x64-docker'
         operatingSystem = 'linux'
