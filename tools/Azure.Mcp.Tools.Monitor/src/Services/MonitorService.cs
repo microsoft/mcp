@@ -5,7 +5,6 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Core.Pipeline;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Models;
@@ -15,7 +14,6 @@ using Azure.Monitor.Query.Logs.Models;
 using Azure.ResourceManager.OperationalInsights;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Validation;
 
@@ -35,7 +33,6 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         int? hours,
         int? limit,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceId), resourceId), (nameof(table), table));
@@ -47,7 +44,6 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
         options.Audience = GetLogsQueryAudience();
 
-        options.ConfigureRetryOptions(retryPolicy);
         options.Transport = new HttpClientTransport(AzureService.GetClient());
         var client = new LogsQueryClient(credential, options);
         var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
@@ -96,7 +92,6 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         string query,
         int timeSpanDays = 1,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(workspace), workspace), (nameof(query), query));
@@ -106,11 +101,10 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
         options.Audience = GetLogsQueryAudience();
 
-        options.ConfigureRetryOptions(retryPolicy);
         options.Transport = new HttpClientTransport(AzureService.GetClient());
         var client = new LogsQueryClient(credential, options);
 
-        var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
+        var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, cancellationToken);
 
         var response = await client.QueryWorkspaceAsync(
             workspaceId,
@@ -148,14 +142,13 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         string workspace,
         string? tableType,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(workspace), workspace));
 
-        var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
+        var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, cancellationToken);
 
-        var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
+        var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken) ??
             throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
         var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName, cancellationToken)
             .ConfigureAwait(false);
@@ -182,14 +175,13 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
         if (!string.IsNullOrEmpty(resourceGroup))
         {
-            var rgResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+            var rgResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
                 ?? throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
 
             return await rgResource
@@ -204,7 +196,7 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
                 .ConfigureAwait(false);
         }
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 
         var workspaces = await subscriptionResource
             .GetOperationalInsightsWorkspacesAsync(cancellationToken)
@@ -226,12 +218,11 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         int? hours,
         int? limit,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(workspace), workspace), (nameof(table), table));
 
-        var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
+        var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, cancellationToken);
         query = BuildQuery(query, table, limit);
         ValidateRequiredParameters((nameof(query), query));
         KqlQueryValidator.ValidateQuerySafety(query);
@@ -242,7 +233,6 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
             var options = AddDefaultPolicies(new LogsQueryClientOptions());
             options.Audience = GetLogsQueryAudience();
 
-            options.ConfigureRetryOptions(retryPolicy);
             options.Transport = new HttpClientTransport(AzureService.GetClient());
             var client = new LogsQueryClient(credential, options);
             var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
@@ -316,14 +306,13 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         string resourceGroup,
         string workspace,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(workspace), workspace));
 
-        var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
+        var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, cancellationToken);
 
-        var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
             ?? throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
         var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName, cancellationToken)
             .ConfigureAwait(false);
@@ -356,7 +345,6 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         ActivityLogEventLevel? eventLevel,
         int top,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
@@ -368,14 +356,14 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
 
         // Resolve the resource ID from the resource name
         var resourceIdentifier = await resourceResolverService.ResolveResourceIdAsync(
-            subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
+            subscription, resourceGroup, resourceType, resourceName, tenant, cancellationToken);
 
         string resourceId = resourceIdentifier.ToString();
         string subscriptionId = resourceIdentifier.SubscriptionId
             ?? throw new ArgumentException($"Unable to extract subscription ID from resource ID: {resourceId}");
 
         // Get the activity logs from the Azure Management API
-        var activityLogs = await CallActivityLogApiAsync(subscriptionId, resourceId, hours, eventLevel, tenant, retryPolicy, cancellationToken);
+        var activityLogs = await CallActivityLogApiAsync(subscriptionId, resourceId, hours, eventLevel, tenant, cancellationToken);
 
         // Take only the requested number of logs
         return activityLogs.Take(top).ToList();
@@ -387,7 +375,6 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         double hours,
         ActivityLogEventLevel? eventLevel,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         var returnValue = new List<ActivityLogEventData>();
@@ -473,12 +460,11 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         string workspace,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         // If we're given an ID and need an ID, or given a name and need a name, return as is
         bool isId = IsWorkspaceId(workspace);
-        var workspaces = await ListWorkspaces(subscription, resourceGroup: null, tenant, retryPolicy, cancellationToken);
+        var workspaces = await ListWorkspaces(subscription, resourceGroup: null, tenant: tenant, cancellationToken: cancellationToken);
 
         // Find the workspace
         var matchingWorkspace = workspaces.FirstOrDefault(w =>

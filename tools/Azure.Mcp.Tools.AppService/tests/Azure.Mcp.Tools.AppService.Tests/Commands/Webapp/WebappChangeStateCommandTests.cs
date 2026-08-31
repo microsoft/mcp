@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp;
 using Azure.Mcp.Tools.AppService.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -28,7 +27,7 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
 
         // Set up the mock to return success for any arguments
         Service.ChangeWebAppStateAsync("sub123", "rg1", "test-app", stateChange, softRestart,
-            waitForCompletion, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            waitForCompletion, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         List<string> unparsedArgs = ["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app", "--state-change", stateChange];
@@ -47,7 +46,7 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
         // Assert
         // Verify that the mock was called with the expected parameters
         await Service.Received(1).ChangeWebAppStateAsync("sub123", "rg1", "test-app", stateChange,
-            softRestart, waitForCompletion, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
+            softRestart, waitForCompletion, Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.WebappChangeStateResult);
@@ -90,7 +89,6 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -116,7 +114,6 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -130,7 +127,7 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
     {
         // Arrange
         Service.ChangeWebAppStateAsync("sub123", "rg1", "test-app", stateChange, softRestart,
-            waitForCompletion, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            waitForCompletion, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
         List<string> unparsedArgs = ["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app", "--state-change", stateChange];
@@ -148,7 +145,7 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
 
         // Assert
         await Service.Received(1).ChangeWebAppStateAsync("sub123", "rg1", "test-app", stateChange,
-            softRestart, waitForCompletion, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
+            softRestart, waitForCompletion, Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);

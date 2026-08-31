@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Nodes;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Services;
 
@@ -12,6 +11,5 @@ public interface IApplicationInsightsService
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

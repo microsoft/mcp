@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:ignore LIFECYCLESERVICEGROUPNAME
+// cspell:ignore LIFECYCLESERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -144,9 +144,64 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_delete_drill()
+    public async Task Should_update_drill()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+
+        var result = await CallToolAsync(
+            "resilience_drill_update",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drillName },
+                { "rbac-setup-mode", "AutomatedBuiltinRoles" }
+            });
+
+        var drill = result.AssertProperty("drill");
+        Assert.EndsWith(drillName, drill.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
+        var properties = drill.AssertProperty("properties");
+        Assert.Equal("Succeeded", properties.AssertProperty("provisioningState").GetString());
+        Assert.Equal("AutomatedBuiltinRoles", properties.AssertProperty("rbacSetupMode").GetString());
+    }
+
+    [Fact]
+    public async Task Should_create_drill()
+    {
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+
+        var result = await CallToolAsync(
+            "resilience_drill_create",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drillName },
+                { "subscription", Settings.SubscriptionId },
+                { "region", "westus2" },
+                { "resource-group", resourceGroupName },
+                { "drill-type", "Zonal" },
+                { "rbac-setup-mode", "AutomatedBuiltinRoles" },
+                { "recovery-plan", recoveryPlan }
+            });
+
+        var drill = result.AssertProperty("drill");
+        Assert.EndsWith(drillName, drill.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
+        var properties = drill.AssertProperty("properties");
+        Assert.Equal("Succeeded", properties.AssertProperty("provisioningState").GetString());
+        Assert.Equal("Zonal", properties.AssertProperty("drillType").GetString());
+        var recoveryPlanId = properties.AssertProperty("recoveryPlanProperties").AssertProperty("recoveryPlanId").GetString();
+        Assert.EndsWith($"/recoveryPlans/{recoveryPlan}", recoveryPlanId, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Should_delete_drill()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "LIFECYCLESERVICEGROUPNAME");
         var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DELETEDRILLNAME");
 
         var result = await CallToolAsync(
@@ -419,10 +474,14 @@ public class ResilienceManagementCommandTests(
         var existingDefaultGroupProperties = existingRecoveryGroups
             .AssertProperty("defaultGroup")
             .AssertProperty("properties");
-        string[] existingAdditionalGroups = existingRecoveryGroups
+        (string? GroupUniqueId, int OrderId, string? Description)[] existingAdditionalGroups = existingRecoveryGroups
             .AssertProperty("additionalGroups")
             .EnumerateArray()
-            .Select(group => group.GetRawText())
+            .Select(group => group.AssertProperty("properties"))
+            .Select(properties => (
+                properties.AssertProperty("groupUniqueId").GetString(),
+                properties.AssertProperty("orderId").GetInt32(),
+                properties.AssertProperty("description").GetString()))
             .ToArray();
         var defaultGroupId = existingDefaultGroupProperties.AssertProperty("groupUniqueId").GetString();
         var defaultGroupDescription = existingDefaultGroupProperties.AssertProperty("description").GetString();
@@ -449,7 +508,10 @@ public class ResilienceManagementCommandTests(
         Assert.Equal(defaultGroupDescription, updatedDefaultGroup.AssertProperty("description").GetString());
         Assert.Equal(
             existingAdditionalGroups,
-            plan.AssertProperty("additionalGroups").EnumerateArray().Select(group => group.GetRawText()));
+            plan.AssertProperty("additionalGroups").EnumerateArray().Select(group => (
+                group.AssertProperty("groupUniqueId").GetString(),
+                group.AssertProperty("orderId").GetInt32(),
+                group.AssertProperty("description").GetString())));
     }
 
     [Fact]
@@ -478,7 +540,7 @@ public class ResilienceManagementCommandTests(
     [CustomMatcher(compareBody: false)]
     public async Task Should_create_update_and_delete_recovery_plan()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("lifecycleServiceGroupName", "LIFECYCLESERVICEGROUPNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("lifecycleServiceGroupName", "PLANLIFECYCLESERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveVariable("lifecycleRecoveryPlanName", $"mcp-lifecycle-{Guid.NewGuid().ToString("N")[..8]}");
         bool recoveryPlanExists = false;
 
@@ -718,6 +780,67 @@ public class ResilienceManagementCommandTests(
 
         var operationId = result.AssertProperty("result").AssertProperty("operationId").GetString();
         Assert.False(string.IsNullOrEmpty(operationId));
+    }
+
+    [Fact]
+    public async Task Should_validate_recovery_plan_for_failover()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+        var listedResources = await CallToolAsync(
+            "resilience_recoveryplan_resource_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan }
+            });
+        string? resourceId = null;
+        string? sourceLocation = null;
+        foreach (JsonElement resource in listedResources.AssertProperty("recoveryResources").EnumerateArray())
+        {
+            string candidateResourceId = resource.AssertProperty("id").GetString()!;
+            var resourceResult = await CallToolAsync(
+                "resilience_recoveryplan_resource_get",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "recovery-plan", recoveryPlan },
+                    { "name", candidateResourceId.Split('/').Last() }
+                });
+            JsonElement physicalZones = resourceResult
+                .AssertProperty("recoveryResource")
+                .AssertProperty("properties")
+                .AssertProperty("resourcePhysicalZones");
+            sourceLocation = physicalZones.ValueKind == JsonValueKind.Array
+                ? physicalZones.EnumerateArray().Select(zone => zone.GetString()).FirstOrDefault(zone => !string.IsNullOrWhiteSpace(zone))
+                : null;
+            if (sourceLocation is not null)
+            {
+                resourceId = candidateResourceId;
+                break;
+            }
+        }
+
+        Assert.False(string.IsNullOrEmpty(resourceId), "The Zonal recovery plan must contain a resource with a physical zone.");
+        Assert.False(string.IsNullOrEmpty(sourceLocation), "A physical source zone is required for Zonal failover validation.");
+
+        var result = await CallToolAsync(
+            "resilience_recoveryplan_validateforfailover",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan },
+                { "source-locations", new[] { sourceLocation } },
+                { "selected-resource-ids", new[] { resourceId } }
+            });
+
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
+        JsonElement qualifications = result.AssertProperty("recoveryResourceQualifications");
+        Assert.Equal(JsonValueKind.Array, qualifications.ValueKind);
+        Assert.NotEmpty(qualifications.EnumerateArray());
     }
 
     [Fact]

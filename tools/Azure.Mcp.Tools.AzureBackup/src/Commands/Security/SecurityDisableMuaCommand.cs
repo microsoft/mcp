@@ -48,7 +48,6 @@ public sealed class SecurityDisableMuaCommand(ILogger<SecurityDisableMuaCommand>
                 options.Subscription!,
                 options.VaultType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

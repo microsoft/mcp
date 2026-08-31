@@ -44,7 +44,6 @@ public sealed class DrillCheckResyncReadinessCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new DrillResyncReadinessResult("operation1", false));
         }
@@ -61,7 +60,6 @@ public sealed class DrillCheckResyncReadinessCommandTests
             ServiceGroup,
             Drill,
             "tenant1",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new DrillResyncReadinessResult("operation1", false));
 
@@ -95,7 +93,6 @@ public sealed class DrillCheckResyncReadinessCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -111,7 +108,6 @@ public sealed class DrillCheckResyncReadinessCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 

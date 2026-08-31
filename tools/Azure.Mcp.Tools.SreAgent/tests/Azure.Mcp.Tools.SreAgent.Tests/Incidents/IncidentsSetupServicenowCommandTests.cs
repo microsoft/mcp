@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -48,10 +47,9 @@ public class IncidentsSetupServicenowCommandTests : SubscriptionCommandUnitTests
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
-            Service.ResolveAgentResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Service.ResolveAgentResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns("rg");
             Service.GetConnectorAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .ThrowsAsync<HttpRequestException>();
@@ -80,10 +78,9 @@ public class IncidentsSetupServicenowCommandTests : SubscriptionCommandUnitTests
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
-        Service.ResolveAgentResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ResolveAgentResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns("rg");
         Service.GetConnectorAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync<HttpRequestException>();
@@ -105,10 +102,9 @@ public class IncidentsSetupServicenowCommandTests : SubscriptionCommandUnitTests
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
-        Service.ResolveAgentResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ResolveAgentResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns("rg");
         Service.GetConnectorAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync<HttpRequestException>();
@@ -130,10 +126,9 @@ public class IncidentsSetupServicenowCommandTests : SubscriptionCommandUnitTests
             null,
             "agent1",
             "tenant1",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
-        Service.ResolveAgentResourceGroupAsync("sub", "agent1", "tenant1", Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ResolveAgentResourceGroupAsync("sub", "agent1", "tenant1", Arg.Any<CancellationToken>())
             .Returns("rg");
         Service.GetConnectorAsync("sub", "rg", "agent1", Arg.Any<string>(), "tenant1", Arg.Any<CancellationToken>())
             .ThrowsAsync<HttpRequestException>();

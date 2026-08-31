@@ -49,7 +49,6 @@ public sealed class DrillCheckResyncReadinessCommand(
                 options.ServiceGroup,
                 options.Drill,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

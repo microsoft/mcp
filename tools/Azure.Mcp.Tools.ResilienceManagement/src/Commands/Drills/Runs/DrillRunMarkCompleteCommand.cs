@@ -63,7 +63,6 @@ public sealed class DrillRunMarkCompleteCommand(ILogger<DrillRunMarkCompleteComm
                 options.DrillRun,
                 stage,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

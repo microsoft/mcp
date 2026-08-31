@@ -132,7 +132,6 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
                 options.Subscription!,
                 options.AuthMethod ?? AuthMethod.Credential,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

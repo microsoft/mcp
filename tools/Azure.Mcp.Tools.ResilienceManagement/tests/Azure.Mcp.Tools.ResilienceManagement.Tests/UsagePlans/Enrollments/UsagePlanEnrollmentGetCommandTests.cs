@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans.Enrollments;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -24,7 +23,7 @@ public class UsagePlanEnrollmentGetCommandTests : SubscriptionCommandUnitTestsBa
     public async Task ExecuteAsync_ListsEnrollments_WhenNameOmitted()
     {
         var expected = new List<ResourceSummary> { new("id1", "enrollment1"), new("id2", "enrollment2") };
-        Service.ListUsagePlanEnrollmentsAsync(ResourceGroup, UsagePlan, SubscriptionId, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListUsagePlanEnrollmentsAsync(ResourceGroup, UsagePlan, SubscriptionId, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync("--subscription", SubscriptionId, "--resource-group", ResourceGroup, "--usage-plan", UsagePlan);
@@ -39,7 +38,7 @@ public class UsagePlanEnrollmentGetCommandTests : SubscriptionCommandUnitTestsBa
     public async Task ExecuteAsync_GetsEnrollment_WhenNameProvided()
     {
         var expected = new UsagePlanEnrollmentInfo("id1", "enrollment1");
-        Service.GetUsagePlanEnrollmentAsync(ResourceGroup, UsagePlan, "enrollment1", SubscriptionId, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetUsagePlanEnrollmentAsync(ResourceGroup, UsagePlan, "enrollment1", SubscriptionId, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync("--subscription", SubscriptionId, "--resource-group", ResourceGroup, "--usage-plan", UsagePlan, "--name", "enrollment1");
@@ -54,7 +53,7 @@ public class UsagePlanEnrollmentGetCommandTests : SubscriptionCommandUnitTestsBa
     public async Task ExecuteAsync_HandlesException()
     {
         var expectedError = "Test error";
-        Service.ListUsagePlanEnrollmentsAsync(ResourceGroup, UsagePlan, SubscriptionId, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListUsagePlanEnrollmentsAsync(ResourceGroup, UsagePlan, SubscriptionId, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var response = await ExecuteCommandAsync("--subscription", SubscriptionId, "--resource-group", ResourceGroup, "--usage-plan", UsagePlan);

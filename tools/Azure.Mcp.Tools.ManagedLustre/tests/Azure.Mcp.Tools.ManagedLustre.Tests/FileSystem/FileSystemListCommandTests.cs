@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -83,7 +82,6 @@ public class FileSystemListCommandTests : SubscriptionCommandUnitTestsBase<FileS
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -137,7 +135,6 @@ public class FileSystemListCommandTests : SubscriptionCommandUnitTestsBase<FileS
                 Arg.Is(_knownSubscriptionId),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expected);
         }
@@ -169,7 +166,6 @@ public class FileSystemListCommandTests : SubscriptionCommandUnitTestsBase<FileS
             Arg.Is(_knownSubscriptionId),
             Arg.Is<string?>(x => x == null),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -190,7 +186,6 @@ public class FileSystemListCommandTests : SubscriptionCommandUnitTestsBase<FileS
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "not found"));
 
@@ -209,7 +204,6 @@ public class FileSystemListCommandTests : SubscriptionCommandUnitTestsBase<FileS
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "forbidden"));
 

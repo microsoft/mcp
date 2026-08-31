@@ -45,7 +45,6 @@ public class DrillValidateForExecutionCommandTests
                 Arg.Any<string>(),
                 Arg.Any<IEnumerable<string>>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new DrillValidateForExecutionResult("operation1", false));
         }
@@ -63,7 +62,6 @@ public class DrillValidateForExecutionCommandTests
             Drill,
             Arg.Is<IEnumerable<string>>(locations => locations.SequenceEqual(new[] { "eastus-az1", "westus-az2" })),
             "tenant1",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new DrillValidateForExecutionResult("operation1", false));
 
@@ -106,7 +104,6 @@ public class DrillValidateForExecutionCommandTests
             Drill,
             Arg.Any<IEnumerable<string>>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -127,7 +124,6 @@ public class DrillValidateForExecutionCommandTests
             Drill,
             Arg.Any<IEnumerable<string>>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Not found"));
 

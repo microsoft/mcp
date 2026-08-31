@@ -57,7 +57,6 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
                     options.VaultType,
                     options.Container,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -72,7 +71,6 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
                     options.Subscription!,
                     options.VaultType,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(

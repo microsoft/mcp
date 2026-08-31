@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.SignalR.Commands;
 using Azure.Mcp.Tools.SignalR.Commands.Runtime;
 using Azure.Mcp.Tools.SignalR.Models;
 using Azure.Mcp.Tools.SignalR.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -80,7 +79,6 @@ public class RuntimeGetCommandTests : SubscriptionCommandUnitTestsBase<RuntimeGe
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(runtimes);
         }
@@ -110,7 +108,6 @@ public class RuntimeGetCommandTests : SubscriptionCommandUnitTestsBase<RuntimeGe
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -132,7 +129,6 @@ public class RuntimeGetCommandTests : SubscriptionCommandUnitTestsBase<RuntimeGe
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -155,7 +151,6 @@ public class RuntimeGetCommandTests : SubscriptionCommandUnitTestsBase<RuntimeGe
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
@@ -176,7 +171,6 @@ public class RuntimeGetCommandTests : SubscriptionCommandUnitTestsBase<RuntimeGe
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 

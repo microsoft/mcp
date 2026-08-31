@@ -46,7 +46,6 @@ public sealed class DrillAddOrUpdateResourcesCommandTests
                 Arg.Any<string>(),
                 Arg.Any<AddOrUpdateResourcesContent>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new DrillAddOrUpdateResourcesResult("operation1", false));
         }
@@ -64,7 +63,6 @@ public sealed class DrillAddOrUpdateResourcesCommandTests
             Drill,
             Arg.Any<AddOrUpdateResourcesContent>(),
             "tenant1",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new DrillAddOrUpdateResourcesResult("operation1", false));
 
@@ -165,7 +163,6 @@ public sealed class DrillAddOrUpdateResourcesCommandTests
             Arg.Any<string>(),
             Arg.Any<AddOrUpdateResourcesContent>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 

@@ -53,7 +53,6 @@ public sealed class DrillRunMarkCompleteCommandTests
             DrillRun,
             Stage,
             "tenant1",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new DrillRunMarkCompleteResult("operation1", false));
 
@@ -87,7 +86,6 @@ public sealed class DrillRunMarkCompleteCommandTests
             DrillRun,
             "FaultInjection",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -108,7 +106,6 @@ public sealed class DrillRunMarkCompleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -146,7 +143,6 @@ public sealed class DrillRunMarkCompleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 

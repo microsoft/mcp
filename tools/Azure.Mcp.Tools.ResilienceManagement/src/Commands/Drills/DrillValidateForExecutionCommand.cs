@@ -55,7 +55,6 @@ public sealed class DrillValidateForExecutionCommand(
                 options.Drill,
                 options.SourceLocations,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
