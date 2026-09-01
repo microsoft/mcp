@@ -205,6 +205,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_protecteditem_get | Show backup status of protected item <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Start protecting my Azure VM by enabling backup on <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_protecteditem_protect | Protect AKS cluster <cluster_id> with policy <policy_name> in vault <vault_name> and resource group <resource_group>, including only namespace <namespace> and cluster-scoped resources | investigation-required |
 | azurebackup_protecteditem_undelete | Restore a soft-deleted backup item for datasource <datasource_id> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_undelete | Undelete the accidentally deleted backup for VM <datasource_id> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_recoverypoint_get | Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |

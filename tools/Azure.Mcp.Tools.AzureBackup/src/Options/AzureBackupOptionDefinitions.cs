@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Services;
+
 namespace Azure.Mcp.Tools.AzureBackup.Options;
 
 public static class AzureBackupOptionDefinitions
@@ -17,6 +19,9 @@ public static class AzureBackupOptionDefinitions
     internal const string SoftDelete = "Soft delete state: 'AlwaysOn', 'On', or 'Off'.";
     internal const string SoftDeleteRetentionDays = "Soft delete retention period (14-180 days).";
     internal const string WorkloadType = "Workload type: VM, SQL, SAPHANA, SAPASE, AzureFileShare (RSV types); AzureDisk, AzureBlob, AKS, ElasticSAN, PostgreSQLFlexible, ADLS, CosmosDB (DPP types). Also accepts aliases like AzureVM, SQLDatabase, etc.";
+    // RSV-only alias set accepted by 'protectableitem list', validated by WorkloadTypeNormalizer.
+    // Distinct from the policy-create/protect WorkloadType above, which also covers DPP workloads.
+    internal const string ProtectableItemWorkloadType = $"Filter by workload type. Supported values (case-insensitive): {WorkloadTypeNormalizer.SupportedTokensDescription}.";
     public const string WorkloadTypeName = "workload-type";
     internal const string DailyRetentionDays = "Daily recovery point retention in days. Defaults to datasource-specific value if omitted.";
 
