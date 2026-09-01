@@ -93,7 +93,8 @@ public class ServerStartCommandTests
             "--dangerously-disable-http-incoming-auth",
             "--dangerously-disable-elicitation",
             "--dangerously-disable-retry-limits",
-            "--disable-caching"
+            "--disable-caching",
+            "--disable-proxy-tools"
         };
         var theoryData = new TheoryData<string, bool, bool>();
         foreach (var option in options)
@@ -213,7 +214,8 @@ public class ServerStartCommandTests
             "--read-only",
             "--debug",
             "--dangerously-disable-elicitation",
-            "--disable-caching");
+            "--disable-caching",
+            "--disable-proxy-tools");
 
         // Assert
         Assert.Equal(TransportTypes.StdIo, options.Transport);
@@ -224,6 +226,7 @@ public class ServerStartCommandTests
         Assert.False(options.DangerouslyDisableHttpIncomingAuth);
         Assert.True(options.DangerouslyDisableElicitation);
         Assert.True(options.DisableCaching);
+        Assert.True(options.DisableProxyTools);
     }
 
     [Fact]

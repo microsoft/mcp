@@ -108,4 +108,10 @@ public sealed class ServerStartOptions
     /// </summary>
     [Option(Description = "Disable caching of resource responses, requiring repeated requests to fetch fresh data each time.", DefaultValue = false)]
     public bool DisableCaching { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets whether proxy tools that are proxied from external sources configured by the server's /Resources/registry.json are disabled.
+    /// </summary>
+    [Option(Description = "Disable tools that are proxied from external sources configured by the server's /Resources/registry.json.", DefaultValue = false)]
+    public bool DisableProxyTools { get; set; } = false;
 }
