@@ -895,6 +895,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_table_type_list | Show me the available table types in the Log Analytics workspace <workspace_name> | none |
 | monitor_webtests_createorupdate | Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> | none |
 | monitor_webtests_createorupdate | Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> | none |
+| monitor_webtests_get | List all web tests in my subscription | none |
+| monitor_webtests_get | Show me the web tests in resource group <resource_group> | none |
+| monitor_webtests_get | Get the details of web test <webtest_resource_name> in resource group <resource_group> | none |
 | monitor_workspace_list | List all Log Analytics workspaces in my subscription | none |
 | monitor_workspace_list | Show me my Log Analytics workspaces | none |
 | monitor_workspace_list | Show me the Log Analytics workspaces in my subscription | none |

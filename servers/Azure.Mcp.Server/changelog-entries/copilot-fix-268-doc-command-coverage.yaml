@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Added a CI test that verifies every registered CLI command is documented with the correct command path in azmcp-commands.md and every tool is documented in e2eTestPrompts.md, and fixed several stale/incorrect command names in azmcp-commands.md (e.g. get_azure_bestpractices, sreagent connectors/incidents/threads/docs subcommands, managedlustre blob job commands) and added the missing monitor table type list and monitor_webtests_get documentation entries."

@@ -3132,8 +3132,7 @@ azmcp marketplace product get --subscription <subscription> \
 
 ```bash
 # Get best practices for secure, production-grade Azure usage
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp get azure bestpractices get --resource <resource> --action <action>
+azmcp get_azure_bestpractices get --resource <resource> --action <action>
 
 # Resource options:
 #   general        - General Azure best practices
@@ -3149,7 +3148,7 @@ azmcp get azure bestpractices get --resource <resource> --action <action>
 # Get best practices for building AI applications, workflows and agents in Azure
 # Call this before generating code for any AI application, working with Microsoft Agent Framework,
 # or implementing AI solutions in Azure.
-azmcp get azure bestpractices ai_app
+azmcp get_azure_bestpractices ai_app
 
 # AI App Development:
 #   ai_app - Comprehensive guidance for AI applications including:
@@ -3220,6 +3219,12 @@ azmcp monitor activitylog list --subscription <subscription> \
 azmcp monitor table list --subscription <subscription> \
                          --workspace <workspace> \
                          --resource-group <resource-group>
+
+# List available table types in a Log Analytics workspace
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor table type list --subscription <subscription> \
+                              --workspace <workspace> \
+                              --resource-group <resource-group>
 
 # List Log Analytics workspaces in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -3515,8 +3520,7 @@ azmcp managedlustre fs expansion delete --subscription <subscription> \
                                         --expansion-job-name <expansion-job-name>
 
 # Create an autoexport job for an Azure Managed Lustre filesystem
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre fs blob autoexport create --subscription <subscription> \
+azmcp managedlustre fs blob_autoexport create --subscription <subscription> \
                                              --resource-group <resource-group> \
                                              --filesystem-name <filesystem-name> \
                                              [--job-name <job-name>] \
@@ -3524,38 +3528,33 @@ azmcp managedlustre fs blob autoexport create --subscription <subscription> \
                                              [--admin-status <Enable|Disable>]
 
 # Cancel an autoexport job for an Azure Managed Lustre filesystem
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre fs blob autoexport cancel --subscription <subscription> \
+azmcp managedlustre fs blob_autoexport cancel --subscription <subscription> \
                                              --resource-group <resource-group> \
                                              --filesystem-name <filesystem-name> \
                                              --job-name <job-name>
 
 # Get details of autoexport jobs for an Azure Managed Lustre filesystem
 # Returns a specific job if job-name is provided, or lists all jobs if omitted
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre fs blob autoexport get --subscription <subscription> \
+azmcp managedlustre fs blob_autoexport get --subscription <subscription> \
                                           --resource-group <resource-group> \
                                           --filesystem-name <filesystem-name> \
                                           [--job-name <job-name>]
 
 # Delete an autoexport job for an Azure Managed Lustre filesystem
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre fs blob autoexport delete --subscription <subscription> \
+azmcp managedlustre fs blob_autoexport delete --subscription <subscription> \
                                              --resource-group <resource-group> \
                                              --filesystem-name <filesystem-name> \
                                              --job-name <job-name>
 
 # Get details of autoimport jobs for an Azure Managed Lustre filesystem
 # Returns a specific job if job-name is provided, or lists all jobs if omitted
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre fs blob autoimport get --subscription <subscription> \
+azmcp managedlustre fs blob_autoimport get --subscription <subscription> \
                                            --resource-group <resource-group> \
                                            --filesystem-name <filesystem-name> \
                                            [--job-name <job-name>]
 
 # Create an autoimport job for an Azure Managed Lustre filesystem
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre fs blob autoimport create --subscription <subscription> \
+azmcp managedlustre fs blob_autoimport create --subscription <subscription> \
                                              --resource-group <resource-group> \
                                              --filesystem-name <filesystem-name> \
                                              [--job-name <job-name>] \
@@ -3566,22 +3565,19 @@ azmcp managedlustre fs blob autoimport create --subscription <subscription> \
                                              [--maximum-errors <number>]
 
 # Cancel an autoimport job for an Azure Managed Lustre filesystem
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre fs blob autoimport cancel --subscription <subscription> \
+azmcp managedlustre fs blob_autoimport cancel --subscription <subscription> \
                                               --resource-group <resource-group> \
                                               --filesystem-name <filesystem-name> \
                                               --job-name <job-name>
 
 # Delete an autoimport job for an Azure Managed Lustre filesystem
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre fs blob autoimport delete --subscription <subscription> \
+azmcp managedlustre fs blob_autoimport delete --subscription <subscription> \
                                               --resource-group <resource-group> \
                                               --filesystem-name <filesystem-name> \
                                               --job-name <job-name>
 
 # Create a one-time import job for an Azure Managed Lustre filesystem
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre fs blob import create --subscription <subscription> \
+azmcp managedlustre fs blob_import create --subscription <subscription> \
                                          --resource-group <resource-group> \
                                          --filesystem-name <filesystem-name> \
                                          [--job-name <job-name>] \
@@ -3591,22 +3587,19 @@ azmcp managedlustre fs blob import create --subscription <subscription> \
 
 # Get details of one-time import jobs for an Azure Managed Lustre filesystem
 # Returns a specific job if job-name is provided, or lists all jobs if omitted
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre fs blob import get --subscription <subscription> \
+azmcp managedlustre fs blob_import get --subscription <subscription> \
                                       --resource-group <resource-group> \
                                       --filesystem-name <filesystem-name> \
                                       [--job-name <job-name>]
 
 # Cancel a running one-time import job for an Azure Managed Lustre filesystem
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre fs blob import cancel --subscription <subscription> \
+azmcp managedlustre fs blob_import cancel --subscription <subscription> \
                                          --resource-group <resource-group> \
                                          --filesystem-name <filesystem-name> \
                                          --job-name <job-name>
 
 # Delete a one-time import job for an Azure Managed Lustre filesystem
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre fs blob import delete --subscription <subscription> \
+azmcp managedlustre fs blob_import delete --subscription <subscription> \
                                          --resource-group <resource-group> \
                                          --filesystem-name <filesystem-name> \
                                          --job-name <job-name>
@@ -4359,16 +4352,14 @@ azmcp sreagent connectors get --subscription <subscription> \
                               --name <connector-name>
 
 # Create or update a Kusto data connector
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent connectors create kusto --subscription <subscription> \
+azmcp sreagent connectors create_kusto --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --agent <agent-name> \
                                        --name <connector-name> \
                                        --cluster-url <kusto-cluster-url>
 
 # Create or update an MCP connector
-# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
-azmcp sreagent connectors create mcp --subscription <subscription> \
+azmcp sreagent connectors create_mcp --subscription <subscription> \
                                      --resource-group <resource-group> \
                                      --agent <agent-name> \
                                      --name <connector-name> \
@@ -4459,7 +4450,7 @@ azmcp sreagent threads create --subscription <subscription> \
                               --agent <agent-name>
 
 # Send a message to an existing thread
-azmcp sreagent threads send-message --subscription <subscription> \
+azmcp sreagent threads send_message --subscription <subscription> \
                                     --resource-group <resource-group> \
                                     --agent <agent-name> \
                                     --thread <thread-id> \
@@ -4480,8 +4471,7 @@ azmcp sreagent threads investigate --subscription <subscription> \
                                    --message <investigation-prompt>
 
 # Run an investigation prompt with auto-approval (yolo mode)
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent threads investigate yolo --subscription <subscription> \
+azmcp sreagent threads investigate_yolo --subscription <subscription> \
                                         --resource-group <resource-group> \
                                         --agent <agent-name> \
                                         --message <investigation-prompt>
@@ -4525,7 +4515,8 @@ azmcp sreagent scheduledtasks delete --subscription <subscription> --resource-gr
 
 ```bash
 # List active incidents
-azmcp sreagent incidents active-list --subscription <subscription> \
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp sreagent incidents active list --subscription <subscription> \
                                      --resource-group <resource-group> \
                                      --agent <agent-name>
 
@@ -4542,14 +4533,12 @@ azmcp sreagent incidents create --subscription <subscription> \
                                 --steps <step-1> <step-2>
 
 # List incident response plans
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent incidents plans list --subscription <subscription> \
+azmcp sreagent incidents plans_list --subscription <subscription> \
                                     --resource-group <resource-group> \
                                     --agent <agent-name>
 
 # Create an incident response plan
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent incidents plans create --subscription <subscription> \
+azmcp sreagent incidents plans_create --subscription <subscription> \
                                       --resource-group <resource-group> \
                                       --agent <agent-name> \
                                       --name <plan-name> \
@@ -4557,8 +4546,8 @@ azmcp sreagent incidents plans create --subscription <subscription> \
                                       --trigger-condition <condition>
 
 # Configure PagerDuty / ServiceNow connectors
-azmcp sreagent incidents setup-pagerduty   --subscription <s> --resource-group <rg> --agent <a> --api-key-env <env>
-azmcp sreagent incidents setup-servicenow  --subscription <s> --resource-group <rg> --agent <a> --instance-url <url> --auth-type <type>
+azmcp sreagent incidents setup_pagerduty  --subscription <s> --resource-group <rg> --agent <a> --api-key-env <env>
+azmcp sreagent incidents setup_servicenow --subscription <s> --resource-group <rg> --agent <a> --instance-url <url> --auth-type <type>
 ```
 
 #### Workflows
@@ -4587,23 +4576,19 @@ azmcp sreagent workflows apply --subscription <s> --resource-group <rg> --agent 
 azmcp sreagent docs get --topic <topic>
 
 # List all memories in the knowledge base
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent docs memories list --subscription <s> --resource-group <rg> --agent <a>
+azmcp sreagent docs memories_list --subscription <s> --resource-group <rg> --agent <a>
 
 # Search and manage knowledge base memories
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent docs memories search --subscription <s> --resource-group <rg> --agent <a> --search <text>
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent docs memories add    --subscription <s> --resource-group <rg> --agent <a> --name <doc> --content <body>
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent docs memories delete --subscription <s> --resource-group <rg> --agent <a> --name <doc>
+azmcp sreagent docs memories_search --subscription <s> --resource-group <rg> --agent <a> --search <text>
+azmcp sreagent docs memories_add    --subscription <s> --resource-group <rg> --agent <a> --name <doc> --content <body>
+azmcp sreagent docs memories_delete --subscription <s> --resource-group <rg> --agent <a> --name <doc>
 
 # Trigger a full reindex of the knowledge base
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent docs memories reindex --subscription <s> --resource-group <rg> --agent <a>
+azmcp sreagent docs memories_reindex --subscription <s> --resource-group <rg> --agent <a>
 
 # Generate architecture documentation
-azmcp sreagent architecture generate --requirements <text>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp sreagent architecture plan --requirements <text>
 
 # Manage common prompts
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
