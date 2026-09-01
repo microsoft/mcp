@@ -954,6 +954,8 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 ### 📊 Azure Advisor
 
 * "List my Advisor recommendations"
+* "Summarize my Advisor recommendations by category"
+* "Which resource types have the most high-impact Advisor recommendations?"
 * "Apply Advisor recommendations to IaaC files"
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 * "Show Advisor service retirements on or after March 31, 2026"

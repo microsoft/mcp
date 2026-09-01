@@ -11,6 +11,7 @@ words:
   - aigateway
   - airunway
   - appconfiguration
+  - applicationgatewaywebapplicationfirewallpolicies
   - appsettings
   - azclis
   - azurefiles
@@ -25,21 +26,28 @@ words:
   - codeowners
   - commonprompts
   - configmap
+  - connectedclusters
   - consumergroup
+  - containerregistry
   - contentsafety
   - createorupdate
+  - databaseaccounts
   - deviceregistry
   - discoverability
+  - domainservices
   - donet
   - elicitations
   - enumerables
   - eventhub
   - eventhubs
   - eventprocessorhost
+  - expressrouteports
   - fileshares
   - finetuning
+  - flexibleservers
   - foundryexensions
   - foundryextensions
+  - frontdoorwebapplicationfirewallpolicies
   - getattr
   - getguidance
   - groq
@@ -51,7 +59,9 @@ words:
   - imageanalysis
   - inspektor
   - irql
+  - kubernetesconfiguration
   - managedcluster
+  - managedinstances
   - mypass
   - mysvc
   - myuser
@@ -79,6 +89,7 @@ words:
   - serviceguide
   - sreagent
   - statelessly
+  - staticsites
   - storagee
   - storagesync
   - structs
@@ -88,5 +99,6 @@ words:
   - testcontainer
   - toolsets
   - toplist
+  - virtualmachinescalesets
   - webjobs
   - wellarchitectedframework
