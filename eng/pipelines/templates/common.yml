@@ -125,7 +125,7 @@ extends:
             TimeoutInMinutes: 75
         - template: /eng/pipelines/templates/jobs/live-test.yml
           parameters:
-            JobName: Reuseable LiveTest
+            JobName: ReuseableLiveTest
             JobDisplayName: "Reusable Live tests -"
             Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.reusableLiveTestMatrix']
             MaxParallel: 10
