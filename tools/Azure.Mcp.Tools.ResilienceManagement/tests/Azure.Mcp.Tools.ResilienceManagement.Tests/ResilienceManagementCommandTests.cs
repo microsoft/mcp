@@ -23,6 +23,13 @@ public class ResilienceManagementCommandTests(
     LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    // Preserve LRO Location paths during recording; replacing the entire header breaks polling playback.
+    public override List<string> DisabledDefaultSanitizers =>
+    [
+        .. base.DisabledDefaultSanitizers,
+        "AZSDK2003"
+    ];
+
     // Prepend the base sanitizers (e.g. WWW-Authenticate) then add tool-specific ones.
     // Sanitize the required per-invocation operation-id request GUID for playback matching and the
     // x-ms-operation-identifier response header, which contains the real tenant ID and object ID.
@@ -35,6 +42,23 @@ public class ResilienceManagementCommandTests(
         }),
         new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("operation-id")
         {
+            Value = "sanitized"
+        }),
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("Location")
+        {
+            Regex = "([?&](?:t|c|s|h)=)(?<value>[^&]+)",
+            GroupForReplace = "value",
+            Value = "sanitized"
+        })
+    ];
+
+    public override List<UriRegexSanitizer> UriRegexSanitizers =>
+    [
+        .. base.UriRegexSanitizers,
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "([?&](?:t|c|s|h)=)(?<value>[^&]+)",
+            GroupForReplace = "value",
             Value = "sanitized"
         })
     ];
