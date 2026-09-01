@@ -60,6 +60,12 @@ public class ResilienceManagementCommandTests(
             Regex = "([?&](?:t|c|s|h)=)(?<value>[^&]+)",
             GroupForReplace = "value",
             Value = "sanitized"
+        }),
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = @"resource[Gg]roups/([^?\\/]+)",
+            GroupForReplace = "1",
+            Value = "Sanitized"
         })
     ];
 
