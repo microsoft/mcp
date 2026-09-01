@@ -10,7 +10,9 @@ param(
     [switch] $IncludeNative,
     [switch] $TestPipeline,
     [switch] $CI,
-    [bool] $CommonCodeBuildsAll = $true
+    [bool] $CommonCodeBuildsAll = $true,
+    [string] $SourceCommittish,
+    [string] $TargetCommittish
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
@@ -261,7 +263,16 @@ function Get-PathsToTest {
         )
 
         # If we're in a pull request, use the set of changed files to narrow down the set of paths to test.
-        $changedFiles = Get-ChangedFiles
+        if ([string]::IsNullOrEmpty($SourceCommittish)) {
+            $SourceCommittish = "${env:SYSTEM_PULLREQUEST_SOURCECOMMITID}"
+        }
+        
+        if ([string]::IsNullOrEmpty($TargetCommittish)) {
+            $TargetCommittish = ("origin/${env:SYSTEM_PULLREQUEST_TARGETBRANCH}" -replace "refs/heads/")
+        }
+
+        $changedFiles = Get-ChangedFiles -SourceCommittish $SourceCommittish -TargetCommittish $TargetCommittish
+
         # When common code builds all, track whether engineering, the Core libraries, or shared build changed. If so, build everything.
         $coreChanged = $CommonCodeBuildsAll -and ($changedFiles | Where-Object { $_ -match '^core/(Azure|Fabric|Microsoft).Mcp.Core/src/' }).Count -gt 0
         $engChanged = $CommonCodeBuildsAll -and  ($changedFiles | Where-Object { $_ -match '^eng/' }).Count -gt 0
