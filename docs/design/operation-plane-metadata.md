@@ -84,9 +84,11 @@ Applying the rule:
 
 ### Default
 
-`OperationPlane` defaults to `Unspecified`, which is a validation failure for Azure service commands rather than a shipping state.
+`OperationPlane` defaults to `Unspecified`, which is an unset marker rather than a shipping state.
 
-Defaulting to `Data` would silently misclassify the many ARM-based commands. Making the default an unset marker instead means a command that is never classified fails validation loudly rather than publishing a wrong answer.
+Defaulting to `Data` would silently misclassify the many ARM-based commands. Making the default an unset marker instead means a command that is never classified fails loudly rather than publishing a wrong answer.
+
+`CommandOperationPlaneTests.AllCommands_DeclareAnOperationPlane` enforces this: it walks every registered command and fails on any that is still `Unspecified`. There is no allowlist, so a new command must be classified before it can ship. A command that calls no Azure service is `NotApplicable`, which is an explicit classification and satisfies the test.
 
 ## JSON representation
 
@@ -133,10 +135,15 @@ Keeping aggregation in the consumer avoids duplicating the rule across the names
 
 ## Rollout
 
-1. Add the enum, the attribute property, and the CLI JSON serialization.
-2. Classify every command in the repository against the deliverable rule.
-3. Add repository validation rejecting `Unspecified` for Azure service commands, so a new command cannot be added without a classification.
-4. Update documentation generation to display the classification and derive tool-family coverage.
+Delivered in this change:
+
+1. The enum, the attribute property, and the CLI JSON serialization.
+2. A classification for every command in the repository, applying the deliverable rule.
+3. A test rejecting `Unspecified`, so a new command cannot be added without a classification.
+
+Left to a consumer:
+
+4. Documentation generation displaying the classification and deriving tool-family coverage.
 
 Classifying everything in one pass, rather than incrementally, keeps `Unspecified` from becoming a permanent resting state and means the annotation is useful the day it ships.
 
