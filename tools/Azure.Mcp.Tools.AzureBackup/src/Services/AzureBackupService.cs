@@ -60,16 +60,21 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             $"RSV error: {rsvInner.GetType().Name}: {rsvInner.Message} " +
             $"DPP error: {dppInner.GetType().Name}: {dppInner.Message}";
 
-        if (rsvInner is RequestFailedException rsvRfe && dppInner is RequestFailedException dppRfe)
+        // BUG-A fix (extends NEW-5): prefer RequestFailedException from EITHER side, not
+        // only when both sides are RFE. Real telemetry showed cases where RSV reported a
+        // clean 422/403 while DPP raised a non-Azure exception (e.g. an SDK deserialization
+        // error). The old code fell through to InvalidOperationException, which the
+        // classifier buckets as an MCP bug. Preferring the RFE side keeps the classifier
+        // in the AzureService bucket and preserves the original HTTP status.
+        var rsvRfe = rsvInner as RequestFailedException;
+        var dppRfe = dppInner as RequestFailedException;
+        if (rsvRfe is not null || dppRfe is not null)
         {
-            // NEW-5 fix: when both inners are RequestFailedException, return a
-            // RequestFailedException so the command-layer error mapper classifies the
-            // failure as an Azure service error (with the original HTTP status code)
-            // rather than as an MCP-side bug. Pick a single source for the
-            // (Status, ErrorCode) pair so they are guaranteed to come from the same
-            // exception - prefer the side that reports a non-zero HTTP status.
-            var primary = rsvRfe.Status != 0 ? rsvRfe : dppRfe;
-            return new RequestFailedException(primary.Status, combinedMessage, primary.ErrorCode, primary);
+            // Prefer the side that reports a non-zero HTTP status so the surfaced status is meaningful.
+            var primary = (rsvRfe?.Status is > 0) ? rsvRfe
+                : (dppRfe?.Status is > 0) ? dppRfe
+                : rsvRfe ?? dppRfe!;
+            return new RequestFailedException(primary!.Status, combinedMessage, primary.ErrorCode, primary);
         }
 
         return new InvalidOperationException(combinedMessage, rsvInner);
@@ -530,6 +535,13 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         string? tagFilter, string? tenant,
         CancellationToken cancellationToken)
     {
+        // BUG-3 fix: validate the caller-supplied resource-type filter before any Azure
+        // work so a bad filter (workload alias like "mssql", or malformed value) fails
+        // fast with a customer-facing 400 rather than after ARM/vault calls.
+        var preParsedTargetTypes = !string.IsNullOrEmpty(resourceTypeFilter)
+            ? ValidateAndParseResourceTypeFilter(resourceTypeFilter)
+            : null;
+
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
         // Step 1: List all vaults (RSV + DPP) in the subscription (parallelized)
         var rsvVaultsTask = rsvOps.ListVaultsAsync(subscription, tenant, cancellationToken);
@@ -641,9 +653,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         var subId = SubscriptionResource.CreateResourceIdentifier(subscription);
         var subResource = armClient.GetSubscriptionResource(subId);
 
-        var targetTypes = !string.IsNullOrEmpty(resourceTypeFilter)
-            ? ValidateAndParseResourceTypeFilter(resourceTypeFilter)
-            : s_protectableResourceTypes;
+        var targetTypes = preParsedTargetTypes ?? s_protectableResourceTypes;
 
         var unprotected = new List<UnprotectedResourceInfo>();
 
@@ -1200,18 +1210,57 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     }
 
     /// <summary>
+    /// Workload/service aliases that customers frequently supply to --resource-type-filter
+    /// but which are NOT ARM resource types. Detected explicitly so we can surface a
+    /// clearer error steering the caller toward vault-level protectable-item discovery.
+    /// </summary>
+    private static readonly HashSet<string> s_workloadAliases = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "mssql", "sql", "sqldatabase", "sqldb", "azuresql",
+        "saphana", "hana",
+        "sapase", "ase",
+        "azurefiles", "afs", "fileshare", "fileshares"
+    };
+
+    /// <summary>
     /// Validates that each resource type in the filter matches the expected ARM resource type format
     /// (e.g., "Microsoft.Compute/virtualMachines") to prevent OData injection.
+    ///
+    /// BUG-3 fix: throws <see cref="RequestFailedException"/> (HTTP 400) instead of
+    /// <see cref="ArgumentException"/> so the telemetry classifier does not bucket
+    /// customer input errors as MCP-side bugs. Also detects common workload aliases
+    /// (mssql, saphana, sapase, azurefiles, ...) which are NOT ARM resource types and
+    /// steers the caller toward the vault-discovery path.
     /// </summary>
     private static string[] ValidateAndParseResourceTypeFilter(string resourceTypeFilter)
     {
         var types = resourceTypeFilter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         foreach (var type in types)
         {
+            if (s_workloadAliases.Contains(type))
+            {
+                throw new RequestFailedException(
+                    status: 400,
+                    message:
+                        $"'{type}' is a workload/service alias, not an ARM resource type. " +
+                        "The --resource-type-filter option only accepts ARM resource types " +
+                        "(e.g. 'Microsoft.Compute/virtualMachines'). To discover unprotected " +
+                        "SQL databases in VMs, SAP HANA, SAP ASE, or Azure File Shares, omit " +
+                        "--resource-type-filter so the vault-discovery pass runs; those workloads " +
+                        "are then listed with 'discoverySource: vault' in the results.",
+                    errorCode: "InvalidWorkloadAliasInResourceTypeFilter",
+                    innerException: null);
+            }
+
             if (!ArmResourceTypeRegex().IsMatch(type))
             {
-                throw new ArgumentException(
-                    $"Invalid resource type format '{type}'. Expected format: 'Microsoft.Provider/resourceType' (e.g., 'Microsoft.Compute/virtualMachines').");
+                throw new RequestFailedException(
+                    status: 400,
+                    message:
+                        $"Invalid resource type format '{type}'. Expected format: " +
+                        "'Microsoft.Provider/resourceType' (e.g., 'Microsoft.Compute/virtualMachines').",
+                    errorCode: "InvalidResourceTypeFilter",
+                    innerException: null);
             }
         }
 

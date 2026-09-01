@@ -423,9 +423,52 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         var collection = vaultResource.GetDataProtectionBackupInstances();
 
         var items = new List<ProtectedItemInfo>();
-        await foreach (var instance in collection.GetAllAsync(cancellationToken))
+
+        // BUG-B fix: DPP backup instances sometimes deserialize to an "unknown" polymorphic
+        // subtype whose base-properties converter throws (ArgumentNullException /
+        // ArgumentException / FormatException / InvalidOperationException) inside
+        // MoveNextAsync. Previously the whole listing failed with an MCP-classified
+        // exception. Now we skip past the bad item and continue - matching the pattern
+        // already used by ListPoliciesAsync above - so a single unsupported instance
+        // does not blank out the entire list. Cap consecutive failures so a page-level
+        // deserialization loop can not spin forever.
+        var enumerator = collection.GetAllAsync(cancellationToken).GetAsyncEnumerator(cancellationToken);
+        const int maxConsecutiveFailures = 3;
+        var consecutiveFailures = 0;
+        try
         {
-            items.Add(MapToProtectedItemInfo(instance.Data));
+            while (true)
+            {
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    items.Add(MapToProtectedItemInfo(enumerator.Current.Data));
+                    consecutiveFailures = 0;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex) when (
+                    ex is FormatException
+                    or ArgumentNullException
+                    or ArgumentException
+                    or InvalidOperationException)
+                {
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
         }
 
         return items;
