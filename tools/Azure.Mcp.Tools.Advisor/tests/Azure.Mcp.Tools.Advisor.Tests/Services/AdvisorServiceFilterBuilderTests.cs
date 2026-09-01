@@ -28,8 +28,6 @@ public class AdvisorServiceFilterBuilderTests
     public void BuildAdditionalFilter_WhitespaceFields_ReturnsStatusClauseOnly()
     {
         var filters = new RecommendationFilters(
-            Category: "  ",
-            Impact: "",
             ResourceType: "\t",
             Resource: " ",
             Search: "");
@@ -40,7 +38,7 @@ public class AdvisorServiceFilterBuilderTests
     [Fact]
     public void BuildAdditionalFilter_Category_UsesCaseInsensitiveEquality()
     {
-        var result = AdvisorService.BuildAdditionalFilter(new RecommendationFilters(Category: "Security"));
+        var result = AdvisorService.BuildAdditionalFilter(new RecommendationFilters(Category: AdvisorCategory.Security));
 
         Assert.Equal($"{StatusClause} and tostring(properties.category) =~ 'Security'", result);
     }
@@ -48,7 +46,7 @@ public class AdvisorServiceFilterBuilderTests
     [Fact]
     public void BuildAdditionalFilter_Impact_UsesCaseInsensitiveEquality()
     {
-        var result = AdvisorService.BuildAdditionalFilter(new RecommendationFilters(Impact: "High"));
+        var result = AdvisorService.BuildAdditionalFilter(new RecommendationFilters(Impact: AdvisorImpact.High));
 
         Assert.Equal($"{StatusClause} and tostring(properties.impact) =~ 'High'", result);
     }
@@ -91,8 +89,8 @@ public class AdvisorServiceFilterBuilderTests
     public void BuildAdditionalFilter_MultipleFields_JoinedWithAnd()
     {
         var filters = new RecommendationFilters(
-            Category: "Security",
-            Impact: "High",
+            Category: AdvisorCategory.Security,
+            Impact: AdvisorImpact.High,
             Search: "tls");
 
         var result = AdvisorService.BuildAdditionalFilter(filters);
@@ -111,8 +109,8 @@ public class AdvisorServiceFilterBuilderTests
         // BaseAzureResourceService rejects additionalFilter strings containing '|'
         // as a KQL-injection guard. Verify our builder never emits one.
         var filters = new RecommendationFilters(
-            Category: "Sec|urity",
-            Impact: "Hi|gh",
+            Category: AdvisorCategory.Security,
+            Impact: AdvisorImpact.High,
             ResourceType: "Microsoft.Storage|fake",
             Resource: "my|storage",
             Search: "tls|injection");

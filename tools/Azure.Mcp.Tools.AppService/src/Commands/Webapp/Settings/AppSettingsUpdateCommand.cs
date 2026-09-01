@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Tools.AppService.Options;
+using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
@@ -17,13 +17,8 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
     Name = "update-appsettings",
     Title = "Updates Azure App Service Web App Application Settings",
     Description = """
-        Updates the application setting for an App Service web app. Three types of updating are available:
-
-        - Add: adds a new application setting with the specified name and value. If the application setting already exists, the operation will fail and return an error message.
-        - Set: sets the value of an application setting. If the application setting does not exist, this is equivalent to add. If the application setting already exists, the value will be overwritten.
-        - Delete: deletes an application setting with the specified name. If the application setting does not exist, nothing happens.
-
-        For add and set update types, both the application setting name and value are required. For delete update type, only the application setting name is required.
+        Updates an application setting for an App Service web app. Updates that create or replace a setting require both the
+        setting name and value. Removing a setting requires only its name.
         """,
     Destructive = true,
     Idempotent = false,
@@ -37,41 +32,23 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
     private readonly ILogger<AppSettingsUpdateCommand> _logger = logger;
     private readonly IAppServiceService _appServiceService = appServiceService;
 
-    private static readonly HashSet<string> s_validUpdateTypes = ["add", "set", "delete"];
-
     public override void ValidateOptions(AppSettingsUpdateOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
 
-        if (!ValidateUpdateType(options.SettingUpdateType, out var errorMessage))
-        {
-            validationResult.Errors.Add(errorMessage);
-        }
-
-        if (!ValidateSettingValue(options.SettingUpdateType, options.SettingValue, out errorMessage))
+        if (!ValidateSettingValue(options.SettingUpdateType, options.SettingValue, out var errorMessage))
         {
             validationResult.Errors.Add(errorMessage);
         }
     }
 
-    internal static bool ValidateUpdateType(string? settingUpdateType, out string errorMessage)
+    internal static bool ValidateSettingValue(AppSettingUpdateType settingUpdateType, string? settingValue, out string errorMessage)
     {
         errorMessage = string.Empty;
-        if (!s_validUpdateTypes.Contains(settingUpdateType, StringComparer.OrdinalIgnoreCase))
-        {
-            errorMessage = $"'{AppServiceOptionDefinitions.AppSettingUpdateTypeName}' must be one of the following values: {string.Join(", ", s_validUpdateTypes)}.";
-            return false;
-        }
-        return true;
-    }
-
-    internal static bool ValidateSettingValue(string? settingUpdateType, string? settingValue, out string errorMessage)
-    {
-        errorMessage = string.Empty;
-        if (("add".Equals(settingUpdateType, StringComparison.OrdinalIgnoreCase) || "set".Equals(settingUpdateType, StringComparison.OrdinalIgnoreCase))
+        if (settingUpdateType is AppSettingUpdateType.Add or AppSettingUpdateType.Set
             && string.IsNullOrWhiteSpace(settingValue))
         {
-            errorMessage = $"'{AppServiceOptionDefinitions.AppSettingValueName}' is required when '{AppServiceOptionDefinitions.AppSettingUpdateTypeName}' is 'add' or 'set'.";
+            errorMessage = "--setting-value is required for the selected update operation.";
             return false;
         }
         return true;

@@ -10,7 +10,7 @@ public interface IAppServiceService
     Task<DatabaseConnectionInfo> AddDatabaseAsync(
         string appName,
         string resourceGroup,
-        string databaseType,
+        DatabaseType databaseType,
         string databaseServer,
         string databaseName,
         string connectionString,
@@ -37,7 +37,7 @@ public interface IAppServiceService
         string resourceGroup,
         string appName,
         string settingName,
-        string settingUpdateType,
+        AppSettingUpdateType settingUpdateType,
         string? settingValue = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
@@ -72,7 +72,7 @@ public interface IAppServiceService
         string subscription,
         string resourceGroup,
         string appName,
-        string stateChange,
+        WebappStateChange stateChange,
         bool softRestart,
         bool waitForCompletion,
         string? tenant = null,

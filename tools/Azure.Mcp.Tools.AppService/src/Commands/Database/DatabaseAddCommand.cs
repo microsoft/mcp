@@ -19,7 +19,7 @@ namespace Azure.Mcp.Tools.AppService.Commands.Database;
     Description = """
         Add a database connection for an App Service using connection string for an existing database. This command configures database connection
         settings for the specified App Service, allowing it to connect to a database server name. You must specify the App Service name, database name,
-        database type, database server name, connection string, resource group name and subscription.
+        database type, database server name, resource group name and subscription.
         """,
     Destructive = false,
     Idempotent = false,

@@ -4,8 +4,8 @@
 namespace Azure.Mcp.Tools.Advisor.Models;
 
 public sealed record RecommendationFilters(
-    string? Category = null,
-    string? Impact = null,
+    AdvisorCategory? Category = null,
+    AdvisorImpact? Impact = null,
     string? ResourceType = null,
     string? Resource = null,
     string? Search = null);

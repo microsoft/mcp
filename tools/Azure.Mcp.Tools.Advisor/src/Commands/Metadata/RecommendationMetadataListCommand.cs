@@ -36,15 +36,6 @@ public sealed class RecommendationMetadataListCommand(
         RecommendationMetadataListOptions,
         RecommendationMetadataListCommand.RecommendationMetadataListResult>()
 {
-    private static readonly string[] AllowedImpacts = ["High", "Medium", "Low"];
-    private static readonly string[] AllowedCategories =
-    [
-        "Cost",
-        "HighAvailability",
-        "Security",
-        "Performance",
-        "OperationalExcellence",
-    ];
     private static readonly string[] AllowedRetirementDateOperators = ["eq", "lt", "le", "gt", "ge"];
     private static readonly HashSet<string> SupportedLanguages = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -66,22 +57,6 @@ public sealed class RecommendationMetadataListCommand(
             validationResult.Errors.Add(
                 $"Unsupported --language value '{options.Language}'. Supported values: " +
                 $"{string.Join(", ", SupportedLanguages.OrderBy(l => l, StringComparer.Ordinal))}.");
-        }
-
-        var normalizedImpact = options.Impact?.Trim();
-        if (!string.IsNullOrEmpty(normalizedImpact) &&
-            !AllowedImpacts.Contains(normalizedImpact, StringComparer.OrdinalIgnoreCase))
-        {
-            validationResult.Errors.Add(
-                $"Invalid --impact value '{options.Impact}'. Allowed values: {string.Join(", ", AllowedImpacts)}.");
-        }
-
-        var normalizedCategory = options.Category?.Trim();
-        if (!string.IsNullOrEmpty(normalizedCategory) &&
-            !AllowedCategories.Contains(normalizedCategory, StringComparer.OrdinalIgnoreCase))
-        {
-            validationResult.Errors.Add(
-                $"Invalid --category value '{options.Category}'. Allowed values: {string.Join(", ", AllowedCategories)}.");
         }
 
         var hasServiceRetirementFilter =
@@ -113,7 +88,6 @@ public sealed class RecommendationMetadataListCommand(
         try
         {
             _ = TryNormalizeLanguage(options.Language, out var language);
-            var impact = NormalizeImpact(options.Impact);
             _ = TryParseRetirementDateFilter(
                 options.RetirementDate,
                 out var retirementDateOperator,
@@ -122,8 +96,8 @@ public sealed class RecommendationMetadataListCommand(
 
             var filters = new RecommendationMetadataFilters(
                 ResourceType: NormalizeOptionalFilter(options.ResourceType),
-                Impact: impact,
-                Category: NormalizeAllowedValue(options.Category, AllowedCategories),
+                Impact: options.Impact,
+                Category: options.Category,
                 SubCategory: NormalizeOptionalFilter(options.SubCategory),
                 TrackingId: NormalizeOptionalFilter(options.TrackingId),
                 RetirementDateOperator: retirementDateOperator,
@@ -183,20 +157,6 @@ public sealed class RecommendationMetadataListCommand(
         }
 
         return false;
-    }
-
-    private static string? NormalizeImpact(string? impact)
-        => NormalizeAllowedValue(impact, AllowedImpacts);
-
-    private static string? NormalizeAllowedValue(string? value, IReadOnlyList<string> allowedValues)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        return allowedValues.FirstOrDefault(
-            candidate => candidate.Equals(value.Trim(), StringComparison.OrdinalIgnoreCase));
     }
 
     private static string? NormalizeOptionalFilter(string? value) =>

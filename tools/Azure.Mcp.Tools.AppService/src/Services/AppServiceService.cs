@@ -5,7 +5,6 @@ using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AppService.Commands;
-using Azure.Mcp.Tools.AppService.Commands.Webapp;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.ResourceManager.AppService;
@@ -20,12 +19,10 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
 {
     private readonly ILogger<AppServiceService> _logger = logger;
 
-    private static readonly string[] supportedTypes = ["sqlserver", "mysql", "postgresql", "cosmosdb"];
-
     public async Task<DatabaseConnectionInfo> AddDatabaseAsync(
         string appName,
         string resourceGroup,
-        string databaseType,
+        DatabaseType databaseType,
         string databaseServer,
         string databaseName,
         string connectionString,
@@ -41,7 +38,6 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         ValidateRequiredParameters(
             (nameof(appName), appName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(databaseType), databaseType),
             (nameof(databaseServer), databaseServer),
             (nameof(databaseName), databaseName),
             (nameof(subscription), subscription));
@@ -84,7 +80,7 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         return webAppResource.Value;
     }
 
-    private string PrepareConnectionString(string? connectionString, string databaseType,
+    private string PrepareConnectionString(string? connectionString, DatabaseType databaseType,
         string databaseServer, string databaseName)
     {
         return string.IsNullOrWhiteSpace(connectionString)
@@ -93,7 +89,7 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
     }
 
     private static async Task UpdateWebAppConnectionStringAsync(WebSiteResource webApp, string connectionStringName,
-        string connectionString, string databaseType, CancellationToken cancellationToken)
+        string connectionString, DatabaseType databaseType, CancellationToken cancellationToken)
     {
         // Get current web app configuration
         var configResource = webApp.GetWebSiteConfig();
@@ -131,12 +127,12 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         }
     }
 
-    private static DatabaseConnectionInfo CreateDatabaseConnectionInfo(string databaseType, string databaseServer,
+    private static DatabaseConnectionInfo CreateDatabaseConnectionInfo(DatabaseType databaseType, string databaseServer,
         string databaseName, string connectionString, string connectionStringName)
     {
         return new()
         {
-            DatabaseType = databaseType,
+            DatabaseType = GetDatabaseTypeName(databaseType),
             DatabaseServer = databaseServer,
             DatabaseName = databaseName,
             ConnectionString = connectionString,
@@ -146,27 +142,36 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         };
     }
 
-    private static ConnectionStringType GetConnectionStringType(string databaseType)
+    private static ConnectionStringType GetConnectionStringType(DatabaseType databaseType)
     {
-        return databaseType.ToLowerInvariant() switch
+        return databaseType switch
         {
-            "sqlserver" => ConnectionStringType.SqlServer,
-            "mysql" => ConnectionStringType.MySql,
-            "postgresql" => ConnectionStringType.PostgreSql,
-            "cosmosdb" => ConnectionStringType.Custom,
-            _ => throw new ArgumentException($"Unsupported database type: {databaseType}. Supported types: {string.Join(", ", supportedTypes)}")
+            DatabaseType.SqlServer => ConnectionStringType.SqlServer,
+            DatabaseType.MySql => ConnectionStringType.MySql,
+            DatabaseType.PostgreSql => ConnectionStringType.PostgreSql,
+            DatabaseType.CosmosDb => ConnectionStringType.Custom,
+            _ => throw new ArgumentOutOfRangeException(nameof(databaseType), databaseType, "Unsupported database type.")
         };
     }
 
-    private string BuildConnectionString(string databaseType, string databaseServer, string databaseName)
+    private static string GetDatabaseTypeName(DatabaseType databaseType) => databaseType switch
     {
-        return databaseType.ToLowerInvariant() switch
+        DatabaseType.SqlServer => "SqlServer",
+        DatabaseType.MySql => "MySQL",
+        DatabaseType.PostgreSql => "PostgreSQL",
+        DatabaseType.CosmosDb => "CosmosDB",
+        _ => throw new ArgumentOutOfRangeException(nameof(databaseType), databaseType, "Unsupported database type.")
+    };
+
+    private string BuildConnectionString(DatabaseType databaseType, string databaseServer, string databaseName)
+    {
+        return databaseType switch
         {
-            "sqlserver" => $"Server={databaseServer};Database={databaseName};User Id={{username}};Password={{password}};TrustServerCertificate=True;",
-            "mysql" => $"Server={databaseServer};Database={databaseName};Uid={{username}};Pwd={{password}};",
-            "postgresql" => $"Host={databaseServer};Database={databaseName};Username={{username}};Password={{password}};",
-            "cosmosdb" => BuildCosmosConnectionString(databaseServer, databaseName),
-            _ => throw new ArgumentException($"Unsupported database type: {databaseType}")
+            DatabaseType.SqlServer => $"Server={databaseServer};Database={databaseName};User Id={{username}};Password={{password}};TrustServerCertificate=True;",
+            DatabaseType.MySql => $"Server={databaseServer};Database={databaseName};Uid={{username}};Pwd={{password}};",
+            DatabaseType.PostgreSql => $"Host={databaseServer};Database={databaseName};Username={{username}};Password={{password}};",
+            DatabaseType.CosmosDb => BuildCosmosConnectionString(databaseServer, databaseName),
+            _ => throw new ArgumentOutOfRangeException(nameof(databaseType), databaseType, "Unsupported database type.")
         };
     }
 
@@ -262,7 +267,7 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         string resourceGroup,
         string appName,
         string settingName,
-        string settingUpdateType,
+        AppSettingUpdateType settingUpdateType,
         string? settingValue = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
@@ -271,15 +276,14 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
             (nameof(appName), appName),
-            (nameof(settingName), settingName),
-            (nameof(settingUpdateType), settingUpdateType));
+            (nameof(settingName), settingName));
 
-        if (!AppSettingsUpdateCommand.ValidateUpdateType(settingUpdateType, out var errorMessage))
+        if (!Enum.IsDefined(settingUpdateType))
         {
-            throw new ArgumentException(errorMessage);
+            throw new ArgumentOutOfRangeException(nameof(settingUpdateType), settingUpdateType, "Unsupported application setting update type.");
         }
 
-        if (!AppSettingsUpdateCommand.ValidateSettingValue(settingUpdateType, settingValue, out errorMessage))
+        if (!AppSettingsUpdateCommand.ValidateSettingValue(settingUpdateType, settingValue, out var errorMessage))
         {
             throw new ArgumentException(errorMessage);
         }
@@ -287,9 +291,8 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, cancellationToken);
         var configResource = await webAppResource.GetApplicationSettingsAsync(cancellationToken: cancellationToken);
 
-        // Don't worry about an else case here because validation should have already caught invalid update types
         string updateResultMessage = string.Empty;
-        if ("add".Equals(settingUpdateType, StringComparison.OrdinalIgnoreCase))
+        if (settingUpdateType == AppSettingUpdateType.Add)
         {
             if (!configResource.Value.Properties.TryAdd(settingName, settingValue!))
             {
@@ -299,12 +302,12 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
 
             updateResultMessage = $"Application setting '{settingName}' added successfully.";
         }
-        else if ("set".Equals(settingUpdateType, StringComparison.OrdinalIgnoreCase))
+        else if (settingUpdateType == AppSettingUpdateType.Set)
         {
             configResource.Value.Properties[settingName] = settingValue!;
             updateResultMessage = $"Application setting '{settingName}' set successfully.";
         }
-        else if ("delete".Equals(settingUpdateType, StringComparison.OrdinalIgnoreCase))
+        else if (settingUpdateType == AppSettingUpdateType.Delete)
         {
             if (!configResource.Value.Properties.Remove(settingName))
             {
@@ -312,6 +315,10 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
                 return $"Application setting '{settingName}' doesn't exist, deletion is skipped.";
             }
             updateResultMessage = $"Application setting '{settingName}' deleted successfully.";
+        }
+        else
+        {
+            throw new ArgumentOutOfRangeException(nameof(settingUpdateType), settingUpdateType, "Unsupported application setting update type.");
         }
 
         await webAppResource.UpdateApplicationSettingsAsync(configResource.Value, cancellationToken: cancellationToken);
@@ -540,7 +547,7 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         string subscription,
         string resourceGroup,
         string appName,
-        string stateChange,
+        WebappStateChange stateChange,
         bool softRestart,
         bool waitForCompletion,
         string? tenant = null,
@@ -549,27 +556,21 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(appName), appName),
-            (nameof(stateChange), stateChange));
-
-        if (!WebappChangeStateCommand.ValidateStateChange(stateChange, out var errorMessage))
-        {
-            throw new ArgumentException(errorMessage);
-        }
+            (nameof(appName), appName));
 
         var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, cancellationToken);
 
-        if (stateChange.Equals("start", StringComparison.OrdinalIgnoreCase))
+        if (stateChange == WebappStateChange.Start)
         {
             await webAppResource.StartAsync(cancellationToken: cancellationToken);
             return $"Web app '{appName}' start initiated successfully.";
         }
-        else if (stateChange.Equals("stop", StringComparison.OrdinalIgnoreCase))
+        else if (stateChange == WebappStateChange.Stop)
         {
             await webAppResource.StopAsync(cancellationToken: cancellationToken);
             return $"Web app '{appName}' stop initiated successfully.";
         }
-        else if (stateChange.Equals("restart", StringComparison.OrdinalIgnoreCase))
+        else if (stateChange == WebappStateChange.Restart)
         {
             await webAppResource.RestartAsync(softRestart: softRestart, synchronous: waitForCompletion, cancellationToken: cancellationToken);
             return waitForCompletion
@@ -577,7 +578,6 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
                 : $"Web app '{appName}' restart initiated successfully (Soft restart: {softRestart}).";
         }
 
-        // Should never reach this.
-        throw new ArgumentException($"Invalid state change action: {stateChange}. Valid values are: start, stop, restart.");
+        throw new ArgumentOutOfRangeException(nameof(stateChange), stateChange, "Unsupported web app state change.");
     }
 }

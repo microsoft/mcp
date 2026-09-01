@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.AppService.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AppService.Options.Webapp.Settings;
@@ -17,8 +18,8 @@ public sealed class AppSettingsUpdateOptions : ISubscriptionOption
     [Option(Description = "The value of the application setting. Required for add and set update types.")]
     public string? SettingValue { get; set; }
 
-    [Option(Description = "The type of update to perform on the application setting. Valid values are: add, set, delete.")]
-    public required string SettingUpdateType { get; set; }
+    [Option(Description = "The update operation to perform on the application setting.")]
+    public required AppSettingUpdateType SettingUpdateType { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

@@ -25,19 +25,6 @@ public class AdvisorService(IAzureService azureService)
         ["Low"] = 2,
     };
 
-    internal const string GroupByRecommendationType = "recommendation-type";
-    internal const string GroupByCategory = "category";
-    internal const string GroupByImpact = "impact";
-    internal const string GroupByResourceType = "resource-type";
-
-    internal static readonly IReadOnlyList<string> AllowedGroupBy =
-    [
-        GroupByRecommendationType,
-        GroupByCategory,
-        GroupByImpact,
-        GroupByResourceType,
-    ];
-
     public async Task<ResourceQueryResults<Recommendation>> ListRecommendationsAsync(
         string subscription,
         string? resourceGroup,
@@ -110,14 +97,12 @@ public class AdvisorService(IAzureService azureService)
             query += $" | where tostring(properties.supportedResourceType) =~ '{EscapeKqlString(filters.ResourceType.Trim())}'";
         }
 
-        if (!string.IsNullOrWhiteSpace(filters?.Impact))
+        if (filters?.Impact is { } impact)
         {
-            query += $" | where tostring(properties.recommendationImpact) =~ '{EscapeKqlString(filters.Impact.Trim())}'";
+            query += $" | where tostring(properties.recommendationImpact) =~ '{impact}'";
         }
 
-        var category = string.IsNullOrWhiteSpace(filters?.Category)
-            ? null
-            : filters.Category.Trim();
+        var category = filters?.Category;
         var subCategory = string.IsNullOrWhiteSpace(filters?.SubCategory)
             ? null
             : filters.SubCategory.Trim();
@@ -143,9 +128,9 @@ public class AdvisorService(IAzureService azureService)
             subCategory,
             hasServiceRetirementFilter);
 
-        if (category is not null)
+        if (category is { } categoryValue)
         {
-            query += $" | where tostring(properties.recommendationCategory) =~ '{EscapeKqlString(category)}'";
+            query += $" | where tostring(properties.recommendationCategory) =~ '{categoryValue}'";
         }
 
         if (subCategory is not null)
@@ -318,13 +303,16 @@ public class AdvisorService(IAzureService azureService)
     public async Task<RecommendationSummary> SummarizeRecommendationsAsync(
         string subscription,
         string? resourceGroup,
-        string groupBy,
+        RecommendationGroupBy groupBy,
         RecommendationFilters? filters = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
-        ArgumentException.ThrowIfNullOrWhiteSpace(groupBy);
+        if (!Enum.IsDefined(groupBy))
+        {
+            throw new ArgumentOutOfRangeException(nameof(groupBy), groupBy, "Unsupported recommendation grouping.");
+        }
 
         var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var allTenants = await AzureService.GetTenants(cancellationToken);
@@ -369,10 +357,10 @@ public class AdvisorService(IAzureService azureService)
 
         var totalRecommendations = allGroups.Sum(g => g.Count);
 
-        return new(groupBy, totalRecommendations, allGroups);
+        return new(GetGroupByName(groupBy), totalRecommendations, allGroups);
     }
 
-    internal static string BuildSummarizeQuery(string groupBy, string? resourceGroup, RecommendationFilters? filters)
+    internal static string BuildSummarizeQuery(RecommendationGroupBy groupBy, string? resourceGroup, RecommendationFilters? filters)
     {
         var query = "advisorresources | where type =~ 'Microsoft.Advisor/recommendations'";
 
@@ -395,20 +383,18 @@ public class AdvisorService(IAzureService azureService)
         return query;
     }
 
-    internal static string MapGroupByToKqlField(string groupBy) => groupBy.ToLowerInvariant() switch
+    internal static string MapGroupByToKqlField(RecommendationGroupBy groupBy) => groupBy switch
     {
-        GroupByCategory =>
+        RecommendationGroupBy.Category =>
             "iff(isempty(tostring(properties.category)), 'Unknown', tostring(properties.category))",
-        GroupByImpact =>
+        RecommendationGroupBy.Impact =>
             "iff(isempty(tostring(properties.impact)), 'Unknown', tostring(properties.impact))",
-        GroupByRecommendationType =>
+        RecommendationGroupBy.RecommendationType =>
             "iff(isempty(tostring(properties.shortDescription.problem)), 'Unknown', tostring(properties.shortDescription.problem))",
-        GroupByResourceType =>
+        RecommendationGroupBy.ResourceType =>
             "iff(isempty(extract(@'/providers/([^/]+/[^/]+)', 1, tostring(properties.resourceMetadata.resourceId))), 'Unknown', " +
             "extract(@'/providers/([^/]+/[^/]+)', 1, tostring(properties.resourceMetadata.resourceId)))",
-        _ => throw new ArgumentException(
-            $"Unsupported group-by value '{groupBy}'. Allowed values: {string.Join(", ", AllowedGroupBy)}.",
-            nameof(groupBy)),
+        _ => throw new ArgumentOutOfRangeException(nameof(groupBy), groupBy, "Unsupported recommendation grouping."),
     };
 
     internal static string? BuildAdditionalFilter(RecommendationFilters? filters)
@@ -420,14 +406,14 @@ public class AdvisorService(IAzureService azureService)
 
         if (filters is not null)
         {
-            if (!string.IsNullOrWhiteSpace(filters.Category))
+            if (filters.Category is { } category)
             {
-                clauses.Add($"tostring(properties.category) =~ '{SanitizeForKql(filters.Category)}'");
+                clauses.Add($"tostring(properties.category) =~ '{category}'");
             }
 
-            if (!string.IsNullOrWhiteSpace(filters.Impact))
+            if (filters.Impact is { } impact)
             {
-                clauses.Add($"tostring(properties.impact) =~ '{SanitizeForKql(filters.Impact)}'");
+                clauses.Add($"tostring(properties.impact) =~ '{impact}'");
             }
 
             if (!string.IsNullOrWhiteSpace(filters.ResourceType))
@@ -448,6 +434,15 @@ public class AdvisorService(IAzureService azureService)
 
         return string.Join(" and ", clauses);
     }
+
+    private static string GetGroupByName(RecommendationGroupBy groupBy) => groupBy switch
+    {
+        RecommendationGroupBy.RecommendationType => "recommendation-type",
+        RecommendationGroupBy.Category => "category",
+        RecommendationGroupBy.Impact => "impact",
+        RecommendationGroupBy.ResourceType => "resource-type",
+        _ => throw new ArgumentOutOfRangeException(nameof(groupBy), groupBy, "Unsupported recommendation grouping."),
+    };
 
     // KQL clause that restricts results to active ('New') recommendations only.
     internal const string ActiveRecommendationClause = "tostring(properties.recommendationStatus) =~ 'New'";
