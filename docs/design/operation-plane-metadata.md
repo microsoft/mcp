@@ -10,7 +10,7 @@ Proposed.
 
 Azure MCP commands can call Azure management APIs, service data APIs, or both. The existing tool metadata describes behavioral characteristics such as whether a command is read-only or destructive, but it does not identify the Azure API plane used by a command.
 
-The strongly typed option conversion described in [option-conversion.md](../option-conversion.md) moves command identity and behavioral hints to `CommandMetadataAttribute`. The `[Option]` attributes introduced by that conversion only describe command-line parameters and therefore do not solve operation-plane classification.
+The strongly typed option conversion moves command identity and behavioral hints to `CommandMetadataAttribute`. The `[Option]` attributes introduced by that conversion only describe command-line parameters and therefore do not solve operation-plane classification.
 
 Documentation generation needs this classification in `tools list` JSON so it can accurately describe the coverage of individual tools and tool families.
 
