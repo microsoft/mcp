@@ -6,8 +6,6 @@ using Azure.Core;
 using Azure.Core.Pipeline;
 using Microsoft.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.NetAppFiles.Commands;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Services.Models;
@@ -17,10 +15,9 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Tools.NetAppFiles.Services;
 
 public class NetAppFilesService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
+    IAzureService azureService,
     ILogger<NetAppFilesService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), INetAppFilesService
+    : BaseAzureResourceService(azureService), INetAppFilesService
 {
     private const string NetAppFilesApiVersion = "2026-01-01";
 
@@ -2914,6 +2911,8 @@ public class NetAppFilesService(
     private static string BuildVolumeActionUri(ReplicationVolumeTarget target, string subscription, string action)
         => $"https://management.azure.com/subscriptions/{subscription}/resourceGroups/{target.ResourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{target.Account}/capacityPools/{target.Pool}/volumes/{target.Volume}/{action}?api-version={NetAppFilesApiVersion}";
 
+
+    // todo refactor this out entirely
     private async Task<ManagementRequestResult> SendManagementRequestAsync(
         RequestMethod method,
         string requestUri,
@@ -2923,8 +2922,8 @@ public class NetAppFilesService(
         CancellationToken cancellationToken)
     {
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new ArmClientOptions()), retryPolicy);
-        options.Transport = new HttpClientTransport(TenantService.GetClient());
-        options.Environment = TenantService.CloudConfiguration.ArmEnvironment;
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
+        options.Environment = AzureService.CloudConfiguration.ArmEnvironment;
 
         var pipeline = HttpPipelineBuilder.Build(options);
         var accessToken = await GetArmAccessTokenAsync(tenant, cancellationToken);
