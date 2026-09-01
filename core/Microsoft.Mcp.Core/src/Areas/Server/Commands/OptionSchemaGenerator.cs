@@ -41,6 +41,20 @@ internal static class OptionSchemaGenerator
         TreatNullObliviousAsNonNullable = true,
     };
 
+    private static readonly JsonSchemaExporterOptions OutputExporterOptions = new()
+    {
+        TreatNullObliviousAsNonNullable = true,
+        TransformSchemaNode = static (context, schema) =>
+        {
+            if (schema is JsonObject schemaObject && StructuredOutputHelper.IsObjectRoot(schemaObject))
+            {
+                ReconcileRequiredProperties(schemaObject, context.TypeInfo);
+            }
+
+            return schema;
+        },
+    };
+
     [UnconditionalSuppressMessage("Trimming", "IL2026:RequiresUnreferencedCode",
         Justification = "Option value types are primitives, enums, and arrays of primitives that the default resolver handles without trim concerns.")]
     [UnconditionalSuppressMessage("AOT", "IL3050:RequiresDynamicCode",
@@ -127,11 +141,10 @@ internal static class OptionSchemaGenerator
     {
         ArgumentNullException.ThrowIfNull(resultTypeInfo);
 
-        var schema = JsonSchemaExporter.GetJsonSchemaAsNode(resultTypeInfo, ExporterOptions);
+        var schema = JsonSchemaExporter.GetJsonSchemaAsNode(resultTypeInfo, OutputExporterOptions);
 
         if (schema is JsonObject rootObject && StructuredOutputHelper.IsObjectRoot(rootObject))
         {
-            ReconcileRequiredProperties(rootObject, resultTypeInfo);
             return rootObject;
         }
 
