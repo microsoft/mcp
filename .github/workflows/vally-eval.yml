@@ -2,17 +2,31 @@ name: Vally evaluations
 
 on:
   pull_request:
+    branches:
+      - main
+    types:
+      - closed
     paths:
-      - 'tools/Azure.Mcp.*/**'
+      - 'tools/Azure.Mcp.*/**/*.cs'
+      - 'tools/Azure.Mcp.*/**/eval.yml'
+      - 'tools/Azure.Mcp.*/**/eval.yaml'
   workflow_dispatch:
     inputs:
+      baseCommit:
+        description: 'Base commit; defaults to HEAD^ on main branch'
+        required: false
+        type: string
+      headCommit:
+        description: 'Head commit; defaults to HEAD on main branch'
+        required: false
+        type: string
       logLevel:
-        description: 'Is Debug'
+        description: 'Is verbose'
         required: false
         default: false
         type: boolean
       numberOfRuns:
-        description: 'Number of runs'
+        description: '# of runs per stimulus'
         required: false
         default: 1
         type: number
@@ -28,7 +42,10 @@ concurrency:
 
 jobs:
   eval-job:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
     runs-on: ubuntu-latest
+    env:
+      BUILD_INFO_PATH: ${{ github.workspace }}/.work/build_info.json
 
     steps:
       - name: Checkout repository
@@ -48,14 +65,30 @@ jobs:
 
       - run: npm install -g @microsoft/vally-cli@0.13.0
 
-      - name: Set BUILD_REASON environment variable
-        if: ${{ github.event_name == 'pull_request' }}
+      - name: Resolve git SHAs
+        id: diff
+        shell: pwsh
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          MANUAL_BASE: ${{ inputs.baseCommit }}
+          MANUAL_HEAD: ${{ inputs.headCommit }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
+          if ($env:EVENT_NAME -eq 'pull_request') {
+            $baseCommit = $env:PR_BASE_SHA
+            $headCommit = $env:PR_HEAD_SHA
+          }
+          else {
+            $headCommit = if ($env:MANUAL_HEAD) { $env:MANUAL_HEAD } else { 'HEAD' }
+            $baseCommit = if ($env:MANUAL_BASE) { $env:MANUAL_BASE } else { 'HEAD^' }
+          }
+
           {
             echo "BUILD_REASON=PullRequest"
-            echo "SYSTEM_PULLREQUEST_TARGETBRANCH=${{ github.base_ref }}"
-            echo "SYSTEM_PULLREQUEST_SOURCECOMMITID=${{ github.event.pull_request.head.sha }}"
-          } >> "$GITHUB_ENV"
+            echo "DIFF_HEAD_COMMIT=$headCommit"
+            echo "DIFF_BASE_COMMIT=$baseCommit"
+          } >> $env:GITHUB_ENV
 
       - name: Create build_info.json
         shell: pwsh
@@ -67,7 +100,11 @@ jobs:
             Write-Host "Run type: manual run"
           }
 
-          ./eng/scripts/New-BuildInfo.ps1 -ServerName Azure.Mcp.Server -CommonCodeBuildsAll $false
+          ./eng/scripts/New-BuildInfo.ps1 `
+            -ServerName Azure.Mcp.Server `
+            -CommonCodeBuildsAll $false `
+            -SourceCommittish $env:DIFF_HEAD_COMMIT `
+            -TargetCommittish $env:DIFF_BASE_COMMIT
 
       - name: Build server code
         shell: pwsh
@@ -88,16 +125,16 @@ jobs:
           Write-Host "Current RID: $rid"
           Write-Host "Using build platform: $platformName"
 
-          ./eng/scripts/Build-Code.ps1 -BuildInfoPath "${{ github.workspace }}/.work/build_info.json" -PlatformName $platformName -ReleaseBuild
+          ./eng/scripts/Build-Code.ps1 -BuildInfoPath "$env:BUILD_INFO_PATH" -PlatformName $platformName -ReleaseBuild
 
       - name: Create vally evaluations
-        run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/src/VallyEvaluator.csproj' -- --buildInfo '${{ github.workspace }}/.work/build_info.json' --serverName Azure.Mcp.Server
+        run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/src/VallyEvaluator.csproj' -- --buildInfo '$env:BUILD_INFO_PATH' --serverName Azure.Mcp.Server
 
       - name: Run vally
         run: |
           $isDebug = '${{ github.event.inputs.logLevel }}' -eq 'true'
           $numberOfRuns = [int]'${{ inputs.numberOfRuns || 1 }}'
-          $buildInfo = '${{ github.workspace }}/.work/build_info.json'
+          $buildInfo = '$env:BUILD_INFO_PATH'
 
           $baseVallyDirectory = '${{ github.workspace }}/.work/vally'
           $evalsDirectory = "$baseVallyDirectory/evals"
