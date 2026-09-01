@@ -524,7 +524,7 @@ The `[Option]` attribute drives automatic option registration and binding via `O
 - **Required**: Driven by the `required` keyword (`RequiredMemberAttribute`). Use `required` on required options; use nullable types (`?`) for optional options.
 - **Description**: Always required, passed using attribute properties: `[Option(Description = "description")]`.
 - **Shared descriptions**: Use constants from `OptionDescriptions` (e.g., `OptionDescriptions.Subscription`, `OptionDescriptions.Tenant`).
-- **Nested objects**: Use `[OptionContainer(Prefix = "prefix")]` on a property of a complex type. Its child properties become `--prefix-child-name`. Example: `ModelOption` containing `[Option(Name = "world")]` attributed with `[OptionContainer(Prefix = "hello")]` produces `--hello-world`.
+- **Nested objects**: Use `[OptionContainer<TContainer>(Prefix = "prefix")]` on a property of a complex type. Its child properties become `--prefix-child-name`. Example: `ModelOption` containing `[Option(Name = "world")]` attributed with `[OptionContainer<TContainer>(Prefix = "hello")]` produces `--hello-world`.
 - **Property ordering**: List command-specific options first, then sink common/infrastructure options to the bottom in this order: `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`. This keeps the most relevant options visible at a glance.
 
 ### Usage Patterns
