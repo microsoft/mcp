@@ -1046,8 +1046,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resourcehealth_availability-status_get | Get Azure Resource Health availability status for all resources in my subscription | none |
 | resourcehealth_availability-status_get | Show me the health status of all my Azure resources | none |
 | resourcehealth_availability-status_get | What resources in resource group <resource_group_name> have health issues? | none |
+| resourcehealth_health-events_list | Get the service health event with tracking ID <tracking-id> | none |
 | resourcehealth_health-events_list | List all service health events in my subscription | none |
 | resourcehealth_health-events_list | Show me Azure service health events for subscription <subscription_id> | none |
+| resourcehealth_health-events_list | Show me service health events matching the filter <odata-filter-expression> | none |
 | resourcehealth_health-events_list | What service issues have occurred in the last 30 days? | none |
 | resourcehealth_health-events_list | List active service health events in my subscription | none |
 | resourcehealth_health-events_list | Show me planned maintenance events for my Azure services | none |
