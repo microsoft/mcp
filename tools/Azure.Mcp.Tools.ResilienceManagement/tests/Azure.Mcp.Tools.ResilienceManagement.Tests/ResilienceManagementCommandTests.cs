@@ -229,7 +229,7 @@ public class ResilienceManagementCommandTests(
                 { "resource-group", resourceGroupName },
                 { "drill-type", "Zonal" },
                 { "rbac-setup-mode", "AutomatedBuiltinRoles" },
-                { "recovery-plan", recoveryPlan }
+                { "recoveryplan", recoveryPlan }
             });
 
         var drill = result.AssertProperty("drill");
@@ -570,7 +570,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan },
+                { "recoveryplan", recoveryPlan },
                 { "plan-type", "Zonal" },
                 { "plan-description", "Recovery plan created by Azure MCP tests." },
                 { "identity-type", "SystemAssigned" }
@@ -603,7 +603,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan }
+                { "recoveryplan", recoveryPlan }
             });
 
         Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
@@ -628,7 +628,7 @@ public class ResilienceManagementCommandTests(
                 {
                     { "tenant", Settings.TenantId },
                     { "service-group", serviceGroup },
-                    { "recovery-plan", recoveryPlan },
+                    { "recoveryplan", recoveryPlan },
                     { "plan-type", "Zonal" },
                     { "plan-description", "Recovery plan lifecycle test." },
                     { "identity-type", "SystemAssigned" },
@@ -662,7 +662,7 @@ public class ResilienceManagementCommandTests(
                 {
                     { "tenant", Settings.TenantId },
                     { "service-group", serviceGroup },
-                    { "recovery-plan", recoveryPlan },
+                    { "recoveryplan", recoveryPlan },
                     { "plan-type", "Zonal" },
                     { "plan-description", "Updated recovery plan lifecycle test." },
                     { "identity-type", "SystemAssigned" }
@@ -681,7 +681,7 @@ public class ResilienceManagementCommandTests(
                 {
                     { "tenant", Settings.TenantId },
                     { "service-group", serviceGroup },
-                    { "recovery-plan", recoveryPlan }
+                    { "recoveryplan", recoveryPlan }
                 });
             recoveryPlanExists = false;
             Assert.True(deleteResult.AssertProperty("deleted").GetBoolean());
@@ -693,7 +693,7 @@ public class ResilienceManagementCommandTests(
                 {
                     { "tenant", Settings.TenantId },
                     { "service-group", serviceGroup },
-                    { "recovery-plan", recoveryPlan }
+                    { "recoveryplan", recoveryPlan }
                 });
             Assert.False(repeatedDeleteResult.AssertProperty("deleted").GetBoolean());
         }
@@ -707,7 +707,7 @@ public class ResilienceManagementCommandTests(
                     {
                         { "tenant", Settings.TenantId },
                         { "service-group", serviceGroup },
-                        { "recovery-plan", recoveryPlan }
+                        { "recoveryplan", recoveryPlan }
                     });
             }
         }
@@ -729,9 +729,9 @@ public class ResilienceManagementCommandTests(
                 {
                     { "tenant", Settings.TenantId },
                     { "service-group", serviceGroup },
-                    { "recovery-plan", recoveryPlan },
+                    { "recoveryplan", recoveryPlan },
                     { "plan-type", "Zonal" },
-                    { "plan-description", "Recovery plan finalize test." },
+                    { "plan-description", "Recoveryplan finalize test." },
                     { "identity-type", "SystemAssigned" },
                     { "default-group-description", "Finalize default group" }
                 });
@@ -773,7 +773,7 @@ public class ResilienceManagementCommandTests(
                     {
                         { "tenant", Settings.TenantId },
                         { "service-group", serviceGroup },
-                        { "recovery-plan", recoveryPlan }
+                        { "recoveryplan", recoveryPlan }
                     });
             }
         }
@@ -791,7 +791,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan }
+                { "recoveryplan", recoveryPlan }
             });
 
         Assert.Equal(JsonValueKind.Array, result.AssertProperty("recoveryResources").ValueKind);
@@ -809,7 +809,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan }
+                { "recoveryplan", recoveryPlan }
             });
         var resourceSummary = listedResources.AssertProperty("recoveryResources").EnumerateArray().First();
         var resourceId = resourceSummary.AssertProperty("id").GetString();
@@ -822,7 +822,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan },
+                { "recoveryplan", recoveryPlan },
                 { "name", resourceName }
             });
         var recoveryResource = resourceResult.AssertProperty("recoveryResource");
@@ -845,7 +845,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan },
+                { "recoveryplan", recoveryPlan },
                 { "resources-to-update", $"[{updatedResource.ToJsonString()}]" }
             });
 
@@ -859,7 +859,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan },
+                { "recoveryplan", recoveryPlan },
                 { "name", resourceName }
             });
         var inclusionState = updatedResourceResult
@@ -881,7 +881,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan }
+                { "recoveryplan", recoveryPlan }
             });
         string? resourceId = null;
         string? sourceLocation = null;
@@ -894,7 +894,7 @@ public class ResilienceManagementCommandTests(
                 {
                     { "tenant", Settings.TenantId },
                     { "service-group", serviceGroup },
-                    { "recovery-plan", recoveryPlan },
+                    { "recoveryplan", recoveryPlan },
                     { "name", candidateResourceId.Split('/').Last() }
                 });
             JsonElement physicalZones = resourceResult
@@ -911,7 +911,7 @@ public class ResilienceManagementCommandTests(
             }
         }
 
-        Assert.False(string.IsNullOrEmpty(resourceId), "The Zonal recovery plan must contain a resource with a physical zone.");
+        Assert.False(string.IsNullOrEmpty(resourceId), "The Zonal recoveryplan must contain a resource with a physical zone.");
         Assert.False(string.IsNullOrEmpty(sourceLocation), "A physical source zone is required for Zonal failover validation.");
 
         var result = await CallToolAsync(
@@ -920,7 +920,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan },
+                { "recoveryplan", recoveryPlan },
                 { "source-locations", new[] { sourceLocation } },
                 { "selected-resource-ids", new[] { resourceId } }
             });
@@ -943,7 +943,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan }
+                { "recoveryplan", recoveryPlan }
             });
 
         Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
@@ -964,7 +964,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan },
+                { "recoveryplan", recoveryPlan },
                 { "operation-name", "Failover" }
             });
 
@@ -1043,7 +1043,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan }
+                { "recoveryplan", recoveryPlan }
             });
 
         var recoveryJobs = listResult.AssertProperty("recoveryJobs");
@@ -1058,7 +1058,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan },
+                { "recoveryplan", recoveryPlan },
                 { "name", recoveryJob }
             });
 
@@ -1078,7 +1078,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan }
+                { "recoveryplan", recoveryPlan }
             });
 
         var recoveryJobs = listResult.AssertProperty("recoveryJobs");
@@ -1093,7 +1093,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan },
+                { "recoveryplan", recoveryPlan },
                 { "recovery-job", recoveryJob }
             });
 

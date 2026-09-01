@@ -181,7 +181,7 @@ Invoke-ResilienceRestPut -Path $serviceGroupPath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $serviceGroupPath -WaitForAuthorization
 
-# Create a second enrolled service group without a recovery plan. Lifecycle tests use it
+# Create a second enrolled service group without a recoveryplan. Lifecycle tests use it
 # to exercise create and delete without disturbing the shared plan used by other tests.
 $lifecycleServiceGroupPath = "$lifecycleServiceGroupId`?api-version=$serviceGroupApiVersion"
 Invoke-ResilienceRestPut -Path $lifecycleServiceGroupPath -Body @{
@@ -194,7 +194,7 @@ Invoke-ResilienceRestPut -Path $lifecycleServiceGroupPath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $lifecycleServiceGroupPath -WaitForAuthorization
 
-# Recovery-plan lifecycle tests use a separate service group because only one plan of each
+# Recoveryplan lifecycle tests use a separate service group because only one plan of each
 # type can exist in a service group and the drill delete fixture reserves the lifecycle group.
 $planLifecycleServiceGroupPath = "$planLifecycleServiceGroupId`?api-version=$serviceGroupApiVersion"
 Invoke-ResilienceRestPut -Path $planLifecycleServiceGroupPath -Body @{
@@ -296,7 +296,7 @@ if ($existingGoalAssignment.StatusCode -eq 404) {
     throw "GET $goalAssignmentPath failed with status $($existingGoalAssignment.StatusCode): $($existingGoalAssignment.Content)"
 }
 
-# 6) Create or validate the recovery plan on the service group. Do not PUT an
+# 6) Create or validate the recoveryplan on the service group. Do not PUT an
 # existing plan because recovery group IDs are referenced by its recovery resources.
 $recoveryPlanPath = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName`?api-version=$resilienceApiVersion"
 $existingRecoveryPlan = Invoke-AzRestMethod -Method GET -Path $recoveryPlanPath
@@ -306,7 +306,7 @@ if ($existingRecoveryPlan.StatusCode -eq 404) {
             type = 'SystemAssigned'
         }
         properties = @{
-            planDescription       = 'Recovery plan for live testing.'
+            planDescription       = 'Recoveryplan for live testing.'
             planType              = 'Zonal'
             recoveryGroupsSetting = @{
                 defaultGroup     = @{
@@ -327,20 +327,20 @@ if ($existingRecoveryPlan.StatusCode -eq 404) {
     $recoveryPlan = $existingRecoveryPlan.Content | ConvertFrom-Json
     if ($recoveryPlan.properties.provisioningState -ne 'Succeeded') {
         $errorDetails = $recoveryPlan.properties.errorDetails
-        throw "Existing recovery plan '$recoveryPlanName' is in provisioning state '$($recoveryPlan.properties.provisioningState)'. ErrorCode: $($errorDetails.code). Message: $($errorDetails.message)"
+        throw "Existing recoveryplan '$recoveryPlanName' is in provisioning state '$($recoveryPlan.properties.provisioningState)'. ErrorCode: $($errorDetails.code). Message: $($errorDetails.message)"
     }
     if ($recoveryPlan.properties.planType -ne 'Zonal') {
-        throw "Existing recovery plan '$recoveryPlanName' does not match the requested Zonal test configuration."
+        throw "Existing recoveryplan '$recoveryPlanName' does not match the requested Zonal test configuration."
     }
     if ([string]::IsNullOrWhiteSpace($recoveryPlan.properties.recoveryGroupsSetting.defaultGroup.properties.groupUniqueId)) {
-        throw "Existing recovery plan '$recoveryPlanName' does not have a valid default recovery group."
+        throw "Existing recoveryplan '$recoveryPlanName' does not have a valid default recovery group."
     }
-    Write-Host "Recovery plan '$recoveryPlanName' already exists with the requested configuration."
+    Write-Host "Recoveryplan '$recoveryPlanName' already exists with the requested configuration."
 } else {
     throw "GET $recoveryPlanPath failed with status $($existingRecoveryPlan.StatusCode): $($existingRecoveryPlan.Content)"
 }
 
-# 7) Run a readiness check on the recovery plan so it has a recorded validation status.
+# 7) Run a readiness check on the recoveryplan so it has a recorded validation status.
 $checkReadinessPath = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName/checkReadiness`?api-version=$resilienceApiVersion"
 Invoke-ResilienceRestPost -Path $checkReadinessPath -OperationId (New-Guid).Guid | Out-Null
 Wait-ResilienceProvisioning -Path $recoveryPlanPath
@@ -427,7 +427,7 @@ else {
     throw "GET $drillPath failed with status $($existingDrill.StatusCode): $($existingDrill.Content)"
 }
 
-# 8b) Create an isolated recovery plan and drill used exclusively by the delete live test.
+# 8b) Create an isolated recoveryplan and drill used exclusively by the delete live test.
 $deleteRecoveryPlanPath = "$lifecycleServiceGroupResilienceBase/recoveryPlans/$recoveryPlanName`?api-version=$resilienceApiVersion"
 if ((Invoke-AzRestMethod -Method GET -Path $deleteRecoveryPlanPath).StatusCode -eq 404) {
     Invoke-ResilienceRestPut -Path $deleteRecoveryPlanPath -Body @{
@@ -435,7 +435,7 @@ if ((Invoke-AzRestMethod -Method GET -Path $deleteRecoveryPlanPath).StatusCode -
             type = 'SystemAssigned'
         }
         properties = @{
-            planDescription       = 'Recovery plan for the drill delete live test.'
+            planDescription       = 'Recoveryplan for the drill delete live test.'
             planType              = 'Zonal'
             recoveryGroupsSetting = @{
                 defaultGroup     = @{
@@ -613,4 +613,4 @@ $DeploymentOutputs['DRILLRUNRESOURCENAME'] = $drillRunResource.name
 
 New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot | Out-Null
 
-Write-Host "Resilience test resources are ready (service group: $serviceGroupName, usage plan: $usagePlanName, enrollment: $enrollmentName, goal template: $goalTemplateName, goal assignment: $goalAssignmentName, recovery plan: $recoveryPlanName, drill: $drillName, drill run: $($drillRun.name))."
+Write-Host "Resilience test resources are ready (service group: $serviceGroupName, usage plan: $usagePlanName, enrollment: $enrollmentName, goal template: $goalTemplateName, goal assignment: $goalAssignmentName, recoveryplan: $recoveryPlanName, drill: $drillName, drill run: $($drillRun.name))."

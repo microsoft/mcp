@@ -6,6 +6,6 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Options;
 internal static class ResilienceManagementOptionDescriptions
 {
     internal const string ServiceGroup = "The name of the service group.";
-    internal const string RecoveryPlan = "The name of the recovery plan.";
+    internal const string RecoveryPlan = "The name of the recoveryplan.";
     internal const string Drill = "The name of the resilience drill.";
 }

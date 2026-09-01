@@ -30,7 +30,7 @@ var managedDiskName = take('md${uniqueSuffix}', 80)
 //  - Microsoft.Management/serviceGroups (the service group itself)
 //  - the resource group -> service group membership
 //  - the usage plan enrollment
-//  - goal template, goal assignment and recovery plan (extension resources on the service group)
+//  - goal template, goal assignment and recoveryplan (extension resources on the service group)
 
 // Storage account (resource-group scoped) so the service group has a member resource that
 // can surface as a goal/recovery resource target during live tests.

@@ -2,7 +2,7 @@
   "consolidated_tools": [
     {
       "name": "get_azure_resilience_management_details",
-      "description": "Get details about Azure Resilience Management resources, including resilience goals (templates, assignments, and their resources), usage plans and enrollments, recovery plans (plans, resources, and jobs), drills, drill runs, and drill run resources for Azure service groups.",
+      "description": "Get details about Azure Resilience Management resources, including resilience goals (templates, assignments, and their resources), usage plans and enrollments, recoveryplans (plans, resources, and jobs), drills, drill runs, and drill run resources for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -47,7 +47,7 @@
     },
     {
       "name": "create_azure_resilience_management_resources",
-      "description": "Create, update, or delete Azure Resilience Management resources, including usage plans, usage plan enrollments, drills, and recovery plans for Azure service groups.",
+      "description": "Create, update, or delete Azure Resilience Management resources, including usage plans, usage plan enrollments, drills, and recoveryplans for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -85,7 +85,7 @@
       ]
     },
     {
-      "name": "finalize_azure_resilience_recovery_plan",
+      "name": "finalize_azure_resilience_recoveryplan",
       "description": "Complete or finalize the current Azure Resilience Management recoveryplan operation by validating resource permissions and updating recoveryplan state. This does not commit a completed failover.",
       "toolMetadata": {
         "destructive": {
@@ -118,7 +118,7 @@
       ]
     },
     {
-      "name": "start_azure_resilience_recovery_plan_failover",
+      "name": "start_azure_resilience_recoveryplan_failover",
       "description": "Start failover for qualified resources in an Azure Resilience Management recoveryplan using customer-selected source locations or recovery resources.",
       "toolMetadata": {
         "destructive": {
@@ -151,7 +151,7 @@
       ]
     },
     {
-      "name": "start_azure_resilience_recovery_plan_reprotect",
+      "name": "start_azure_resilience_recoveryplan_reprotect",
       "description": "Start reprotection after failover for all qualified or explicitly selected resources in an Azure Resilience Management recoveryplan.",
       "toolMetadata": {
         "destructive": {
@@ -250,12 +250,12 @@
       ]
     },
     {
-      "name": "validate_azure_resilience_recovery_plan_for_failover",
-      "description": "Validate which resources in an Azure Resilience Management recovery plan are qualified for failover from specified source locations.",
+      "name": "validate_azure_resilience_recoveryplan_for_failover",
+      "description": "Validate which resources in an Azure Resilience Management recoveryplan are qualified for failover from specified source locations.",
       "toolMetadata": {
         "destructive": {
           "value": false,
-          "description": "This tool does not delete or modify recovery plan resources."
+          "description": "This tool does not delete or modify recoveryplan resources."
         },
         "idempotent": {
           "value": false,
@@ -284,11 +284,11 @@
     },
     {
       "name": "validate_azure_resilience_recoveryplan_for_reprotect",
-      "description": "Validate which resources in an Azure Resilience Management recovery plan are qualified for reprotect after failover.",
+      "description": "Validate which resources in an Azure Resilience Management recoveryplan are qualified for reprotect after failover.",
       "toolMetadata": {
         "destructive": {
           "value": false,
-          "description": "This tool does not delete or modify recovery plan resources."
+          "description": "This tool does not delete or modify recoveryplan resources."
         },
         "idempotent": {
           "value": false,
@@ -317,11 +317,11 @@
     },
     {
       "name": "validate_azure_resilience_recoveryplan_for_operation",
-      "description": "Validate a customer-selected or unspecified recovery operation for an Azure Resilience Management recovery plan before execution. Use for requests to validate an operation, an intended recovery operation, or operation-specific pre-validation, including when earlier context mentions failover but the current operation is unspecified. Ask the customer to choose Failover, FailoverCommit, Reprotect, TestFailover, or TestFailoverCleanup; do not assume the operation. Checks plan state, readiness, and permissions. Not for general readiness or per-resource failover or reprotect qualification. Does not execute recovery operations.",
+      "description": "Validate a customer-selected or unspecified recovery operation for an Azure Resilience Management recoveryplan before execution. Use for requests to validate an operation, an intended recovery operation, or operation-specific pre-validation, including when earlier context mentions failover but the current operation is unspecified. Ask the customer to choose Failover, FailoverCommit, Reprotect, TestFailover, or TestFailoverCleanup; do not assume the operation. Checks plan state, readiness, and permissions. Not for general readiness or per-resource failover or reprotect qualification. Does not execute recovery operations.",
       "toolMetadata": {
         "destructive": {
           "value": false,
-          "description": "This tool does not execute the recovery operation or modify recovery plan resources."
+          "description": "This tool does not execute the recovery operation or modify recoveryplan resources."
         },
         "idempotent": {
           "value": false,
@@ -350,11 +350,11 @@
     },
     {
       "name": "check_azure_resilience_management_readiness",
-      "description": "Check whether an Azure Resilience Management recovery plan and its protected resources are ready for recovery operations in an Azure service group.",
+      "description": "Check whether an Azure Resilience Management recoveryplan and its protected resources are ready for recovery operations in an Azure service group.",
       "toolMetadata": {
         "destructive": {
           "value": false,
-          "description": "This tool does not delete or modify the recovery plan or its protected resources."
+          "description": "This tool does not delete or modify the recoveryplan or its protected resources."
         },
         "idempotent": {
           "value": false,
@@ -366,7 +366,7 @@
         },
         "readOnly": {
           "value": false,
-          "description": "This tool creates a readiness job while leaving the recovery plan and its protected resources unchanged."
+          "description": "This tool creates a readiness job while leaving the recoveryplan and its protected resources unchanged."
         },
         "secret": {
           "value": false,

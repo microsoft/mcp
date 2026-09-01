@@ -21,7 +21,7 @@ internal static class RecoveryPlanValidation
     {
         if (recoveryPlan.Length is < 5 or > 24 || !recoveryPlan.All(IsValidNameCharacter))
         {
-            validationResult.Errors.Add("The recovery plan name must be 5 to 24 characters and contain only ASCII letters, numbers, or hyphens.");
+            validationResult.Errors.Add("The recoveryplan name must be 5 to 24 characters and contain only ASCII letters, numbers, or hyphens.");
         }
     }
 
@@ -35,7 +35,7 @@ internal static class RecoveryPlanValidation
         {
             if (string.IsNullOrWhiteSpace(resourceId) || !IsRecoveryResourceIdForPlan(resourceId, serviceGroup, recoveryPlan))
             {
-                validationResult.Errors.Add("Each --selected-resource-ids value must be a full recovery-resource ID under the requested service group and recovery plan.");
+                validationResult.Errors.Add("Each --selected-resource-ids value must be a full recovery-resource ID under the requested service group and recoveryplan.");
                 break;
             }
         }

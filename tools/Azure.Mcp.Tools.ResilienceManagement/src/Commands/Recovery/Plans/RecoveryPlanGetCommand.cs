@@ -15,11 +15,11 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 [CommandMetadata(
     Id = "d4a8f1c6-3b75-4e29-9c08-2f6b5d0a7e31",
     Name = "get",
-    Title = "Get or List Resilience Recovery Plans",
+    Title = "Get or List Resilience Recoveryplans",
     Description = """
-        Gets resilience recovery plans in the specified service group. Provide a recovery plan name to get the
+        Gets resilience recoveryplans in the specified service group. Provide a recoveryplan name to get the
         full details of that plan (including its properties and provisioning state). Omit the name to list all
-        recovery plans in the service group, returning only their id and name.
+        recoveryplans in the service group, returning only their id and name.
         """,
     Destructive = false,
     Idempotent = true,
@@ -63,7 +63,7 @@ public sealed class RecoveryPlanGetCommand(ILogger<RecoveryPlanGetCommand> logge
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting recovery plan(s). ServiceGroup: {ServiceGroup}, Name: {Name}.",
+                "Error getting recoveryplan(s). ServiceGroup: {ServiceGroup}, Name: {Name}.",
                 options.ServiceGroup, options.Name);
             HandleException(context, ex);
         }
@@ -73,11 +73,11 @@ public sealed class RecoveryPlanGetCommand(ILogger<RecoveryPlanGetCommand> logge
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        KeyNotFoundException => "Recovery plan not found. Verify the recovery plan name, service group, and that you have access.",
+        KeyNotFoundException => "Recoveryplan not found. Verify the recoveryplan name, service group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Authorization failed getting the recovery plan. Details: {reqEx.Message}",
+            $"Authorization failed getting the recoveryplan. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Recovery plan not found. Verify the recovery plan and service group exist and you have access.",
+            "Recoveryplan not found. Verify the recoveryplan and service group exist and you have access.",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };

@@ -11,7 +11,7 @@ public sealed class RecoveryPlanGetOptions
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
 
-    [Option(Description = "The name of the recovery plan. Provide this argument to get the details of a particular recovery plan; omit it to list all recovery plans in the service group (id and name only).")]
+    [Option(Description = "The name of the recoveryplan. Provide this argument to get the details of a particular recoveryplan; omit it to list all recoveryplans in the service group (id and name only).")]
     public string? Name { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]

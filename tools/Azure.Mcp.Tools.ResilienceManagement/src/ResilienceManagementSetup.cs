@@ -112,7 +112,7 @@ public class ResilienceManagementSetup : IAreaSetup
         enrollments.AddCommand<UsagePlanEnrollmentCreateCommand>(serviceProvider);
 
         // Create recoveryplan subgroup
-        var recoveryPlans = new CommandGroup("recoveryplan", "Resilience recovery plan operations - Commands for listing and getting resilience recovery plans for an Azure service group.");
+        var recoveryPlans = new CommandGroup("recoveryplan", "Resilience recoveryplan operations - Commands for listing and getting resilience recoveryplans for an Azure service group.");
         resilienceManagement.AddSubGroup(recoveryPlans);
 
         recoveryPlans.AddCommand<RecoveryPlanGetCommand>(serviceProvider);
@@ -127,14 +127,14 @@ public class ResilienceManagementSetup : IAreaSetup
         recoveryPlans.AddCommand<RecoveryPlanCheckReadinessCommand>(serviceProvider);
 
         // Create resource subgroup under recoveryplan
-        var recoveryResources = new CommandGroup("resource", "Resilience recovery resource operations - Commands for listing, getting, and updating the resources (members) of a resilience recovery plan.");
+        var recoveryResources = new CommandGroup("resource", "Resilience recovery resource operations - Commands for listing, getting, and updating the resources (members) of a resilience recoveryplan.");
         recoveryPlans.AddSubGroup(recoveryResources);
 
         recoveryResources.AddCommand<RecoveryResourceGetCommand>(serviceProvider);
         recoveryResources.AddCommand<RecoveryPlanUpdateResourcesCommand>(serviceProvider);
 
         // Create recoveryjob subgroup
-        var recoveryJobs = new CommandGroup("recoveryjob", "Resilience recovery job operations - Commands for listing and getting the recovery jobs of a resilience recovery plan.");
+        var recoveryJobs = new CommandGroup("recoveryjob", "Resilience recovery job operations - Commands for listing and getting the recovery jobs of a resilience recoveryplan.");
         resilienceManagement.AddSubGroup(recoveryJobs);
 
         recoveryJobs.AddCommand<RecoveryJobGetCommand>(serviceProvider);

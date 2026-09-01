@@ -470,7 +470,7 @@ public sealed class ResilienceManagementServiceTests
         JobErrorInfo providerError = ModelReaderWriter.Read<JobErrorInfo>(BinaryData.FromObjectAsJson(new
         {
             errorCode = "NotReady",
-            errorMessage = "The recovery plan is not ready."
+            errorMessage = "The recoveryplan is not ready."
         }))!;
 
         RecoveryPlanReadinessError? result = ResilienceManagementService.CreateReadinessError(providerError);
@@ -635,7 +635,7 @@ public sealed class ResilienceManagementServiceTests
                 error = new
                 {
                     code = "RecoveryPlanStateDoesNotSupportOperation",
-                    message = "Operation Reprotect is not allowed for the current recovery plan state."
+                    message = "Operation Reprotect is not allowed for the current recoveryplan state."
                 }
             }
         });
@@ -647,7 +647,7 @@ public sealed class ResilienceManagementServiceTests
 
         Assert.False(result.IsValid);
         Assert.Equal("RecoveryPlanStateDoesNotSupportOperation", result.ErrorCode);
-        Assert.Equal("Operation Reprotect is not allowed for the current recovery plan state.", result.ErrorMessage);
+        Assert.Equal("Operation Reprotect is not allowed for the current recoveryplan state.", result.ErrorMessage);
     }
 
     [Theory]

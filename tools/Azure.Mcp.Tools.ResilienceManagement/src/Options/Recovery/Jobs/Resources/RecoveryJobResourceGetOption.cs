@@ -11,7 +11,7 @@ public sealed class RecoveryJobResourceGetOptions
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
 
-    [Option(Description = ResilienceManagementOptionDescriptions.RecoveryPlan)]
+    [Option(Name = "recoveryplan", Description = ResilienceManagementOptionDescriptions.RecoveryPlan)]
     public required string RecoveryPlan { get; set; }
 
     [Option(Description = "The name of the recovery job.")]
