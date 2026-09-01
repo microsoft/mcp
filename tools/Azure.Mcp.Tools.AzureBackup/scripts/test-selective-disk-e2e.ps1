@@ -17,8 +17,8 @@
 #   * SQL / SAPHANA / SAPASE / AFS + disk-exclusion → rejected (registry tests)
 #
 # Usage:
-#   pwsh scripts/test-selective-disk-e2e.ps1
-#   pwsh scripts/test-selective-disk-e2e.ps1 -KeepResources -Location eastus
+#   pwsh tools/Azure.Mcp.Tools.AzureBackup/scripts/test-selective-disk-e2e.ps1
+#   pwsh tools/Azure.Mcp.Tools.AzureBackup/scripts/test-selective-disk-e2e.ps1 -KeepResources -Location eastus
 [CmdletBinding()]
 param(
     [string]$Location = 'southeastasia',
@@ -39,7 +39,7 @@ $RsvName   = "sdrsv$RgSuffix"
 $AdminUser = 'sdtestadmin'
 # Deterministic-but-strong password
 $AdminPass = 'Sd!' + ([Guid]::NewGuid().ToString('N').Substring(0, 16)) + 'Aa1@'
-$AzMcp     = Join-Path $PSScriptRoot '..\servers\Azure.Mcp.Server\src\bin\Debug\net10.0\azmcp.exe' | Resolve-Path | Select-Object -ExpandProperty Path
+$AzMcp     = Join-Path $PSScriptRoot '..\..\..\servers\Azure.Mcp.Server\src\bin\Debug\net10.0\azmcp.exe' | Resolve-Path | Select-Object -ExpandProperty Path
 $Bicep     = Join-Path $PSScriptRoot 'selective-disk-e2e.bicep'
 $Sub       = (az account show --query id -o tsv).Trim()
 $Tenant    = (az account show --query tenantId -o tsv).Trim()
