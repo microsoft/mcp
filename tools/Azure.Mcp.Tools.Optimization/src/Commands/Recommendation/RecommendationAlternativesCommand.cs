@@ -47,6 +47,10 @@ public sealed class RecommendationAlternativesCommand(
     {
         base.ValidateOptions(options, validationResult);
 
+        if (string.IsNullOrWhiteSpace(options.ResourceId))
+        {
+            validationResult.Errors.Add("--resource-id is required.");
+        }
         else if (!ArmResourceId.IsValid(ArmResourceId.StripAdvisorRecommendationSuffix(options.ResourceId)))
         {
             validationResult.Errors.Add(OptimizationStrings.AltInvalidResourceIdMessage);
