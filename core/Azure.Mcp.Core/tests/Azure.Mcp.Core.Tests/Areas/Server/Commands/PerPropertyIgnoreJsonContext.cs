@@ -3,13 +3,9 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
-using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands;
 
 [JsonSerializable(typeof(VmGetCommand.VmGetResult))]
-[JsonSerializable(typeof(RecoveryPlanDeleteCommand.RecoveryPlanDeleteCommandResult))]
-[JsonSourceGenerationOptions(
-    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal sealed partial class PerPropertyIgnoreJsonContext : JsonSerializerContext;

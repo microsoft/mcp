@@ -270,7 +270,7 @@ public class OptionSchemaGeneratorTests
     public void CreateOutputSchema_PerPropertyNever_OverridesDefaultIgnoreCondition()
     {
         var result = new RecoveryPlanDeleteCommand.RecoveryPlanDeleteCommandResult(false, "plan");
-        var typeInfo = PerPropertyIgnoreJsonContext.Default.RecoveryPlanDeleteCommandResult;
+        var typeInfo = DefaultIgnoreJsonContext.Default.RecoveryPlanDeleteCommandResult;
         var schema = OptionSchemaGenerator.CreateOutputSchema(typeInfo);
         var payload = JsonSerializer.SerializeToElement(result, typeInfo);
 
