@@ -53,7 +53,8 @@ public static partial class ServiceCollectionExtensions
             Tool = serverStartOptions.Tool,
             ReadOnly = serverStartOptions.ReadOnly ?? false,
             DangerouslyDisableElicitation = serverStartOptions.DangerouslyDisableElicitation,
-            Cloud = serverStartOptions.Cloud
+            Cloud = serverStartOptions.Cloud,
+            StructuredOutputMode = serverStartOptions.StructuredOutputMode
         };
 
         services.AddSingleton(serverRuntimeConfiguration);
@@ -127,7 +128,8 @@ public static partial class ServiceCollectionExtensions
                     Tool = serverRuntimeConfiguration.Tool,
                     Transport = serverRuntimeConfiguration.Transport,
                     Mode = serverRuntimeConfiguration.Mode,
-                    Cloud = serverRuntimeConfiguration.Cloud
+                    Cloud = serverRuntimeConfiguration.Cloud,
+                    StructuredOutputMode = serverRuntimeConfiguration.StructuredOutputMode
                 };
 
                 toolLoaders.Add(new CommandFactoryToolLoader(
