@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.Storage.Commands.Disk;
     Id = "65d4c07d-212c-46c9-bf88-6991189aeb6e",
     Name = "diagnose",
     Title = "Diagnose Azure Disk Performance",
-    Description = "Diagnoses Azure virtual machine disk performance through the Storage Intelligence service. Identify the target with a VM or attached managed disk resource ID, or with subscription, resource group, and VM name. Diagnose all attached disks or select one or more named disks attached to a VM in a resource group. Optionally specify an ISO 8601 time window of up to 24 hours. Returns disk configuration, performance metrics, throttling intervals, per-LUN analysis, host-side latency metrics when provided by the service, and recommendations.",
+    Description = "Diagnoses Azure virtual machine disk performance through the Storage Intelligence service. Identify the target with a standalone VM, VM scale set instance, or attached managed disk resource ID, or with subscription, resource group, and VM name. Diagnose all attached disks or select one or more named disks attached to a VM in a resource group. Optionally specify an ISO 8601 time window of up to 24 hours. Returns disk configuration, performance metrics, throttling intervals, per-LUN analysis, host-side latency metrics when provided by the service, and recommendations.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -33,6 +33,7 @@ public sealed class DiskDiagnoseCommand(
     private const int MaxDiskCount = 100;
     private static readonly ResourceType s_managedDiskResourceType = new("Microsoft.Compute/disks");
     private static readonly ResourceType s_virtualMachineResourceType = new("Microsoft.Compute/virtualMachines");
+    private static readonly ResourceType s_virtualMachineScaleSetVmResourceType = new("Microsoft.Compute/virtualMachineScaleSets/virtualMachines");
     private readonly ILogger<DiskDiagnoseCommand> _logger = logger;
     private readonly IStorageIntelligenceService _storageIntelligenceService = storageIntelligenceService;
     private readonly ISubscriptionResolver _subscriptionResolver = subscriptionResolver;
@@ -175,7 +176,8 @@ public sealed class DiskDiagnoseCommand(
         try
         {
             var resourceId = new ResourceIdentifier(value);
-            isVirtualMachine = resourceId.ResourceType == s_virtualMachineResourceType;
+            isVirtualMachine = resourceId.ResourceType == s_virtualMachineResourceType
+                || resourceId.ResourceType == s_virtualMachineScaleSetVmResourceType;
             if (resourceId.ResourceType == s_managedDiskResourceType || isVirtualMachine)
             {
                 return true;
@@ -187,7 +189,7 @@ public sealed class DiskDiagnoseCommand(
             return false;
         }
 
-        error = "--resource-id must identify a Microsoft.Compute/virtualMachines or Microsoft.Compute/disks resource.";
+        error = "--resource-id must identify a Microsoft.Compute/virtualMachines, Microsoft.Compute/virtualMachineScaleSets/virtualMachines, or Microsoft.Compute/disks resource.";
         return false;
     }
 
