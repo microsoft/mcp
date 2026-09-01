@@ -52,7 +52,7 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
 
         if (options.PlanType != Models.RecoveryPlanKind.Zonal)
         {
-            validationResult.Errors.Add("Only Zonal recoveryplans are currently supported.");
+            validationResult.Errors.Add("Only Zonal recovery plans are currently supported.");
         }
 
         RecoveryPlanValidation.ValidateServiceGroup(options.ServiceGroup, validationResult);

@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Id = "207d19cd-06fb-4aab-b3a9-d233935c6229",
     Name = "failover",
     Title = "Fail Over Resilience Recoveryplan",
-    Description = "Starts failover for a qualified resilience recoveryplan using customer-provided source locations, selected recovery-resource IDs, or both. This destructive operation starts recovery workloads in target locations and returns operation and recovery job IDs for tracking. If neither selector is provided, ask the customer which source locations or recovery-resource IDs to fail over. Use validateforfailover and checkreadiness first when qualification or readiness is unknown.",
+    Description = "Fails over qualified resources in a resilience recoveryplan in an Azure service group. Use this tool when asked to fail over a recoveryplan from a source location or to fail over selected recovery resources. If asked to fail over without specifying source locations or recovery resources, ask the user to choose one. This destructive operation starts recovery workloads and returns operation and recovery job IDs. Validate readiness and failover qualification first.",
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

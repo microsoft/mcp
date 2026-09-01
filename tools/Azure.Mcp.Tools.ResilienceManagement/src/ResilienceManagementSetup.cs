@@ -112,7 +112,7 @@ public class ResilienceManagementSetup : IAreaSetup
         enrollments.AddCommand<UsagePlanEnrollmentCreateCommand>(serviceProvider);
 
         // Create recoveryplan subgroup
-        var recoveryPlans = new CommandGroup("recoveryplan", "Resilience recoveryplan operations - Commands for listing and getting resilience recoveryplans for an Azure service group.");
+        var recoveryPlans = new CommandGroup("recoveryplan", "Resilience recoveryplan operations - Commands for listing and getting resilience recovery plans for an Azure service group.");
         resilienceManagement.AddSubGroup(recoveryPlans);
 
         recoveryPlans.AddCommand<RecoveryPlanGetCommand>(serviceProvider);

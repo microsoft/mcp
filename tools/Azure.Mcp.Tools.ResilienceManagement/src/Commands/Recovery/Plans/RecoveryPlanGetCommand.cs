@@ -15,11 +15,11 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 [CommandMetadata(
     Id = "d4a8f1c6-3b75-4e29-9c08-2f6b5d0a7e31",
     Name = "get",
-    Title = "Get or List Resilience Recoveryplans",
+    Title = "Get or List Resilience Recovery Plans",
     Description = """
-        Gets resilience recoveryplans in the specified service group. Provide a recoveryplan name to get the
+        Gets resilience recovery plans in the specified service group. Provide a recoveryplan name to get the
         full details of that plan (including its properties and provisioning state). Omit the name to list all
-        recoveryplans in the service group, returning only their id and name.
+        recovery plans in the service group, returning only their id and name.
         """,
     Destructive = false,
     Idempotent = true,

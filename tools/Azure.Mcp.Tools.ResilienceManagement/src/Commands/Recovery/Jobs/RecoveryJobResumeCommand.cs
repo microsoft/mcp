@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs;
     Id = "260f87af-e70d-45fb-9458-3ecbc9543458",
     Name = "resume",
     Title = "Resume Resilience Recovery Job",
-    Description = "Resumes a paused resilience recovery job, optionally providing user input for the paused action. This destructive operation allows the existing recovery workflow to continue and returns an operation ID for tracking. The job must currently be Paused.",
+    Description = "Resumes or continues a paused resilience recovery job for a recoveryplan in an Azure service group. Use when asked to resume a paused recovery job, optionally with a description containing user input for the paused action. This destructive operation continues the existing recovery workflow and returns an operation ID for tracking. The recovery job must currently be Paused.",
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

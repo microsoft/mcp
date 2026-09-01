@@ -66,7 +66,7 @@ public sealed class RecoveryPlanDeleteCommand(ILogger<RecoveryPlanDeleteCommand>
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "The recoveryplan cannot be deleted in its current state. Complete or cancel active recovery operations and try again.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            "Authorization failed deleting the recoveryplan. Verify you have permission to delete recoveryplans in the service group.",
+            "Authorization failed deleting the recoveryplan. Verify you have permission to delete recovery plans in the service group.",
         RequestFailedException =>
             "The recoveryplan delete request failed. Verify the recoveryplan, service group, and request parameters, then try again.",
         _ => base.GetErrorMessage(ex)

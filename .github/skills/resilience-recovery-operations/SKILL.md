@@ -101,8 +101,8 @@ Apply these gates whenever adding or modifying a Resilience Management tool:
 
 1. Follow the repository [new command guide](../../../servers/Azure.Mcp.Server/docs/new-command.md) end to end. Treat it as mandatory, not optional guidance.
 2. Preserve the established command, options, service, registration, AOT serialization, testing, recording, documentation, and changelog patterns required by that guide.
-3. Run `ToolDescriptionEvaluator` for every new or changed tool description.
-4. Require a ToolDescriptionEvaluator score of at least `0.6`. Revise the description and rerun evaluation until the threshold is met.
+3. Add at least two distinct E2E evaluation prompts for every new or changed tool, then run `ToolDescriptionEvaluator` against all of them.
+4. Require the expected tool to rank `#1` with a ToolDescriptionEvaluator score of at least `0.6` for every prompt. Revise the description and rerun evaluation until every prompt meets both thresholds.
 5. Record the final score and representative evaluation prompts in the pull request description.
 6. Do not consider the tool ready for review when the new-command guide is incomplete or the score is below `0.6`.
 7. Preserve existing whitespace exactly. Do not make whitespace-only changes or alter whitespace in unrelated code outside the requested change.
@@ -185,6 +185,12 @@ Run commands from the repository root. The complete recording model and sanitize
 	```
 
 	Commit the updated `assets.json`; never commit `.proxy/` or `.assets/`.
+
+8. Run the repository spelling check and resolve every issue in changed files rather than adding domain prose typos to the dictionary:
+
+	```powershell
+	.\eng\common\spelling\Invoke-Cspell.ps1
+	```
 
 ### Resilience recording safeguards
 

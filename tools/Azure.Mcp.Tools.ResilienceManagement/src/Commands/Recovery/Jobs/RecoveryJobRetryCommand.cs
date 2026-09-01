@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs;
     Id = "e84ec6e8-94ad-4e09-af25-0fd323238f29",
     Name = "retry",
     Title = "Retry Resilience Recovery Job",
-    Description = "Retries a failed resilience recovery job. This destructive operation re-executes the original recovery workflow using the existing recovery job and returns an operation ID for tracking. The job must currently be Failed.",
+    Description = "Retries or reruns a failed resilience recovery job for a recoveryplan in an Azure service group. Use when asked to retry a failed recovery job. This destructive operation re-executes the original recovery workflow using the existing recovery job and returns an operation ID for tracking. The recovery job must currently be Failed.",
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

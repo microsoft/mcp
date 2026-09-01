@@ -3866,7 +3866,7 @@ azmcp resilience usageplan enrollment create --subscription <subscription> \
                                              --enrollment <enrollment> \
                                              --service-group <service-group>
 
-# Get a resilience recoveryplan, or list all recoveryplans in a service group (omit --name)
+# Get a resilience recoveryplan, or list all recovery plans in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan get --service-group <service-group> \
                                    [--name <name>]
