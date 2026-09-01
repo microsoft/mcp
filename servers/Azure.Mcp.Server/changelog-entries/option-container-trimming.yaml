@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Nested command options (`[OptionContainer]`) are now preserved in trimmed Azure MCP Server distributions."

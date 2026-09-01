@@ -115,4 +115,10 @@ public sealed class ServerStartOptions
     /// </summary>
     [Option(Description = "Enable structured output using 'duplicated' to retain complete content or 'compact' to return concise content. Both modes return complete structuredContent.")]
     public StructuredOutputMode? StructuredOutputMode { get; set; } = null;
+
+    /// <summary>
+    /// Gets or sets whether proxy tools that are proxied from external sources configured by the server's /Resources/registry.json are disabled.
+    /// </summary>
+    [Option(Description = "Disable tools that are proxied from external sources configured by the server's /Resources/registry.json.", DefaultValue = false)]
+    public bool DisableProxyTools { get; set; } = false;
 }

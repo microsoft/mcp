@@ -553,6 +553,102 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public void CreateRecoveryPlanValidateForOperationResult_ParsesSuccessfulStringProperties()
+    {
+        BinaryData operationResponse = BinaryData.FromObjectAsJson(new
+        {
+            status = "Succeeded",
+            properties = """
+                {"error":{"code":"None","message":"Operation validated successfully."}}
+                """
+        });
+
+        RecoveryPlanValidateForOperationResult result = ResilienceManagementService.CreateRecoveryPlanValidateForOperationResult(
+            "11111111-1111-1111-1111-111111111111",
+            "Failover",
+            operationResponse);
+
+        Assert.True(result.IsValid);
+        Assert.Equal("Failover", result.OperationName);
+        Assert.Null(result.ErrorCode);
+        Assert.Null(result.ErrorMessage);
+    }
+
+    [Fact]
+    public void CreateRecoveryPlanValidateForOperationResult_MapsMissingPropertiesAsValid()
+    {
+        BinaryData operationResponse = BinaryData.FromObjectAsJson(new
+        {
+            status = "Succeeded",
+            properties = (object?)null
+        });
+
+        RecoveryPlanValidateForOperationResult result = ResilienceManagementService.CreateRecoveryPlanValidateForOperationResult(
+            "11111111-1111-1111-1111-111111111111",
+            "Failover",
+            operationResponse);
+
+        Assert.True(result.IsValid);
+        Assert.Null(result.ErrorCode);
+        Assert.Null(result.ErrorMessage);
+    }
+
+    [Fact]
+    public void CreateRecoveryPlanValidateForOperationResult_MapsBlockedOperationFromObjectProperties()
+    {
+        BinaryData operationResponse = BinaryData.FromObjectAsJson(new
+        {
+            status = "Succeeded",
+            properties = new
+            {
+                error = new
+                {
+                    code = "RecoveryPlanStateDoesNotSupportOperation",
+                    message = "Operation Reprotect is not allowed for the current recovery plan state."
+                }
+            }
+        });
+
+        RecoveryPlanValidateForOperationResult result = ResilienceManagementService.CreateRecoveryPlanValidateForOperationResult(
+            "11111111-1111-1111-1111-111111111111",
+            "Reprotect",
+            operationResponse);
+
+        Assert.False(result.IsValid);
+        Assert.Equal("RecoveryPlanStateDoesNotSupportOperation", result.ErrorCode);
+        Assert.Equal("Operation Reprotect is not allowed for the current recovery plan state.", result.ErrorMessage);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("Success")]
+    public void CreateRecoveryPlanValidateForOperationResult_MapsNonNoneErrorAsInvalid(string? errorCode)
+    {
+        BinaryData operationResponse = BinaryData.FromObjectAsJson(new
+        {
+            status = "Succeeded",
+            properties = new
+            {
+                error = new
+                {
+                    code = errorCode,
+                    message = "Operation validation failed."
+                }
+            }
+        });
+
+        RecoveryPlanValidateForOperationResult result = ResilienceManagementService.CreateRecoveryPlanValidateForOperationResult(
+            "11111111-1111-1111-1111-111111111111",
+            "Failover",
+            operationResponse);
+
+        Assert.False(result.IsValid);
+        Assert.Equal(errorCode, result.ErrorCode);
+        Assert.Equal("Operation validation failed.", result.ErrorMessage);
+    }
+
+    [Fact]
     public void CreateRecoveryPlanValidateForFailoverResult_HandlesMissingQualifications()
     {
         RecoveryPlanValidateForFailoverResult result = ResilienceManagementService.CreateRecoveryPlanValidateForFailoverResult(
@@ -734,6 +830,25 @@ public sealed class ResilienceManagementServiceTests
         RecoveryMembersData existing = CreateRecoveryResource();
 
         ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_ExclusionPreservesExistingProtectionConfiguration()
+    {
+        ResourceCustomProtectionSetting existingSetting = CreateCustomRunbookSetting();
+        RecoveryMembersData requested = CreateRecoveryResource(ResourceInclusionState.Excluded);
+        RecoveryMembersData existing = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.CustomRunbook,
+            existingSetting);
+
+        ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing);
+
+        Assert.Equal(ResourceInclusionState.Included, existing.Properties!.InclusionState);
+        Assert.Equal(ResourceProtectionSolutionType.CustomRunbook, existing.Properties.SelectedProtectionSolutionType);
+        Assert.Same(existingSetting, existing.Properties.SelectedProtectionSolutionSetting);
+        Assert.Null(requested.Properties!.SelectedProtectionSolutionType);
+        Assert.Null(requested.Properties.SelectedProtectionSolutionSetting);
     }
 
     [Fact]
