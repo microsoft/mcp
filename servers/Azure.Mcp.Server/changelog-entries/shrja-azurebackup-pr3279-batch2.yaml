@@ -1,0 +1,29 @@
+changes:
+  - section: "Bug Fixes"
+    description: >-
+      Azure Backup: `azmcp_azurebackup_disasterrecovery_enable-crr` — DPP vault Enable-CRR
+      now preserves existing `FeatureSettings` sibling fields on the PATCH payload. The
+      newer Azure.ResourceManager.DataProtectionBackup api-version rejects a bare
+      `FeatureSettings` PATCH containing only `CrossRegionRestoreState`. This is a
+      follow-on to the SDK upgrade in PR #3279.
+  - section: "Bug Fixes"
+    description: >-
+      Azure Backup: `azmcp_azurebackup_disasterrecovery_enable-crr` — RSV vault Enable-CRR
+      Vault-PATCH fallback (triggered by `BMSUserErrorRedundancySettingsUseVaultApi`) now
+      preserves the existing `RedundancySettings.StandardTierStorageRedundancy` sibling
+      field on the PATCH payload. The newer Azure.ResourceManager.RecoveryServices
+      api-version rejects state-only PATCH on `Properties.RedundancySettings`. Follow-on
+      to PR #3279.
+  - section: "Bug Fixes"
+    description: >-
+      Azure Backup: `azmcp_azurebackup_protecteditem_undelete` — searching for the
+      soft-deleted backup instance no longer blanks out the entire list when the DPP
+      SDK throws on an unknown polymorphic discriminator introduced by a newer service
+      version. Uses the resilient enumerator pattern already established in
+      `ListPoliciesAsync`.
+  - section: "Bug Fixes"
+    description: >-
+      Azure Backup: `azmcp_azurebackup_recoverypoint_get` (list mode) — DPP recovery-point
+      enumeration no longer blanks out the entire list when a single item throws on an
+      unknown polymorphic discriminator introduced by a newer service version. Uses the
+      resilient enumerator pattern already established in `ListPoliciesAsync`.
