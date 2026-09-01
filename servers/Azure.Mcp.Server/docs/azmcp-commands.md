@@ -328,12 +328,9 @@ azmcp server info
 
 ```bash
 # Check authentication and connectivity for an ADME endpoint and data partition
-# Specify at least one of --include-auth or --include-connectivity
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme health check --endpoint <endpoint> \
-                         --data-partition <data-partition> \
-                         [--include-auth] \
-                         [--include-connectivity]
+                         --data-partition <data-partition>
 
 # Get a schema by its fully-qualified OSDU kind
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

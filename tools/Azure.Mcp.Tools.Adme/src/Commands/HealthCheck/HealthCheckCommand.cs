@@ -22,11 +22,6 @@ namespace Azure.Mcp.Tools.Adme.Commands.HealthCheck;
         wrong data partition, or blocked network path.
 
         Required: --endpoint and --data-partition.
-        Optional: --include-auth, --include-connectivity
-
-        --include-auth acquires a token for the platform scope. --include-connectivity calls the storage
-        info endpoint with that token, so it implies the auth check and is skipped when auth fails. Specify
-        at least one of the two; with neither, no checks are performed.
 
         Returns: authOk plus authError, connectivityOk plus connectivityError, and the HTTP
         connectivityStatusCode returned by the service (401/403 points at auth or entitlements, 404 usually means a
@@ -47,11 +42,6 @@ public sealed class HealthCheckCommand(IHealthService healthService)
     {
         base.ValidateOptions(options, validationResult);
         AdmeServiceHelper.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
-
-        if (!options.IncludeAuth && !options.IncludeConnectivity)
-        {
-            validationResult.Errors.Add("Specify at least one of --include-auth or --include-connectivity.");
-        }
     }
 
     /// <summary>
@@ -65,8 +55,6 @@ public sealed class HealthCheckCommand(IHealthService healthService)
             var result = await _healthService.CheckHealthAsync(
                 options.Endpoint,
                 options.DataPartition,
-                options.IncludeAuth,
-                options.IncludeConnectivity,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

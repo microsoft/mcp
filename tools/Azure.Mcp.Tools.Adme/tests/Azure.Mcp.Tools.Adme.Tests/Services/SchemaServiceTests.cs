@@ -29,7 +29,9 @@ public sealed class SchemaServiceTests
 
         Assert.Equal("Well", result.GetProperty("title").GetString());
         Assert.Equal(
-            "/api/schema-service/v1/schema/osdu%3Awks%3Amaster-data--Well%3A1.0.0",
+            "/api/schema-service/v1/schema/osdu%3A" +
+            "wks%3A" +
+            "master-data--Well%3A1.0.0",
             handler.LastRequest!.RequestUri!.PathAndQuery);
         Assert.Equal("Bearer", handler.LastRequest.Headers.Authorization!.Scheme);
         Assert.Equal("token-abc", handler.LastRequest.Headers.Authorization.Parameter);

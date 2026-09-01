@@ -13,21 +13,17 @@ namespace Azure.Mcp.Tools.Adme.Tests.Commands.HealthCheck;
 public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCommand, IHealthService>
 {
     [Fact]
-    public async Task Execute_WithChecks_ForwardsRequestAndReturnsHealth()
+    public async Task Execute_ForwardsRequestAndReturnsHealth()
     {
         Service.CheckHealthAsync(
                 "https://sample.energy.azure.com",
                 "opendes",
-                true,
-                true,
                 Arg.Any<CancellationToken>())
             .Returns(new HealthCheckResult(true, null, true, null, 200));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", "https://sample.energy.azure.com",
-            "--data-partition", "opendes",
-            "--include-auth",
-            "--include-connectivity");
+            "--data-partition", "opendes");
 
         var result = ValidateAndDeserializeResponse(
             response,
@@ -43,31 +39,15 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
         Service.CheckHealthAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<bool>(),
-                Arg.Any<bool>(),
                 Arg.Any<CancellationToken>())
             .Returns<HealthCheckResult>(_ => throw new InvalidOperationException("boom"));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", "https://sample.energy.azure.com",
-            "--data-partition", "opendes",
-            "--include-auth");
+            "--data-partition", "opendes");
 
         Assert.NotEqual(System.Net.HttpStatusCode.OK, response.Status);
         Assert.Contains("boom", response.Message);
-    }
-
-    [Fact]
-    public async Task Execute_WithoutChecks_ReturnsValidationError()
-    {
-        var response = await ExecuteCommandAsync(
-            "--endpoint", "https://sample.energy.azure.com",
-            "--data-partition", "opendes");
-
-        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("--include-auth", response.Message);
-        await Service.DidNotReceiveWithAnyArgs().CheckHealthAsync(
-            default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -76,14 +56,14 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
     public async Task Execute_WithoutRequiredTargetOption_DoesNotCallService(bool omitEndpoint)
     {
         var arguments = omitEndpoint
-            ? new[] { "--data-partition", "opendes", "--include-auth" }
-            : new[] { "--endpoint", "https://sample.energy.azure.com", "--include-auth" };
+            ? new[] { "--data-partition", "opendes" }
+            : new[] { "--endpoint", "https://sample.energy.azure.com" };
 
         var response = await ExecuteCommandAsync(arguments);
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().CheckHealthAsync(
-            default!, default!, default, default, TestContext.Current.CancellationToken);
+            default!, default!, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -97,11 +77,10 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
 
         var response = await ExecuteCommandAsync(
             "--endpoint", endpoint,
-            "--data-partition", dataPartition,
-            "--include-auth");
+            "--data-partition", dataPartition);
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().CheckHealthAsync(
-            default!, default!, default, default, TestContext.Current.CancellationToken);
+            default!, default!, TestContext.Current.CancellationToken);
     }
 }

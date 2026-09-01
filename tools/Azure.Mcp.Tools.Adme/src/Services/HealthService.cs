@@ -19,79 +19,67 @@ public sealed class HealthService(
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     /// <summary>
-    /// Runs the requested health checks against an ADME instance.
+    /// Checks authentication and connectivity for an ADME instance.
     /// </summary>
     public async Task<HealthCheckResult> CheckHealthAsync(
         string endpoint,
         string dataPartition,
-        bool includeAuth,
-        bool includeConnectivity,
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(dataPartition);
         var endpointUri = AdmeServiceHelper.ValidateEndpoint(new Uri(endpoint));
-        var authOk = true;
-        string? authError = null;
-        string? token = null;
+        string token;
 
-        if (includeAuth || includeConnectivity)
+        try
         {
-            try
-            {
-                var credential = await _credentialProvider.GetTokenCredentialAsync(tenantId: null, cancellationToken);
-                var accessToken = await credential.GetTokenAsync(
-                    new TokenRequestContext([AdmeServiceHelper.AuthScope]), cancellationToken);
-                token = accessToken.Token;
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (Exception)
-            {
-                authOk = false;
-                authError = "Microsoft Entra authentication failed. Verify your credentials and sign-in configuration.";
-            }
+            var credential = await _credentialProvider.GetTokenCredentialAsync(tenantId: null, cancellationToken);
+            var accessToken = await credential.GetTokenAsync(
+                new TokenRequestContext([AdmeServiceHelper.AuthScope]), cancellationToken);
+            token = accessToken.Token;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            return new HealthCheckResult(
+                false,
+                "Microsoft Entra authentication failed. Verify your credentials and sign-in configuration.",
+                false,
+                "Connectivity check skipped because authentication failed.",
+                null);
         }
 
-        var connectivityOk = true;
-        string? connectivityError = null;
-        int? statusCode = null;
-
-        if (includeConnectivity && authOk)
+        try
         {
-            try
-            {
-                using var client = _httpClientFactory.CreateClient(AdmeServiceHelper.HttpClientName);
-                client.BaseAddress = endpointUri;
-                using var request = new HttpRequestMessage(HttpMethod.Get, "/api/storage/v2/info");
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                request.Headers.Add("data-partition-id", dataPartition);
+            using var client = _httpClientFactory.CreateClient(AdmeServiceHelper.HttpClientName);
+            client.BaseAddress = endpointUri;
+            using var request = new HttpRequestMessage(HttpMethod.Get, "/api/storage/v2/info");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Headers.Add("data-partition-id", dataPartition);
 
-                using var response = await client.SendAsync(request, cancellationToken);
-                statusCode = (int)response.StatusCode;
-                connectivityOk = response.IsSuccessStatusCode;
-                if (!connectivityOk)
-                {
-                    connectivityError = $"ADME returned HTTP status {(int)response.StatusCode}.";
-                }
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (Exception)
-            {
-                connectivityOk = false;
-                connectivityError = "Could not connect to the ADME endpoint. Verify the endpoint and network access.";
-            }
+            using var response = await client.SendAsync(request, cancellationToken);
+            var statusCode = (int)response.StatusCode;
+            return new HealthCheckResult(
+                true,
+                null,
+                response.IsSuccessStatusCode,
+                response.IsSuccessStatusCode ? null : $"ADME returned HTTP status {statusCode}.",
+                statusCode);
         }
-
-        return new HealthCheckResult(
-            authOk,
-            authError,
-            includeConnectivity ? connectivityOk : true,
-            connectivityError,
-            statusCode);
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            return new HealthCheckResult(
+                true,
+                null,
+                false,
+                "Could not connect to the ADME endpoint. Verify the endpoint and network access.",
+                null);
+        }
     }
 }

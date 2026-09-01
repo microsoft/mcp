@@ -23,8 +23,6 @@ public sealed class HealthServiceTests
         var result = await service.CheckHealthAsync(
             "https://sample.energy.azure.com",
             "opendes",
-            true,
-            true,
             TestContext.Current.CancellationToken);
 
         Assert.True(result.AuthOk);
@@ -49,8 +47,6 @@ public sealed class HealthServiceTests
         var result = await service.CheckHealthAsync(
             "https://sample.energy.azure.com",
             "opendes",
-            true,
-            true,
             TestContext.Current.CancellationToken);
 
         Assert.False(result.AuthOk);
@@ -58,6 +54,9 @@ public sealed class HealthServiceTests
             "Microsoft Entra authentication failed. Verify your credentials and sign-in configuration.",
             result.AuthError);
         Assert.DoesNotContain("no credential available", result.AuthError);
+        Assert.False(result.ConnectivityOk);
+        Assert.Equal("Connectivity check skipped because authentication failed.", result.ConnectivityError);
+        Assert.Null(result.ConnectivityStatusCode);
         Assert.Null(handler.LastRequest);
     }
 
@@ -70,8 +69,6 @@ public sealed class HealthServiceTests
         var result = await service.CheckHealthAsync(
             "https://sample.energy.azure.com",
             "opendes",
-            true,
-            true,
             TestContext.Current.CancellationToken);
 
         Assert.True(result.AuthOk);
@@ -95,8 +92,6 @@ public sealed class HealthServiceTests
         await Assert.ThrowsAsync<System.Security.SecurityException>(() => service.CheckHealthAsync(
             endpoint,
             "opendes",
-            true,
-            true,
             TestContext.Current.CancellationToken));
     }
 

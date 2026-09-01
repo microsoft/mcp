@@ -21,7 +21,6 @@ public sealed class HealthRecordedTests(
     public async Task Should_check_adme_health()
     {
         var arguments = CreateArguments();
-        arguments["include-connectivity"] = true;
 
         var result = await CallToolResultsAsync(HealthCheckTool, arguments);
 

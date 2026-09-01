@@ -11,12 +11,10 @@ namespace Azure.Mcp.Tools.Adme.Services;
 public interface IHealthService
 {
     /// <summary>
-    /// Runs the requested health checks against an ADME instance.
+    /// Checks authentication and connectivity for an ADME instance.
     /// </summary>
     Task<HealthCheckResult> CheckHealthAsync(
         string endpoint,
         string dataPartition,
-        bool includeAuth,
-        bool includeConnectivity,
         CancellationToken cancellationToken);
 }

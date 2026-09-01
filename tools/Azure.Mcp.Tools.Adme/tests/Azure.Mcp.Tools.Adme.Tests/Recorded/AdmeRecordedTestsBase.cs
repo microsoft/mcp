@@ -30,6 +30,16 @@ public abstract class AdmeRecordedTestsBase(
     ];
 
     /// <inheritdoc />
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        .. base.BodyKeySanitizers,
+        new(new("$..partition")
+        {
+            Value = PlaybackDataPartition,
+        }),
+    ];
+
+    /// <inheritdoc />
     public override List<UriRegexSanitizer> UriRegexSanitizers =>
     [
         .. base.UriRegexSanitizers,
