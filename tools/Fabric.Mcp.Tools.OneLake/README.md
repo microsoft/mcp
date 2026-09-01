@@ -86,15 +86,9 @@ Configure your MCP client to use OneLake tools:
 }
 ```
 
-### Environment Verification
+### Endpoint Verification
 
-You can verify which environment you're targeting by checking the endpoints in the logs or by listing workspaces and comparing the results with what you expect in each environment.
-
-**Important Notes:**
-- Each environment may have different workspaces and items available
-- Authentication requirements may vary between environments
-- Daily and DXT environments are primarily for testing and development
-- Production environment should be used for production workloads
+You can verify which endpoints you're targeting by checking the URLs in the logs or by listing workspaces and comparing the results with what you expect.
 
 ### Workspace and Item Identifiers
 

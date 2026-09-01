@@ -75,7 +75,6 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, ICo
                 options.NoWait,
                 options.SkipShutdown,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

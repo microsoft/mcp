@@ -8,7 +8,6 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.DataProtectionBackup;
 using Azure.ResourceManager.DataProtectionBackup.Models;
 using Azure.ResourceManager.Resources;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
@@ -35,7 +34,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string location,
         string? sku, string? storageType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -43,7 +42,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             (nameof(subscription), subscription),
             (nameof(location), location));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var collection = rgResource.GetDataProtectionBackupVaults();
@@ -87,7 +86,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     public async Task<BackupVaultInfo> GetVaultAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken,
+        string? tenant, CancellationToken cancellationToken,
         VaultExpand expand = VaultExpand.None)
     {
         ValidateRequiredParameters(
@@ -95,7 +94,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
@@ -109,12 +108,12 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     public async Task<List<BackupVaultInfo>> ListVaultsAsync(
         string subscription, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken,
+        CancellationToken cancellationToken,
         VaultExpand expand = VaultExpand.None)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subId = SubscriptionResource.CreateResourceIdentifier(subscription);
         var subResource = armClient.GetSubscriptionResource(subId);
 
@@ -152,7 +151,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         string? aksIncludedNamespaces, string? aksExcludedNamespaces,
         string? aksLabelSelectors, string? aksIncludeClusterScopeResources,
         string? aksSnapshotResourceGroup,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -161,7 +160,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             (nameof(datasourceId), datasourceId),
             (nameof(policyName), policyName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
         var vaultData = await vaultResource.GetAsync(cancellationToken);
@@ -357,7 +356,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
     public async Task<ProtectedItemInfo> GetProtectedItemAsync(
         string vaultName, string resourceGroup, string subscription,
         string protectedItemName, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -365,7 +364,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             (nameof(subscription), subscription),
             (nameof(protectedItemName), protectedItemName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         // First try direct lookup by exact instance name
         try
@@ -381,7 +380,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         }
 
         // Fall back to listing all items and searching by friendly name
-        var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+        var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
         var found = items.FirstOrDefault(i =>
             (!string.IsNullOrEmpty(i.Name) && i.Name.Equals(protectedItemName, StringComparison.OrdinalIgnoreCase)) ||
             MatchesDppFriendlyName(i, protectedItemName));
@@ -411,14 +410,14 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     public async Task<List<ProtectedItemInfo>> ListProtectedItemsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
         var collection = vaultResource.GetDataProtectionBackupInstances();
@@ -435,7 +434,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
     public async Task<BackupPolicyInfo> GetPolicyAsync(
         string vaultName, string resourceGroup, string subscription,
         string policyName, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -443,7 +442,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             (nameof(subscription), subscription),
             (nameof(policyName), policyName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var policyId = DataProtectionBackupPolicyResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, policyName);
         var policyResource = armClient.GetDataProtectionBackupPolicyResource(policyId);
 
@@ -458,7 +457,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             // retention/duration fields (XmlConvert.ToTimeSpan limitation in
             // DataProtectionBackupAbsoluteDeleteSetting). Fall back to listing all
             // policies and matching by name to work around this SDK limitation.
-            var policies = await ListPoliciesAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+            var policies = await ListPoliciesAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
             return policies.FirstOrDefault(p => p.Name == policyName)
                 ?? throw new KeyNotFoundException(
                     $"Policy '{policyName}' not found in vault '{vaultName}'. " +
@@ -468,14 +467,14 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     public async Task<List<BackupPolicyInfo>> ListPoliciesAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
         var collection = vaultResource.GetDataProtectionBackupPolicies();
@@ -525,7 +524,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
     public async Task<OperationResult> UndeleteProtectedItemAsync(
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -533,7 +532,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             (nameof(subscription), subscription),
             (nameof(datasourceId), datasourceId));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
 
@@ -571,7 +570,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
     public async Task<BackupJobInfo> GetJobAsync(
         string vaultName, string resourceGroup, string subscription,
         string jobId, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -579,7 +578,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             (nameof(subscription), subscription),
             (nameof(jobId), jobId));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var jobResourceId = DataProtectionBackupJobResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, jobId);
         var jobResource = armClient.GetDataProtectionBackupJobResource(jobResourceId);
 
@@ -598,7 +597,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             // exist beyond the point where the enumerator broke. Re-throw FormatException
             // (not KeyNotFoundException) to preserve SDK-parse-failure semantics.
             // Tracked in azure-sdk-for-net#59306.
-            var jobs = await ListJobsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+            var jobs = await ListJobsAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
             return jobs.FirstOrDefault(j => j.Name == jobId)
                 ?? throw new FormatException($"Job '{jobId}' exists but the Azure SDK cannot parse its duration field (XmlConvert.ToTimeSpan limitation).");
         }
@@ -606,14 +605,14 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     public async Task<List<BackupJobInfo>> ListJobsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
         var collection = vaultResource.GetDataProtectionBackupJobs();
@@ -661,7 +660,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
     public async Task<RecoveryPointInfo> GetRecoveryPointAsync(
         string vaultName, string resourceGroup, string subscription,
         string protectedItemName, string recoveryPointId, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -670,7 +669,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             (nameof(protectedItemName), protectedItemName),
             (nameof(recoveryPointId), recoveryPointId));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rpId = DataProtectionBackupRecoveryPointResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, protectedItemName, recoveryPointId);
         var rpResource = armClient.GetDataProtectionBackupRecoveryPointResource(rpId);
         var rp = await rpResource.GetAsync(cancellationToken);
@@ -681,7 +680,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
     public async Task<List<RecoveryPointInfo>> ListRecoveryPointsAsync(
         string vaultName, string resourceGroup, string subscription,
         string protectedItemName, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -689,7 +688,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             (nameof(subscription), subscription),
             (nameof(protectedItemName), protectedItemName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var instanceId = DataProtectionBackupInstanceResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, protectedItemName);
         var instanceResource = armClient.GetDataProtectionBackupInstanceResource(instanceId);
         var collection = instanceResource.GetDataProtectionBackupRecoveryPoints();
@@ -708,7 +707,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         string vaultName, string resourceGroup, string subscription,
         string? redundancy, string? softDelete, string? softDeleteRetentionDays,
         string? immutabilityState, string? identityType, string? tags,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -722,7 +721,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
                 "Set --storage-type during vault creation instead.");
         }
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
@@ -789,7 +788,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
     public async Task<OperationResult> CreatePolicyAsync(
         Policy.PolicyCreateRequest request,
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -803,7 +802,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             (nameof(policyName), policyName),
             (nameof(workloadType), workloadType));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
         var collection = vaultResource.GetDataProtectionBackupPolicies();
@@ -829,14 +828,14 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     public async Task<OperationResult> ConfigureCrossRegionRestoreAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
 
@@ -879,7 +878,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     public async Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName, string resourceGroup, string subscription,
-        string immutabilityState, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string immutabilityState, string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -887,7 +886,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             (nameof(subscription), subscription),
             (nameof(immutabilityState), immutabilityState));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
 
@@ -910,7 +909,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
     public async Task<OperationResult> ConfigureSoftDeleteAsync(
         string vaultName, string resourceGroup, string subscription,
         string softDeleteState, string? softDeleteRetentionDays,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -918,7 +917,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             (nameof(subscription), subscription),
             (nameof(softDeleteState), softDeleteState));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
 
@@ -950,7 +949,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     public async Task<OperationResult> ConfigureMultiUserAuthorizationAsync(
         string vaultName, string resourceGroup, string subscription,
-        string resourceGuardId, string? tenant, RetryPolicyOptions? retryPolicy,
+        string resourceGuardId, string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -959,7 +958,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             (nameof(subscription), subscription),
             (nameof(resourceGuardId), resourceGuardId));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
         var proxyCollection = vaultResource.GetResourceGuardProxyBaseResources();
@@ -984,7 +983,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     public async Task<OperationResult> DisableMultiUserAuthorizationAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy,
+        string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -992,7 +991,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
 
@@ -1007,7 +1006,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         string vaultName, string resourceGroup, string subscription,
         string keyVaultUri, string keyName, string identityType,
         string? keyVersion, string? userAssignedIdentityId,
-        string? tenant, RetryPolicyOptions? retryPolicy,
+        string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -1039,7 +1038,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             ? $"{kvUri}/keys/{keyName}"
             : $"{kvUri}/keys/{keyName}/{keyVersion}";
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
 

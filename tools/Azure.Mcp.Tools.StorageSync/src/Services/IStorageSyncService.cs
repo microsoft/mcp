@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.StorageSync.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.StorageSync.Services;
 
@@ -21,7 +20,6 @@ public interface IStorageSyncService
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -32,7 +30,6 @@ public interface IStorageSyncService
         string resourceGroup,
         string storageSyncServiceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -45,7 +42,6 @@ public interface IStorageSyncService
         string location,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -59,7 +55,6 @@ public interface IStorageSyncService
         Dictionary<string, string>? tags = null,
         string? identityType = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -70,7 +65,6 @@ public interface IStorageSyncService
         string resourceGroup,
         string storageSyncServiceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     #endregion
@@ -85,7 +79,6 @@ public interface IStorageSyncService
         string resourceGroup,
         string storageSyncServiceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -97,7 +90,6 @@ public interface IStorageSyncService
         string storageSyncServiceName,
         string syncGroupName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -109,7 +101,6 @@ public interface IStorageSyncService
         string storageSyncServiceName,
         string syncGroupName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -121,7 +112,6 @@ public interface IStorageSyncService
         string storageSyncServiceName,
         string syncGroupName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     #endregion
@@ -137,7 +127,6 @@ public interface IStorageSyncService
         string storageSyncServiceName,
         string syncGroupName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -150,7 +139,6 @@ public interface IStorageSyncService
         string syncGroupName,
         string cloudEndpointName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -165,7 +153,6 @@ public interface IStorageSyncService
         string storageAccountResourceId,
         string azureFileShareName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -178,7 +165,6 @@ public interface IStorageSyncService
         string syncGroupName,
         string cloudEndpointName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -194,7 +180,6 @@ public interface IStorageSyncService
         string? changeDetectionMode = null,
         IList<string>? paths = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     #endregion
@@ -210,7 +195,6 @@ public interface IStorageSyncService
         string storageSyncServiceName,
         string syncGroupName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -223,7 +207,6 @@ public interface IStorageSyncService
         string syncGroupName,
         string serverEndpointName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -242,7 +225,6 @@ public interface IStorageSyncService
         int? tierFilesOlderThanDays = null,
         string? localCacheMode = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -259,7 +241,6 @@ public interface IStorageSyncService
         int? tierFilesOlderThanDays = null,
         string? localCacheMode = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -272,7 +253,6 @@ public interface IStorageSyncService
         string syncGroupName,
         string serverEndpointName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     #endregion
@@ -287,7 +267,6 @@ public interface IStorageSyncService
         string resourceGroup,
         string storageSyncServiceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -299,7 +278,6 @@ public interface IStorageSyncService
         string storageSyncServiceName,
         string registeredServerId,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -311,7 +289,6 @@ public interface IStorageSyncService
         string storageSyncServiceName,
         string registeredServerId,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -323,7 +300,6 @@ public interface IStorageSyncService
         string storageSyncServiceName,
         string registeredServerId,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -336,7 +312,6 @@ public interface IStorageSyncService
         string registeredServerId,
         Dictionary<string, object>? properties = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     #endregion

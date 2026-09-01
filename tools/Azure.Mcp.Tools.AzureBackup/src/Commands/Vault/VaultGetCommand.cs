@@ -91,7 +91,6 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
                     options.Subscription!,
                     options.VaultType,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken,
                     expand);
 
@@ -106,7 +105,6 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
                     options.ResourceGroup,
                     options.VaultType,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken,
                     expand);
 

@@ -1,23 +1,18 @@
 # Azure MCP CLI Command Reference
 
 > [!IMPORTANT]
-> The Azure MCP Server has two modes: MCP Server mode and CLI mode. When you start the MCP Server with `azmcp server start` that will expose an endpoint for MCP Client communication. The `azmcp` CLI also exposes all of the tools via a command line interface, i.e. `azmcp subscription list`. In this document, "command" refers to CLI commands (e.g., `azmcp storage account list`), while "tool" refers to MCP server tools that can be invoked by MCP clients.
+> The Azure MCP Server has two modes: MCP Server mode and CLI mode.  When you start the MCP Server with `azmcp server start` that will expose an endpoint for MCP Client communication. The `azmcp` CLI also exposes all of the tools via a command line interface, i.e. `azmcp subscription list`.  In this document, "command" refers to CLI commands (e.g., `azmcp storage account list`), while "tool" refers to MCP server tools that can be invoked by MCP clients.
 
 ## Global Options
 
 The following options are available for most commands:
 
-| Option                    | Required | Default                                      | Description                                                                                                                                                                                     |
-| ------------------------- | -------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--subscription`          | No       | Environment variable `AZURE_SUBSCRIPTION_ID` | Azure subscription ID for target resources                                                                                                                                                      |
-| `--tenant-id`             | No       | -                                            | Azure tenant ID for authentication                                                                                                                                                              |
-| `--auth-method`           | No       | 'credential'                                 | Authentication method ('credential', 'key', 'connectionString')                                                                                                                                 |
-| `--retry-max-retries`     | No       | 3                                            | Maximum retry attempts for failed operations                                                                                                                                                    |
-| `--retry-delay`           | No       | 2                                            | Delay between retry attempts (seconds)                                                                                                                                                          |
-| `--retry-max-delay`       | No       | 10                                           | Maximum delay between retries (seconds)                                                                                                                                                         |
-| `--retry-mode`            | No       | 'exponential'                                | Retry strategy ('fixed' or 'exponential')                                                                                                                                                       |
-| `--retry-network-timeout` | No       | 100                                          | Network operation timeout (seconds)                                                                                                                                                             |
-| `--learn`                 | No       | false                                        | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
+| Option | Required | Default | Description |
+|-----------|----------|---------|-------------|
+| `--subscription` | No | Environment variable `AZURE_SUBSCRIPTION_ID` | Azure subscription ID for target resources |
+| `--tenant-id` | No | - | Azure tenant ID for authentication |
+| `--auth-method` | No | 'credential' | Authentication method ('credential', 'key', 'connectionString') |
+| `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
 
 ### Discovery with `--learn`
 
@@ -74,7 +69,6 @@ are valid.
 When you run the **Azure MCP Server container image** `mcr.microsoft.com/azure-sdk/azure-mcp` (for example in Azure Container Apps),
 the image already contains an entrypoint that starts the MCP server process.
 The image does **not** support overriding the container command with `azmcp ...` directly, as the entrypoint is already configured to start the server.
-
 - Do **not** override the container command / entrypoint with `azmcp ...` when
   deploying the image. Doing so will cause the container to fail to start.
 - Leave the command / entrypoint blank in Azure Container Apps so the default
@@ -195,13 +189,11 @@ azmcp server start \
 Exposes carefully curated tools that group related Azure operations together based on common user workflows and tasks. This mode provides the optimal balance between discoverability and usability by organizing consolidated tools that combine multiple related operations.
 
 Each consolidated tool groups operations that are commonly used together:
-
 - **Resource management**: Groups operations by resource type and action (get, create, edit, delete)
 - **Workflow-based**: Organizes tools around common tasks (deployment, monitoring, security)
 - **Metadata-aligned**: Only groups commands with exactly the same toolMetadata values (destructive, idempotent, readOnly, etc.)
 
 **Benefits:**
-
 - **Better for AI agents**: Reduces decision complexity by presenting meaningful tool groupings
 - **Optimized tool count**: Well under VS Code's 128-tool limit
 - **Task-oriented**: Tools are named after user intents (e.g., `get_azure_databases_details`, `deploy_azure_resources_and_applications`)
@@ -217,7 +209,6 @@ azmcp server start \
 ```
 
 **Configuration file location**: The consolidated tool definitions are maintained in `core/Azure.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json`. Each definition includes:
-
 - Tool name and description optimized for AI agent selection
 - List of mapped individual commands
 - Matching toolMetadata (destructive, idempotent, readOnly, secret, etc.)
@@ -257,32 +248,30 @@ azmcp server start \
 
 The `azmcp server start` command supports the following options:
 
-| Option                                     | Required | Default        | Description                                                                                                                                                                                                                                                                                                                                             |
-| ------------------------------------------ | -------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--transport`                              | No       | `stdio`        | Transport mechanism to use. Valid values: `stdio` (default, supported in all distributions) or `http` (supported only in the Docker image distribution and other builds with HTTP enabled; may not be available in local CLI builds).                                                                                                                   |
-| `--mode`                                   | No       | `namespace`    | Server mode: `namespace` (default), `consolidated`, `all`, or `single`                                                                                                                                                                                                                                                                                  |
-| `--namespace`                              | No       | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all existing modes to filter tools.                                                                                                                                                                                                                                           |
-| `--tool`                                   | No       | All tools      | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`.                                                                                                                                                                                               |
-| `--read-only`                              | No       | `false`        | Only expose read-only operations                                                                                                                                                                                                                                                                                                                        |
-| `--debug`                                  | No       | `false`        | Enable verbose debug logging to stderr                                                                                                                                                                                                                                                                                                                  |
-| `--dangerously-disable-http-incoming-auth` | No       | false          | Dangerously disable HTTP incoming authentication                                                                                                                                                                                                                                                                                                        |
-| `--dangerously-disable-elicitation`        | No       | `false`        | **⚠️ DANGEROUS**: Disable user consent prompts for sensitive operations                                                                                                                                                                                                                                                                                 |
-| `--outgoing-auth-strategy`                 | No       | `NotSet`       | Outgoing authentication strategy for service requests. Valid values: `NotSet`, `UseHostingEnvironmentIdentity`, `UseOnBehalfOf`.                                                                                                                                                                                                                        |
-| `--dangerously-write-support-logs-to-dir`  | No       | -              | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs.                                                                                                                                |
-| `--cloud`                                  | No       | `AzureCloud`   | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
-| `--disable-caching`                        | No       | `false`        | Disable caching of resource responses, requiring repeated requests to fetch fresh data each time.                                                                                                                                                                                                                                                       |
+| Option | Required | Default | Description |
+|--------|----------|---------|-------------|
+| `--transport` | No | `stdio` | Transport mechanism to use. Valid values: `stdio` (default, supported in all distributions) or `http` (supported only in the Docker image distribution and other builds with HTTP enabled; may not be available in local CLI builds). |
+| `--mode` | No | `namespace` | Server mode: `namespace` (default), `consolidated`, `all`, or `single` |
+| `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all existing modes to filter tools. |
+| `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
+| `--read-only` | No | `false` | Only expose read-only operations |
+| `--debug` | No | `false` | Enable verbose debug logging to stderr |
+| `--dangerously-disable-http-incoming-auth` | No | false | Dangerously disable HTTP incoming authentication |
+| `--dangerously-disable-elicitation` | No | `false` | **⚠️ DANGEROUS**: Disable user consent prompts for sensitive operations |
+| `--outgoing-auth-strategy` | No | `NotSet` | Outgoing authentication strategy for service requests. Valid values: `NotSet`, `UseHostingEnvironmentIdentity`, `UseOnBehalfOf`. |
+| `--dangerously-write-support-logs-to-dir` | No | - | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs. |
+| `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
+| `--disable-caching` | No | `false` | Disable caching of resource responses, requiring repeated requests to fetch fresh data each time. |
 
 > **⚠️ Security Warning for `--dangerously-disable-elicitation`:**
 >
 > This option disables user confirmations (elicitations) before running tools that read sensitive data. When enabled:
->
 > - Tools that handle secrets, credentials, or sensitive data will execute without user confirmation
 > - This removes an important security layer designed to prevent unauthorized access to sensitive information
 > - Only use this option in trusted, automated environments where user interaction is not possible
 > - Never use this option in production environments or when handling untrusted input
 >
 > **Example usage (use with caution):**
->
 > ```bash
 > # For automated scenarios only - bypasses security prompts
 > azmcp server start --dangerously-disable-elicitation
@@ -291,14 +280,12 @@ The `azmcp server start` command supports the following options:
 > **⚠️ Security Warning for `--dangerously-write-support-logs-to-dir`:**
 >
 > This option enables detailed debug-level logging that may include sensitive information such as request payloads and authentication details. When enabled:
->
 > - Log files are created in the specified directory with timestamp-based filenames (e.g., `azmcp_20251202_143052.log`)
 > - Logs may contain sensitive data that could be useful for support troubleshooting
 > - Only use this option when specifically requested by support for diagnosing issues
 > - Remove log files after troubleshooting is complete
 >
 > **Example usage:**
->
 > ```bash
 > # For support troubleshooting only
 > azmcp server start --dangerously-write-support-logs-to-dir /path/to/logs
@@ -307,7 +294,6 @@ The `azmcp server start` command supports the following options:
 > **Note on `--outgoing-auth-strategy`:**
 >
 > This option controls how the server authenticates when making requests to downstream Azure services:
->
 > - `NotSet` (default): A safe default is chosen based on other settings
 > - `UseHostingEnvironmentIdentity`: Uses the hosting environment's identity (similar to `DefaultAzureCredential`). All outgoing requests use the same identity regardless of the incoming request's identity
 > - `UseOnBehalfOf`: Exchanges the incoming request's access token for a new token valid for the downstream service. Only valid when the server is running with HTTP transport and incoming HTTP authentication enabled (i.e., `--transport http` without `--dangerously-disable-http-incoming-auth`)
@@ -315,14 +301,12 @@ The `azmcp server start` command supports the following options:
 > **Note on `--cloud`:**
 >
 > Use this option to target sovereign cloud environments:
->
 > - `AzureCloud` (default): Azure public cloud
 > - `AzureChinaCloud`: Azure China (operated by 21Vianet)
 > - `AzureUSGovernment`: Azure US Government
 > - Custom URL: A custom authority host URL starting with `https://`
 >
 > **Example usage:**
->
 > ```bash
 > # Connect to Azure US Government cloud
 > azmcp server start --cloud AzureUSGovernment
@@ -402,7 +386,9 @@ azmcp search index get --service <service> \
 azmcp search index query --subscription <subscription> \
                          --service <service> \
                          --index <index> \
-                         --query <query>
+                         --query <query> \
+                         [--query-type <simple|full|semantic>] \
+                         [--semantic-configuration <semantic-configuration>]
 
 # Get AI Search knowledge bases (all or a specific one)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -445,7 +431,6 @@ azmcp speech stt recognize --endpoint <endpoint> \
 The `--phrases` parameter supports multiple ways to specify phrase hints that improve speech recognition accuracy:
 
 **Multiple Arguments:**
-
 ```bash
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
@@ -453,7 +438,6 @@ azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
 ```
 
 **Comma-Separated Values:**
-
 ```bash
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
@@ -461,7 +445,6 @@ azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
 ```
 
 **Mixed Syntax:**
-
 ```bash
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
@@ -484,15 +467,15 @@ azmcp speech tts synthesize --endpoint <endpoint> \
 
 #### Text-to-Speech Parameters
 
-| Parameter       | Required | Description                                                                                                                                                                                           |
-| --------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--endpoint`    | Yes      | Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/)                                                                                                              |
-| `--text`        | Yes      | The text to convert to speech                                                                                                                                                                         |
-| `--outputAudio` | Yes      | Path where the synthesized audio file will be saved (e.g., output.wav, speech.mp3)                                                                                                                    |
-| `--language`    | No       | Speech synthesis language (default: en-US). Examples: es-ES, fr-FR, de-DE                                                                                                                             |
-| `--voice`       | No       | Neural voice to use (e.g., en-US-JennyNeural, es-ES-ElviraNeural). If not specified, default voice for the language is used                                                                           |
-| `--format`      | No       | Output audio format (default: Riff24Khz16BitMonoPcm). Supported formats: Riff24Khz16BitMonoPcm, Audio16Khz32KBitRateMonoMp3, Audio24Khz96KBitRateMonoMp3, Ogg16Khz16BitMonoOpus, Raw16Khz16BitMonoPcm |
-| `--endpointId`  | No       | Endpoint ID of a custom voice model for personalized speech synthesis                                                                                                                                 |
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--endpoint` | Yes | Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/) |
+| `--text` | Yes | The text to convert to speech |
+| `--outputAudio` | Yes | Path where the synthesized audio file will be saved (e.g., output.wav, speech.mp3) |
+| `--language` | No | Speech synthesis language (default: en-US). Examples: es-ES, fr-FR, de-DE |
+| `--voice` | No | Neural voice to use (e.g., en-US-JennyNeural, es-ES-ElviraNeural). If not specified, default voice for the language is used |
+| `--format` | No | Output audio format (default: Riff24Khz16BitMonoPcm). Supported formats: Riff24Khz16BitMonoPcm, Audio16Khz32KBitRateMonoMp3, Audio24Khz96KBitRateMonoMp3, Ogg16Khz16BitMonoOpus, Raw16Khz16BitMonoPcm |
+| `--endpointId` | No | Endpoint ID of a custom voice model for personalized speech synthesis |
 
 #### Supported Audio Formats
 
@@ -668,21 +651,21 @@ azmcp appservice database add --subscription "my-subscription" \
 
 **Database Types Supported:**
 
-- `SqlServer` - Azure SQL Database
-- `MySQL` - Azure Database for MySQL
-- `PostgreSQL` - Azure Database for PostgreSQL
-- `CosmosDB` - Azure Cosmos DB
+-   `SqlServer` - Azure SQL Database
+-   `MySQL` - Azure Database for MySQL
+-   `PostgreSQL` - Azure Database for PostgreSQL
+-   `CosmosDB` - Azure Cosmos DB
 
 **Parameters:**
 
-- `--subscription`: Azure subscription ID (required)
-- `--resource-group`: Resource group containing the App Service (required)
-- `--app`: Name of the App Service web app (required)
-- `--database-type`: Type of database - SqlServer, MySQL, PostgreSQL, or CosmosDB (required)
-- `--database-server`: Database server name or endpoint (required)
-- `--database`: Name of the database (required)
-- `--connection-string`: Custom connection string (optional - auto-generated if not provided)
-- `--tenant`: Azure tenant ID for authentication (optional)
+-   `--subscription`: Azure subscription ID (required)
+-   `--resource-group`: Resource group containing the App Service (required)
+-   `--app`: Name of the App Service web app (required)
+-   `--database-type`: Type of database - SqlServer, MySQL, PostgreSQL, or CosmosDB (required)
+-   `--database-server`: Database server name or endpoint (required)
+-   `--database`: Name of the database (required)
+-   `--connection-string`: Custom connection string (optional - auto-generated if not provided)
+-   `--tenant`: Azure tenant ID for authentication (optional)
 
 #### Web Apps
 
@@ -916,6 +899,58 @@ azmcp azurebackup vault update --subscription <subscription> \
                                [--redundancy <redundancy>]
 ```
 
+#### Private Endpoint (RSV only)
+
+```bash
+# Creates a Private Endpoint (v2 experience) for a Recovery Services vault in a customer VNet subnet.
+# Provisions the Microsoft.Network/privateEndpoints resource and, when --auto-approve is true, approves
+# the resulting Private Endpoint Connection on the vault. Backup vaults (DPP) are not supported. The
+# vault must have no protected items. --group-id must be 'AzureBackup' (primary region) or
+# 'AzureBackup_secondary' (paired region / CRR).
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault privateendpoint create --subscription <subscription> \
+                                               --resource-group <resource-group> \
+                                               --vault <vault> \
+                                               --private-endpoint-name <private-endpoint-name> \
+                                               --vnet-subnet-id <vnet-subnet-id> \
+                                               [--vault-type <vault-type>] \
+                                               [--group-id <AzureBackup|AzureBackup_secondary>] \
+                                               [--location <location>] \
+                                               [--auto-approve <true|false>]
+
+# Retrieves Private Endpoint Connections on a Recovery Services vault. When --private-endpoint-name is
+# specified, returns that single connection; when omitted, lists every PEC on the vault. Backup vaults
+# (DPP) are not supported.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault privateendpoint get --subscription <subscription> \
+                                            --resource-group <resource-group> \
+                                            --vault <vault> \
+                                            [--vault-type <vault-type>] \
+                                            [--private-endpoint-name <private-endpoint-name>]
+
+# Deletes a Private Endpoint Connection from a Recovery Services vault. This removes the vault-side
+# connection object only; the Microsoft.Network/privateEndpoints resource must be deleted separately.
+# Backup vaults (DPP) are not supported.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault privateendpoint delete --subscription <subscription> \
+                                               --resource-group <resource-group> \
+                                               --vault <vault> \
+                                               --private-endpoint-name <private-endpoint-name> \
+                                               [--vault-type <vault-type>]
+
+# Approves or rejects a pending Private Endpoint Connection on a Recovery Services vault. If the
+# connection is already in the target state, returns it unchanged. Approve requires
+# Microsoft.RecoveryServices/vaults/privateEndpointConnectionsApproval/action on the vault.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault privateendpoint approve-reject --subscription <subscription> \
+                                                       --resource-group <resource-group> \
+                                                       --vault <vault> \
+                                                       --private-endpoint-name <private-endpoint-name> \
+                                                       --action <approve|reject> \
+                                                       [--vault-type <vault-type>] \
+                                                       [--description <description>]
+```
+
 #### Policy
 
 ```bash
@@ -1130,14 +1165,24 @@ azmcp azurebackup disasterrecovery enable-crr --subscription <subscription> \
 #### Security
 
 ```bash
-# Configures Multi-User Authorization (MUA) on a vault by linking or unlinking a Resource Guard.
-# Provide --resource-guard-id to enable MUA. Omit to disable MUA (protected operation).
+# Enables Multi-User Authorization (MUA) on a vault by linking a Resource Guard.
+# --resource-guard-id is required. To disable MUA, use 'security disable-mua'.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp azurebackup security configure-mua --subscription <subscription> \
-                                         --resource-group <resource-group> \
-                                         --vault <vault> \
-                                         [--vault-type <vault-type>] \
-                                         [--resource-guard-id <resource-guard-id>]
+azmcp azurebackup security enable-mua --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --vault <vault> \
+                                      --resource-guard-id <resource-guard-id> \
+                                      [--vault-type <vault-type>]
+```
+
+```bash
+# Disables Multi-User Authorization (MUA) on a vault by unlinking the Resource Guard.
+# Critical operations will no longer require approval after this call.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup security disable-mua --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --vault <vault> \
+                                       [--vault-type <vault-type>]
 ```
 
 ```bash
@@ -1153,6 +1198,38 @@ azmcp azurebackup security configure-encryption --subscription <subscription> \
                                                 [--vault-type <vault-type>] \
                                                 [--key-version <key-version>] \
                                                 [--user-assigned-identity-id <user-assigned-identity-id>]
+```
+
+#### Resource Guard
+
+```bash
+# Creates a Resource Guard for Multi-User Authorization (MUA). Once a vault is linked to this
+# Resource Guard, protected operations (disable soft delete, remove immutability, stop protection,
+# disable MUA) will require approval from a security admin with Backup MUA Admin role on the guard.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup resourceguard create --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-guard <resource-guard> \
+                                       --location <location> \
+                                       [--excluded-operations <excluded-operations>] \
+                                       [--tags <tags>]
+```
+
+```bash
+# Gets a Resource Guard by name, or lists Resource Guards in a resource group or subscription.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup resourceguard get --subscription <subscription> \
+                                    [--resource-group <resource-group>] \
+                                    [--resource-guard <resource-guard>]
+```
+
+```bash
+# Deletes a Resource Guard. Any vaults still linked to this guard will no longer be protected
+# by MUA after deletion.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup resourceguard delete --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-guard <resource-guard>
 ```
 
 ### Azure CLI Operations
@@ -1224,17 +1301,16 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
 ```
 
 **Options:**
-
-- `--endpoint`: Azure Communication Services endpoint URL (required)
-- `--sender`: Email address to send from, must be from a verified domain (required)
-- `--to`: Recipient email address(es), comma-separated for multiple recipients (required)
-- `--subject`: Email subject line (required)
-- `--message`: Email content body (required)
-- `--is-html`: Flag indicating the message content is HTML format (optional)
-- `--sender-name`: Display name of the sender (optional)
-- `--cc`: Carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
-- `--bcc`: Blind carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
-- `--reply-to`: Reply-to email address(es), comma-separated for multiple addresses (optional)
+-   `--endpoint`: Azure Communication Services endpoint URL (required)
+-   `--from`: Email address to send from, must be from a verified domain (required)
+-   `--to`: Recipient email address(es), comma-separated for multiple recipients (required)
+-   `--subject`: Email subject line (required)
+-   `--message`: Email content body (required)
+-   `--is-html`: Flag indicating the message content is HTML format (optional)
+-   `--sender-name`: Display name of the sender (optional)
+-   `--cc`: Carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
+-   `--bcc`: Blind carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
+-   `--reply-to`: Reply-to email address(es), comma-separated for multiple addresses (optional)
 
 #### SMS
 
@@ -1267,13 +1343,13 @@ azmcp communication sms send --endpoint "https://mycomms.communication.azure.com
 ```
 
 **Options:**
+-   `--endpoint`: Azure Communication Services endpoint URL (required)
+-   `--from`: SMS-enabled phone number in E.164 format (required)
+-   `--to`: Recipient phone number(s) in E.164 format, comma-separated for multiple recipients (required)
+-   `--message`: SMS message content (required)
+-   `--enable-delivery-report`: Enable delivery reporting for the SMS message (optional)
+-   `--tag`: Custom tag for message tracking (optional)
 
-- `--endpoint`: Azure Communication Services endpoint URL (required)
-- `--from`: SMS-enabled phone number in E.164 format (required)
-- `--to`: Recipient phone number(s) in E.164 format, comma-separated for multiple recipients (required)
-- `--message`: SMS message content (required)
-- `--enable-delivery-report`: Enable delivery reporting for the SMS message (optional)
-- `--tag`: Custom tag for message tracking (optional)
 
 ### Azure Compute Operations
 
@@ -1313,13 +1389,11 @@ azmcp compute vm get --subscription "my-subscription" \
 ```
 
 **Command Behavior:**
-
 - **With `--vm-name`**: Gets detailed information about a specific VM (requires `--resource-group`). Optionally include `--instance-view` for runtime status.
 - **With `--resource-group` only**: Lists all VMs in the specified resource group.
 - **With neither**: Lists all VMs in the subscription.
 
 **Returns:**
-
 - VM information including name, location, VM size, provisioning state, OS type, license type, zones, and tags.
 - When `--instance-view` is specified: Also includes power state, provisioning state, VM agent status, disk status, and extension status.
 
@@ -1405,23 +1479,23 @@ If omitted, defaults to `Ubuntu2404`.
 
 Marketplace aliases map to a `publisher:offer:sku:version` URN:
 
-| Alias               | OS      | Publisher               | Offer                        | SKU                           | Version |
-| ------------------- | ------- | ----------------------- | ---------------------------- | ----------------------------- | ------- |
-| `Ubuntu2604`        | Linux   | Canonical               | ubuntu-26_04-lts             | server                        | latest  |
-| `Ubuntu2404`        | Linux   | Canonical               | ubuntu-24_04-lts             | server                        | latest  |
-| `Ubuntu2204`        | Linux   | Canonical               | 0001-com-ubuntu-server-jammy | 22_04-lts-gen2                | latest  |
-| `Debian12`          | Linux   | Debian                  | debian-12                    | 12-gen2                       | latest  |
-| `Debian11`          | Linux   | Debian                  | debian-11                    | 11-gen2                       | latest  |
-| `RHEL9`             | Linux   | RedHat                  | RHEL                         | 9_0                           | latest  |
-| `CentOS8`           | Linux   | OpenLogic               | CentOS                       | 8_5-gen2                      | latest  |
-| `Win2022Datacenter` | Windows | MicrosoftWindowsServer  | WindowsServer2022            | 2022-datacenter-azure-edition | latest  |
-| `Win11Pro`          | Windows | MicrosoftWindowsDesktop | windows-11                   | win11-22h2-pro                | latest  |
-| `Win10Pro`          | Windows | MicrosoftWindowsDesktop | Windows-10                   | win10-22h2-pro-g2             | latest  |
+| Alias | OS | Publisher | Offer | SKU | Version |
+|-------|------|-----------|-------|-----|---------|
+| `Ubuntu2604` | Linux | Canonical | ubuntu-26_04-lts | server | latest |
+| `Ubuntu2404` | Linux | Canonical | ubuntu-24_04-lts | server | latest |
+| `Ubuntu2204` | Linux | Canonical | 0001-com-ubuntu-server-jammy | 22_04-lts-gen2 | latest |
+| `Debian12` | Linux | Debian | debian-12 | 12-gen2 | latest |
+| `Debian11` | Linux | Debian | debian-11 | 11-gen2 | latest |
+| `RHEL9` | Linux | RedHat | RHEL | 9_0 | latest |
+| `CentOS8` | Linux | OpenLogic | CentOS | 8_5-gen2 | latest |
+| `Win2022Datacenter` | Windows | MicrosoftWindowsServer | WindowsServer2022 | 2022-datacenter-azure-edition | latest |
+| `Win11Pro` | Windows | MicrosoftWindowsDesktop | windows-11 | win11-22h2-pro | latest |
+| `Win10Pro` | Windows | MicrosoftWindowsDesktop | Windows-10 | win10-22h2-pro-g2 | latest |
 
 Shared gallery aliases map to a shared gallery image ID:
 
-| Alias                 | OS      | Shared Gallery Image ID                                                                  |
-| --------------------- | ------- | ---------------------------------------------------------------------------------------- |
+| Alias | OS | Shared Gallery Image ID |
+|-------|------|-------------------------|
 | `Win2022Datacenter1P` | Windows | `/sharedGalleries/WINDOWSSERVER.1P/images/2022-DATACENTER-AZURE-EDITION/versions/latest` |
 
 **Examples using different image formats:**
@@ -1554,7 +1628,6 @@ azmcp compute vm delete --subscription "my-subscription" \
 ```
 
 **Command Behavior:**
-
 - Deletes the VM. Associated resources (disks, NICs, public IPs) are NOT automatically deleted.
 - **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VM even if it is in a running or failed state.
 
@@ -1624,7 +1697,6 @@ azmcp compute vm power-state --subscription "my-subscription" \
 ```
 
 **Command Behavior:**
-
 - Changes the power state of a virtual machine. Equivalent to `az vm start/stop/deallocate/restart`.
 - **start**: Powers on a stopped or deallocated VM.
 - **stop**: Shuts down the OS and powers off the VM (VM is still allocated and billing continues). Use `--skip-shutdown` to force power off without OS shutdown.
@@ -1633,7 +1705,6 @@ azmcp compute vm power-state --subscription "my-subscription" \
 - **With `--no-wait`**: Returns immediately after initiating the operation without waiting for completion.
 
 **Returns:**
-
 - VM name, ID, resource group, requested power action, completion status, and a status message.
 
 **Parameters:**
@@ -1682,14 +1753,12 @@ azmcp compute vmss get --subscription "my-subscription" \
 ```
 
 **Command Behavior:**
-
 - **With `--instance-id`**: Gets detailed information about a specific VM instance in the scale set (requires `--vmss-name` and `--resource-group`).
 - **With `--vmss-name`**: Gets detailed information about a specific VMSS (requires `--resource-group`).
 - **With `--resource-group` only**: Lists all VMSS in the specified resource group.
 - **With neither**: Lists all VMSS in the subscription.
 
 **Returns:**
-
 - VMSS information including name, location, SKU, capacity, provisioning state, upgrade policy, overprovision setting, zones, and tags.
 - When `--instance-id` is specified: Returns VM instance information including instance ID, name, location, VM size, provisioning state, OS type, zones, and tags.
 
@@ -1847,7 +1916,6 @@ azmcp compute vmss delete --subscription "my-subscription" \
 ```
 
 **Command Behavior:**
-
 - Deletes the VMSS and all its VM instances. This operation is irreversible.
 - **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VMSS even if it is in a running or failed state.
 
@@ -1879,10 +1947,9 @@ azmcp compute disk get --subscription <subscription> \
 ```
 
 **Options:**
-
-- `--disk-name`: The name of the managed disk (optional - if not provided, lists all disks)
-- `--resource-group`: The resource group to filter by (optional - if not provided, lists disks across all resource groups; required when specifying a disk name)
-- `--subscription`: Azure subscription ID or name (optional - defaults to AZURE_SUBSCRIPTION_ID environment variable)
+-   `--disk-name`: The name of the managed disk (optional - if not provided, lists all disks)
+-   `--resource-group`: The resource group to filter by (optional - if not provided, lists disks across all resource groups; required when specifying a disk name)
+-   `--subscription`: Azure subscription ID or name (optional - defaults to AZURE_SUBSCRIPTION_ID environment variable)
 
 ```bash
 # Create an empty managed disk (location defaults to resource group's location)
@@ -1968,7 +2035,6 @@ azmcp compute disk create --subscription <subscription> \
 ```
 
 **Command Behavior:**
-
 - Creates a new Azure managed disk in the specified resource group.
 - Either `--size-gb`, `--source`, `--gallery-image-reference`, or `--upload-type` must be specified.
 - When `--source` is a resource ID (snapshot or managed disk), the disk is created as a copy. When `--source` is a blob URI, the disk is imported from the VHD.
@@ -1978,7 +2044,6 @@ azmcp compute disk create --subscription <subscription> \
 - Supports configuring disk size, storage SKU, OS type, availability zone, hypervisor generation, tags, encryption settings, performance tier, shared disk, network access, on-demand bursting, IOPS and throughput limits (UltraSSD only), upload type, and security type.
 
 **Returns:**
-
 - Disk information including name, location, resource group, disk size, SKU, provisioning state, OS type, zones, and tags.
 
 **Parameters:**
@@ -2019,13 +2084,11 @@ azmcp compute disk delete --subscription <subscription> \
 ```
 
 **Command Behavior:**
-
 - Deletes an Azure managed disk from the specified resource group.
 - This is an idempotent operation: returns `Deleted = true` if the disk was successfully removed, or `Deleted = false` if the disk was not found.
 - The disk must not be attached to a virtual machine. Detach it first before deleting.
 
 **Returns:**
-
 - `Deleted`: Boolean indicating whether the disk was deleted.
 - `DiskName`: Name of the disk that was targeted for deletion.
 
@@ -2070,14 +2133,12 @@ azmcp compute disk update --subscription <subscription> \
 ```
 
 **Command Behavior:**
-
 - Updates properties of an existing Azure managed disk. Only specified properties are modified; unspecified properties remain unchanged.
 - If `--resource-group` is not specified, the disk is located by name within the subscription.
 - Disk size can only be increased, not decreased.
 - IOPS and throughput limits (`--disk-iops-read-write`, `--disk-mbps-read-write`) apply to UltraSSD disks only.
 
 **Returns:**
-
 - Updated disk information including name, location, resource group, disk size, SKU, provisioning state, OS type, zones, and tags.
 
 **Parameters:**
@@ -2116,11 +2177,10 @@ azmcp confidentialledger entries get --ledger <ledger-name> \
 ```
 
 **Options:**
-
-- `--ledger`: Confidential Ledger name (required)
-- `--content`: JSON or text data to insert into the ledger (required for the append command)
-- `--collection-id`: Collection ID to store the data with (optional)
-- `--transaction-id`: Ledger transaction identifier to retrieve (required for the get command)
+-   `--ledger`: Confidential Ledger name (required)
+-   `--content`: JSON or text data to insert into the ledger (required for the append command)
+-   `--collection-id`: Collection ID to store the data with (optional)
+-   `--transaction-id`: Ledger transaction identifier to retrieve (required for the get command)
 
 ### Azure Container Apps Operations
 
@@ -2831,7 +2891,7 @@ azmcp insights get --scope tenant \
 azmcp iothub hub get --subscription <subscription> \
                      --resource-group <resource-group> \
                      --hub-name <iot-hub-name>
-```
+```                     
 
 ### Azure Key Vault Operations
 
@@ -2893,7 +2953,6 @@ Tools that handle sensitive data such as secrets require user consent before exe
 > **🛡️ Elicitation (user confirmation) Security Feature:**
 >
 > Elicitation prompts appear when tools may expose sensitive information like:
->
 > - Key Vault secrets
 > - Connection strings and passwords
 > - Certificate private keys
@@ -3023,7 +3082,6 @@ azmcp loadtesting testrun createorupdate --subscription <subscription> \
 azmcp grafana list --subscription <subscription> \
                   [--resource-group <resource-group>]
 ```
-
 ### Azure IoT Hub Operations
 
 #### Device Registry Operations
@@ -3076,9 +3134,10 @@ azmcp get azure bestpractices get --resource <resource> --action <action>
 #   general        - General Azure best practices
 #   azurefunctions - Azure Functions specific best practices
 #   static-web-app - Azure Static Web Apps specific best practices
+#   coding-agent   - Coding Agent configuration best practices
 #
 # Action options:
-#   all             - Best practices for both code generation and deployment (only for static-web-app)
+#   all             - Best practices for both code generation and deployment (only for static-web-app and coding-agent)
 #   code-generation - Best practices for code generation (for general and azurefunctions)
 #   deployment      - Best practices for deployment (for general and azurefunctions)
 
@@ -3098,13 +3157,11 @@ azmcp get azure bestpractices ai_app
 The `azmcp tools list` command provides flexible ways to explore and discover available tools in the Azure MCP server. It supports multiple modes and filtering options that can be combined for precise control over the output format and content.
 
 **Available Options:**
-
 - `--namespace-mode`: List only top-level service namespaces instead of individual tools
 - `--name-only`: Return only tool/namespace names without descriptions, options, or metadata
 - `--namespace <namespace>`: Filter results to specific namespace(s). Can be used multiple times to include multiple namespaces
 
 **Option Combinations:**
-
 - Use `--name-only` alone to get a simple list of all tool names
 - Use `--namespace-mode` alone to see available service namespaces with full details
 - Combine `--namespace-mode` and `--name-only` to get just the namespace names
@@ -3336,7 +3393,6 @@ azmcp monitor instrumentation send-enhancement-select --session-id <session-id> 
 ```
 
 **Notes:**
-
 - `orchestrator-start` and `orchestrator-next` mirror the orchestration flow used by Azure Monitor onboarding.
 - `send-brownfield-analysis` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator-start` when status is `analysis_needed`.
 - `send-enhancement-select` expects one or more enhancement keys from `enhancementOptions` returned by `orchestrator-start` when status is `enhancement_available`.
@@ -3400,6 +3456,28 @@ azmcp managedlustre fs subnetsize validate --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre fs sku get --subscription <subscription> \
                                             --location <location>
+
+# Create an expansion job to increase the storage capacity of an Azure Managed Lustre filesystem
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs expansion create --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --filesystem-name <filesystem-name> \
+                                        --new-size <new-size-tib> \
+                                        [--expansion-job-name <expansion-job-name>]
+
+# Get expansion job details for an Azure Managed Lustre filesystem. Returns a specific job if expansion-job-name is provided, otherwise lists all expansion jobs.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs expansion get --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --filesystem-name <filesystem-name> \
+                                     [--expansion-job-name <expansion-job-name>]
+
+# Delete an expansion job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs expansion delete --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --filesystem-name <filesystem-name> \
+                                        --expansion-job-name <expansion-job-name>
 
 # Create an autoexport job for an Azure Managed Lustre filesystem
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -3513,31 +3591,29 @@ azmcp azuremigrate platformlandingzone getguidance --scenario <scenario> \
 
 **Available Scenarios:**
 
-| Scenario             | Description                                          |
-| -------------------- | ---------------------------------------------------- |
-| `resource-names`     | Update resource naming prefixes and suffixes         |
-| `management-groups`  | Customize management group names and IDs             |
-| `ddos`               | Enable or disable DDoS protection plan               |
-| `bastion`            | Turn off Bastion host                                |
-| `dns`                | Turn off Private DNS zones and resolvers             |
-| `gateways`           | Turn off Virtual Network Gateways (VPN/ExpressRoute) |
-| `regions`            | Add or remove secondary regions                      |
-| `ip-addresses`       | Adjust CIDR ranges and IP address space              |
-| `policy-enforcement` | Change policy enforcement mode to DoNotEnforce       |
-| `policy-assignment`  | Remove or disable a policy assignment                |
-| `ama`                | Turn off Azure Monitoring Agent                      |
-| `amba`               | Deploy Azure Monitoring Baseline Alerts              |
-| `defender`           | Turn off Defender Plans                              |
-| `zero-trust`         | Implement Zero Trust Networking                      |
-| `slz`                | Implement Sovereign Landing Zone controls            |
+| Scenario | Description |
+|----------|-------------|
+| `resource-names` | Update resource naming prefixes and suffixes |
+| `management-groups` | Customize management group names and IDs |
+| `ddos` | Enable or disable DDoS protection plan |
+| `bastion` | Turn off Bastion host |
+| `dns` | Turn off Private DNS zones and resolvers |
+| `gateways` | Turn off Virtual Network Gateways (VPN/ExpressRoute) |
+| `regions` | Add or remove secondary regions |
+| `ip-addresses` | Adjust CIDR ranges and IP address space |
+| `policy-enforcement` | Change policy enforcement mode to DoNotEnforce |
+| `policy-assignment` | Remove or disable a policy assignment |
+| `ama` | Turn off Azure Monitoring Agent |
+| `amba` | Deploy Azure Monitoring Baseline Alerts |
+| `defender` | Turn off Defender Plans |
+| `zero-trust` | Implement Zero Trust Networking |
+| `slz` | Implement Sovereign Landing Zone controls |
 
 **Policy-related Options:**
-
 - `--policy-name`: Search for a specific policy by partial or full name
 - `--list-policies`: Set to `true` to list ALL policies organized by archetype
 
 **Examples:**
-
 ```bash
 # Get guidance for enabling DDoS protection
 # ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
@@ -3569,75 +3645,70 @@ azmcp azuremigrate platformlandingzone request --subscription <subscription> \
 **Actions:**
 
 1. **Check Existing** (`--action check`)
-
-    ```bash
-    # Check if a platform landing zone already exists
-    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
-                                                   --resource-group <resource-group> \
-                                                   --migrate-project-name <migrate-project-name> \
-                                                   --action check
-    ```
+   ```bash
+   # Check if a platform landing zone already exists
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action check
+   ```
 
 2. **Update Parameters** (`--action update`)
-
-    ```bash
-    # Cache all parameters for generation of the platform landing zone
-    # Defaults are applied automatically if not specified
-    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
-                                                   --resource-group <resource-group> \
-                                                   --migrate-project-name <migrate-project-name> \
-                                                   --action update \
-                                                   [--region-type <single|multi>] \
-                                                   [--firewall-type <azurefirewall|nva>] \
-                                                   [--network-architecture <hubspoke|vwan>] \
-                                                   [--version-control-system <local|github|azuredevops>] \
-                                                   [--regions <comma-separated-regions>] \
-                                                   [--environment-name <environment-name>] \
-                                                   [--organization-name <organization-name>] \
-                                                   [--identity-subscription-id <subscription-id>] \
-                                                   [--management-subscription-id <subscription-id>] \
-                                                   [--connectivity-subscription-id <subscription-id>]
-    ```
+   ```bash
+   # Cache all parameters for generation of the platform landing zone
+   # Defaults are applied automatically if not specified
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action update \
+                                                  [--region-type <single|multi>] \
+                                                  [--firewall-type <azurefirewall|nva>] \
+                                                  [--network-architecture <hubspoke|vwan>] \
+                                                  [--version-control-system <local|github|azuredevops>] \
+                                                  [--regions <comma-separated-regions>] \
+                                                  [--environment-name <environment-name>] \
+                                                  [--organization-name <organization-name>] \
+                                                  [--identity-subscription-id <subscription-id>] \
+                                                  [--management-subscription-id <subscription-id>] \
+                                                  [--connectivity-subscription-id <subscription-id>]
+   ```
 
 3. **Generate Landing Zone** (`--action generate`)
-
-    ```bash
-    # Generate the platform landing zone
-    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
-                                                   --resource-group <resource-group> \
-                                                   --migrate-project-name <migrate-project-name> \
-                                                   --action generate
-    ```
+   ```bash
+   # Generate the platform landing zone
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action generate
+   ```
 
 4. **Download Landing Zone** (`--action download`)
-
-    ```bash
-    # Download generated landing zone files to local workspace
-    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
-                                                   --resource-group <resource-group> \
-                                                   --migrate-project-name <migrate-project-name> \
-                                                   --action download
-    ```
+   ```bash
+   # Download generated landing zone files to local workspace
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action download
+   ```
 
 5. **View Status** (`--action status`)
-
-    ```bash
-    # View cached parameters
-    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
-                                                   --resource-group <resource-group> \
-                                                   --migrate-project-name <migrate-project-name> \
-                                                   --action status
-    ```
+   ```bash
+   # View cached parameters
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action status
+   ```
 
 6. **Create Azure Migrate Project** (`--action createmigrateproject`)
-    ```bash
-    # Create a new Azure Migrate project if one doesn't exist (requires location parameter)
-    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
-                                                   --resource-group <resource-group> \
-                                                   --migrate-project-name <migrate-project-name> \
-                                                   --action createmigrateproject \
-                                                   --location <azure-region>
-    ```
+   ```bash
+   # Create a new Azure Migrate project if one doesn't exist (requires location parameter)
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action createmigrateproject \
+                                                  --location <azure-region>
+   ```
 
 ### Azure Native ISV Operations
 
@@ -3681,7 +3752,6 @@ azmcp quota usage check --subscription <subscription> \
 ```
 
 ### Azure Policy Operations
-
 ```bash
 # List Azure Policy Assignments
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -3705,16 +3775,16 @@ azmcp pricing get [--sku <sku>] \
                   [--filter <odata-filter>]
 ```
 
-| Option                   | Required | Default | Description                                               |
-| ------------------------ | -------- | ------- | --------------------------------------------------------- |
-| `--sku`                  | No\*     | -       | ARM SKU name (e.g., Standard_D4s_v5)                      |
-| `--service`              | No\*     | -       | Azure service name (e.g., Virtual Machines, Storage)      |
-| `--region`               | No\*     | -       | Azure region (e.g., eastus, westeurope)                   |
-| `--service-family`       | No\*     | -       | Service family (e.g., Compute, Storage, Databases)        |
-| `--price-type`           | No\*     | -       | Price type (Consumption, Reservation, DevTestConsumption) |
-| `--currency`             | No       | USD     | Currency code (e.g., USD, EUR)                            |
-| `--include-savings-plan` | No       | false   | Include savings plan pricing (uses preview API)           |
-| `--filter`               | No\*     | -       | Raw OData filter for advanced queries                     |
+| Option | Required | Default | Description |
+|--------|----------|---------|-------------|
+| `--sku` | No* | - | ARM SKU name (e.g., Standard_D4s_v5) |
+| `--service` | No* | - | Azure service name (e.g., Virtual Machines, Storage) |
+| `--region` | No* | - | Azure region (e.g., eastus, westeurope) |
+| `--service-family` | No* | - | Service family (e.g., Compute, Storage, Databases) |
+| `--price-type` | No* | - | Price type (Consumption, Reservation, DevTestConsumption) |
+| `--currency` | No | USD | Currency code (e.g., USD, EUR) |
+| `--include-savings-plan` | No | false | Include savings plan pricing (uses preview API) |
+| `--filter` | No* | - | Raw OData filter for advanced queries |
 
 \* At least one filter option is required.
 
@@ -3751,20 +3821,17 @@ azmcp redis list --subscription <subscription>
 ```bash
 # Get a resilience goal template, or list all goal templates in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience goal template get --subscription <subscription> \
-                                   --service-group <service-group> \
+azmcp resilience goal template get --service-group <service-group> \
                                    [--name <name>]
 
 # Get a resilience goal assignment, or list all goal assignments in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience goal assignment get --subscription <subscription> \
-                                     --service-group <service-group> \
+azmcp resilience goal assignment get --service-group <service-group> \
                                      [--name <name>]
 
 # Get a resource (member) of a goal assignment, or list all resources of the assignment (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience goal resource get --subscription <subscription> \
-                                   --service-group <service-group> \
+azmcp resilience goal resource get --service-group <service-group> \
                                    --goal-assignment <goal-assignment> \
                                    [--name <name>]
 
@@ -3798,11 +3865,10 @@ azmcp resilience usageplan enrollment create --subscription <subscription> \
 
 # Get a resilience recovery plan, or list all recovery plans in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recoveryplan get --subscription <subscription> \
-                                   --service-group <service-group> \
+azmcp resilience recoveryplan get --service-group <service-group> \
                                    [--name <name>]
 
-# Create or fully update a Zonal resilience recovery plan. Ask the customer to select an identity type; do not assume SystemAssigned or another default. Identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description must be 5 to 50 characters and is required on create; it is preserved when omitted on update.
+# Create or update a Zonal resilience recovery plan's identity, recovery group structure, and recovery group pre/post actions. Use recoveryplan resource update instead for recovery resource membership and protection settings. Ask the customer to select an identity type; do not assume SystemAssigned or another default. Identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description must be 5 to 50 characters and is required on create; it is preserved when omitted on update. Additional groups and group actions are preserved when omitted and replaced when supplied.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan create --service-group <service-group> \
                                       --recovery-plan <recovery-plan> \
@@ -3810,15 +3876,39 @@ azmcp resilience recoveryplan create --service-group <service-group> \
                                       [--plan-description <plan-description>] \
                                       --identity-type <SystemAssigned|UserAssigned|SystemAndUserAssigned> \
                                       [--user-assigned-identity <user-assigned-identity-resource-id>] \
-                                      [--default-group-description <default-group-description>]
+                                      [--default-group-description <default-group-description>] \
+                                      [--default-group-pre-actions '<json-array>'] \
+                                      [--default-group-post-actions '<json-array>'] \
+                                      [--additional-groups '<json-array>']
 
 # Provide --user-assigned-identity when --identity-type is UserAssigned or SystemAndUserAssigned.
 # Directly replacing one user-assigned identity with another is not currently supported.
+# Additional group orderId values must be unique and sequential starting at 1. groupUniqueId is optional.
+# Additional group objects may contain preActions and postActions arrays. Default group actions use the dedicated options above.
+# Before adding an action, collect and explain each value to the customer:
+# 1. type: ManualAction pauses for a person to complete a step; CustomRunbook runs an Azure Automation runbook.
+# 2. name: a 3 to 24 character customer-facing action name containing only letters, numbers, or hyphens.
+# 3. description: optional action instructions up to 100 characters; an empty value is allowed.
+# 4. timeoutInMinutes: a positive whole number defining how long the action may run.
+# 5. actionResourceId: required only for CustomRunbook; use the full Microsoft.Automation/automationAccounts/runbooks resource ID.
+# 6. parameters: optional for CustomRunbook; use a JSON object whose values are strings.
+# ManualAction example: [{"type":"ManualAction","name":"Confirm-dependencies","description":"Verify dependencies are ready","timeoutInMinutes":30}]
+# CustomRunbook example: [{"type":"CustomRunbook","name":"Start-dependencies","description":"Start application dependencies","timeoutInMinutes":30,"actionResourceId":"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Automation/automationAccounts/{account}/runbooks/{runbook}","parameters":{"environment":"production"}}]
+# Omit an action option or property to preserve existing actions. Specify [] to clear that action list.
 
 # Delete a resilience recovery plan. Returns deleted=false when the plan does not exist.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan delete --service-group <service-group> \
                                       --recovery-plan <recovery-plan>
+
+# Validate which recovery-plan resources are qualified for failover from the specified source locations.
+# Optionally limit validation to selected full recovery-resource IDs and provide execution consent.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan validateforfailover --service-group <service-group> \
+                                                   --recovery-plan <recovery-plan> \
+                                                   --source-locations <source-location> [<source-location> ...] \
+                                                   [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
+                                                   [--user-consent <Unspecified|Allowed>]
 
 # Configure recovery-plan resource inclusions, exclusions, removals, recovery groups, identities, and protection settings. At least one JSON array is required.
 # First inclusion requires matching protection type and settings. CustomRunbook requires failover and reprotect runbook resource IDs.
@@ -3836,38 +3926,69 @@ azmcp resilience recoveryplan checkreadiness --service-group <service-group> \
 
 # Get a resource (member) of a recovery plan, or list all resources of the plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recoveryplan resource get --subscription <subscription> \
-                                            --service-group <service-group> \
+azmcp resilience recoveryplan resource get --service-group <service-group> \
                                             --recovery-plan <recovery-plan> \
                                             [--name <name>]
 
 # Get a recovery job, or list all recovery jobs of a recovery plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recoveryjob get --subscription <subscription> \
-                                 --service-group <service-group> \
+azmcp resilience recoveryjob get --service-group <service-group> \
                                  --recovery-plan <recovery-plan> \
                                  [--name <name>]
 
 # Get a resource (target) of a recovery job, or list all resources of the job (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience recoveryjob resource get --subscription <subscription> \
-                                          --service-group <service-group> \
+azmcp resilience recoveryjob resource get --service-group <service-group> \
                                           --recovery-plan <recovery-plan> \
                                           --recovery-job <recovery-job> \
                                           [--name <name>]
 
+# Create or update a resilience drill in a service group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill create --service-group <service-group> \
+                              --drill <drill> \
+                              --subscription <subscription> \
+                              --region <region> \
+                              --drill-type <drill-type> \
+                              --rbac-setup-mode <rbac-setup-mode> \
+                              [--resource-group <resource-group>] \
+                              [--recovery-plan <recovery-plan>]
+
 # Get a resilience drill, or list all drills in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience drill get --subscription <subscription> \
-                           --service-group <service-group> \
+azmcp resilience drill get --service-group <service-group> \
                            [--name <name>]
+
+# Update mutable properties of a resilience drill
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill update --service-group <service-group> \
+                              --drill <drill> \
+                              [--subscription <subscription> --region <region>] \
+                              [--rbac-setup-mode <AutomatedCustomRole|AutomatedBuiltinRoles|Manual>] \
+                              [--recovery-plan <recovery-plan>]
+# Delete a resilience drill from a service group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill delete --service-group <service-group> \
+                              --drill <drill>
 
 # Get a resource (target) of a drill, or list all resources of the drill (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resilience drill resource get --subscription <subscription> \
-                                    --service-group <service-group> \
+azmcp resilience drill resource get --service-group <service-group> \
                                     --drill <drill> \
                                     [--name <name>]
+
+# Get a run of a drill, or list all runs of the drill (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run get --service-group <service-group> \
+                               --drill <drill> \
+                               [--name <name>]
+
+# Get a resource (target) of a drill run, or list all resources of the run (omit --name)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run resource get --service-group <service-group> \
+                                        --drill <drill> \
+                                        --drill-run <drill-run> \
+                                        [--name <name>]
 ```
 
 ### Azure Resource Group Operations
@@ -4102,12 +4223,11 @@ azmcp sreagent agents create --subscription <subscription> \
                              --resource-group <resource-group> \
                              --agent <agent-name>
 
-# Delete an SRE Agent resource (requires --confirm true)
+# Delete an SRE Agent resource
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent agents delete --subscription <subscription> \
                              --resource-group <resource-group> \
-                             --agent <agent-name> \
-                             --confirm true
+                             --agent <agent-name>
 ```
 
 #### Agent Tools
@@ -4150,13 +4270,12 @@ azmcp sreagent skills create --subscription <subscription> \
                              --name <skill-name> \
                              --content <skill-content>
 
-# Delete a skill from an SRE Agent resource (requires --confirm true)
+# Delete a skill from an SRE Agent resource
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent skills delete --subscription <subscription> \
                              --resource-group <resource-group> \
                              --agent <agent-name> \
-                             --name <skill-name> \
-                             --confirm true
+                             --name <skill-name>
 ```
 
 #### Connectors
@@ -4198,13 +4317,12 @@ azmcp sreagent connectors test --subscription <subscription> \
                                --agent <agent-name> \
                                --name <connector-name>
 
-# Delete a connector (requires --confirm true)
+# Delete a connector
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent connectors delete --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --agent <agent-name> \
-                                 --name <connector-name> \
-                                 --confirm true
+                                 --name <connector-name>
 ```
 
 #### Hooks
@@ -4223,13 +4341,12 @@ azmcp sreagent hooks get --subscription <subscription> \
                          --agent <agent-name> \
                          --name <hook-name>
 
-# Delete a hook (requires --confirm true)
+# Delete a hook
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent hooks delete --subscription <subscription> \
                             --resource-group <resource-group> \
                             --agent <agent-name> \
-                            --name <hook-name> \
-                            --confirm true
+                            --name <hook-name>
 
 # List hooks activated for a thread
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4284,13 +4401,12 @@ azmcp sreagent threads send-message --subscription <subscription> \
                                     --thread <thread-id> \
                                     --message <message>
 
-# Delete a thread (requires --confirm true)
+# Delete a thread
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent threads delete --subscription <subscription> \
                               --resource-group <resource-group> \
                               --agent <agent-name> \
-                              --thread <thread-id> \
-                              --confirm true
+                              --thread <thread-id>
 
 # Run an investigation prompt
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4332,13 +4448,13 @@ azmcp sreagent scheduledtasks get --subscription <subscription> \
                                   --agent <agent-name> \
                                   --task <task-id>
 
-# Pause / resume / delete (delete requires --confirm true)
+# Pause / resume / delete
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent scheduledtasks pause  --subscription <subscription> --resource-group <rg> --agent <agent> --task <task-id>
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent scheduledtasks resume --subscription <subscription> --resource-group <rg> --agent <agent> --task <task-id>
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent scheduledtasks delete --subscription <subscription> --resource-group <rg> --agent <agent> --task <task-id> --confirm true
+azmcp sreagent scheduledtasks delete --subscription <subscription> --resource-group <rg> --agent <agent> --task <task-id>
 ```
 
 #### Incidents
@@ -4416,7 +4532,7 @@ azmcp sreagent docs memories search --subscription <s> --resource-group <rg> --a
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent docs memories add    --subscription <s> --resource-group <rg> --agent <a> --name <doc> --content <body>
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent docs memories delete --subscription <s> --resource-group <rg> --agent <a> --name <doc> --confirm true
+azmcp sreagent docs memories delete --subscription <s> --resource-group <rg> --agent <a> --name <doc>
 
 # Trigger a full reindex of the knowledge base
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4433,7 +4549,7 @@ azmcp sreagent commonprompts get    --subscription <s> --resource-group <rg> --a
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sreagent commonprompts create --subscription <s> --resource-group <rg> --agent <a> --name <prompt-name> --content <body>
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sreagent commonprompts delete --subscription <s> --resource-group <rg> --agent <a> --name <prompt-name> --confirm true
+azmcp sreagent commonprompts delete --subscription <s> --resource-group <rg> --agent <a> --name <prompt-name>
 ```
 
 ### Azure Storage Operations
@@ -4455,16 +4571,16 @@ azmcp storage account create --subscription <subscription> \
 
 #### Storage Account Create Parameters
 
-| Parameter                         | Required | Description                                                                                                                                                                                                               |
-| --------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--subscription`                  | Yes      | Azure subscription ID or display name.                                                                                                                                                                                    |
-| `--account`                       | Yes      | Globally unique storage account name using 3-24 lowercase letters and numbers.                                                                                                                                            |
-| `--resource-group`                | Yes      | Resource group name.                                                                                                                                                                                                      |
-| `--location`                      | Yes      | Azure region, such as `eastus` or `westus2`.                                                                                                                                                                              |
-| `--sku`                           | No       | Storage account SKU for StorageV2 accounts. Valid values: `Standard_LRS`, `Standard_GRS`, `Standard_RAGRS`, `Standard_ZRS`, `Premium_LRS`, `Premium_ZRS`, `Standard_GZRS`, `Standard_RAGZRS`. Defaults to `Standard_LRS`. |
-| `--access-tier`                   | No       | Default access tier for blob storage. Valid values: `Hot`, `Cool`, `Cold`, `Premium`. Defaults to `Hot`.                                                                                                                  |
-| `--enable-hierarchical-namespace` | No       | Whether to enable the Azure Data Lake Storage Gen2 hierarchical namespace. Defaults to `false`.                                                                                                                           |
-| `--tenant`                        | No       | Azure tenant ID or name.                                                                                                                                                                                                  |
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID or display name. |
+| `--account` | Yes | Globally unique storage account name using 3-24 lowercase letters and numbers. |
+| `--resource-group` | Yes | Resource group name. |
+| `--location` | Yes | Azure region, such as `eastus` or `westus2`. |
+| `--sku` | No | Storage account SKU for StorageV2 accounts. Valid values: `Standard_LRS`, `Standard_GRS`, `Standard_RAGRS`, `Standard_ZRS`, `Premium_LRS`, `Premium_ZRS`, `Standard_GZRS`, `Standard_RAGZRS`. Defaults to `Standard_LRS`. |
+| `--access-tier` | No | Default access tier for blob storage. Valid values: `Hot`, `Cool`, `Cold`, `Premium`. Defaults to `Hot`. |
+| `--enable-hierarchical-namespace` | No | Whether to enable the Azure Data Lake Storage Gen2 hierarchical namespace. Defaults to `false`. |
+| `--tenant` | No | Azure tenant ID or name. |
 
 ```bash
 # Get detailed properties of Storage accounts
@@ -4935,11 +5051,11 @@ All responses follow a consistent JSON format:
 
 ```json
 {
-    "status": "200|403|500, etc",
-    "message": "",
-    "options": [],
-    "results": [],
-    "duration": 123
+  "status": "200|403|500, etc",
+  "message": "",
+  "options": [],
+  "results": [],
+  "duration": 123
 }
 ```
 
@@ -4947,14 +5063,14 @@ All responses follow a consistent JSON format:
 
 When invoking `azmcp tools list` (with or without `--namespace-mode`), each returned object now includes a `count` field:
 
-| Field         | Description                                                                      |
-| ------------- | -------------------------------------------------------------------------------- |
-| `name`        | Command or namespace name                                                        |
-| `description` | Human-readable description                                                       |
-| `command`     | Fully qualified CLI invocation path                                              |
-| `subcommands` | (Namespaces only) Array of leaf command objects                                  |
-| `option`      | (Leaf commands only) Array of options supported by the command                   |
-| `count`       | Namespaces: number of subcommands; Leaf commands: always 0 (options not counted) |
+| Field | Description |
+|-------|-------------|
+| `name` | Command or namespace name |
+| `description` | Human-readable description |
+| `command` | Fully qualified CLI invocation path |
+| `subcommands` | (Namespaces only) Array of leaf command objects |
+| `option` | (Leaf commands only) Array of options supported by the command |
+| `count` | Namespaces: number of subcommands; Leaf commands: always 0 (options not counted) |
 
 This quantitative field enables quick sizing of a namespace without traversing nested arrays. Leaf command complexity should be inferred from its option list, not the `count` field.
 

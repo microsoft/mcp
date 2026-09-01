@@ -4,7 +4,6 @@
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -17,7 +16,6 @@ public class ResourceResolverService(IAzureService azureService)
         string? resourceType,
         string resourceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
@@ -35,7 +33,7 @@ public class ResourceResolverService(IAzureService azureService)
         }
 
         // Need to discover the resource - get subscription resource
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 
         // Get all resources matching the name
         var allMatchingResources = await subscriptionResource.GetGenericResourcesAsync(cancellationToken: cancellationToken)
