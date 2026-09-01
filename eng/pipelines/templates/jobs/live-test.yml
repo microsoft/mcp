@@ -1,4 +1,8 @@
 parameters:
+- name: JobName
+  type: string
+- name: JobDisplayName
+  type: string
 - name: Matrix
   type: object
 - name: MaxParallel
@@ -10,8 +14,8 @@ parameters:
   default: true
 
 jobs:
-- job: LiveTest
-  displayName: "Live tests -"
+- job: ${{ parameters.JobName }}
+  displayName: ${{ parameters.JobDisplayName }}
   timeoutInMinutes: ${{ parameters.TimeoutInMinutes }}
   # The variable reference in the matrix parameter will resolve to a json map. If there are no live test legs, it will be an empty map.
   condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'))
