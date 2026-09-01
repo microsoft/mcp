@@ -9,14 +9,14 @@ The following options are available for most commands:
 
 | Option | Required | Default | Description |
 |-----------|----------|---------|-------------|
-| `--subscription` | No | Environment variable `AZURE_SUBSCRIPTION_ID` | The Azure subscription GUID identifier or display name. If not specified, the Azure CLI profile default subscription or `AZURE_SUBSCRIPTION_ID` environment variable will be used. |
+| `--subscription` | No | Azure CLI profile default; otherwise `AZURE_SUBSCRIPTION_ID` | The Azure subscription GUID identifier or display name. If not specified, the Azure CLI profile default subscription or `AZURE_SUBSCRIPTION_ID` environment variable will be used. |
 | `--tenant` | No | - | The Microsoft Entra ID tenant GUID identifier or display name. |
 | `--auth-method` | No | 'credential' | Authentication method ('credential', 'key', 'connectionString') |
 | `--retry-max-retries` | No | 3 | Maximum number of retry attempts. |
 | `--retry-delay` | No | 2 | Initial delay in seconds. For exponential backoff, this value is used as the base. |
-| `--retry-max-delay` | No | 10 | Maximum delay between retries (seconds) |
+| `--retry-max-delay` | No | 10 | Maximum delay in seconds, regardless of the retry strategy. |
 | `--retry-mode` | No | 'exponential' | Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts. |
-| `--retry-network-timeout` | No | 100 | Network operation timeout (seconds) |
+| `--retry-network-timeout` | No | 100 | Network operation timeout in seconds. |
 | `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
 
 ### Discovery with `--learn`
