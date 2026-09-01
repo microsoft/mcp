@@ -41,7 +41,8 @@ public sealed class CommandTelemetryTests
             activity);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Equal("Sanitized failure details.", activity.GetTagItem(TagName.ExceptionMessage));
+        Assert.Equal("Sanitized failure details.", activity.GetTagItem(TagName.ToolFailureMessage));
+        Assert.Null(activity.GetTagItem(TagName.ExceptionMessage));
     }
 
     [Fact]
@@ -52,6 +53,7 @@ public sealed class CommandTelemetryTests
             new TelemetryTestCommand(HttpStatusCode.OK, "Successful operation details."),
             activity);
 
+        Assert.Null(activity.GetTagItem(TagName.ToolFailureMessage));
         Assert.Null(activity.GetTagItem(TagName.ExceptionMessage));
     }
 
@@ -68,11 +70,12 @@ public sealed class CommandTelemetryTests
             new TelemetryTestCommand(HttpStatusCode.BadRequest, telemetryFailureMessage),
             activity);
 
+        Assert.Null(activity.GetTagItem(TagName.ToolFailureMessage));
         Assert.Equal("Existing failure details.", activity.GetTagItem(TagName.ExceptionMessage));
     }
 
     [Fact]
-    public async Task ExecuteAsync_ExplicitTelemetryFailureMessage_ReplacesExistingTelemetry()
+    public async Task ExecuteAsync_ExplicitTelemetryFailureMessage_PreservesExceptionTelemetry()
     {
         using var activity = CreateActivity();
         activity.SetTag(TagName.ExceptionMessage, "Generic failure details.");
@@ -81,7 +84,8 @@ public sealed class CommandTelemetryTests
             new TelemetryTestCommand(HttpStatusCode.BadRequest, "Command-specific failure details."),
             activity);
 
-        Assert.Equal("Command-specific failure details.", activity.GetTagItem(TagName.ExceptionMessage));
+        Assert.Equal("Command-specific failure details.", activity.GetTagItem(TagName.ToolFailureMessage));
+        Assert.Equal("Generic failure details.", activity.GetTagItem(TagName.ExceptionMessage));
     }
 
     [Fact]

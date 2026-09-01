@@ -148,7 +148,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         var isError = response.Status < HttpStatusCode.OK || response.Status >= HttpStatusCode.Ambiguous;
         if (isError && !string.IsNullOrWhiteSpace(response.TelemetryFailureMessage))
         {
-            context.Activity?.SetTag(TagName.ExceptionMessage, response.TelemetryFailureMessage);
+            context.Activity?.SetTag(TagName.ToolFailureMessage, response.TelemetryFailureMessage);
         }
     }
 
