@@ -1781,6 +1781,40 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         await WaitForLroCompletionAsync(operation, cancellationToken);
     }
 
+    public async Task<string> StartDrillAsync(string serviceGroup, string drill, string mode, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+
+        var drillId = ResilienceManagementDrillResource.CreateResourceIdentifier(serviceGroup, drill);
+        ResilienceManagementDrillResource drillResource = armClient.GetResilienceManagementDrillResource(drillId);
+        string operationId = Guid.NewGuid().ToString();
+
+        await drillResource.StartAsync(
+            WaitUntil.Started,
+            operationId,
+            new DrillStartContent(new DrillMode(mode)),
+            cancellationToken);
+
+        return operationId;
+    }
+
+    public async Task<string> EndDrillAsync(string serviceGroup, string drill, string attestation, string attestationNotes, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+
+        var drillId = ResilienceManagementDrillResource.CreateResourceIdentifier(serviceGroup, drill);
+        ResilienceManagementDrillResource drillResource = armClient.GetResilienceManagementDrillResource(drillId);
+        string operationId = Guid.NewGuid().ToString();
+
+        await drillResource.EndAsync(
+            WaitUntil.Started,
+            operationId,
+            new DrillEndContent(new DrillAttestation(attestation), attestationNotes),
+            cancellationToken);
+
+        return operationId;
+    }
+
     public async Task<IEnumerable<ResourceSummary>> ListDrillResourcesAsync(string serviceGroup, string drill, string? tenant = null, CancellationToken cancellationToken = default)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
