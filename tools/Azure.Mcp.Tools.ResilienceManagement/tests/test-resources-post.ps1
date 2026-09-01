@@ -161,13 +161,6 @@ function Add-RecoveryContributorRole {
         [string] $Scope
     )
 
-    $currentAccount = (Get-AzContext).Account
-    $currentUserObjectId = $currentAccount.ExtendedProperties.HomeAccountId.Split('.')[0]
-    if ($TestApplicationOid -eq $currentUserObjectId) {
-        Write-Host "Using the automatic service-group roles for the signed-in test user at $Scope"
-        return
-    }
-
     $roleName = 'Azure Resilience Management Recovery Contributor'
     $assignment = Get-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionName $roleName -ErrorAction SilentlyContinue
     if (!$assignment) {
@@ -349,7 +342,7 @@ if ($existingRecoveryPlan.StatusCode -eq 404) {
 
 # 7) Run a readiness check on the recovery plan so it has a recorded validation status.
 $checkReadinessPath = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName/checkReadiness`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPost -Path $checkReadinessPath | Out-Null
+Invoke-ResilienceRestPost -Path $checkReadinessPath -OperationId (New-Guid).Guid | Out-Null
 Wait-ResilienceProvisioning -Path $recoveryPlanPath
 
 # Capture the recovery job created by the readiness check (and its first resource, if any) so the

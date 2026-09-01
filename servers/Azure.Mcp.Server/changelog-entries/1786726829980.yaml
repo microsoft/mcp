@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Add new server starting option disable-proxy-tools to disable tools loaded via registry.json"

@@ -262,6 +262,7 @@ The `azmcp server start` command supports the following options:
 | `--dangerously-write-support-logs-to-dir` | No | - | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs. |
 | `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
 | `--disable-caching` | No | `false` | Disable caching of resource responses, requiring repeated requests to fetch fresh data each time. |
+| `--disable-proxy-tools` | No | `false` | Disable tools that are proxied from sources configured in `/Resources/registry.json`. |
 
 > **⚠️ Security Warning for `--dangerously-disable-elicitation`:**
 >
@@ -2859,7 +2860,42 @@ azmcp insights get --scope tenant \
 azmcp iothub hub get --subscription <subscription> \
                      --resource-group <resource-group> \
                      --hub-name <iot-hub-name>
-```                     
+
+# Show a device identity from an IoT Hub device registry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub device show --subscription <subscription> \
+                         --resource-group <resource-group> \
+                         --hub-name <iot-hub-name> \
+                         --device-id <device-id>
+
+# Get device statistics for an IoT Hub identity registry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub device stats --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --hub-name <iot-hub-name>
+
+# Get a device twin from an IoT Hub device registry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub device twin get --subscription <subscription> \
+                             --resource-group <resource-group> \
+                             --hub-name <iot-hub-name> \
+                             --device-id <device-id>
+
+# Run an IoT Hub query and return the matching results. The tool pages through IoT Hub internally and
+# aggregates every page, so a single call returns the full result set. Provide --query (raw SQL) or
+# --filters (structured predicates; fields are auto-discovered from the twin registry, validated, then
+# compiled). Use --max-count to cap the total items returned; if more matches exist than the cap, the tool
+# returns an error indicating the max-count limit was hit. Omit --max-count to return every match.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub query run --subscription <subscription> \
+                       --resource-group <resource-group> \
+                       --hub-name <iot-hub-name> \
+                       [--query <query>] \
+                       [--filters <filters-json>] \
+                       [--from <source>] \
+                       [--logical-operator <operator>] \
+                       [--max-count <max-count>]
+```
 
 ### Azure Key Vault Operations
 
@@ -3292,6 +3328,36 @@ azmcp monitor metrics query --subscription <subscription> \
                             --end-time "2024-01-01T23:59:59Z" \
                             --interval "PT1H" \
                             --aggregation "Average"
+
+# Query Azure Monitor metrics for multiple resources in a single batch request
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor metrics batchquery --subscription <subscription> \
+                                 --resources <resources> \
+                                 --metric-namespace <metric-namespace> \
+                                 --metric-names <metric-names> \
+                                 [--resource-group <resource-group>] \
+                                 [--resource-type <resource-type>] \
+                                 [--start-time <start-time>] \
+                                 [--end-time <end-time>] \
+                                 [--interval <interval>] \
+                                 [--aggregation <aggregation>] \
+                                 [--filter <filter>] \
+                                 [--order-by <order-by>] \
+                                 [--top <top>] \
+                                 [--max-buckets <max-buckets>]
+
+# Query CPU metrics across multiple storage accounts at once
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor metrics batchquery --subscription <subscription> \
+                                 --resources "storageaccount1,storageaccount2,storageaccount3" \
+                                 --resource-group <resource-group> \
+                                 --resource-type "Microsoft.Storage/storageAccounts" \
+                                 --metric-namespace "Microsoft.Storage/storageAccounts" \
+                                 --metric-names "Transactions" \
+                                 --start-time "2024-01-01T00:00:00Z" \
+                                 --end-time "2024-01-01T23:59:59Z" \
+                                 --interval "PT1H" \
+                                 --aggregation "Total"
 ```
 
 #### Web Tests (Availability Tests)
@@ -3878,6 +3944,21 @@ azmcp resilience recoveryplan validateforfailover --service-group <service-group
                                                    [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
                                                    [--user-consent <Unspecified|Allowed>]
 
+# Validate which recovery-plan resources are qualified for reprotect after failover.
+# Optionally limit validation to selected full recovery-resource IDs; omit them to validate all qualified resources in the plan.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan validateforreprotect --service-group <service-group> \
+                                                    --recovery-plan <recovery-plan> \
+                                                    [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]]
+
+# Validate whether a recovery plan is eligible to start a specified operation based on plan support, current state, readiness, and permissions.
+# Supported operations are Failover, FailoverCommit, Reprotect, TestFailover, and TestFailoverCleanup.
+# The operation must be explicitly selected; do not infer it from prior context, plan state, or resource metadata.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan validateforoperation --service-group <service-group> \
+                                                    --recovery-plan <recovery-plan> \
+                                                    --operation-name <Failover|FailoverCommit|Reprotect|TestFailover|TestFailoverCleanup>
+
 # Configure recovery-plan resource inclusions, exclusions, removals, recovery groups, identities, and protection settings. At least one JSON array is required.
 # First inclusion requires matching protection type and settings. CustomRunbook requires failover and reprotect runbook resource IDs.
 # AzureSiteRecovery is supported for virtual machines and requires disk reprotect details. Existing configuration is preserved on sparse updates.
@@ -3927,6 +4008,19 @@ azmcp resilience drill create --service-group <service-group> \
 azmcp resilience drill get --service-group <service-group> \
                            [--name <name>]
 
+# Start a new execution of a resilience drill in Failover or TestFailover mode
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill start --service-group <service-group> \
+                             --drill <drill> \
+                             --mode <Failover|TestFailover>
+
+# End the running execution of a resilience drill and attest its outcome
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill end --service-group <service-group> \
+                           --drill <drill> \
+                           --attestation <Success|Failed> \
+                           --attestation-notes <attestation-notes>
+
 # Update mutable properties of a resilience drill
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill update --service-group <service-group> \
@@ -3934,6 +4028,7 @@ azmcp resilience drill update --service-group <service-group> \
                               [--subscription <subscription> --region <region>] \
                               [--rbac-setup-mode <AutomatedCustomRole|AutomatedBuiltinRoles|Manual>] \
                               [--recovery-plan <recovery-plan>]
+
 # Delete a resilience drill from a service group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill delete --service-group <service-group> \

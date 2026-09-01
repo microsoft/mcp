@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Commands.HealthModels;
@@ -28,6 +29,9 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(HealthModelIdentity))]
 [JsonSerializable(typeof(HealthModelListCommand.HealthModelListCommandResult))]
 [JsonSerializable(typeof(HealthModelSummary))]
+[JsonSerializable(typeof(List<HealthModelSummary>))]
+[JsonSerializable(typeof(List<JsonNode>))]
+[JsonSerializable(typeof(MetricsBatchQueryCommand.MetricsBatchQueryCommandResult))]
 [JsonSerializable(typeof(MetricsDefinitionsCommand.MetricsDefinitionsCommandResult))]
 [JsonSerializable(typeof(MetricsDefinitionsCommand.MetricsDefinitionsCommandResult))]
 [JsonSerializable(typeof(MetricsQueryCommand.MetricsQueryCommandResult))]
@@ -37,6 +41,8 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(ResourceLogQueryCommand.ResourceLogQueryCommandResult))]
 [JsonSerializable(typeof(SendBrownfieldAnalysisCommand.SendBrownfieldAnalysisCommandResult))]
 [JsonSerializable(typeof(SendEnhancementSelectCommand.SendEnhancementSelectCommandResult))]
+[JsonSerializable(typeof(Azure.Mcp.Tools.Monitor.Models.ResourceMetricsResult))]
+[JsonSerializable(typeof(List<Azure.Mcp.Tools.Monitor.Models.ResourceMetricsResult>))]
 [JsonSerializable(typeof(TableListCommand.TableListCommandResult))]
 [JsonSerializable(typeof(TableTypeListCommand.TableTypeListCommandResult))]
 [JsonSerializable(typeof(WebTestsCreateOrUpdateCommand.WebTestsCreateOrUpdateCommandResult))]

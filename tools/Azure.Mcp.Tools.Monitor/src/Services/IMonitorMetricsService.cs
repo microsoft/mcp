@@ -83,4 +83,41 @@ public interface IMonitorMetricsService
         string? searchString = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Queries metrics for multiple resources in a single batch request. All resources must belong to the same
+    /// subscription, Azure region, and resource type.
+    /// </summary>
+    /// <param name="subscription">The subscription ID</param>
+    /// <param name="resourceGroup">The resource group name (optional, applied to all resources)</param>
+    /// <param name="resourceType">The resource type (optional, e.g., 'Microsoft.Storage/storageAccounts', applied to all resources)</param>
+    /// <param name="resources">The names or resource IDs of the resources to query metrics for</param>
+    /// <param name="metricNamespace">Required metric namespace</param>
+    /// <param name="metricNames">List of metric names to query</param>
+    /// <param name="startTime">Optional start time for the query in ISO format</param>
+    /// <param name="endTime">Optional end time for the query in ISO format</param>
+    /// <param name="interval">Optional time interval for data points</param>
+    /// <param name="aggregation">Optional comma-separated aggregation types (Average, Maximum, Minimum, Total, Count)</param>
+    /// <param name="filter">Optional OData filter to apply</param>
+    /// <param name="orderBy">Optional sort order, only valid when <paramref name="filter"/> is specified</param>
+    /// <param name="top">Optional maximum number of time series to retrieve per resource per metric, only valid when <paramref name="filter"/> is specified</param>
+    /// <param name="tenant">Optional tenant ID for multi-tenant scenarios</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of metric results per resource, with time series data</returns>
+    Task<List<ResourceMetricsResult>> QueryMetricsBatchAsync(
+        string subscription,
+        string? resourceGroup,
+        string? resourceType,
+        IEnumerable<string> resources,
+        string metricNamespace,
+        IEnumerable<string> metricNames,
+        string? startTime = null,
+        string? endTime = null,
+        string? interval = null,
+        string? aggregation = null,
+        string? filter = null,
+        string? orderBy = null,
+        int? top = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
 }
