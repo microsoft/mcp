@@ -283,7 +283,7 @@
 # ServiceOwners:                       @agrimayadav @pachaturvedi
 
 # PRLabel: %tools-IoTHub
-tools/Azure.Mcp.Tools.IoTHub/          @adarsh1 @riteshrao @sasundaram @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.IoTHub/         @adarsh1 @riteshrao @sasundaram @microsoft/azure-mcp
 
 # ServiceLabel: %tools-IoTHub
 # ServiceOwners:                       @adarsh1 @riteshrao @sasundaram @microsoft/azure-mcp
