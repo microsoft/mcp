@@ -36,10 +36,23 @@ public class ResilienceManagementCommandTests(
         new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("operation-id")
         {
             Value = "sanitized"
-        }),
-        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("Location")
+        })
+    ];
+
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        .. base.BodyKeySanitizers,
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..subscription")
         {
-            Value = ""
+            Value = "Sanitized"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..healthModelId")
+        {
+            Value = "Sanitized"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..chaosExperimentId")
+        {
+            Value = "Sanitized"
         })
     ];
 
@@ -262,6 +275,100 @@ public class ResilienceManagementCommandTests(
             });
 
         Assert.Equal(JsonValueKind.Object, result.AssertProperty("drillResource").ValueKind);
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: false)]
+    public async Task Should_start_and_end_drill()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+        bool startAccepted = false;
+
+        try
+        {
+            var startResult = await StartDrillAsync(serviceGroup, drillName);
+            startAccepted = true;
+
+            Assert.False(string.IsNullOrEmpty(startResult.AssertProperty("operationId").GetString()));
+            Assert.Equal("Accepted", startResult.AssertProperty("status").GetString());
+
+            var endResult = await EndDrillAsync(serviceGroup, drillName);
+            startAccepted = false;
+
+            Assert.False(string.IsNullOrEmpty(endResult.AssertProperty("operationId").GetString()));
+            Assert.Equal("Accepted", endResult.AssertProperty("status").GetString());
+        }
+        finally
+        {
+            if (startAccepted)
+            {
+                await EndDrillAsync(serviceGroup, drillName);
+            }
+        }
+    }
+
+    private async Task<JsonElement> StartDrillAsync(string serviceGroup, string drillName)
+    {
+        const int maxAttempts = 36;
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            JsonElement? response = await CallToolAsync(
+                "resilience_drill_start",
+                new()
+                {
+                    { "service-group", serviceGroup },
+                    { "drill", drillName },
+                    { "mode", "TestFailover" }
+                },
+                resultProcessor: element => element);
+            Assert.True(response.HasValue);
+
+            var status = response.Value.AssertProperty("status").GetInt32();
+            if (status == 200)
+            {
+                return response.Value.AssertProperty("results");
+            }
+
+            Assert.Equal(409, status);
+            await Task.Delay(PollInterval(15000), TestContext.Current.CancellationToken);
+        }
+
+        Assert.Fail($"The drill start operation was not accepted after {maxAttempts} attempts.");
+        return default;
+    }
+
+    private async Task<JsonElement> EndDrillAsync(string serviceGroup, string drillName)
+    {
+        const int maxAttempts = 36;
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            JsonElement? response = await CallToolAsync(
+                "resilience_drill_end",
+                new()
+                {
+                    { "service-group", serviceGroup },
+                    { "drill", drillName },
+                    { "attestation", "Success" },
+                    { "attestation-notes", "Azure MCP recorded lifecycle test completed." }
+                },
+                resultProcessor: element => element);
+            Assert.True(response.HasValue);
+
+            var status = response.Value.AssertProperty("status").GetInt32();
+            if (status == 200)
+            {
+                return response.Value.AssertProperty("results");
+            }
+
+            Assert.Equal(409, status);
+            await Task.Delay(PollInterval(15000), TestContext.Current.CancellationToken);
+        }
+
+        Assert.Fail($"The drill end operation was not accepted after {maxAttempts} attempts.");
+        return default;
     }
 
     [Fact]

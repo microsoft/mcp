@@ -949,6 +949,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_drill_create | Create a resilience drill for service group <service_group> | clarification-required |
 | resilience_drill_delete | Delete resilience drill <drill_name> from service group <service_group> | none |
 | resilience_drill_delete | Permanently remove drill <drill_name> in service group <service_group> | none |
+| resilience_drill_end | End resilience drill <drill_name> in service group <service_group> with a Success attestation and notes "Validation completed" | none |
+| resilience_drill_end | Stop the running resilience drill <drill_name> in service group <service_group> and attest it as Failed with notes "Validation failed" | none |
 | resilience_drill_get | List all resilience drills in service group <service_group> | none |
 | resilience_drill_get | Get the details of resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_update | Update resilience drill <drill_name> in service group <service_group> to use manual RBAC setup | none |
@@ -960,6 +962,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_drill_resource_get | Get the complete details of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_resource_get | Get drill target <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_resource_get | Retrieve the ARM properties of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_start | Start resilience drill <drill_name> in service group <service_group> in Failover mode | none |
+| resilience_drill_start | Run resilience drill <drill_name> in service group <service_group> as a TestFailover | none |
 | resilience_drill_run_get | List all runs of drill <drill_name> in service group <service_group> | none |
 | resilience_drill_run_get | Get drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resilience_drill_run_resource_get | List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |

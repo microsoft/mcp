@@ -3962,6 +3962,19 @@ azmcp resilience drill create --service-group <service-group> \
 azmcp resilience drill get --service-group <service-group> \
                            [--name <name>]
 
+# Start a new execution of a resilience drill in Failover or TestFailover mode
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill start --service-group <service-group> \
+                             --drill <drill> \
+                             --mode <Failover|TestFailover>
+
+# End the running execution of a resilience drill and attest its outcome
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill end --service-group <service-group> \
+                           --drill <drill> \
+                           --attestation <Success|Failed> \
+                           --attestation-notes <attestation-notes>
+
 # Update mutable properties of a resilience drill
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill update --service-group <service-group> \
@@ -3969,6 +3982,7 @@ azmcp resilience drill update --service-group <service-group> \
                               [--subscription <subscription> --region <region>] \
                               [--rbac-setup-mode <AutomatedCustomRole|AutomatedBuiltinRoles|Manual>] \
                               [--recovery-plan <recovery-plan>]
+
 # Delete a resilience drill from a service group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill delete --service-group <service-group> \
