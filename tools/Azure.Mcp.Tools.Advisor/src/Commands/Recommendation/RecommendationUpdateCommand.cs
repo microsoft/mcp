@@ -25,7 +25,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         Requires subscription context from --subscription, which accepts an Azure subscription ID or name, or from the configured default subscription. Requires --recommendation-id, which is the recommendation's stable ID.
         If no dismissal reason is supplied or the user's intent cannot be mapped to a supported reason, uses Other.
         State changes are rejected for Security category recommendations, and recommendations already marked as resolved by the Advisor platform.
-        Returns a concise shared recommendation object containing the updated lifecycle state and identifying recommendation and resource details.
+        Returns the updated recommendation in the standard ARM resource shape with id, name, type, and properties.
         """,
     Destructive = true,
     Idempotent = true,

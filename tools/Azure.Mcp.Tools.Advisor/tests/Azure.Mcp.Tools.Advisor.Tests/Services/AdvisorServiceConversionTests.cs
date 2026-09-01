@@ -9,35 +9,6 @@ namespace Azure.Mcp.Tools.Advisor.Tests.Services;
 
 public class AdvisorServiceConversionTests
 {
-    [Theory]
-    [InlineData(null, null)]
-    [InlineData("", null)]
-    [InlineData("/subscriptions/abc", null)]
-    [InlineData("/subscriptions/abc/resourceGroups/rg1", null)]
-    [InlineData(
-        "/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/mystorage",
-        "Microsoft.Storage/storageAccounts")]
-    [InlineData(
-        "/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/mystorage/blobServices/default",
-        "Microsoft.Storage/storageAccounts/blobServices")]
-    [InlineData(
-        "/subscriptions/abc/providers/Microsoft.Authorization/roleAssignments/guid",
-        "Microsoft.Authorization/roleAssignments")]
-    public void ParseImpactedResourceType_ExtractsTypePath(string? resourceId, string? expected)
-    {
-        Assert.Equal(expected, AdvisorService.ParseImpactedResourceType(resourceId));
-    }
-
-    [Fact]
-    public void ParseImpactedResourceType_ProviderSegmentAtEnd_ReturnsNull()
-    {
-        // Malformed id where 'providers' appears with no namespace/type after it.
-        // Must not throw — Resource Graph occasionally returns oddly shaped ids.
-        var result = AdvisorService.ParseImpactedResourceType("/subscriptions/abc/providers");
-
-        Assert.Null(result);
-    }
-
     [Fact]
     public void ConvertToAdvisorRecommendationModel_PopulatesAllFields()
     {
@@ -51,7 +22,19 @@ public class AdvisorServiceConversionTests
                 "properties": {
                     "category": "Security",
                     "impact": "High",
-                    "shortDescription": { "problem": "Enable encryption at rest" },
+                    "impactedField": "Microsoft.Compute/virtualMachines",
+                    "impactedValue": "vm1",
+                    "recommendationStatus": "New",
+                    "recommendationDismissReason": "Other",
+                    "postponedUntilDateTime": "2027-07-01T00:00:00Z",
+                    "recommendationTypeId": "Type-A",
+                    "shortDescription": {
+                        "problem": "Enable encryption at rest",
+                        "solution": "Turn on encryption"
+                    },
+                    "extendedProperties": {
+                        "maturityLevel": "Preview"
+                    },
                     "resourceMetadata": {
                         "resourceId": "/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/mystorage"
                     }
@@ -64,15 +47,33 @@ public class AdvisorServiceConversionTests
 
         Assert.Equal(
             "/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/mystorage",
-            result.ResourceId);
-        Assert.Equal("Enable encryption at rest", result.RecommendationText);
-        Assert.Equal("Security", result.Category);
-        Assert.Equal("High", result.Impact);
-        Assert.Equal("Microsoft.Storage/storageAccounts", result.ImpactedResourceType);
-        Assert.Equal("rec1", result.RecommendationId);
-        Assert.Null(result.RecommendationStatus);
-        Assert.Null(result.RecommendationDismissReason);
-        Assert.Null(result.PostponedUntilDateTime);
+            result.Properties.ResourceMetadata?.ResourceId);
+        Assert.Equal(
+            "/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Advisor/recommendations/rec1",
+            result.Id);
+        Assert.Equal("rec1", result.Name);
+        Assert.Equal("Microsoft.Advisor/recommendations", result.Type);
+        Assert.Equal("Enable encryption at rest", result.Properties.ShortDescription?.Problem);
+        Assert.Equal("Turn on encryption", result.Properties.ShortDescription?.Solution);
+        Assert.Equal("Security", result.Properties.Category);
+        Assert.Equal("High", result.Properties.Impact);
+        Assert.Equal("Microsoft.Compute/virtualMachines", result.Properties.ImpactedField);
+        Assert.Equal("vm1", result.Properties.ImpactedValue);
+        Assert.Equal("Type-A", result.Properties.RecommendationTypeId);
+        Assert.Equal("New", result.Properties.RecommendationStatus);
+        Assert.Equal("Other", result.Properties.RecommendationDismissReason);
+        Assert.Equal(
+            DateTimeOffset.Parse("2027-07-01T00:00:00Z"),
+            result.Properties.PostponedUntilDateTime);
+        Assert.Equal("Preview", result.Properties.ExtendedProperties?["maturityLevel"].GetString());
+
+        var serialized = JsonSerializer.Serialize(
+            result,
+            Azure.Mcp.Tools.Advisor.Commands.AdvisorJsonContext.Default.Recommendation);
+        Assert.StartsWith("{\"id\":", serialized);
+        Assert.Contains("\"name\":\"rec1\"", serialized);
+        Assert.Contains("\"type\":\"Microsoft.Advisor/recommendations\"", serialized);
+        Assert.Contains("\"properties\":", serialized);
     }
 
     [Fact]
@@ -92,11 +93,14 @@ public class AdvisorServiceConversionTests
         using var doc = JsonDocument.Parse(json);
         var result = AdvisorService.ConvertToAdvisorRecommendationModel(doc.RootElement);
 
-        Assert.Equal("Unknown", result.ResourceId);
-        Assert.Equal("Right-size your VMs", result.RecommendationText);
-        Assert.Equal("Cost", result.Category);
-        Assert.Null(result.Impact);
-        Assert.Null(result.ImpactedResourceType);
+        Assert.Null(result.Properties.ResourceMetadata);
+        Assert.Equal("Right-size your VMs", result.Properties.ShortDescription?.Problem);
+        Assert.Equal("Cost", result.Properties.Category);
+        Assert.Null(result.Properties.Impact);
+        Assert.Null(result.Properties.RecommendationStatus);
+        Assert.Null(result.Properties.CompletionType);
+        Assert.Null(result.Properties.RecommendationDismissReason);
+        Assert.Null(result.Properties.PostponedUntilDateTime);
     }
 
     [Fact]
@@ -120,7 +124,7 @@ public class AdvisorServiceConversionTests
         using var doc = JsonDocument.Parse(json);
         var result = AdvisorService.ConvertToAdvisorRecommendationModel(doc.RootElement);
 
-        Assert.Equal("Medium", result.Impact);
+        Assert.Equal("Medium", result.Properties.Impact);
     }
 
     [Fact]
@@ -164,12 +168,15 @@ public class AdvisorServiceConversionTests
             """;
 
         using var doc = JsonDocument.Parse(json);
-        var result = AdvisorService.ConvertToUpdatedAdvisorRecommendationModel(doc.RootElement);
+        var result = AdvisorService.ConvertToAdvisorRecommendationModel(doc.RootElement);
 
-        Assert.Equal("rec4", result.RecommendationId);
-        Assert.Equal("Dismissed", result.RecommendationStatus);
-        Assert.Equal("RiskIsAcceptable", result.RecommendationDismissReason);
-        Assert.Equal(DateTimeOffset.Parse("2027-01-02T03:04:05Z"), result.PostponedUntilDateTime);
+        Assert.Equal("rec4", result.Name);
+        Assert.Equal("Dismissed", result.Properties.RecommendationStatus);
+        Assert.Equal("ManuallyCompleted", result.Properties.CompletionType);
+        Assert.Equal("RiskIsAcceptable", result.Properties.RecommendationDismissReason);
+        Assert.Equal(
+            DateTimeOffset.Parse("2027-01-02T03:04:05Z"),
+            result.Properties.PostponedUntilDateTime);
     }
 
     [Fact]
@@ -190,9 +197,9 @@ public class AdvisorServiceConversionTests
             """;
 
         using var doc = JsonDocument.Parse(json);
-        var result = AdvisorService.ConvertToUpdatedAdvisorRecommendationModel(doc.RootElement);
+        var result = AdvisorService.ConvertToAdvisorRecommendationModel(doc.RootElement);
 
-        Assert.Equal("InProgress", result.RecommendationStatus);
-        Assert.Equal("NotRelevant", result.RecommendationDismissReason);
+        Assert.Equal("InProgress", result.Properties.RecommendationStatus);
+        Assert.Equal("NotRelevant", result.Properties.RecommendationDismissReason);
     }
 }

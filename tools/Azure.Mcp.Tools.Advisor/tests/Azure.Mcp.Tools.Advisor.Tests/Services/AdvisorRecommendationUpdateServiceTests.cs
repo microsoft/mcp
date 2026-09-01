@@ -69,9 +69,15 @@ public class AdvisorRecommendationUpdateServiceTests
         Assert.False(properties.TryGetProperty("postponedUntilDateTime", out _));
         Assert.False(properties.TryGetProperty("recommendationDismissReason", out _));
 
-        Assert.Equal("rec-1", result.RecommendationId);
-        Assert.Equal("Completed", result.RecommendationStatus);
-        Assert.Equal("Microsoft.Compute/virtualMachines", result.ImpactedResourceType);
+        Assert.Equal(
+            $"/subscriptions/{SubscriptionId}/providers/Microsoft.Advisor/recommendations/rec-1",
+            result.Id);
+        Assert.Equal("rec-1", result.Name);
+        Assert.Equal("Microsoft.Advisor/recommendations", result.Type);
+        Assert.Equal("Completed", result.Properties.RecommendationStatus);
+        Assert.Equal(
+            "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm",
+            result.Properties.ResourceMetadata?.ResourceId);
     }
 
     [Fact]

@@ -120,7 +120,7 @@ public class AdvisorService(IAzureService azureService)
 
         using var document = JsonDocument.Parse(response.Content.ToStream());
 
-        return ConvertToUpdatedAdvisorRecommendationModel(document.RootElement);
+        return ConvertToAdvisorRecommendationModel(document.RootElement);
     }
 
     private static async Task<Response> SendRecommendationUpdateAsync(
@@ -541,32 +541,10 @@ public class AdvisorService(IAzureService azureService)
 
     private static string SanitizeForKql(string value) => EscapeKqlString(value.Replace("|", string.Empty));
 
-    internal static Recommendation ConvertToAdvisorRecommendationModel(JsonElement item) =>
-        ConvertToAdvisorRecommendationModel(item, includeLifecycleState: false);
-
-    internal static Recommendation ConvertToUpdatedAdvisorRecommendationModel(JsonElement item) =>
-        ConvertToAdvisorRecommendationModel(item, includeLifecycleState: true);
-
-    private static Recommendation ConvertToAdvisorRecommendationModel(
-        JsonElement item,
-        bool includeLifecycleState)
+    internal static Recommendation ConvertToAdvisorRecommendationModel(JsonElement item)
     {
-        var advisorRecommendation = Models.RecommendationData.FromJson(item)
+        return JsonSerializer.Deserialize(item, AdvisorJsonContext.Default.Recommendation)
             ?? throw new InvalidOperationException("Failed to parse Advisor recommendation data");
-
-        var properties = advisorRecommendation.Properties;
-        var resourceId = properties?.ResourceMetadata?.ResourceId ?? "Unknown";
-
-        return new(
-            ResourceId: resourceId,
-            RecommendationText: properties?.ShortDescription?.Problem ?? "Unknown",
-            Category: properties?.Category ?? "Unknown",
-            Impact: properties?.Impact,
-            ImpactedResourceType: ParseImpactedResourceType(resourceId),
-            RecommendationId: advisorRecommendation.ResourceName,
-            RecommendationStatus: includeLifecycleState ? properties?.RecommendationStatus : null,
-            RecommendationDismissReason: includeLifecycleState ? properties?.RecommendationDismissReason : null,
-            PostponedUntilDateTime: includeLifecycleState ? properties?.PostponedUntilDateTime : null);
     }
 
     private static RequestFailedException CreateRecommendationUpdateException(Response response)
@@ -615,36 +593,4 @@ public class AdvisorService(IAzureService azureService)
             null);
     }
 
-    internal static string? ParseImpactedResourceType(string? resourceId)
-    {
-        if (string.IsNullOrEmpty(resourceId))
-        {
-            return null;
-        }
-
-        var segments = resourceId.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        string? ns = null;
-        var typeParts = new List<string>();
-
-        for (var i = 0; i < segments.Length; i++)
-        {
-            if (!string.Equals(segments[i], "providers", StringComparison.OrdinalIgnoreCase) || i + 2 >= segments.Length)
-            {
-                continue;
-            }
-
-            ns = segments[i + 1];
-            typeParts.Clear();
-            typeParts.Add(segments[i + 2]);
-
-            for (var j = i + 4; j < segments.Length; j += 2)
-            {
-                typeParts.Add(segments[j]);
-            }
-
-            break;
-        }
-
-        return ns is null ? null : $"{ns}/{string.Join('/', typeParts)}";
-    }
 }

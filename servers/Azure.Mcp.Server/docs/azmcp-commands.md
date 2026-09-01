@@ -324,7 +324,7 @@ azmcp server info
 ```bash
 # List Advisor recommendations in a subscription, with optional server-side filters
 # Only active recommendations (status 'New') are returned; dismissed and postponed ones are excluded
-# Each result includes the stable recommendation ID
+# Each result uses the standard ARM resource shape; name contains the stable recommendation ID
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation list --subscription <subscription> \
                                   [--top <top>] \
@@ -340,7 +340,7 @@ azmcp advisor recommendation list --subscription <subscription> \
 # Dismissed, or Completed. Postponed requires a future ISO 8601 date and time with a timezone offset. For Dismissed,
 # an omitted reason or natural-language intent that cannot be mapped to a supported reason defaults to Other. New reactivates
 # a postponed or dismissed recommendation. Security and platform-resolved recommendations cannot
-# be updated. Returns a concise shared recommendation object with the updated lifecycle and identifying details.
+# be updated. Returns the updated recommendation in the standard ARM resource shape with id, name, type, and properties.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation update --subscription <subscription> \
                                     --recommendation-id <recommendation-id> \

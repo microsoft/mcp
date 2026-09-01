@@ -65,9 +65,9 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         // Arrange
         var expectedRecommendations = new List<Models.Recommendation>
         {
-            new(ResourceId: "recId1", RecommendationText: "Recommendation 1", Category: "HighAvailability"),
-            new(ResourceId: "recId2", RecommendationText: "Recommendation 2", Category: "Cost"),
-            new(ResourceId: "recId3", RecommendationText: "Recommendation 3", Category: "Performance")
+            new(new(Category: "HighAvailability", ShortDescription: new("Recommendation 1", null)), Name: "recId1"),
+            new(new(Category: "Cost", ShortDescription: new("Recommendation 2", null)), Name: "recId2"),
+            new(new(Category: "Performance", ShortDescription: new("Recommendation 3", null)), Name: "recId3")
         };
         Service.ListRecommendationsAsync(
             Arg.Any<string>(),
@@ -85,9 +85,13 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
 
         Assert.Equal(expectedRecommendations.Count, result.Recommendations.Count);
-        Assert.Equal(expectedRecommendations[0].ResourceId, result.Recommendations[0].ResourceId);
-        Assert.Equal(expectedRecommendations[0].RecommendationText, result.Recommendations[0].RecommendationText);
-        Assert.Equal(expectedRecommendations[0].Category, result.Recommendations[0].Category);
+        Assert.Equal(expectedRecommendations[0].Name, result.Recommendations[0].Name);
+        Assert.Equal(
+            expectedRecommendations[0].Properties.ShortDescription,
+            result.Recommendations[0].Properties.ShortDescription);
+        Assert.Equal(
+            expectedRecommendations[0].Properties.Category,
+            result.Recommendations[0].Properties.Category);
 
         // Verify the mock was called
         await Service.Received(1).ListRecommendationsAsync(

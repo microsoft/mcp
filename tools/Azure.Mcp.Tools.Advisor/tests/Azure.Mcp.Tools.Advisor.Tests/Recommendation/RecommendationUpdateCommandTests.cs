@@ -17,12 +17,16 @@ public class RecommendationUpdateCommandTests
     : SubscriptionCommandUnitTestsBase<RecommendationUpdateCommand, IAdvisorService>
 {
     private static readonly Models.Recommendation UpdatedRecommendation = new(
-        ResourceId: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm",
-        RecommendationText: "Enable availability zones",
-        Category: "HighAvailability",
-        Impact: "High",
-        RecommendationId: "rec-1",
-        RecommendationStatus: nameof(RecommendationStatus.Completed));
+        Properties: new Models.RecommendationProperties(
+            Category: "HighAvailability",
+            Impact: "High",
+            RecommendationStatus: nameof(RecommendationStatus.Completed),
+            ShortDescription: new("Enable availability zones", "Deploy across zones"),
+            ResourceMetadata: new(
+                "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm")),
+        Id: "/subscriptions/sub/providers/Microsoft.Advisor/recommendations/rec-1",
+        Name: "rec-1",
+        Type: "Microsoft.Advisor/recommendations");
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
