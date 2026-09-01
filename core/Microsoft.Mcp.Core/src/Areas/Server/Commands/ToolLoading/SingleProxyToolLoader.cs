@@ -24,10 +24,10 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 public sealed class SingleProxyToolLoader(
     ICommandFactory commandFactory,
-    IMcpDiscoveryStrategy? discoveryStrategy,
     ILogger<SingleProxyToolLoader> logger,
     IOptions<ServerRuntimeConfiguration> configuration,
-    IOptions<McpServerConfiguration> serverConfiguration) : BaseToolLoader(logger)
+    IOptions<McpServerConfiguration> serverConfiguration,
+    IMcpDiscoveryStrategy? discoveryStrategy = null) : BaseToolLoader(logger)
 {
     private readonly ICommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
     private readonly IMcpDiscoveryStrategy? _discoveryStrategy = discoveryStrategy;
