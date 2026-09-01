@@ -596,6 +596,9 @@ azmcp applicationinsights recommendation list --subscription <subscription> \
                                               --resource-group <resource-group>
 ```
 
+> [!NOTE]
+> The `applicationinsights recommendation list` command does not support `--auth-method`.
+
 ### Azure App Service Operations
 
 #### Databases
@@ -2355,6 +2358,9 @@ azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> -
                   --query <kql-query>
 
 ```
+
+> [!NOTE]
+> The `kusto cluster get`, `kusto cluster list`, `kusto database list`, `kusto query`, `kusto sample`, `kusto table list`, and `kusto table schema` commands do not support `--auth-method`.
 
 ### Azure Database for MySQL Operations
 
@@ -4697,6 +4703,9 @@ azmcp storage table list --subscription <subscription> \
                          --account <account>
 ```
 
+> [!NOTE]
+> The `storage account get`, `storage blob get`, `storage blob upload`, `storage blob container create`, `storage blob container get`, and `storage table list` commands do not support `--auth-method`.
+
 ### Azure Storage Sync Operations
 
 #### Storage Sync Service
@@ -4992,6 +5001,9 @@ azmcp virtualdesktop hostpool host user-list --subscription <subscription> \
                                                            --sessionhost <sessionhost-name> \
                                                            [--resource-group <resource-group>]
 ```
+
+> [!NOTE]
+> The `virtualdesktop hostpool list`, `virtualdesktop hostpool host list`, and `virtualdesktop hostpool host user-list` commands do not support `--auth-method`.
 
 #### Resource Group Optimization
 
