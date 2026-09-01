@@ -4083,6 +4083,8 @@ azmcp resourcehealth availability-status get --subscription <subscription> \
 azmcp resourcehealth health-events list --subscription <subscription> \
                                                 [--event-type <event-type>] \
                                                 [--status <status>] \
+                                                [--tracking-id <tracking-id>] \
+                                                [--filter <odata-filter>] \
                                                 [--query-start-time <start-time>] \
                                                 [--query-end-time <end-time>]
 ```
