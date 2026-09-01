@@ -14,7 +14,7 @@ The evaluator generates specifications; it does not execute them. Use `eng/scrip
 CI installs the Vally CLI with:
 
 ```powershell
-npm install --global @microsoft/vally-cli@0.13.0
+npm install --global @microsoft/vally-cli@0.15.0
 ```
 
 See [Testing with Vally](../../../docs/testing-with-vally.md) for repository-wide setup and eval authoring guidance.
