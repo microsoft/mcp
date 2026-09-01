@@ -8,6 +8,8 @@ using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
+using Azure.Mcp.Tools.Compute.Commands.Vm;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Xunit;
 
@@ -249,13 +251,46 @@ public class OptionSchemaGeneratorTests
             OutputSchemaTestJsonContext.Default.KeyValueLockSetCommandResult);
     }
 
+    [Fact]
+    public void CreateOutputSchema_PerPropertyWhenWritingNull_MatchesSerializedPayload()
+    {
+        var result = new VmGetCommand.VmGetResult(null, null, []);
+        var typeInfo = PerPropertyIgnoreJsonContext.Default.VmGetResult;
+        var schema = OptionSchemaGenerator.CreateOutputSchema(typeInfo);
+        var payload = JsonSerializer.SerializeToElement(result, typeInfo);
+
+        Assert.False(payload.TryGetProperty("vm", out _));
+        Assert.False(payload.TryGetProperty("instanceView", out _));
+        Assert.True(payload.TryGetProperty("vms", out _));
+        Assert.False(schema.ContainsKey("required"));
+        AssertRequiredPropertiesArePresent(schema, payload);
+    }
+
+    [Fact]
+    public void CreateOutputSchema_PerPropertyNever_OverridesDefaultIgnoreCondition()
+    {
+        var result = new RecoveryPlanDeleteCommand.RecoveryPlanDeleteCommandResult(false, "plan");
+        var typeInfo = PerPropertyIgnoreJsonContext.Default.RecoveryPlanDeleteCommandResult;
+        var schema = OptionSchemaGenerator.CreateOutputSchema(typeInfo);
+        var payload = JsonSerializer.SerializeToElement(result, typeInfo);
+
+        Assert.False(payload.GetProperty("deleted").GetBoolean());
+        var required = Assert.IsType<JsonArray>(schema["required"]);
+        Assert.Contains(required, property => (string?)property == "deleted");
+        AssertRequiredPropertiesArePresent(schema, payload);
+    }
+
     private static void AssertOmittedLabelConforms<T>(T result, JsonTypeInfo<T> typeInfo)
     {
         var schema = OptionSchemaGenerator.CreateOutputSchema(typeInfo);
         var payload = JsonSerializer.SerializeToElement(result, typeInfo);
 
         Assert.False(payload.TryGetProperty("label", out _));
+        AssertRequiredPropertiesArePresent(schema, payload);
+    }
 
+    private static void AssertRequiredPropertiesArePresent(JsonObject schema, JsonElement payload)
+    {
         if (schema["required"] is not JsonArray required)
         {
             return;

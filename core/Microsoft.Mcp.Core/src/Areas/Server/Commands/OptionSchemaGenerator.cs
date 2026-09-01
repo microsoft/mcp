@@ -130,7 +130,7 @@ internal static class OptionSchemaGenerator
 
         if (schema is JsonObject rootObject && StructuredOutputJson.IsObjectRoot(rootObject))
         {
-            ReconcileRequiredProperties(rootObject, resultTypeInfo.Options.DefaultIgnoreCondition);
+            ReconcileRequiredProperties(rootObject, resultTypeInfo);
             return rootObject;
         }
 
@@ -142,24 +142,26 @@ internal static class OptionSchemaGenerator
         };
     }
 
-    private static void ReconcileRequiredProperties(JsonObject schema, JsonIgnoreCondition defaultIgnoreCondition)
+    private static void ReconcileRequiredProperties(JsonObject schema, JsonTypeInfo resultTypeInfo)
     {
         if (schema["required"] is not JsonArray required
-            || schema["properties"] is not JsonObject properties
-            || defaultIgnoreCondition is not (JsonIgnoreCondition.WhenWritingNull or JsonIgnoreCondition.WhenWritingDefault))
+            || schema["properties"] is not JsonObject properties)
         {
             return;
         }
 
+        var propertyMetadata = resultTypeInfo.Properties.ToDictionary(property => property.Name, StringComparer.Ordinal);
         for (var index = required.Count - 1; index >= 0; index--)
         {
             var propertyName = required[index]?.GetValue<string>();
-            if (propertyName is null || !properties.TryGetPropertyValue(propertyName, out var propertySchema))
+            if (propertyName is null
+                || !properties.TryGetPropertyValue(propertyName, out var propertySchema)
+                || !propertyMetadata.TryGetValue(propertyName, out var propertyInfo))
             {
                 continue;
             }
 
-            if (defaultIgnoreCondition == JsonIgnoreCondition.WhenWritingDefault || AllowsNull(propertySchema))
+            if (CanBeOmitted(propertyInfo, resultTypeInfo.Options.DefaultIgnoreCondition, propertySchema))
             {
                 required.RemoveAt(index);
             }
@@ -169,6 +171,37 @@ internal static class OptionSchemaGenerator
         {
             schema.Remove("required");
         }
+    }
+
+    private static bool CanBeOmitted(
+        JsonPropertyInfo propertyInfo,
+        JsonIgnoreCondition defaultIgnoreCondition,
+        JsonNode? propertySchema)
+    {
+        JsonIgnoreAttribute? ignoreAttribute = null;
+        if (propertyInfo.ShouldSerialize is not null)
+        {
+            // Source-generated metadata uses ShouldSerialize for property-level JsonIgnore conditions.
+            // Read the attribute to distinguish Never from conditions that can omit the property.
+            ignoreAttribute = propertyInfo.AttributeProvider?
+                .GetCustomAttributes(typeof(JsonIgnoreAttribute), inherit: true)
+                .OfType<JsonIgnoreAttribute>()
+                .SingleOrDefault();
+
+            if (ignoreAttribute is null)
+            {
+                // A custom ShouldSerialize predicate can omit the property, so it cannot be required.
+                return true;
+            }
+        }
+
+        var ignoreCondition = ignoreAttribute?.Condition ?? defaultIgnoreCondition;
+        return ignoreCondition switch
+        {
+            JsonIgnoreCondition.Always or JsonIgnoreCondition.WhenWritingDefault => true,
+            JsonIgnoreCondition.WhenWritingNull => AllowsNull(propertySchema),
+            _ => false,
+        };
     }
 
     private static bool AllowsNull(JsonNode? schema)
