@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.NetAppFiles.Commands;
 using Azure.Mcp.Tools.NetAppFiles.Commands.Account;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Services;
+using Azure.Mcp.Tests.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
@@ -20,32 +21,12 @@ using Xunit.Sdk;
 
 namespace Azure.Mcp.Tools.NetAppFiles.UnitTests.Account;
 
-public class AccountCreateCommandTests
+public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<AccountCreateCommand, INetAppFilesService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly INetAppFilesService _netAppFilesService;
-    private readonly ILogger<AccountCreateCommand> _logger;
-    private readonly AccountCreateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public AccountCreateCommandTests()
-    {
-        _netAppFilesService = Substitute.For<INetAppFilesService>();
-        _logger = Substitute.For<ILogger<AccountCreateCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_netAppFilesService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _netAppFilesService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("create", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -69,7 +50,7 @@ public class AccountCreateCommandTests
                 ResourceGroup: "myrg",
                 ProvisioningState: "Succeeded");
 
-            _netAppFilesService.CreateAccount(
+            Service.CreateAccount(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -91,10 +72,8 @@ public class AccountCreateCommandTests
                 .Returns(expectedAccount);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -113,7 +92,6 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_CreatesAccount_Successfully()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var resourceGroup = "myrg";
         var location = "eastus";
@@ -127,7 +105,7 @@ public class AccountCreateCommandTests
             ResourceGroup: resourceGroup,
             ProvisioningState: "Succeeded");
 
-        _netAppFilesService.CreateAccount(
+        Service.CreateAccount(
             Arg.Is(account), Arg.Is(resourceGroup), Arg.Is(location), Arg.Is(subscription),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
@@ -144,13 +122,11 @@ public class AccountCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedAccount));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", account, "--resource-group", resourceGroup,
             "--location", location, "--subscription", subscription
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -172,10 +148,9 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
 
-        _netAppFilesService.CreateAccount(
+        Service.CreateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<Dictionary<string, string>?>(),
@@ -193,13 +168,11 @@ public class AccountCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--resource-group", "myrg",
             "--location", "eastus", "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -212,8 +185,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesConflict()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateAccount(
+        Service.CreateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<Dictionary<string, string>?>(),
@@ -231,13 +203,11 @@ public class AccountCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Account already exists"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--resource-group", "myrg",
             "--location", "eastus", "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -249,8 +219,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateAccount(
+        Service.CreateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<Dictionary<string, string>?>(),
@@ -268,13 +237,11 @@ public class AccountCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Resource group not found"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--resource-group", "nonexistentrg",
             "--location", "eastus", "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -286,8 +253,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateAccount(
+        Service.CreateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<Dictionary<string, string>?>(),
@@ -305,13 +271,11 @@ public class AccountCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--resource-group", "myrg",
             "--location", "eastus", "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -323,8 +287,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateAccount(
+        Service.CreateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<Dictionary<string, string>?>(),
@@ -342,13 +305,11 @@ public class AccountCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<NetAppAccountCreateResult>(new Exception("Test error")));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--resource-group", "myrg",
             "--location", "eastus", "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -360,7 +321,6 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var expectedAccount = new NetAppAccountCreateResult(
             Id: "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount",
             Name: "myanfaccount",
@@ -369,7 +329,7 @@ public class AccountCreateCommandTests
             ResourceGroup: "myrg",
             ProvisioningState: "Succeeded");
 
-        _netAppFilesService.CreateAccount(
+        Service.CreateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<Dictionary<string, string>?>(),
@@ -387,13 +347,11 @@ public class AccountCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedAccount));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--resource-group", "myrg",
             "--location", "westus2", "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response.Results);
@@ -414,7 +372,6 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var resourceGroup = "myrg";
         var location = "eastus";
@@ -428,7 +385,7 @@ public class AccountCreateCommandTests
             ResourceGroup: resourceGroup,
             ProvisioningState: "Succeeded");
 
-        _netAppFilesService.CreateAccount(
+        Service.CreateAccount(
             account, resourceGroup, location, subscription,
             null,
             null,
@@ -445,17 +402,15 @@ public class AccountCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedAccount);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", account, "--resource-group", resourceGroup,
             "--location", location, "--subscription", subscription
         ]);
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _netAppFilesService.Received(1).CreateAccount(
+        await Service.Received(1).CreateAccount(
             account, resourceGroup, location, subscription,
             null,
             null,
@@ -476,7 +431,6 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_CallsServiceWithCreateOptionalParameters()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var resourceGroup = "myrg";
         var location = "eastus";
@@ -493,7 +447,7 @@ public class AccountCreateCommandTests
             ResourceGroup: resourceGroup,
             ProvisioningState: "Succeeded");
 
-        _netAppFilesService.CreateAccount(
+        Service.CreateAccount(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -514,7 +468,8 @@ public class AccountCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedAccount);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", account,
             "--resource-group", resourceGroup,
             "--location", location,
@@ -532,12 +487,9 @@ public class AccountCreateCommandTests
             "--nfsV4IdDomain", "contoso.local"
         ]);
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _netAppFilesService.Received(1).CreateAccount(
+        await Service.Received(1).CreateAccount(
             account,
             resourceGroup,
             location,

@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.NetAppFiles.Commands;
 using Azure.Mcp.Tools.NetAppFiles.Commands.BackupPolicy;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Services;
+using Azure.Mcp.Tests.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
@@ -20,33 +21,12 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.NetAppFiles.UnitTests.BackupPolicy;
 
-public class BackupPolicyGetCommandTests
+public class BackupPolicyGetCommandTests : SubscriptionCommandUnitTestsBase<BackupPolicyGetCommand, INetAppFilesService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly INetAppFilesService _netAppFilesService;
-    private readonly ILogger<BackupPolicyGetCommand> _logger;
-    private readonly BackupPolicyGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public BackupPolicyGetCommandTests()
-    {
-        _netAppFilesService = Substitute.For<INetAppFilesService>();
-        _logger = Substitute.For<ILogger<BackupPolicyGetCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_netAppFilesService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _netAppFilesService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public async Task ExecuteAsync_NoBackupPolicyParameter_ReturnsAllBackupPolicies()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var expectedPolicies = new ResourceQueryResults<BackupPolicyInfo>(
         [
@@ -54,7 +34,7 @@ public class BackupPolicyGetCommandTests
             new("account1/policy2", "westus", "rg2", "Succeeded", 7, 4, 6, 1, false)
         ], false);
 
-        _netAppFilesService.GetBackupPolicyDetails(
+        Service.GetBackupPolicyDetails(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -65,10 +45,8 @@ public class BackupPolicyGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedPolicies));
 
-        var args = _commandDefinition.Parse(["--subscription", subscription]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(["--subscription", subscription]);
 
         // Assert
         Assert.NotNull(response);
@@ -87,10 +65,9 @@ public class BackupPolicyGetCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoBackupPolicies()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
-        _netAppFilesService.GetBackupPolicyDetails(
+        Service.GetBackupPolicyDetails(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -101,10 +78,8 @@ public class BackupPolicyGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<BackupPolicyInfo>([], false));
 
-        var args = _commandDefinition.Parse(["--subscription", subscription]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(["--subscription", subscription]);
 
         // Assert
         Assert.NotNull(response);
@@ -121,11 +96,10 @@ public class BackupPolicyGetCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
         var subscription = "sub123";
 
-        _netAppFilesService.GetBackupPolicyDetails(
+        Service.GetBackupPolicyDetails(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -136,10 +110,8 @@ public class BackupPolicyGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse(["--subscription", subscription]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(["--subscription", subscription]);
 
         // Assert
         Assert.NotNull(response);
@@ -150,7 +122,7 @@ public class BackupPolicyGetCommandTests
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("get", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -171,15 +143,13 @@ public class BackupPolicyGetCommandTests
                 [new("account1/policy1", "eastus", "rg1", "Succeeded", 5, 4, 12, 3, true)],
                 false);
 
-            _netAppFilesService.GetBackupPolicyDetails(
+            Service.GetBackupPolicyDetails(
                 Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(expectedPolicies));
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -198,7 +168,6 @@ public class BackupPolicyGetCommandTests
     public async Task ExecuteAsync_ReturnsBackupPolicyDetails_WhenPolicyExists()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var backupPolicy = "mypolicy";
         var subscription = "sub123";
@@ -206,14 +175,12 @@ public class BackupPolicyGetCommandTests
             [new($"{account}/{backupPolicy}", "eastus", "rg1", "Succeeded", 5, 4, 12, 3, true)],
             false);
 
-        _netAppFilesService.GetBackupPolicyDetails(
+        Service.GetBackupPolicyDetails(
             Arg.Is(account), Arg.Is(backupPolicy), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedPolicies));
 
-        var args = _commandDefinition.Parse(["--account", account, "--backupPolicy", backupPolicy, "--subscription", subscription]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(["--account", account, "--backupPolicy", backupPolicy, "--subscription", subscription]);
 
         // Assert
         Assert.NotNull(response);
@@ -235,17 +202,14 @@ public class BackupPolicyGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
-        _netAppFilesService.GetBackupPolicyDetails(
+        Service.GetBackupPolicyDetails(
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var parseResult = _commandDefinition.Parse(["--subscription", subscription]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(["--subscription", subscription]);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -257,18 +221,15 @@ public class BackupPolicyGetCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var backupPolicy = "nonexistentpolicy";
 
-        _netAppFilesService.GetBackupPolicyDetails(
+        Service.GetBackupPolicyDetails(
             Arg.Any<string?>(), Arg.Is(backupPolicy), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Backup policy not found"));
 
-        var parseResult = _commandDefinition.Parse(["--backupPolicy", backupPolicy, "--subscription", subscription]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(["--backupPolicy", backupPolicy, "--subscription", subscription]);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -279,17 +240,14 @@ public class BackupPolicyGetCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
 
-        _netAppFilesService.GetBackupPolicyDetails(
+        Service.GetBackupPolicyDetails(
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
-        var parseResult = _commandDefinition.Parse(["--subscription", subscription]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(["--subscription", subscription]);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -300,20 +258,17 @@ public class BackupPolicyGetCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var subscription = "sub123";
         var expectedPolicies = new ResourceQueryResults<BackupPolicyInfo>(
             [new("account1/policy1", "eastus", "rg1", "Succeeded", 5, 4, 12, 3, true)],
             false);
 
-        _netAppFilesService.GetBackupPolicyDetails(
+        Service.GetBackupPolicyDetails(
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedPolicies));
 
-        var args = _commandDefinition.Parse(["--subscription", subscription]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(["--subscription", subscription]);
 
         // Assert
         Assert.NotNull(response.Results);

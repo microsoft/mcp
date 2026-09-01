@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.NetAppFiles.Commands;
 using Azure.Mcp.Tools.NetAppFiles.Commands.Volume;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Services;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.NetAppFiles.Services.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -20,32 +21,12 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.NetAppFiles.UnitTests.Volume;
 
-public class VolumeCreateCommandTests
+public class VolumeCreateCommandTests : SubscriptionCommandUnitTestsBase<VolumeCreateCommand, INetAppFilesService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly INetAppFilesService _netAppFilesService;
-    private readonly ILogger<VolumeCreateCommand> _logger;
-    private readonly VolumeCreateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public VolumeCreateCommandTests()
-    {
-        _netAppFilesService = Substitute.For<INetAppFilesService>();
-        _logger = Substitute.For<ILogger<VolumeCreateCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_netAppFilesService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _netAppFilesService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("create", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -77,7 +58,7 @@ public class VolumeCreateCommandTests
                 SubnetId: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
                 ProtocolTypes: ["NFSv3"]);
 
-            _netAppFilesService.CreateVolume(
+            Service.CreateVolume(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -91,10 +72,8 @@ public class VolumeCreateCommandTests
                 .Returns(expectedVolume);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -113,7 +92,6 @@ public class VolumeCreateCommandTests
     public async Task ExecuteAsync_CreatesVolume_Successfully()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var pool = "mypool";
         var volume = "myvol";
@@ -137,7 +115,7 @@ public class VolumeCreateCommandTests
             SubnetId: subnetId,
             ProtocolTypes: ["NFSv3"]);
 
-        _netAppFilesService.CreateVolume(
+        Service.CreateVolume(
             Arg.Is(account), Arg.Is(pool), Arg.Is(volume),
             Arg.Is(resourceGroup), Arg.Is(location), Arg.Is(subscription),
             Arg.Is<NetAppVolumeCreateParameters>(p =>
@@ -147,15 +125,13 @@ public class VolumeCreateCommandTests
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVolume));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", account, "--pool", pool, "--volume", volume,
             "--resource-group", resourceGroup, "--location", location,
             "--creationToken", creationToken, "--usageThreshold", usageThreshold.ToString(),
             "--subnetId", subnetId, "--subscription", subscription
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -183,26 +159,23 @@ public class VolumeCreateCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
 
-        _netAppFilesService.CreateVolume(
+        Service.CreateVolume(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<NetAppVolumeCreateParameters>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
             "--resource-group", "myrg", "--location", "eastus",
             "--creationToken", "myvol", "--usageThreshold", "107374182400",
             "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -215,24 +188,21 @@ public class VolumeCreateCommandTests
     public async Task ExecuteAsync_HandlesConflict()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateVolume(
+        Service.CreateVolume(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<NetAppVolumeCreateParameters>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Volume already exists"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
             "--resource-group", "myrg", "--location", "eastus",
             "--creationToken", "myvol", "--usageThreshold", "107374182400",
             "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -244,24 +214,21 @@ public class VolumeCreateCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateVolume(
+        Service.CreateVolume(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<NetAppVolumeCreateParameters>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Resource group not found"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
             "--resource-group", "nonexistentrg", "--location", "eastus",
             "--creationToken", "myvol", "--usageThreshold", "107374182400",
             "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -273,24 +240,21 @@ public class VolumeCreateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateVolume(
+        Service.CreateVolume(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<NetAppVolumeCreateParameters>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
             "--resource-group", "myrg", "--location", "eastus",
             "--creationToken", "myvol", "--usageThreshold", "107374182400",
             "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -302,24 +266,21 @@ public class VolumeCreateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateVolume(
+        Service.CreateVolume(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<NetAppVolumeCreateParameters>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<NetAppVolumeCreateResult>(new Exception("Test error")));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
             "--resource-group", "myrg", "--location", "eastus",
             "--creationToken", "myvol", "--usageThreshold", "107374182400",
             "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -331,7 +292,6 @@ public class VolumeCreateCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var expectedVolume = new NetAppVolumeCreateResult(
             Id: "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvol",
             Name: "myanfaccount/mypool/myvol",
@@ -345,23 +305,21 @@ public class VolumeCreateCommandTests
             SubnetId: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
             ProtocolTypes: ["NFSv3", "NFSv4.1"]);
 
-        _netAppFilesService.CreateVolume(
+        Service.CreateVolume(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<NetAppVolumeCreateParameters>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVolume));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
             "--resource-group", "myrg", "--location", "eastus",
             "--creationToken", "myvol", "--usageThreshold", "214748364800",
             "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response.Results);
@@ -388,7 +346,6 @@ public class VolumeCreateCommandTests
     public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var pool = "mypool";
         var volume = "myvol";
@@ -412,7 +369,7 @@ public class VolumeCreateCommandTests
             SubnetId: subnetId,
             ProtocolTypes: ["NFSv3"]);
 
-        _netAppFilesService.CreateVolume(
+        Service.CreateVolume(
             account, pool, volume, resourceGroup, location, subscription,
             Arg.Is<NetAppVolumeCreateParameters>(p =>
                 p.CreationToken == creationToken &&
@@ -422,7 +379,8 @@ public class VolumeCreateCommandTests
             null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedVolume);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", account, "--pool", pool, "--volume", volume,
             "--resource-group", resourceGroup, "--location", location,
             "--creationToken", creationToken, "--usageThreshold", usageThreshold.ToString(),
@@ -430,12 +388,9 @@ public class VolumeCreateCommandTests
             "--serviceLevel", "Premium"
         ]);
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _netAppFilesService.Received(1).CreateVolume(
+        await Service.Received(1).CreateVolume(
             account, pool, volume, resourceGroup, location, subscription,
             Arg.Is<NetAppVolumeCreateParameters>(p =>
                 p.CreationToken == creationToken &&
@@ -449,17 +404,14 @@ public class VolumeCreateCommandTests
     public async Task ExecuteAsync_RejectsNoWaitArgument()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
             "--resource-group", "myrg", "--location", "eastus",
             "--creationToken", "myvol", "--usageThreshold", "107374182400",
             "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
             "--subscription", "sub123", "--no-wait"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -470,17 +422,14 @@ public class VolumeCreateCommandTests
     public async Task ExecuteAsync_RejectsAcquirePolicyTokenArgument()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
             "--resource-group", "myrg", "--location", "eastus",
             "--creationToken", "myvol", "--usageThreshold", "107374182400",
             "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
             "--subscription", "sub123", "--acquirePolicyToken"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.NetAppFiles.Commands;
 using Azure.Mcp.Tools.NetAppFiles.Commands.BackupVault;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Services;
+using Azure.Mcp.Tests.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
@@ -20,32 +21,12 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.NetAppFiles.UnitTests.BackupVault;
 
-public class BackupVaultCreateCommandTests
+public class BackupVaultCreateCommandTests : SubscriptionCommandUnitTestsBase<BackupVaultCreateCommand, INetAppFilesService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly INetAppFilesService _netAppFilesService;
-    private readonly ILogger<BackupVaultCreateCommand> _logger;
-    private readonly BackupVaultCreateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public BackupVaultCreateCommandTests()
-    {
-        _netAppFilesService = Substitute.For<INetAppFilesService>();
-        _logger = Substitute.For<ILogger<BackupVaultCreateCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_netAppFilesService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _netAppFilesService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("create", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -70,7 +51,7 @@ public class BackupVaultCreateCommandTests
                 ResourceGroup: "myrg",
                 ProvisioningState: "Succeeded");
 
-            _netAppFilesService.CreateBackupVault(
+            Service.CreateBackupVault(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -83,10 +64,8 @@ public class BackupVaultCreateCommandTests
                 .Returns(expectedVault);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -105,7 +84,6 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_CreatesBackupVault_Successfully()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var backupVault = "myvault";
         var resourceGroup = "myrg";
@@ -120,20 +98,18 @@ public class BackupVaultCreateCommandTests
             ResourceGroup: resourceGroup,
             ProvisioningState: "Succeeded");
 
-        _netAppFilesService.CreateBackupVault(
+        Service.CreateBackupVault(
             Arg.Is(account), Arg.Is(backupVault), Arg.Is(resourceGroup), Arg.Is(location), Arg.Is(subscription),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVault));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", account, "--backupVault", backupVault,
             "--resource-group", resourceGroup, "--location", location,
             "--subscription", subscription
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -155,10 +131,9 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
 
-        _netAppFilesService.CreateBackupVault(
+        Service.CreateBackupVault(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<Dictionary<string, string>?>(),
@@ -166,14 +141,12 @@ public class BackupVaultCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--backupVault", "myvault",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -186,8 +159,7 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_HandlesConflict()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateBackupVault(
+        Service.CreateBackupVault(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<Dictionary<string, string>?>(),
@@ -195,14 +167,12 @@ public class BackupVaultCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Backup vault already exists"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--backupVault", "myvault",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -214,8 +184,7 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateBackupVault(
+        Service.CreateBackupVault(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<Dictionary<string, string>?>(),
@@ -223,14 +192,12 @@ public class BackupVaultCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Account not found"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--backupVault", "myvault",
             "--resource-group", "nonexistentrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -242,8 +209,7 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateBackupVault(
+        Service.CreateBackupVault(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<Dictionary<string, string>?>(),
@@ -251,14 +217,12 @@ public class BackupVaultCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--backupVault", "myvault",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -270,8 +234,7 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateBackupVault(
+        Service.CreateBackupVault(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<Dictionary<string, string>?>(),
@@ -279,14 +242,12 @@ public class BackupVaultCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<BackupVaultCreateResult>(new Exception("Test error")));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--backupVault", "myvault",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -298,7 +259,6 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var expectedVault = new BackupVaultCreateResult(
             Id: "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/backupVaults/myvault",
             Name: "myanfaccount/myvault",
@@ -307,7 +267,7 @@ public class BackupVaultCreateCommandTests
             ResourceGroup: "myrg",
             ProvisioningState: "Succeeded");
 
-        _netAppFilesService.CreateBackupVault(
+        Service.CreateBackupVault(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<Dictionary<string, string>?>(),
@@ -315,14 +275,12 @@ public class BackupVaultCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVault));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--backupVault", "myvault",
             "--resource-group", "myrg", "--location", "westus2",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response.Results);
@@ -343,7 +301,6 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var backupVault = "myvault";
         var resourceGroup = "myrg";
@@ -358,23 +315,21 @@ public class BackupVaultCreateCommandTests
             ResourceGroup: resourceGroup,
             ProvisioningState: "Succeeded");
 
-        _netAppFilesService.CreateBackupVault(
+        Service.CreateBackupVault(
             account, backupVault, resourceGroup, location, subscription,
             null, null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedVault);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", account, "--backupVault", backupVault,
             "--resource-group", resourceGroup, "--location", location,
             "--subscription", subscription
         ]);
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _netAppFilesService.Received(1).CreateBackupVault(
+        await Service.Received(1).CreateBackupVault(
             account, backupVault, resourceGroup, location, subscription,
             null, null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
     }
@@ -383,7 +338,6 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_CallsServiceWithParsedTags()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var backupVault = "myvault";
         var resourceGroup = "myrg";
@@ -397,7 +351,7 @@ public class BackupVaultCreateCommandTests
             ResourceGroup: resourceGroup,
             ProvisioningState: "Succeeded");
 
-        _netAppFilesService.CreateBackupVault(
+        Service.CreateBackupVault(
             account,
             backupVault,
             resourceGroup,
@@ -409,7 +363,8 @@ public class BackupVaultCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedVault);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", account,
             "--backupVault", backupVault,
             "--resource-group", resourceGroup,
@@ -418,12 +373,9 @@ public class BackupVaultCreateCommandTests
             "--tags", "{\"env\":\"prod\"}"
         ]);
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _netAppFilesService.Received(1).CreateBackupVault(
+        await Service.Received(1).CreateBackupVault(
             account,
             backupVault,
             resourceGroup,
@@ -439,15 +391,12 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_HandlesInvalidTagsJson()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--backupVault", "myvault",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123", "--tags", "invalid-json"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -458,15 +407,12 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_RejectsNoWaitArgument()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--backupVault", "myvault",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123", "--no-wait"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -477,15 +423,12 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_RejectsAcquirePolicyTokenArgument()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--backupVault", "myvault",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123", "--acquirePolicyToken"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -496,15 +439,12 @@ public class BackupVaultCreateCommandTests
     public async Task ExecuteAsync_RejectsChangeReferenceArgument()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--backupVault", "myvault",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123", "--changeReference", "chg-123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

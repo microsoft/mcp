@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.NetAppFiles.Commands;
 using Azure.Mcp.Tools.NetAppFiles.Commands.SnapshotPolicy;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Services;
+using Azure.Mcp.Tests.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
@@ -19,34 +20,14 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.NetAppFiles.UnitTests.SnapshotPolicy;
 
-public class SnapshotPolicyUpdateCommandTests
+public class SnapshotPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<SnapshotPolicyUpdateCommand, INetAppFilesService>
 {
     private const string SnapshotPolicyResourceId = "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/snapshotPolicies/mypolicy";
-
-    private readonly IServiceProvider _serviceProvider;
-    private readonly INetAppFilesService _netAppFilesService;
-    private readonly ILogger<SnapshotPolicyUpdateCommand> _logger;
-    private readonly SnapshotPolicyUpdateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public SnapshotPolicyUpdateCommandTests()
-    {
-        _netAppFilesService = Substitute.For<INetAppFilesService>();
-        _logger = Substitute.For<ILogger<SnapshotPolicyUpdateCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_netAppFilesService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _netAppFilesService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("update", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -62,7 +43,7 @@ public class SnapshotPolicyUpdateCommandTests
     {
         if (shouldSucceed)
         {
-            _netAppFilesService.UpdateSnapshotPolicy(
+            Service.UpdateSnapshotPolicy(
                 default!,
                 default!,
                 default!,
@@ -89,8 +70,8 @@ public class SnapshotPolicyUpdateCommandTests
                 .ReturnsForAnyArgs(BuildExpectedPolicy());
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        // Act
+        var response = await ExecuteCommandAsync(args);
 
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
@@ -110,10 +91,9 @@ public class SnapshotPolicyUpdateCommandTests
     [Fact]
     public async Task ExecuteAsync_UpdatesSnapshotPolicy_WithExpandedParameters()
     {
-        TestEnvironment.ClearAzureSubscriptionId();
         var expectedPolicy = BuildExpectedPolicy();
 
-        _netAppFilesService.UpdateSnapshotPolicy(
+        Service.UpdateSnapshotPolicy(
             Arg.Is("myanfaccount"),
             Arg.Is("mypolicy"),
             Arg.Is("myrg"),
@@ -139,7 +119,8 @@ public class SnapshotPolicyUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedPolicy);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount",
             "--snapshotPolicy", "mypolicy",
             "--resource-group", "myrg",
@@ -162,10 +143,8 @@ public class SnapshotPolicyUpdateCommandTests
             "--tags", "{\"env\":\"test\"}"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _netAppFilesService.Received(1).UpdateSnapshotPolicy(
+        await Service.Received(1).UpdateSnapshotPolicy(
             "myanfaccount",
             "mypolicy",
             "myrg",
@@ -191,17 +170,6 @@ public class SnapshotPolicyUpdateCommandTests
             Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public void BindOptions_AcceptsIds()
-    {
-        var args = _commandDefinition.Parse([
-            "--ids", SnapshotPolicyResourceId,
-            "--subscription", "sub123"
-        ]);
-
-        Assert.Empty(args.Errors);
-    }
-
     [Theory]
     [InlineData("--no-wait", "no-wait")]
     [InlineData("--acquirePolicyToken", "acquirePolicyToken")]
@@ -212,9 +180,7 @@ public class SnapshotPolicyUpdateCommandTests
     [InlineData("--force-string", "force-string")]
     public async Task ExecuteAsync_RejectsUnsupportedArguments(string extraArgs, string expectedArgument)
     {
-        var parseResult = _commandDefinition.Parse($"--account myanfaccount --snapshotPolicy mypolicy --resource-group myrg --subscription sub123 {extraArgs}");
-
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync($"--account myanfaccount --snapshotPolicy mypolicy --resource-group myrg --subscription sub123 {extraArgs}");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains(expectedArgument, response.Message, StringComparison.OrdinalIgnoreCase);
@@ -223,15 +189,14 @@ public class SnapshotPolicyUpdateCommandTests
     [Fact]
     public async Task ExecuteAsync_RejectsInvalidTagsJson()
     {
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount",
             "--snapshotPolicy", "mypolicy",
             "--resource-group", "myrg",
             "--subscription", "sub123",
             "--tags", "{invalid-json}"
         ]);
-
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Invalid tags JSON format", response.Message);
@@ -240,9 +205,7 @@ public class SnapshotPolicyUpdateCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesException()
     {
-        TestEnvironment.ClearAzureSubscriptionId();
-
-        _netAppFilesService.UpdateSnapshotPolicy(
+        Service.UpdateSnapshotPolicy(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -268,14 +231,13 @@ public class SnapshotPolicyUpdateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount",
             "--snapshotPolicy", "mypolicy",
             "--resource-group", "myrg",
             "--subscription", "sub123"
         ]);
-
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
@@ -285,10 +247,9 @@ public class SnapshotPolicyUpdateCommandTests
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {
-        TestEnvironment.ClearAzureSubscriptionId();
         var expectedPolicy = BuildExpectedPolicy();
 
-        _netAppFilesService.UpdateSnapshotPolicy(
+        Service.UpdateSnapshotPolicy(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -314,14 +275,13 @@ public class SnapshotPolicyUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedPolicy);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount",
             "--snapshotPolicy", "mypolicy",
             "--resource-group", "myrg",
             "--subscription", "sub123"
         ]);
-
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
@@ -336,10 +296,10 @@ public class SnapshotPolicyUpdateCommandTests
     }
 
     [Fact]
-    public void BindOptions_BindsOptionsCorrectly()
+    public async Task BindOptions_BindsOptionsCorrectly()
     {
-        TestEnvironment.ClearAzureSubscriptionId();
-        var args = _commandDefinition.Parse([
+        // Act
+        var args = CommandDefinition.Parse([
             "--account", "myanfaccount",
             "--snapshotPolicy", "mypolicy",
             "--resource-group", "myrg",

@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.NetAppFiles.Commands;
 using Azure.Mcp.Tools.NetAppFiles.Commands.Snapshot;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Services;
+using Azure.Mcp.Tests.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
@@ -19,32 +20,12 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.NetAppFiles.UnitTests.Snapshot;
 
-public class SnapshotCreateCommandTests
+public class SnapshotCreateCommandTests : SubscriptionCommandUnitTestsBase<SnapshotCreateCommand, INetAppFilesService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly INetAppFilesService _netAppFilesService;
-    private readonly ILogger<SnapshotCreateCommand> _logger;
-    private readonly SnapshotCreateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public SnapshotCreateCommandTests()
-    {
-        _netAppFilesService = Substitute.For<INetAppFilesService>();
-        _logger = Substitute.For<ILogger<SnapshotCreateCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_netAppFilesService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _netAppFilesService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("create", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -71,7 +52,7 @@ public class SnapshotCreateCommandTests
                 ProvisioningState: "Succeeded",
                 Created: "2026-01-15T10:30:00Z");
 
-            _netAppFilesService.CreateSnapshot(
+            Service.CreateSnapshot(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -85,10 +66,8 @@ public class SnapshotCreateCommandTests
                 .Returns(expectedSnapshot);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -109,9 +88,7 @@ public class SnapshotCreateCommandTests
     [InlineData("--changeReference CR-123", "changeReference")]
     public async Task ExecuteAsync_RejectsUnsupportedArguments(string extraArgs, string expectedArgument)
     {
-        var parseResult = _commandDefinition.Parse($"--account myanfaccount --pool mypool --volume myvolume --snapshot mysnapshot --resource-group myrg --location eastus --subscription sub123 {extraArgs}");
-
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync($"--account myanfaccount --pool mypool --volume myvolume --snapshot mysnapshot --resource-group myrg --location eastus --subscription sub123 {extraArgs}");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains(expectedArgument, response.Message, StringComparison.OrdinalIgnoreCase);
@@ -121,7 +98,6 @@ public class SnapshotCreateCommandTests
     public async Task ExecuteAsync_CreatesSnapshot_Successfully()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var pool = "mypool";
         var volume = "myvolume";
@@ -139,20 +115,18 @@ public class SnapshotCreateCommandTests
             ProvisioningState: "Succeeded",
             Created: "2026-01-15T10:30:00Z");
 
-        _netAppFilesService.CreateSnapshot(
+        Service.CreateSnapshot(
             Arg.Is(account), Arg.Is(pool), Arg.Is(volume), Arg.Is(snapshot), Arg.Is(resourceGroup), Arg.Is(location), Arg.Is(subscription),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedSnapshot));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", account, "--pool", pool,
             "--volume", volume, "--snapshot", snapshot,
             "--resource-group", resourceGroup, "--location", location,
             "--subscription", subscription
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -175,10 +149,9 @@ public class SnapshotCreateCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
 
-        _netAppFilesService.CreateSnapshot(
+        Service.CreateSnapshot(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(),
@@ -186,15 +159,13 @@ public class SnapshotCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool",
             "--volume", "myvolume", "--snapshot", "mysnapshot",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -207,8 +178,7 @@ public class SnapshotCreateCommandTests
     public async Task ExecuteAsync_HandlesConflict()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateSnapshot(
+        Service.CreateSnapshot(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(),
@@ -216,15 +186,13 @@ public class SnapshotCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Snapshot already exists"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool",
             "--volume", "myvolume", "--snapshot", "mysnapshot",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -236,8 +204,7 @@ public class SnapshotCreateCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateSnapshot(
+        Service.CreateSnapshot(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(),
@@ -245,15 +212,13 @@ public class SnapshotCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Volume not found"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool",
             "--volume", "myvolume", "--snapshot", "mysnapshot",
             "--resource-group", "nonexistentrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -265,8 +230,7 @@ public class SnapshotCreateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateSnapshot(
+        Service.CreateSnapshot(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(),
@@ -274,15 +238,13 @@ public class SnapshotCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool",
             "--volume", "myvolume", "--snapshot", "mysnapshot",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -294,8 +256,7 @@ public class SnapshotCreateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateSnapshot(
+        Service.CreateSnapshot(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(),
@@ -303,15 +264,13 @@ public class SnapshotCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SnapshotCreateResult>(new Exception("Test error")));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool",
             "--volume", "myvolume", "--snapshot", "mysnapshot",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -323,7 +282,6 @@ public class SnapshotCreateCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var expectedSnapshot = new SnapshotCreateResult(
             Id: "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume/snapshots/mysnapshot",
             Name: "myanfaccount/mypool/myvolume/mysnapshot",
@@ -333,7 +291,7 @@ public class SnapshotCreateCommandTests
             ProvisioningState: "Succeeded",
             Created: "2026-01-15T10:30:00Z");
 
-        _netAppFilesService.CreateSnapshot(
+        Service.CreateSnapshot(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(),
@@ -341,15 +299,13 @@ public class SnapshotCreateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedSnapshot));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool",
             "--volume", "myvolume", "--snapshot", "mysnapshot",
             "--resource-group", "myrg", "--location", "westus2",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response.Results);
@@ -371,7 +327,6 @@ public class SnapshotCreateCommandTests
     public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var pool = "mypool";
         var volume = "myvolume";
@@ -389,24 +344,22 @@ public class SnapshotCreateCommandTests
             ProvisioningState: "Succeeded",
             Created: "2026-01-15T10:30:00Z");
 
-        _netAppFilesService.CreateSnapshot(
+        Service.CreateSnapshot(
             account, pool, volume, snapshot, resourceGroup, location, subscription,
             null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedSnapshot);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", account, "--pool", pool,
             "--volume", volume, "--snapshot", snapshot,
             "--resource-group", resourceGroup, "--location", location,
             "--subscription", subscription
         ]);
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _netAppFilesService.Received(1).CreateSnapshot(
+        await Service.Received(1).CreateSnapshot(
             account, pool, volume, snapshot, resourceGroup, location, subscription,
             null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
     }

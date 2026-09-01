@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.NetAppFiles.Commands;
 using Azure.Mcp.Tools.NetAppFiles.Commands.VolumeGroup;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Services;
+using Azure.Mcp.Tests.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
@@ -19,32 +20,12 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.NetAppFiles.UnitTests.VolumeGroup;
 
-public class VolumeGroupUpdateCommandTests
+public class VolumeGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<VolumeGroupUpdateCommand, INetAppFilesService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly INetAppFilesService _netAppFilesService;
-    private readonly ILogger<VolumeGroupUpdateCommand> _logger;
-    private readonly VolumeGroupUpdateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public VolumeGroupUpdateCommandTests()
-    {
-        _netAppFilesService = Substitute.For<INetAppFilesService>();
-        _logger = Substitute.For<ILogger<VolumeGroupUpdateCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_netAppFilesService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _netAppFilesService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("update", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -73,7 +54,7 @@ public class VolumeGroupUpdateCommandTests
                 GroupMetaDataApplicationIdentifier: "SH1",
                 GroupMetaDataDescription: null);
 
-            _netAppFilesService.UpdateVolumeGroup(
+            Service.UpdateVolumeGroup(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -87,10 +68,8 @@ public class VolumeGroupUpdateCommandTests
                 .Returns(expectedVolumeGroup);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -111,7 +90,6 @@ public class VolumeGroupUpdateCommandTests
     public async Task ExecuteAsync_UpdatesVolumeGroup_Successfully()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var volumeGroup = "myvg";
         var resourceGroup = "myrg";
@@ -130,21 +108,19 @@ public class VolumeGroupUpdateCommandTests
             GroupMetaDataApplicationIdentifier: "SH1",
             GroupMetaDataDescription: groupDescription);
 
-        _netAppFilesService.UpdateVolumeGroup(
+        Service.UpdateVolumeGroup(
             Arg.Is(account), Arg.Is(volumeGroup), Arg.Is(resourceGroup),
             Arg.Is(location), Arg.Is(subscription), Arg.Is(groupDescription),
             Arg.Any<Dictionary<string, string>>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVolumeGroup));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", account, "--volumeGroup", volumeGroup,
             "--resource-group", resourceGroup, "--location", location,
             "--groupDescription", groupDescription, "--subscription", subscription
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -169,7 +145,6 @@ public class VolumeGroupUpdateCommandTests
     public async Task ExecuteAsync_UpdatesVolumeGroupWithTags_Successfully()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var volumeGroup = "myvg";
         var resourceGroup = "myrg";
@@ -188,21 +163,19 @@ public class VolumeGroupUpdateCommandTests
             GroupMetaDataApplicationIdentifier: "SH1",
             GroupMetaDataDescription: null);
 
-        _netAppFilesService.UpdateVolumeGroup(
+        Service.UpdateVolumeGroup(
             Arg.Is(account), Arg.Is(volumeGroup), Arg.Is(resourceGroup),
             Arg.Is(location), Arg.Is(subscription), Arg.Any<string>(),
             Arg.Is<Dictionary<string, string>>(d => d.ContainsKey("env") && d["env"] == "prod"),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVolumeGroup));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", account, "--volumeGroup", volumeGroup,
             "--resource-group", resourceGroup, "--location", location,
             "--tags", tagsJson, "--subscription", subscription
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -214,15 +187,12 @@ public class VolumeGroupUpdateCommandTests
     public async Task ExecuteAsync_HandlesInvalidTagsJson()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--volumeGroup", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
             "--tags", "not-valid-json", "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -234,24 +204,21 @@ public class VolumeGroupUpdateCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
 
-        _netAppFilesService.UpdateVolumeGroup(
+        Service.UpdateVolumeGroup(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<Dictionary<string, string>>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--volumeGroup", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -264,22 +231,19 @@ public class VolumeGroupUpdateCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.UpdateVolumeGroup(
+        Service.UpdateVolumeGroup(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<Dictionary<string, string>>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Volume group not found"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--volumeGroup", "myvg",
             "--resource-group", "nonexistentrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -291,22 +255,19 @@ public class VolumeGroupUpdateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.UpdateVolumeGroup(
+        Service.UpdateVolumeGroup(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<Dictionary<string, string>>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--volumeGroup", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -318,33 +279,29 @@ public class VolumeGroupUpdateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.UpdateVolumeGroup(
+        Service.UpdateVolumeGroup(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<Dictionary<string, string>>(),
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<VolumeGroupCreateResult>(new Exception("Test error")));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--volumeGroup", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
     }
 
     [Fact]
-    public void BindOptions_BindsOptionsCorrectly()
+    public async Task BindOptions_BindsOptionsCorrectly()
     {
-        // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        var args = _commandDefinition.Parse([
+        // Act
+        var args = CommandDefinition.Parse([
             "--account", "myanfaccount", "--volumeGroup", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
             "--groupDescription", "Updated description",
@@ -352,18 +309,14 @@ public class VolumeGroupUpdateCommandTests
             "--subscription", "sub123"
         ]);
 
-        // Act - verify options are parsed without errors
-        var response = _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
         // Assert - if no exception, binding worked correctly
-        Assert.NotNull(response);
+        Assert.Empty(args.Errors);
     }
 
     [Fact]
     public async Task ExecuteAsync_ResolvesIdsAndCallsServiceWithResolvedArguments()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var id = "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/volumeGroups/myvg";
 
         var expectedVolumeGroup = new VolumeGroupCreateResult(
@@ -377,25 +330,23 @@ public class VolumeGroupUpdateCommandTests
             GroupMetaDataApplicationIdentifier: "SH1",
             GroupMetaDataDescription: null);
 
-        _netAppFilesService.UpdateVolumeGroup(
+        Service.UpdateVolumeGroup(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVolumeGroup));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--ids", id,
             "--location", "eastus",
             "--subscription", "sub123"
         ]);
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _netAppFilesService.Received(1).UpdateVolumeGroup(
+        await Service.Received(1).UpdateVolumeGroup(
             Arg.Is("myanfaccount"), Arg.Is("myvg"), Arg.Is("myrg"),
             Arg.Is("eastus"), Arg.Is("sub123"), Arg.Any<string?>(),
             Arg.Any<Dictionary<string, string>?>(),
@@ -412,13 +363,8 @@ public class VolumeGroupUpdateCommandTests
     [InlineData("--volumes []")]
     public async Task ExecuteAsync_ReturnsBadRequest_ForUnsupportedUpdateArguments(string unsupportedArg)
     {
-        // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-
-        var args = _commandDefinition.Parse($"--account myanfaccount --volumeGroup myvg --resource-group myrg --location eastus --subscription sub123 {unsupportedArg}");
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync($"--account myanfaccount --volumeGroup myvg --resource-group myrg --location eastus --subscription sub123 {unsupportedArg}");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

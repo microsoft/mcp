@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.NetAppFiles.Commands;
 using Azure.Mcp.Tools.NetAppFiles.Commands.VolumeGroup;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Services;
+using Azure.Mcp.Tests.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
@@ -19,32 +20,12 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.NetAppFiles.UnitTests.VolumeGroup;
 
-public class VolumeGroupCreateCommandTests
+public class VolumeGroupCreateCommandTests : SubscriptionCommandUnitTestsBase<VolumeGroupCreateCommand, INetAppFilesService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly INetAppFilesService _netAppFilesService;
-    private readonly ILogger<VolumeGroupCreateCommand> _logger;
-    private readonly VolumeGroupCreateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public VolumeGroupCreateCommandTests()
-    {
-        _netAppFilesService = Substitute.For<INetAppFilesService>();
-        _logger = Substitute.For<ILogger<VolumeGroupCreateCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_netAppFilesService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _netAppFilesService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("create", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -72,7 +53,7 @@ public class VolumeGroupCreateCommandTests
                 GroupMetaDataApplicationIdentifier: "SH1",
                 GroupMetaDataDescription: null);
 
-            _netAppFilesService.CreateVolumeGroup(
+            Service.CreateVolumeGroup(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -88,10 +69,8 @@ public class VolumeGroupCreateCommandTests
                 .Returns(expectedVolumeGroup);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -110,7 +89,6 @@ public class VolumeGroupCreateCommandTests
     public async Task ExecuteAsync_CreatesVolumeGroup_Successfully()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var volumeGroup = "myvg";
         var resourceGroup = "myrg";
@@ -131,7 +109,7 @@ public class VolumeGroupCreateCommandTests
             GroupMetaDataApplicationIdentifier: applicationIdentifier,
             GroupMetaDataDescription: groupDescription);
 
-        _netAppFilesService.CreateVolumeGroup(
+        Service.CreateVolumeGroup(
             Arg.Is(account), Arg.Is(volumeGroup), Arg.Is(resourceGroup),
             Arg.Is(location), Arg.Is(applicationType), Arg.Is(applicationIdentifier),
             Arg.Is(subscription), Arg.Is(groupDescription),
@@ -139,15 +117,13 @@ public class VolumeGroupCreateCommandTests
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVolumeGroup));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", account, "--volumeGroup", volumeGroup,
             "--resource-group", resourceGroup, "--location", location,
             "--applicationType", applicationType, "--applicationIdentifier", applicationIdentifier,
             "--groupDescription", groupDescription, "--subscription", subscription
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -172,10 +148,9 @@ public class VolumeGroupCreateCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
 
-        _netAppFilesService.CreateVolumeGroup(
+        Service.CreateVolumeGroup(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -183,15 +158,13 @@ public class VolumeGroupCreateCommandTests
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--volumeGroup", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
             "--applicationType", "SAP-HANA", "--applicationIdentifier", "SH1",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -204,8 +177,7 @@ public class VolumeGroupCreateCommandTests
     public async Task ExecuteAsync_HandlesConflict()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateVolumeGroup(
+        Service.CreateVolumeGroup(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -213,15 +185,13 @@ public class VolumeGroupCreateCommandTests
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Volume group already exists"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--volumeGroup", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
             "--applicationType", "SAP-HANA", "--applicationIdentifier", "SH1",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -233,8 +203,7 @@ public class VolumeGroupCreateCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateVolumeGroup(
+        Service.CreateVolumeGroup(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -242,15 +211,13 @@ public class VolumeGroupCreateCommandTests
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Account not found"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--volumeGroup", "myvg",
             "--resource-group", "nonexistentrg", "--location", "eastus",
             "--applicationType", "SAP-HANA", "--applicationIdentifier", "SH1",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -262,8 +229,7 @@ public class VolumeGroupCreateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateVolumeGroup(
+        Service.CreateVolumeGroup(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -271,15 +237,13 @@ public class VolumeGroupCreateCommandTests
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--volumeGroup", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
             "--applicationType", "SAP-HANA", "--applicationIdentifier", "SH1",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -291,8 +255,7 @@ public class VolumeGroupCreateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.CreateVolumeGroup(
+        Service.CreateVolumeGroup(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -300,15 +263,13 @@ public class VolumeGroupCreateCommandTests
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<VolumeGroupCreateResult>(new Exception("Test error")));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--volumeGroup", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
             "--applicationType", "SAP-HANA", "--applicationIdentifier", "SH1",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -320,7 +281,6 @@ public class VolumeGroupCreateCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var expectedVolumeGroup = new VolumeGroupCreateResult(
             Id: "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/volumeGroups/myvg",
             Name: "myanfaccount/myvg",
@@ -332,7 +292,7 @@ public class VolumeGroupCreateCommandTests
             GroupMetaDataApplicationIdentifier: "SH1",
             GroupMetaDataDescription: "Volume group for SAP HANA");
 
-        _netAppFilesService.CreateVolumeGroup(
+        Service.CreateVolumeGroup(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -340,16 +300,14 @@ public class VolumeGroupCreateCommandTests
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedVolumeGroup));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--volumeGroup", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
             "--applicationType", "SAP-HANA", "--applicationIdentifier", "SH1",
             "--groupDescription", "Volume group for SAP HANA",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -380,7 +338,6 @@ public class VolumeGroupCreateCommandTests
     public async Task ExecuteAsync_PassesTagsToService_WhenProvided()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var expectedVolumeGroup = new VolumeGroupCreateResult(
             Id: "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/volumeGroups/myvg",
             Name: "myanfaccount/myvg",
@@ -392,7 +349,7 @@ public class VolumeGroupCreateCommandTests
             GroupMetaDataApplicationIdentifier: "SH1",
             GroupMetaDataDescription: "Volume group for SAP HANA");
 
-        _netAppFilesService.CreateVolumeGroup(
+        Service.CreateVolumeGroup(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -400,7 +357,8 @@ public class VolumeGroupCreateCommandTests
             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedVolumeGroup);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount",
             "--volumeGroup", "myvg",
             "--resource-group", "myrg",
@@ -411,12 +369,9 @@ public class VolumeGroupCreateCommandTests
             "--subscription", "sub123"
         ]);
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _netAppFilesService.Received(1).CreateVolumeGroup(
+        await Service.Received(1).CreateVolumeGroup(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -427,10 +382,8 @@ public class VolumeGroupCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_ForUnsupportedCreateArguments()
     {
-        // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount",
             "--volumeGroup", "myvg",
             "--resource-group", "myrg",
@@ -440,9 +393,6 @@ public class VolumeGroupCreateCommandTests
             "--pool", "mypool",
             "--subscription", "sub123"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

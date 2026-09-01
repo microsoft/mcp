@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.NetAppFiles.Commands;
 using Azure.Mcp.Tools.NetAppFiles.Commands.Account;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Services;
+using Azure.Mcp.Tests.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
@@ -22,32 +23,12 @@ using Xunit.Sdk;
 
 namespace Azure.Mcp.Tools.NetAppFiles.UnitTests.Account;
 
-public class AccountUpdateCommandTests
+public class AccountUpdateCommandTests : SubscriptionCommandUnitTestsBase<AccountUpdateCommand, INetAppFilesService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly INetAppFilesService _netAppFilesService;
-    private readonly ILogger<AccountUpdateCommand> _logger;
-    private readonly AccountUpdateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public AccountUpdateCommandTests()
-    {
-        _netAppFilesService = Substitute.For<INetAppFilesService>();
-        _logger = Substitute.For<ILogger<AccountUpdateCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_netAppFilesService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _netAppFilesService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("update", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -62,7 +43,6 @@ public class AccountUpdateCommandTests
     [InlineData("", false)] // No parameters
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
             var expectedAccount = new NetAppAccountCreateResult(
@@ -73,7 +53,7 @@ public class AccountUpdateCommandTests
                 ResourceGroup: "myrg",
                 ProvisioningState: "Succeeded");
 
-            _netAppFilesService.UpdateAccount(
+            Service.UpdateAccount(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
@@ -95,12 +75,8 @@ public class AccountUpdateCommandTests
                 .Returns(expectedAccount);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
-        var hasSubscription = parseResult.GetValueOrDefault(OptionDefinitions.Common.Subscription);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -111,7 +87,7 @@ public class AccountUpdateCommandTests
         }
         else
         {
-            var expectedString = hasSubscription == null ? "--subscription" : "--ids or both --account and --resource-group";
+            var expectedString = "--ids or both --account and --resource-group";
             Assert.Contains(expectedString, response.Message.ToLower());
         }
     }
@@ -120,7 +96,6 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_UpdatesAccount_Successfully()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var resourceGroup = "myrg";
         var location = "eastus";
@@ -134,7 +109,7 @@ public class AccountUpdateCommandTests
             ResourceGroup: resourceGroup,
             ProvisioningState: "Succeeded");
 
-        _netAppFilesService.UpdateAccount(
+        Service.UpdateAccount(
             Arg.Is(account), Arg.Is(resourceGroup), Arg.Is(location), Arg.Is(subscription),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
@@ -151,13 +126,11 @@ public class AccountUpdateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedAccount));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", account, "--resource-group", resourceGroup,
             "--location", location, "--subscription", subscription
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -179,7 +152,6 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_UpdatesAccountWithTags_Successfully()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var resourceGroup = "myrg";
         var location = "eastus";
@@ -194,7 +166,7 @@ public class AccountUpdateCommandTests
             ResourceGroup: resourceGroup,
             ProvisioningState: "Succeeded");
 
-        _netAppFilesService.UpdateAccount(
+        Service.UpdateAccount(
             Arg.Is(account), Arg.Is(resourceGroup), Arg.Is(location), Arg.Is(subscription),
             Arg.Is<Dictionary<string, string>>(d => d.ContainsKey("env") && d["env"] == "prod"),
             Arg.Any<string?>(),
@@ -211,14 +183,12 @@ public class AccountUpdateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedAccount));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", account, "--resource-group", resourceGroup,
             "--location", location, "--subscription", subscription,
             "--tags", tagsJson
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -230,10 +200,9 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var expectedError = "Test error";
 
-        _netAppFilesService.UpdateAccount(
+        Service.UpdateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<string>(), Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
@@ -242,13 +211,11 @@ public class AccountUpdateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--resource-group", "myrg",
             "--location", "eastus", "--subscription", "00000000-0000-0000-0000-000000000000"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -261,8 +228,7 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_HandlesConflict()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.UpdateAccount(
+        Service.UpdateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<string>(), Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
@@ -271,13 +237,11 @@ public class AccountUpdateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Account already exists"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--resource-group", "myrg",
             "--location", "eastus", "--subscription", "00000000-0000-0000-0000-000000000000"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -289,8 +253,7 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.UpdateAccount(
+        Service.UpdateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<string>(), Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
@@ -299,13 +262,11 @@ public class AccountUpdateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Resource not found"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--resource-group", "nonexistentrg",
             "--location", "eastus", "--subscription", "00000000-0000-0000-0000-000000000000"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -317,8 +278,7 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.UpdateAccount(
+        Service.UpdateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<string>(), Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
@@ -327,13 +287,11 @@ public class AccountUpdateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--resource-group", "myrg",
             "--location", "eastus", "--subscription", "00000000-0000-0000-0000-000000000000"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -345,8 +303,7 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        _netAppFilesService.UpdateAccount(
+        Service.UpdateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<string>(), Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
@@ -355,13 +312,11 @@ public class AccountUpdateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<NetAppAccountCreateResult>(new Exception("Test error")));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--resource-group", "myrg",
             "--location", "eastus", "--subscription", "00000000-0000-0000-0000-000000000000"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -373,7 +328,6 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var expectedAccount = new NetAppAccountCreateResult(
             Id: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount",
             Name: "myanfaccount",
@@ -382,7 +336,7 @@ public class AccountUpdateCommandTests
             ResourceGroup: "myrg",
             ProvisioningState: "Succeeded");
 
-        _netAppFilesService.UpdateAccount(
+        Service.UpdateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<string>(), Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
@@ -391,13 +345,11 @@ public class AccountUpdateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedAccount));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--resource-group", "myrg",
             "--location", "westus2", "--subscription", "00000000-0000-0000-0000-000000000000"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response.Results);
@@ -418,7 +370,6 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var account = "myanfaccount";
         var resourceGroup = "myrg";
         var location = "eastus";
@@ -432,7 +383,7 @@ public class AccountUpdateCommandTests
             ResourceGroup: resourceGroup,
             ProvisioningState: "Succeeded");
 
-        _netAppFilesService.UpdateAccount(
+        Service.UpdateAccount(
             account, resourceGroup, location, subscription,
             null,
             null,
@@ -449,17 +400,15 @@ public class AccountUpdateCommandTests
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedAccount);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", account, "--resource-group", resourceGroup,
             "--location", location, "--subscription", subscription
         ]);
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _netAppFilesService.Received(1).UpdateAccount(
+        await Service.Received(1).UpdateAccount(
             account, resourceGroup, location, subscription,
             null,
             null,
@@ -480,7 +429,6 @@ public class AccountUpdateCommandTests
     public async Task ExecuteAsync_CallsServiceWithIdsAndExtendedParameters()
     {
         // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
         var id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount";
         var expectedAccount = new NetAppAccountCreateResult(
             Id: id,
@@ -490,14 +438,15 @@ public class AccountUpdateCommandTests
             ResourceGroup: "myrg",
             ProvisioningState: "Succeeded");
 
-        _netAppFilesService.UpdateAccount(
+        Service.UpdateAccount(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<JsonElement?>(), Arg.Any<JsonElement?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedAccount);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--ids", id,
             "--subscription", "00000000-0000-0000-0000-000000000000",
             "--tags", "{\"env\":\"prod\"}",
@@ -513,12 +462,9 @@ public class AccountUpdateCommandTests
             "--nfsV4IdDomain", "contoso.local"
         ]);
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _netAppFilesService.Received(1).UpdateAccount(
+        await Service.Received(1).UpdateAccount(
             "myanfaccount",
             "myrg",
             null,
@@ -542,16 +488,12 @@ public class AccountUpdateCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesInvalidTagsJson()
     {
-        // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--resource-group", "myrg",
             "--location", "eastus", "--subscription", "00000000-0000-0000-0000-000000000000",
             "--tags", "invalid-json"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -561,15 +503,11 @@ public class AccountUpdateCommandTests
     [Fact]
     public async Task ExecuteAsync_RejectsNoWait()
     {
-        // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--resource-group", "myrg",
             "--subscription", "00000000-0000-0000-0000-000000000000", "--no-wait"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -579,15 +517,11 @@ public class AccountUpdateCommandTests
     [Fact]
     public async Task ExecuteAsync_RejectsGenericUpdateArguments()
     {
-        // Arrange
-        TestEnvironment.ClearAzureSubscriptionId();
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--resource-group", "myrg",
             "--subscription", "00000000-0000-0000-0000-000000000000", "--set", "properties.foo=bar"
         ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
