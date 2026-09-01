@@ -478,14 +478,14 @@ public sealed class SingleProxyToolLoader(
                 .Where(o => !CommandFactory.IsLearnOption(o))
                 .ToList();
 
-            var jsomElementParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => JsonSerializer.SerializeToElement(kvp.Value, ServerJsonContext.Default.Object));
+            var jsonElementParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => JsonSerializer.SerializeToElement(kvp.Value, ServerJsonContext.Default.Object));
             if (effectiveOptions.Count == 1 && IsRawMcpToolInputOption(effectiveOptions[0]))
             {
-                commandOptions = realCommand.ParseFromRawMcpToolInput(jsomElementParameters);
+                commandOptions = realCommand.ParseFromRawMcpToolInput(jsonElementParameters);
             }
             else
             {
-                if (!realCommand.TryParseFromDictionary(jsomElementParameters, out commandOptions, out var parseErrors))
+                if (!realCommand.TryParseFromDictionary(jsonElementParameters, out commandOptions, out var parseErrors))
                 {
                     return new CallToolResult
                     {

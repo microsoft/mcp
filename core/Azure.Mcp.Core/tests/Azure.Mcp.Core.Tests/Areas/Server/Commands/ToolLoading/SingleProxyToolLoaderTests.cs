@@ -237,6 +237,88 @@ public class SingleProxyToolLoaderTests
     }
 
     [Fact]
+    public async Task CallToolHandler_WithLearnRequestForCommandFactoryManagedTool_UsesCommandFactory()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("azmcp", "Azure MCP");
+        rootGroup.SubGroup.Add(new CommandGroup("storage", "Storage commands"));
+        commandFactory.RootGroup.Returns(rootGroup);
+
+        var command = Substitute.For<IBaseCommand>();
+        command.Id.Returns("storage_account_list");
+        command.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
+        command.GetCommand().Returns(new System.CommandLine.Command("account_list", "List storage accounts"));
+        commandFactory.GroupCommands(Arg.Is<string[]>(groups => groups.Length == 1 && groups[0] == "storage"))
+            .Returns(new Dictionary<string, IBaseCommand> { ["account_list"] = command });
+
+        var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+        var toolLoader = new SingleProxyToolLoader(
+            commandFactory,
+            discoveryStrategy,
+            Substitute.For<ILogger<SingleProxyToolLoader>>(),
+            Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration()),
+            CreateServerConfigurationOptions());
+        var request = McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?>
+        {
+            ["intent"] = "List storage commands",
+            ["tool"] = "storage",
+            ["learn"] = true
+        });
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        var textContent = Assert.IsType<TextContentBlock>(Assert.Single(result.Content));
+        Assert.Contains("account_list", textContent.Text);
+        commandFactory.Received(1).GroupCommands(Arg.Is<string[]>(groups => groups.Length == 1 && groups[0] == "storage"));
+        await discoveryStrategy.DidNotReceive().GetOrCreateClientAsync(
+            Arg.Any<string>(), Arg.Any<McpClientOptions?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithExecutionRequestForCommandFactoryManagedTool_ExecutesCommand()
+    {
+        // Arrange
+        var command = Substitute.For<IBaseCommand>();
+        command.Id.Returns("storage_account_list");
+        command.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
+        command.GetCommand().Returns(new System.CommandLine.Command("account_list", "List storage accounts"));
+        command.ExecuteAsync(Arg.Any<Microsoft.Mcp.Core.Models.Command.CommandContext>(), Arg.Any<System.CommandLine.ParseResult>(), Arg.Any<CancellationToken>())
+            .Returns(new Microsoft.Mcp.Core.Models.Command.CommandResponse
+            {
+                Status = System.Net.HttpStatusCode.OK,
+                Message = "Managed command executed"
+            });
+
+        var commandFactory = Substitute.For<ICommandFactory>();
+        commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand> { ["account_list"] = command });
+        var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+        var toolLoader = new SingleProxyToolLoader(
+            commandFactory,
+            discoveryStrategy,
+            Substitute.For<ILogger<SingleProxyToolLoader>>(),
+            Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration()),
+            CreateServerConfigurationOptions());
+        var request = CreateCallToolRequestWithToolAndCommand("storage", "account_list");
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.False(result.IsError ?? false);
+        var textContent = Assert.IsType<TextContentBlock>(Assert.Single(result.Content));
+        Assert.Contains("Managed command executed", textContent.Text);
+        await command.Received(1).ExecuteAsync(
+            Arg.Is<Microsoft.Mcp.Core.Models.Command.CommandContext>(context => context.McpServer == request.Server),
+            Arg.Any<System.CommandLine.ParseResult>(),
+            TestContext.Current.CancellationToken);
+        await discoveryStrategy.DidNotReceive().GetOrCreateClientAsync(
+            Arg.Any<string>(), Arg.Any<McpClientOptions?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task GetChildToolList_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
     {
         // Arrange
