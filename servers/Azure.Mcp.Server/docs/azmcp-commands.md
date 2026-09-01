@@ -184,6 +184,29 @@ azmcp server start \
     [--read-only]
 ```
 
+#### Structured Output Mode
+
+Enables MCP protocol `outputSchema` and `structuredContent` fields for
+compatible clients. Two structured output modes are available:
+
+- `duplicated` returns the complete result in both `content` and `structuredContent`.
+- `compact` returns concise text in `content` and the complete result in `structuredContent`.
+
+```bash
+# Return the complete result in both content fields
+azmcp server start \
+    --mode all \
+    --structured-output-mode duplicated
+
+# Return concise text alongside the complete structured result
+azmcp server start \
+    --mode all \
+    --structured-output-mode compact
+```
+
+For instructions on adding structured output to a command, see the
+[Output Schema Migration Guide](../../../docs/output-schema-migration.md).
+
 #### Consolidated Mode
 
 Exposes carefully curated tools that group related Azure operations together based on common user workflows and tasks. This mode provides the optimal balance between discoverability and usability by organizing consolidated tools that combine multiple related operations.
