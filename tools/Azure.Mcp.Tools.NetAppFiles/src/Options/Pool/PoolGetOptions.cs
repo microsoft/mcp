@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.Pool;
 
 public class PoolGetOptions : BaseNetAppFilesOptions
 {
-    [JsonPropertyName(NetAppFilesOptionDefinitions.PoolName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Pool)]
     public string? Pool { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.IdsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Ids)]
     public string[]? Ids { get; set; }
 }

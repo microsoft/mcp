@@ -1,24 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.Backup;
 
 public class BackupCreateOptions : BaseNetAppFilesOptions
 {
-    [JsonPropertyName(NetAppFilesOptionDefinitions.BackupVaultName)]
+    [Option(Description = NetAppFilesOptionDefinitions.BackupVault)]
     public string? BackupVault { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.BackupName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Backup)]
     public string? Backup { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.LocationName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Location)]
     public string? Location { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.VolumeResourceIdName)]
+    [Option(Description = NetAppFilesOptionDefinitions.VolumeResourceId)]
     public string? VolumeResourceId { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.LabelName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Label)]
     public string? Label { get; set; }
 }

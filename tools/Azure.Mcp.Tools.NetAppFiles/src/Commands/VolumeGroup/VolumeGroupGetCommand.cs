@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Options;
@@ -29,40 +30,15 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.VolumeGroup;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class VolumeGroupGetCommand(ILogger<VolumeGroupGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<VolumeGroupGetOptions>()
+public sealed class VolumeGroupGetCommand(ILogger<VolumeGroupGetCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<VolumeGroupGetOptions, VolumeGroupGetCommand.VolumeGroupGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<VolumeGroupGetCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VolumeGroupGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(NetAppFilesOptionDefinitions.Account.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.VolumeGroup.AsOptional());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Ids.AsOptional());
-    }
-
-    protected override VolumeGroupGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
-        options.VolumeGroup = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.VolumeGroup.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Ids = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Ids.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var volumeGroups = await _netAppFilesService.GetVolumeGroupDetails(
@@ -96,5 +72,5 @@ public sealed class VolumeGroupGetCommand(ILogger<VolumeGroupGetCommand> logger,
         return context.Response;
     }
 
-    internal record VolumeGroupGetCommandResult(List<VolumeGroupInfo> VolumeGroups, bool AreResultsTruncated);
+    public record VolumeGroupGetCommandResult(List<VolumeGroupInfo> VolumeGroups, bool AreResultsTruncated);
 }

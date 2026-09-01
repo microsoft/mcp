@@ -8,6 +8,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.NetAppFiles.Models;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Replication;
 
@@ -23,37 +27,18 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Replication;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class ReplicationListCommand(ILogger<ReplicationListCommand> logger, INetAppFilesService netAppFilesService) : ReplicationCommandBase<ReplicationListOptions>()
+public sealed class ReplicationListCommand(ILogger<ReplicationListCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver) 
+    : SubscriptionCommand<ReplicationListOptions, ReplicationListCommand.ReplicationListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ReplicationListCommand> _logger = logger;
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ReplicationListOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        RegisterReplicationOptions(command, includeNoWait: false);
-        command.Options.Add(NetAppFilesOptionDefinitions.Exclude);
-    }
-
-    protected override ReplicationListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = BindReplicationOptions(parseResult, base.BindOptions(parseResult));
-        options.Exclude = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Exclude.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
         try
         {
-            ValidateVolumeTarget(options);
-            ValidateUnsupportedCommonOptions(options);
+            ReplicationCommandHelpers.ValidateVolumeTarget(options);
+            ReplicationCommandHelpers.ValidateUnsupportedCommonOptions(options);
             var result = await _netAppFilesService.ListReplications(options.Account, options.Pool, options.Volume, options.ResourceGroup, options.Ids, options.Subscription!, options.Exclude, options.Tenant, options.RetryPolicy, cancellationToken);
             context.Response.Results = ResponseResult.Create(result, NetAppFilesJsonContext.Default.ReplicationListResult);
         }
@@ -65,4 +50,6 @@ public sealed class ReplicationListCommand(ILogger<ReplicationListCommand> logge
 
         return context.Response;
     }
+
+    public record ReplicationListCommandResult([property: JsonPropertyName("replicationListResult")] ReplicationListResult ReplicationListResult);
 }

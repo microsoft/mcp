@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Options;
@@ -29,40 +30,15 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Pool;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class PoolGetCommand(ILogger<PoolGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<PoolGetOptions>()
+public sealed class PoolGetCommand(ILogger<PoolGetCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<PoolGetOptions, PoolGetCommand.PoolGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<PoolGetCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, PoolGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(NetAppFilesOptionDefinitions.Account.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Pool.AsOptional());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Ids.AsOptional());
-    }
-
-    protected override PoolGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
-        options.Pool = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Pool.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Ids = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Ids.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var pools = await _netAppFilesService.GetPoolDetails(
@@ -96,5 +72,5 @@ public sealed class PoolGetCommand(ILogger<PoolGetCommand> logger, INetAppFilesS
         return context.Response;
     }
 
-    internal record PoolGetCommandResult(List<CapacityPoolInfo> Pools, bool AreResultsTruncated);
+    public record PoolGetCommandResult(List<CapacityPoolInfo> Pools, bool AreResultsTruncated);
 }

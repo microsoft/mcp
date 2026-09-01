@@ -5,6 +5,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Options;
@@ -32,74 +33,15 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.SnapshotPolicy;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class SnapshotPolicyCreateCommand(ILogger<SnapshotPolicyCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<SnapshotPolicyCreateOptions>()
+public sealed class SnapshotPolicyCreateCommand(ILogger<SnapshotPolicyCreateCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<SnapshotPolicyCreateOptions, SnapshotPolicyCreateCommand.SnapshotPolicyCreateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<SnapshotPolicyCreateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SnapshotPolicyCreateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(NetAppFilesOptionDefinitions.Account.AsRequired());
-        command.Options.Add(NetAppFilesOptionDefinitions.SnapshotPolicy.AsRequired());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(NetAppFilesOptionDefinitions.Location);
-        command.Options.Add(NetAppFilesOptionDefinitions.HourlyScheduleMinute);
-        command.Options.Add(NetAppFilesOptionDefinitions.HourlyScheduleSnapshotsToKeep);
-        command.Options.Add(NetAppFilesOptionDefinitions.DailyScheduleHour);
-        command.Options.Add(NetAppFilesOptionDefinitions.DailyScheduleMinute);
-        command.Options.Add(NetAppFilesOptionDefinitions.DailyScheduleSnapshotsToKeep);
-        command.Options.Add(NetAppFilesOptionDefinitions.WeeklyScheduleDay);
-        command.Options.Add(NetAppFilesOptionDefinitions.WeeklyScheduleHour);
-        command.Options.Add(NetAppFilesOptionDefinitions.WeeklyScheduleMinute);
-        command.Options.Add(NetAppFilesOptionDefinitions.WeeklyScheduleSnapshotsToKeep);
-        command.Options.Add(NetAppFilesOptionDefinitions.MonthlyScheduleDaysOfMonth);
-        command.Options.Add(NetAppFilesOptionDefinitions.MonthlyScheduleHour);
-        command.Options.Add(NetAppFilesOptionDefinitions.MonthlyScheduleMinute);
-        command.Options.Add(NetAppFilesOptionDefinitions.MonthlyScheduleSnapshotsToKeep);
-        command.Options.Add(NetAppFilesOptionDefinitions.Enabled.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Tags.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.AcquirePolicyToken.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.ChangeReference.AsOptional());
-    }
-
-    protected override SnapshotPolicyCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
-        options.SnapshotPolicy = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.SnapshotPolicy.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Location.Name);
-        options.HourlyScheduleMinute = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.HourlyScheduleMinute.Name);
-        options.HourlyScheduleSnapshotsToKeep = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.HourlyScheduleSnapshotsToKeep.Name);
-        options.DailyScheduleHour = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.DailyScheduleHour.Name);
-        options.DailyScheduleMinute = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.DailyScheduleMinute.Name);
-        options.DailyScheduleSnapshotsToKeep = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.DailyScheduleSnapshotsToKeep.Name);
-        options.WeeklyScheduleDay = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.WeeklyScheduleDay.Name);
-        options.WeeklyScheduleHour = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.WeeklyScheduleHour.Name);
-        options.WeeklyScheduleMinute = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.WeeklyScheduleMinute.Name);
-        options.WeeklyScheduleSnapshotsToKeep = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.WeeklyScheduleSnapshotsToKeep.Name);
-        options.MonthlyScheduleDaysOfMonth = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.MonthlyScheduleDaysOfMonth.Name);
-        options.MonthlyScheduleHour = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.MonthlyScheduleHour.Name);
-        options.MonthlyScheduleMinute = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.MonthlyScheduleMinute.Name);
-        options.MonthlyScheduleSnapshotsToKeep = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.MonthlyScheduleSnapshotsToKeep.Name);
-        options.Enabled = parseResult.GetValueOrDefault<bool?>(NetAppFilesOptionDefinitions.Enabled.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Tags.Name);
-        options.AcquirePolicyToken = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.AcquirePolicyToken.Name);
-        options.ChangeReference = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.ChangeReference.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             ValidateUnsupportedCreateArguments(options);
@@ -183,5 +125,5 @@ public sealed class SnapshotPolicyCreateCommand(ILogger<SnapshotPolicyCreateComm
         }
     }
 
-    internal record SnapshotPolicyCreateCommandResult([property: JsonPropertyName("snapshotPolicy")] SnapshotPolicyCreateResult SnapshotPolicy);
+    public record SnapshotPolicyCreateCommandResult([property: JsonPropertyName("snapshotPolicy")] SnapshotPolicyCreateResult SnapshotPolicy);
 }

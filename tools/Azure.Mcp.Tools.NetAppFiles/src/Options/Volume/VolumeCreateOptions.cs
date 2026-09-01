@@ -1,219 +1,219 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.Volume;
 
 public class VolumeCreateOptions : BaseNetAppFilesOptions
 {
-    [JsonPropertyName(NetAppFilesOptionDefinitions.PoolName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Pool)]
     public string? Pool { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.VolumeName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Volume)]
     public string? Volume { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.LocationName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Location)]
     public string? Location { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SubnetIdName)]
+    [Option(Description = NetAppFilesOptionDefinitions.SubnetId)]
     public string? SubnetId { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.CreationTokenName)]
+    [Option(Description = NetAppFilesOptionDefinitions.CreationToken)]
     public string? CreationToken { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.UsageThresholdName)]
+    [Option(Description = NetAppFilesOptionDefinitions.UsageThreshold)]
     public long? UsageThreshold { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ServiceLevelName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ServiceLevel)]
     public string? ServiceLevel { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ProtocolTypesName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ProtocolTypes)]
     public string[]? ProtocolTypes { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SubnetName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Subnet)]
     public string? Subnet { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.VnetName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Vnet)]
     public string? Vnet { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.AcceptGrowCapacityPoolForShortTermCloneSplitName)]
+    [Option(Description = NetAppFilesOptionDefinitions.AcceptGrowCapacityPoolForShortTermCloneSplit)]
     public string? AcceptGrowCapacityPoolForShortTermCloneSplit { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.AllowedClientsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.AllowedClients)]
     public string? AllowedClients { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.AvsDataStoreName)]
+    [Option(Description = NetAppFilesOptionDefinitions.AvsDataStore)]
     public string? AvsDataStore { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.BackupIdName)]
+    [Option(Description = NetAppFilesOptionDefinitions.BackupId)]
     public string? BackupId { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.BackupPolicyIdName)]
+    [Option(Description = NetAppFilesOptionDefinitions.BackupPolicyId)]
     public string? BackupPolicyId { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.BackupVaultIdName)]
+    [Option(Description = NetAppFilesOptionDefinitions.BackupVaultId)]
     public string? BackupVaultId { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.CoolAccessRetrievalPolicyName)]
+    [Option(Description = NetAppFilesOptionDefinitions.CoolAccessRetrievalPolicy)]
     public string? CoolAccessRetrievalPolicy { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.CoolAccessTieringPolicyName)]
+    [Option(Description = NetAppFilesOptionDefinitions.CoolAccessTieringPolicy)]
     public string? CoolAccessTieringPolicy { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.CapacityPoolResourceIdName)]
+    [Option(Description = NetAppFilesOptionDefinitions.CapacityPoolResourceId)]
     public string? CapacityPoolResourceId { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ChownModeName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ChownMode)]
     public string? ChownMode { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.CifsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Cifs)]
     public bool? Cifs { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.CoolAccessVolumeName)]
+    [Option(Description = NetAppFilesOptionDefinitions.CoolAccessVolume)]
     public bool? CoolAccessVolume { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.CoolnessPeriodName)]
+    [Option(Description = NetAppFilesOptionDefinitions.CoolnessPeriod)]
     public int? CoolnessPeriod { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.DeleteBaseSnapshotName)]
+    [Option(Description = NetAppFilesOptionDefinitions.DeleteBaseSnapshot)]
     public bool? DeleteBaseSnapshot { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.DesiredArpStateName)]
+    [Option(Description = NetAppFilesOptionDefinitions.DesiredArpState)]
     public string? DesiredArpState { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.EnableSubvolumesName)]
+    [Option(Description = NetAppFilesOptionDefinitions.EnableSubvolumes)]
     public string? EnableSubvolumes { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.EncryptionKeySourceName)]
+    [Option(Description = NetAppFilesOptionDefinitions.EncryptionKeySource)]
     public string? EncryptionKeySource { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ExportPolicyRulesName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ExportPolicyRules)]
     public string? ExportPolicyRules { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ExternalHostNameName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ExternalHostName)]
     public string? ExternalHostName { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ExternalServerNameName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ExternalServerName)]
     public string? ExternalServerName { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ExternalVolumeNameName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ExternalVolumeName)]
     public string? ExternalVolumeName { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.HasRootAccessName)]
+    [Option(Description = NetAppFilesOptionDefinitions.HasRootAccess)]
     public bool? HasRootAccess { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.IsLargeVolumeName)]
+    [Option(Description = NetAppFilesOptionDefinitions.IsLargeVolume)]
     public bool? IsLargeVolume { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.KerberosEnabledName)]
+    [Option(Description = NetAppFilesOptionDefinitions.KerberosEnabled)]
     public bool? KerberosEnabled { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.Kerberos5RName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Kerberos5R)]
     public bool? Kerberos5R { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.Kerberos5RwName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Kerberos5Rw)]
     public bool? Kerberos5Rw { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.Kerberos5IRName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Kerberos5IR)]
     public bool? Kerberos5IR { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.Kerberos5IRwName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Kerberos5IRw)]
     public bool? Kerberos5IRw { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.Kerberos5PRName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Kerberos5PR)]
     public bool? Kerberos5PR { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.Kerberos5PRwName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Kerberos5PRw)]
     public bool? Kerberos5PRw { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.KeyVaultPrivateEndpointResourceIdName)]
+    [Option(Description = NetAppFilesOptionDefinitions.KeyVaultPrivateEndpointResourceId)]
     public string? KeyVaultPrivateEndpointResourceId { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.LdapEnabledName)]
+    [Option(Description = NetAppFilesOptionDefinitions.LdapEnabled)]
     public bool? LdapEnabled { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.NetworkFeaturesName)]
+    [Option(Description = NetAppFilesOptionDefinitions.NetworkFeatures)]
     public string? NetworkFeatures { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.PlacementRulesName)]
+    [Option(Description = NetAppFilesOptionDefinitions.PlacementRules)]
     public string? PlacementRules { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.PolicyEnforcedName)]
+    [Option(Description = NetAppFilesOptionDefinitions.PolicyEnforced)]
     public bool? PolicyEnforced { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ProximityPlacementGroupName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ProximityPlacementGroup)]
     public string? ProximityPlacementGroup { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.RelocationRequestedName)]
+    [Option(Description = NetAppFilesOptionDefinitions.RelocationRequested)]
     public bool? RelocationRequested { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.RemoteVolumeResourceIdName)]
+    [Option(Description = NetAppFilesOptionDefinitions.RemoteVolumeResourceId)]
     public string? RemoteVolumeResourceId { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.RemoteVolumeRegionName)]
+    [Option(Description = NetAppFilesOptionDefinitions.RemoteVolumeRegion)]
     public string? RemoteVolumeRegion { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ReplicationScheduleName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ReplicationSchedule)]
     public string? ReplicationSchedule { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.RuleIndexName)]
+    [Option(Description = NetAppFilesOptionDefinitions.RuleIndex)]
     public int? RuleIndex { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SecurityStyleName)]
+    [Option(Description = NetAppFilesOptionDefinitions.SecurityStyle)]
     public string? SecurityStyle { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SmbAccessEnumerationName)]
+    [Option(Description = NetAppFilesOptionDefinitions.SmbAccessEnumeration)]
     public string? SmbAccessEnumeration { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SmbContinuouslyAvailableName)]
+    [Option(Description = NetAppFilesOptionDefinitions.SmbContinuouslyAvailable)]
     public bool? SmbContinuouslyAvailable { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SmbEncryptionName)]
+    [Option(Description = NetAppFilesOptionDefinitions.SmbEncryption)]
     public bool? SmbEncryption { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SmbNonBrowsableName)]
+    [Option(Description = NetAppFilesOptionDefinitions.SmbNonBrowsable)]
     public string? SmbNonBrowsable { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SnapshotDirectoryVisibleName)]
+    [Option(Description = NetAppFilesOptionDefinitions.SnapshotDirectoryVisible)]
     public bool? SnapshotDirectoryVisible { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SnapshotIdName)]
+    [Option(Description = NetAppFilesOptionDefinitions.SnapshotId)]
     public string? SnapshotId { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SnapshotPolicyIdName)]
+    [Option(Description = NetAppFilesOptionDefinitions.SnapshotPolicyId)]
     public string? SnapshotPolicyId { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.TagsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Tags)]
     public string? Tags { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ThroughputMibpsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ThroughputMibps)]
     public int? ThroughputMibps { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.UnixPermissionsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.UnixPermissions)]
     public string? UnixPermissions { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.UnixReadOnlyName)]
+    [Option(Description = NetAppFilesOptionDefinitions.UnixReadOnly)]
     public bool? UnixReadOnly { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.UnixReadWriteName)]
+    [Option(Description = NetAppFilesOptionDefinitions.UnixReadWrite)]
     public bool? UnixReadWrite { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.VolumeSpecNameName)]
+    [Option(Description = NetAppFilesOptionDefinitions.VolumeSpecName)]
     public string? VolumeSpecName { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.VolumeTypeName)]
+    [Option(Description = NetAppFilesOptionDefinitions.VolumeType)]
     public string? VolumeType { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ZonesName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Zones)]
     public string[]? Zones { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.NoWaitName)]
+    [Option(Description = NetAppFilesOptionDefinitions.NoWait)]
     public bool NoWait { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.AcquirePolicyTokenName)]
+    [Option(Description = NetAppFilesOptionDefinitions.AcquirePolicyToken)]
     public bool AcquirePolicyToken { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ChangeReferenceName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ChangeReference)]
     public string? ChangeReference { get; set; }
 }

@@ -1,63 +1,64 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.Account;
 
+// note: can DRY this further by combining AccountGetOptions and AccountUpdateOptions common options into a single class
 public class AccountUpdateOptions : BaseNetAppFilesOptions
 {
-    [JsonPropertyName(NetAppFilesOptionDefinitions.IdsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Ids)]
     public string[]? Ids { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.LocationName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Location)]
     public string? Location { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.TagsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Tags)]
     public string? Tags { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.KeyNameName)]
+    [Option(Description = NetAppFilesOptionDefinitions.KeyName)]
     public string? KeyName { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.KeySourceName)]
+    [Option(Description = NetAppFilesOptionDefinitions.KeySource)]
     public string? KeySource { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.KeyVaultResourceIdName)]
+    [Option(Description = NetAppFilesOptionDefinitions.KeyVaultResourceId)]
     public string? KeyVaultResourceId { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.KeyVaultUriName)]
+    [Option(Description = NetAppFilesOptionDefinitions.KeyVaultUri)]
     public string? KeyVaultUri { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.FederatedClientIdName)]
+    [Option(Description = NetAppFilesOptionDefinitions.FederatedClientId)]
     public string? FederatedClientId { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.UserAssignedIdentityName)]
+    [Option(Description = NetAppFilesOptionDefinitions.UserAssignedIdentity)]
     public string? UserAssignedIdentity { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.IdentityTypeName)]
+    [Option(Description = NetAppFilesOptionDefinitions.IdentityType)]
     public string? IdentityType { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.UserAssignedIdentitiesName)]
+    [Option(Description = NetAppFilesOptionDefinitions.UserAssignedIdentities)]
     public string? UserAssignedIdentities { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ActiveDirectoriesName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ActiveDirectories)]
     public string? ActiveDirectories { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.NfsV4IdDomainName)]
+    [Option(Description = NetAppFilesOptionDefinitions.NfsV4IdDomain)]
     public string? NfsV4IdDomain { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.NoWaitName)]
+    [Option(Description = NetAppFilesOptionDefinitions.NoWait)]
     public bool NoWait { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.AddName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Add)]
     public string[]? Add { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SetName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Set)]
     public string[]? Set { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.RemoveName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Remove)]
     public string[]? Remove { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ForceStringName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ForceString)]
     public bool ForceString { get; set; }
 }

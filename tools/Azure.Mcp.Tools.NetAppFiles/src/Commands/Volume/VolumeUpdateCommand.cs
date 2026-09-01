@@ -5,6 +5,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Options;
@@ -32,48 +33,15 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Volume;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class VolumeUpdateCommand(ILogger<VolumeUpdateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<VolumeUpdateOptions>()
+public sealed class VolumeUpdateCommand(ILogger<VolumeUpdateCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<VolumeUpdateOptions, VolumeUpdateCommand.VolumeUpdateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<VolumeUpdateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VolumeUpdateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(NetAppFilesOptionDefinitions.Account.AsRequired());
-        command.Options.Add(NetAppFilesOptionDefinitions.Pool.AsRequired());
-        command.Options.Add(NetAppFilesOptionDefinitions.Volume.AsRequired());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(NetAppFilesOptionDefinitions.Location);
-        command.Options.Add(NetAppFilesOptionDefinitions.UsageThreshold.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.ServiceLevel);
-        command.Options.Add(NetAppFilesOptionDefinitions.Tags.AsOptional());
-    }
-
-    protected override VolumeUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
-        options.Pool = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Pool.Name);
-        options.Volume = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Volume.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Location.Name);
-        options.UsageThreshold = parseResult.GetValueOrDefault<long>(NetAppFilesOptionDefinitions.UsageThreshold.Name);
-        options.ServiceLevel = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.ServiceLevel.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Tags.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             Dictionary<string, string>? tags = null;
@@ -131,5 +99,5 @@ public sealed class VolumeUpdateCommand(ILogger<VolumeUpdateCommand> logger, INe
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VolumeUpdateCommandResult([property: JsonPropertyName("volume")] NetAppVolumeCreateResult Volume);
+    public record VolumeUpdateCommandResult([property: JsonPropertyName("volume")] NetAppVolumeCreateResult Volume);
 }

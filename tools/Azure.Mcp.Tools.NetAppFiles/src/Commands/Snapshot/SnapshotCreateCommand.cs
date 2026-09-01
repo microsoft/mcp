@@ -4,6 +4,7 @@
 using System.Net;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Options;
@@ -31,50 +32,15 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Snapshot;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<SnapshotCreateOptions>()
+public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<SnapshotCreateOptions, SnapshotCreateCommand.SnapshotCreateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<SnapshotCreateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SnapshotCreateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(NetAppFilesOptionDefinitions.Account.AsRequired());
-        command.Options.Add(NetAppFilesOptionDefinitions.Pool.AsRequired());
-        command.Options.Add(NetAppFilesOptionDefinitions.Volume.AsRequired());
-        command.Options.Add(NetAppFilesOptionDefinitions.Snapshot.AsRequired());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(NetAppFilesOptionDefinitions.Location);
-        command.Options.Add(NetAppFilesOptionDefinitions.NoWait.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.AcquirePolicyToken.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.ChangeReference.AsOptional());
-    }
-
-    protected override SnapshotCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
-        options.Pool = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Pool.Name);
-        options.Volume = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Volume.Name);
-        options.Snapshot = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Snapshot.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Location.Name);
-        options.NoWait = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.NoWait.Name);
-        options.AcquirePolicyToken = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.AcquirePolicyToken.Name);
-        options.ChangeReference = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.ChangeReference.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             ValidateUnsupportedCreateArguments(options);
@@ -143,5 +109,5 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
         _ => base.GetStatusCode(ex)
     };
 
-    internal record SnapshotCreateCommandResult([property: JsonPropertyName("snapshot")] SnapshotCreateResult Snapshot);
+    public record SnapshotCreateCommandResult([property: JsonPropertyName("snapshot")] SnapshotCreateResult Snapshot);
 }

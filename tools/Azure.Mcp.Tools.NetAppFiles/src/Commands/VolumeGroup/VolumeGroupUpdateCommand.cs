@@ -5,6 +5,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Options;
@@ -32,60 +33,15 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.VolumeGroup;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class VolumeGroupUpdateCommand(ILogger<VolumeGroupUpdateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<VolumeGroupUpdateOptions>()
+public sealed class VolumeGroupUpdateCommand(ILogger<VolumeGroupUpdateCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<VolumeGroupUpdateOptions, VolumeGroupUpdateCommand.VolumeGroupUpdateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<VolumeGroupUpdateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VolumeGroupUpdateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(NetAppFilesOptionDefinitions.Account.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.VolumeGroup.AsOptional());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Location);
-        command.Options.Add(NetAppFilesOptionDefinitions.GroupDescription.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Tags.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Ids.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.NoWait.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Add.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Set.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Remove.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.ForceString.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.GroupMetaData.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Volumes.AsOptional());
-    }
-
-    protected override VolumeGroupUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
-        options.VolumeGroup = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.VolumeGroup.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Location.Name);
-        options.GroupDescription = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.GroupDescription.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Tags.Name);
-        options.Ids = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Ids.Name);
-        options.NoWait = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.NoWait.Name);
-        options.Add = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Add.Name);
-        options.Set = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Set.Name);
-        options.Remove = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Remove.Name);
-        options.ForceString = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.ForceString.Name);
-        options.GroupMetaData = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.GroupMetaData.Name);
-        options.Volumes = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Volumes.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             ResolveResourceIdArguments(options);
@@ -219,5 +175,5 @@ public sealed class VolumeGroupUpdateCommand(ILogger<VolumeGroupUpdateCommand> l
         }
     }
 
-    internal record VolumeGroupUpdateCommandResult([property: JsonPropertyName("volumeGroup")] VolumeGroupCreateResult VolumeGroup);
+    public record VolumeGroupUpdateCommandResult([property: JsonPropertyName("volumeGroup")] VolumeGroupCreateResult VolumeGroup);
 }

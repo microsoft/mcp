@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.Replication;
 
 public class ReplicationListOptions : BaseReplicationOptions
 {
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ExcludeName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Exclude)]
     public string? Exclude { get; set; }
 }

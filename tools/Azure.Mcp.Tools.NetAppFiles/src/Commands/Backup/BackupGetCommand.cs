@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Options;
@@ -29,38 +30,15 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Backup;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class BackupGetCommand(ILogger<BackupGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<BackupGetOptions>()
+public sealed class BackupGetCommand(ILogger<BackupGetCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<BackupGetOptions, BackupGetCommand.BackupGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<BackupGetCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BackupGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(NetAppFilesOptionDefinitions.Account.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.BackupVault.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Backup.AsOptional());
-    }
-
-    protected override BackupGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
-        options.BackupVault = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.BackupVault.Name);
-        options.Backup = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Backup.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var backups = await _netAppFilesService.GetBackupDetails(
@@ -94,5 +72,5 @@ public sealed class BackupGetCommand(ILogger<BackupGetCommand> logger, INetAppFi
         return context.Response;
     }
 
-    internal record BackupGetCommandResult(List<BackupInfo> Backups, bool AreResultsTruncated);
+    public record BackupGetCommandResult(List<BackupInfo> Backups, bool AreResultsTruncated);
 }

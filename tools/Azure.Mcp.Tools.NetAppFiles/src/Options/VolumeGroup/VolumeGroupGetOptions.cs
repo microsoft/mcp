@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.VolumeGroup;
 
 public class VolumeGroupGetOptions : BaseNetAppFilesOptions
 {
-    [JsonPropertyName(NetAppFilesOptionDefinitions.VolumeGroupName)]
+    [Option(Description = NetAppFilesOptionDefinitions.VolumeGroup)]
     public string? VolumeGroup { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.IdsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Ids)]
     public string[]? Ids { get; set; }
 }

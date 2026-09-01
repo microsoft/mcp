@@ -5,6 +5,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Options;
@@ -32,55 +33,15 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Pool;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class PoolUpdateCommand(ILogger<PoolUpdateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<PoolUpdateOptions>()
+public sealed class PoolUpdateCommand(ILogger<PoolUpdateCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<PoolUpdateOptions, PoolUpdateCommand.PoolUpdateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<PoolUpdateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, PoolUpdateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(NetAppFilesOptionDefinitions.Account.AsRequired());
-        command.Options.Add(NetAppFilesOptionDefinitions.Pool.AsRequired());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(NetAppFilesOptionDefinitions.Location);
-        command.Options.Add(NetAppFilesOptionDefinitions.Size.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.SizeInBytes);
-        command.Options.Add(NetAppFilesOptionDefinitions.ServiceLevel);
-        command.Options.Add(NetAppFilesOptionDefinitions.QosType);
-        command.Options.Add(NetAppFilesOptionDefinitions.CustomThroughputMibps);
-        command.Options.Add(NetAppFilesOptionDefinitions.CoolAccess);
-        command.Options.Add(NetAppFilesOptionDefinitions.Tags.AsOptional());
-    }
-
-    protected override PoolUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
-        options.Pool = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Pool.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Location.Name);
-        var size = parseResult.GetValueOrDefault<long>(NetAppFilesOptionDefinitions.Size.Name);
-        options.Size = size != 0 ? size : null;
-        options.QosType = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.QosType.Name);
-        options.CoolAccess = parseResult.GetValueOrDefault<bool?>(NetAppFilesOptionDefinitions.CoolAccess.Name);
-        options.ServiceLevel = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.ServiceLevel.Name);
-        options.SizeInBytes = parseResult.GetValueOrDefault<long?>(NetAppFilesOptionDefinitions.SizeInBytes.Name);
-        options.CustomThroughputMibps = parseResult.GetValueOrDefault<long?>(NetAppFilesOptionDefinitions.CustomThroughputMibps.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Tags.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             Dictionary<string, string>? tags = null;
@@ -141,5 +102,5 @@ public sealed class PoolUpdateCommand(ILogger<PoolUpdateCommand> logger, INetApp
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record PoolUpdateCommandResult([property: JsonPropertyName("pool")] CapacityPoolCreateResult Pool);
+    public record PoolUpdateCommandResult([property: JsonPropertyName("pool")] CapacityPoolCreateResult Pool);
 }

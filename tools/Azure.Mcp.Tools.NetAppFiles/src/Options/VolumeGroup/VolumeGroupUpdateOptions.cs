@@ -1,45 +1,45 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.VolumeGroup;
 
 public class VolumeGroupUpdateOptions : BaseNetAppFilesOptions
 {
-    [JsonPropertyName(NetAppFilesOptionDefinitions.VolumeGroupName)]
+    [Option(Description = NetAppFilesOptionDefinitions.VolumeGroup)]
     public string? VolumeGroup { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.LocationName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Location)]
     public string? Location { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.GroupDescriptionName)]
+    [Option(Description = NetAppFilesOptionDefinitions.GroupDescription)]
     public string? GroupDescription { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.TagsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Tags)]
     public string? Tags { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.IdsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Ids)]
     public string[]? Ids { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.NoWaitName)]
+    [Option(Description = NetAppFilesOptionDefinitions.NoWait)]
     public bool NoWait { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.AddName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Add)]
     public string[]? Add { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SetName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Set)]
     public string[]? Set { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.RemoveName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Remove)]
     public string[]? Remove { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ForceStringName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ForceString)]
     public bool ForceString { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.GroupMetaDataName)]
+    [Option(Description = NetAppFilesOptionDefinitions.GroupMetaData)]
     public string? GroupMetaData { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.VolumesName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Volumes)]
     public string? Volumes { get; set; }
 }

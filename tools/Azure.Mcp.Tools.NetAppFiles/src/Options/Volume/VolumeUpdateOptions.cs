@@ -1,27 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.Volume;
 
 public class VolumeUpdateOptions : BaseNetAppFilesOptions
 {
-    [JsonPropertyName(NetAppFilesOptionDefinitions.PoolName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Pool)]
     public string? Pool { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.VolumeName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Volume)]
     public string? Volume { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.LocationName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Location)]
     public string? Location { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.UsageThresholdName)]
+    [Option(Description = NetAppFilesOptionDefinitions.UsageThreshold)]
     public long? UsageThreshold { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ServiceLevelName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ServiceLevel)]
     public string? ServiceLevel { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.TagsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Tags)]
     public string? Tags { get; set; }
 }

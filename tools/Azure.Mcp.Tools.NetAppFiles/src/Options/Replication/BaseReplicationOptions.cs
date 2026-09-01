@@ -1,24 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.Replication;
 
 public class BaseReplicationOptions : BaseNetAppFilesOptions
 {
-    [JsonPropertyName(NetAppFilesOptionDefinitions.PoolName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Pool)]
     public string? Pool { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.VolumeName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Volume)]
     public string? Volume { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.IdsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Ids)]
     public string[]? Ids { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.AcquirePolicyTokenName)]
+    [Option(Description = NetAppFilesOptionDefinitions.AcquirePolicyToken)]
     public bool AcquirePolicyToken { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ChangeReferenceName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ChangeReference)]
     public string? ChangeReference { get; set; }
 }

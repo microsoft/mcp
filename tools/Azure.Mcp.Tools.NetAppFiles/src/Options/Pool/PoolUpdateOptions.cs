@@ -1,36 +1,36 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.Pool;
 
 public class PoolUpdateOptions : BaseNetAppFilesOptions
 {
-    [JsonPropertyName(NetAppFilesOptionDefinitions.PoolName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Pool)]
     public string? Pool { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.LocationName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Location)]
     public string? Location { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SizeName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Size)]
     public long? Size { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.QosTypeName)]
+    [Option(Description = NetAppFilesOptionDefinitions.QosType)]
     public string? QosType { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.CoolAccessName)]
+    [Option(Description = NetAppFilesOptionDefinitions.CoolAccess)]
     public bool? CoolAccess { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ServiceLevelName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ServiceLevel)]
     public string? ServiceLevel { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SizeInBytesName)]
+    [Option(Description = NetAppFilesOptionDefinitions.SizeInBytes)]
     public long? SizeInBytes { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.CustomThroughputMibpsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.CustomThroughputMibps)]
     public long? CustomThroughputMibps { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.TagsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Tags)]
     public string? Tags { get; set; }
 }

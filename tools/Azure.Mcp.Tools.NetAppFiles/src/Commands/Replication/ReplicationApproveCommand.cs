@@ -8,6 +8,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.NetAppFiles.Models;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Replication;
 
@@ -23,37 +27,18 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Replication;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class ReplicationApproveCommand(ILogger<ReplicationApproveCommand> logger, INetAppFilesService netAppFilesService) : ReplicationCommandBase<ReplicationApproveOptions>()
+public sealed class ReplicationApproveCommand(ILogger<ReplicationApproveCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ReplicationApproveOptions, ReplicationApproveCommand.ReplicationApproveCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ReplicationApproveCommand> _logger = logger;
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ReplicationApproveOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        RegisterReplicationOptions(command, includeNoWait: true);
-        command.Options.Add(NetAppFilesOptionDefinitions.RemoteVolumeResourceId);
-    }
-
-    protected override ReplicationApproveOptions BindOptions(ParseResult parseResult)
-    {
-        var options = BindReplicationOptions(parseResult, base.BindOptions(parseResult));
-        options.RemoteVolumeResourceId = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.RemoteVolumeResourceId.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
         try
         {
-            ValidateVolumeTarget(options);
-            ValidateUnsupportedActionOptions(options);
+            ReplicationCommandHelpers.ValidateVolumeTarget(options);
+            ReplicationCommandHelpers.ValidateUnsupportedActionOptions(options);
 
             if (string.IsNullOrWhiteSpace(options.RemoteVolumeResourceId))
             {
@@ -71,4 +56,6 @@ public sealed class ReplicationApproveCommand(ILogger<ReplicationApproveCommand>
 
         return context.Response;
     }
+
+    public record ReplicationApproveCommandResult([property: JsonPropertyName("replicationApproveResult")] ReplicationOperationResult ReplicationOperationResult);
 }

@@ -1,45 +1,64 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
+
+// find: \[JsonPropertyName\(NetAppFilesOptionDefinitions.(.*)Name\)\]
+// [Option(Description = NetAppFilesOptionDefinitions.$1)]
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.Account;
 
-public class AccountCreateOptions : BaseNetAppFilesOptions
+public class AccountCreateOptions : ISubscriptionOption
 {
-    [JsonPropertyName(NetAppFilesOptionDefinitions.LocationName)]
+    [Option(Description = "The name of the Azure NetApp Files account to create (e.g., 'myanfaccount').")]
+    public required string Account { get; set; }
+
+    [Option(Description = NetAppFilesOptionDefinitions.Location)]
     public string? Location { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.TagsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Tags)]
     public string? Tags { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.KeyNameName)]
+    [Option(Description = NetAppFilesOptionDefinitions.KeyName)]
     public string? KeyName { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.KeySourceName)]
+    [Option(Description = NetAppFilesOptionDefinitions.KeySource)]
     public string? KeySource { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.KeyVaultResourceIdName)]
+    [Option(Description = NetAppFilesOptionDefinitions.KeyVaultResourceId)]
     public string? KeyVaultResourceId { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.KeyVaultUriName)]
+    [Option(Description = NetAppFilesOptionDefinitions.KeyVaultUri)]
     public string? KeyVaultUri { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.FederatedClientIdName)]
+    [Option(Description = NetAppFilesOptionDefinitions.FederatedClientId)]
     public string? FederatedClientId { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.UserAssignedIdentityName)]
+    [Option(Description = NetAppFilesOptionDefinitions.UserAssignedIdentity)]
     public string? UserAssignedIdentity { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.IdentityTypeName)]
+    [Option(Description = NetAppFilesOptionDefinitions.IdentityType)]
     public string? IdentityType { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.UserAssignedIdentitiesName)]
+    [Option(Description = NetAppFilesOptionDefinitions.UserAssignedIdentities)]
     public string? UserAssignedIdentities { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ActiveDirectoriesName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ActiveDirectories)]
     public string? ActiveDirectories { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.NfsV4IdDomainName)]
+    [Option(Description = NetAppFilesOptionDefinitions.NfsV4IdDomain)]
     public string? NfsV4IdDomain { get; set; }
+
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public required string ResourceGroup { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [OptionContainer(Prefix = "retry")]
+    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

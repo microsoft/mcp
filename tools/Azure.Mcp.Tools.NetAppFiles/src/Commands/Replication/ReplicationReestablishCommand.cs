@@ -8,6 +8,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.NetAppFiles.Models;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Replication;
 
@@ -23,37 +27,18 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Replication;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class ReplicationReestablishCommand(ILogger<ReplicationReestablishCommand> logger, INetAppFilesService netAppFilesService) : ReplicationCommandBase<ReplicationReestablishOptions>()
+public sealed class ReplicationReestablishCommand(ILogger<ReplicationReestablishCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ReplicationReestablishOptions, ReplicationReestablishCommand.ReplicationReestablishCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ReplicationReestablishCommand> _logger = logger;
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ReplicationReestablishOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        RegisterReplicationOptions(command, includeNoWait: true);
-        command.Options.Add(NetAppFilesOptionDefinitions.SourceVolumeId);
-    }
-
-    protected override ReplicationReestablishOptions BindOptions(ParseResult parseResult)
-    {
-        var options = BindReplicationOptions(parseResult, base.BindOptions(parseResult));
-        options.SourceVolumeId = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.SourceVolumeId.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
         try
         {
-            ValidateVolumeTarget(options);
-            ValidateUnsupportedActionOptions(options);
+            ReplicationCommandHelpers.ValidateVolumeTarget(options);
+            ReplicationCommandHelpers.ValidateUnsupportedActionOptions(options);
             if (string.IsNullOrWhiteSpace(options.SourceVolumeId))
             {
                 throw new ArgumentException("Provide --sourceVolumeId to re-establish a replication.");
@@ -70,4 +55,6 @@ public sealed class ReplicationReestablishCommand(ILogger<ReplicationReestablish
 
         return context.Response;
     }
+
+    public record ReplicationReestablishCommandResult([property: JsonPropertyName("replicationReestablishResult")] ReplicationOperationResult ReplicationOperationResult);
 }

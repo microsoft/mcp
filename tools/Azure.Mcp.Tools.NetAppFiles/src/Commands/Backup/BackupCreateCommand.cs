@@ -4,6 +4,7 @@
 using System.Net;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Options;
@@ -31,46 +32,15 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Backup;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class BackupCreateCommand(ILogger<BackupCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<BackupCreateOptions>()
+public sealed class BackupCreateCommand(ILogger<BackupCreateCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<BackupCreateOptions, BackupCreateCommand.BackupCreateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<BackupCreateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BackupCreateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(NetAppFilesOptionDefinitions.Account.AsRequired());
-        command.Options.Add(NetAppFilesOptionDefinitions.BackupVault.AsRequired());
-        command.Options.Add(NetAppFilesOptionDefinitions.Backup.AsRequired());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(NetAppFilesOptionDefinitions.Location);
-        command.Options.Add(NetAppFilesOptionDefinitions.VolumeResourceId);
-        command.Options.Add(NetAppFilesOptionDefinitions.Label);
-    }
-
-    protected override BackupCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
-        options.BackupVault = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.BackupVault.Name);
-        options.Backup = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Backup.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Location.Name);
-        options.VolumeResourceId = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.VolumeResourceId.Name);
-        options.Label = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Label.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var backup = await _netAppFilesService.CreateBackup(
@@ -113,5 +83,5 @@ public sealed class BackupCreateCommand(ILogger<BackupCreateCommand> logger, INe
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record BackupCreateCommandResult([property: JsonPropertyName("backup")] BackupCreateResult Backup);
+    public record BackupCreateCommandResult([property: JsonPropertyName("backup")] BackupCreateResult Backup);
 }

@@ -1,30 +1,30 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.Snapshot;
 
 public class SnapshotCreateOptions : BaseNetAppFilesOptions
 {
-    [JsonPropertyName(NetAppFilesOptionDefinitions.PoolName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Pool)]
     public string? Pool { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.VolumeName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Volume)]
     public string? Volume { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SnapshotName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Snapshot)]
     public string? Snapshot { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.LocationName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Location)]
     public string? Location { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.NoWaitName)]
+    [Option(Description = NetAppFilesOptionDefinitions.NoWait)]
     public bool NoWait { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.AcquirePolicyTokenName)]
+    [Option(Description = NetAppFilesOptionDefinitions.AcquirePolicyToken)]
     public bool AcquirePolicyToken { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ChangeReferenceName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ChangeReference)]
     public string? ChangeReference { get; set; }
 }

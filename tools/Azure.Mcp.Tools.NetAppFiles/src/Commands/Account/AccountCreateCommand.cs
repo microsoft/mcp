@@ -5,6 +5,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Options;
@@ -32,60 +33,15 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Account;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<AccountCreateOptions>()
+public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<AccountCreateOptions, AccountCreateCommand.AccountCreateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<AccountCreateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AccountCreateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(NetAppFilesOptionDefinitions.Account.AsRequired());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(NetAppFilesOptionDefinitions.Location);
-        command.Options.Add(NetAppFilesOptionDefinitions.Tags.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.KeyName.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.KeySource.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.KeyVaultResourceId.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.KeyVaultUri.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.FederatedClientId.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.UserAssignedIdentity.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.IdentityType.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.UserAssignedIdentities.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.ActiveDirectories.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.NfsV4IdDomain.AsOptional());
-    }
-
-    protected override AccountCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Location.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Tags.Name);
-        options.KeyName = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.KeyName.Name);
-        options.KeySource = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.KeySource.Name);
-        options.KeyVaultResourceId = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.KeyVaultResourceId.Name);
-        options.KeyVaultUri = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.KeyVaultUri.Name);
-        options.FederatedClientId = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.FederatedClientId.Name);
-        options.UserAssignedIdentity = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.UserAssignedIdentity.Name);
-        options.IdentityType = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.IdentityType.Name);
-        options.UserAssignedIdentities = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.UserAssignedIdentities.Name);
-        options.ActiveDirectories = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.ActiveDirectories.Name);
-        options.NfsV4IdDomain = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.NfsV4IdDomain.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             Dictionary<string, string>? tags = null;
@@ -169,5 +125,5 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, I
         }
     }
 
-    internal record AccountCreateCommandResult([property: JsonPropertyName("account")] NetAppAccountCreateResult Account);
+    public record AccountCreateCommandResult([property: JsonPropertyName("account")] NetAppAccountCreateResult Account);
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Options;
@@ -29,40 +30,15 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.BackupVault;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class BackupVaultGetCommand(ILogger<BackupVaultGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<BackupVaultGetOptions>()
+public sealed class BackupVaultGetCommand(ILogger<BackupVaultGetCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<BackupVaultGetOptions, BackupVaultGetCommand.BackupVaultGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<BackupVaultGetCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BackupVaultGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(NetAppFilesOptionDefinitions.Account.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.BackupVault.AsOptional());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Ids.AsOptional());
-    }
-
-    protected override BackupVaultGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
-        options.BackupVault = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.BackupVault.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Ids = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Ids.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var backupVaults = await _netAppFilesService.GetBackupVaultDetails(
@@ -96,5 +72,5 @@ public sealed class BackupVaultGetCommand(ILogger<BackupVaultGetCommand> logger,
         return context.Response;
     }
 
-    internal record BackupVaultGetCommandResult(List<BackupVaultInfo> BackupVaults, bool AreResultsTruncated);
+    public record BackupVaultGetCommandResult(List<BackupVaultInfo> BackupVaults, bool AreResultsTruncated);
 }

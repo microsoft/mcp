@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.Account;
 
 public class AccountGetOptions : BaseNetAppFilesOptions
 {
-	[JsonPropertyName(NetAppFilesOptionDefinitions.IdsName)]
+	[Option(Description = NetAppFilesOptionDefinitions.Ids)]
 	public string[]? Ids { get; set; }
 }

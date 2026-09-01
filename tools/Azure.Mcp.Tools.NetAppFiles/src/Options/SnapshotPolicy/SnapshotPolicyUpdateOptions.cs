@@ -1,84 +1,84 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.SnapshotPolicy;
 
 public class SnapshotPolicyUpdateOptions : BaseNetAppFilesOptions
 {
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SnapshotPolicyName)]
+    [Option(Description = NetAppFilesOptionDefinitions.SnapshotPolicy)]
     public string? SnapshotPolicy { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.LocationName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Location)]
     public string? Location { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.HourlyScheduleMinuteName)]
+    [Option(Description = NetAppFilesOptionDefinitions.HourlyScheduleMinute)]
     public int? HourlyScheduleMinute { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.HourlyScheduleSnapshotsToKeepName)]
+    [Option(Description = NetAppFilesOptionDefinitions.HourlyScheduleSnapshotsToKeep)]
     public int? HourlyScheduleSnapshotsToKeep { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.DailyScheduleHourName)]
+    [Option(Description = NetAppFilesOptionDefinitions.DailyScheduleHour)]
     public int? DailyScheduleHour { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.DailyScheduleMinuteName)]
+    [Option(Description = NetAppFilesOptionDefinitions.DailyScheduleMinute)]
     public int? DailyScheduleMinute { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.DailyScheduleSnapshotsToKeepName)]
+    [Option(Description = NetAppFilesOptionDefinitions.DailyScheduleSnapshotsToKeep)]
     public int? DailyScheduleSnapshotsToKeep { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.WeeklyScheduleDayName)]
+    [Option(Description = NetAppFilesOptionDefinitions.WeeklyScheduleDay)]
     public string? WeeklyScheduleDay { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.WeeklyScheduleHourName)]
+    [Option(Description = NetAppFilesOptionDefinitions.WeeklyScheduleHour)]
     public int? WeeklyScheduleHour { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.WeeklyScheduleMinuteName)]
+    [Option(Description = NetAppFilesOptionDefinitions.WeeklyScheduleMinute)]
     public int? WeeklyScheduleMinute { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.WeeklyScheduleSnapshotsToKeepName)]
+    [Option(Description = NetAppFilesOptionDefinitions.WeeklyScheduleSnapshotsToKeep)]
     public int? WeeklyScheduleSnapshotsToKeep { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.MonthlyScheduleDaysOfMonthName)]
+    [Option(Description = NetAppFilesOptionDefinitions.MonthlyScheduleDaysOfMonth)]
     public string? MonthlyScheduleDaysOfMonth { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.MonthlyScheduleHourName)]
+    [Option(Description = NetAppFilesOptionDefinitions.MonthlyScheduleHour)]
     public int? MonthlyScheduleHour { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.MonthlyScheduleMinuteName)]
+    [Option(Description = NetAppFilesOptionDefinitions.MonthlyScheduleMinute)]
     public int? MonthlyScheduleMinute { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.MonthlyScheduleSnapshotsToKeepName)]
+    [Option(Description = NetAppFilesOptionDefinitions.MonthlyScheduleSnapshotsToKeep)]
     public int? MonthlyScheduleSnapshotsToKeep { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.EnabledName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Enabled)]
     public bool? Enabled { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.TagsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Tags)]
     public string? Tags { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.IdsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Ids)]
     public string[]? Ids { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.NoWaitName)]
+    [Option(Description = NetAppFilesOptionDefinitions.NoWait)]
     public bool NoWait { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.AcquirePolicyTokenName)]
+    [Option(Description = NetAppFilesOptionDefinitions.AcquirePolicyToken)]
     public bool AcquirePolicyToken { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ChangeReferenceName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ChangeReference)]
     public string? ChangeReference { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.AddName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Add)]
     public string[]? Add { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SetName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Set)]
     public string[]? Set { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.RemoveName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Remove)]
     public string[]? Remove { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ForceStringName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ForceString)]
     public bool ForceString { get; set; }
 }

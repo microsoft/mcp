@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Core;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Options;
@@ -33,72 +34,15 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Account;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class AccountUpdateCommand(ILogger<AccountUpdateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<AccountUpdateOptions>()
+public sealed class AccountUpdateCommand(ILogger<AccountUpdateCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<AccountUpdateOptions, AccountUpdateCommand.AccountUpdateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<AccountUpdateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AccountUpdateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(NetAppFilesOptionDefinitions.Account.AsOptional());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Ids.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Location.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Tags.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.KeyName.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.KeySource.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.KeyVaultResourceId.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.KeyVaultUri.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.FederatedClientId.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.UserAssignedIdentity.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.IdentityType.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.UserAssignedIdentities.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.ActiveDirectories.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.NfsV4IdDomain.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.NoWait.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Add.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Set.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Remove.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.ForceString.AsOptional());
-    }
-
-    protected override AccountUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Ids = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Ids.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Location.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Tags.Name);
-        options.KeyName = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.KeyName.Name);
-        options.KeySource = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.KeySource.Name);
-        options.KeyVaultResourceId = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.KeyVaultResourceId.Name);
-        options.KeyVaultUri = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.KeyVaultUri.Name);
-        options.FederatedClientId = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.FederatedClientId.Name);
-        options.UserAssignedIdentity = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.UserAssignedIdentity.Name);
-        options.IdentityType = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.IdentityType.Name);
-        options.UserAssignedIdentities = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.UserAssignedIdentities.Name);
-        options.ActiveDirectories = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.ActiveDirectories.Name);
-        options.NfsV4IdDomain = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.NfsV4IdDomain.Name);
-        options.NoWait = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.NoWait.Name);
-        options.Add = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Add.Name);
-        options.Set = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Set.Name);
-        options.Remove = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Remove.Name);
-        options.ForceString = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.ForceString.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             ResolveResourceIdArguments(options);
@@ -219,5 +163,5 @@ public sealed class AccountUpdateCommand(ILogger<AccountUpdateCommand> logger, I
         }
     }
 
-    internal record AccountUpdateCommandResult([property: JsonPropertyName("account")] NetAppAccountCreateResult Account);
+    public record AccountUpdateCommandResult([property: JsonPropertyName("account")] NetAppAccountCreateResult Account);
 }

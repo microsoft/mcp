@@ -5,6 +5,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Options;
@@ -32,62 +33,15 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.BackupPolicy;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class BackupPolicyUpdateCommand(ILogger<BackupPolicyUpdateCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<BackupPolicyUpdateOptions>()
+public sealed class BackupPolicyUpdateCommand(ILogger<BackupPolicyUpdateCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<BackupPolicyUpdateOptions, BackupPolicyUpdateCommand.BackupPolicyUpdateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<BackupPolicyUpdateCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BackupPolicyUpdateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(NetAppFilesOptionDefinitions.Account.AsRequired());
-        command.Options.Add(NetAppFilesOptionDefinitions.BackupPolicy.AsRequired());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(NetAppFilesOptionDefinitions.Location);
-        command.Options.Add(NetAppFilesOptionDefinitions.DailyBackupsToKeep);
-        command.Options.Add(NetAppFilesOptionDefinitions.WeeklyBackupsToKeep);
-        command.Options.Add(NetAppFilesOptionDefinitions.MonthlyBackupsToKeep);
-        command.Options.Add(NetAppFilesOptionDefinitions.Enabled.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Tags.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Ids.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.NoWait.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Add.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Set.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Remove.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.ForceString.AsOptional());
-    }
-
-    protected override BackupPolicyUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name);
-        options.BackupPolicy = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.BackupPolicy.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Location.Name);
-        options.DailyBackupsToKeep = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.DailyBackupsToKeep.Name);
-        options.WeeklyBackupsToKeep = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.WeeklyBackupsToKeep.Name);
-        options.MonthlyBackupsToKeep = parseResult.GetValueOrDefault<int?>(NetAppFilesOptionDefinitions.MonthlyBackupsToKeep.Name);
-        options.Enabled = parseResult.GetValueOrDefault<bool?>(NetAppFilesOptionDefinitions.Enabled.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Tags.Name);
-        options.Ids = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Ids.Name);
-        options.NoWait = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.NoWait.Name);
-        options.Add = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Add.Name);
-        options.Set = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Set.Name);
-        options.Remove = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Remove.Name);
-        options.ForceString = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.ForceString.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             ValidateUnsupportedUpdateArguments(options);
@@ -181,5 +135,5 @@ public sealed class BackupPolicyUpdateCommand(ILogger<BackupPolicyUpdateCommand>
         }
     }
 
-    internal record BackupPolicyUpdateCommandResult([property: JsonPropertyName("backupPolicy")] BackupPolicyCreateResult BackupPolicy);
+    public record BackupPolicyUpdateCommandResult([property: JsonPropertyName("backupPolicy")] BackupPolicyCreateResult BackupPolicy);
 }

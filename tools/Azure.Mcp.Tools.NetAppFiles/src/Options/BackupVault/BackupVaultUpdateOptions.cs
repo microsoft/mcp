@@ -1,42 +1,42 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.BackupVault;
 
 public class BackupVaultUpdateOptions : BaseNetAppFilesOptions
 {
-    [JsonPropertyName(NetAppFilesOptionDefinitions.BackupVaultName)]
+    [Option(Description = NetAppFilesOptionDefinitions.BackupVault)]
     public string? BackupVault { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.LocationName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Location)]
     public string? Location { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.TagsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Tags)]
     public string? Tags { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.IdsName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Ids)]
     public string[]? Ids { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.NoWaitName)]
+    [Option(Description = NetAppFilesOptionDefinitions.NoWait)]
     public bool NoWait { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.AcquirePolicyTokenName)]
+    [Option(Description = NetAppFilesOptionDefinitions.AcquirePolicyToken)]
     public bool AcquirePolicyToken { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ChangeReferenceName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ChangeReference)]
     public string? ChangeReference { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.AddName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Add)]
     public string[]? Add { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.SetName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Set)]
     public string[]? Set { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.RemoveName)]
+    [Option(Description = NetAppFilesOptionDefinitions.Remove)]
     public string[]? Remove { get; set; }
 
-    [JsonPropertyName(NetAppFilesOptionDefinitions.ForceStringName)]
+    [Option(Description = NetAppFilesOptionDefinitions.ForceString)]
     public bool ForceString { get; set; }
 }

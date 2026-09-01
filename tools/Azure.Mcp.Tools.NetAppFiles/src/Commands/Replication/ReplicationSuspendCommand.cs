@@ -8,6 +8,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.NetAppFiles.Models;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Replication;
 
@@ -23,37 +27,18 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Replication;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class ReplicationSuspendCommand(ILogger<ReplicationSuspendCommand> logger, INetAppFilesService netAppFilesService) : ReplicationCommandBase<ReplicationSuspendOptions>()
+public sealed class ReplicationSuspendCommand(ILogger<ReplicationSuspendCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver) 
+    : SubscriptionCommand<ReplicationSuspendOptions, ReplicationSuspendCommand.ReplicationSuspendCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ReplicationSuspendCommand> _logger = logger;
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ReplicationSuspendOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        RegisterReplicationOptions(command, includeNoWait: true);
-        command.Options.Add(NetAppFilesOptionDefinitions.ForceBreakReplication);
-    }
-
-    protected override ReplicationSuspendOptions BindOptions(ParseResult parseResult)
-    {
-        var options = BindReplicationOptions(parseResult, base.BindOptions(parseResult));
-        options.ForceBreakReplication = parseResult.GetValueOrDefault<bool>(NetAppFilesOptionDefinitions.ForceBreakReplication.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
         try
         {
-            ValidateVolumeTarget(options);
-            ValidateUnsupportedActionOptions(options);
+            ReplicationCommandHelpers.ValidateVolumeTarget(options);
+            ReplicationCommandHelpers.ValidateUnsupportedActionOptions(options);
             var result = await _netAppFilesService.SuspendReplication(options.Account, options.Pool, options.Volume, options.ResourceGroup, options.Ids, options.Subscription!, options.ForceBreakReplication, options.Tenant, options.RetryPolicy, cancellationToken);
             context.Response.Results = ResponseResult.Create(result, NetAppFilesJsonContext.Default.ReplicationOperationResult);
         }
@@ -65,4 +50,6 @@ public sealed class ReplicationSuspendCommand(ILogger<ReplicationSuspendCommand>
 
         return context.Response;
     }
+
+    public record ReplicationSuspendCommandResult([property: JsonPropertyName("replicationSuspendResult")] ReplicationOperationResult ReplicationOperationResult);
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.Mcp.Tools.NetAppFiles.Options;
@@ -29,7 +30,8 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.SnapshotPolicy;
     LocalRequired = false,
     Secret = false
 )]
-public sealed class SnapshotPolicyGetCommand(ILogger<SnapshotPolicyGetCommand> logger, INetAppFilesService netAppFilesService) : SubscriptionCommand<SnapshotPolicyGetOptions>()
+public sealed class SnapshotPolicyGetCommand(ILogger<SnapshotPolicyGetCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<SnapshotPolicyGetOptions, SnapshotPolicyGetCommand.SnapshotPolicyGetCommandResult>(subscriptionResolver)
 {
     private static readonly Option<string> AccountNameOption = new("--account-name")
     {
@@ -47,38 +49,8 @@ public sealed class SnapshotPolicyGetCommand(ILogger<SnapshotPolicyGetCommand> l
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SnapshotPolicyGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(NetAppFilesOptionDefinitions.Account.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.SnapshotPolicy.AsOptional());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(NetAppFilesOptionDefinitions.Ids.AsOptional());
-        command.Options.Add(AccountNameOption);
-        command.Options.Add(NameOption);
-    }
-
-    protected override SnapshotPolicyGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.Account.Name)
-            ?? parseResult.GetValueOrDefault<string>(AccountNameOption.Name);
-        options.SnapshotPolicy = parseResult.GetValueOrDefault<string>(NetAppFilesOptionDefinitions.SnapshotPolicy.Name)
-            ?? parseResult.GetValueOrDefault<string>(NameOption.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Ids = parseResult.GetValueOrDefault<string[]>(NetAppFilesOptionDefinitions.Ids.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var snapshotPolicies = await _netAppFilesService.GetSnapshotPolicyDetails(
@@ -112,5 +84,5 @@ public sealed class SnapshotPolicyGetCommand(ILogger<SnapshotPolicyGetCommand> l
         return context.Response;
     }
 
-    internal record SnapshotPolicyGetCommandResult(List<SnapshotPolicyInfo> SnapshotPolicies, bool AreResultsTruncated);
+    public record SnapshotPolicyGetCommandResult(List<SnapshotPolicyInfo> SnapshotPolicies, bool AreResultsTruncated);
 }
