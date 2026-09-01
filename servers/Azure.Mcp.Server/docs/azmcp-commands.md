@@ -3913,6 +3913,21 @@ azmcp resilience recoveryplan validateforfailover --service-group <service-group
                                                    [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
                                                    [--user-consent <Unspecified|Allowed>]
 
+# Validate which recovery-plan resources are qualified for reprotect after failover.
+# Optionally limit validation to selected full recovery-resource IDs; omit them to validate all qualified resources in the plan.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan validateforreprotect --service-group <service-group> \
+                                                    --recovery-plan <recovery-plan> \
+                                                    [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]]
+
+# Validate whether a recovery plan is eligible to start a specified operation based on plan support, current state, readiness, and permissions.
+# Supported operations are Failover, FailoverCommit, Reprotect, TestFailover, and TestFailoverCleanup.
+# The operation must be explicitly selected; do not infer it from prior context, plan state, or resource metadata.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan validateforoperation --service-group <service-group> \
+                                                    --recovery-plan <recovery-plan> \
+                                                    --operation-name <Failover|FailoverCommit|Reprotect|TestFailover|TestFailoverCleanup>
+
 # Configure recovery-plan resource inclusions, exclusions, removals, recovery groups, identities, and protection settings. At least one JSON array is required.
 # First inclusion requires matching protection type and settings. CustomRunbook requires failover and reprotect runbook resource IDs.
 # AzureSiteRecovery is supported for virtual machines and requires disk reprotect details. Existing configuration is preserved on sparse updates.

@@ -23,6 +23,13 @@ public class ResilienceManagementCommandTests(
     LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    // Preserve LRO Location paths during recording; replacing the entire header breaks polling playback.
+    public override List<string> DisabledDefaultSanitizers =>
+    [
+        .. base.DisabledDefaultSanitizers,
+        "AZSDK2003"
+    ];
+
     // Prepend the base sanitizers (e.g. WWW-Authenticate) then add tool-specific ones.
     // Sanitize the required per-invocation operation-id request GUID for playback matching and the
     // x-ms-operation-identifier response header, which contains the real tenant ID and object ID.
@@ -36,6 +43,29 @@ public class ResilienceManagementCommandTests(
         new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("operation-id")
         {
             Value = "sanitized"
+        }),
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("Location")
+        {
+            Regex = "([?&](?:t|c|s|h)=)(?<value>[^&]+)",
+            GroupForReplace = "value",
+            Value = "sanitized"
+        })
+    ];
+
+    public override List<UriRegexSanitizer> UriRegexSanitizers =>
+    [
+        .. base.UriRegexSanitizers,
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "([?&](?:t|c|s|h)=)(?<value>[^&]+)",
+            GroupForReplace = "value",
+            Value = "sanitized"
+        }),
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = @"resource[Gg]roups/([^?\\/]+)",
+            GroupForReplace = "1",
+            Value = "Sanitized"
         })
     ];
 
@@ -482,7 +512,7 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_get_recovery_plan()
+    public async Task Should_get_recoveryplan()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
@@ -501,7 +531,7 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_update_recovery_plan()
+    public async Task Should_update_recoveryplan()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
@@ -562,7 +592,7 @@ public class ResilienceManagementCommandTests(
 
     [Fact]
     [CustomMatcher(compareBody: false)]
-    public async Task Should_check_recovery_plan_readiness()
+    public async Task Should_check_recoveryplan_readiness()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
@@ -584,7 +614,7 @@ public class ResilienceManagementCommandTests(
 
     [Fact]
     [CustomMatcher(compareBody: false)]
-    public async Task Should_create_update_and_delete_recovery_plan()
+    public async Task Should_create_update_and_delete_recoveryplan()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("lifecycleServiceGroupName", "PLANLIFECYCLESERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveVariable("lifecycleRecoveryPlanName", $"mcp-lifecycle-{Guid.NewGuid().ToString("N")[..8]}");
@@ -702,7 +732,7 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_update_recovery_plan_resources()
+    public async Task Should_update_recoveryplan_resources()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
@@ -833,6 +863,48 @@ public class ResilienceManagementCommandTests(
         JsonElement qualifications = result.AssertProperty("recoveryResourceQualifications");
         Assert.Equal(JsonValueKind.Array, qualifications.ValueKind);
         Assert.NotEmpty(qualifications.EnumerateArray());
+    }
+
+    [Fact]
+    public async Task Should_validate_recoveryplan_for_reprotect()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+
+        var result = await CallToolAsync(
+            "resilience_recoveryplan_validateforreprotect",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan }
+            });
+
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
+        JsonElement qualifications = result.AssertProperty("recoveryResourceQualifications");
+        Assert.Equal(JsonValueKind.Array, qualifications.ValueKind);
+        Assert.NotEmpty(qualifications.EnumerateArray());
+    }
+
+    [Fact]
+    public async Task Should_validate_recoveryplan_for_operation()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+
+        var result = await CallToolAsync(
+            "resilience_recoveryplan_validateforoperation",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan },
+                { "operation-name", "Failover" }
+            });
+
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
+        Assert.Equal("Failover", result.AssertProperty("operationName").GetString());
+        Assert.True(result.AssertProperty("isValid").GetBoolean());
     }
 
     [Fact]
