@@ -13,6 +13,7 @@ words:
   - appconfiguration
   - appsettings
   - azclis
+  - azurefiles
   - azureicon
   - azuremanagedlustre
   - azuremigrate

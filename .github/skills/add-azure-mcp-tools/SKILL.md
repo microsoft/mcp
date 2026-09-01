@@ -801,6 +801,19 @@ public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fi
 }
 ```
 
+#### `LocalRequired` tools
+
+Remote HTTP mode intentionally excludes tools marked `LocalRequired = true`. Every recorded test for such a tool must verify that exclusion and return before exercising local-only behavior:
+
+```csharp
+if (await AssertLocalToolIsUnavailableInHttpMode("{toolset}_{resource}_{operation}"))
+{
+    return;
+}
+```
+
+Use the inherited helper in every applicable test in a class extending `RecordedCommandTestsBase`; do not duplicate the transport check or unavailable-tool assertions.
+
 ### 3c. Record and Verify
 
  #### Create assets.json

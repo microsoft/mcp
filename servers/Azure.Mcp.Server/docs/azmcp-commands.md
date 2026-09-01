@@ -2895,7 +2895,7 @@ azmcp iothub query run --subscription <subscription> \
                        [--from <source>] \
                        [--logical-operator <operator>] \
                        [--max-count <max-count>]
-```                     
+```
 
 ### Azure Key Vault Operations
 
@@ -3328,6 +3328,36 @@ azmcp monitor metrics query --subscription <subscription> \
                             --end-time "2024-01-01T23:59:59Z" \
                             --interval "PT1H" \
                             --aggregation "Average"
+
+# Query Azure Monitor metrics for multiple resources in a single batch request
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor metrics batchquery --subscription <subscription> \
+                                 --resources <resources> \
+                                 --metric-namespace <metric-namespace> \
+                                 --metric-names <metric-names> \
+                                 [--resource-group <resource-group>] \
+                                 [--resource-type <resource-type>] \
+                                 [--start-time <start-time>] \
+                                 [--end-time <end-time>] \
+                                 [--interval <interval>] \
+                                 [--aggregation <aggregation>] \
+                                 [--filter <filter>] \
+                                 [--order-by <order-by>] \
+                                 [--top <top>] \
+                                 [--max-buckets <max-buckets>]
+
+# Query CPU metrics across multiple storage accounts at once
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor metrics batchquery --subscription <subscription> \
+                                 --resources "storageaccount1,storageaccount2,storageaccount3" \
+                                 --resource-group <resource-group> \
+                                 --resource-type "Microsoft.Storage/storageAccounts" \
+                                 --metric-namespace "Microsoft.Storage/storageAccounts" \
+                                 --metric-names "Transactions" \
+                                 --start-time "2024-01-01T00:00:00Z" \
+                                 --end-time "2024-01-01T23:59:59Z" \
+                                 --interval "PT1H" \
+                                 --aggregation "Total"
 ```
 
 #### Web Tests (Availability Tests)

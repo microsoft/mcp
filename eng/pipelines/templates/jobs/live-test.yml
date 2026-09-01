@@ -93,13 +93,12 @@ jobs:
       parameters:
         ServiceConnection: azure-sdk-tests-public
 
-    - template: /eng/common/TestResources/deploy-test-resources.yml
-      parameters:
-        ServiceConnection: azure-sdk-tests-public
-        PersistOidcToken: true
-        TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
-        AdditionalParameters: "@{ UseHttpTransport = true }"
-        SkipEnvironmentSetup: true # environment setup was performed in the first deployment
+  - template: /eng/common/TestResources/deploy-test-resources.yml
+    parameters:
+      ServiceConnection: azure-sdk-tests-public
+      PersistOidcToken: true
+      TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
+      SkipEnvironmentSetup: true # environment setup was performed in the first deployment
 
   - task: AzurePowershell@5
     displayName: "Run tests (http) - az pwsh"
