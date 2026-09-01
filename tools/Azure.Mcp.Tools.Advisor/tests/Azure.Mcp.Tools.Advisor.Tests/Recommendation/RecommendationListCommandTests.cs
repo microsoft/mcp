@@ -225,6 +225,40 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     }
 
     [Fact]
+    public async Task ExecuteAsync_TrimsCategoryAndImpactBeforeForwarding()
+    {
+        // Arrange
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--category", "  Security  ",
+            "--impact", "  High  ",
+            "--resource-type", "  Microsoft.Storage/storageAccounts  ",
+            "--resource", "  mystorage  ",
+            "--search", "  encryption  ");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal("Security", captured!.Category);
+        Assert.Equal("High", captured.Impact);
+        Assert.Equal("Microsoft.Storage/storageAccounts", captured.ResourceType);
+        Assert.Equal("mystorage", captured.Resource);
+        // --search is intentionally left untrimmed to preserve free-text intent.
+        Assert.Equal("  encryption  ", captured.Search);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_OmittedFiltersAreNull()
     {
         // Arrange

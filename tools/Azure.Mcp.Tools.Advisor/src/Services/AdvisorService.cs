@@ -56,6 +56,8 @@ public class AdvisorService(IAzureService azureService)
 
         if (metadataByTypeId is { Count: 0 })
         {
+            // Validate the scope so an invalid subscription or resource group fails instead of returning an empty success.
+            await ValidateScopeAsync(subscription, resourceGroup, tenant, cancellationToken);
             return new([], false);
         }
 
@@ -88,6 +90,27 @@ public class AdvisorService(IAzureService azureService)
         return new(
             JoinWithMetadata(recommendations.Results, metadataByTypeId),
             recommendations.AreResultsTruncated);
+    }
+
+    private async Task<SubscriptionResource> ValidateScopeAsync(
+        string subscription,
+        string? resourceGroup,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
+
+        if (!string.IsNullOrEmpty(resourceGroup))
+        {
+            var rgExists = await subscriptionResource.GetResourceGroups().ExistsAsync(resourceGroup, cancellationToken);
+            if (!rgExists.Value)
+            {
+                throw new KeyNotFoundException(
+                    $"Resource group '{resourceGroup}' does not exist in subscription '{subscriptionResource.Data.SubscriptionId}'");
+            }
+        }
+
+        return subscriptionResource;
     }
 
     internal static bool HasMetadataOnlyFilters(RecommendationFilters? filters) =>
@@ -182,7 +205,10 @@ public class AdvisorService(IAzureService azureService)
                             ? null
                             : new RecommendationShortDescription(metadata.DisplayName, metadata.DisplayName)),
                     Description = metadata.DetailedDescription ?? recommendation.Properties.Description,
-                    Label = metadata.Label ?? recommendation.Properties.Label,
+                    // Recommendations from an external source system carry a per-instance label that differs from the catalog, so keep it.
+                    Label = string.IsNullOrWhiteSpace(recommendation.Properties.SourceSystem)
+                        ? metadata.Label ?? recommendation.Properties.Label
+                        : recommendation.Properties.Label,
                     LearnMoreLink = metadata.LearnMoreLink ?? recommendation.Properties.LearnMoreLink,
                     PotentialBenefits = metadata.PotentialBenefits ?? recommendation.Properties.PotentialBenefits,
                     ExtendedProperties = AddMetadataSubCategory(
@@ -623,20 +649,10 @@ public class AdvisorService(IAzureService azureService)
         ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
         ArgumentException.ThrowIfNullOrWhiteSpace(groupBy);
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
+        var subscriptionResource = await ValidateScopeAsync(subscription, resourceGroup, tenant, cancellationToken);
         var allTenants = await AzureService.GetTenants(cancellationToken);
         var tenantResource = allTenants.FirstOrDefault(t => t.Data.TenantId == subscriptionResource.Data.TenantId)
             ?? throw new InvalidOperationException($"No accessible tenant found for subscription '{subscription}'");
-
-        if (!string.IsNullOrEmpty(resourceGroup))
-        {
-            var rgExists = await subscriptionResource!.GetResourceGroups().ExistsAsync(resourceGroup, cancellationToken);
-            if (!rgExists.Value)
-            {
-                throw new KeyNotFoundException(
-                    $"Resource group '{resourceGroup}' does not exist in subscription '{subscriptionResource.Data.SubscriptionId}'");
-            }
-        }
 
         var query = BuildSummarizeQuery(groupBy, resourceGroup, filters);
         var queryContent = new ResourceQueryContent(query)

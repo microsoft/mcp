@@ -319,6 +319,55 @@ public class AdvisorServiceMetadataJoinTests
     }
 
     [Fact]
+    public void JoinWithMetadata_NoSourceSystem_UsesMetadataLabel()
+    {
+        var recommendation = new Models.Recommendation(
+            new Models.RecommendationProperties(
+                Category: "Cost",
+                RecommendationTypeId: "Type-A",
+                Label: "Instance label"));
+
+        var joined = AdvisorService.JoinWithMetadata(
+            [recommendation],
+            AdvisorService.BuildMetadataLookup([CreateMetadata("Type-A")]));
+
+        Assert.Equal("Reliability", Assert.Single(joined).Properties.Label);
+    }
+
+    [Fact]
+    public void JoinWithMetadata_WithSourceSystem_PreservesInstanceLabel()
+    {
+        var recommendation = new Models.Recommendation(
+            new Models.RecommendationProperties(
+                Category: "Cost",
+                RecommendationTypeId: "Type-A",
+                Label: "Instance-specific label",
+                SourceSystem: "Azure Resource Graph"));
+
+        var joined = AdvisorService.JoinWithMetadata(
+            [recommendation],
+            AdvisorService.BuildMetadataLookup([CreateMetadata("Type-A")]));
+
+        Assert.Equal("Instance-specific label", Assert.Single(joined).Properties.Label);
+    }
+
+    [Fact]
+    public void JoinWithMetadata_WithSourceSystemAndNoLabel_DoesNotUseMetadataLabel()
+    {
+        var recommendation = new Models.Recommendation(
+            new Models.RecommendationProperties(
+                Category: "Cost",
+                RecommendationTypeId: "Type-A",
+                SourceSystem: "Azure Resource Graph"));
+
+        var joined = AdvisorService.JoinWithMetadata(
+            [recommendation],
+            AdvisorService.BuildMetadataLookup([CreateMetadata("Type-A")]));
+
+        Assert.Null(Assert.Single(joined).Properties.Label);
+    }
+
+    [Fact]
     public void JoinWithMetadata_InstanceShortDescription_PreservesInstanceFields()
     {
         var recommendation = new Models.Recommendation(
