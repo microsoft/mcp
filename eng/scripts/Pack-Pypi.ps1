@@ -112,6 +112,25 @@ function Get-KeywordsString($keywords) {
     return ($keywords | ForEach-Object { "`"$_`"" }) -join ', '
 }
 
+function ConvertTo-PythonPackageVersion {
+    param ([string] $Version)
+
+    $parsedVersion = [AzureEngSemanticVersion]::ParseVersionString($Version)
+    if (!$parsedVersion) {
+        return $null
+    }
+
+    $parsedVersion.SetupPythonConventions()
+    if ($parsedVersion.PrereleaseLabel -eq 'beta') {
+        $parsedVersion.PrereleaseLabel = 'b'
+    }
+    elseif ($parsedVersion.PrereleaseLabel -eq 'alpha') {
+        $parsedVersion.PrereleaseLabel = 'a'
+    }
+
+    return $parsedVersion.ToString()
+}
+
 function Get-PythonCommand {
     # Try python3 first (common on Linux/macOS), but verify it works
     # On Windows, "python3" may be a Store alias that doesn't work
@@ -162,6 +181,13 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         Write-Host "Skipping $($server.name) - no PyPI package name configured" -ForegroundColor Yellow
         return
     }
+
+    $pythonVersion = ConvertTo-PythonPackageVersion $server.version
+    if (!$pythonVersion) {
+        Write-Error "Server version '$($server.version)' is not a valid semantic version for PyPI packaging."
+        return
+    }
+    $pythonVersion = $pythonVersion.ToString()
     
     $description = if ([string]::IsNullOrWhiteSpace($server.pypiDescription)) { $server.description } else { $server.pypiDescription }
     $cliName = $server.cliName
@@ -228,7 +254,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
 
         $pyprojectContent = $pyprojectTemplate `
             -replace '{{PACKAGE_NAME}}', $basePackageName `
-            -replace '{{VERSION}}', $server.version `
+            -replace '{{VERSION}}', $pythonVersion `
             -replace '{{DESCRIPTION}}', $description `
             -replace '{{KEYWORDS}}', (Get-KeywordsString $keywords) `
             -replace '{{OS_CLASSIFIER}}', $osClassifier `
@@ -243,7 +269,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         # Update version in __init__.py
         $initPyPath = "$tempFolder/src/$moduleName/__init__.py"
         $initPyContent = Get-Content $initPyPath -Raw
-        $initPyContent = $initPyContent -replace '__version__ = "0\.0\.0"', "__version__ = `"$($server.version)`""
+        $initPyContent = $initPyContent -replace '__version__ = "0\.0\.0"', "__version__ = `"$pythonVersion`""
         $initPyContent | Out-File -FilePath $initPyPath -Encoding utf8 -Force
 
         # Set executable permissions on non-Windows

@@ -2,7 +2,7 @@
   "consolidated_tools": [
     {
       "name": "get_azure_resilience_management_details",
-      "description": "Get details about Azure Resilience Management resources, including resilience goals (templates, assignments, and their resources), usage plans and enrollments, and recovery plans (plans, resources, and jobs) for Azure service groups.",
+      "description": "Get details about Azure Resilience Management resources, including resilience goals (templates, assignments, and their resources), usage plans and enrollments, recovery plans (plans, resources, and jobs), drills, drill runs, and drill run resources for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -35,15 +35,19 @@
         "resilience_goal_resource_get",
         "resilience_usageplan_get",
         "resilience_usageplan_enrollment_get",
-        "resilience_recovery_plan_get",
-        "resilience_recovery_plan_resource_get",
-        "resilience_recovery_job_get",
-        "resilience_recovery_job_resource_get"
+        "resilience_recoveryplan_get",
+        "resilience_recoveryplan_resource_get",
+        "resilience_recoveryjob_get",
+        "resilience_recoveryjob_resource_get",
+        "resilience_drill_get",
+        "resilience_drill_resource_get",
+        "resilience_drill_run_get",
+        "resilience_drill_run_resource_get"
       ]
     },
     {
       "name": "create_azure_resilience_management_resources",
-      "description": "Create or update Azure Resilience Management resources, including usage plans and usage plan enrollments, for Azure service groups.",
+      "description": "Create, update, or delete Azure Resilience Management resources, including usage plans, usage plan enrollments, drills, and recovery plans for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -71,8 +75,212 @@
         }
       },
       "mappedToolList": [
+        "resilience_drill_update",
+        "resilience_drill_create",
         "resilience_usageplan_create",
-        "resilience_usageplan_enrollment_create"
+        "resilience_usageplan_enrollment_create",
+        "resilience_recoveryplan_create",
+        "resilience_recoveryplan_delete",
+        "resilience_recoveryplan_resource_update"
+      ]
+    },
+    {
+      "name": "validate_azure_resilience_recovery_plan_for_failover",
+      "description": "Validate which resources in an Azure Resilience Management recovery plan are qualified for failover from specified source locations.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not delete or modify recovery plan resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each invocation starts a new failover validation operation."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool starts a validation operation and may update operation state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_recoveryplan_validateforfailover"
+      ]
+    },
+    {
+      "name": "validate_azure_resilience_recoveryplan_for_reprotect",
+      "description": "Validate which resources in an Azure Resilience Management recovery plan are qualified for reprotect after failover.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not delete or modify recovery plan resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each invocation starts a new reprotect validation operation."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool starts a validation operation and may update operation state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_recoveryplan_validateforreprotect"
+      ]
+    },
+    {
+      "name": "validate_azure_resilience_recoveryplan_for_operation",
+      "description": "Validate a customer-selected or unspecified recovery operation for an Azure Resilience Management recovery plan before execution. Use for requests to validate an operation, an intended recovery operation, or operation-specific pre-validation, including when earlier context mentions failover but the current operation is unspecified. Ask the customer to choose Failover, FailoverCommit, Reprotect, TestFailover, or TestFailoverCleanup; do not assume the operation. Checks plan state, readiness, and permissions. Not for general readiness or per-resource failover or reprotect qualification. Does not execute recovery operations.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not execute the recovery operation or modify recovery plan resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each invocation starts a new plan operation validation."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool starts a validation operation and may update operation state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_recoveryplan_validateforoperation"
+      ]
+    },
+    {
+      "name": "check_azure_resilience_management_readiness",
+      "description": "Check whether an Azure Resilience Management recovery plan and its protected resources are ready for recovery operations in an Azure service group.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not delete or modify the recovery plan or its protected resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each invocation creates a new readiness job with a unique operation identifier."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool creates a readiness job while leaving the recovery plan and its protected resources unchanged."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_recoveryplan_checkreadiness"
+      ]
+    },
+    {
+      "name": "delete_azure_resilience_management_resources",
+      "description": "Delete Azure Resilience Management resources, including drills, from Azure service groups. This permanently removes the resource and cannot be undone.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool permanently deletes Azure Resilience Management resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool deletes Azure resources."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_drill_delete"
+      ]
+    },
+    {
+      "name": "manage_azure_resilience_management_drill_executions",
+      "description": "Start or end Azure Resilience Management drill executions for Azure service groups, including failover mode and completion attestation.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_drill_start",
+        "resilience_drill_end"
       ]
     },
     {
@@ -436,6 +644,7 @@
         "monitor_activitylog_list",
         "monitor_healthmodels_list",
         "monitor_healthmodels_get",
+        "monitor_metrics_batchquery",
         "monitor_metrics_definitions",
         "monitor_metrics_query",
         "monitor_resource_log_query",
@@ -885,37 +1094,37 @@
       ]
     },
     {
-        "name": "apply_azure_advisor_recommendations",
-        "description": "Get rules that can help apply Advisor recommendation to create or modify IaaC files (like ARM, Bicep) for Azure resources.",
-        "toolMetadata": {
-            "destructive": {
-                "value": false,
-                "description": "This tool performs only additive updates without deleting or modifying existing resources."
-            },
-            "idempotent": {
-                "value": true,
-                "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
-            },
-            "openWorld": {
-                "value": false,
-                "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
-            },
-            "readOnly": {
-                "value": true,
-                "description": "This tool only performs read operations without modifying any state or data."
-            },
-            "secret": {
-                "value": false,
-                "description": "This tool does not handle sensitive or secret information."
-            },
-            "localRequired": {
-                "value": false,
-                "description": "This tool is available in both local and remote server modes."
-            }
+      "name": "apply_azure_advisor_recommendations",
+      "description": "Get rules that can help apply Advisor recommendation to create or modify IaaC files (like ARM, Bicep) for Azure resources.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
         },
-        "mappedToolList": [
-            "advisor_recommendation_apply"
-        ]
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "advisor_recommendation_apply"
+      ]
     },
     {
       "name": "get_azure_retail_pricing",
@@ -1666,6 +1875,7 @@
         "managedlustre_fs_blob_autoexport_get",
         "managedlustre_fs_blob_autoimport_get",
         "managedlustre_fs_blob_import_get",
+        "managedlustre_fs_expansion_get",
         "storage_account_get",
         "storage_blob_container_get",
         "storage_blob_get",
@@ -1912,7 +2122,8 @@
         "managedlustre_fs_create",
         "managedlustre_fs_blob_autoexport_create",
         "managedlustre_fs_blob_autoimport_create",
-        "managedlustre_fs_blob_import_create"
+        "managedlustre_fs_blob_import_create",
+        "managedlustre_fs_expansion_create"
       ]
     },
     {
@@ -1950,7 +2161,7 @@
     },
     {
       "name": "manage_azure_managed_lustre_sync_jobs",
-      "description": "Manage Azure Managed Lustre data synchronization jobs including canceling and deleting autoimport, autoexport, and one-time import jobs that sync data between Lustre filesystems and Azure Blob Storage.",
+      "description": "Manage Azure Managed Lustre data synchronization and expansion jobs including canceling and deleting autoimport, autoexport, one-time import, and expansion jobs that manage data sync and storage capacity for Lustre filesystems.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -1983,7 +2194,8 @@
         "managedlustre_fs_blob_autoimport_cancel",
         "managedlustre_fs_blob_autoimport_delete",
         "managedlustre_fs_blob_import_cancel",
-        "managedlustre_fs_blob_import_delete"
+        "managedlustre_fs_blob_import_delete",
+        "managedlustre_fs_expansion_delete"
       ]
     },
     {
@@ -2224,6 +2436,171 @@
       },
       "mappedToolList": [
         "iothub_hub_get"
+      ]
+    },
+    {
+      "name": "list_azure_iot_hub_devices",
+      "description": "List devices registered in an Azure IoT Hub's device registry, returning device identity metadata without authentication keys.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only retrieves device information from an Azure IoT Hub without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_device_list"
+      ]
+    },
+    {
+      "name": "get_azure_iot_hub_device",
+      "description": "Get a single device identity from an Azure IoT Hub device registry. Returns device identity metadata, excluding authentication keys.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only performs read operations on an Azure IoT Hub without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_device_show"
+      ]
+    },
+    {
+      "name": "get_azure_iot_hub_device_statistics",
+      "description": "Get aggregate device statistics for an Azure IoT Hub identity registry: enabled, disabled, and total device counts.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only performs read operations on an Azure IoT Hub without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_device_stats"
+      ]
+    },
+    {
+      "name": "get_azure_iot_hub_device_twin",
+      "description": "Get a device twin from an Azure IoT Hub, including tags and desired/reported properties.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only performs read operations on an Azure IoT Hub without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_device_twin_get"
+      ]
+    },
+    {
+      "name": "run_azure_iot_hub_query",
+      "description": "Run a SQL-like query against an Azure IoT Hub device registry and return a single page of results.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only performs read operations on an Azure IoT Hub without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_query_run"
       ]
     },
     {
@@ -3980,7 +4357,9 @@
         "azurebackup_backup_status",
         "azurebackup_job_get",
         "azurebackup_recoverypoint_get",
-        "azurebackup_governance_find-unprotected"
+        "azurebackup_governance_find-unprotected",
+        "azurebackup_resourceguard_get",
+        "azurebackup_vault_privateendpoint_get"
       ]
     },
     {
@@ -4015,7 +4394,9 @@
       "mappedToolList": [
         "azurebackup_vault_create",
         "azurebackup_policy_create",
-        "azurebackup_protecteditem_protect"
+        "azurebackup_protecteditem_protect",
+        "azurebackup_resourceguard_create",
+        "azurebackup_vault_privateendpoint_create"
       ]
     },
     {
@@ -4055,7 +4436,11 @@
         "azurebackup_disasterrecovery_enable-crr",
         "azurebackup_protecteditem_undelete",
         "azurebackup_security_configure-encryption",
-        "azurebackup_security_configure-mua"
+        "azurebackup_security_enable-mua",
+        "azurebackup_security_disable-mua",
+        "azurebackup_resourceguard_delete",
+        "azurebackup_vault_privateendpoint_delete",
+        "azurebackup_vault_privateendpoint_approve-reject"
       ]
     },
     {
@@ -4370,7 +4755,7 @@
     },
     {
       "name": "ingest_azure_sre_agent_events_and_memories",
-      "description": "Append memory entries, trigger memory reindexing, and create incidents or response plans on an Azure SRE Agent resource. Each call is non-idempotent and may produce a new record.",
+      "description": "Append memory entries, trigger memory re-indexing, and create incidents or response plans on an Azure SRE Agent resource. Each call is non-idempotent and may produce a new record.",
       "toolMetadata": {
         "destructive": {
           "value": false,

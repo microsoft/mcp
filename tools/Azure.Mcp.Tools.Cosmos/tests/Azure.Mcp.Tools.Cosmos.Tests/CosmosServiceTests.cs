@@ -11,7 +11,6 @@ using Azure.ResourceManager.Resources;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 using NSubstitute;
@@ -76,7 +75,7 @@ public class CosmosServiceTests : IAsyncDisposable
     [Fact]
     public async Task ListDatabases_CredentialAuthFails_DoesNotFallBackToKeyAuth()
     {
-        // Arrange: HTTP handler returns 401 so credential-based CosmosClient validation fails
+        // Arrange: HTTP handler returns 401 so the credential-based database operation fails
         var handler = new MockHttpHandler(HttpStatusCode.Unauthorized);
         _azureService.GetClient().Returns(new HttpClient(handler));
 
@@ -92,13 +91,13 @@ public class CosmosServiceTests : IAsyncDisposable
         // Verify no fallback to key auth: GetSubscription is only called for key-based auth
         // (to look up the account and retrieve master keys)
         await _azureService.DidNotReceive()
-            .GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            .GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ListDatabases_CredentialAuthFailsWith403_DoesNotFallBackToKeyAuth()
     {
-        // Arrange: HTTP handler returns 403 so credential-based CosmosClient validation fails
+        // Arrange: HTTP handler returns 403 so the credential-based database operation fails
         var handler = new MockHttpHandler(HttpStatusCode.Forbidden);
         _azureService.GetClient().Returns(new HttpClient(handler));
 
@@ -113,7 +112,7 @@ public class CosmosServiceTests : IAsyncDisposable
 
         // Verify no fallback to key auth
         await _azureService.DidNotReceive()
-            .GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            .GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -128,7 +127,7 @@ public class CosmosServiceTests : IAsyncDisposable
         _cacheService.GetAsync<List<string>>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
             .Returns(default(List<string>));
 
-        // Act: client creation fails, but cache lookup has already happened
+        // Act: the database operation fails, but the client cache lookup has already happened
         await Assert.ThrowsAnyAsync<Exception>(() =>
             _service.ListDatabases("myaccount", "sub123", AuthMethod.Credential, cancellationToken: TestContext.Current.CancellationToken));
 
@@ -156,7 +155,7 @@ public class CosmosServiceTests : IAsyncDisposable
         _cacheService.GetAsync<List<string>>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
             .Returns(default(List<string>));
 
-        // Act: client creation fails after the cache miss, but cache lookup has already happened
+        // Act: key authentication setup fails after the cache miss, but cache lookup has already happened
         await Assert.ThrowsAnyAsync<Exception>(() =>
             _service.ListDatabases("myaccount", "sub123", AuthMethod.Key, cancellationToken: TestContext.Current.CancellationToken));
 
@@ -216,7 +215,7 @@ public class CosmosServiceTests : IAsyncDisposable
     {
         // Arrange: the resource group lookup returns a 404, which should surface as a not-found.
         var subscriptionResource = Substitute.For<SubscriptionResource>();
-        _azureService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        _azureService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(subscriptionResource);
         subscriptionResource.GetResourceGroupAsync("missing-rg", Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Resource group not found"));
@@ -238,7 +237,7 @@ public class CosmosServiceTests : IAsyncDisposable
             .Returns(default(List<string>));
 
         var subscriptionResource = Substitute.For<SubscriptionResource>();
-        _azureService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        _azureService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(subscriptionResource);
         subscriptionResource.GetResourceGroupAsync("missing-rg", Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Resource group not found"));

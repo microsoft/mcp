@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -16,6 +17,8 @@ public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
 {
     private const string IndexName = "products";
     private const string SanitizedValue = "sanitized";
+    private const string SanitizedSubscriptionName = "SanitizedSubscription";
+    private const string SanitizedOtherSubscriptionName = "SanitizedOther";
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
 
     public override bool EnableDefaultSanitizerAdditions => false;
@@ -26,6 +29,7 @@ public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         if (Settings.TestMode == TestMode.Playback)
         {
             Settings.ResourceBaseName = SanitizedValue;
+            Settings.SubscriptionName = SanitizedSubscriptionName;
         }
     }
 
@@ -57,7 +61,13 @@ public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         .. base.BodyKeySanitizers,
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..displayName")
         {
-            Value = SanitizedValue
+            Regex = $"^(?!(?:{Regex.Escape(Settings.SubscriptionName)}|{SanitizedSubscriptionName})$).*$",
+            Value = SanitizedOtherSubscriptionName
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..displayName")
+        {
+            Regex = $"^{Regex.Escape(Settings.SubscriptionName)}$",
+            Value = SanitizedSubscriptionName
         }),
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..vectorSearch.vectorizers[*].azureOpenAIParameters.authIdentity.userAssignedIdentity")
         {
@@ -167,9 +177,7 @@ public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
             "search_index_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
-                { "service", Settings.ResourceBaseName },
-                { "resource-group", Settings.ResourceGroupName }
+                { "service", Settings.ResourceBaseName }
             });
 
         var indexesArray = result.AssertProperty("indexes");
@@ -183,9 +191,7 @@ public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
             "search_index_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "service", Settings.ResourceBaseName },
-                { "resource-group", Settings.ResourceGroupName },
                 { "index", "products" }
             });
 

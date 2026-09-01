@@ -84,7 +84,7 @@ As a **Public Preview** project, please note:
 **Your feedback during this preview period is crucial for shaping the final product!**
 
 We especially welcome feedback on:
-- Missing Fabric workload types or APIs
+- Missing Fabric item types or APIs
 - Performance and reliability issues
 - Documentation clarity and completeness
 - Integration with different MCP clients

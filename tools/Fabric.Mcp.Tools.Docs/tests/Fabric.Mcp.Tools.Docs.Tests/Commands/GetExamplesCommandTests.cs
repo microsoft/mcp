@@ -31,7 +31,7 @@ public class GetExamplesCommandTests : CommandUnitTestsBase<GetExamplesCommand, 
     }
 
     [Fact]
-    public async Task GetExamplesCommand_ExecuteAsync_WithValidWorkloadType_ReturnsExamples()
+    public async Task GetExamplesCommand_ExecuteAsync_WithValidItemType_ReturnsExamples()
     {
         // Arrange
         var expectedExamples = new Dictionary<string, string>
@@ -40,37 +40,37 @@ public class GetExamplesCommandTests : CommandUnitTestsBase<GetExamplesCommand, 
             { "example2.json", "content2" }
         };
 
-        Service.GetWorkloadExamplesAsync("notebook", Arg.Any<CancellationToken>()).Returns(expectedExamples);
+        Service.GetExamplesAsync("notebook", Arg.Any<CancellationToken>()).Returns(expectedExamples);
 
         // Act
-        var result = await ExecuteCommandAsync("--workload-type", "notebook");
+        var result = await ExecuteCommandAsync("--item-type", "notebook");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
-        await Service.Received(1).GetWorkloadExamplesAsync("notebook", Arg.Any<CancellationToken>());
+        await Service.Received(1).GetExamplesAsync("notebook", Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task GetExamplesCommand_ExecuteAsync_WithEmptyWorkloadType_ReturnsBadRequest()
+    public async Task GetExamplesCommand_ExecuteAsync_WithEmptyItemType_ReturnsBadRequest()
     {
         // Arrange & Act
         var result = await ExecuteCommandAsync([]);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
-        Assert.Contains("Missing Required options: --workload-type", result.Message);
-        await Service.DidNotReceive().GetWorkloadExamplesAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+        Assert.Contains("Missing Required options: --item-type", result.Message);
+        await Service.DidNotReceive().GetExamplesAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetExamplesCommand_ExecuteAsync_WithServiceException_ReturnsInternalServerError()
     {
         // Arrange
-        Service.GetWorkloadExamplesAsync("notebook", Arg.Any<CancellationToken>()).ThrowsAsync(new InvalidOperationException("Service error"));
+        Service.GetExamplesAsync("notebook", Arg.Any<CancellationToken>()).ThrowsAsync(new InvalidOperationException("Service error"));
 
         // Act
-        var result = await ExecuteCommandAsync("--workload-type", "notebook");
+        var result = await ExecuteCommandAsync("--item-type", "notebook");
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, result.Status);

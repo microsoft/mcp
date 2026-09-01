@@ -7,7 +7,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -37,7 +36,6 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
             Service.ListRecommendationsAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<Models.RecommendationFilters?>(),
                 Arg.Any<int>(),
                 Arg.Any<string?>(),
@@ -74,7 +72,6 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Service.ListRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<Models.RecommendationFilters?>(),
             Arg.Any<int>(),
             Arg.Any<string?>(),
@@ -96,7 +93,6 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         await Service.Received(1).ListRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<Models.RecommendationFilters?>(),
             Arg.Any<int>(),
             Arg.Any<string?>(),
@@ -110,7 +106,6 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Service.ListRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<Models.RecommendationFilters?>(),
             Arg.Any<int>(),
             Arg.Any<string?>(),
@@ -133,7 +128,6 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Service.ListRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<Models.RecommendationFilters?>(),
             Arg.Any<int>(),
             Arg.Any<string?>(),
@@ -157,7 +151,6 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Service.ListRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<Models.RecommendationFilters?>(),
             Arg.Any<int>(),
             Arg.Any<string?>(),
@@ -180,7 +173,6 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Service.ListRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Do<Models.RecommendationFilters?>(f => captured = f),
             Arg.Any<int>(),
             Arg.Any<string?>(),
@@ -214,7 +206,6 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Service.ListRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Do<Models.RecommendationFilters?>(f => captured = f),
             Arg.Any<int>(),
             Arg.Any<string?>(),
@@ -246,7 +237,6 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Service.ListRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<Models.RecommendationFilters?>(),
             Arg.Do<int>(t => capturedTop = t),
             Arg.Any<string?>(),

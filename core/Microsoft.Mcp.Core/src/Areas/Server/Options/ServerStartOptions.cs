@@ -29,8 +29,8 @@ public sealed class ServerStartOptions
     /// Gets or sets the mode mode for the server.
     /// Defaults to 'namespace' mode which exposes one tool per namespace.
     /// </summary>
-    [Option(Description = "Mode for the MCP server. 'single' exposes one azure tool that routes to all services. 'namespace' (default) exposes one tool per service namespace. 'all' exposes all tools individually.", DefaultValue = "namespace")]
-    public string? Mode { get; set; } = ModeTypes.NamespaceProxy;
+    [Option(Description = "Mode for the MCP server. 'single' exposes one azure tool that routes to all services. 'namespace' (default) exposes one tool per service namespace. 'all' exposes all tools individually.", DefaultValue = ModeTypes.Default)]
+    public string? Mode { get; set; } = ModeTypes.Default;
 
     /// <summary>
     /// Gets or sets the specific tool names to expose.
@@ -108,4 +108,10 @@ public sealed class ServerStartOptions
     /// </summary>
     [Option(Description = "Disable caching of resource responses, requiring repeated requests to fetch fresh data each time.", DefaultValue = false)]
     public bool DisableCaching { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets whether proxy tools that are proxied from external sources configured by the server's /Resources/registry.json are disabled.
+    /// </summary>
+    [Option(Description = "Disable tools that are proxied from external sources configured by the server's /Resources/registry.json.", DefaultValue = false)]
+    public bool DisableProxyTools { get; set; } = false;
 }

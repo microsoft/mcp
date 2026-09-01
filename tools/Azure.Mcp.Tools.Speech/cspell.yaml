@@ -6,4 +6,47 @@
 version: "0.2"
 import:
   - ../../.vscode/cspell.json
-words: []
+words:
+  - alaw
+  - bokmål
+  - dieyi
+  - douzi
+  - duan
+  - gstreamer
+  - heute
+  - jilu
+  - kiswahili
+  - localmcp
+  - mulaw
+  - mundo
+  - música
+  - musique
+  - nanami
+  - nbest
+  - odia
+  - phraselist
+  - quel
+  - rebobinar
+  - rembobinez
+  - rica
+  - segundos
+  - shitou
+  - sinhala
+  - speechtotext
+  - spxerr
+  - traffictype
+  - treffen
+  - türkiye
+  - vingt
+  - whatstheweatherlike
+  - xiaolou
+  - xiaoxiao
+  - ارجع
+  - السوق
+  - الطازجة
+  - الفواكه
+  - الموسيقى
+  - ثانية
+  - ذاهب
+  - لأشتري
+  - والخضروات

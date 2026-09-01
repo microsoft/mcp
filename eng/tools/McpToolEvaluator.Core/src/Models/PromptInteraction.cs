@@ -14,5 +14,8 @@ public enum PromptInteraction
     ClarificationRequired,
 
     [EnumMember(Value = PromptInteractionExtensions.ContextRequired)]
-    ContextRequired
+    ContextRequired,
+
+    [EnumMember(Value = PromptInteractionExtensions.InvestigationRequired)]
+    InvestigationRequired
 }

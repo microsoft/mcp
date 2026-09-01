@@ -43,7 +43,6 @@ public sealed class FileShareDeleteCommand(ILogger<FileShareDeleteCommand> logge
                 options.ResourceGroup,
                 options.Name,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

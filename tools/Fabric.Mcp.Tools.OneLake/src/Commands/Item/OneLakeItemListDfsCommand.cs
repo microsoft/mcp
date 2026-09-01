@@ -17,7 +17,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
 /// </summary>
 [CommandMetadata(
     Id = "7e7566ab-0984-4f1e-a8be-45a0184a59e5",
-    Name = "onelake-item-list-dfs",
+    Name = "list-item-paths-dfs",
     Title = "List OneLake Items (DFS)",
     Description = "List OneLake items in a workspace using the OneLake DFS (Data Lake File System) API",
     Destructive = false,

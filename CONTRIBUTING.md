@@ -173,6 +173,8 @@ Do not assume the Pull Request pipeline will always ingest a missing package aut
 
 4. **Follow implementation guidelines** in [.github/skills/add-azure-mcp-tools/SKILL.md](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md)
 
+  Tools marked `LocalRequired = true` need special recorded-test handling. In every applicable test in a class extending `RecordedCommandTestsBase`, call `AssertLocalToolIsUnavailableInHttpMode(toolName)` and return early when it returns `true` so the test verifies that remote HTTP mode excludes the local-only tool.
+
 5. **Update documentation**:
    - Add the new command to [/servers/Azure.Mcp.Server/docs/azmcp-commands.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
    - Run `.\eng\scripts\Update-AzCommandsMetadata.ps1` to update tool metadata in azmcp-commands.md (required for CI)
@@ -252,11 +254,11 @@ Real product code under unit testing must be passed `Xunit.TestContext.Current.C
 
 ### End-to-end Tests
 
-End-to-end tests are performed manually. Command authors must thoroughly test each command to ensure correct tool invocation and results. At least one prompt per tool is required and should be added to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`.
+End-to-end tests are performed manually. Command authors must thoroughly test each command to ensure correct tool invocation and results. At least one prompt per tool is required and should be added to the server's `/server/<servername>/docs/e2eTestPrompts.md` file.
 
 ### Running evals with vally
 
-vally is the evaluation framework used to test the performance/accuracy of Azure MCP server and its tools. See `/docs/testing-with-vally.md`.
+vally is the evaluation framework used to test the performance/accuracy of Azure MCP server and its tools. See [`/docs/testing-with-vally.md`](https://github.com/microsoft/mcp/blob/main/docs/testing-with-vally.md).
 
 ### Testing Local Build with VS Code
 
@@ -853,6 +855,18 @@ External servers integrate seamlessly with the Azure MCP Server's tool aggregati
 2. Add or update tests as needed
 3. Reference the original issue
 4. Wait for review and address any feedback
+
+#### Assisted Pull Request Review
+
+The repository includes the `.github/skills/mcp-code-reviewer/SKILL.md` skill for consistent, repository-aware reviews in supported IDE, CLI, and GitHub Copilot Code Review sessions.
+
+1. Open the repository in the pull request branch or worktree.
+2. Ask the reviewing agent to `Review pull request <number> using the mcp-code-reviewer skill. Return draft inline comments only and do not post them.`
+3. Inspect each draft finding against the diff and post only the comments you agree with.
+
+In GitHub Copilot Code Review, requesting a review authorizes the agent to post qualified inline comments directly. The skill keeps these reviews read-only and comment-only: it does not modify the branch, approve or request changes, resolve threads, or invoke another agent to implement changes.
+
+The skill does not replace maintainer judgment, required validation, or the security inspection required before authorizing live tests for an untrusted contribution.
 
 ### Builds and Releases (Internal)
 

@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -66,7 +65,6 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
                 Arg.Any<string>(),
                 Arg.Any<bool?>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedAccount);
         }
@@ -103,7 +101,6 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(conflictException);
 
@@ -134,7 +131,6 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
@@ -165,7 +161,6 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(authException);
 
@@ -194,7 +189,6 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<StorageAccountResult>(new Exception("Test error")));
 
@@ -243,7 +237,6 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             "Cool",
             true,
             null,
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedAccount);
 
@@ -268,7 +261,6 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             "Cool",
             true,
             null,
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 }

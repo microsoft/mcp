@@ -42,7 +42,6 @@ public sealed class ResourceListCommand(ILogger<ResourceListCommand> logger, IAz
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken).ToListAsync(cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(resources), GroupJsonContext.Default.ResourceListCommandResult);

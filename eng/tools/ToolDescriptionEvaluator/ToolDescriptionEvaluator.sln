@@ -9,7 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6F3DF750-4119-4D28-986A-3F22EF16E71E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToolDescriptionEvaluator.UnitTests", "tests\ToolDescriptionEvaluator.UnitTests\ToolDescriptionEvaluator.UnitTests.csproj", "{85D39AC2-463F-44B4-9A6C-8FD9E6E3BA1F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToolDescriptionEvaluator.Tests", "tests\ToolDescriptionEvaluator.Tests\ToolDescriptionEvaluator.Tests.csproj", "{85D39AC2-463F-44B4-9A6C-8FD9E6E3BA1F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Services.Http;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -28,6 +29,7 @@ public static class TestHttpClientFactoryProvider
         services.AddOptions();
         services.Configure<HttpClientOptions>(_ => { });
         services.Configure<ServerStartOptions>(_ => { });
+        services.Configure<ServerRuntimeConfiguration>(_ => { });
         services.AddHttpClient();
 
         configureServices?.Invoke(services);
