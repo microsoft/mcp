@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -40,7 +39,6 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedVaults);
 
@@ -70,7 +68,6 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedVault);
 
@@ -99,7 +96,6 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -123,7 +119,6 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -150,7 +145,6 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Vault not found"));
 
@@ -185,7 +179,7 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
     public async Task ExecuteAsync_AcceptsValidVaultType(string vaultType)
     {
         Service.ListVaultsAsync(
-            Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         var response = await ExecuteCommandAsync("--subscription", "sub123", "--vault-type", vaultType);
@@ -200,11 +194,11 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
         if (shouldSucceed)
         {
             Service.ListVaultsAsync(
-                Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns([]);
 
             Service.GetVaultAsync(
-                Arg.Is("myVault"), Arg.Is("myRg"), Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Is("myVault"), Arg.Is("myRg"), Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new BackupVaultInfo("id1", "myVault", "rsv", "eastus", "myRg", "Succeeded", "Standard", "GeoRedundant", null, null, null, null, null, null));
         }
 
@@ -234,5 +228,77 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
         Assert.Contains(options, o => o.Name == "--resource-group");
         Assert.Contains(options, o => o.Name == "--vault");
         Assert.Contains(options, o => o.Name == "--vault-type");
+        Assert.Contains(options, o => o.Name == "--expand");
+    }
+
+    [Theory]
+    [InlineData("bogus")]
+    [InlineData("security,foobar")]
+    [InlineData("mua,invalid")]
+    [InlineData("network")]
+    [InlineData("monitoring")]
+    public async Task ExecuteAsync_RejectsInvalidExpandValue(string expand)
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123", "--expand", expand);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--expand", response.Message);
+    }
+
+    [Theory]
+    [InlineData("security")]
+    [InlineData("mua")]
+    [InlineData("all")]
+    [InlineData("security,mua")]
+    [InlineData(" SECURITY , Mua ")]
+    public async Task ExecuteAsync_AcceptsValidExpandValues_AndForwardsToService(string expand)
+    {
+        var subscription = "sub123";
+        Service.ListVaultsAsync(
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>(),
+            Arg.Is<VaultExpand>(e => e != VaultExpand.None))
+            .Returns([]);
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription, "--expand", expand);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListVaultsAsync(
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>(),
+            Arg.Is<VaultExpand>(e => e != VaultExpand.None));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OmittingExpand_PassesNoneToService()
+    {
+        var subscription = "sub123";
+        Service.ListVaultsAsync(
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>(),
+            Arg.Is(VaultExpand.None))
+            .Returns([]);
+
+        var response = await ExecuteCommandAsync("--subscription", subscription);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListVaultsAsync(
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>(),
+            Arg.Is(VaultExpand.None));
     }
 }

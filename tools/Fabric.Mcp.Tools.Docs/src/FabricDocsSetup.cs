@@ -22,12 +22,12 @@ public class FabricDocsSetup : IAreaSetup
         services.AddSingleton<IFabricPublicApiService, FabricPublicApiService>();
         services.AddHttpClient<FabricPublicApiService>();
 
-        services.AddSingleton<ListWorkloadsCommand>();
-        services.AddSingleton<GetWorkloadApisCommand>();
+        services.AddSingleton<ListItemTypesCommand>();
+        services.AddSingleton<GetItemApisCommand>();
         services.AddSingleton<GetPlatformApisCommand>();
         services.AddSingleton<GetBestPracticesCommand>();
         services.AddSingleton<GetExamplesCommand>();
-        services.AddSingleton<GetWorkloadDefinitionCommand>();
+        services.AddSingleton<GetItemDefinitionCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -36,8 +36,8 @@ public class FabricDocsSetup : IAreaSetup
             """
             Microsoft Fabric Documentation Tools - Access OpenAPI specifications, best practices,
             and example files for Microsoft Fabric APIs. Use this tool when you need to:
-            - Discover available Fabric workload types and their API specifications
-            - Retrieve detailed OpenAPI documentation for specific workloads
+            - Discover available Fabric item types and their API specifications
+            - Retrieve detailed OpenAPI documentation for specific item types
             - Access best practice guidance for Fabric development
             - Get example API request/response files for implementation reference
             This tool provides read-only access to Microsoft Fabric documentation and does NOT
@@ -45,10 +45,10 @@ public class FabricDocsSetup : IAreaSetup
             """, Title);
 
         // Register all commands directly at the docs level (flat structure)
-        fabricDocs.AddCommand<ListWorkloadsCommand>(serviceProvider);
-        fabricDocs.AddCommand<GetWorkloadApisCommand>(serviceProvider);
+        fabricDocs.AddCommand<ListItemTypesCommand>(serviceProvider);
+        fabricDocs.AddCommand<GetItemApisCommand>(serviceProvider);
         fabricDocs.AddCommand<GetPlatformApisCommand>(serviceProvider);
-        fabricDocs.AddCommand<GetWorkloadDefinitionCommand>(serviceProvider);
+        fabricDocs.AddCommand<GetItemDefinitionCommand>(serviceProvider);
         fabricDocs.AddCommand<GetBestPracticesCommand>(serviceProvider);
         fabricDocs.AddCommand<GetExamplesCommand>(serviceProvider);
 

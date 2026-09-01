@@ -12,6 +12,7 @@ public sealed class PromptInteractionExtensionsTests
     [InlineData(PromptInteraction.None, PromptInteractionExtensions.None)]
     [InlineData(PromptInteraction.ClarificationRequired, PromptInteractionExtensions.ClarificationRequired)]
     [InlineData(PromptInteraction.ContextRequired, PromptInteractionExtensions.ContextRequired)]
+    [InlineData(PromptInteraction.InvestigationRequired, PromptInteractionExtensions.InvestigationRequired)]
     public void Parse_DisplayString_RoundTrips(PromptInteraction interaction, string displayString)
     {
         Assert.Equal(interaction, PromptInteractionExtensions.Parse(displayString));

@@ -13,7 +13,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
 
 [CommandMetadata(
     Id = "173cfc00-7c12-486d-a0e7-c0d4c1de23fd",
-    Name = "list_table_namespaces",
+    Name = "list-table-namespaces",
     Title = "List OneLake Table Namespaces",
     Description = "Lists table namespaces in OneLake. Use this when the user needs to discover available table namespaces.",
     Destructive = false,

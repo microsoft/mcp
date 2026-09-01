@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.ResourceManager.ApplicationInsights;
 using Azure.ResourceManager.ApplicationInsights.Models;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -18,12 +17,11 @@ public class MonitorWebTestService(IAzureService azureService)
     public async Task<List<WebTestSummaryInfo>> ListWebTests(
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 
         var webTests = await subscriptionResource
             .GetApplicationInsightsWebTestsAsync(cancellationToken)
@@ -45,14 +43,13 @@ public class MonitorWebTestService(IAzureService azureService)
         string subscription,
         string resourceGroup,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup));
 
-        var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
+        var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken) ??
             throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
 
         var webTests = await resourceGroupResource
@@ -76,7 +73,6 @@ public class MonitorWebTestService(IAzureService azureService)
       string resourceGroup,
       string resourceName,
       string? tenant = null,
-      RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -84,7 +80,7 @@ public class MonitorWebTestService(IAzureService azureService)
             (nameof(resourceGroup), resourceGroup),
             (nameof(resourceName), resourceName));
 
-        var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
+        var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken) ??
             throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
 
         var webTest = await resourceGroupResource.GetApplicationInsightsWebTestAsync(resourceName, cancellationToken).ConfigureAwait(false);
@@ -152,7 +148,6 @@ public class MonitorWebTestService(IAzureService azureService)
         int? sslLifetimeCheckInDays = null,
         int? timeoutInSeconds = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -163,7 +158,7 @@ public class MonitorWebTestService(IAzureService azureService)
             (nameof(location), location),
             (nameof(requestUrl), requestUrl));
 
-        var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
+        var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken) ??
             throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
 
         // Check if web test already exists
@@ -292,7 +287,6 @@ public class MonitorWebTestService(IAzureService azureService)
         int? sslLifetimeCheckInDays = null,
         int? timeoutInSeconds = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -300,7 +294,7 @@ public class MonitorWebTestService(IAzureService azureService)
             (nameof(resourceGroup), resourceGroup),
             (nameof(resourceName), resourceName));
 
-        var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
+        var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken) ??
             throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
 
         // Get existing web test

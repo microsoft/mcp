@@ -8,7 +8,11 @@ import:
   - ../../.vscode/cspell.json
 words:
   - existingaccount
+  - existingcontainer
+  - invalidaccess
   - nonexistentaccount
   - nonexistentrg
+  - tapansing
   - testacct
+  - testblob
   - testfilesystem

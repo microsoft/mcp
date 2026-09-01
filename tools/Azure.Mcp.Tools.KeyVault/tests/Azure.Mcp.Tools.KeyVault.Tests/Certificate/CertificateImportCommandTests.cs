@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -32,7 +31,6 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             null,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error")); // force exception to avoid building return object
 
@@ -51,7 +49,6 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             null,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status); // due to forced exception
     }
@@ -98,7 +95,6 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expected));
 
@@ -125,7 +121,6 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             null,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -144,7 +139,6 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             null,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
     }
@@ -161,7 +155,6 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             password,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -179,7 +172,6 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             password,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
     }
@@ -199,7 +191,6 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
                 null,
                 _knownSubscription,
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
 
@@ -218,7 +209,6 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
                 null,
                 _knownSubscription,
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
             Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         }
@@ -246,7 +236,6 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             null,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException(errorMessage));
 
@@ -274,7 +263,6 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             password,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(mismatchMessage));
 

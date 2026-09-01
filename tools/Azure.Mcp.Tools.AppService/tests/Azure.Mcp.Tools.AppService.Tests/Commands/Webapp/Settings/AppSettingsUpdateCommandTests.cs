@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -31,7 +30,7 @@ public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<Ap
         // Arrange
         // Set up the mock to return success for any arguments
         Service.UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName, settingUpdateType,
-            settingValue, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            settingValue, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedValue);
 
         List<string> unparsedArgs = [
@@ -52,7 +51,7 @@ public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<Ap
         // Assert
         // Verify that the mock was called with the expected parameters
         await Service.Received(1).UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName,
-            settingUpdateType, settingValue, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
+            settingUpdateType, settingValue, Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.AppSettingsUpdateResult);
@@ -92,7 +91,6 @@ public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<Ap
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -118,7 +116,6 @@ public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<Ap
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -130,7 +127,7 @@ public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<Ap
     {
         // Arrange
         Service.UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName, settingUpdateType,
-            settingValue, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            settingValue, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
         List<string> unparsedArgs = [
@@ -153,7 +150,7 @@ public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<Ap
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
 
         await Service.Received(1).UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName,
-            settingUpdateType, settingValue, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
+            settingUpdateType, settingValue, Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 }

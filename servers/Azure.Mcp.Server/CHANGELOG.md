@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.35 (Unreleased)
+## 3.0.0-beta.40 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,78 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 3.0.0-beta.39 (2026-08-27)
+
+### Features Added
+
+- Added support for creating, replacing, and removing additional recovery groups and their manual or Custom Runbook pre/post actions through the `azmcp resilience recoveryplan create` command. [[#3352](https://github.com/microsoft/mcp/pull/3352)]
+- Added the resilience recovery plan validate-for-failover tool to report per-resource failover qualification and blocking reasons. [[#3354](https://github.com/microsoft/mcp/pull/3354)]
+- Added the `azmcp resilience drill delete` command to delete a resilience drill from an Azure service group. [[#3343](https://github.com/microsoft/mcp/pull/3343)]
+- Added AMLFS expansion job commands (create, get, delete) to resize Azure Managed Lustre filesystem storage capacity. [[#3344](https://github.com/microsoft/mcp/pull/3344)]
+- Added the resilience drill create command for creating or updating zonal and regional drills in Azure service groups. [[#3320](https://github.com/microsoft/mcp/pull/3320)]
+- Added the resilience drill update tool for changing supporting resource placement, RBAC setup mode, and recovery plan association. [[#3324](https://github.com/microsoft/mcp/pull/3324)]
+- Added `azurebackup resourceguard` command group with `create`, `get`, and `delete` operations for managing Multi-User Authorization Resource Guards. [[#3322](https://github.com/microsoft/mcp/pull/3322)]
+- Added `azurebackup security disable-mua` command to explicitly disable Multi-User Authorization on a vault. [[#3322](https://github.com/microsoft/mcp/pull/3322)]
+- Added `azurebackup vault privateendpoint` command group for managing Private Endpoints (v2 experience) on Recovery Services vaults (RSV). Includes `create`, `get`, `delete`, and `approve-reject` (with an `--action approve|reject` parameter) operations. Backup vaults (DPP) are not supported and return a clear error directing users to RSV. [[#3345](https://github.com/microsoft/mcp/pull/3345)]
+
+### Breaking Changes
+
+- Renamed `azurebackup security configure-mua` to `azurebackup security enable-mua`. [[#3322](https://github.com/microsoft/mcp/pull/3322)]
+
+### Bugs Fixed
+
+- Aligned resilience recovery group and action input validation with the service API contract. [[#3352](https://github.com/microsoft/mcp/pull/3352)]
+- Fixed `azurebackup security configure-mua` (now `enable-mua`) silently disabling MUA when `--resource-guard-id` was omitted. The parameter is now required for enabling MUA; use the new `azurebackup security disable-mua` command to disable. [[#3322](https://github.com/microsoft/mcp/pull/3322)]
+
+## 3.0.0-beta.38 (2026-08-25)
+
+### Features Added
+
+- Added the `azmcp resilience drill run get` command to list runs of a resilience drill or get a specific drill run. [[#3318](https://github.com/microsoft/mcp/pull/3318)]
+- Added the `azmcp resilience drill run resource get` command to list resources of a resilience drill run or get a specific drill run resource. [[#3318](https://github.com/microsoft/mcp/pull/3318)]
+- Added the `azmcp resilience recoveryplan checkreadiness` command to discover and assess whether a recovery plan and its protected resources are ready for recovery operations. The command waits for the readiness job and returns its status, errors, failed tasks, and failed resources. [[#3268](https://github.com/microsoft/mcp/pull/3268)]
+- The `azmcp search index query` command now uses the full Lucene query syntax by default and supports a new optional `--query-type` option to select between `simple`, `full`, and `semantic` queries. [[#3251](https://github.com/microsoft/mcp/pull/3251)]
+
+### Breaking Changes
+
+- Renamed the recovery plan command group from `azmcp resilience recovery plan` to `azmcp resilience recoveryplan` and the recovery job command group from `azmcp resilience recovery job` to `azmcp resilience recoveryjob`. Existing get commands now use the corresponding single-word resource group names. [[#3268](https://github.com/microsoft/mcp/pull/3268)]
+
+## 3.0.0-beta.37 (2026-08-20)
+
+### Features Added
+
+- `azurebackup vault get` now accepts an optional `--expand` parameter (comma-separated: `security`, `mua`, `all`) to include extended vault posture fields (encryption key URI, cross-region restore state, MUA resource guard link). For DPP vaults, `encryptionState` is also returned from the service. RSV vaults omit `encryptionState` because the Recovery Services vault GET API does not return an explicit state field. Default output shape is unchanged. [[#1718](https://github.com/microsoft/mcp/pull/1718)]
+- Added the `azmcp resilience recovery plan create` command to create or fully update a Zonal recovery plan with an explicitly selected system-assigned, user-assigned, or combined identity. Updates can switch identity types while preserving existing recovery groups. [[#3268](https://github.com/microsoft/mcp/pull/3268)]
+- Added the `azmcp resilience recovery plan delete` command to delete a recovery plan from an Azure service group. The command is idempotent and reports whether a plan was deleted. [[#3268](https://github.com/microsoft/mcp/pull/3268)]
+- Added the `azmcp resilience recovery plan update-resources` command to include, exclude, configure, or remove recovery resources, including their recovery groups, associated identities, and protection settings. The command validates mandatory protection settings before first inclusion while preserving existing settings on sparse updates. [[#3268](https://github.com/microsoft/mcp/pull/3268)]
+
+### Bugs Fixed
+
+- Fixed `azmcp eventgrid events publish` so that failures publishing events to an Event Grid topic now propagate as errors (with the correct HTTP status code) instead of being swallowed and reported as a successful (HTTP 200) response with a `Failed` status. [[#3326](https://github.com/microsoft/mcp/pull/3326)]
+
+### Other Changes
+
+- Updated capture of `ToolParameters` for multi-step server modes. [[#3296](https://github.com/microsoft/mcp/pull/3296)]
+- Improved Event Grid performance by looking up a topic or system topic directly by name when a resource group is supplied, instead of enumerating every topic in the resource group. [[#3308](https://github.com/microsoft/mcp/pull/3308)]
+
+## 3.0.0-beta.36 (2026-08-18)
+
+### Features Added
+
+- `azurebackup vault get` now accepts an optional `--expand` parameter (comma-separated: `security`, `mua`, `all`) to include extended vault posture fields (encryption key URI, cross-region restore state, MUA resource guard link). For DPP vaults, `encryptionState` is also returned from the service. RSV vaults omit `encryptionState` because the Recovery Services vault GET API does not return an explicit state field. Default output shape is unchanged.
+- Added the 'azmcp resilience drill get' command to list or retrieve drill details for a service group. [[#3232](https://github.com/microsoft/mcp/pull/3232)]
+- Added the 'azmcp resilience drill resource get' command to list or retrieve resources associated with a drill. [[#3232](https://github.com/microsoft/mcp/pull/3232)]
+
+### Breaking Changes
+
+- Tool calls with unknown parameters are now explicitly rejected. [[#3282](https://github.com/microsoft/mcp/pull/3282)]
+
+## 3.0.0-beta.35 (2026-08-13)
+
+### Other Changes
+
+- Improved `foundry` and `foundryexensions` namespace-level tool descriptions.
 
 ## 3.0.0-beta.34 (2026-08-11)
 
@@ -71,6 +143,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added `azmcp iothub device list` to list device identities in an Azure IoT Hub device registry. The command returns device metadata without authentication keys, defaults `--max-count` to 100 and returns a validation error when it is less than 1 or greater than 100, and flags `truncated` (with an explanatory message) when the hub contains more devices than were returned.
 - Added Azure IoT Hub integration updates including command docs, e2e prompts, README service coverage, consolidated tool mapping, and CODEOWNERS ownership. [[#3005](https://github.com/microsoft/mcp/pull/3005)]
 
 ### Breaking Changes
@@ -93,7 +166,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Migrated Azure Terraform tools to new tool pattern. [[#3101](https://github.com/microsoft/mcp/pull/3101)]
 - Migrated Cloud Architect tools to new tool design. [[#3130](https://github.com/microsoft/mcp/pull/3130)]
 - Migrated Azure MCP Server to the MCP 2026-07-28 stateless protocol (SDK 2.0.0-preview.1). HTTP clients using the new protocol must now include `Mcp-Method` and `Mcp-Name` routing headers on every POST request. Clients on the previous 2025-11-25 protocol are unaffected — the server auto-negotiates backward compatibility. [[#3016](https://github.com/microsoft/mcp/pull/3016)]
-- Added a server usage rule instructing agents to consult the troubleshooting guide (https://aka.ms/azmcp/troubleshooting) when an Azure MCP tool call fails, including retrying with the correct `tenant` and/or `subscription` parameter for authentication, authorization, tenant, or subscription context errors. [[#3054](https://github.com/microsoft/mcp/pull/3054)]
+- Added a server usage rule instructing agents to consult the troubleshooting guide (<https://aka.ms/azmcp/troubleshooting>) when an Azure MCP tool call fails, including retrying with the correct `tenant` and/or `subscription` parameter for authentication, authorization, tenant, or subscription context errors. [[#3054](https://github.com/microsoft/mcp/pull/3054)]
 
 ## 3.0.0-beta.28 (2026-07-21)
 
@@ -697,24 +770,24 @@ For a complete history of changes included in this release, see entries for vers
 **Tool Consolidation:** Numerous related tools were consolidated for a more streamlined tool surface:
 
 - **Cosmos DB/MySQL/PostgreSQL**: Consolidated **list** commands:
-    - Removed `cosmos account list`, `cosmos database list`, and `cosmos database container list` – use `cosmos list` with the appropriate parameters to route hierarchically
-    - Removed `postgres server list`, `postgres database list`, `postgres table list` – use `postgres list` with the appropriate parameters to route hierarchically
-    - Removed `mysql server list`, `mysql database list`, `mysql table list` – use `mysql list` with the appropriate parameters to route hierarchically
+  - Removed `cosmos account list`, `cosmos database list`, and `cosmos database container list` – use `cosmos list` with the appropriate parameters to route hierarchically
+  - Removed `postgres server list`, `postgres database list`, `postgres table list` – use `postgres list` with the appropriate parameters to route hierarchically
+  - Removed `mysql server list`, `mysql database list`, `mysql table list` – use `mysql list` with the appropriate parameters to route hierarchically
 - **Key Vault**: Merged **get**/**list** tools:
-    - Removed `keyvault key list` – use `keyvault key get` without providing a key name to list keys in a key vault
-    - Removed `keyvault secret list` – use `keyvault secret get` without providing a secret name to list secrets in a key vault
-    - Removed `keyvault certificate list` – use `keyvault certificate get` without providing a certificate name to list certificates in a key vault
+  - Removed `keyvault key list` – use `keyvault key get` without providing a key name to list keys in a key vault
+  - Removed `keyvault secret list` – use `keyvault secret get` without providing a secret name to list secrets in a key vault
+  - Removed `keyvault certificate list` – use `keyvault certificate get` without providing a certificate name to list certificates in a key vault
 - **Monitor WebTest**: Merged **get**/**list** and **create**/**update** tools:
-    - Removed `monitor webtests list` – use `monitor webtests get` without providing a WebTest name to list WebTests in a resource group
-    - Removed `monitor webtests update` – use `monitor webtests createorupdate` for both create and update scenarios
+  - Removed `monitor webtests list` – use `monitor webtests get` without providing a WebTest name to list WebTests in a resource group
+  - Removed `monitor webtests update` – use `monitor webtests createorupdate` for both create and update scenarios
 - **SQL**: Merged **show**/**list** tools:
-    - Removed `sql db show` and `sql db list` – use `sql db get` without providing a database name to list databases in a server
-    - Removed `sql server show` and `sql server list` – use `sql server get` without providing a server name to list servers in a subscription
+  - Removed `sql db show` and `sql db list` – use `sql db get` without providing a database name to list databases in a server
+  - Removed `sql server show` and `sql server list` – use `sql server get` without providing a server name to list servers in a subscription
 - **Load Testing**: Merged **list**/**get** and **create**/**update** tools:
-    - Removed `loadtesting testrun list` – use `loadtesting testrun get` without providing a TestRun name to list test runs in a resource group
-    - Removed `loadtesting testrun update` – use `loadtesting testrun createorupdate` for both create and update scenarios
+  - Removed `loadtesting testrun list` – use `loadtesting testrun get` without providing a TestRun name to list test runs in a resource group
+  - Removed `loadtesting testrun update` – use `loadtesting testrun createorupdate` for both create and update scenarios
 - **Resource Health**: Merged **get**/**list** tools:
-    - Removed `resourcehealth availability-status list` – use `resourcehealth availability-status get` without providing a resource ID to list availability status for multiple resources
+  - Removed `resourcehealth availability-status list` – use `resourcehealth availability-status get` without providing a resource ID to list availability status for multiple resources
 
 **Namespace, Tool, and Option Renames**:
 
@@ -957,6 +1030,7 @@ For a complete history of changes included in this release, see entries for vers
 - Consolidated the `list_learning_resources` and `get_learning_resource` tools into a single `get_learning_resource` tool in the `monitor` namespace. [[#2113](https://github.com/microsoft/mcp/pull/2113)]
 
 ### Other Changes
+
 - Extended command telemetry to include additional attributes (`plugin-version`, `skill-name`, `skill-version`). [[#2114](https://github.com/microsoft/mcp/pull/2114)]
 - Reviewed MCP tool Command definitions and resolved validation inconsistencies, aligning implementations with tool development guidelines and improving consistency across multiple tool areas. [[#2086](https://github.com/microsoft/mcp/pull/2086)]
 
@@ -1114,7 +1188,7 @@ For a complete history of changes included in this release, see entries for vers
 
 ### Features Added
 
-- Added new tools available via the external Azure AI Foundry MCP server (https://mcp.ai.azure.com) that provide capabilities not previously available in Azure MCP Server: [[#1771](https://github.com/microsoft/mcp/pull/1771)]
+- Added new tools available via the external Azure AI Foundry MCP server (<https://mcp.ai.azure.com>) that provide capabilities not previously available in Azure MCP Server: [[#1771](https://github.com/microsoft/mcp/pull/1771)]
   - agent_container_control: Control an agent container
   - agent_container_status_get: Get the status of an agent container
   - agent_definition_schema_get: Get the schema for an agent definition
@@ -1155,7 +1229,7 @@ For a complete history of changes included in this release, see entries for vers
   - foundryextensions_threads_create: Create a new agent thread
   - foundryextensions_threads_get_messages: Get messages from an agent thread
   - foundryextensions_threads_list: List agent threads
-- The following Azure AI Foundry tools were renamed as part of the migration to the external Foundry MCP server (https://mcp.ai.azure.com). See the Breaking Changes entry for the full list of removed tools: [[#1771](https://github.com/microsoft/mcp/pull/1771)]
+- The following Azure AI Foundry tools were renamed as part of the migration to the external Foundry MCP server (<https://mcp.ai.azure.com>). See the Breaking Changes entry for the full list of removed tools: [[#1771](https://github.com/microsoft/mcp/pull/1771)]
   - foundry_agents_list → agent_get
   - foundry_agents_create → agent_update
   - foundry_agents_connect → agent_invoke
@@ -1302,18 +1376,18 @@ For a complete history of changes included in this release, see entries for vers
 ### Breaking Changes
 
 - Consolidated KeyVault get/list commands - separate list commands removed: [[#1653](https://github.com/microsoft/mcp/pull/1653)]
-    - Removed keyvault_key_list - use keyvault_key_get without providing a key name
-    - Removed keyvault_secret_list - use keyvault_secret_get without providing a secret name
-    - Removed keyvault_certificate_list - use keyvault_certificate_get without providing a certificate name
+  - Removed keyvault_key_list - use keyvault_key_get without providing a key name
+  - Removed keyvault_secret_list - use keyvault_secret_get without providing a secret name
+  - Removed keyvault_certificate_list - use keyvault_certificate_get without providing a certificate name
 - Consolidated Monitor WebTest commands – (get/list merged into monitor_webtests_get, create/update merged into monitor_webtests_createorupdate): [[#1678](https://github.com/microsoft/mcp/pull/1678)]
-    - Removed monitor_webtests_list – use monitor_webtests_get without providing a WebTest name
-    - Removed monitor_webtests_update – use monitor_webtests_createorupdate for both create and update scenarios
+  - Removed monitor_webtests_list – use monitor_webtests_get without providing a WebTest name
+  - Removed monitor_webtests_update – use monitor_webtests_createorupdate for both create and update scenarios
 - Consolidated MySQL and PostgreSQL list commands – separate server/database/table list tools removed: [[#1710](https://github.com/microsoft/mcp/pull/1710)]
-    - Removed postgres_server_list, postgres_database_list, postgres_table_list – use postgres_list with appropriate parameters to route hierarchically
-    - Removed mysql_server_list, mysql_database_list, mysql_table_list – use mysql_list with appropriate parameters to route hierarchically
+  - Removed postgres_server_list, postgres_database_list, postgres_table_list – use postgres_list with appropriate parameters to route hierarchically
+  - Removed mysql_server_list, mysql_database_list, mysql_table_list – use mysql_list with appropriate parameters to route hierarchically
 - Consolidated Load Testing TestRun commands – separate list/update commands removed: [[#1711](https://github.com/microsoft/mcp/pull/1711)]
-    - Removed loadtesting_testrun_list – use loadtesting_testrun_get for retrieving test runs
-    - Removed loadtesting_testrun_update – use loadtesting_testrun_createorupdate for both create and update scenarios
+  - Removed loadtesting_testrun_list – use loadtesting_testrun_get for retrieving test runs
+  - Removed loadtesting_testrun_update – use loadtesting_testrun_createorupdate for both create and update scenarios
 
 ### Other Changes
 
@@ -1622,12 +1696,10 @@ For a complete history of changes included in this release, see entries for vers
 
 - PostgreSQL MCP tools now require SSL and verify the server's full certificate chain before creating database connections. This SSL mode provides both `eavesdropping protection` and `man-in-the-middle protection`. See [SSL Mode VerifyFull](https://www.npgsql.org/doc/security.html?tabs=tabid-1#encryption-ssltls) for more details. [[#1023](https://github.com/microsoft/mcp/pull/1023)]
 
-
 ### Bugs Fixed
 
 - Updated a codepath `--mode namespace` where `learn=true` wouldn't always result in agent learning happening. [[#1122](https://github.com/microsoft/mcp/pull/1122)]
 - Use the correct `Assembly` to find `Version` for telemetry. [[#1122](https://github.com/microsoft/mcp/pull/1122)]
-
 
 ### Other Changes
 
@@ -1640,8 +1712,8 @@ For a complete history of changes included in this release, see entries for vers
 - Added support for speech recognition from an audio file with Fast Transcription via the command `azmcp_speech_stt_recognize`. [[#1054](https://github.com/microsoft/mcp/pull/1054)]
 - Added support for User-Assigned Managed Identity via the `AZURE_CLIENT_ID` environment variable. [[#1033](https://github.com/microsoft/mcp/pull/1033)]
 - Added the following features for deploying as a `Remote MCP Server`:
-    - Added support for HTTP transport, including both incoming and outgoing authentication. Incoming authentication uses Entra ID, while outgoing authentication can either use Entra On-Behalf-Of (OBO) or the authentication configured in the host environment. [[#1020](https://github.com/microsoft/mcp/pull/1020)]
-    - Added support for the `--dangerously-disable-http-incoming-auth` command-line option to disable the built-in incoming authentication. Use this option only if you plan to provide your own incoming authentication mechanism, and with caution, as it exposes the server to unauthenticated access. [[#1037](https://github.com/microsoft/mcp/pull/1037)]
+  - Added support for HTTP transport, including both incoming and outgoing authentication. Incoming authentication uses Entra ID, while outgoing authentication can either use Entra On-Behalf-Of (OBO) or the authentication configured in the host environment. [[#1020](https://github.com/microsoft/mcp/pull/1020)]
+  - Added support for the `--dangerously-disable-http-incoming-auth` command-line option to disable the built-in incoming authentication. Use this option only if you plan to provide your own incoming authentication mechanism, and with caution, as it exposes the server to unauthenticated access. [[#1037](https://github.com/microsoft/mcp/pull/1037)]
 - Enhanced the `tools list` command with new filtering and output options: [[#741](https://github.com/microsoft/mcp/pull/741)]
   - Added the `--namespace` option to filter tools by one or more service namespaces (e.g., 'storage', 'keyvault').
   - Added the `--name-only` option to return only tool names without descriptions or metadata.
@@ -2173,7 +2245,6 @@ For a complete history of pre-release changes, see versions [0.9.9](#099-2025-10
 - Removed support for the `AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS` environment variable. Use `AZURE_TOKEN_CREDENTIALS` instead for more flexible credential selection. For migration details, see [Controlling Authentication Methods with AZURE_TOKEN_CREDENTIALS](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#controlling-authentication-methods-with-azure_token_credentials). [[#56](https://github.com/microsoft/mcp/pull/56)]
 - Merged `azmcp_appconfig_kv_lock` and `azmcp_appconfig_kv_unlock` into `azmcp_appconfig_kv_lock_set` which can handle locking or unlocking a key-value based on the `--lock` parameter. [[#485](https://github.com/microsoft/mcp/pull/485)]
 
-
 ### Other Changes
 
 - Update `azmcp_foundry_models_deploy` to use "GenericResource" for deploying models to Azure AI Services. [[#456](https://github.com/microsoft/mcp/pull/456)]
@@ -2278,6 +2349,7 @@ For a complete history of pre-release changes, see versions [0.9.9](#099-2025-10
 ### Other Changes
 
 AOT- Added a verb to the namespace name for bestpractices [[#109](https://github.com/microsoft/mcp/pull/109)]
+
 - Added instructions about consumption plan for azure functions deployment best practices [[#218](https://github.com/microsoft/mcp/pull/218)]
 
 ## 0.5.11 (2025-09-02)
@@ -2354,6 +2426,7 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 ## 0.5.7 (2025-08-19)
 
 ### Features Added
+
 - Added support for the following Azure Deploy and Azure Quota operations: [[#626](https://github.com/Azure/azure-mcp/pull/626)]
   - `azmcp_deploy_app_logs_get` - Get logs from Azure applications deployed using azd.
   - `azmcp_deploy_iac_rules_get` - Get Infrastructure as Code rules.
@@ -2424,6 +2497,7 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 - Updated metadata for CREATE and SET tools to `destructive = true`. [[#773](https://github.com/Azure/azure-mcp/pull/773)]
 
 ### Other Changes
+
 - Consolidate "AzSubscriptionGuid" telemetry logic into `McpRuntime`. [[#935](https://github.com/Azure/azure-mcp/pull/935)]
 
 ## 0.5.4 (2025-08-07)
@@ -2626,6 +2700,7 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 - Improved install reliability and error handling when missing platform packages on Ubuntu. [[#394](https://github.com/Azure/azure-mcp/pull/394)]
 
 ### Other Changes
+
 - Updated `engines.node` in `package.json` to require Node.js version `>=22.0.0`.
 
 #### Dependency Updates
@@ -2694,10 +2769,10 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 
 ### Features Added
 
-- Added new command for resource-centric logs query in Azure Monitor with command path `azmcp-monitor-resource-logs-query` - https://github.com/Azure/azure-mcp/pull/413
-- Added support for starting the server with a subset of services using the `--service` flag - https://github.com/Azure/azure-mcp/pull/424
-- Improved index schema handling in Azure AI Search (index descriptions, facetable fields, etc.) - https://github.com/Azure/azure-mcp/pull/440
-- Added new commands for querying metrics with Azure Monitor with command paths `azmcp-monitor-metrics-query` and `azmcp-monitor-metrics-definitions`. - https://github.com/Azure/azure-mcp/pull/428
+- Added new command for resource-centric logs query in Azure Monitor with command path `azmcp-monitor-resource-logs-query` - <https://github.com/Azure/azure-mcp/pull/413>
+- Added support for starting the server with a subset of services using the `--service` flag - <https://github.com/Azure/azure-mcp/pull/424>
+- Improved index schema handling in Azure AI Search (index descriptions, facetable fields, etc.) - <https://github.com/Azure/azure-mcp/pull/440>
+- Added new commands for querying metrics with Azure Monitor with command paths `azmcp-monitor-metrics-query` and `azmcp-monitor-metrics-definitions`. - <https://github.com/Azure/azure-mcp/pull/428>
 
 ### Breaking Changes
 
@@ -2717,53 +2792,52 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 
 ### Features Added
 
-- Adds support to launch MCP server in readonly mode - https://github.com/Azure/azure-mcp/pull/410
+- Adds support to launch MCP server in readonly mode - <https://github.com/Azure/azure-mcp/pull/410>
 
 ### Bugs Fixed
 
-- MCP tools now expose annotations to clients https://github.com/Azure/azure-mcp/pull/388
+- MCP tools now expose annotations to clients <https://github.com/Azure/azure-mcp/pull/388>
 
 ## 0.2.2 (2025-06-17)
 
 ### Features Added
 
-- Support for Azure ISV Services https://github.com/Azure/azure-mcp/pull/199/
-- Support for Azure RBAC https://github.com/Azure/azure-mcp/pull/266
-- Support for Key Vault Secrets https://github.com/Azure/azure-mcp/pull/173
-
+- Support for Azure ISV Services <https://github.com/Azure/azure-mcp/pull/199/>
+- Support for Azure RBAC <https://github.com/Azure/azure-mcp/pull/266>
+- Support for Key Vault Secrets <https://github.com/Azure/azure-mcp/pull/173>
 
 ## 0.2.1 (2025-06-12)
 
 ### Bugs Fixed
 
-- Fixed the issue where queries containing double quotes failed to execute. https://github.com/Azure/azure-mcp/pull/338
-- Enables dynamic proxy mode within single "azure" tool. https://github.com/Azure/azure-mcp/pull/325
+- Fixed the issue where queries containing double quotes failed to execute. <https://github.com/Azure/azure-mcp/pull/338>
+- Enables dynamic proxy mode within single "azure" tool. <https://github.com/Azure/azure-mcp/pull/325>
 
 ## 0.2.0 (2025-06-09)
 
 ### Features Added
 
-- Support for launching smaller service level MCP servers. https://github.com/Azure/azure-mcp/pull/324
+- Support for launching smaller service level MCP servers. <https://github.com/Azure/azure-mcp/pull/324>
 
 ### Bugs Fixed
 
-- Fixed failure starting Docker image. https://github.com/Azure/azure-mcp/pull/301
+- Fixed failure starting Docker image. <https://github.com/Azure/azure-mcp/pull/301>
 
 ## 0.1.2 (2025-06-03)
 
 ### Bugs Fixed
 
-- Monitor Query Logs Failing.  Fixed with https://github.com/Azure/azure-mcp/pull/280
+- Monitor Query Logs Failing.  Fixed with <https://github.com/Azure/azure-mcp/pull/280>
 
 ## 0.1.1 (2025-05-30)
 
 ### Bugs Fixed
 
-- Fixed return value of `tools/list` to use JSON object names. https://github.com/Azure/azure-mcp/pull/275
+- Fixed return value of `tools/list` to use JSON object names. <https://github.com/Azure/azure-mcp/pull/275>
 
 ### Other Changes
 
-- Update .NET SDK version to 9.0.300 https://github.com/Azure/azure-mcp/pull/278
+- Update .NET SDK version to 9.0.300 <https://github.com/Azure/azure-mcp/pull/278>
 
 ## 0.1.0 (2025-05-28)
 
@@ -2773,48 +2847,48 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 
 ### Other Changes
 
-- Removed "Arguments" from code base in favor of "Options" to align with System. CommandLine semantics. https://github.com/Azure/azure-mcp/pull/232
+- Removed "Arguments" from code base in favor of "Options" to align with System. CommandLine semantics. <https://github.com/Azure/azure-mcp/pull/232>
 
 ## 0.0.21 (2025-05-22)
 
 ### Features Added
 
-- Support for Azure Redis Caches and Clusters https://github.com/Azure/azure-mcp/pull/198
-- Support for Azure Monitor Health Models https://github.com/Azure/azure-mcp/pull/208
+- Support for Azure Redis Caches and Clusters <https://github.com/Azure/azure-mcp/pull/198>
+- Support for Azure Monitor Health Models <https://github.com/Azure/azure-mcp/pull/208>
 
 ### Bugs Fixed
 
-- Updates the usage patterns of Azure Developer CLI (azd) when invoked from MCP. https://github.com/Azure/azure-mcp/pull/203
-- Fixes server binding issue when using SSE transport in Docker by replacing `ListenLocalhost` with `ListenAnyIP`, allowing external access via port mapping. https://github.com/Azure/azure-mcp/pull/233
+- Updates the usage patterns of Azure Developer CLI (azd) when invoked from MCP. <https://github.com/Azure/azure-mcp/pull/203>
+- Fixes server binding issue when using SSE transport in Docker by replacing `ListenLocalhost` with `ListenAnyIP`, allowing external access via port mapping. <https://github.com/Azure/azure-mcp/pull/233>
 
 ### Other Changes
 
-- Updated to the latest ModelContextProtocol library. https://github.com/Azure/azure-mcp/pull/220
+- Updated to the latest ModelContextProtocol library. <https://github.com/Azure/azure-mcp/pull/220>
 
 ## 0.0.20 (2025-05-17)
 
 ### Bugs Fixed
 
-- Improve the formatting in the ParseJsonOutput method and refactor it to utilize a ParseError record. https://github.com/Azure/azure-mcp/pull/218
-- Added dummy argument for best practices tool, so the schema is properly generated for Python Open API use cases. https://github.com/Azure/azure-mcp/pull/219
+- Improve the formatting in the ParseJsonOutput method and refactor it to utilize a ParseError record. <https://github.com/Azure/azure-mcp/pull/218>
+- Added dummy argument for best practices tool, so the schema is properly generated for Python Open API use cases. <https://github.com/Azure/azure-mcp/pull/219>
 
 ## 0.0.19 (2025-05-15)
 
 ### Bugs Fixed
 
-- Fixes Service Bus host name parameter description. https://github.com/Azure/azure-mcp/pull/209/
+- Fixes Service Bus host name parameter description. <https://github.com/Azure/azure-mcp/pull/209/>
 
 ## 0.0.18 (2025-05-14)
 
 ### Bugs Fixed
 
-- Include option to exclude managed keys. https://github.com/Azure/azure-mcp/pull/202
+- Include option to exclude managed keys. <https://github.com/Azure/azure-mcp/pull/202>
 
 ## 0.0.17 (2025-05-13)
 
 ### Bugs Fixed
 
-- Added an opt-in timeout for browser-based authentication to handle cases where the process waits indefinitely if the user closes the browser. https://github.com/Azure/azure-mcp/pull/189
+- Added an opt-in timeout for browser-based authentication to handle cases where the process waits indefinitely if the user closes the browser. <https://github.com/Azure/azure-mcp/pull/189>
 
 ## 0.0.16 (2025-05-13)
 
@@ -2824,43 +2898,43 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 
 ### Other Changes
 
-- Updated to the latest ModelContextProtocol library. https://github.com/Azure/azure-mcp/pull/161
+- Updated to the latest ModelContextProtocol library. <https://github.com/Azure/azure-mcp/pull/161>
 
 ## 0.0.15 (2025-05-09)
 
 ### Features Added
 
-- Support for getting properties and runtime information for Azure Service Bus queues, topics, and subscriptions. https://github.com/Azure/azure-mcp/pull/150/
-- Support for peeking at Azure Service Bus messages from queues or subscriptions. https://github.com/Azure/azure-mcp/pull/144
-- Adds Best Practices tool that provides guidance to LLMs for effective code generation. https://github.com/Azure/azure-mcp/pull/153 https://github.com/Azure/azure-mcp/pull/156
+- Support for getting properties and runtime information for Azure Service Bus queues, topics, and subscriptions. <https://github.com/Azure/azure-mcp/pull/150/>
+- Support for peeking at Azure Service Bus messages from queues or subscriptions. <https://github.com/Azure/azure-mcp/pull/144>
+- Adds Best Practices tool that provides guidance to LLMs for effective code generation. <https://github.com/Azure/azure-mcp/pull/153> <https://github.com/Azure/azure-mcp/pull/156>
 
 ### Other Changes
 
-- Disabled Parallel testing in the ADO pipeline for Live Tests https://github.com/Azure/azure-mcp/pull/151
+- Disabled Parallel testing in the ADO pipeline for Live Tests <https://github.com/Azure/azure-mcp/pull/151>
 
 ## 0.0.14 (2025-05-07)
 
 ### Features Added
 
-- Support for Azure Key Vault keys https://github.com/Azure/azure-mcp/pull/119
-- Support for Azure Data Explorer  https://github.com/Azure/azure-mcp/pull/21
+- Support for Azure Key Vault keys <https://github.com/Azure/azure-mcp/pull/119>
+- Support for Azure Data Explorer  <https://github.com/Azure/azure-mcp/pull/21>
 
 ## 0.0.13 (2025-05-06)
 
 ### Features Added
 
-- Support for Azure PostgreSQL. https://github.com/Azure/azure-mcp/pull/81
+- Support for Azure PostgreSQL. <https://github.com/Azure/azure-mcp/pull/81>
 
 ## 0.0.12 (2025-05-05)
 
 ### Features Added
 
-- Azure Search Tools https://github.com/Azure/azure-mcp/pull/83
+- Azure Search Tools <https://github.com/Azure/azure-mcp/pull/83>
 
 ### Other Changes
 
-- Arguments no longer echoed in response: https://github.com/Azure/azure-mcp/pull/79
-- Editorconfig and gitattributes updated: https://github.com/Azure/azure-mcp/pull/91
+- Arguments no longer echoed in response: <https://github.com/Azure/azure-mcp/pull/79>
+- Editorconfig and gitattributes updated: <https://github.com/Azure/azure-mcp/pull/91>
 
 ## 0.0.11 (2025-04-29)
 
@@ -2869,14 +2943,16 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 ### Breaking Changes
 
 ### Bugs Fixed
+
 - Bug fixes to existing MCP commands
-- See https://github.com/Azure/azure-mcp/releases/tag/0.0.11
+- See <https://github.com/Azure/azure-mcp/releases/tag/0.0.11>
 
 ### Other Changes
 
 ## 0.0.10 (2025-04-17)
 
 ### Features Added
+
 - Support for Azure Cosmos DB (NoSQL databases).
 - Support for Azure Storage.
 - Support for Azure Monitor (Log Analytics).
@@ -2888,7 +2964,9 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 ### Breaking Changes
 
 ### Bugs Fixed
-- See https://github.com/Azure/azure-mcp/releases/tag/0.0.10
+
+- See <https://github.com/Azure/azure-mcp/releases/tag/0.0.10>
 
 ### Other Changes
-- See blog post for details https://devblogs.microsoft.com/azure-sdk/introducing-the-azure-mcp-server/
+
+- See blog post for details <https://devblogs.microsoft.com/azure-sdk/introducing-the-azure-mcp-server/>

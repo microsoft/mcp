@@ -43,7 +43,6 @@ public sealed class GoalTemplateGetCommand(ILogger<GoalTemplateGetCommand> logge
                 var goalTemplates = await _resilienceManagementService.ListGoalTemplatesAsync(
                     options.ServiceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new GoalTemplateGetCommandResult(GoalTemplates: goalTemplates.ToList());
             }
@@ -53,7 +52,6 @@ public sealed class GoalTemplateGetCommand(ILogger<GoalTemplateGetCommand> logge
                     options.ServiceGroup,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new GoalTemplateGetCommandResult(GoalTemplate: goalTemplate);
             }

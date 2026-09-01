@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -37,7 +36,6 @@ public class AutoexportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns("autoexport-20250107120000");
 
@@ -59,7 +57,6 @@ public class AutoexportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -93,7 +90,6 @@ public class AutoexportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "not found"));
 
@@ -120,7 +116,6 @@ public class AutoexportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("boom"));
 
@@ -147,7 +142,6 @@ public class AutoexportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns("autoexport-20250107120000");
 
@@ -167,7 +161,6 @@ public class AutoexportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -184,7 +177,6 @@ public class AutoexportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(jobName);
 
@@ -205,7 +197,6 @@ public class AutoexportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -222,7 +213,6 @@ public class AutoexportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns("blob_autoexport");
 
@@ -243,7 +233,6 @@ public class AutoexportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Is(prefix),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -261,7 +250,6 @@ public class AutoexportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns("blob_autoexport");
 
@@ -282,7 +270,6 @@ public class AutoexportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string?>(),
             Arg.Is(adminStatus),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -302,7 +289,6 @@ public class AutoexportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(jobName);
 
@@ -325,7 +311,6 @@ public class AutoexportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Is(prefix),
             Arg.Is(adminStatus),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 }

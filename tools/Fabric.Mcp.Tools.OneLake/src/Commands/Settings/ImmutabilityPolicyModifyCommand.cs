@@ -12,7 +12,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Settings;
 
 [CommandMetadata(
     Id = "a1b2c3d4-3001-4000-8000-000000000003",
-    Name = "modify_immutability_policy",
+    Name = "modify-immutability-policy",
     Title = "Modify OneLake Immutability Policy",
     Description = """
         Modify the workspace-level OneLake immutability policy. Once enabled,

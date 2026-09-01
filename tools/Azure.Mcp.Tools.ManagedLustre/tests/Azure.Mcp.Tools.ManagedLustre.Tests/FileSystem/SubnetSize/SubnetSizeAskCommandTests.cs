@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.SubnetSize;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -34,7 +33,6 @@ public class FileSystemSubnetSizeCommandTests : SubscriptionCommandUnitTestsBase
             Arg.Is("AMLFS-Durable-Premium-40"),
             Arg.Is(480),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(21);
 
@@ -62,7 +60,6 @@ public class FileSystemSubnetSizeCommandTests : SubscriptionCommandUnitTestsBase
             Arg.Any<string>(),
             Arg.Any<int>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>()).Returns(10);
 
         // Act
@@ -89,7 +86,6 @@ public class FileSystemSubnetSizeCommandTests : SubscriptionCommandUnitTestsBase
             Arg.Any<string>(),
             Arg.Any<int>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(10);
 
@@ -124,7 +120,6 @@ public class FileSystemSubnetSizeCommandTests : SubscriptionCommandUnitTestsBase
             Arg.Any<string>(),
             Arg.Any<int>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("error"));
 

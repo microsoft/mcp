@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -75,7 +74,6 @@ public class VmGetCommandTests : SubscriptionCommandUnitTestsBase<VmGetCommand, 
                     Arg.Any<string>(),
                     Arg.Any<string>(),
                     Arg.Any<string?>(),
-                    Arg.Any<RetryPolicyOptions?>(),
                     Arg.Any<CancellationToken>())
                     .Returns((vmInfo, instanceView));
             }
@@ -86,7 +84,6 @@ public class VmGetCommandTests : SubscriptionCommandUnitTestsBase<VmGetCommand, 
                     Arg.Any<string>(),
                     Arg.Any<string>(),
                     Arg.Any<string?>(),
-                    Arg.Any<RetryPolicyOptions?>(),
                     Arg.Any<CancellationToken>())
                     .Returns(vmInfo);
             }
@@ -96,7 +93,6 @@ public class VmGetCommandTests : SubscriptionCommandUnitTestsBase<VmGetCommand, 
                     Arg.Any<string?>(),
                     Arg.Any<string>(),
                     Arg.Any<string?>(),
-                    Arg.Any<RetryPolicyOptions?>(),
                     Arg.Any<CancellationToken>())
                     .Returns(vmList);
             }
@@ -158,7 +154,6 @@ public class VmGetCommandTests : SubscriptionCommandUnitTestsBase<VmGetCommand, 
             Arg.Is<string?>(x => x == null),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedVms);
 
@@ -196,7 +191,6 @@ public class VmGetCommandTests : SubscriptionCommandUnitTestsBase<VmGetCommand, 
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedVms);
 
@@ -221,7 +215,6 @@ public class VmGetCommandTests : SubscriptionCommandUnitTestsBase<VmGetCommand, 
             Arg.Any<string?>(),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -255,7 +248,6 @@ public class VmGetCommandTests : SubscriptionCommandUnitTestsBase<VmGetCommand, 
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedVm);
 
@@ -312,7 +304,6 @@ public class VmGetCommandTests : SubscriptionCommandUnitTestsBase<VmGetCommand, 
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns((vmInfo, instanceView));
 
@@ -355,7 +346,6 @@ public class VmGetCommandTests : SubscriptionCommandUnitTestsBase<VmGetCommand, 
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(vmInfo);
 
@@ -382,7 +372,6 @@ public class VmGetCommandTests : SubscriptionCommandUnitTestsBase<VmGetCommand, 
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
@@ -407,7 +396,6 @@ public class VmGetCommandTests : SubscriptionCommandUnitTestsBase<VmGetCommand, 
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 
@@ -430,7 +418,6 @@ public class VmGetCommandTests : SubscriptionCommandUnitTestsBase<VmGetCommand, 
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(exception);
 

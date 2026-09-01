@@ -86,15 +86,9 @@ Configure your MCP client to use OneLake tools:
 }
 ```
 
-### Environment Verification
+### Endpoint Verification
 
-You can verify which environment you're targeting by checking the endpoints in the logs or by listing workspaces and comparing the results with what you expect in each environment.
-
-**Important Notes:**
-- Each environment may have different workspaces and items available
-- Authentication requirements may vary between environments
-- Daily and DXT environments are primarily for testing and development
-- Production environment should be used for production workloads
+You can verify which endpoints you're targeting by checking the URLs in the logs or by listing workspaces and comparing the results with what you expect.
 
 ### Workspace and Item Identifiers
 
@@ -721,14 +715,14 @@ Eight per-target tools provide flat, typed options instead of requiring a JSON b
 
 | Tool | Target Type |
 |------|-------------|
-| `create_shortcut_onelake` | Another OneLake location |
-| `create_shortcut_adls_gen2` | Azure Data Lake Storage Gen2 |
-| `create_shortcut_amazon_s3` | Amazon S3 |
-| `create_shortcut_azure_blob` | Azure Blob Storage |
-| `create_shortcut_gcs` | Google Cloud Storage |
-| `create_shortcut_s3_compatible` | S3-compatible storage |
-| `create_shortcut_dataverse` | Dataverse environment |
-| `create_shortcut_onedrive_sharepoint` | OneDrive / SharePoint Online |
+| `create-shortcut-onelake` | Another OneLake location |
+| `create-shortcut-adls-gen2` | Azure Data Lake Storage Gen2 |
+| `create-shortcut-amazon-s3` | Amazon S3 |
+| `create-shortcut-azure-blob` | Azure Blob Storage |
+| `create-shortcut-gcs` | Google Cloud Storage |
+| `create-shortcut-s3-compatible` | S3-compatible storage |
+| `create-shortcut-dataverse` | Dataverse environment |
+| `create-shortcut-onedrive-sharepoint` | OneDrive / SharePoint Online |
 
 **Common parameters (all per-target tools):**
 - `--workspace-id`: Workspace ID (GUID)

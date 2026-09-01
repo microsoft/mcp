@@ -21,5 +21,7 @@ internal static class ManagedLustreOptionDescriptions
     internal const string AutoexportJobName = "The name of the autoexport job";
     internal const string AutoimportJobName = "The name of the autoimport job";
     internal const string ImportJobName = "The name of the import job";
+    internal const string ExpansionJobName = "The name of the expansion job";
+    internal const string NewSize = "The new storage capacity in TiB for the AML file system after expansion. Must be a multiple of the SKU step size and greater than the current storage capacity. Example: --new-size 64";
     internal const string AdminStatus = "The administrative status of the auto import job. Enable: job is active. Disable: disables the current active auto import job. Default: Enable. Allowed values: Enable, Disable.";
 }
