@@ -23,8 +23,8 @@ namespace Azure.Mcp.Tools.Optimization.Commands.Recommendation;
         "you MUST render as an inline chart on the SAME turn you receive the response \u2014 rendering the chart is a required " +
         "part of completing this tool call, not an optional follow-up. Call this whenever the user asks to 'explain recommendation N', " +
         "'explain this recommendation', 'tell me more about recommendation N', 'why is this recommended', or 'go deeper on' " +
-        "a recommendation after listing recommendations with the 'list' tool. Pass the --resource-id and " +
-        "--recommendation-type-id from the corresponding row returned by the 'list' tool. --target-sku is OPTIONAL: pass " +
+        "a recommendation after listing recommendations with the 'list' tool. Pass the --resource-id " +
+        "from the corresponding row returned by the 'list' tool. --target-sku is OPTIONAL: pass " +
         "the target VM/VMSS SKU to project against only if the user already named one. If omitted, the tool automatically " +
         "derives the target SKU from the top alternative resize recommendation for the resource, so you can call this " +
         "directly WITHOUT first calling the 'alternatives' tool. Returns the matching recommendation count, a " +
@@ -72,11 +72,6 @@ public sealed class RecommendationExplainCommand(
             validationResult.Errors.Add(OptimizationStrings.ErrorInvalidResourceId);
         }
 
-        if (string.IsNullOrWhiteSpace(options.RecommendationTypeId))
-        {
-            validationResult.Errors.Add("--recommendation-type-id is required.");
-        }
-
         if (!string.IsNullOrWhiteSpace(options.View) &&
             !Enum.TryParse<UtilizationView>(options.View, ignoreCase: true, out _))
         {
@@ -95,7 +90,6 @@ public sealed class RecommendationExplainCommand(
         {
             var result = await _optimizationService.GetRecommendationExplanationAsync(
                 options.ResourceId!,
-                options.RecommendationTypeId!,
                 options.TargetSku,
                 view,
                 options.Subscription!,

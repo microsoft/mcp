@@ -10,9 +10,6 @@ namespace Azure.Mcp.Tools.Optimization.Services;
 /// </summary>
 internal static class OptimizationKqlQueries
 {
-    /// <summary>Default recommendationTypeId for the underutilized-VM right-size recommendation.</summary>
-    public const string DefaultRightSizeRecommendationTypeId = "e10b1381-5f0a-47ff-8c7b-37bd13d7c974";
-
     private static string EscapeKql(string value) => value.Replace("'", "''", StringComparison.Ordinal);
 
     /// <summary>ARG query resolving a subscription id (and owning tenant) from a subscription name.</summary>
@@ -23,20 +20,20 @@ internal static class OptimizationKqlQueries
         "| project subscriptionId, tenantId, name";
 
     /// <summary>ARG query returning the alternative resize/SKU options for a compute resource.</summary>
-    public static string BuildAlternativesQuery(string resourceId, string recommendationTypeId) =>
+    public static string BuildAlternativesQuery(string resourceId) =>
         "advisorresources " +
         "| where type =~ 'microsoft.advisor/recommendations' " +
         $"| where properties.resourceMetadata.resourceId =~ '{EscapeKql(resourceId)}' " +
-        $"| where properties.recommendationTypeId == '{EscapeKql(recommendationTypeId)}' " +
+        $"| where properties.category == 'Cost'" +
         "| extend alternatives = parse_json(properties.extendedProperties.alternatives) " +
         "| project alternatives";
 
     /// <summary>ARG query returning a single Advisor recommendation for a resource and type.</summary>
-    public static string BuildAdvisorRecommendationQuery(string resourceId, string recommendationTypeId) =>
+    public static string BuildAdvisorRecommendationQuery(string resourceId) =>
         "advisorresources " +
         "| where type =~ 'microsoft.advisor/recommendations' " +
         $"| where properties.resourceMetadata.resourceId == '{EscapeKql(resourceId)}' " +
-        $"| where properties.recommendationTypeId == '{EscapeKql(recommendationTypeId)}'";
+        $"| where properties.category == 'Cost'";
 
     /// <summary>Curated top cost-savings ARG query. Subscription scoping is applied via the query content.</summary>
     public const string TopCostSavingsQuery = """

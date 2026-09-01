@@ -41,7 +41,6 @@ public class RecommendationAlternativesCommandTests
             Service.GetAlternativesAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
@@ -75,7 +74,6 @@ public class RecommendationAlternativesCommandTests
         Service.GetAlternativesAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -92,7 +90,6 @@ public class RecommendationAlternativesCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         Service.GetAlternativesAsync(
-            Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),

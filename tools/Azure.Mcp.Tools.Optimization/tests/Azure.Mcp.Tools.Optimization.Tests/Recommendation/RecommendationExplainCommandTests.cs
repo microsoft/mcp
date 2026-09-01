@@ -19,7 +19,6 @@ public class RecommendationExplainCommandTests
 {
     private const string ValidResourceId =
         "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm1";
-    private const string RecommendationTypeId = "e10b1381-5f0a-47ff-8c7b-37bd13d7c974";
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -31,16 +30,14 @@ public class RecommendationExplainCommandTests
     }
 
     [Theory]
-    [InlineData("--subscription sub123 --resource-id /subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm1 --recommendation-type-id e10b1381-5f0a-47ff-8c7b-37bd13d7c974 --target-sku Standard_E2as_v5", true)]
-    [InlineData("--subscription sub123 --recommendation-type-id e10b1381-5f0a-47ff-8c7b-37bd13d7c974 --target-sku Standard_E2as_v5", false)]  // missing resource-id
-    [InlineData("--subscription sub123 --resource-id /subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm1 --target-sku Standard_E2as_v5", false)]  // missing recommendation-type-id
-    [InlineData("--subscription sub123 --resource-id /subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm1 --recommendation-type-id e10b1381-5f0a-47ff-8c7b-37bd13d7c974", true)]  // target-sku optional; auto-derived
+    [InlineData("--subscription sub123 --resource-id /subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm1 --target-sku Standard_E2as_v5", true)]
+    [InlineData("--subscription sub123 --target-sku Standard_E2as_v5", false)]  // missing resource-id
+    [InlineData("--subscription sub123 --resource-id /subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm1", true)]  // target-sku optional; auto-derived
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
         {
             Service.GetRecommendationExplanationAsync(
-                Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<UtilizationView>(),
@@ -62,7 +59,6 @@ public class RecommendationExplainCommandTests
         Service.GetRecommendationExplanationAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<UtilizationView>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -80,7 +76,6 @@ public class RecommendationExplainCommandTests
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-id", ValidResourceId,
-            "--recommendation-type-id", RecommendationTypeId,
             "--target-sku", "Standard_E2as_v5");
 
         var result = ValidateAndDeserializeResponse(response, OptimizationJsonContext.Default.RecommendationExplanationResult);
@@ -94,7 +89,6 @@ public class RecommendationExplainCommandTests
         Service.GetRecommendationExplanationAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<UtilizationView>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -105,7 +99,6 @@ public class RecommendationExplainCommandTests
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-id", ValidResourceId,
-            "--recommendation-type-id", RecommendationTypeId,
             "--target-sku", "Standard_E2as_v5");
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

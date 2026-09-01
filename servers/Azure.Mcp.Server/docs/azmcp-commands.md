@@ -2262,7 +2262,6 @@ azmcp optimization recommendation list --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp optimization recommendation alternatives --subscription <subscription> \
                                                --resource-id <resource-id> \
-                                               [--recommendation-type-id <recommendation-type-id>] \
                                                [--new-skus <new-skus>] \
                                                [--new-vm-series <new-vm-series>] \
                                                [--new-processor-types <new-processor-types>] \
@@ -2275,7 +2274,6 @@ azmcp optimization recommendation alternatives --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp optimization recommendation explain --subscription <subscription> \
                                           --resource-id <resource-id> \
-                                          --recommendation-type-id <recommendation-type-id> \
                                           [--target-sku <target-sku>] \
                                           [--view <Detail|Trend|Both>] \
                                           [--tenant <tenant>]

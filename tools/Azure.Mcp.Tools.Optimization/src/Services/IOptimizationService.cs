@@ -26,7 +26,6 @@ public interface IOptimizationService
     /// </summary>
     Task<IReadOnlyList<AlternativeRecommendation>> GetAlternativesAsync(
         string resourceId,
-        string recommendationTypeId,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -38,7 +37,6 @@ public interface IOptimizationService
     /// </summary>
     Task<RecommendationExplanationResult> GetRecommendationExplanationAsync(
         string resourceId,
-        string recommendationTypeId,
         string? targetSku,
         UtilizationView view,
         string subscription,

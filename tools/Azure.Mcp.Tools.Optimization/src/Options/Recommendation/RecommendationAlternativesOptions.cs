@@ -16,10 +16,6 @@ public class RecommendationAlternativesOptions : ISubscriptionOption
         "'resourceId' or 'id' field from the 'list' tool output.")]
     public string? ResourceId { get; set; }
 
-    [Option(Description = "Optional Azure Advisor recommendationTypeId that carries the alternative SKU options. " +
-        "Defaults to the underutilized-VM right-size recommendation type ('e10b1381-5f0a-47ff-8c7b-37bd13d7c974').")]
-    public string? RecommendationTypeId { get; set; }
-
     [Option(Description = "Only include proposals whose new SKU matches any of these (comma/semicolon separated, e.g. 'Standard_D4s_v5, Standard_E4s_v5').")]
     public string? NewSkus { get; set; }
 

@@ -16,9 +16,6 @@ public class RecommendationExplainOptions : ISubscriptionOption
         "'resourceId' or 'id' field from the 'list' tool output.")]
     public string? ResourceId { get; set; }
 
-    [Option(Description = "Azure Advisor recommendation type ID to retrieve and explain.")]
-    public string? RecommendationTypeId { get; set; }
-
     [Option(Description = "Optional target Azure VM SKU to compare against the current SKU, e.g. 'Standard_E2as_v5'. " +
         "If omitted, the tool automatically derives it from the top alternative resize recommendation for the resource, " +
         "so you do not need to call the 'alternatives' tool first. Only set this when the user explicitly names a SKU.")]

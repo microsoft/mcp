@@ -72,13 +72,8 @@ public sealed class RecommendationAlternativesCommand(
                 ExcludeProcessorTypes = AlternativeFilters.Parse(options.ExcludeProcessorTypes),
             };
 
-            var recommendationTypeId = string.IsNullOrWhiteSpace(options.RecommendationTypeId)
-                ? OptimizationKqlQueries.DefaultRightSizeRecommendationTypeId
-                : options.RecommendationTypeId.Trim();
-
             var parsed = await _optimizationService.GetAlternativesAsync(
                 options.ResourceId!,
-                recommendationTypeId,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
