@@ -75,7 +75,7 @@ public static partial class ServiceCollectionExtensions
             services.AddSingleton<IToolLoader, SingleProxyToolLoader>();
             if (!serverStartOptions.DisableProxyTools)
             {
-                services.AddSingleton<IMcpDiscoveryStrategy>(sp => sp.GetRequiredService<RegistryDiscoveryStrategy>());
+                services.AddSingleton<IMcpDiscoveryStrategy, RegistryDiscoveryStrategy>();
             }
         }
         else if (serverStartOptions.Mode == ModeTypes.NamespaceProxy)

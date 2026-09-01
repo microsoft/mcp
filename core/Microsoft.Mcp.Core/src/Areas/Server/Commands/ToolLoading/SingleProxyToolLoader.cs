@@ -212,6 +212,20 @@ public sealed class SingleProxyToolLoader(
 
         foreach (var group in _commandFactory.RootGroup.SubGroup)
         {
+            if (DiscoveryConstants.IgnoredCommandGroups.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
+            {
+                // Skip ignored command groups.
+                continue;
+            }
+
+            if (_configuration.Value.Namespace != null &&
+                    _configuration.Value.Namespace.Length > 0 &&
+                    !_configuration.Value.Namespace.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
+            {
+                // Only include tools that match the configured namespace filter.
+                continue;
+            }
+
             if (_configuration.Value.ReadOnly && group.AllToolsInGroupMatch(meta => !meta.ReadOnly))
             {
                 // If ReadOnly mode is enabled and all commands in the group are not read-only, skip exposing this namespace as a tool.
@@ -384,14 +398,11 @@ public sealed class SingleProxyToolLoader(
         }
         else
         {
-            if (_cachedGroupToolLists.ContainsKey(tool))
-            {
-                return await ToolLearnModeAsync(request, intent, tool, cancellationToken);
-            }
-            else
-            {
-                return await RootLearnModeAsync(request, intent, cancellationToken);
-            }
+            var isKnownGroup = _commandFactory.RootGroup.SubGroup
+                .Any(g => string.Equals(g.Name, tool, StringComparison.OrdinalIgnoreCase));
+            return isKnownGroup
+                ? await ToolLearnModeAsync(request, intent, tool, cancellationToken)
+                : await RootLearnModeAsync(request, intent, cancellationToken);
         }
     }
 
@@ -570,7 +581,9 @@ public sealed class SingleProxyToolLoader(
                             Run again with the "learn=true" to get a list of available commands and their parameters.
                             """
                     }
-                ]
+                ],
+                IsError = true,
+                Meta = new([new(McpHelper.ToolIdMetaKey, baseCommand.Id)])
             };
         }
     }
