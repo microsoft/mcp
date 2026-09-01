@@ -20,6 +20,7 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
 {
     private const string DiskResourceId = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/disks/test-disk";
     private const string VmResourceId = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm";
+    private const string VmssVmResourceId = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachineScaleSets/test-vmss/virtualMachines/0";
     private const string Subscription = "00000000-0000-0000-0000-000000000001";
     private readonly ISubscriptionResolver _subscriptionResolver;
 
@@ -42,6 +43,7 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
 
     [Theory]
     [InlineData(VmResourceId)]
+    [InlineData(VmssVmResourceId)]
     [InlineData(DiskResourceId)]
     public async Task ExecuteAsync_ValidResource_ReturnsAnalysis(string resourceId)
     {

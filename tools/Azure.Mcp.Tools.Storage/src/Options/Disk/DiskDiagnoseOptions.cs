@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.Storage.Options.Disk;
 
 public class DiskDiagnoseOptions
 {
-    [Option(Description = "The full Azure resource ID of the virtual machine or attached managed disk to diagnose. Do not combine with --resource-group or --vm.")]
+    [Option(Description = "The full Azure resource ID of a virtual machine, virtual machine scale set instance, or attached managed disk to diagnose. Do not combine with --resource-group or --vm.")]
     public string? ResourceId { get; set; }
 
     [Option(Description = OptionDescriptions.Subscription)]
