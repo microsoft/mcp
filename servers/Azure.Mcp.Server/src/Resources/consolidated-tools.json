@@ -644,6 +644,7 @@
         "monitor_activitylog_list",
         "monitor_healthmodels_list",
         "monitor_healthmodels_get",
+        "monitor_metrics_batchquery",
         "monitor_metrics_definitions",
         "monitor_metrics_query",
         "monitor_resource_log_query",
