@@ -57,7 +57,6 @@ public sealed class UsagePlanCreateCommand(ILogger<UsagePlanCreateCommand> logge
                 options.PlanType,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

@@ -45,7 +45,6 @@ public sealed class ElasticPoolListCommand(ISqlService sqlService, ILogger<Elast
                 options.Server,
                 options.ResourceGroup,
                 options.Subscription!,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(elasticPools ?? []), SqlJsonContext.Default.ElasticPoolListResult);

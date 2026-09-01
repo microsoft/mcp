@@ -50,7 +50,6 @@ public sealed class ServerEndpointCreateCommand(ILogger<ServerEndpointCreateComm
                 options.TierFilesOlderThanDays,
                 options.LocalCacheMode,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(endpoint), StorageSyncJsonContext.Default.ServerEndpointCreateCommandResult);

@@ -39,7 +39,6 @@ public sealed class ClusterGetCommand(
                 options.Subscription!,
                 options.Cluster,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = cluster is null ?

@@ -40,7 +40,6 @@ public sealed class HealthModelGetCommand(IMonitorHealthModelService healthModel
                 options.ResourceGroup,
                 options.HealthModel,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(model), MonitorJsonContext.Default.HealthModelGetCommandResult);

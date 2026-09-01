@@ -43,7 +43,6 @@ public sealed class GoalAssignmentGetCommand(ILogger<GoalAssignmentGetCommand> l
                 var goalAssignments = await _resilienceManagementService.ListGoalAssignmentsAsync(
                     options.ServiceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new GoalAssignmentGetCommandResult(GoalAssignments: goalAssignments.ToList());
             }
@@ -53,7 +52,6 @@ public sealed class GoalAssignmentGetCommand(ILogger<GoalAssignmentGetCommand> l
                     options.ServiceGroup,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new GoalAssignmentGetCommandResult(GoalAssignment: goalAssignment);
             }

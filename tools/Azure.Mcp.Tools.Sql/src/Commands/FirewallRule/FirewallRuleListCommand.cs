@@ -42,7 +42,6 @@ public sealed class FirewallRuleListCommand(ISqlService sqlService, ILogger<Fire
                 options.Server,
                 options.ResourceGroup,
                 options.Subscription!,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(firewallRules ?? []), SqlJsonContext.Default.FirewallRuleListResult);

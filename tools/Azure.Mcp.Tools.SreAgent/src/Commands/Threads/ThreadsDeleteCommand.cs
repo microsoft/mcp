@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
     Id = "7c86f73c-bd69-4bb9-908a-d4a02d9f6805",
     Name = "delete",
     Title = "Delete Thread",
-    Description = "Delete an SRE Agent thread. Requires confirm=true.",
+    Description = "Delete an SRE Agent thread.",
     OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = false,
@@ -34,8 +34,6 @@ public sealed class ThreadsDeleteCommand(ILogger<ThreadsDeleteCommand> logger, I
     {
         try
         {
-            if (!options.Confirm)
-                throw new InvalidOperationException("Deleting a thread requires --confirm true.");
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
                 options,

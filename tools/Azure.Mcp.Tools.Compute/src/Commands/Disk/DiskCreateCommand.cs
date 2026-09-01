@@ -95,7 +95,6 @@ public sealed class DiskCreateCommand(ILogger<DiskCreateCommand> logger, IComput
                 options.UploadSizeBytes,
                 options.SecurityType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(disk), ComputeJsonContext.Default.DiskCreateCommandResult);

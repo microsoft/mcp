@@ -47,7 +47,6 @@ public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCo
                     options.Server,
                     options.ResourceGroup,
                     options.Subscription!,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create([server], SqlJsonContext.Default.ListSqlServer);
@@ -57,7 +56,6 @@ public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCo
                 var servers = await _sqlService.ListServersAsync(
                     options.ResourceGroup,
                     options.Subscription!,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(servers ?? [], SqlJsonContext.Default.ListSqlServer);

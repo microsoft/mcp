@@ -49,7 +49,6 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
                 options.Hours,
                 options.Limit,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(results, MonitorJsonContext.Default.ListJsonNode);

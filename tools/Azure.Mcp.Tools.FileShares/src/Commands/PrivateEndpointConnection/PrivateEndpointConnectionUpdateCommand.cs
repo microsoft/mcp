@@ -43,7 +43,6 @@ public sealed class PrivateEndpointConnectionUpdateCommand(ILogger<PrivateEndpoi
                 options.Status,
                 options.Description,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(connection), FileSharesJsonContext.Default.PrivateEndpointConnectionUpdateCommandResult);

@@ -34,7 +34,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
     {
         try
         {
-            var subscriptions = await _azureService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
+            var subscriptions = await _azureService.GetSubscriptions(options.Tenant, cancellationToken);
 
             var defaultSubscriptionId = _azureService.GetDefaultSubscriptionId();
             var subscriptionInfos = MapToSubscriptionInfos(subscriptions, defaultSubscriptionId);

@@ -51,7 +51,6 @@ public sealed class DiskGetCommand(ILogger<DiskGetCommand> logger, IComputeServi
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new([disk]), ComputeJsonContext.Default.DiskGetCommandResult);
@@ -66,7 +65,6 @@ public sealed class DiskGetCommand(ILogger<DiskGetCommand> logger, IComputeServi
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 // Apply wildcard filtering if disk name pattern is provided

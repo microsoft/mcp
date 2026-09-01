@@ -39,7 +39,6 @@ public sealed class HealthModelListCommand(IMonitorHealthModelService healthMode
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(models, MonitorJsonContext.Default.ListHealthModelSummary);

@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -39,7 +38,6 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(CreateSuccessfulResult());
         }
@@ -62,7 +60,6 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -79,7 +76,6 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -89,7 +85,6 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
         Service.CheckRecoveryPlanReadinessAsync(
             "sg1",
             "plan1",
-            null,
             null,
             Arg.Any<CancellationToken>())
             .Returns(CreateSuccessfulResult());
@@ -110,7 +105,6 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
         Service.CheckRecoveryPlanReadinessAsync(
             "sg1",
             "plan1",
-            null,
             null,
             Arg.Any<CancellationToken>())
             .Returns(new RecoveryPlanReadinessResult(
@@ -149,7 +143,6 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
@@ -168,7 +161,6 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new TimeoutException(internalDetails));
 
@@ -188,7 +180,6 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException(internalDetails));
 

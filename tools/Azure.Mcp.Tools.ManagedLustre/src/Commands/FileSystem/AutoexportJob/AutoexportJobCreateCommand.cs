@@ -47,7 +47,6 @@ public sealed class AutoexportJobCreateCommand(IManagedLustreService service, IL
                 options.AutoexportPrefix,
                 options.AdminStatus,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(job), ManagedLustreJsonContext.Default.AutoexportJobCreateResult);

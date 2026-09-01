@@ -49,7 +49,6 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
                 options.Subscription!,
                 options.UserMetadata,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(consumerGroup), EventHubsJsonContext.Default.ConsumerGroupUpdateCommandResult);

@@ -46,7 +46,6 @@ public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger, IAp
                 options.ResourceGroup,
                 options.App,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(detectors), AppServiceJsonContext.Default.DetectorListResult);

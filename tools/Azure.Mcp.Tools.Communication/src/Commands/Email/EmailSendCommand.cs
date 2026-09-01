@@ -76,7 +76,6 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger, ICommunic
                 options.Bcc,
                 options.ReplyTo,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(result), CommunicationJsonContext.Default.EmailSendCommandResult);

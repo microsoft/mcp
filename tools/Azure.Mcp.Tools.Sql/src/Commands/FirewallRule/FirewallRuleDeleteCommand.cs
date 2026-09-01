@@ -42,7 +42,6 @@ public sealed class FirewallRuleDeleteCommand(ISqlService sqlService, ILogger<Fi
                 options.ResourceGroup,
                 options.Subscription!,
                 options.FirewallRuleName,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(deleted, options.FirewallRuleName!), SqlJsonContext.Default.FirewallRuleDeleteResult);

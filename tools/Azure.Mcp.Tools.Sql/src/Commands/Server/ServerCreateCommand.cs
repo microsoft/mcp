@@ -50,7 +50,6 @@ public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCr
                 options.AdministratorPassword,
                 options.Version,
                 options.PublicNetworkAccess,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(server), SqlJsonContext.Default.ServerCreateResult);

@@ -73,7 +73,6 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger, IComput
                 options.ScaleInPolicy,
                 options.Tags,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(result), ComputeJsonContext.Default.VmssUpdateCommandResult);

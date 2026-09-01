@@ -102,7 +102,6 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
                 options.Subscription!,
                 options.VaultType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

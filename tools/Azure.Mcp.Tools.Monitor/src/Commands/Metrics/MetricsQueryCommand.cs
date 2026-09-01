@@ -80,7 +80,6 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger, IMo
                 options.Aggregation,
                 options.Filter,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             // Validate bucket count limit

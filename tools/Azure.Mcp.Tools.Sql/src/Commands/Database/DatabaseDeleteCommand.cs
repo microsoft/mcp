@@ -39,7 +39,6 @@ public sealed class DatabaseDeleteCommand(ISqlService sqlService, ILogger<Databa
                 options.Database,
                 options.ResourceGroup,
                 options.Subscription!,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(deleted, options.Database!), SqlJsonContext.Default.DatabaseDeleteResult);

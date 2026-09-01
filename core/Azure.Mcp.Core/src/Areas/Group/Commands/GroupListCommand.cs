@@ -41,7 +41,6 @@ public sealed class GroupListCommand(ILogger<GroupListCommand> logger, IAzureSer
             var groups = await _azureService.GetResourceGroups(
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(groups ?? []), GroupJsonContext.Default.Result);

@@ -56,7 +56,6 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
                     options.ResourceGroup!,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 if (service == null)
@@ -78,7 +77,6 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(services ?? []), StorageSyncJsonContext.Default.StorageSyncServiceGetCommandResult);

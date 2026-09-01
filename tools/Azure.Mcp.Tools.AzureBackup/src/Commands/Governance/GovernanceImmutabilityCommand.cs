@@ -60,7 +60,6 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
                 options.ImmutabilityState!,
                 options.VaultType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

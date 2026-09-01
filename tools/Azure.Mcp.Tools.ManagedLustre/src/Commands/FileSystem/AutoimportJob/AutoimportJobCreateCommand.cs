@@ -67,7 +67,6 @@ public sealed class AutoimportJobCreateCommand(IManagedLustreService service, IL
                 options.EnableDeletions,
                 options.MaximumErrors,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(job), ManagedLustreJsonContext.Default.AutoimportJobCreateResult);

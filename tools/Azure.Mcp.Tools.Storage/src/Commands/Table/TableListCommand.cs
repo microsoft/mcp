@@ -38,7 +38,6 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageS
                 options.Account,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new TableListCommandResult(tables ?? []), StorageJsonContext.Default.TableListCommandResult);

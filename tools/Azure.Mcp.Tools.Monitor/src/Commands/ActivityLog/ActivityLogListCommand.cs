@@ -51,7 +51,6 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
                 options.EventLevel,
                 options.Top ?? 10,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             // Return empty array if no results

@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Skills;
     Id = "a052cd8d-05a5-44ed-8ee1-ef131c8b0321",
     Name = "delete",
     Title = "Delete SRE Agent Tool",
-    Description = "Deletes a custom skill from a targeted SRE Agent resource. Required: --subscription, --agent, --name, --confirm true.",
+    Description = "Deletes a custom skill from a targeted SRE Agent resource. Required: --subscription, --agent, --name.",
     OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = true,
@@ -34,11 +34,6 @@ public sealed class SkillsDeleteCommand(ILogger<SkillsDeleteCommand> logger, ISr
     {
         try
         {
-            if (!options.Confirm)
-            {
-                throw new InvalidOperationException($"Refusing to delete skill '{options.Name}': destructive operation requires --confirm true.");
-            }
-
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
                 options,

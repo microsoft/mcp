@@ -62,7 +62,6 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, vmInstance, null), ComputeJsonContext.Default.VmssGetResult);
@@ -75,7 +74,6 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(vmss, null, null), ComputeJsonContext.Default.VmssGetResult);
@@ -87,7 +85,6 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.ResourceGroup,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, null, vmssList ?? []), ComputeJsonContext.Default.VmssGetResult);

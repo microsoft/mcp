@@ -45,7 +45,6 @@ public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger, I
             var namespaces = await _deviceRegistryService.ListNamespacesAsync(
                 options.Subscription!,
                 options.ResourceGroup,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

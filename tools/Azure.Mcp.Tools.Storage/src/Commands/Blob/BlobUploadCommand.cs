@@ -44,7 +44,6 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorag
                 options.LocalFilePath,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(result, StorageJsonContext.Default.BlobUploadResult);

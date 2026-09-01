@@ -41,7 +41,6 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVault
                     options.Vault,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(Secrets: secrets ?? [], Secret: null), KeyVaultJsonContext.Default.SecretGetCommandResult);
@@ -54,7 +53,6 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVault
                     options.Secret,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, SecretDetails.FromSecret(secret)), KeyVaultJsonContext.Default.SecretGetCommandResult);

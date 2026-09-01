@@ -41,7 +41,6 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = insights?.Count() > 0 ?

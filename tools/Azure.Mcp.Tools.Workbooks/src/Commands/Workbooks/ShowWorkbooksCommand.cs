@@ -51,7 +51,6 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger, I
         {
             var result = await _workbooksService.GetWorkbooksAsync(
                 options.WorkbookIds,
-                options.RetryPolicy,
                 options.Tenant,
                 cancellationToken);
 

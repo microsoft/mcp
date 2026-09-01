@@ -45,7 +45,6 @@ public sealed class PrivateEndpointConnectionGetCommand(ILogger<PrivateEndpointC
                     options.FileShareName,
                     options.ConnectionName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 var singleResult = new PrivateEndpointConnectionGetCommandResult([connection]);
@@ -65,7 +64,6 @@ public sealed class PrivateEndpointConnectionGetCommand(ILogger<PrivateEndpointC
                     options.ResourceGroup,
                     options.FileShareName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 var result = new PrivateEndpointConnectionGetCommandResult(connections ?? []);

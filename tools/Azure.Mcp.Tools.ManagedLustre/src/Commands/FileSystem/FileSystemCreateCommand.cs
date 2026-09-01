@@ -80,7 +80,6 @@ public sealed class FileSystemCreateCommand(IManagedLustreService service, ILogg
                 options.SourceVault,
                 options.UserAssignedIdentityId,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(fs), ManagedLustreJsonContext.Default.FileSystemCreateResult);

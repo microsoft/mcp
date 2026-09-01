@@ -46,7 +46,6 @@ public sealed class AutoimportJobDeleteCommand(IManagedLustreService service, IL
                 options.FilesystemName,
                 options.JobName,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(options.JobName!, "Deleted"), ManagedLustreJsonContext.Default.AutoimportJobDeleteResult);

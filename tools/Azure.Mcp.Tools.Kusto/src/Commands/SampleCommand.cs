@@ -47,7 +47,6 @@ public sealed class SampleCommand(
                     options.Database,
                     query,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else
@@ -58,7 +57,6 @@ public sealed class SampleCommand(
                     options.Database,
                     query,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
 

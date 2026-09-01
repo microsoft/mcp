@@ -53,7 +53,6 @@ public sealed class UsagePlanGetCommand(ILogger<UsagePlanGetCommand> logger, IRe
                     options.Name,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new UsagePlanGetCommandResult(UsagePlan: usagePlan);
             }
@@ -63,7 +62,6 @@ public sealed class UsagePlanGetCommand(ILogger<UsagePlanGetCommand> logger, IRe
                     options.ResourceGroup,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new UsagePlanGetCommandResult(UsagePlans: usagePlans.ToList());
             }
@@ -72,7 +70,6 @@ public sealed class UsagePlanGetCommand(ILogger<UsagePlanGetCommand> logger, IRe
                 var usagePlans = await _resilienceManagementService.ListUsagePlansBySubscriptionAsync(
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new UsagePlanGetCommandResult(UsagePlans: usagePlans.ToList());
             }

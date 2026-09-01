@@ -39,7 +39,6 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksS
                 options.Cluster!,
                 options.Nodepool,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(nodePools ?? []), AksJsonContext.Default.NodepoolGetCommandResult);

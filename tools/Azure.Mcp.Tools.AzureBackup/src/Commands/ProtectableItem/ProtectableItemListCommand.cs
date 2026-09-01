@@ -67,7 +67,6 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
                 options.Container,
                 options.VaultType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

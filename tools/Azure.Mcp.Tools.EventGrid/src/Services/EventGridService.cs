@@ -13,7 +13,6 @@ using Azure.ResourceManager.EventGrid.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.EventGrid.Services;
 
@@ -26,10 +25,9 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var topics = new List<EventGridTopicInfo>();
 
         if (!string.IsNullOrEmpty(resourceGroup))
@@ -61,11 +59,10 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         string? topicName = null,
         string? location = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         var subscriptions = new List<EventGridSubscriptionInfo>();
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 
         // If specific topic is requested, get subscriptions for that topic only
         if (!string.IsNullOrEmpty(topicName))
@@ -88,14 +85,13 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         string eventData,
         string? eventSchema = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         var operationId = Guid.NewGuid().ToString();
         _logger.LogInformation("Starting event publication. OperationId: {OperationId}, Topic: {TopicName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
             operationId, topicName, resourceGroup, subscription);
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 
         // Find the topic to get its endpoint and access key
         var topic = await FindTopic(subscriptionResource, resourceGroup, topicName, cancellationToken);

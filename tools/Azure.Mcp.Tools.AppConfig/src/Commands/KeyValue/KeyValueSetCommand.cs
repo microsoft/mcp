@@ -44,7 +44,6 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger, IAppC
                 options.Value,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 options.Label,
                 options.ContentType,
                 options.Tags,

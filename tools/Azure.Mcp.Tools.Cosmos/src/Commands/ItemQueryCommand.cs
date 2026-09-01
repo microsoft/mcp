@@ -60,7 +60,6 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger, ICosmosSe
                 options.Subscription!,
                 options.AuthMethod ?? AuthMethod.Credential,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(items ?? []), CosmosJsonContext.Default.ItemQueryCommandResult);

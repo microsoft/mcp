@@ -60,7 +60,6 @@ public sealed class UsagePlanEnrollmentCreateCommand(ILogger<UsagePlanEnrollment
                 options.ServiceGroup,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

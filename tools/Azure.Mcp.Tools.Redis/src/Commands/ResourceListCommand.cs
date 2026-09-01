@@ -40,7 +40,6 @@ public sealed class ResourceListCommand(IRedisService redisService, ILogger<Reso
             var resources = await _redisService.ListResourcesAsync(
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(resources ?? []), RedisJsonContext.Default.ResourceListCommandResult);

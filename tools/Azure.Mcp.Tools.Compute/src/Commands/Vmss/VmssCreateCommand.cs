@@ -101,7 +101,6 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger, IComput
                 options.OsDiskSizeGb,
                 options.OsDiskType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(result), ComputeJsonContext.Default.VmssCreateCommandResult);

@@ -45,7 +45,6 @@ public sealed class DrillResourceGetCommand(ILogger<DrillResourceGetCommand> log
                     options.ServiceGroup,
                     options.Drill,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new DrillResourceGetCommandResult(DrillResources: drillResources.ToList());
             }
@@ -56,7 +55,6 @@ public sealed class DrillResourceGetCommand(ILogger<DrillResourceGetCommand> log
                     options.Drill,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new DrillResourceGetCommandResult(DrillResource: drillResource);
             }

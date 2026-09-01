@@ -45,7 +45,6 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger, IVi
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else
@@ -53,7 +52,6 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger, IVi
                 hostpools = await _virtualDesktopService.ListHostpoolsAsync(
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
 

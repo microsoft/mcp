@@ -52,7 +52,6 @@ public sealed class ProtectedItemUndeleteCommand(ILogger<ProtectedItemUndeleteCo
                 options.VaultType,
                 options.Container,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

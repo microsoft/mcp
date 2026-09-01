@@ -51,7 +51,6 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger, IComputeSer
                 options.Subscription!,
                 options.ForceDeletion ? true : null,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             var message = deleted

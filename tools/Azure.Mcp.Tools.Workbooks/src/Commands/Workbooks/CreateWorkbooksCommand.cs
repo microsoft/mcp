@@ -49,7 +49,6 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
                  * otherwise the workbook will display an error when opening.
                  */
                 options.SourceId ?? "azure monitor",
-                options.RetryPolicy,
                 options.Tenant,
                 cancellationToken) ?? throw new InvalidOperationException("Failed to create workbook");
 

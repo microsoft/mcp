@@ -85,7 +85,6 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzur
                 options.IdentityType,
                 options.Tags,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

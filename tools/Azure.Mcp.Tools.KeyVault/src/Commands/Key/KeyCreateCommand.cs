@@ -40,7 +40,6 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger, IKeyVault
                 options.KeyType,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(KeyDetails.FromKey(key), KeyVaultJsonContext.Default.KeyDetails);

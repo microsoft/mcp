@@ -42,7 +42,6 @@ public sealed class AgentsListCommand(ILogger<AgentsListCommand> logger, ISreAge
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(agents), SreAgentJsonContext.Default.AgentsListCommandResult);

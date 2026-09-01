@@ -48,7 +48,6 @@ public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger, I
                 options.App,
                 options.DeploymentId,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(deployments), AppServiceJsonContext.Default.DeploymentGetResult);

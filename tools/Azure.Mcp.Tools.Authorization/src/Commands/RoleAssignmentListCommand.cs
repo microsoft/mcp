@@ -41,7 +41,6 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
                 options.Subscription!,
                 options.Scope,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(assignments?.Results ?? [], assignments?.AreResultsTruncated ?? false), AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);

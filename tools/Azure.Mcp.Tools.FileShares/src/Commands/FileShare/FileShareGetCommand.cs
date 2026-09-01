@@ -52,7 +52,6 @@ public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFi
                     options.ResourceGroup!,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new([fileShare]), FileSharesJsonContext.Default.FileShareGetCommandResult);
@@ -69,7 +68,6 @@ public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFi
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(fileShares ?? []), FileSharesJsonContext.Default.FileShareGetCommandResult);

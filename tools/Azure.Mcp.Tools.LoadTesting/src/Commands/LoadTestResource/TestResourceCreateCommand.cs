@@ -43,7 +43,6 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
                 options.ResourceGroup,
                 options.TestResourceName,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
             // Set results if any were returned
             context.Response.Results = results != null ?

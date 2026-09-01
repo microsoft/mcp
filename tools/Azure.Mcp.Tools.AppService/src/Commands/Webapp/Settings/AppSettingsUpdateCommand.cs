@@ -92,7 +92,6 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
                 options.SettingUpdateType,
                 options.SettingValue,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(updateResult), AppServiceJsonContext.Default.AppSettingsUpdateResult);

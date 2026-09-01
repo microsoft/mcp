@@ -52,7 +52,6 @@ public sealed class ItemListRecentCommand(ILogger<ItemListRecentCommand> logger,
                 options.Subscription!,
                 options.AuthMethod ?? AuthMethod.Credential,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

@@ -37,7 +37,6 @@ public sealed class FileSystemListCommand(IManagedLustreService service, ILogger
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(fileSystems ?? []), ManagedLustreJsonContext.Default.FileSystemListResult);

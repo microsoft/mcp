@@ -52,7 +52,6 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger, ILoadTe
                 options.RampUpTime,
                 options.Endpoint,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             // Set results if any were returned

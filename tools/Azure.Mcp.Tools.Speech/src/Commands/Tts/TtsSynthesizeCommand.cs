@@ -101,7 +101,6 @@ public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> l
                 options.Voice,
                 options.Format,
                 options.EndpointId,
-                options.RetryPolicy,
                 cancellationToken);
 
             _logger.LogInformation(

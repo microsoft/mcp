@@ -41,7 +41,6 @@ public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDe
                 options.ResourceGroup,
                 options.Name,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Message = "Storage sync service deleted successfully";

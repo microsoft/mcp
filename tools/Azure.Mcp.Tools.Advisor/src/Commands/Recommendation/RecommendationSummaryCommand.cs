@@ -78,7 +78,6 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
             var summary = await _advisorService.SummarizeRecommendationsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
-                options.RetryPolicy,
                 groupBy,
                 filters,
                 options.Tenant,

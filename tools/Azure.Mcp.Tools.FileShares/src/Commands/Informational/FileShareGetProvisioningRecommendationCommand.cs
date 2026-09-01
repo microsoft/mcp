@@ -46,7 +46,6 @@ public sealed class FileShareGetProvisioningRecommendationCommand(ILogger<FileSh
                 options.Location,
                 options.ProvisionedStorageInGiB,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.FileShareProvisioningRecommendationResult);

@@ -71,7 +71,6 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger, IComputeSer
                 options.BootDiagnostics,
                 options.UserData,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(result), ComputeJsonContext.Default.VmUpdateCommandResult);

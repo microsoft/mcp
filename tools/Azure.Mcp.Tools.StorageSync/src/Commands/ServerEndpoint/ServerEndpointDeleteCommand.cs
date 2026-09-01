@@ -43,7 +43,6 @@ public sealed class ServerEndpointDeleteCommand(ILogger<ServerEndpointDeleteComm
                 options.SyncGroupName,
                 options.ServerEndpointName,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Message = "Server endpoint deleted successfully";

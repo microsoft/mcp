@@ -48,7 +48,7 @@ Focus on:
 - Correct Azure SDK client, API version, resource scope, and operation semantics
 - Cloud-aware endpoints and sovereign cloud behavior
 - Credential, tenant, subscription, and resource group propagation
-- Retry policies, polling, pagination, throttling, and cancellation
+- Polling, pagination, throttling, and cancellation
 - Resource Graph use for read operations when it matches established patterns
 - Idempotency and cleanup for write operations
 - Cost or data-loss consequences from resource defaults and destructive operations

@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.Monitor.Models.HealthModels;
 using Azure.ResourceManager.CloudHealth;
 using Azure.ResourceManager.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -29,12 +28,11 @@ public class MonitorHealthModelService(IAzureService azureService, ILogger<Monit
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var results = new List<HealthModelSummary>();
 
         if (string.IsNullOrEmpty(resourceGroup))
@@ -91,7 +89,6 @@ public class MonitorHealthModelService(IAzureService azureService, ILogger<Monit
         string resourceGroup,
         string healthModelName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -99,7 +96,7 @@ public class MonitorHealthModelService(IAzureService azureService, ILogger<Monit
             (nameof(resourceGroup), resourceGroup),
             (nameof(healthModelName), healthModelName));
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var model = await resourceGroupResource.Value.GetHealthModels().GetAsync(healthModelName, cancellationToken);
         var healthState = await TryGetRootHealthStateAsync(model.Value, healthModelName, cancellationToken);

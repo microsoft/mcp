@@ -57,7 +57,6 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger, IAppServi
                 options.ResourceGroup,
                 options.App,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(webapps), AppServiceJsonContext.Default.WebappGetResult);

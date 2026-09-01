@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Hooks;
     Id = "290f14b5-720e-4036-82b1-9fd9f577e009",
     Name = "delete",
     Title = "Delete SRE Agent Hook",
-    Description = "Delete a hook from an Azure SRE Agent resource. Required: --subscription, --agent, --name, --confirm true.",
+    Description = "Delete a hook from an Azure SRE Agent resource. Required: --subscription, --agent, --name.",
     OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = true,
@@ -33,11 +33,6 @@ public sealed class HooksDeleteCommand(ILogger<HooksDeleteCommand> logger, ISreA
     {
         try
         {
-            if (!options.Confirm)
-            {
-                throw new InvalidOperationException($"Refusing to delete hook '{options.Name}': destructive operation requires --confirm true.");
-            }
-
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
                 options,

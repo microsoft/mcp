@@ -41,7 +41,6 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger, IAc
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(registries?.Results ?? [], registries?.AreResultsTruncated ?? false), AcrJsonContext.Default.RegistryListCommandResult);

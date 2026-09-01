@@ -43,7 +43,6 @@ public sealed class DisasterRecoveryEnableCrrCommand(ILogger<DisasterRecoveryEna
                 options.Subscription!,
                 options.VaultType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

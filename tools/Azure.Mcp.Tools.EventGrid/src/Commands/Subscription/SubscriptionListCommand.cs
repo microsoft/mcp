@@ -73,7 +73,7 @@ public sealed class SubscriptionListCommand(
             {
                 // Iterate all subscriptions and aggregate
                 // TODO (alzimmer): Listing all subscriptions should be done in the IEventGridService implementation.
-                var allSubs = await _azureService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
+                var allSubs = await _azureService.GetSubscriptions(options.Tenant, cancellationToken: cancellationToken);
                 var aggregate = new List<EventGridSubscriptionInfo>();
                 foreach (var sub in allSubs)
                 {
@@ -85,8 +85,7 @@ public sealed class SubscriptionListCommand(
                             options.Topic, // bare name
                             options.Location,
                             options.Tenant,
-                            options.RetryPolicy,
-                            cancellationToken);
+                            cancellationToken: cancellationToken);
                         if (found?.Count > 0)
                         {
                             aggregate.AddRange(found);
@@ -108,8 +107,7 @@ public sealed class SubscriptionListCommand(
                     options.Topic,
                     options.Location,
                     options.Tenant,
-                    options.RetryPolicy,
-                    cancellationToken);
+                    cancellationToken: cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(subscriptions ?? []), EventGridJsonContext.Default.SubscriptionListCommandResult);
             }

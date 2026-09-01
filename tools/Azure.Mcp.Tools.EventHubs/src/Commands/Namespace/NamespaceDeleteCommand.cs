@@ -49,7 +49,6 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
                 options.ResourceGroup,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             var message = success

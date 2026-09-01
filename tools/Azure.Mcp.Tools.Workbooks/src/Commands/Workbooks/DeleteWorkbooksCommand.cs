@@ -52,7 +52,6 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
         {
             var result = await _workbooksService.DeleteWorkbooksAsync(
                 options.WorkbookIds,
-                options.RetryPolicy,
                 options.Tenant,
                 cancellationToken);
 

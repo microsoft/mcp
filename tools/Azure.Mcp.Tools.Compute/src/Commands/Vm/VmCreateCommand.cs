@@ -101,7 +101,6 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger, IComputeSer
                 options.OsDiskSizeGb,
                 options.OsDiskType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(result), ComputeJsonContext.Default.VmCreateCommandResult);

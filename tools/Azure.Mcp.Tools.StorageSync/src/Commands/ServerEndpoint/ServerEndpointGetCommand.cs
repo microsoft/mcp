@@ -48,7 +48,6 @@ public sealed class ServerEndpointGetCommand(ILogger<ServerEndpointGetCommand> l
                     options.SyncGroupName,
                     options.ServerEndpointName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 if (endpoint == null)
@@ -72,7 +71,6 @@ public sealed class ServerEndpointGetCommand(ILogger<ServerEndpointGetCommand> l
                     options.Name,
                     options.SyncGroupName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(endpoints ?? []), StorageSyncJsonContext.Default.ServerEndpointGetCommandResult);

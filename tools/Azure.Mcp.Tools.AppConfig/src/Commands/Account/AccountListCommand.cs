@@ -41,7 +41,6 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger, IAppC
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false), AppConfigJsonContext.Default.AccountListCommandResult);

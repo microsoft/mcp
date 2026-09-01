@@ -73,7 +73,6 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
                 options.Sku,
                 options.StorageType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

@@ -42,7 +42,6 @@ public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterN
                 options.Nodes,
                 options.UpdateType ?? Models.UpdateType.Default,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

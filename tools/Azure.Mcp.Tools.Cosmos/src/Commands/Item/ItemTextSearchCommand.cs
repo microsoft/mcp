@@ -86,7 +86,6 @@ public sealed class ItemTextSearchCommand(ILogger<ItemTextSearchCommand> logger,
                 options.Subscription!,
                 options.AuthMethod ?? AuthMethod.Credential,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

@@ -97,7 +97,6 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
                 options.SoftRestart,
                 options.WaitForCompletion,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(stateChange), AppServiceJsonContext.Default.WebappChangeStateResult);

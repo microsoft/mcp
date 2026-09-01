@@ -39,7 +39,6 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
                 options.Certificate,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(CertificateDetails.FromCertificate(certificate), KeyVaultJsonContext.Default.CertificateDetails);

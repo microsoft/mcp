@@ -48,7 +48,6 @@ public sealed class ServerEndpointUpdateCommand(ILogger<ServerEndpointUpdateComm
                 options.TierFilesOlderThanDays,
                 options.LocalCacheMode,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(endpoint), StorageSyncJsonContext.Default.ServerEndpointUpdateCommandResult);

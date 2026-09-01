@@ -58,8 +58,7 @@ public sealed class IoTHubGetCommand(
                 options.ResourceGroup,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
-                cancellationToken);
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new IoTHubGetCommandResult(iotHub, AreResultsTruncated: false),

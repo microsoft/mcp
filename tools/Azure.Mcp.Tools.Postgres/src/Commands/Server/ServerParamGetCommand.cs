@@ -33,7 +33,7 @@ public sealed class ServerParamGetCommand(IPostgresService postgresService, ILog
     {
         try
         {
-            var parameterValue = await _postgresService.GetServerParameterAsync(options.Subscription!, options.ResourceGroup, options.User, options.Server, options.Param, options.Tenant, options.RetryPolicy, cancellationToken);
+            var parameterValue = await _postgresService.GetServerParameterAsync(options.Subscription!, options.ResourceGroup, options.User, options.Server, options.Param, options.Tenant, cancellationToken);
             context.Response.Results = parameterValue?.Length > 0 ?
                 ResponseResult.Create(new(parameterValue), PostgresJsonContext.Default.ServerParamGetCommandResult) :
                 null;

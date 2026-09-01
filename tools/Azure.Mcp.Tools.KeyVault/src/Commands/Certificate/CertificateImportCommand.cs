@@ -41,7 +41,6 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
                 options.Password,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(CertificateDetails.FromCertificate(certificate), KeyVaultJsonContext.Default.CertificateDetails);

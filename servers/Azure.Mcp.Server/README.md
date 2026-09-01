@@ -1152,6 +1152,12 @@ Example prompts that generate Azure CLI commands:
 * "Show me IoT Hub 'my-iot-hub' in resource group 'my-resource-group' of my subscription 'my-subscription'"
 * "Get details for IoT Hub 'my-iot-hub' in resource group 'my-resource-group' of my subscription 'my-subscription'"
 * "List devices in IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
+* "Show device 'my-device' in IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
+* "Show device statistics for IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
+* "Get the device twin for 'my-device' in IoT Hub 'my-iot-hub'"
+* "Query all devices in IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
+* "Compile an IoT Hub query for devices where reported batteryLevel is less than 20"
+* "Discover the queryable device twin fields in IoT Hub 'my-iot-hub'"
 
 ### 🔑 Azure Key Vault
 
@@ -1266,6 +1272,9 @@ Example prompts that generate Azure CLI commands:
 * "Remove recovery resource 'my-resource' from recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "Delete recovery plan 'my-recovery-plan' from service group 'my-service-group' and report whether it existed"
 * "List the recovery jobs of recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Update resilience drill 'my-drill' in service group 'my-service-group' to use manual RBAC setup"
+* "Create a zonal resilience drill 'my-drill' in service group 'my-service-group'"
+* "Get the resilience drill 'my-drill' in service group 'my-service-group'"
 * "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
 * "Enroll service group 'my-service-group' into usage plan 'my-plan' in resource group 'my-rg'"
 
@@ -1338,7 +1347,7 @@ The Azure MCP Server provides tools for interacting with **44+ Azure service are
 - 📊 **Azure Quota** - Resource quota and usage management
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
-- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery jobs, and recovery job resources
+- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery jobs, recovery job resources, and drills
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations

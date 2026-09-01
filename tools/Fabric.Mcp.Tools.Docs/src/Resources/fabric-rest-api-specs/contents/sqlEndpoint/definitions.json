@@ -36,15 +36,45 @@
         ]
     },
     "SqlEndpointRefreshMetadataRequest": {
-      "description": "Refresh SQL analaytics endpoint request payload.",
+      "description": "The request payload for refreshing a SQL analytics endpoint.",
       "properties": {
         "timeout": {
           "description": "The request duration before timing out. The default value is 15 minutes.",
           "$ref": "../common/definitions.json#/definitions/Duration"
         },
         "recreateTables": {
-          "description": "When set to true, this property instructs the system to drop and recreate all tables on SQL analytics endpoint during the refresh process. Use this option if you need to fully rebuild tables from their source definitions, for example to resolve inconsistencies or ensure a clean refresh. The default value is false.",
+          "description": "When set to true, this property instructs the system to drop and recreate all tables on the SQL analytics endpoint during the refresh process. Use this option if you need to fully rebuild tables from their source definitions, for example, to resolve inconsistencies or ensure a clean refresh. When combined with `tables`, the sync state reset is scoped only to the specified tables. The default value is false.",
           "type": "boolean"
+        },
+        "tables": {
+          "description": "When provided, scopes the refresh to only the listed tables. When omitted or empty, all tables are refreshed. Each entry specifies a schema and one or more table names to refresh under that schema. The maximum number of tables that can be synchronized in a single request is 25. Table resolution depends on whether the SQL endpoint's parent item is schema-enabled. For schema-enabled items, tables are resolved using the caller-provided schema. For non-schema-enabled items, all tables resolve under the default schema regardless of the caller-provided schema value; tables under a non-default schema cannot be resolved and will be reported with a `DeltaTableNotFound` error.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TableDefinition"
+          }
+        }
+      }
+    },
+    "TableDefinition": {
+      "description": "A pair of schema and table names for scoping a selective refresh.",
+      "type": "object",
+      "required": ["schema", "tableNames"],
+      "properties": {
+        "schema": {
+          "description": "The schema name for table resolution. Must not be a reserved system schema.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "tableNames": {
+          "description": "One or more table names to refresh under the specified schema.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
         }
       }
     },
@@ -74,7 +104,7 @@
       ],
       "properties": {
         "tableName": {
-          "description": "The name of the table that synchronized.",
+          "description": "The name of the table that synchronized. For schema-enabled items, the table name is prefixed with the schema name (e.g., \"schema.tableName\").",
           "type": "string"
         },
         "startDateTime": {

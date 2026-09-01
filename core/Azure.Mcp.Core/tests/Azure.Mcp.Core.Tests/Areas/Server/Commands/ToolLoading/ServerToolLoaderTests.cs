@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Tests.Areas.Server.Helpers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
@@ -24,27 +25,30 @@ namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
 public class ServerToolLoaderTests
 {
-    private static (ServerToolLoader toolLoader, IMcpDiscoveryStrategy mockDiscoveryStrategy) CreateToolLoader(ToolLoaderOptions? options = null)
+    private static (ServerToolLoader toolLoader, IMcpDiscoveryStrategy mockDiscoveryStrategy) CreateToolLoaderAndDiscoveryStrategy()
     {
         var mockDiscoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
-        var logger = Substitute.For<ILogger<ServerToolLoader>>();
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ToolLoaderOptions());
+        var toolLoader = CreateToolLoader(mockDiscoveryStrategy);
 
-        var toolLoader = new ServerToolLoader(mockDiscoveryStrategy, toolLoaderOptions, logger);
         return (toolLoader, mockDiscoveryStrategy);
+    }
+
+    private static ServerToolLoader CreateToolLoader(
+        IMcpDiscoveryStrategy? discoveryStrategy = null,
+        ServerRuntimeConfiguration? configuration = null)
+    {
+        var logger = Substitute.For<ILogger<ServerToolLoader>>();
+        var serverConfiguration = Microsoft.Extensions.Options.Options.Create(configuration ?? new ServerRuntimeConfiguration());
+        discoveryStrategy ??= RegistryDiscoveryStrategyHelper.CreateStrategy(serverConfiguration.Value);
+
+        return new ServerToolLoader(discoveryStrategy, serverConfiguration, logger);
     }
 
     [Fact]
     public async Task CallToolHandler_WithoutListToolsFirst_ShouldSucceed()
     {
         // Arrange - use real RegistryDiscoveryStrategy since ServerToolLoader depends on it
-        var serverStartOptions = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
-        var discoveryLogger = Substitute.For<ILogger<RegistryDiscoveryStrategy>>();
-        var discoveryStrategy = RegistryDiscoveryStrategyHelper.CreateStrategy(serverStartOptions.Value, discoveryLogger);
-        var logger = Substitute.For<ILogger<ServerToolLoader>>();
-
-        var toolLoader = new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger);
+        var toolLoader = CreateToolLoader();
         var request = McpTestUtilities.CreateToolCallRequest("documentation", new Dictionary<string, object?>
         {
             { "intent", "search for information about implementing MCP servers" },
@@ -66,7 +70,7 @@ public class ServerToolLoaderTests
     public async Task ListToolsHandler_WithNoServers_ReturnsEmptyToolList()
     {
         // Arrange
-        var (toolLoader, mockDiscoveryStrategy) = CreateToolLoader();
+        var (toolLoader, mockDiscoveryStrategy) = CreateToolLoaderAndDiscoveryStrategy();
         var request = McpTestUtilities.CreateToolListRequest();
 
         mockDiscoveryStrategy.DiscoverServersAsync(TestContext.Current.CancellationToken)
@@ -85,13 +89,7 @@ public class ServerToolLoaderTests
     public async Task ListToolsHandler_WithRealRegistryDiscovery_ReturnsExpectedStructure()
     {
         // Arrange - use real RegistryDiscoveryStrategy
-        var serverStartOptions = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions());
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
-        var discoveryLogger = Substitute.For<ILogger<RegistryDiscoveryStrategy>>();
-        var discoveryStrategy = RegistryDiscoveryStrategyHelper.CreateStrategy(serverStartOptions.Value, discoveryLogger);
-        var logger = Substitute.For<ILogger<ServerToolLoader>>();
-
-        var toolLoader = new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger);
+        var toolLoader = CreateToolLoader();
         var request = McpTestUtilities.CreateToolListRequest();
 
         // Act
@@ -137,8 +135,7 @@ public class ServerToolLoaderTests
         discoveryStrategy.DiscoverServersAsync(TestContext.Current.CancellationToken)
             .Returns([providerA, providerB]);
 
-        var logger = Substitute.For<ILogger<ServerToolLoader>>();
-        var toolLoader = new ServerToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+        var toolLoader = CreateToolLoader(discoveryStrategy);
         var request = McpTestUtilities.CreateToolListRequest();
 
         // Act
@@ -165,8 +162,7 @@ public class ServerToolLoaderTests
         discoveryStrategy.GetOrCreateClientAsync("documentation", Arg.Any<McpClientOptions>(), TestContext.Current.CancellationToken)
             .Returns((McpClient)null!);
 
-        var logger = Substitute.For<ILogger<ServerToolLoader>>();
-        var toolLoader = new ServerToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+        var toolLoader = CreateToolLoader(discoveryStrategy);
 
         var request = McpTestUtilities.CreateToolCallRequest("documentation", new Dictionary<string, object?>
             {
@@ -217,10 +213,9 @@ public class ServerToolLoaderTests
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         discoveryStrategy.GetOrCreateClientAsync("storage", Arg.Any<McpClientOptions?>(), TestContext.Current.CancellationToken)
             .Returns(mcpClient);
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions() { ReadOnly = true });
-        var logger = Substitute.For<ILogger<ServerToolLoader>>();
+        var configuration = new ServerRuntimeConfiguration() { ReadOnly = true };
 
-        var toolLoader = new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger);
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
         var request = McpTestUtilities.CreateToolCallRequest("storage");
 
         // Act
@@ -260,10 +255,9 @@ public class ServerToolLoaderTests
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         discoveryStrategy.GetOrCreateClientAsync("storage", Arg.Any<McpClientOptions?>(), TestContext.Current.CancellationToken)
             .Returns(mcpClient);
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions() { IsHttpMode = true });
-        var logger = Substitute.For<ILogger<ServerToolLoader>>();
+        var configuration = new ServerRuntimeConfiguration() { Transport = TransportTypes.Http };
 
-        var toolLoader = new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger);
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
         var request = McpTestUtilities.CreateToolCallRequest("storage");
 
         // Act
@@ -280,17 +274,15 @@ public class ServerToolLoaderTests
 
     #region Execution-Time Mode Enforcement Tests
 
-    private static (ServerToolLoader toolLoader, IMcpDiscoveryStrategy discoveryStrategy) CreateToolLoaderWithMockClient(
-        ToolLoaderOptions options, MockMcpClientBuilder clientBuilder, string serverName = "test-server")
+    private static ServerToolLoader CreateToolLoaderWithMockClient(
+        ServerRuntimeConfiguration configuration, MockMcpClientBuilder clientBuilder, string serverName = "test-server")
     {
         var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
             .AddServer(serverName, serverName, $"{serverName} description", clientBuilder)
             .Build();
 
-        var logger = Substitute.For<ILogger<ServerToolLoader>>();
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(options);
-
-        return (new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger), discoveryStrategy);
+        return CreateToolLoader(discoveryStrategy, configuration);
+        ;
     }
 
     private static RequestContext<CallToolRequestParams> CreateCallToolRequestWithCommand(
@@ -342,8 +334,7 @@ public class ServerToolLoaderTests
                 return new CallToolResult { Content = [new TextContentBlock { Text = "Created account" }], IsError = false };
             });
 
-        var (toolLoader, _) = CreateToolLoaderWithMockClient(
-            new ToolLoaderOptions(ReadOnly: true), clientBuilder, "storage");
+        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "storage");
 
         var request = CreateCallToolRequestWithCommand("storage", "account_create");
 
@@ -383,8 +374,7 @@ public class ServerToolLoaderTests
             .AddTool(readOnlyTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Listed accounts" }], IsError = false })
             .AddTool(writeTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Created account" }], IsError = false });
 
-        var (toolLoader, _) = CreateToolLoaderWithMockClient(
-            new ToolLoaderOptions(ReadOnly: true), clientBuilder, "storage");
+        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "storage");
 
         var request = CreateCallToolRequestWithCommand("storage", "account_list");
 
@@ -430,8 +420,7 @@ public class ServerToolLoaderTests
             })
             .AddTool(remoteTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Remote result" }], IsError = false });
 
-        var (toolLoader, _) = CreateToolLoaderWithMockClient(
-            new ToolLoaderOptions(IsHttpMode: true), clientBuilder, "storage");
+        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { Transport = TransportTypes.Http }, clientBuilder, "storage");
 
         var request = CreateCallToolRequestWithCommand("storage", "local_command");
 
@@ -473,8 +462,7 @@ public class ServerToolLoaderTests
             .AddTool(localRequiredTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Local result" }], IsError = false })
             .AddTool(remoteTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Remote result" }], IsError = false });
 
-        var (toolLoader, _) = CreateToolLoaderWithMockClient(
-            new ToolLoaderOptions(IsHttpMode: true), clientBuilder, "storage");
+        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { Transport = TransportTypes.Http }, clientBuilder, "storage");
 
         var request = CreateCallToolRequestWithCommand("storage", "remote_command");
 
@@ -509,8 +497,7 @@ public class ServerToolLoaderTests
                 return new CallToolResult { Content = [new TextContentBlock { Text = "Result" }], IsError = false };
             });
 
-        var (toolLoader, _) = CreateToolLoaderWithMockClient(
-            new ToolLoaderOptions(ReadOnly: true), clientBuilder, "storage");
+        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "storage");
 
         var request = CreateCallToolRequestWithCommand("storage", "unknown_command");
 
@@ -541,8 +528,7 @@ public class ServerToolLoaderTests
         var clientBuilder = new MockMcpClientBuilder()
             .AddTool(writeTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Created account" }], IsError = false });
 
-        var (toolLoader, _) = CreateToolLoaderWithMockClient(
-            new ToolLoaderOptions(ReadOnly: false), clientBuilder, "storage");
+        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = false }, clientBuilder, "storage");
 
         var request = CreateCallToolRequestWithCommand("storage", "account_create");
 
@@ -583,8 +569,7 @@ public class ServerToolLoaderTests
             .AddTool(readOnlyTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Listed accounts" }], IsError = false })
             .AddTool(writeTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Created account" }], IsError = false });
 
-        var (toolLoader, _) = CreateToolLoaderWithMockClient(
-            new ToolLoaderOptions(ReadOnly: true), clientBuilder, "storage");
+        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "storage");
 
         // Use a command name that doesn't exist in the filtered available tools list.
         // "account_create" exists in the backend but is filtered out by ReadOnly.
@@ -617,8 +602,7 @@ public class ServerToolLoaderTests
         using var activity = new Activity("test-activity");
         activity.Start();
 
-        var (toolLoader, _) = CreateToolLoaderWithMockClient(
-            new ToolLoaderOptions(ReadOnly: false), clientBuilder, "storage");
+        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = false }, clientBuilder, "storage");
 
         var request = CreateCallToolRequestWithCommand("storage", "account_create");
 
@@ -655,8 +639,7 @@ public class ServerToolLoaderTests
         using var activity = new Activity("test-activity");
         activity.Start();
 
-        var (toolLoader, _) = CreateToolLoaderWithMockClient(
-            new ToolLoaderOptions(ReadOnly: false), clientBuilder, "storage");
+        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = false }, clientBuilder, "storage");
 
         var request = CreateCallToolRequestWithCommand("storage", "account_create");
 
@@ -691,8 +674,7 @@ public class ServerToolLoaderTests
         using var activity = new Activity("test-activity");
         activity.Start();
 
-        var (toolLoader, _) = CreateToolLoaderWithMockClient(
-            new ToolLoaderOptions(ReadOnly: false), clientBuilder, "storage");
+        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = false }, clientBuilder, "storage");
 
         var request = CreateCallToolRequestWithCommand("storage", "account_create", new()
         {

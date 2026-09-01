@@ -44,7 +44,6 @@ public sealed class RecoveryPlanCheckReadinessCommand(ILogger<RecoveryPlanCheckR
                 options.ServiceGroup,
                 options.RecoveryPlan,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

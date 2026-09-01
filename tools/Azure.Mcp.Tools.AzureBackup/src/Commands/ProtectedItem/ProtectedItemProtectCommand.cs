@@ -111,7 +111,6 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
                 options.AksIncludeClusterScopeResources ? "true" : null,
                 options.AksSnapshotResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

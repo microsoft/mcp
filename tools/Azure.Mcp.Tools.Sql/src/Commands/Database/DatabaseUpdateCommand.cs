@@ -53,7 +53,6 @@ public sealed class DatabaseUpdateCommand(ISqlService sqlService, ILogger<Databa
                 options.ElasticPoolName,
                 options.ZoneRedundant,
                 options.ReadScale,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseUpdateResult);

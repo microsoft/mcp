@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
     Id = "6fe4a44c-b9c5-44b1-b985-12f9043b1051",
     Name = "memories_delete",
     Title = "Delete Memory",
-    Description = "Delete a knowledge base document after explicit confirmation.",
+    Description = "Delete a knowledge base document.",
     OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = true,
@@ -34,10 +34,6 @@ public sealed class MemoriesDeleteCommand(ILogger<MemoriesDeleteCommand> logger,
     {
         try
         {
-            if (!options.Confirm)
-            {
-                throw new InvalidOperationException($"Refusing to delete memory '{options.Name}': destructive operation requires --confirm true.");
-            }
             var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
                 _sreAgentService,
                 options,

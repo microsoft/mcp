@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Secrets;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -32,7 +31,6 @@ public class SecretCreateCommandTests : SubscriptionCommandUnitTestsBase<SecretC
             Arg.Is(_knownSecretValue),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(_knownKeyVaultSecret);
 
@@ -77,7 +75,6 @@ public class SecretCreateCommandTests : SubscriptionCommandUnitTestsBase<SecretC
             Arg.Is(_knownSecretValue),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 

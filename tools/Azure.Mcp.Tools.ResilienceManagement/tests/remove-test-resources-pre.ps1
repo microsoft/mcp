@@ -107,9 +107,11 @@ function Remove-RecoveryPlans {
 
 $serviceGroupName = Get-OutputValue -Name 'serviceGroupName'
 $lifecycleServiceGroupName = Get-OutputValue -Name 'lifecycleServiceGroupName'
+$planLifecycleServiceGroupName = Get-OutputValue -Name 'planLifecycleServiceGroupName'
 $usagePlanName = Get-OutputValue -Name 'usagePlanName'
 $enrollmentName = Get-OutputValue -Name 'enrollmentName'
 $lifecycleEnrollmentName = Get-OutputValue -Name 'lifecycleEnrollmentName'
+$planLifecycleEnrollmentName = Get-OutputValue -Name 'planLifecycleEnrollmentName'
 $goalAssignmentName = Get-OutputValue -Name 'goalAssignmentName'
 $goalTemplateName = Get-OutputValue -Name 'goalTemplateName'
 $drillName = Get-OutputValue -Name 'drillName'
@@ -133,19 +135,28 @@ foreach ($requiredOutput in $requiredOutputs.GetEnumerator()) {
 
 $serviceGroupId = "/providers/Microsoft.Management/serviceGroups/$serviceGroupName"
 $lifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$lifecycleServiceGroupName"
+$planLifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$planLifecycleServiceGroupName"
 $resilienceBase = "$serviceGroupId/providers/Microsoft.AzureResilienceManagement"
 $usagePlanId = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName"
 
 Remove-Resource -ResourceId "$resilienceBase/drills/$drillName" -ApiVersion $resilienceApiVersion
 Remove-RecoveryPlans -ServiceGroupId $serviceGroupId
 Remove-RecoveryPlans -ServiceGroupId $lifecycleServiceGroupId
+if (![string]::IsNullOrWhiteSpace($planLifecycleServiceGroupName)) {
+    Remove-RecoveryPlans -ServiceGroupId $planLifecycleServiceGroupId
+}
 Remove-Resource -ResourceId "$resilienceBase/goalAssignments/$goalAssignmentName" -ApiVersion $resilienceApiVersion
 Remove-Resource -ResourceId "$resilienceBase/goalTemplates/$goalTemplateName" -ApiVersion $resilienceApiVersion
 Remove-Resource -ResourceId "$usagePlanId/enrollments/$enrollmentName" -ApiVersion $resilienceApiVersion
 Remove-Resource -ResourceId "$usagePlanId/enrollments/$lifecycleEnrollmentName" -ApiVersion $resilienceApiVersion
+if (![string]::IsNullOrWhiteSpace($planLifecycleEnrollmentName)) {
+    Remove-Resource -ResourceId "$usagePlanId/enrollments/$planLifecycleEnrollmentName" -ApiVersion $resilienceApiVersion
+}
 Remove-Resource -ResourceId "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/rhub-rg-member" -ApiVersion $membershipApiVersion
+Remove-Resource -ResourceId "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/rhub-lifecycle-rg-member" -ApiVersion $membershipApiVersion
+Remove-Resource -ResourceId "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/rhub-plan-lifecycle-rg-member" -ApiVersion $membershipApiVersion
 
-foreach ($serviceGroupIdToDelete in @($lifecycleServiceGroupId, $serviceGroupId)) {
+foreach ($serviceGroupIdToDelete in @($planLifecycleServiceGroupName ? $planLifecycleServiceGroupId : $null, $lifecycleServiceGroupId, $serviceGroupId)) {
     if ($serviceGroupIdToDelete -notmatch '/$') {
         Remove-Resource -ResourceId $serviceGroupIdToDelete -ApiVersion $serviceGroupApiVersion
     }

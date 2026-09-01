@@ -102,7 +102,6 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
                 options.ZoneRedundant,
                 tags,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

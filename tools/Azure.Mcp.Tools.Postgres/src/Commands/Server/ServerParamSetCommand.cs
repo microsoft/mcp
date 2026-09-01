@@ -36,7 +36,7 @@ public sealed class ServerParamSetCommand(IPostgresService postgresService, ILog
         {
             ServerParameterValidator.EnsureParameterAllowed(options.Param);
 
-            var result = await _postgresService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup, options.User, options.Server, options.Param, options.Value, options.Tenant, options.RetryPolicy, cancellationToken);
+            var result = await _postgresService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup, options.User, options.Server, options.Param, options.Value, options.Tenant, cancellationToken);
             context.Response.Results = !string.IsNullOrEmpty(result) ?
                 ResponseResult.Create(new(result, options.Param!, options.Value!), PostgresJsonContext.Default.ServerParamSetCommandResult) :
                 null;

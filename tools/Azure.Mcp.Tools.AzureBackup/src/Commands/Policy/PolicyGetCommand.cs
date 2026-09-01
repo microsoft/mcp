@@ -55,7 +55,6 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBac
                     options.Policy,
                     options.VaultType,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -70,7 +69,6 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBac
                     options.Subscription!,
                     options.VaultType,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(

@@ -41,7 +41,6 @@ public sealed class TableSchemaCommand(
                     options.Database,
                     options.Table,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else
@@ -52,7 +51,6 @@ public sealed class TableSchemaCommand(
                     options.Database,
                     options.Table,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
 

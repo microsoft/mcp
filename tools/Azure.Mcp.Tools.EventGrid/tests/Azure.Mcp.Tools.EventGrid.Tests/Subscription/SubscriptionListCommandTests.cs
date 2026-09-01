@@ -9,7 +9,6 @@ using Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -52,7 +51,7 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
             new("subscription2", "Microsoft.EventGrid/eventSubscriptions", "StorageQueue", "https://storage.queue.core.windows.net/myqueue", "Succeeded", null, null, 10, 720, "2023-01-03T00:00:00Z", "2023-01-04T00:00:00Z")
         };
 
-        Service.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedSubscriptions);
 
         // Act
@@ -78,7 +77,7 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
             new("filtered-subscription", "Microsoft.EventGrid/eventSubscriptions", "WebHook", "https://example.com/webhook", "Succeeded", null, null, 30, 1440, "2023-01-01T00:00:00Z", "2023-01-02T00:00:00Z")
         };
 
-        Service.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Is(topicName), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Is(topicName), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedSubscriptions);
 
         // Act
@@ -101,7 +100,7 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
         // Arrange
         var subscription = "sub123";
 
-        Service.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -124,7 +123,7 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
             new("location-filtered-subscription", "Microsoft.EventGrid/eventSubscriptions", "WebHook", "https://example.com/webhook", "Succeeded", null, null, 30, 1440, "2023-01-01T00:00:00Z", "2023-01-02T00:00:00Z")
         };
 
-        Service.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(location), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(location), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedSubscriptions);
 
         // Act
@@ -142,7 +141,7 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        Service.GetSubscriptionsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetSubscriptionsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -167,14 +166,14 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
         // Arrange
         if (shouldSucceed)
         {
-            Service.GetSubscriptionsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Service.GetSubscriptionsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(
                 [
                     new("subscription1", "Microsoft.EventGrid/eventSubscriptions", "WebHook", "https://example.com/webhook1", "Succeeded", null, null, 30, 1440, "2023-01-01T00:00:00Z", "2023-01-02T00:00:00Z")
                 ]);
 
             // Set up subscription service for cross-subscription search scenario
-            _azureService.GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            _azureService.GetSubscriptions(Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
 

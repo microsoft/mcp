@@ -68,7 +68,6 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
                 options.ResourceGroup,
                 options.TagFilter,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

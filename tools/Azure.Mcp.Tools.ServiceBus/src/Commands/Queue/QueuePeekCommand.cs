@@ -44,7 +44,6 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger, IServiceB
                 options.Queue,
                 options.MaxMessages ?? 1,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(messages ?? []), ServiceBusJsonContext.Default.QueuePeekCommandResult);

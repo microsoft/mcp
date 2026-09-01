@@ -44,7 +44,6 @@ public sealed class RegisteredServerUpdateCommand(ILogger<RegisteredServerUpdate
                 options.ServerId,
                 null, // TODO (alzimmer): Doesn't appear this command actually updates anything.
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(server), StorageSyncJsonContext.Default.RegisteredServerUpdateCommandResult);

@@ -19,7 +19,6 @@ namespace Azure.Mcp.Tools.Sql.Commands.Server;
     Description = """
         Remove the specified SQL server from your Azure subscription, including all associated databases.
         This operation permanently deletes all server data and cannot be reversed.
-        Use --force to bypass confirmation.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
@@ -38,22 +37,10 @@ public sealed class ServerDeleteCommand(ISqlService sqlService, ILogger<ServerDe
     {
         try
         {
-            // Show warning about destructive operation unless force is specified
-            if (!options.Force)
-            {
-                context.Response.Status = HttpStatusCode.OK;
-                context.Response.Message =
-                    $"WARNING: This operation will permanently delete the SQL server '{options.Server}' " +
-                    $"and ALL its databases in resource group '{options.ResourceGroup}'. " +
-                    $"This action cannot be undone. Use --force to confirm deletion.";
-                return context.Response;
-            }
-
             var deleted = await _sqlService.DeleteServerAsync(
                 options.Server,
                 options.ResourceGroup,
                 options.Subscription!,
-                options.RetryPolicy,
                 cancellationToken);
 
             if (deleted)

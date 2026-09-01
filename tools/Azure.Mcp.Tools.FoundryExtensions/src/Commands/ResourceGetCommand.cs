@@ -55,7 +55,6 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger, IFoun
                     options.ResourceGroup!,
                     options.ResourceName!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken: cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -69,7 +68,6 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger, IFoun
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken: cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(

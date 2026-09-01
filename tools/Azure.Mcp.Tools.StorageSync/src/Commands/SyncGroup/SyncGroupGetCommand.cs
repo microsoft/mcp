@@ -47,7 +47,6 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
                     options.Name,
                     options.SyncGroupName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 if (syncGroup == null)
@@ -70,7 +69,6 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
                     options.ResourceGroup,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(syncGroups ?? []), StorageSyncJsonContext.Default.SyncGroupGetCommandResult);
