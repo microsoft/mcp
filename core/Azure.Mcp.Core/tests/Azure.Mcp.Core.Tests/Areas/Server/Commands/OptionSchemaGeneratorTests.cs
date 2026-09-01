@@ -280,6 +280,39 @@ public class OptionSchemaGeneratorTests
         AssertRequiredPropertiesArePresent(schema, payload);
     }
 
+    [Fact]
+    public void CreateOutputSchema_PropertyIgnoreConditions_MatchSerializedPayload()
+    {
+        var result = new IgnoreConditionSample(
+            AlwaysIgnored: "always",
+            IgnoredWhenWriting: "write",
+            IgnoredWhenReading: "read",
+            DefaultValue: 0,
+            NullValue: null,
+            NeverIgnored: false);
+        var typeInfo = PerPropertyIgnoreJsonContext.Default.IgnoreConditionSample;
+        var schema = OptionSchemaGenerator.CreateOutputSchema(typeInfo);
+        var payload = JsonSerializer.SerializeToElement(result, typeInfo);
+
+        Assert.False(payload.TryGetProperty("alwaysIgnored", out _));
+        Assert.False(payload.TryGetProperty("ignoredWhenWriting", out _));
+        Assert.True(payload.TryGetProperty("ignoredWhenReading", out _));
+        Assert.False(payload.TryGetProperty("defaultValue", out _));
+        Assert.False(payload.TryGetProperty("nullValue", out _));
+        Assert.True(payload.TryGetProperty("neverIgnored", out _));
+
+        var required = Assert.IsType<JsonArray>(schema["required"])
+            .Select(property => (string?)property)
+            .ToArray();
+        Assert.Contains("ignoredWhenReading", required);
+        Assert.Contains("neverIgnored", required);
+        Assert.DoesNotContain("alwaysIgnored", required);
+        Assert.DoesNotContain("ignoredWhenWriting", required);
+        Assert.DoesNotContain("defaultValue", required);
+        Assert.DoesNotContain("nullValue", required);
+        AssertRequiredPropertiesArePresent(schema, payload);
+    }
+
     private static void AssertOmittedLabelConforms<T>(T result, JsonTypeInfo<T> typeInfo)
     {
         var schema = OptionSchemaGenerator.CreateOutputSchema(typeInfo);

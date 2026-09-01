@@ -199,7 +199,9 @@ internal static class OptionSchemaGenerator
         var ignoreCondition = ignoreAttribute?.Condition ?? defaultIgnoreCondition;
         return ignoreCondition switch
         {
-            JsonIgnoreCondition.Always or JsonIgnoreCondition.WhenWritingDefault => true,
+            JsonIgnoreCondition.Always
+                or JsonIgnoreCondition.WhenWriting
+                or JsonIgnoreCondition.WhenWritingDefault => true,
             JsonIgnoreCondition.WhenWritingNull => AllowsNull(propertySchema),
             _ => false,
         };

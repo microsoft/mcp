@@ -7,5 +7,6 @@ using Azure.Mcp.Tools.Compute.Commands.Vm;
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands;
 
 [JsonSerializable(typeof(VmGetCommand.VmGetResult))]
+[JsonSerializable(typeof(IgnoreConditionSample))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal sealed partial class PerPropertyIgnoreJsonContext : JsonSerializerContext;
