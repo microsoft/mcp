@@ -271,6 +271,8 @@ function Get-PathsToTest {
             $TargetCommittish = ("origin/${env:SYSTEM_PULLREQUEST_TARGETBRANCH}" -replace "refs/heads/")
         }
 
+        Write-Host "Pull request build detected. Source: $SourceCommittish, Target: $TargetCommittish" -ForegroundColor Cyan
+
         $changedFiles = Get-ChangedFiles -SourceCommittish $SourceCommittish -TargetCommittish $TargetCommittish
 
         # When common code builds all, track whether engineering, the Core libraries, or shared build changed. If so, build everything.
@@ -331,6 +333,8 @@ function Get-PathsToTest {
                 'tools/Azure.Mcp.Tools.KeyVault'  <-- from Microsoft.Mcp.Core's server canary list
             ) #>
         }
+    } else {
+        Write-Host "Not a pull request build. Source: $SourceCommittish, Target: $TargetCommittish" -ForegroundColor Cyan
     }
 
     $pathsToTest = $normalizedPaths | ForEach-Object -ThrottleLimit 5 -Parallel {
