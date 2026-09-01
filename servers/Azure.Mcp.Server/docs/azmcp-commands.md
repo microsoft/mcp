@@ -10,7 +10,7 @@ The following options are available for most commands:
 | Option | Required | Default | Description |
 |-----------|----------|---------|-------------|
 | `--subscription` | No | Environment variable `AZURE_SUBSCRIPTION_ID` | Azure subscription ID for target resources |
-| `--tenant-id` | No | - | Azure tenant ID for authentication |
+| `--tenant` | No | - | Azure tenant ID for authentication |
 | `--auth-method` | No | 'credential' | Authentication method ('credential', 'key', 'connectionString') |
 | `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
 
@@ -566,7 +566,7 @@ azmcp appconfig kv set --subscription <subscription> \
 ### Azure App Lens Operations
 
 > [!NOTE]
-> The `applens resource diagnose` command does not support `--auth-method` or any `--retry-*` options.
+> The `applens resource diagnose` command does not support `--auth-method`.
 
 ```bash
 # Diagnose resource using Azure App Lens
@@ -2982,7 +2982,7 @@ azmcp keyvault secret get --subscription <subscription> \
 ### Azure Kubernetes Service (AKS) Operations
 
 > [!NOTE]
-> The `aks cluster get` and `aks nodepool get` commands do not support `--auth-method` (the `--retry-*` options are still supported).
+> The `aks cluster get` and `aks nodepool get` commands do not support `--auth-method` or any `--retry-*` options.
 
 ```bash
 # Gets Azure Kubernetes Service (AKS) cluster details
@@ -4026,6 +4026,11 @@ azmcp resilience drill run resource get --service-group <service-group> \
 
 ### Azure Resource Group Operations
 
+> [!NOTE]
+> The core `group list` and `group resource list` commands also support
+> `--retry-max-retries`, `--retry-delay`, `--retry-max-delay`, `--retry-mode`,
+> and `--retry-network-timeout`.
+
 ```bash
 # List resource groups in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4833,12 +4838,17 @@ azmcp storagesync serverendpoint update --subscription <subscription> \
 
 ### Azure Subscription Management
 
+> [!NOTE]
+> The core `subscription list` command also supports `--retry-max-retries`,
+> `--retry-delay`, `--retry-max-delay`, `--retry-mode`, and
+> `--retry-network-timeout`.
+
 ```bash
 # List available Azure subscriptions with default subscription indicator
 # Returns subscriptionId, displayName, state, tenantId, and isDefault for each subscription
 # The isDefault field is true for the default subscription set via 'az account set' or AZURE_SUBSCRIPTION_ID env var
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp subscription list [--tenant-id <tenant-id>]
+azmcp subscription list [--tenant <tenant-id>]
 ```
 
 ### Azure Terraform Best Practices
@@ -5056,7 +5066,7 @@ azmcp bicepschema get --resource-type <resource-type> \
 ### Cloud Architect
 
 > [!NOTE]
-> The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant-id`, `--auth-method`, or any `--retry-*` options.
+> The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant`, or `--auth-method`.
 
 ```bash
 # Design Azure cloud architectures through guided questions
