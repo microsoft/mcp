@@ -81,20 +81,18 @@ jobs:
             $baseCommit = $env:PR_BASE_SHA
             $headCommit = $env:PR_HEAD_SHA
 
-            Write-Host "Pull request merged into main. Base: $($env:PR_BASE_SHA), Head: $($env:PR_HEAD_SHA)"
+            Write-Host "Pull request merged into main. Base: ${env:PR_BASE_SHA}, Head: ${env:PR_HEAD_SHA}"
           }
           else {
             $headCommit = if ($env:MANUAL_HEAD) { $env:MANUAL_HEAD } else { 'HEAD' }
             $baseCommit = if ($env:MANUAL_BASE) { $env:MANUAL_BASE } else { 'HEAD^' }
 
-            Write-Host "Manual run. Base: $baseCommit, Head: $headCommit"
+            Write-Host "Manual run. Base: ${baseCommit}, Head: ${headCommit}"
           }
 
-          {
-            echo "BUILD_REASON=PullRequest"
-            echo "DIFF_HEAD_COMMIT=$headCommit"
-            echo "DIFF_BASE_COMMIT=$baseCommit"
-          } >> $env:GITHUB_ENV
+          "BUILD_REASON=PullRequest" >> $env:GITHUB_ENV
+          "DIFF_HEAD_COMMIT=$headCommit" >> $env:GITHUB_ENV
+          "DIFF_BASE_COMMIT=$baseCommit" >> $env:GITHUB_ENV
 
       - name: Create build_info.json
         shell: pwsh
@@ -134,7 +132,7 @@ jobs:
           ./eng/scripts/Build-Code.ps1 -BuildInfoPath "$env:BUILD_INFO_PATH" -PlatformName $platformName -ReleaseBuild
 
       - name: Create vally evaluations
-        run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/src/VallyEvaluator.csproj' -- --buildInfo "$env:BUILD_INFO_PATH" --serverName Azure.Mcp.Server
+        run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/src/VallyEvaluator.csproj' -- --buildInfo '${{ env.BUILD_INFO_PATH }}' --serverName Azure.Mcp.Server
 
       - name: Run vally
         run: |
