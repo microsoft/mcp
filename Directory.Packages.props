@@ -20,8 +20,9 @@
     <PackageVersion Include="Azure.Messaging.EventGrid" Version="5.0.0" />
     <PackageVersion Include="Azure.Messaging.ServiceBus" Version="7.20.2" />
     <PackageVersion Include="Azure.Monitor.Ingestion" Version="1.2.0" />
-    <PackageVersion Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.4.0" />
+    <PackageVersion Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.6.0" />
     <PackageVersion Include="Azure.Monitor.Query.Logs" Version="1.0.0" />
+    <PackageVersion Include="Azure.Monitor.Query.Metrics" Version="1.0.0" />
     <PackageVersion Include="Azure.ResourceManager" Version="1.14.0" />
     <PackageVersion Include="Azure.ResourceManager.ApplicationInsights" Version="1.1.0" />
     <PackageVersion Include="Azure.ResourceManager.AppContainers" Version="1.5.0" />
@@ -102,7 +103,7 @@
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.1.0" />
     <PackageVersion Include="MySqlConnector" Version="2.6.1" />
     <PackageVersion Include="Npgsql" Version="10.0.3" />    
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.17.0" />
     <PackageVersion Include="System.ClientModel" Version="1.15.0" />
     <PackageVersion Include="System.CommandLine" Version="2.0.11" />
     <PackageVersion Include="System.Formats.Asn1" Version="10.0.11" />

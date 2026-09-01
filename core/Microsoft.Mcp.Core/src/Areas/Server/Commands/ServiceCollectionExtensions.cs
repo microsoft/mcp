@@ -59,79 +59,54 @@ public static partial class ServiceCollectionExtensions
         services.AddSingleton(serverRuntimeConfiguration);
         services.AddSingleton(Options.Create(serverRuntimeConfiguration));
 
-        // Register tool loader strategies
+        // Register dependency injected tool loaders and discovery strategies.
+        // Always need CommandFactoryToolLoader as it loads tools defined in the microsoft/mcp project.
         services.AddSingleton<CommandFactoryToolLoader>();
-        services.AddSingleton<RegistryToolLoader>();
+        if (!serverStartOptions.DisableProxyTools)
+        {
+            // Conditionally add RegistryDiscoveryStrategy as they load proxied tools.
+            services.AddSingleton<RegistryDiscoveryStrategy>();
+        }
 
-        services.AddSingleton<SingleProxyToolLoader>();
-        services.AddSingleton<CompositeToolLoader>();
-        services.AddSingleton<ServerToolLoader>();
-        services.AddSingleton<NamespaceToolLoader>();
-
-        // Register server discovery strategies
-        services.AddSingleton<CommandGroupDiscoveryStrategy>();
-        services.AddSingleton<CompositeDiscoveryStrategy>();
-        services.AddSingleton<RegistryDiscoveryStrategy>();
-        services.AddSingleton<ConsolidatedToolDiscoveryStrategy>();
-
-        // Register MCP runtimes
-        services.AddSingleton<IMcpRuntime, McpRuntime>();
-
-        // Register MCP discovery strategies based on proxy mode
         if (serverStartOptions.Mode == ModeTypes.SingleToolProxy)
         {
-            services.AddSingleton<IMcpDiscoveryStrategy>(sp =>
-            {
-                var discoveryStrategies = new List<IMcpDiscoveryStrategy>
-                {
-                    sp.GetRequiredService<RegistryDiscoveryStrategy>(),
-                    sp.GetRequiredService<CommandGroupDiscoveryStrategy>(),
-                };
-
-                var logger = sp.GetRequiredService<ILogger<CompositeDiscoveryStrategy>>();
-                return new CompositeDiscoveryStrategy(discoveryStrategies, logger);
-            });
-        }
-        else if (serverStartOptions.Mode == ModeTypes.NamespaceProxy)
-        {
-            services.AddSingleton<IMcpDiscoveryStrategy, RegistryDiscoveryStrategy>();
-        }
-        else if (serverStartOptions.Mode == ModeTypes.ConsolidatedProxy)
-        {
-            services.AddSingleton<IMcpDiscoveryStrategy>(sp =>
-            {
-                var discoveryStrategies = new List<IMcpDiscoveryStrategy>
-                {
-                    sp.GetRequiredService<RegistryDiscoveryStrategy>(),
-                    sp.GetRequiredService<ConsolidatedToolDiscoveryStrategy>(),
-                };
-
-                var logger = sp.GetRequiredService<ILogger<CompositeDiscoveryStrategy>>();
-                return new CompositeDiscoveryStrategy(discoveryStrategies, logger);
-            });
-        }
-
-        // Configure tool loading based on mode
-        if (serverStartOptions.Mode == ModeTypes.SingleToolProxy)
-        {
+            // Server is configured with '--mode single', configure for single mode.
             services.AddSingleton<IToolLoader, SingleProxyToolLoader>();
+            // SingleToolProxy mode requires CommandGroupDiscoveryStrategy to discover tools in the microsoft/mcp project.
+            services.AddSingleton<CommandGroupDiscoveryStrategy>();
+            services.AddSingleton<IMcpDiscoveryStrategy>(sp =>
+            {
+                var discoveryStrategies = new List<IMcpDiscoveryStrategy>();
+                if (!serverStartOptions.DisableProxyTools)
+                {
+                    discoveryStrategies.Add(sp.GetRequiredService<RegistryDiscoveryStrategy>());
+                }
+
+                discoveryStrategies.Add(sp.GetRequiredService<CommandGroupDiscoveryStrategy>());
+
+                var logger = sp.GetRequiredService<ILogger<CompositeDiscoveryStrategy>>();
+                return new CompositeDiscoveryStrategy(discoveryStrategies, logger);
+            });
         }
         else if (serverStartOptions.Mode == ModeTypes.NamespaceProxy)
         {
+            // Server is configured with either '--mode namespace' or no mode at all, configure for namespace mode.
+            services.AddSingleton<NamespaceToolLoader>();
             services.AddSingleton<IToolLoader>(sp =>
             {
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-                var toolLoaders = new List<IToolLoader>
+                var toolLoaders = new List<IToolLoader>();
+                if (!serverStartOptions.DisableProxyTools)
                 {
-                    // ServerToolLoader with RegistryDiscoveryStrategy creates proxy tools for external MCP servers.
-                    new ServerToolLoader(
+                    // If proxy tools are enabled, ServerToolLoader with RegistryDiscoveryStrategy creates proxy tools for external MCP servers.
+                    toolLoaders.Add(new ServerToolLoader(
                         sp.GetRequiredService<RegistryDiscoveryStrategy>(),
                         sp.GetRequiredService<IOptions<ServerRuntimeConfiguration>>(),
-                        loggerFactory.CreateLogger<ServerToolLoader>()
-                    ),
-                    // NamespaceToolLoader enables direct in-process execution for tools in Azure namespaces
-                    sp.GetRequiredService<NamespaceToolLoader>(),
-                };
+                        loggerFactory.CreateLogger<ServerToolLoader>()));
+                }
+
+                // NamespaceToolLoader enables direct in-process execution for tools in Azure namespaces
+                toolLoaders.Add(sp.GetRequiredService<NamespaceToolLoader>());
 
                 // Always add utility commands (subscription, group) in namespace mode
                 // so they are available regardless of which namespaces are loaded
@@ -158,14 +133,28 @@ public static partial class ServiceCollectionExtensions
                 toolLoaders.Add(new CommandFactoryToolLoader(
                     sp.GetRequiredService<ICommandFactory>(),
                     Options.Create(additionalToolsServerRuntimeConfiguration),
-                    loggerFactory.CreateLogger<CommandFactoryToolLoader>()
-                ));
+                    loggerFactory.CreateLogger<CommandFactoryToolLoader>()));
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });
         }
         else if (serverStartOptions.Mode == ModeTypes.ConsolidatedProxy)
         {
+            // Server is configured with '--mode consolidated', configure for consolidated mode.
+            services.AddSingleton<ConsolidatedToolDiscoveryStrategy>();
+            services.AddSingleton<IMcpDiscoveryStrategy>(sp =>
+            {
+                var discoveryStrategies = new List<IMcpDiscoveryStrategy>();
+                if (!serverStartOptions.DisableProxyTools)
+                {
+                    discoveryStrategies.Add(sp.GetRequiredService<RegistryDiscoveryStrategy>());
+                }
+
+                discoveryStrategies.Add(sp.GetRequiredService<ConsolidatedToolDiscoveryStrategy>());
+
+                var logger = sp.GetRequiredService<ILogger<CompositeDiscoveryStrategy>>();
+                return new CompositeDiscoveryStrategy(discoveryStrategies, logger);
+            });
             services.AddSingleton<IToolLoader>(sp =>
             {
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
@@ -174,41 +163,51 @@ public static partial class ServiceCollectionExtensions
                 // Create a new CommandFactory with consolidated command groups
                 var consolidatedCommandFactory = consolidatedStrategy.CreateConsolidatedCommandFactory();
 
-                var toolLoaders = new List<IToolLoader>
+                var toolLoaders = new List<IToolLoader>();
+                if (!serverStartOptions.DisableProxyTools)
                 {
-                    // ServerToolLoader with RegistryDiscoveryStrategy creates proxy tools for external MCP servers.
-                    new ServerToolLoader(
+                    // If proxy tools are enabled, ServerToolLoader with RegistryDiscoveryStrategy creates proxy tools for external MCP servers.
+                    toolLoaders.Add(new ServerToolLoader(
                         sp.GetRequiredService<RegistryDiscoveryStrategy>(),
                         sp.GetRequiredService<IOptions<ServerRuntimeConfiguration>>(),
-                        loggerFactory.CreateLogger<ServerToolLoader>()
-                    ),
-                    // NamespaceToolLoader enables direct in-process execution for consolidated tools
-                    new NamespaceToolLoader(
-                        consolidatedCommandFactory,
-                        sp.GetRequiredService<IOptions<ServerRuntimeConfiguration>>(),
-                        loggerFactory.CreateLogger<NamespaceToolLoader>(),
-                        false
-                    ),
-                };
+                        loggerFactory.CreateLogger<ServerToolLoader>()));
+                }
+
+                // NamespaceToolLoader enables direct in-process execution for consolidated tools
+                toolLoaders.Add(new NamespaceToolLoader(
+                    consolidatedCommandFactory,
+                    sp.GetRequiredService<IOptions<ServerRuntimeConfiguration>>(),
+                    loggerFactory.CreateLogger<NamespaceToolLoader>(),
+                    false));
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });
         }
         else if (serverStartOptions.Mode == ModeTypes.All)
         {
-            services.AddSingleton<IMcpDiscoveryStrategy, RegistryDiscoveryStrategy>();
+            // Server is configured with '--mode all', configure for all mode.
+            if (!serverStartOptions.DisableProxyTools)
+            {
+                services.AddSingleton<RegistryToolLoader>();
+                services.AddSingleton<IMcpDiscoveryStrategy, RegistryDiscoveryStrategy>();
+            }
             services.AddSingleton<IToolLoader>(sp =>
             {
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-                var toolLoaders = new List<IToolLoader>
+                var toolLoaders = new List<IToolLoader>();
+                if (!serverStartOptions.DisableProxyTools)
                 {
-                    sp.GetRequiredService<RegistryToolLoader>(),
-                    sp.GetRequiredService<CommandFactoryToolLoader>(),
-                };
+                    toolLoaders.Add(sp.GetRequiredService<RegistryToolLoader>());
+                }
+
+                toolLoaders.Add(sp.GetRequiredService<CommandFactoryToolLoader>());
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });
         }
+
+        // Register MCP runtimes
+        services.AddSingleton<IMcpRuntime, McpRuntime>();
 
         var mcpServerOptions = services
             .AddOptions<McpServerOptions>()

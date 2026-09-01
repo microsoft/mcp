@@ -1,0 +1,30 @@
+changes:
+  - section: Bugs Fixed
+    description: >-
+      Azure Backup: `azmcp_azurebackup_vault_list` and other vault-listing paths
+      now surface a `RequestFailedException` (with the original HTTP status)
+      whenever either the RSV or DPP backend returns a `RequestFailedException`,
+      instead of wrapping mixed-failure cases in an `InvalidOperationException`.
+      Restores meaningful HTTP status codes (e.g. 422, 429) and prevents
+      classifying real Azure service failures as MCP-side bugs.
+  - section: Bugs Fixed
+    description: >-
+      Azure Backup: `azmcp_azurebackup_protecteditem_get` (DPP path) no longer
+      fails the entire list when a single backup instance deserializes to an
+      unknown polymorphic subtype. The DPP protected-item enumerator now skips
+      individual bad items (matching the resilient pattern already used for DPP
+      policy listing) and returns the remaining valid items.
+  - section: Bugs Fixed
+    description: >-
+      Azure Backup: `azmcp_azurebackup_governance_find-unprotected` now
+      validates the `--resource-type-filter` value up-front and returns a
+      customer-facing 400 (`RequestFailedException`) for malformed inputs or
+      workload aliases (e.g. `mssql`, `saphana`, `sapase`, `azurefiles`) with a
+      hint pointing to the vault-discovery path. Previously the tool threw an
+      `ArgumentException` that was classified as an MCP-side bug.
+  - section: Bugs Fixed
+    description: >-
+      Azure Backup: Added regression coverage for `azmcp_azurebackup_backup_status`
+      against DPP-only ARM resource types (e.g. `Microsoft.Compute/disks`) to
+      pin the null-cast in the ARM-type-to-DataSourceType mapping and prevent
+      the previously-observed `ArgumentNullException`.

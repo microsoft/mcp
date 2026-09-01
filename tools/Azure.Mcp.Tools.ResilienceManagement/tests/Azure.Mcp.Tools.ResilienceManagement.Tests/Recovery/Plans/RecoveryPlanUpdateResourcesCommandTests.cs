@@ -153,6 +153,36 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
     }
 
     [Fact]
+    public async Task ExecuteAsync_ForwardsUpdateAndDistinctRemovalTogether()
+    {
+        Service.UpdateRecoveryPlanResourcesAsync(
+            "sg1",
+            "plan1",
+            Arg.Is<UpdateRecoveryResourcesContent>(content =>
+                content.ResourcesToUpdate.Count == 1 &&
+                content.ResourcesToUpdate[0].Properties.RecoveryResourceUniqueId == "12345678-9012-3456-7890-123456789012" &&
+                content.ResourcesToRemove.Count == 1 &&
+                content.ResourcesToRemove[0].ToString() == OtherRecoveryResourceId),
+            null,
+            Arg.Any<CancellationToken>())
+            .Returns(UpdateResult());
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recovery-plan", "plan1",
+            "--resources-to-update", ResourcesToUpdate,
+            "--resources-to-remove", $"[\"{OtherRecoveryResourceId}\"]");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).UpdateRecoveryPlanResourcesAsync(
+            "sg1",
+            "plan1",
+            Arg.Any<UpdateRecoveryResourcesContent>(),
+            null,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ExecuteAsync_RejectsInvalidInclusionState()
     {
         string updates = ResourcesToUpdate.Replace("Included", "Invalid", StringComparison.Ordinal);
