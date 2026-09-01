@@ -47,7 +47,7 @@ public class SingleProxyToolLoaderTests
         return new RegistryDiscoveryStrategy(serverConfiguration, logger, httpClientFactory, registryRoot!);
     }
 
-    private static (SingleProxyToolLoader toolLoader, IMcpDiscoveryStrategy discoveryStrategy) CreateToolLoader(
+    private static (SingleProxyToolLoader toolLoader, ICommandFactory commandFactory, IMcpDiscoveryStrategy discoveryStrategy) CreateToolLoader(
         bool useRealDiscovery = true,
         ServerRuntimeConfiguration? configuration = null)
     {
@@ -58,27 +58,18 @@ public class SingleProxyToolLoaderTests
 
         if (useRealDiscovery)
         {
-            var commandGroupLogger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
-            var commandGroupDiscoveryStrategy = new CommandGroupDiscoveryStrategy(
-                CommandFactoryHelpers.CreateCommandFactory(serviceProvider),
-                runtimeConfiguration,
-                commandGroupLogger
-            );
+            var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
             var registryLogger = Substitute.For<ILogger<RegistryDiscoveryStrategy>>();
             var registryDiscoveryStrategy = CreateStrategy(runtimeConfiguration.Value, registryLogger);
-            var compositeLogger = Substitute.For<ILogger<CompositeDiscoveryStrategy>>();
-            var compositeDiscoveryStrategy = new CompositeDiscoveryStrategy([
-                commandGroupDiscoveryStrategy,
-                registryDiscoveryStrategy
-            ], compositeLogger);
-            var toolLoader = new SingleProxyToolLoader(compositeDiscoveryStrategy, logger, runtimeConfiguration, serverConfiguration);
-            return (toolLoader, compositeDiscoveryStrategy);
+            var toolLoader = new SingleProxyToolLoader(commandFactory, registryDiscoveryStrategy, logger, runtimeConfiguration, serverConfiguration);
+            return (toolLoader, commandFactory, registryDiscoveryStrategy);
         }
         else
         {
+            var mockCommandFactory = Substitute.For<ICommandFactory>();
             var mockDiscoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
-            var toolLoader = new SingleProxyToolLoader(mockDiscoveryStrategy, logger, runtimeConfiguration, serverConfiguration);
-            return (toolLoader, mockDiscoveryStrategy);
+            var toolLoader = new SingleProxyToolLoader(mockCommandFactory, mockDiscoveryStrategy, logger, runtimeConfiguration, serverConfiguration);
+            return (toolLoader, mockCommandFactory, mockDiscoveryStrategy);
         }
     }
 
@@ -86,7 +77,7 @@ public class SingleProxyToolLoaderTests
     public async Task ListToolsHandler_ReturnsAzureToolWithExpectedSchema()
     {
         // Arrange
-        var (toolLoader, _) = CreateToolLoader(useRealDiscovery: true);
+        var (toolLoader, _, _) = CreateToolLoader(useRealDiscovery: true);
         var request = McpTestUtilities.CreateToolListRequest();
 
         // Act
@@ -109,7 +100,7 @@ public class SingleProxyToolLoaderTests
     public async Task ListToolsHandler_WithMockedDiscovery_ReturnsSingleAzureTool()
     {
         // Arrange
-        var (toolLoader, mockDiscoveryStrategy) = CreateToolLoader(useRealDiscovery: false);
+        var (toolLoader, commandFactory, mockDiscoveryStrategy) = CreateToolLoader(useRealDiscovery: false);
         var request = McpTestUtilities.CreateToolListRequest();
 
         // Setup mock to return empty servers (SingleProxyToolLoader always returns the azure tool)
@@ -131,7 +122,7 @@ public class SingleProxyToolLoaderTests
     public async Task CallToolHandler_WithLearnMode_ReturnsRootToolsList()
     {
         // Arrange
-        var (toolLoader, _) = CreateToolLoader(useRealDiscovery: true);
+        var (toolLoader, _, _) = CreateToolLoader(useRealDiscovery: true);
         var arguments = new Dictionary<string, object?>
         {
             ["learn"] = true,
@@ -158,7 +149,7 @@ public class SingleProxyToolLoaderTests
     public async Task CallToolHandler_WithToolLearnMode_ThrowsExceptionForUnknownTool()
     {
         // Arrange
-        var (toolLoader, _) = CreateToolLoader(useRealDiscovery: true);
+        var (toolLoader, _, _) = CreateToolLoader(useRealDiscovery: true);
         var arguments = new Dictionary<string, object?>
         {
             ["learn"] = true,
@@ -177,7 +168,7 @@ public class SingleProxyToolLoaderTests
     public async Task CallToolHandler_WithIntentOnly_AutoEnablesLearnMode()
     {
         // Arrange
-        var (toolLoader, _) = CreateToolLoader(useRealDiscovery: true);
+        var (toolLoader, _, _) = CreateToolLoader(useRealDiscovery: true);
         var arguments = new Dictionary<string, object?>
         {
             ["intent"] = "Show me available Azure tools"
@@ -206,7 +197,7 @@ public class SingleProxyToolLoaderTests
     public async Task CallToolHandler_WithMissingToolAndCommand_ReturnsGuidanceMessage()
     {
         // Arrange
-        var (toolLoader, _) = CreateToolLoader(useRealDiscovery: true);
+        var (toolLoader, _, _) = CreateToolLoader(useRealDiscovery: true);
 
         // No learn, tool, or command parameters - should get guidance message
         var request = McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?>());
@@ -229,7 +220,7 @@ public class SingleProxyToolLoaderTests
     public async Task CallToolHandler_WithNullParams_ReturnsGuidanceMessage()
     {
         // Arrange
-        var (toolLoader, _) = CreateToolLoader(useRealDiscovery: true);
+        var (toolLoader, _, _) = CreateToolLoader(useRealDiscovery: true);
         var request = McpTestUtilities.CreateToolCallRequest((CallToolRequestParams)null!, Substitute.For<McpServer>());
 
         // Act
@@ -271,21 +262,25 @@ public class SingleProxyToolLoaderTests
             req.Method == RequestMethods.ToolsList
                 ? new JsonRpcResponse { Result = toolsResult }
                 : null);
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("azmcp", "Azure MCP");
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand>());
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         discoveryStrategy.GetOrCreateClientAsync("storage", Arg.Any<McpClientOptions?>(), TestContext.Current.CancellationToken)
             .Returns(mcpClient);
         var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration() { ReadOnly = true });
         var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
 
-        var toolLoader = new SingleProxyToolLoader(discoveryStrategy, logger, configuration, CreateServerConfigurationOptions());
+        var toolLoader = new SingleProxyToolLoader(commandFactory, discoveryStrategy, logger, configuration, CreateServerConfigurationOptions());
         var request = McpTestUtilities.CreateToolCallRequest("storage");
 
         // Act
-        var tools = await toolLoader.GetMcpClientToolListAsync(request, "storage", TestContext.Current.CancellationToken);
+        var tools = await toolLoader.GetToolListAsync(request, "storage", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(tools);
-        Assert.All(tools, tool => Assert.True(tool.ProtocolTool.Annotations?.ReadOnlyHint, $"Tool '{tool.Name}' should have ReadOnlyHint = true when ReadOnly mode is enabled"));
+        Assert.All(tools, tool => Assert.True(tool.Annotations?.ReadOnlyHint, $"Tool '{tool.Name}' should have ReadOnlyHint = true when ReadOnly mode is enabled"));
     }
 
     [Fact]
@@ -314,23 +309,27 @@ public class SingleProxyToolLoaderTests
             req.Method == RequestMethods.ToolsList
                 ? new JsonRpcResponse { Result = toolsResult }
                 : null);
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("azmcp", "Azure MCP");
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand>());
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         discoveryStrategy.GetOrCreateClientAsync("storage", Arg.Any<McpClientOptions?>(), TestContext.Current.CancellationToken)
             .Returns(mcpClient);
         var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration() { Transport = TransportTypes.Http });
         var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
 
-        var toolLoader = new SingleProxyToolLoader(discoveryStrategy, logger, configuration, CreateServerConfigurationOptions());
+        var toolLoader = new SingleProxyToolLoader(commandFactory, discoveryStrategy, logger, configuration, CreateServerConfigurationOptions());
         var request = McpTestUtilities.CreateToolCallRequest("storage");
 
         // Act
-        var tools = await toolLoader.GetMcpClientToolListAsync(request, "storage", TestContext.Current.CancellationToken);
+        var tools = await toolLoader.GetToolListAsync(request, "storage", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(tools);
         Assert.All(tools, tool =>
         {
-            Assert.False(McpHelper.HasHint(tool.ProtocolTool, McpHelper.LocalRequiredHintMetaKey),
+            Assert.False(McpHelper.HasHint(tool, McpHelper.LocalRequiredHintMetaKey),
                 $"Tool '{tool.Name}' should have LocalRequiredHint = false when HTTP mode is enabled");
         });
     }
@@ -339,7 +338,7 @@ public class SingleProxyToolLoaderTests
     public async Task SingleProxyToolLoader_CachesRootToolsJson()
     {
         // Arrange
-        var (toolLoader, _) = CreateToolLoader(useRealDiscovery: true);
+        var (toolLoader, _, _) = CreateToolLoader(useRealDiscovery: true);
         var arguments = new Dictionary<string, object?>
         {
             ["learn"] = true
@@ -368,16 +367,17 @@ public class SingleProxyToolLoaderTests
     public void SingleProxyToolLoader_Constructor_ThrowsOnNullArguments()
     {
         // Arrange
-        var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
+        var commandFactory = Substitute.For<ICommandFactory>();
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+        var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
         var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
         var serverConfigurationOptions = CreateServerConfigurationOptions();
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(null!, logger, configuration, serverConfigurationOptions));
-        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(discoveryStrategy, null!, configuration, serverConfigurationOptions));
-        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(discoveryStrategy, logger, null!, serverConfigurationOptions));
-        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(discoveryStrategy, logger, configuration, null!));
+        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(null!, discoveryStrategy, logger, configuration, serverConfigurationOptions));
+        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(commandFactory, discoveryStrategy, null!, configuration, serverConfigurationOptions));
+        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(commandFactory, discoveryStrategy, logger, null!, serverConfigurationOptions));
+        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(commandFactory, discoveryStrategy, logger, configuration, null!));
     }
 
     #region Execution-Time Mode Enforcement Tests
@@ -385,6 +385,10 @@ public class SingleProxyToolLoaderTests
     private static SingleProxyToolLoader CreateToolLoaderWithMockClient(
         ServerRuntimeConfiguration configuration, MockMcpClientBuilder clientBuilder, string serverName = "storage")
     {
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("azmcp", "Azure MCP");
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand>());
         var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
             .AddServer(serverName, serverName, $"{serverName} description", clientBuilder)
             .Build();
@@ -392,7 +396,7 @@ public class SingleProxyToolLoaderTests
         var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
         var runtimeConfiguration = Microsoft.Extensions.Options.Options.Create(configuration);
 
-        return new SingleProxyToolLoader(discoveryStrategy, logger, runtimeConfiguration, CreateServerConfigurationOptions());
+        return new SingleProxyToolLoader(commandFactory, discoveryStrategy, logger, runtimeConfiguration, CreateServerConfigurationOptions());
     }
 
     private static RequestContext<CallToolRequestParams> CreateCallToolRequestWithToolAndCommand(
