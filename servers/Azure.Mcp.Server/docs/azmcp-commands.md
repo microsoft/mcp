@@ -1430,7 +1430,7 @@ azmcp compute vm create --subscription <subscription> \
                         [--os-disk-size-gb <os-disk-size-gb>] \
                         [--os-disk-type <os-disk-type>]
 
-Defaults to Standard_D2s_v5 size when `--vm-size` is not specified. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`). When new NSG rules are created, SSH/RDP access is allowed from any source unless `--source-address-prefix` is provided.
+Defaults to Standard_D2s_v5 size when `--vm-size` is not specified. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`). When new NSG rules are created, SSH/RDP access is allowed from any source unless `--source-address-prefix` is provided. When providing `--ssh-public-key`, supply the key content directly (e.g., `ssh-rsa AAAA...`, `ssh-ed25519 AAAA...`). In stdio mode, a file path to a `.pub` file (e.g., `~/.ssh/id_rsa.pub`) is also accepted and resolved locally. In HTTP/remote mode, only key content is accepted — file paths are rejected for security and return an error asking for the key content directly.
 
 # Examples:
 
@@ -1544,7 +1544,7 @@ azmcp compute vm create --subscription "my-sub" \
 | `--admin-username` | Yes | Admin username |
 | `--image` | Yes | Image alias (e.g., `Ubuntu2404`), Marketplace URN (`publisher:offer:sku:version`), or shared gallery image ID (`/sharedGalleries/...`). No default. |
 | `--admin-password` | Conditional | Admin password (required for Windows, optional for Linux) |
-| `--ssh-public-key` | Conditional | SSH public key (for Linux VMs) |
+| `--ssh-public-key` | Conditional | SSH public key content for Linux VMs. Accepted formats: `ssh-rsa`, `ssh-ed25519`, `ssh-dss`, `ecdsa-sha2-nistp256`, `ecdsa-sha2-nistp384`, `ecdsa-sha2-nistp521`, `sk-ssh-ed25519@openssh.com`, `sk-ecdsa-sha2-nistp256@openssh.com`. In stdio mode, a file path (e.g., `~/.ssh/id_rsa.pub`) may be provided instead. In HTTP/remote mode, only key content is accepted — file paths are rejected for security. |
 | `--vm-size` | No | VM size (default: Standard_D2s_v5) |
 | `--os-type` | No | OS type: 'linux' or 'windows' (auto-detected from image) |
 | `--virtual-network` | No | Virtual network name |
@@ -1632,6 +1632,7 @@ azmcp compute vm delete --subscription "my-subscription" \
 **Command Behavior:**
 - Deletes the VM. Associated resources (disks, NICs, public IPs) are NOT automatically deleted.
 - **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VM even if it is in a running or failed state.
+- **Not-found handling**: If the specified VM does not exist, the command returns `Success: false` with a descriptive message ("...was not found in resource group '...'. Nothing was deleted.") rather than throwing an error. This makes the operation idempotent.
 
 **Parameters:**
 | Parameter | Required | Description |
@@ -1793,7 +1794,7 @@ azmcp compute vmss create --subscription <subscription> \
                           [--os-disk-size-gb <os-disk-size-gb>] \
                           [--os-disk-type <os-disk-type>]
 
-Defaults to two Standard_D2s_v5 instances when size or instance count are not provided. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`).
+Defaults to two Standard_D2s_v5 instances when size or instance count are not provided. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`). When providing `--ssh-public-key`, supply the key content directly (e.g., `ssh-rsa AAAA...`, `ssh-ed25519 AAAA...`). In stdio mode, a file path to a `.pub` file (e.g., `~/.ssh/id_rsa.pub`) is also accepted and resolved locally. In HTTP/remote mode, only key content is accepted — file paths are rejected for security and return an error asking for the key content directly.
 
 # Examples:
 
@@ -1830,7 +1831,7 @@ azmcp compute vmss create --subscription "my-subscription" \
 | `--admin-username` | Yes | Admin username |
 | `--image` | Yes | Image alias (e.g., `Ubuntu2404`), Marketplace URN (`publisher:offer:sku:version`), or shared gallery image ID (`/sharedGalleries/...`). No default. |
 | `--admin-password` | Conditional | Admin password (required for Windows) |
-| `--ssh-public-key` | Conditional | SSH public key (for Linux VMSS) |
+| `--ssh-public-key` | Conditional | SSH public key content for Linux VMSS. Accepted formats: `ssh-rsa`, `ssh-ed25519`, `ssh-dss`, `ecdsa-sha2-nistp256`, `ecdsa-sha2-nistp384`, `ecdsa-sha2-nistp521`, `sk-ssh-ed25519@openssh.com`, `sk-ecdsa-sha2-nistp256@openssh.com`. In stdio mode, a file path (e.g., `~/.ssh/id_rsa.pub`) may be provided instead. In HTTP/remote mode, only key content is accepted — file paths are rejected for security. |
 | `--vm-size` | No | VM size (default: Standard_D2s_v5) |
 | `--os-type` | No | OS type: 'linux' or 'windows' |
 | `--virtual-network` | No | Virtual network name |
@@ -1920,6 +1921,7 @@ azmcp compute vmss delete --subscription "my-subscription" \
 **Command Behavior:**
 - Deletes the VMSS and all its VM instances. This operation is irreversible.
 - **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VMSS even if it is in a running or failed state.
+- **Not-found handling**: If the specified VMSS does not exist, the command returns `Success: false` with a descriptive message ("...was not found in resource group '...'. Nothing was deleted.") rather than throwing an error. This makes the operation idempotent.
 
 **Parameters:**
 | Parameter | Required | Description |
