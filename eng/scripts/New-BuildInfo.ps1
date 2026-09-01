@@ -264,8 +264,8 @@ function Get-PathsToTest {
         $changedFiles = Get-ChangedFiles
         # When common code builds all, track whether engineering, the Core libraries, or shared build changed. If so, build everything.
         $coreChanged = $CommonCodeBuildsAll -and ($changedFiles | Where-Object { $_ -match '^core/(Azure|Fabric|Microsoft).Mcp.Core/src/' }).Count -gt 0
-        $engChanged = $CommonCodeBuildsAll -and  ($changedFiles | Where-Object { $_ -match '^eng/' }).Count -gt 0
-        $sharedBuildChanged = $CommonCodeBuildsAll -and  ($changedFiles | Where-Object { $_ -match '^Directory.(Build|Packages).props' }).Count -gt 0
+        $engChanged = $CommonCodeBuildsAll -and ($changedFiles | Where-Object { $_ -match '^eng/' }).Count -gt 0
+        $sharedBuildChanged = $CommonCodeBuildsAll -and ($changedFiles | Where-Object { $_ -match '^Directory.(Build|Packages).props' }).Count -gt 0
         if ($coreChanged -or $engChanged -or $sharedBuildChanged) {
             Write-Host "Core, engineering, or shared build changes detected. Building everything." -ForegroundColor Yellow
             $pathsToTest = @()
@@ -335,9 +335,10 @@ function Get-PathsToTest {
         $hasTestsProject = Test-Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj"
         $testProjectDetails = $hasTestsProject ? (& "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj") : $null
         $result = $false
-        # Need to parse $testProjectDetails.HasLiveTests and HasUnitTests as they're based on JSON values, therefore will not be a PowerShell boolean
+        # Project properties are read from JSON values and must be parsed into PowerShell booleans.
         $hasUnitTests = $hasTestsProject -and [bool]::TryParse($testProjectDetails.HasUnitTests, [ref]$result) -and $result
         $hasLiveTests = $hasTestsProject -and [bool]::TryParse($testProjectDetails.HasLiveTests, [ref]$result) -and $result
+        $liveTestResourcesCanBeReused = $hasLiveTests -and [bool]::TryParse($testProjectDetails.LiveTestResourcesCanBeReused, [ref]$result) -and $result
         $hasRecordedTests = $hasLiveTests -and (Get-ChildItem $rootedTestResourcesPath -Filter 'assets.json' -Recurse).Count -gt 0
 
         $sourcePath = Join-Path $using:RepoRoot $path "src"
@@ -360,14 +361,15 @@ function Get-PathsToTest {
         }
 
         return @{
-            _error               = $false
-            path                 = $path
-            hasTestResources     = $hasTestResources
-            testResourcesPath    = $hasTestResources ? $testResourcesPath : $null
-            hasLiveTests         = $hasLiveTests
-            hasUnitTests         = $hasUnitTests
-            hasRecordedTests     = $hasRecordedTests
-            azureSupportedClouds = $resolvedClouds
+            _error                       = $false
+            path                         = $path
+            hasTestResources             = $hasTestResources
+            testResourcesPath            = $hasTestResources ? $testResourcesPath : $null
+            hasLiveTests                 = $hasLiveTests
+            hasUnitTests                 = $hasUnitTests
+            hasRecordedTests             = $hasRecordedTests
+            liveTestResourcesCanBeReused = $liveTestResourcesCanBeReused
+            azureSupportedClouds         = $resolvedClouds
         }
     }
 
@@ -384,7 +386,8 @@ function Get-TestMatrix {
     param(
         [hashtable[]] $pathsToTest,
         [ValidateSet('Unit', 'Live')]
-        [string] $TestType
+        [string] $TestType,
+        [bool] $LiveTestResourcesCanBeReused
     )
 
     Write-Host "Forming $($TestType.ToLower()) test matrix"
@@ -396,12 +399,13 @@ function Get-TestMatrix {
         }
 
         if ($TestType -eq 'Live') {
-            if (!$path.HasLiveTests -or !$path.HasTestResources) {
+            if (!$path.HasLiveTests -or !$path.HasTestResources -or $path.LiveTestResourcesCanBeReused -ne $LiveTestResourcesCanBeReused) {
                 continue
             }
 
             $entry.testResourcesPath = $path.TestResourcesPath
             $entry.hasTestResources = $path.HasTestResources
+            $entry.liveTestResourcesCanBeReused = $path.LiveTestResourcesCanBeReused
 
             if ($ServerName) {
                 $entry.serverName = $ServerName
@@ -771,7 +775,8 @@ try {
     $serverDetails = @(Get-ServerDetails)
     $pathsToTest = @(Get-PathsToTest)
     $matrices = Get-BuildMatrices $serverDetails $pathsToTest
-    $matrices['liveTestMatrix'] = Get-TestMatrix $pathsToTest -TestType 'Live'
+    $matrices['liveTestMatrix'] = Get-TestMatrix $pathsToTest -TestType 'Live' -LiveTestResourcesCanBeReused $false
+    $matrices['reusableLiveTestMatrix'] = Get-TestMatrix $pathsToTest -TestType 'Live' -LiveTestResourcesCanBeReused $true
     $matrices['serverMatrix'] = Get-ServerMatrix $serverDetails
 
     # spellchecker: ignore SOURCEVERSION

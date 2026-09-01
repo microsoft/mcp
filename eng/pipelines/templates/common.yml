@@ -121,6 +121,12 @@ extends:
             Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.liveTestMatrix']
             MaxParallel: 10
             TimeoutInMinutes: 75
+        - template: /eng/pipelines/templates/jobs/live-test.yml
+          parameters:
+            Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.reusableLiveTestMatrix']
+            MaxParallel: 10
+            TimeoutInMinutes: 75
+            RedeployTestResources: false
 
     - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunVSCodeIntegrationTests, true)) }}:
       - stage: VSCodeIntegration
