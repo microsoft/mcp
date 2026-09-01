@@ -362,67 +362,6 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
     #region ExecuteAsync Tests - Bucket Limit Validation
 
     [Fact]
-    public async Task ExecuteAsync_ExceedsBucketLimit_ReturnsBadRequest()
-    {
-        // Arrange
-        var resultsWithTooManyBuckets = new List<ResourceMetricsResult>
-        {
-            new()
-            {
-                ResourceId = "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/sa1",
-                Metrics =
-                [
-                    new()
-                    {
-                        Name = "CPU",
-                        Unit = "Percent",
-                        TimeSeries =
-                        [
-                            new()
-                            {
-                                Metadata = [],
-                                Start = DateTime.UtcNow.AddHours(-1),
-                                End = DateTime.UtcNow,
-                                Interval = "PT1M",
-                                AvgBuckets = new double[51] // Exceeds default limit of 50
-                            }
-                        ]
-                    }
-                ]
-            }
-        };
-
-        Service.QueryMetricsBatchAsync(
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<IEnumerable<string>>(),
-            Arg.Any<string>(),
-            Arg.Any<IEnumerable<string>>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(resultsWithTooManyBuckets);
-
-        // Act
-        var response = await ExecuteCommandAsync(
-            "--subscription", "sub1",
-            "--resources", "sa1",
-            "--metric-names", "CPU",
-            "--metric-namespace", "microsoft.compute/virtualmachines");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("exceeds the maximum allowed limit", response.Message);
-    }
-
-    [Fact]
     public async Task ExecuteAsync_IntervalWouldExceedBucketLimit_ReturnsBadRequestWithoutCallingService()
     {
         // Act
@@ -495,12 +434,49 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
     }
 
     [Fact]
-    public async Task ExecuteAsync_NoIntervalSpecified_SkipsUpfrontBucketValidation()
+    public async Task ExecuteAsync_NoIntervalSpecified_UsesDefaultIntervalForBucketValidation()
     {
         // Arrange
-        // With no interval specified, the expected bucket count can't be derived from the inputs alone
-        // (Azure Monitor selects the granularity automatically), so the up-front check must not run and
-        // the service should still be called even though the time range spans multiple days.
+        // When '--interval' isn't specified, the up-front bucket estimate assumes PT1H (this is only used for
+        // validation and is not sent to the service): 30 days at PT1H granularity is 720 buckets, which exceeds
+        // the default limit of 50 -- the service must not be called.
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--resources", "sa1",
+            "--metric-names", "CPU",
+            "--metric-namespace", "microsoft.compute/virtualmachines",
+            "--start-time", "2023-01-01T00:00:00Z",
+            "--end-time", "2023-01-31T00:00:00Z");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("exceeds the maximum allowed limit of 50", response.Message);
+        await Service.DidNotReceive().QueryMetricsBatchAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_NoIntervalSpecified_WithinBucketLimit_CallsService()
+    {
+        // Arrange
+        // When '--interval' isn't specified, the up-front bucket estimate assumes PT1H: 2 hours at PT1H
+        // granularity is 2 buckets, well within the default limit of 50.
         Service.QueryMetricsBatchAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -526,10 +502,26 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
             "--metric-names", "CPU",
             "--metric-namespace", "microsoft.compute/virtualmachines",
             "--start-time", "2023-01-01T00:00:00Z",
-            "--end-time", "2023-01-31T00:00:00Z");
+            "--end-time", "2023-01-01T02:00:00Z");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).QueryMetricsBatchAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Is<string?>(t => t == null),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     #endregion

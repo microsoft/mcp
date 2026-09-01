@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Monitor.Models;
@@ -31,6 +30,11 @@ public sealed class MetricsBatchQueryCommand(ILogger<MetricsBatchQueryCommand> l
     : SubscriptionCommand<MetricsBatchQueryOptions, MetricsBatchQueryCommand.MetricsBatchQueryCommandResult>(subscriptionResolver)
 {
     private const int MaxBatchResources = 50;
+
+    // Assumed granularity used only to estimate the expected bucket count up front when '--interval' isn't
+    // specified. It is never sent to the service -- when '--interval' is omitted, Azure Monitor still selects
+    // the actual granularity automatically.
+    private const string DefaultValidationInterval = "PT1H";
 
     private readonly ILogger<MetricsBatchQueryCommand> _logger = logger;
     private readonly IMonitorMetricsService _metricsService = metricsService;
@@ -72,29 +76,36 @@ public sealed class MetricsBatchQueryCommand(ILogger<MetricsBatchQueryCommand> l
             validationResult.Errors.Add($"Invalid format for '--end-time': '{options.EndTime}'. Provide a valid date/time (e.g. 2023-01-01T00:00:00Z).");
         }
 
-        if (!string.IsNullOrWhiteSpace(options.Interval))
-        {
-            if (!TryParseIsoDuration(options.Interval, out var interval) || interval <= TimeSpan.Zero)
-            {
-                validationResult.Errors.Add($"Invalid format for '--interval': '{options.Interval}'. Provide an ISO 8601 duration (e.g. PT1H, PT5M).");
-            }
-            else if (validStartTime && validEndTime)
-            {
-                // The number of time buckets can be derived directly from the start/end time range, so reject
-                // requests that would clearly exceed the bucket limit before calling the service. When no
-                // interval is specified, Azure Monitor selects the granularity automatically, so the actual
-                // bucket count can only be verified after the query executes (see the check in ExecuteAsync).
-                int maxBuckets = options.MaxBuckets ?? 50;
-                int expectedBucketCount = (int)Math.Ceiling((endTime - startTime) / interval);
+        // The expected number of time buckets is always derived from the start/end time range up front, so an
+        // oversized request is rejected before calling the service -- there's no need to fall back to validating
+        // the actual results after the query executes. When '--interval' isn't specified, Azure Monitor selects
+        // the granularity automatically, so a representative default is assumed for this estimate only; it is not
+        // sent to the service, so the actual query behavior is unaffected.
+        bool intervalProvided = !string.IsNullOrWhiteSpace(options.Interval);
+        string intervalToValidate = intervalProvided ? options.Interval! : DefaultValidationInterval;
 
-                if (expectedBucketCount > maxBuckets)
-                {
-                    validationResult.Errors.Add(
-                        $"The requested time range ('--start-time' to '--end-time') combined with '--interval' of '{options.Interval}' would produce " +
-                        $"approximately {expectedBucketCount} time buckets, which exceeds the maximum allowed limit of {maxBuckets}. " +
-                        $"To resolve this issue, either query a smaller time range, increase the interval size (e.g., use PT1H instead of PT5M), " +
-                        $"or increase the '--max-buckets' parameter.");
-                }
+        if (!TryParseIsoDuration(intervalToValidate, out var interval) || interval <= TimeSpan.Zero)
+        {
+            // The internal default is always a valid duration, so a parse failure here only happens when the
+            // user explicitly supplied an invalid '--interval' value.
+            validationResult.Errors.Add($"Invalid format for '--interval': '{options.Interval}'. Provide an ISO 8601 duration (e.g. PT1H, PT5M).");
+        }
+        else if (validStartTime && validEndTime)
+        {
+            int maxBuckets = options.MaxBuckets ?? 50;
+            int expectedBucketCount = (int)Math.Ceiling((endTime - startTime) / interval);
+
+            if (expectedBucketCount > maxBuckets)
+            {
+                string intervalDescription = intervalProvided
+                    ? $"'--interval' of '{options.Interval}'"
+                    : $"an assumed default interval of '{DefaultValidationInterval}' (since '--interval' was not specified)";
+
+                validationResult.Errors.Add(
+                    $"The requested time range ('--start-time' to '--end-time') combined with {intervalDescription} would produce " +
+                    $"approximately {expectedBucketCount} time buckets, which exceeds the maximum allowed limit of {maxBuckets}. " +
+                    $"To resolve this issue, either query a smaller time range, specify a larger '--interval' (e.g., PT1H), " +
+                    $"or increase the '--max-buckets' parameter.");
             }
         }
     }
@@ -144,53 +155,6 @@ public sealed class MetricsBatchQueryCommand(ILogger<MetricsBatchQueryCommand> l
                 options.Tenant,
                 cancellationToken);
 
-            // When '--interval' isn't specified, Azure Monitor selects the granularity automatically, so the
-            // resulting bucket count can't be predicted ahead of time (see ValidateOptions for the case where
-            // '--interval' is explicit). Validate the actual results here as a fallback for that scenario.
-            if (results?.Count > 0)
-            {
-                int maxBuckets = options.MaxBuckets ?? 50; // Use provided value or default to 50
-
-                foreach (var resourceResult in results)
-                {
-                    foreach (var metric in resourceResult.Metrics)
-                    {
-                        foreach (var timeSeries in metric.TimeSeries)
-                        {
-                            // Check each bucket array for exceeding the limit
-                            var bucketCounts = new[]
-                            {
-                                timeSeries.AvgBuckets?.Length ?? 0,
-                                timeSeries.MinBuckets?.Length ?? 0,
-                                timeSeries.MaxBuckets?.Length ?? 0,
-                                timeSeries.TotalBuckets?.Length ?? 0,
-                                timeSeries.CountBuckets?.Length ?? 0
-                            };
-
-                            int maxBucketCount = bucketCounts.Max();
-
-                            if (maxBucketCount > maxBuckets)
-                            {
-                                string errorMessage = $"Time series for metric '{metric.Name}' on resource '{resourceResult.ResourceId}' contains {maxBucketCount} time buckets, " +
-                                                     $"which exceeds the maximum allowed limit of {maxBuckets}. " +
-                                                     $"To resolve this issue, either query a smaller time range, " +
-                                                     $"increase the interval size (e.g., use PT1H instead of PT5M), " +
-                                                     $"or increase the --max-buckets parameter.";
-
-                                context.Response.Status = HttpStatusCode.BadRequest;
-                                context.Response.Message = errorMessage;
-
-                                _logger.LogWarning("Bucket limit exceeded. ResourceId: {ResourceId}, MetricName: {MetricName}, BucketCount: {BucketCount}, MaxBuckets: {MaxBuckets}",
-                                    resourceResult.ResourceId, metric.Name, maxBucketCount, maxBuckets);
-
-                                return context.Response;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Set results
             context.Response.Results = ResponseResult.Create(new(results ?? []), MonitorJsonContext.Default.MetricsBatchQueryCommandResult);
         }
         catch (Exception ex)

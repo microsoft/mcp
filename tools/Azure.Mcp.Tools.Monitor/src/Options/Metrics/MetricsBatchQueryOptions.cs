@@ -57,7 +57,7 @@ public sealed class MetricsBatchQueryOptions : ISubscriptionOption
     /// <summary>
     /// Time interval for the query
     /// </summary>
-    [Option(Description = "The time interval for data points (e.g., PT1H for 1 hour, PT5M for 5 minutes).")]
+    [Option(Description = "The time interval for data points (e.g., PT1H for 1 hour, PT5M for 5 minutes). If not specified, Azure Monitor selects the granularity automatically.")]
     public string? Interval { get; set; }
 
     /// <summary>
