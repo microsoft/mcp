@@ -6,7 +6,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
-- Add new server starting option disable-proxy-tools to disable tools loaded via registry.json. [[#3287](https://github.com/microsoft/mcp/pull/3287)]
+- Added `--disable-proxy-tools` to server start options to disable tools that are proxied from sources configured in `/Resources/registry.json`. [[#3287](https://github.com/microsoft/mcp/pull/3287)]
 - Added Azure IoT Hub device and query read tools: [[#3180](https://github.com/microsoft/mcp/pull/3180)]
   - `iothub_device_show`: Show a device identity from an IoT Hub device registry
   - `iothub_device_stats`: Get device statistics for an IoT Hub identity registry
