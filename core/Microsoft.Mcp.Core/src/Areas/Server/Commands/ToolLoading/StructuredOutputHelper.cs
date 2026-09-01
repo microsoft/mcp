@@ -11,7 +11,27 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 internal static class StructuredOutputHelper
 {
+    internal const string CommandPropertyName = "command";
+    internal const string KindPropertyName = "kind";
+    internal const string MessagePropertyName = "message";
+    internal const string ResultPropertyName = "result";
+    internal const string ToolPropertyName = "tool";
+    internal const string ToolsPropertyName = "tools";
+    internal const string ValuePropertyName = "value";
+
+    internal const string MessageKind = "message";
+    internal const string ToolListKind = "tool-list";
+    internal const string ToolResultKind = "tool-result";
+
     internal const string CompactContentMessage = "Response successful. See structuredContent for details.";
+
+    internal static bool IsObjectRoot(JsonObject schema) =>
+        schema["type"] is JsonValue typeValue
+        && typeValue.TryGetValue<string>(out var typeName)
+        && typeName == "object";
+
+    internal static JsonObject WrapValue(JsonNode? value) =>
+        new() { [ValuePropertyName] = value?.DeepClone() };
 
     /// <summary>
     /// Extracts and shapes a command result payload.
@@ -26,7 +46,7 @@ internal static class StructuredOutputHelper
         }
 
         var structuredContent = resultNode as JsonObject
-            ?? StructuredOutputJson.WrapValue(resultNode);
+            ?? WrapValue(resultNode);
         return JsonSerializer.SerializeToElement(structuredContent, ServerJsonContext.Default.JsonObject);
     }
 

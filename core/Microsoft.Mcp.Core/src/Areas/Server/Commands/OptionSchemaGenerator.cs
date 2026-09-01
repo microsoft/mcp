@@ -8,6 +8,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Helpers;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands;
@@ -128,7 +129,7 @@ internal static class OptionSchemaGenerator
 
         var schema = JsonSchemaExporter.GetJsonSchemaAsNode(resultTypeInfo, ExporterOptions);
 
-        if (schema is JsonObject rootObject && StructuredOutputJson.IsObjectRoot(rootObject))
+        if (schema is JsonObject rootObject && StructuredOutputHelper.IsObjectRoot(rootObject))
         {
             ReconcileRequiredProperties(rootObject, resultTypeInfo);
             return rootObject;
@@ -137,8 +138,8 @@ internal static class OptionSchemaGenerator
         return new JsonObject
         {
             ["type"] = "object",
-            ["properties"] = StructuredOutputJson.WrapValue(schema),
-            ["required"] = new JsonArray { (JsonNode)StructuredOutputJson.ValuePropertyName },
+            ["properties"] = StructuredOutputHelper.WrapValue(schema),
+            ["required"] = new JsonArray { (JsonNode)StructuredOutputHelper.ValuePropertyName },
         };
     }
 
