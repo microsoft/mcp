@@ -1,12 +1,12 @@
 ---
 name: resilience-recovery-operations
-description: 'Operate all Azure Resilience Management MCP tools for usage plans, enrollments, goals, drills, recoveryplans, recovery resources, recovery jobs, failover, reprotect, readiness, validation, retry, resume, and finalize. Use when: list/get/create/update/delete resilience resources; run or end drills; include/exclude recovery resources; check readiness; validate or execute recovery operations; monitor, retry, or resume recovery jobs.'
+description: 'Operate all Azure Resilience Management MCP tools for usage plans, enrollments, goals, drills, recovery plans, recovery resources, recovery jobs, failover, reprotect, readiness, validation, retry, resume, and finalize. Use when: list/get/create/update/delete resilience resources; run or end drills; include/exclude recovery resources; check readiness; validate or execute recovery operations; monitor, retry, or resume recovery jobs.'
 argument-hint: 'Describe the resilience operation and provide known service group, plan, drill, job, subscription, or resource identifiers'
 user-invocable: true
 disable-model-invocation: false
 ---
 
-<!-- cspell:words recoveryplans reprotect reprotection -->
+<!-- cspell:words reprotect reprotection -->
 
 # Azure Resilience Management Operations
 
@@ -20,7 +20,7 @@ Use the Azure Resilience Management MCP tools exclusively. Do not use Azure CLI 
 ## Operating Rules
 
 1. Use get/list tools to resolve unknown IDs and inspect current state before mutations.
-2. Never invent service groups, recoveryplans, drill names, job IDs, source locations, recovery-resource IDs, identity IDs, or runbook IDs.
+2. Never invent service groups, recovery plans, drill names, job IDs, source locations, recovery-resource IDs, identity IDs, or runbook IDs.
 3. Use a tenant or subscription only when supplied by the user, available from the active environment, or returned by a preceding tool call.
 4. Treat an explicit user request for a named mutation as authorization for that mutation. Ask only for missing choices that cannot be inferred safely.
 5. Before irreversible deletion, identify the exact resource. A request such as “delete X” is sufficient confirmation; an ambiguous request is not.
@@ -28,8 +28,8 @@ Use the Azure Resilience Management MCP tools exclusively. Do not use Azure CLI 
 7. Do not claim an accepted asynchronous operation has completed.
 8. Do not retry stale jobs to represent a fresh operation. Start a new readiness or validation operation when current state must be assessed.
 9. If a prerequisite fails, report per-resource blockers and do not start the dependent destructive operation.
-10. Use `recoveryplan` as the recoveryplan parameter for every tool.
-11. For Recovery Orchestration (RO) recoveryplan updates only, do not use or imply HTTP `PATCH`; the current SDK does not support RO recoveryplan PATCH. Get the existing plan and preserve unchanged values in the create-or-update request.
+10. Use `recoveryplan` as the recovery plan parameter for every tool.
+11. For Recovery Orchestration (RO) recovery plan updates only, do not use or imply HTTP `PATCH`; the current SDK does not support RO recovery plan PATCH. Get the existing plan and preserve unchanged values in the create-or-update request.
 12. If no registered Resilience Management MCP tool supports the requested operation, state that the operation is unavailable through the current toolset. Do not work around the gap with `az`, REST, or another execution surface.
 
 ## Route the Request
@@ -37,8 +37,8 @@ Use the Azure Resilience Management MCP tools exclusively. Do not use Azure CLI 
 - Usage plan or enrollment → `mcp_azure_mcp_ser_resilience_usageplan_*`
 - Goal template, assignment, or member → `mcp_azure_mcp_ser_resilience_goal_*`
 - Drill definition, execution, run, or target → `mcp_azure_mcp_ser_resilience_drill_*`
-- Recoveryplan lifecycle or recovery operation → `mcp_azure_mcp_ser_resilience_recoveryplan_*`
-- Recoveryplan membership/protection → `mcp_azure_mcp_ser_resilience_recoveryplan_resource_*`
+- Recovery plan lifecycle or recovery operation → `mcp_azure_mcp_ser_resilience_recoveryplan_*`
+- Recovery plan membership/protection → `mcp_azure_mcp_ser_resilience_recoveryplan_resource_*`
 - Recovery job, paused action, retry, or job target → `mcp_azure_mcp_ser_resilience_recoveryjob_*`
 
 ## Standard Procedure
@@ -108,14 +108,14 @@ Apply these gates whenever adding or modifying a Resilience Management tool:
 7. Preserve existing whitespace exactly. Do not make whitespace-only changes or alter whitespace in unrelated code outside the requested change.
 8. Create ARM clients through `CreateArmClientAsync`, propagate `tenant` and the caller's cancellation token on every request, start SDK LROs with `WaitUntil.Started`, and wait through the shared bounded helper. Give every long-running operation a defined timeout linked with caller cancellation; never rely on the caller to cancel an operation that may otherwise wait indefinitely.
 9. For better tool-generation context, suggest adding the Azure SDK repository, relevant service repository, and portal repository to the Visual Studio Code multi-root workspace when the change depends on their SDK contracts, service behavior, or portal workflows. Add only the repositories required for the requested tool.
-10. Choose the command base by scope: use `SubscriptionCommand<TOptions, TResult>` and `SubscriptionCommandUnitTestsBase` for subscription-scoped usage plans and enrollments; use `AuthenticatedCommand<TOptions, TResult>` and `CommandUnitTestsBase` for tenant/service-group-scoped goals, drills, recoveryplans, resources, and jobs. A supporting-resource `subscription` option does not make the command subscription-scoped.
+10. Choose the command base by scope: use `SubscriptionCommand<TOptions, TResult>` and `SubscriptionCommandUnitTestsBase` for subscription-scoped usage plans and enrollments; use `AuthenticatedCommand<TOptions, TResult>` and `CommandUnitTestsBase` for tenant/service-group-scoped goals, drills, recovery plans, resources, and jobs. A supporting-resource `subscription` option does not make the command subscription-scoped.
 11. Keep commands stateless and transport-agnostic for remote multi-user execution. Do not access `HttpContext`, branch on stdio versus HTTP, retain request state in command fields, or omit tenant propagation.
 12. Register every response type in `ResilienceManagementJsonContext`, register the command in `ResilienceManagementSetup`, and verify metadata accurately describes destructive, idempotent, read-only, open-world, secret, and local-required behavior.
 13. For every added, renamed, or behaviorally changed tool, update command documentation, E2E prompts, and consolidated-tool mappings when applicable; add a schema-valid changelog entry; and verify unit, live, recorded-playback, AOT, and relevant RBAC coverage. Do not rename a recorded test method casually because its name identifies the recording.
 14. Return explicit, typed response contracts. Do not expose raw `JsonElement`, `JsonDocument`, `BinaryData`, `object`, or unstructured dictionaries when the service response has a known schema. Map SDK responses to named records with stable properties, put reusable models in separate files, and source-generate every root and nested response type. Raw JSON parsing may still be used internally for JSON-string inputs, but it must not leak into a structured tool response.
 15. Use primary constructors, seal command and service classes unless inheritance is intentional, keep interfaces and reusable classes in separate files, make helpers static when possible, and use `System.Text.Json` exclusively. Keep option classes as flat POCOs with `[Option]` attributes; do not introduce option inheritance or legacy option-definition registration.
 16. Validate all untrusted inputs before service calls: required combinations, mutually dependent fields, allowed enum values, lengths, resource-specific naming rules, ARM resource-ID shape, positive action timeouts, JSON structure, and ManualAction, CustomRunbook, or ASR conditional fields. Return focused validation errors and never silently infer a tenant, subscription, identity, selector, or destructive choice.
-17. Keep public tool contracts compatible. Use `subscription`, `resource-group`, singular resource nouns, and the established `recoveryplan` spelling; do not rename tools, options, result properties, command metadata IDs, or recorded test identifiers without an explicit migration and all required mapping, documentation, prompt, and recording updates.
+17. Keep released public tool contracts compatible. Use `subscription`, `resource-group`, singular resource nouns, and the established `recoveryplan` spelling; do not rename released tools, options, result properties, command metadata IDs, or recorded test identifiers without an explicit migration and all required mapping, documentation, prompt, and recording updates. An unreleased contract may be corrected without a compatibility alias when the intentional change is documented in the changelog.
 18. Catch command failures, log only individually named non-secret fields, and always route exceptions through `HandleException`. Provide actionable timeout, authorization, not-found, conflict, and validation messages without returning raw backend bodies, credentials, signed URLs, tokens, action parameters, or complete option objects.
 19. Use Azure SDK retry defaults and the shared authentication/client infrastructure; never expose `RetryPolicyOptions`, construct ad hoc credentials, substitute `CancellationToken.None`, or add transport-specific clients. Test success, empty/list/get behavior, validation failures, service exceptions, timeout/cancellation, destructive metadata, serialization, and the real lifecycle state required by retry or resume.
 20. Keep changes file-scoped and minimal, preserve unrelated whitespace and public APIs, add one coherent tool per pull request, review the complete diff for consistency, maintainability, security, testability, and AOT safety, and run the smallest relevant build/tests before the repository-wide validation gates.

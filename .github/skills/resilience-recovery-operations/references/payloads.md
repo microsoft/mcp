@@ -4,7 +4,7 @@
 
 Use JSON strings only for parameters whose tool schema requires JSON. Do not serialize ordinary scalar or array parameters manually.
 
-## Recoveryplan Actions
+## Recovery Plan Actions
 
 A manual action pauses the workflow for a person:
 
@@ -162,7 +162,7 @@ Use the smallest fixture that reaches the state required by the command under te
 ]
 ```
 
-Removal is different from exclusion. Use removal only when the user wants membership deleted from the recoveryplan.
+Removal is different from exclusion. Use removal only when the user wants membership deleted from the recovery plan.
 
 ## Array Selectors
 

@@ -22,7 +22,7 @@ These tools do not create or mutate goals.
 
 ## Create and Configure a Drill
 
-1. Collect drill type, region, supporting-resource subscription, RBAC setup mode, and optional recoveryplan.
+1. Collect drill type, region, supporting-resource subscription, RBAC setup mode, and optional recovery plan.
 2. Call `mcp_azure_mcp_ser_resilience_drill_create`.
 3. Get the drill and verify provisioning state.
 4. List targets with `mcp_azure_mcp_ser_resilience_drill_resource_get`.
@@ -37,7 +37,7 @@ These tools do not create or mutate goals.
 5. Inspect run targets with `mcp_azure_mcp_ser_resilience_drill_run_resource_get` when per-resource results are needed.
 6. End only a running drill with `mcp_azure_mcp_ser_resilience_drill_end`; require outcome and notes.
 
-## Create a Recoveryplan
+## Create a Recovery Plan
 
 1. Require plan name, `Zonal` plan type, description, and identity choice.
 2. For `UserAssigned` or `SystemAndUserAssigned`, require the full identity ARM ID.
@@ -111,7 +111,7 @@ For an existing plan, read it first and preserve omitted values. If it retains a
 5. Collect paused-action input instead of inventing a resume description.
 6. Return the new operation ID and preserve the recovery job identity.
 
-## Delete a Drill or Recoveryplan
+## Delete a Drill or Recovery Plan
 
 1. Get the exact named target.
 2. Check active execution state and dependent resources.

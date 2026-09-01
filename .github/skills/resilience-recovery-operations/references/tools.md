@@ -1,6 +1,6 @@
 # Azure Resilience Management MCP Tool Reference
 
-<!-- cspell:words recoveryplans reprotect reprotection -->
+<!-- cspell:words reprotect reprotection -->
 
 This reference lists all 32 tools registered under the `resilience` namespace. Parameters marked **required** must be collected before invocation. `tenant` is optional for every tool unless the active environment requires it.
 
@@ -31,7 +31,7 @@ These tools are read-only. Omit `name` to list IDs and names; provide it for ful
 |---|---|---|
 | `mcp_azure_mcp_ser_resilience_drill_get` | List drills or get one definition | **`service-group`**, `name?`, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_drill_create` | Create/configure a drill | **`service-group`**, **`drill`**, **`subscription`**, **`region`**, **`drill-type`** (`Zonal` or `Regional`), **`rbac-setup-mode`** (`AutomatedCustomRole`, `AutomatedBuiltinRoles`, or `Manual`), `resource-group?`, `recoveryplan?`, `tenant?` |
-| `mcp_azure_mcp_ser_resilience_drill_update` | Update drill RBAC, recoveryplan association, or supporting-resource location | **`service-group`**, **`drill`**, `subscription?` + `region?` together, `rbac-setup-mode?`, `recoveryplan?`, `tenant?`. Supply at least one change. |
+| `mcp_azure_mcp_ser_resilience_drill_update` | Update drill RBAC, recovery plan association, or supporting-resource location | **`service-group`**, **`drill`**, `subscription?` + `region?` together, `rbac-setup-mode?`, `recoveryplan?`, `tenant?`. Supply at least one change. |
 | `mcp_azure_mcp_ser_resilience_drill_delete` | Permanently delete a drill definition | **`service-group`**, **`drill`**, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_drill_start` | Start a drill execution | **`service-group`**, **`drill`**, **`mode`** (`Failover` or `TestFailover`), `tenant?` |
 | `mcp_azure_mcp_ser_resilience_drill_end` | End a running drill and attest outcome | **`service-group`**, **`drill`**, **`attestation`** (`Success` or `Failed`), **`attestation-notes`**, `tenant?` |
@@ -39,7 +39,7 @@ These tools are read-only. Omit `name` to list IDs and names; provide it for ful
 | `mcp_azure_mcp_ser_resilience_drill_run_get` | List drill runs or get one | **`service-group`**, **`drill`**, `name?`, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_drill_run_resource_get` | List run targets or get one | **`service-group`**, **`drill`**, **`drill-run`**, `name?`, `tenant?` |
 
-## Recoveryplans
+## Recovery Plans
 
 | Tool | Purpose | Parameters |
 |---|---|---|
@@ -54,7 +54,7 @@ These tools are read-only. Omit `name` to list IDs and names; provide it for ful
 | `mcp_azure_mcp_ser_resilience_recoveryplan_reprotect` | Start reprotection after failover | **`service-group`**, **`recoveryplan`**, `selected-resource-ids?`, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_recoveryplan_finalize` | Validate permissions and finalize current plan operation state | **`service-group`**, **`recoveryplan`**, `tenant?`. This does not commit a completed failover. |
 
-### Recoveryplan identity values
+### Recovery plan identity values
 
 - `SystemAssigned`
 - `UserAssigned` — requires `user-assigned-identity`
