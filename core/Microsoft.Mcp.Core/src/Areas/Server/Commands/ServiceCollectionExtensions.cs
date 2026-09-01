@@ -75,7 +75,7 @@ public static partial class ServiceCollectionExtensions
             services.AddSingleton<IToolLoader, SingleProxyToolLoader>();
             if (!serverStartOptions.DisableProxyTools)
             {
-                services.AddSingleton<IMcpDiscoveryStrategy, RegistryDiscoveryStrategy>();
+                services.AddSingleton<IMcpDiscoveryStrategy>(sp => sp.GetRequiredService<RegistryDiscoveryStrategy>());
             }
         }
         else if (serverStartOptions.Mode == ModeTypes.NamespaceProxy)
@@ -135,7 +135,7 @@ public static partial class ServiceCollectionExtensions
             services.AddSingleton<ConsolidatedToolDiscoveryStrategy>();
             if (!serverStartOptions.DisableProxyTools)
             {
-                services.AddSingleton<IMcpDiscoveryStrategy, RegistryDiscoveryStrategy>();
+                services.AddSingleton<IMcpDiscoveryStrategy>(sp => sp.GetRequiredService<RegistryDiscoveryStrategy>());
             }
             services.AddSingleton<IToolLoader>(sp =>
             {
@@ -171,7 +171,7 @@ public static partial class ServiceCollectionExtensions
             if (!serverStartOptions.DisableProxyTools)
             {
                 services.AddSingleton<RegistryToolLoader>();
-                services.AddSingleton<IMcpDiscoveryStrategy, RegistryDiscoveryStrategy>();
+                services.AddSingleton<IMcpDiscoveryStrategy>(sp => sp.GetRequiredService<RegistryDiscoveryStrategy>());
             }
             services.AddSingleton<IToolLoader>(sp =>
             {
