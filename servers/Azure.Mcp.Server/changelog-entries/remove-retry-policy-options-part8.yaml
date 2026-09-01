@@ -1,3 +1,0 @@
-changes:
-  - section: Breaking Changes
-    description: Removed custom retry policy options from Service Fabric, SignalR, Speech, SQL, SRE Agent, Storage, and Storage Sync tools.

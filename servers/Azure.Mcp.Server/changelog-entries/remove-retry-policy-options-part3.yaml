@@ -1,3 +1,0 @@
-changes:
-  - section: Breaking Changes
-    description: Removed custom retry policy options from Communication, Compute, Container Apps, and Cosmos tools.

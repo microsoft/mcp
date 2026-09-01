@@ -1,3 +1,0 @@
-changes:
-  - section: Breaking Changes
-    description: Removed custom retry policy options from Device Registry, Event Grid, Event Hubs, File Shares, and Foundry Extensions tools.
