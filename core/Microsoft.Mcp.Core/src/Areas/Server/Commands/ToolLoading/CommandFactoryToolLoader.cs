@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
@@ -28,6 +29,7 @@ public sealed class CommandFactoryToolLoader(
 {
     private readonly ICommandFactory _commandFactory = commandFactory;
     private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration;
+    private bool StructuredOutputEnabled => _configuration.Value.StructuredOutputMode != null;
     private IReadOnlyDictionary<string, IBaseCommand> _toolCommands =
         (configuration.Value.Namespace == null || configuration.Value.Namespace.Length == 0)
             ? commandFactory.AllCommands
@@ -56,7 +58,7 @@ public sealed class CommandFactoryToolLoader(
         var tools = visibleCommands
             .Where(kvp => !_configuration.Value.ReadOnly || kvp.Value.Metadata.ReadOnly)
             .Where(kvp => !_configuration.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
-            .Select(kvp => GetTool(kvp.Key, kvp.Value))
+            .Select(kvp => GetTool(kvp.Key, kvp.Value, StructuredOutputEnabled))
             .ToList();
 
         var listToolsResult = new ListToolsResult { Tools = tools };
@@ -225,20 +227,17 @@ public sealed class CommandFactoryToolLoader(
         {
             activity?.SetTag(TagName.IsServerCommandInvoked, true);
             var commandResponse = await command.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
-            var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
-            return new CallToolResult
-            {
-                Content = [
-                    new TextContentBlock
-                    {
-                        Text = jsonResponse
-                    }
-                ],
-                IsError = isError,
-                Meta = new([new(McpHelper.ToolIdMetaKey, command.Id)])
-            };
+            var callToolResult = StructuredOutputHelper.CreateCallToolResult(
+                _configuration.Value.StructuredOutputMode,
+                () => JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse),
+                command.ResultTypeInfo is null
+                    ? null
+                    : () => StructuredOutputHelper.TryBuildStructuredContent(commandResponse.Results),
+                isError);
+
+            return McpHelper.InjectToolIdMetadata(callToolResult, command.Id);
         }
         catch (Exception ex)
         {
@@ -257,7 +256,10 @@ public sealed class CommandFactoryToolLoader(
     /// <param name="fullName">The full name of the command.</param>
     /// <param name="command">The command to convert.</param>
     /// <returns>An MCP tool definition.</returns>
-    private static Tool GetTool(string fullName, IBaseCommand command)
+    private static Tool GetTool(
+        string fullName,
+        IBaseCommand command,
+        bool structuredOutputEnabled)
     {
         var underlyingCommand = command.GetCommand();
         var tool = new Tool
@@ -290,19 +292,24 @@ public sealed class CommandFactoryToolLoader(
         }
         tool.Meta = meta;
 
+        var resultTypeInfo = structuredOutputEnabled
+            ? command.ResultTypeInfo
+            : null;
+        if (resultTypeInfo != null)
+        {
+            var outputSchema = OptionSchemaGenerator.CreateOutputSchema(resultTypeInfo);
+            tool.OutputSchema = JsonSerializer.SerializeToElement(outputSchema, ServerJsonContext.Default.JsonObject);
+        }
+
         var options = command.GetCommand().Options
             .Where(o => !CommandFactory.IsLearnOption(o))
             .ToList();
 
-        if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
-        {
-            var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? [];
-            tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
-            return tool;
-        }
+        var inputSchema = options.Count == 1 && IsRawMcpToolInputOption(options[0])
+            ? JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? []
+            : OptionSchemaGenerator.CreateInputSchema(options);
 
-        var schema = OptionSchemaGenerator.CreateInputSchema(options);
-        tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.JsonObject);
+        tool.InputSchema = JsonSerializer.SerializeToElement(inputSchema, ServerJsonContext.Default.JsonObject);
 
         return tool;
     }
