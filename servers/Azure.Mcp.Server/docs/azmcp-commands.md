@@ -355,7 +355,7 @@ azmcp advisor recommendation summary --subscription <subscription> \
 # keyvault_vaults, kubernetes_connectedclusters, kubernetesconfiguration_extensions, netapp_volumes,
 # network_applicationgatewaywebapplicationfirewallpolicies, network_expressrouteports,
 # network_frontdoorwebapplicationfirewallpolicies, sql_managedinstances, storage_storageaccounts,
-# web_serverfarms, web_staticsites.
+# web_serverfarms, web_staticsites
 azmcp advisor recommendation apply --resource <resource>
 
 # List the global Azure Advisor recommendation metadata catalog (also called recommendation types) from Azure Resource
