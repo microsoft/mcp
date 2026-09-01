@@ -32,6 +32,8 @@ public sealed class BaseCommandMetadataTests
         public override Task<CommandResponse> ExecuteAsync(
             CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
             => Task.FromResult(context.Response);
+
+        public void SetStringResult(CommandContext context, string result) => SetResult(context, result);
     }
 
     private sealed class NoMetadataCommand : BaseCommand<EmptyOptions, string>
@@ -151,6 +153,25 @@ public sealed class BaseCommandMetadataTests
         Assert.False(metadata.ReadOnly);
         Assert.False(metadata.Secret);
         Assert.False(metadata.LocalRequired);
+    }
+
+    [Fact]
+    public void SetResult_WithNullContext_ThrowsArgumentNullException()
+    {
+        var command = new AttributeBasedCommand();
+
+        Assert.Throws<ArgumentNullException>(() => command.SetStringResult(null!, "result"));
+    }
+
+    [Fact]
+    public void SetResult_WithoutResultTypeInfo_ThrowsInvalidOperationException()
+    {
+        var command = new AttributeBasedCommand();
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => command.SetStringResult(new CommandContext(), "result"));
+
+        Assert.Contains(nameof(command.ResultTypeInfo), exception.Message, StringComparison.Ordinal);
     }
 
     // ---------- Missing metadata throws InvalidOperationException ----------

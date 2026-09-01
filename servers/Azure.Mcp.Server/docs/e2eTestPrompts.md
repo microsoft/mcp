@@ -876,6 +876,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_instrumentation_send-enhancement-select | Submit enhancement selection keys <enhancement_keys> for Azure Monitor instrumentation session <session_id> after enhancement options are presented | investigation-required |
 | monitor_instrumentation_send-enhancement-select | Continue instrumentation enhancement flow by sending selected keys <enhancement_keys> to session <session_id> | none |
 | monitor_instrumentation_send-enhancement-select | Send chosen enhancement option keys <enhancement_keys> to Azure Monitor instrumentation onboarding session <session_id> | none |
+| monitor_metrics_batchquery | Get the <metric_name> metric for storage accounts <resource_name_1>, <resource_name_2>, and <resource_name_3> over the last <time_period> | none |
+| monitor_metrics_batchquery | Compare <metric_name> across resources <resource_name_1> and <resource_name_2> in resource group <resource_group> for the last <time_period> | none |
+| monitor_metrics_batchquery | Query <aggregation_type> <metric_name> for multiple <resource_type> resources <resource_name_1>, <resource_name_2> in one request | none |
 | monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace | none |
 | monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> | none |
 | monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> | none |
@@ -949,6 +952,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_drill_create | Create a resilience drill for service group <service_group> | clarification-required |
 | resilience_drill_delete | Delete resilience drill <drill_name> from service group <service_group> | none |
 | resilience_drill_delete | Permanently remove drill <drill_name> in service group <service_group> | none |
+| resilience_drill_end | End resilience drill <drill_name> in service group <service_group> with a Success attestation and notes "Validation completed" | none |
+| resilience_drill_end | Stop the running resilience drill <drill_name> in service group <service_group> and attest it as Failed with notes "Validation failed" | none |
 | resilience_drill_get | List all resilience drills in service group <service_group> | none |
 | resilience_drill_get | Get the details of resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_update | Update resilience drill <drill_name> in service group <service_group> to use manual RBAC setup | none |
@@ -960,6 +965,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_drill_resource_get | Get the complete details of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_resource_get | Get drill target <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_resource_get | Retrieve the ARM properties of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_start | Start resilience drill <drill_name> in service group <service_group> in Failover mode | none |
+| resilience_drill_start | Run resilience drill <drill_name> in service group <service_group> as a TestFailover | none |
 | resilience_drill_run_get | List all runs of drill <drill_name> in service group <service_group> | none |
 | resilience_drill_run_get | Get drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resilience_drill_run_resource_get | List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
@@ -988,19 +995,27 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_recoveryplan_delete | Delete the entire recovery plan <recovery_plan_name> from service group <service_group> | none |
 | resilience_recoveryplan_delete | Recovery plan <recovery_plan_name> is no longer needed. Delete it from resilience service group <service_group> | none |
 | resilience_recoveryplan_get | List all resilience recovery plans in service group <service_group> | none |
-| resilience_recoveryplan_get | Get the details of recovery plan <recovery_plan_name> in service group <service_group> | none |
-| resilience_recoveryplan_validateforfailover | Validate recovery plan <recovery_plan_name> for failover in service group <service_group>, but I have not specified a source location or selected recovery-resource ID | clarification-required |
-| resilience_recoveryplan_validateforfailover | Validate which resources in recovery plan <recovery_plan_name> in service group <service_group> can fail over from <source_location> and report blocking reasons | none |
-| resilience_recoveryplan_validateforfailover | Check whether recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> is qualified for failover without requiring a source location or executing failover | none |
-| resilience_recoveryplan_validateforfailover | Validate recovery plan <recovery_plan_name> for failover from <source_location>, supply required user consent, and return per-resource qualification results without updating resources | none |
-| resilience_recoveryplan_resource_update | Include and configure recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group> with selected protection solution type <protection_solution_type> and settings <protection_settings_json> | none |
-| resilience_recoveryplan_resource_update | Add recovery resource <recovery_resource_id> to recovery plan <recovery_plan_name> in service group <service_group>. Protect it with CustomRunbook using failover runbook <failover_runbook_resource_id> and reprotect runbook <reprotect_runbook_resource_id> | none |
-| resilience_recoveryplan_resource_update | Include virtual machine recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group> using AzureSiteRecovery protection settings <protection_settings_json> with disk reprotection, staging storage, and a test failover virtual network | none |
-| resilience_recoveryplan_resource_update | Include recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group>, but I have not chosen CustomRunbook or AzureSiteRecovery protection settings | clarification-required |
-| resilience_recoveryplan_resource_update | Keep recovery resource <recovery_resource_id> in recovery plan <recovery_plan_name> in service group <service_group>, but exclude it from recovery operations | none |
-| resilience_recoveryplan_resource_update | Update recovery plan <recovery_plan_name> in service group <service_group> by removing recovery resource <recovery_resource_id> from its resource membership while retaining the recovery plan and its other recovery resources | none |
-| resilience_recoveryplan_resource_get | List all resources (members) of recovery plan <recovery_plan_name> in service group <service_group> | none |
-| resilience_recoveryplan_resource_get | Get the recovery resource <resource_name> for recovery plan <recovery_plan_name> in service group <service_group> | none |
+| resilience_recoveryplan_get | Get the details of recovery plan <recoveryplan_name> in service group <service_group> | none |
+| resilience_recoveryplan_validateforfailover | Validate recovery plan <recoveryplan_name> for failover in service group <service_group>, but I have not specified a source location or selected recovery-resource ID | clarification-required |
+| resilience_recoveryplan_validateforfailover | Validate which resources in recovery plan <recoveryplan_name> in service group <service_group> can fail over from <source_location> and report blocking reasons | none |
+| resilience_recoveryplan_validateforfailover | Check whether recovery resource <recovery_resource_id> in recovery plan <recoveryplan_name> is qualified for failover without requiring a source location or executing failover | none |
+| resilience_recoveryplan_validateforfailover | Validate recovery plan <recoveryplan_name> for failover from <source_location>, supply required user consent, and return per-resource qualification results without updating resources | none |
+| resilience_recoveryplan_validateforreprotect | Validate all qualified resources in recovery plan <recoveryplan_name> in service group <service_group> for reprotect after failover and report blocking reasons | none |
+| resilience_recoveryplan_validateforreprotect | Check whether recovery resource <recovery_resource_id> in recovery plan <recoveryplan_name> is qualified for reprotect without executing reprotect or updating resources | none |
+| resilience_recoveryplan_validateforoperation | Validate the Failover operation for recovery plan <recoveryplan_name> in service group <service_group> before execution, including whether the plan's current state allows it | none |
+| resilience_recoveryplan_validateforoperation | Run operation-specific pre-validation for TestFailoverCleanup on recovery plan <recoveryplan_name>; check plan support, current state, readiness status, and permissions without executing it | none |
+| resilience_recoveryplan_validateforoperation | Run operation-specific pre-validation for recovery plan <recoveryplan_name> in service group <service_group>, but ask me which supported operation to validate before proceeding | clarification-required |
+| resilience_recoveryplan_validateforoperation | Validate an operation on recovery plan <recoveryplan_name> in service group <service_group> | clarification-required |
+| resilience_recoveryplan_validateforoperation | We were discussing failover earlier. Now validate an operation on recovery plan <recoveryplan_name> in service group <service_group>, but do not assume which operation I mean | clarification-required |
+| resilience_recoveryplan_validateforoperation | Check whether recovery plan <recoveryplan_name> can perform my intended recovery operation in service group <service_group>; ask me to choose Failover, FailoverCommit, Reprotect, TestFailover, or TestFailoverCleanup | clarification-required |
+| resilience_recoveryplan_resource_update | Include and configure recovery resource <recovery_resource_id> in recovery plan <recoveryplan_name> in service group <service_group> with selected protection solution type <protection_solution_type> and settings <protection_settings_json> | none |
+| resilience_recoveryplan_resource_update | Add recovery resource <recovery_resource_id> to recovery plan <recoveryplan_name> in service group <service_group>. Protect it with CustomRunbook using failover runbook <failover_runbook_resource_id> and reprotect runbook <reprotect_runbook_resource_id> | none |
+| resilience_recoveryplan_resource_update | Include virtual machine recovery resource <recovery_resource_id> in recovery plan <recoveryplan_name> in service group <service_group> using AzureSiteRecovery protection settings <protection_settings_json> with disk reprotection, staging storage, and a test failover virtual network | none |
+| resilience_recoveryplan_resource_update | Include recovery resource <recovery_resource_id> in recovery plan <recoveryplan_name> in service group <service_group>, but I have not chosen CustomRunbook or AzureSiteRecovery protection settings | clarification-required |
+| resilience_recoveryplan_resource_update | Keep recovery resource <recovery_resource_id> in recovery plan <recoveryplan_name> in service group <service_group>, but exclude it from recovery operations | none |
+| resilience_recoveryplan_resource_update | Update recovery plan <recoveryplan_name> in service group <service_group> by removing recovery resource <recovery_resource_id> from its resource membership while retaining the recovery plan and its other recovery resources | none |
+| resilience_recoveryplan_resource_get | List all resources (members) of recovery plan <recoveryplan_name> in service group <service_group> | none |
+| resilience_recoveryplan_resource_get | Get the recovery resource <resource_name> for recovery plan <recoveryplan_name> in service group <service_group> | none |
 | resilience_usageplan_create | Create a resilience usage plan <usage_plan_name> with plan type Basic in resource group <resource_group_name> | none |
 | resilience_usageplan_create | Set up a Basic resilience usage plan named <usage_plan_name> in resource group <resource_group_name> | none |
 | resilience_usageplan_create | Update resilience usage plan <usage_plan_name> in resource group <resource_group_name> to use the Basic plan type | none |

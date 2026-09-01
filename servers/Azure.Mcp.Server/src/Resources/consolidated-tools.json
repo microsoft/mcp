@@ -118,6 +118,72 @@
       ]
     },
     {
+      "name": "validate_azure_resilience_recoveryplan_for_reprotect",
+      "description": "Validate which resources in an Azure Resilience Management recovery plan are qualified for reprotect after failover.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not delete or modify recovery plan resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each invocation starts a new reprotect validation operation."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool starts a validation operation and may update operation state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_recoveryplan_validateforreprotect"
+      ]
+    },
+    {
+      "name": "validate_azure_resilience_recoveryplan_for_operation",
+      "description": "Validate a customer-selected or unspecified recovery operation for an Azure Resilience Management recovery plan before execution. Use for requests to validate an operation, an intended recovery operation, or operation-specific pre-validation, including when earlier context mentions failover but the current operation is unspecified. Ask the customer to choose Failover, FailoverCommit, Reprotect, TestFailover, or TestFailoverCleanup; do not assume the operation. Checks plan state, readiness, and permissions. Not for general readiness or per-resource failover or reprotect qualification. Does not execute recovery operations.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not execute the recovery operation or modify recovery plan resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each invocation starts a new plan operation validation."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool starts a validation operation and may update operation state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_recoveryplan_validateforoperation"
+      ]
+    },
+    {
       "name": "check_azure_resilience_management_readiness",
       "description": "Check whether an Azure Resilience Management recovery plan and its protected resources are ready for recovery operations in an Azure service group.",
       "toolMetadata": {
@@ -181,6 +247,40 @@
       },
       "mappedToolList": [
         "resilience_drill_delete"
+      ]
+    },
+    {
+      "name": "manage_azure_resilience_management_drill_executions",
+      "description": "Start or end Azure Resilience Management drill executions for Azure service groups, including failover mode and completion attestation.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_drill_start",
+        "resilience_drill_end"
       ]
     },
     {
@@ -544,6 +644,7 @@
         "monitor_activitylog_list",
         "monitor_healthmodels_list",
         "monitor_healthmodels_get",
+        "monitor_metrics_batchquery",
         "monitor_metrics_definitions",
         "monitor_metrics_query",
         "monitor_resource_log_query",
