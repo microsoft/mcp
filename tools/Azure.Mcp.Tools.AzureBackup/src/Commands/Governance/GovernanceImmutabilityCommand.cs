@@ -17,11 +17,10 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
     Name = "immutability",
     Title = "Configure Vault Immutability",
     Description = """
-        Configures the immutability state for a backup vault. --immutability-state must be
-        'Disabled', 'Unlocked' (recoverable; 'Enabled' is accepted as a backward-compatible
-        alias for 'Unlocked'), or 'Locked' (IRREVERSIBLE). Requires --immutability-type
-        ('AsPerPolicy' or 'TimeBased'). 'TimeBased' also requires --immutability-duration-days
-        (30-36135) unless --immutability-state is 'Disabled'.
+        Configures the immutability state for a backup vault. --immutability-state 'Locked'
+        is irreversible, 'Enabled' is an alias for 'Unlocked'. --immutability-type 'TimeBased'
+        also requires --immutability-duration-days (30-36135) unless --immutability-state
+        is 'Disabled'.
         """,
     Destructive = true,
     Idempotent = true,
