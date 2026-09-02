@@ -11,7 +11,7 @@ public sealed class DrillValidateForExecutionOptions
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
 
-    [Option(Description = "The name of the resilience drill to validate for execution.")]
+    [Option(Description = ResilienceManagementOptionDescriptions.Drill)]
     public required string Drill { get; set; }
 
     [Option(Description = "The physical source locations from which resources will be failed over or faulted.")]

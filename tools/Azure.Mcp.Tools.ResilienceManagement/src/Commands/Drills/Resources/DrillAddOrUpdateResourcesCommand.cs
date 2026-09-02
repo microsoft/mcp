@@ -8,6 +8,7 @@ using System.Text.Json;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Drills.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
+using Azure.ResourceManager.ResilienceManagement;
 using Azure.ResourceManager.ResilienceManagement.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -52,7 +53,7 @@ public sealed class DrillAddOrUpdateResourcesCommand(ILogger<DrillAddOrUpdateRes
 
         try
         {
-            _ = CreateContent(options);
+            options.ParsedContent = CreateContent(options);
         }
         catch (ArgumentException ex)
         {
@@ -64,7 +65,7 @@ public sealed class DrillAddOrUpdateResourcesCommand(ILogger<DrillAddOrUpdateRes
     {
         try
         {
-            AddOrUpdateResourcesContent content = CreateContent(options);
+            AddOrUpdateResourcesContent content = options.ParsedContent ?? CreateContent(options);
             DrillAddOrUpdateResourcesResult result = await _resilienceManagementService.AddOrUpdateDrillResourcesAsync(
                 options.ServiceGroup,
                 options.Drill,
@@ -148,11 +149,10 @@ public sealed class DrillAddOrUpdateResourcesCommand(ILogger<DrillAddOrUpdateRes
                 writer.WriteEndObject();
             }
 
-            var reader = new Utf8JsonReader(stream.ToArray());
-            var model = new AddOrUpdateResourcesContent(options.FaultDurationMinutes);
-            return ((IJsonModel<AddOrUpdateResourcesContent>)model).Create(
-                ref reader,
-                ModelReaderWriterOptions.Json) ??
+            return ModelReaderWriter.Read<AddOrUpdateResourcesContent>(
+                BinaryData.FromBytes(stream.ToArray()),
+                ModelReaderWriterOptions.Json,
+                AzureResourceManagerResilienceManagementContext.Default) ??
                 throw new ArgumentException("The drill resource configuration could not be parsed.");
         }
         catch (JsonException ex)

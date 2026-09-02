@@ -11,7 +11,7 @@ public sealed class DrillCheckResyncReadinessOptions
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
 
-    [Option(Description = "The name of the resilience drill to run a resync and readiness check on.")]
+    [Option(Description = ResilienceManagementOptionDescriptions.Drill)]
     public required string Drill { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
