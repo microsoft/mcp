@@ -262,6 +262,8 @@ The `azmcp server start` command supports the following options:
 | `--dangerously-write-support-logs-to-dir` | No | - | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs. |
 | `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
 | `--disable-caching` | No | `false` | Disable caching of resource responses, requiring repeated requests to fetch fresh data each time. |
+| `--structured-output-mode` | No | Disabled | Enables `outputSchema` and `structuredContent` in `all`, `namespace`, `consolidated`, and `single` modes. `duplicated` retains the complete original `content`; `compact` returns concise `content`. Both return the complete structured result. Enable this only when the client supports these fields. |
+| `--disable-proxy-tools` | No | `false` | Disable tools that are proxied from sources configured in `/Resources/registry.json`. |
 
 > **⚠️ Security Warning for `--dangerously-disable-elicitation`:**
 >
@@ -383,8 +385,7 @@ azmcp search index get --service <service> \
 
 # Query AI Search index
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp search index query --subscription <subscription> \
-                         --service <service> \
+azmcp search index query --service <service> \
                          --index <index> \
                          --query <query> \
                          [--query-type <simple|full|semantic>] \
@@ -962,7 +963,7 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 --resource-group <resource-group> \
                                 --vault <vault> \
                                 --policy <policy> \
-                                --workload-type <workload-type> \
+                                --workload-type <VM|SQL|SAPHANA|SAPASE|AzureFileShare|AzureDisk|AzureBlob|AKS|ElasticSAN|PostgreSQLFlexible|ADLS|CosmosDB> \
                                 [--vault-type <vault-type>] \
                                 # --- Common schedule (RSV + DPP) ---
                                 [--time-zone <time-zone>] \
@@ -1027,7 +1028,22 @@ azmcp azurebackup policy update --subscription <subscription> \
                                 --policy <policy> \
                                 [--vault-type <vault-type>] \
                                 [--schedule-time <schedule-time>] \
-                                [--daily-retention-days <daily-retention-days>]
+                                [--daily-retention-days <daily-retention-days>] \
+                                [--time-zone <time-zone>] \
+                                [--schedule-frequency <Daily|Weekly>] \
+                                [--schedule-times <HH:mm[,HH:mm...]>] \
+                                [--schedule-days-of-week <day[,day...]>] \
+                                [--weekly-retention-weeks <int>] \
+                                [--weekly-retention-days-of-week <day[,day...]>] \
+                                [--monthly-retention-months <int>] \
+                                [--monthly-retention-week-of-month <First|Second|Third|Fourth|Last>] \
+                                [--monthly-retention-days-of-week <day[,day...]>] \
+                                [--monthly-retention-days-of-month <int[,int...]>] \
+                                [--yearly-retention-years <int>] \
+                                [--yearly-retention-months <month[,month...]>] \
+                                [--yearly-retention-week-of-month <First|Second|Third|Fourth|Last>] \
+                                [--yearly-retention-days-of-week <day[,day...]>] \
+                                [--yearly-retention-days-of-month <int[,int...]>]
 
 # Retrieves backup policy information. When --policy is specified, returns detailed information about a single policy including datasource types and protected items count. When omitted, lists all backup policies configured in the vault.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1050,7 +1066,7 @@ azmcp azurebackup protecteditem get --subscription <subscription> \
                                     [--protected-item <protected-item>] \
                                     [--container <container>]
 
-# Enables backup protection for a resource by creating a protected item or backup instance. For RSV the tool waits for the underlying ConfigureBackup job to reach a terminal state and returns the final job status; for DPP the tool waits for the protect operation to complete and reads back the backup instance, returning ProtectionStatus (DPP protection is not a job - use 'azurebackup protecteditem get' or 'list' to verify).
+# Enables backup protection for a resource by creating a protected item or backup instance. For RSV the tool waits for the underlying ConfigureBackup job to reach a terminal state and returns the final job status; for DPP the tool waits for the protect operation to complete and reads back the backup instance, returning ProtectionStatus (DPP protection is not a job - use 'azurebackup protecteditem get' or 'list' to verify). For RSV IaaS VM datasources, --disk-list-setting, --disks-list, and --exclude-all-data-disks configure selective disk backup (see https://learn.microsoft.com/azure/backup/selective-disk-backup-restore).
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup protecteditem protect --subscription <subscription> \
                                         --resource-group <resource-group> \
@@ -1059,7 +1075,23 @@ azmcp azurebackup protecteditem protect --subscription <subscription> \
                                         --policy <policy> \
                                         [--vault-type <vault-type>] \
                                         [--container <container>] \
-                                        [--datasource-type <datasource-type>]
+                                        [--datasource-type <RSV: VM|SQL|SAPHANA|SAPASE|AzureFileShare; DPP: AzureDisk|AzureBlob|AKS|ElasticSAN|PostgreSQLFlexible|ADLS|CosmosDB>] \
+                                        [--disk-list-setting <include|exclude|resetexclusionsettings>] \
+                                        [--disks-list <lun[,lun...]>] \
+                                        [--exclude-all-data-disks]
+
+# Updates the backup configuration of an already-protected RSV IaaS VM. Supports changing the attached backup policy and/or the selective disk backup configuration. Only supported for RSV IaaS VM protected items. At least one of --policy, --disk-list-setting, --disks-list, or --exclude-all-data-disks must be provided.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup protecteditem update-protection --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --vault <vault> \
+                                                  --datasource-id <datasource-id> \
+                                                  [--vault-type <vault-type>] \
+                                                  [--container <container>] \
+                                                  [--policy <policy>] \
+                                                  [--disk-list-setting <include|exclude|resetexclusionsettings>] \
+                                                  [--disks-list <lun[,lun...]>] \
+                                                  [--exclude-all-data-disks]
 
 # Restores a soft-deleted backup item to an active protection state. For RSV vaults, pass the datasource ARM resource ID as --datasource-id. For DPP vaults, pass the datasource ARM resource ID to find and restore the soft-deleted backup instance.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1134,21 +1166,29 @@ azmcp azurebackup governance find-unprotected --subscription <subscription> \
                                               [--tag-filter <tag-filter>]
 
 # Configures the immutability state for a backup vault.
+# --immutability-state: Disabled | Unlocked | Locked (Enabled is a backward-compat alias for Unlocked).
+# --immutability-type: AsPerPolicy | TimeBased. TimeBased additionally requires --immutability-duration-days (30-36135).
+# WARNING: Locked is IRREVERSIBLE and cannot be relaxed by any subsequent call.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup governance immutability --subscription <subscription> \
                                           --resource-group <resource-group> \
                                           --vault <vault> \
                                           --immutability-state <immutability-state> \
+                                          --immutability-type <immutability-type> \
+                                          [--immutability-duration-days <immutability-duration-days>] \
                                           [--vault-type <vault-type>]
 
 # Configures the soft delete settings for a backup vault.
+# --soft-delete: On | Off | AlwaysOn. WARNING: AlwaysOn is IRREVERSIBLE.
+# --soft-delete-retention-days: required, 14-180. Sent on every PATCH — api-version
+# 2026-02-01+ rejects state-only updates.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup governance soft-delete --subscription <subscription> \
                                          --resource-group <resource-group> \
                                          --vault <vault> \
                                          --soft-delete <soft-delete> \
-                                         [--vault-type <vault-type>] \
-                                         [--soft-delete-retention-days <soft-delete-retention-days>]
+                                         --soft-delete-retention-days <soft-delete-retention-days> \
+                                         [--vault-type <vault-type>]
 ```
 
 #### Disaster Recovery
@@ -2474,17 +2514,18 @@ azmcp postgres server param set --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp deploy app logs get --workspace-folder <workspace-folder> \
                           --azd-env-name <azd-env-name> \
-                          [--limit <limit>]
+                          [--limit <limit>] \
+                          [--subscription <subscription>]
 
-# Generate a mermaid architecture diagram for the application topology follow the schema defined in [DeployAppTopologySchema.cs](../../../tools/Azure.Mcp.Deploy/src/Schemas/DeployAppTopologySchema.cs)
+# Generate a mermaid architecture diagram for the application topology, following the schema defined in [DeployAppTopologySchema.cs](../../../tools/Azure.Mcp.Tools.Deploy/src/Schemas/DeployAppTopologySchema.cs)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp deploy architecture diagram generate --raw-mcp-tool-input <app-topology>
 
 # Get the iac generation rules for the resource types
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp deploy iac rules get --deployment-tool <deployment-tool> \
-                           --iac-type <iac-type> \
-                           --resource-types <resource-types>
+                           [--iac-type <iac-type>] \
+                           [--resource-types <resource-types>]
 
 # Get the ci/cd pipeline guidance
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2494,11 +2535,10 @@ azmcp deploy pipeline guidance get [--is-azd-project <is-azd-project>] \
 
 # Get a deployment plan for a specific project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp deploy plan get --workspace-folder <workspace-folder> \
-                      --project-name <project-name> \
-                      --target-app-service <target-app-service> \
-                      --provisioning-tool <provisioning-tool> \
-                      --source-type <source-type> \
+azmcp deploy plan get --project-name <project-name> \
+                      [--target-app-service <target-app-service>] \
+                      [--provisioning-tool <provisioning-tool>] \
+                      [--source-type <source-type>] \
                       [--iac-options <iac-options>] \
                       [--deploy-option <deploy-option>] \
                       [--resource-group <resource-group>] \
@@ -2756,7 +2796,7 @@ azmcp foundryextensions knowledge index list \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundryextensions knowledge index schema \
     --endpoint <project-endpoint> \
-    --index-name <index-name>
+    --index <index-name>
 
 # Create chat completions using Azure OpenAI in Microsoft Foundry
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2764,7 +2804,7 @@ azmcp foundryextensions openai chat-completions-create \
     --subscription <subscription> \
     --resource-group <resource-group> \
     --resource-name <resource-name> \
-    --deployment-name <deployment-name> \
+    --deployment <deployment-name> \
     --message-array <json-message-array>
 
 # Create text completions using Azure OpenAI in Microsoft Foundry
@@ -2773,7 +2813,7 @@ azmcp foundryextensions openai create-completion \
     --subscription <subscription> \
     --resource-group <resource-group> \
     --resource-name <resource-name> \
-    --deployment-name <deployment-name> \
+    --deployment <deployment-name> \
     --prompt-text <prompt>
 
 # Create embeddings using Azure OpenAI in Microsoft Foundry
@@ -2782,7 +2822,7 @@ azmcp foundryextensions openai embeddings-create \
     --subscription <subscription> \
     --resource-group <resource-group> \
     --resource-name <resource-name> \
-    --deployment-name <deployment-name> \
+    --deployment <deployment-name> \
     --input-text <text>
 
 # List available Azure OpenAI model deployments in a Microsoft Foundry resource
@@ -2859,7 +2899,42 @@ azmcp insights get --scope tenant \
 azmcp iothub hub get --subscription <subscription> \
                      --resource-group <resource-group> \
                      --hub-name <iot-hub-name>
-```                     
+
+# Show a device identity from an IoT Hub device registry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub device show --subscription <subscription> \
+                         --resource-group <resource-group> \
+                         --hub-name <iot-hub-name> \
+                         --device-id <device-id>
+
+# Get device statistics for an IoT Hub identity registry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub device stats --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --hub-name <iot-hub-name>
+
+# Get a device twin from an IoT Hub device registry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub device twin get --subscription <subscription> \
+                             --resource-group <resource-group> \
+                             --hub-name <iot-hub-name> \
+                             --device-id <device-id>
+
+# Run an IoT Hub query and return the matching results. The tool pages through IoT Hub internally and
+# aggregates every page, so a single call returns the full result set. Provide --query (raw SQL) or
+# --filters (structured predicates; fields are auto-discovered from the twin registry, validated, then
+# compiled). Use --max-count to cap the total items returned; if more matches exist than the cap, the tool
+# returns an error indicating the max-count limit was hit. Omit --max-count to return every match.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub query run --subscription <subscription> \
+                       --resource-group <resource-group> \
+                       --hub-name <iot-hub-name> \
+                       [--query <query>] \
+                       [--filters <filters-json>] \
+                       [--from <source>] \
+                       [--logical-operator <operator>] \
+                       [--max-count <max-count>]
+```
 
 ### Azure Key Vault Operations
 
@@ -3292,6 +3367,36 @@ azmcp monitor metrics query --subscription <subscription> \
                             --end-time "2024-01-01T23:59:59Z" \
                             --interval "PT1H" \
                             --aggregation "Average"
+
+# Query Azure Monitor metrics for multiple resources in a single batch request
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor metrics batchquery --subscription <subscription> \
+                                 --resources <resources> \
+                                 --metric-namespace <metric-namespace> \
+                                 --metric-names <metric-names> \
+                                 [--resource-group <resource-group>] \
+                                 [--resource-type <resource-type>] \
+                                 [--start-time <start-time>] \
+                                 [--end-time <end-time>] \
+                                 [--interval <interval>] \
+                                 [--aggregation <aggregation>] \
+                                 [--filter <filter>] \
+                                 [--order-by <order-by>] \
+                                 [--top <top>] \
+                                 [--max-buckets <max-buckets>]
+
+# Query CPU metrics across multiple storage accounts at once
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor metrics batchquery --subscription <subscription> \
+                                 --resources "storageaccount1,storageaccount2,storageaccount3" \
+                                 --resource-group <resource-group> \
+                                 --resource-type "Microsoft.Storage/storageAccounts" \
+                                 --metric-namespace "Microsoft.Storage/storageAccounts" \
+                                 --metric-names "Transactions" \
+                                 --start-time "2024-01-01T00:00:00Z" \
+                                 --end-time "2024-01-01T23:59:59Z" \
+                                 --interval "PT1H" \
+                                 --aggregation "Total"
 ```
 
 #### Web Tests (Availability Tests)
@@ -3878,6 +3983,21 @@ azmcp resilience recoveryplan validateforfailover --service-group <service-group
                                                    [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
                                                    [--user-consent <Unspecified|Allowed>]
 
+# Validate which recovery-plan resources are qualified for reprotect after failover.
+# Optionally limit validation to selected full recovery-resource IDs; omit them to validate all qualified resources in the plan.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan validateforreprotect --service-group <service-group> \
+                                                    --recovery-plan <recovery-plan> \
+                                                    [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]]
+
+# Validate whether a recovery plan is eligible to start a specified operation based on plan support, current state, readiness, and permissions.
+# Supported operations are Failover, FailoverCommit, Reprotect, TestFailover, and TestFailoverCleanup.
+# The operation must be explicitly selected; do not infer it from prior context, plan state, or resource metadata.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan validateforoperation --service-group <service-group> \
+                                                    --recovery-plan <recovery-plan> \
+                                                    --operation-name <Failover|FailoverCommit|Reprotect|TestFailover|TestFailoverCleanup>
+
 # Configure recovery-plan resource inclusions, exclusions, removals, recovery groups, identities, and protection settings. At least one JSON array is required.
 # First inclusion requires matching protection type and settings. CustomRunbook requires failover and reprotect runbook resource IDs.
 # AzureSiteRecovery is supported for virtual machines and requires disk reprotect details. Existing configuration is preserved on sparse updates.
@@ -3927,6 +4047,19 @@ azmcp resilience drill create --service-group <service-group> \
 azmcp resilience drill get --service-group <service-group> \
                            [--name <name>]
 
+# Start a new execution of a resilience drill in Failover or TestFailover mode
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill start --service-group <service-group> \
+                             --drill <drill> \
+                             --mode <Failover|TestFailover>
+
+# End the running execution of a resilience drill and attest its outcome
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill end --service-group <service-group> \
+                           --drill <drill> \
+                           --attestation <Success|Failed> \
+                           --attestation-notes <attestation-notes>
+
 # Update mutable properties of a resilience drill
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill update --service-group <service-group> \
@@ -3934,6 +4067,7 @@ azmcp resilience drill update --service-group <service-group> \
                               [--subscription <subscription> --region <region>] \
                               [--rbac-setup-mode <AutomatedCustomRole|AutomatedBuiltinRoles|Manual>] \
                               [--recovery-plan <recovery-plan>]
+
 # Delete a resilience drill from a service group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill delete --service-group <service-group> \
@@ -4639,7 +4773,8 @@ azmcp storage table list --subscription <subscription> \
 azmcp storagesync service create --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --name <service-name> \
-                                 --location <location>
+                                 --location <location> \
+                                 [--tags <tag-key=tag-value>]
 
 # Delete a Storage Sync Service (idempotent – succeeds even if the service does not exist)
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4668,22 +4803,22 @@ azmcp storagesync service update --subscription <subscription> \
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync syncgroup create --subscription <subscription> \
                                    --resource-group <resource-group> \
-                                   --service <service-name> \
-                                   --name <syncgroup-name>
+                                   --name <service-name> \
+                                   --sync-group-name <syncgroup-name>
 
 # Delete a Sync Group (idempotent – succeeds even if the group does not exist)
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync syncgroup delete --subscription <subscription> \
                                    --resource-group <resource-group> \
-                                   --service <service-name> \
-                                   --name <syncgroup-name>
+                                   --name <service-name> \
+                                   --sync-group-name <syncgroup-name>
 
-# Get a specific Sync Group or list all sync groups. If --name is provided, returns a specific sync group; otherwise, lists all sync groups in the Storage Sync Service.
+# Get a specific Sync Group or list all sync groups. If --sync-group-name is provided, returns a specific sync group; otherwise, lists all sync groups in the Storage Sync Service.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync syncgroup get --subscription <subscription> \
                                 --resource-group <resource-group> \
-                                --service <service-name> \
-                                [--name <syncgroup-name>]
+                                --name <service-name> \
+                                [--sync-group-name <syncgroup-name>]
 ```
 
 #### Cloud Endpoint
@@ -4693,35 +4828,35 @@ azmcp storagesync syncgroup get --subscription <subscription> \
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync cloudendpoint create --subscription <subscription> \
                                        --resource-group <resource-group> \
-                                       --service <service-name> \
-                                       --syncgroup <syncgroup-name> \
-                                       --name <endpoint-name> \
-                                       --storage-account <storage-account-name> \
-                                       --share <share-name>
+                                       --name <service-name> \
+                                       --sync-group-name <syncgroup-name> \
+                                       --cloud-endpoint-name <endpoint-name> \
+                                       --storage-account-resource-id <storage-account-resource-id> \
+                                       --azure-file-share-name <share-name>
 
 # Delete a Cloud Endpoint (idempotent – succeeds even if the endpoint does not exist)
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync cloudendpoint delete --subscription <subscription> \
                                        --resource-group <resource-group> \
-                                       --service <service-name> \
-                                       --syncgroup <syncgroup-name> \
-                                       --name <endpoint-name>
+                                       --name <service-name> \
+                                       --sync-group-name <syncgroup-name> \
+                                       --cloud-endpoint-name <endpoint-name>
 
-# Get a specific Cloud Endpoint or list all cloud endpoints. If --name is provided, returns a specific cloud endpoint; otherwise, lists all cloud endpoints in the Sync Group.
+# Get a specific Cloud Endpoint or list all cloud endpoints. If --cloud-endpoint-name is provided, returns a specific cloud endpoint; otherwise, lists all cloud endpoints in the Sync Group.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync cloudendpoint get --subscription <subscription> \
                                     --resource-group <resource-group> \
-                                    --service <service-name> \
-                                    --syncgroup <syncgroup-name> \
-                                    [--name <endpoint-name>]
+                                    --name <service-name> \
+                                    --sync-group-name <syncgroup-name> \
+                                    [--cloud-endpoint-name <endpoint-name>]
 
 # Trigger change detection on a Cloud Endpoint
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync cloudendpoint changedetection --subscription <subscription> \
                                                 --resource-group <resource-group> \
-                                                --service <service-name> \
-                                                --syncgroup <syncgroup-name> \
-                                                --name <endpoint-name> \
+                                                --name <service-name> \
+                                                --sync-group-name <syncgroup-name> \
+                                                --cloud-endpoint-name <endpoint-name> \
                                                 --directory-path <path> \
                                                 [--change-detection-mode <mode>] \
                                                 [--paths <path1> <path2> ...]
@@ -4730,27 +4865,26 @@ azmcp storagesync cloudendpoint changedetection --subscription <subscription> \
 #### Registered Server
 
 ```bash
-# Get a specific Registered Server or list all registered servers. If --server is provided, returns a specific registered server; otherwise, lists all registered servers in the Storage Sync Service.
+# Get a specific Registered Server or list all registered servers. If --server-id is provided, returns a specific registered server; otherwise, lists all registered servers in the Storage Sync Service.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync registeredserver get --subscription <subscription> \
                                        --resource-group <resource-group> \
-                                       --service <service-name> \
-                                       [--server <server-name>]
+                                       --name <service-name> \
+                                       [--server-id <server-id>]
 
 # Unregister a server from a Storage Sync Service
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync registeredserver unregister --subscription <subscription> \
                                               --resource-group <resource-group> \
-                                              --service <service-name> \
-                                              --server <server-name>
+                                              --name <service-name> \
+                                              --server-id <server-id>
 
 # Update a Registered Server configuration
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync registeredserver update --subscription <subscription> \
                                           --resource-group <resource-group> \
-                                          --service <service-name> \
-                                          --server <server-name> \
-                                          [--certificate <certificate-path>]
+                                          --name <service-name> \
+                                          --server-id <server-id>
 ```
 
 #### Server Endpoint
@@ -4760,38 +4894,43 @@ azmcp storagesync registeredserver update --subscription <subscription> \
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync serverendpoint create --subscription <subscription> \
                                         --resource-group <resource-group> \
-                                        --service <service-name> \
-                                        --syncgroup <syncgroup-name> \
-                                        --server <server-name> \
-                                        --name <endpoint-name> \
-                                        --server-local-path <local-path>
+                                        --name <service-name> \
+                                        --sync-group-name <syncgroup-name> \
+                                        --server-endpoint-name <endpoint-name> \
+                                        --server-resource-id <server-resource-id> \
+                                        --server-local-path <local-path> \
+                                        [--cloud-tiering <true|false>] \
+                                        [--volume-free-space-percent <percent>] \
+                                        [--tier-files-older-than-days <days>] \
+                                        [--local-cache-mode <DownloadNewAndModifiedFiles|UpdateLocallyCachedFiles>]
 
 # Delete a Server Endpoint (idempotent – succeeds even if the endpoint does not exist)
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync serverendpoint delete --subscription <subscription> \
                                         --resource-group <resource-group> \
-                                        --service <service-name> \
-                                        --syncgroup <syncgroup-name> \
-                                        --name <endpoint-name>
+                                        --name <service-name> \
+                                        --sync-group-name <syncgroup-name> \
+                                        --server-endpoint-name <endpoint-name>
 
-# Get a specific Server Endpoint or list all server endpoints. If --name is provided, returns a specific server endpoint; otherwise, lists all server endpoints in the Sync Group.
+# Get a specific Server Endpoint or list all server endpoints. If --server-endpoint-name is provided, returns a specific server endpoint; otherwise, lists all server endpoints in the Sync Group.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync serverendpoint get --subscription <subscription> \
                                      --resource-group <resource-group> \
-                                     --service <service-name> \
-                                     --syncgroup <syncgroup-name> \
-                                     [--name <endpoint-name>]
+                                     --name <service-name> \
+                                     --sync-group-name <syncgroup-name> \
+                                     [--server-endpoint-name <endpoint-name>]
 
 # Update a Server Endpoint configuration
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storagesync serverendpoint update --subscription <subscription> \
                                         --resource-group <resource-group> \
-                                        --service <service-name> \
-                                        --syncgroup <syncgroup-name> \
-                                        --name <endpoint-name> \
-                                        [--cloud-tiering <Enabled|Disabled>] \
-                                        [--tiering-policy-days <days>] \
-                                        [--tiering-policy-volume-free-percent <percent>]
+                                        --name <service-name> \
+                                        --sync-group-name <syncgroup-name> \
+                                        --server-endpoint-name <endpoint-name> \
+                                        [--cloud-tiering <true|false>] \
+                                        [--volume-free-space-percent <percent>] \
+                                        [--tier-files-older-than-days <days>] \
+                                        [--local-cache-mode <DownloadNewAndModifiedFiles|UpdateLocallyCachedFiles>]
 ```
 
 ### Azure Subscription Management
@@ -4838,14 +4977,15 @@ azmcp azureterraform azapi get --resource-type <resource-type> \
 
 ```bash
 # List all available Azure Verified Modules (AVM) for Terraform (both resource and pattern modules)
+# Returns each module with a moduleType field: 'resource' (avm-res-*) or 'pattern' (avm-ptn-*)
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azureterraform avm list
 
-# List all available versions of a specified Azure Verified Module
+# List all available versions of a specified Azure Verified Module (both resource and pattern modules)
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azureterraform avm versions --module-name <module-name>
 
-# Retrieve the documentation (README.md) for a specific version of an Azure Verified Module
+# Retrieve the documentation (README.md) for a specific version of an Azure Verified Module (both resource and pattern modules)
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azureterraform avm get --module-name <module-name> \
                              --module-version <module-version>

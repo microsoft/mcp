@@ -217,6 +217,11 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     [Fact]
     public async Task Should_import_certificate()
     {
+        if (await AssertLocalToolIsUnavailableInHttpMode("keyvault_certificate_import"))
+        {
+            return;
+        }
+
         var fakePassword = _importCertificateAssets.Password;
         var tempPath = _importCertificateAssets.CreateTempCopy();
 
