@@ -58,7 +58,7 @@ Regardless of which credential is used, the authenticated identity must have the
 | **Local development** | Sign in with `az login`, VS Code Azure extension, or Azure PowerShell. The chain picks it up automatically. |
 | **Azure Pipelines** | Use an Azure Resource Manager service connection with workload identity federation and select `AzurePipelinesCredential` as described below. |
 | **Other CI / CD pipelines** | Set `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, and `AZURE_TENANT_ID` environment variables (service principal). |
-| **Production (hosted)** | HTTP transport is recommended for production hosting — see Remote [Authentication (HTTP Transport)](#remote-authentication-http-transport). If STDIO is required, set AZURE_TOKEN_CREDENTIALS=prod to restrict the chain to Environment, Workload Identity, and Managed Identity credentials only — no interactive browser fallback. |
+| **Production (hosted)** | HTTP transport is recommended for production hosting — see Remote [Authentication (HTTP Transport)](#remote-authentication-http-transport). If STDIO is required, set AZURE_TOKEN_CREDENTIALS=prod to restrict the chain to Environment, Azure Pipelines (when configured), Workload Identity, and Managed Identity credentials only — no interactive browser fallback. |
 
 ### Azure Pipelines workload identity
 
