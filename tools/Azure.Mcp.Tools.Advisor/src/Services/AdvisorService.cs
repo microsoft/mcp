@@ -205,10 +205,10 @@ public class AdvisorService(IAzureService azureService)
                             ? null
                             : new RecommendationShortDescription(metadata.DisplayName, metadata.DisplayName)),
                     Description = metadata.DetailedDescription ?? recommendation.Properties.Description,
-                    // Recommendations from an external source system carry a per-instance label that differs from the catalog, so keep it.
+                    // Recommendations from an external source system carry a per-instance label that differs from the catalog, so prefer it.
                     Label = string.IsNullOrWhiteSpace(recommendation.Properties.SourceSystem)
                         ? metadata.Label ?? recommendation.Properties.Label
-                        : recommendation.Properties.Label,
+                        : recommendation.Properties.Label ?? metadata.Label,
                     LearnMoreLink = metadata.LearnMoreLink ?? recommendation.Properties.LearnMoreLink,
                     PotentialBenefits = metadata.PotentialBenefits ?? recommendation.Properties.PotentialBenefits,
                     ExtendedProperties = AddMetadataSubCategory(

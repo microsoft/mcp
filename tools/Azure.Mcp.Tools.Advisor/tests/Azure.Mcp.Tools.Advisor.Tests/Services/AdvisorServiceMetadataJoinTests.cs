@@ -352,7 +352,7 @@ public class AdvisorServiceMetadataJoinTests
     }
 
     [Fact]
-    public void JoinWithMetadata_WithSourceSystemAndNoLabel_DoesNotUseMetadataLabel()
+    public void JoinWithMetadata_WithSourceSystemAndNoLabel_FallsBackToMetadataLabel()
     {
         var recommendation = new Models.Recommendation(
             new Models.RecommendationProperties(
@@ -364,7 +364,7 @@ public class AdvisorServiceMetadataJoinTests
             [recommendation],
             AdvisorService.BuildMetadataLookup([CreateMetadata("Type-A")]));
 
-        Assert.Null(Assert.Single(joined).Properties.Label);
+        Assert.Equal("Reliability", Assert.Single(joined).Properties.Label);
     }
 
     [Fact]
