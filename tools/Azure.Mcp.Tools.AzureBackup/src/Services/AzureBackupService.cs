@@ -825,41 +825,50 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName, string resourceGroup, string subscription,
-        string immutabilityState, string? vaultType, string? tenant,
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays,
+        string? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
-        ArgumentException.ThrowIfNullOrWhiteSpace(immutabilityState, nameof(immutabilityState));
 
-        var normalizedState = NormalizeImmutabilityState(immutabilityState);
+        // 'Enabled' is a backward-compatible alias for 'Unlocked'; both RSV and DPP APIs
+        // require the canonical 'Unlocked' value on the wire.
+        var normalizedState = immutabilityState == AzureBackupImmutabilityState.Enabled
+            ? AzureBackupImmutabilityState.Unlocked
+            : immutabilityState;
+
+        // TimeBased requires a duration; AsPerPolicy ignores it. Validate here (single source of truth).
+        if (normalizedState != AzureBackupImmutabilityState.Disabled
+            && immutabilityType == AzureBackupImmutabilityType.TimeBased
+            && (immutabilityDurationDays is null || immutabilityDurationDays < 30 || immutabilityDurationDays > 36135))
+        {
+            throw new ArgumentException(
+                "'--immutability-duration-days' is required when '--immutability-type' is 'TimeBased' and must be between 30 and 36135.",
+                nameof(immutabilityDurationDays));
+        }
+
         var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
         return VaultTypeResolver.IsRsv(resolved)
-            ? await rsvOps.ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedState, tenant, cancellationToken)
-            : await dppOps.ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedState, tenant, cancellationToken);
+            ? await rsvOps.ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedState, immutabilityType, immutabilityDurationDays, tenant, cancellationToken)
+            : await dppOps.ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedState, immutabilityType, immutabilityDurationDays, tenant, cancellationToken);
     }
-
-    /// <summary>
-    /// Normalizes user-friendly immutability state values to the API-expected values.
-    /// Both RSV and DPP APIs expect 'Unlocked' (not 'Enabled') for the active-but-unlocked state.
-    /// Valid API values are: Disabled, Unlocked, Locked.
-    /// </summary>
-    private static string NormalizeImmutabilityState(string immutabilityState) =>
-        immutabilityState.ToUpperInvariant() switch
-        {
-            "ENABLED" => "Unlocked",
-            "UNLOCKED" => "Unlocked",
-            "DISABLED" => "Disabled",
-            "LOCKED" => "Locked",
-            _ => throw new ArgumentException(
-                $"Invalid immutability state '{immutabilityState}'. Valid values are: Enabled, Disabled, Unlocked, Locked.",
-                nameof(immutabilityState))
-        };
 
     public async Task<OperationResult> ConfigureSoftDeleteAsync(
         string vaultName, string resourceGroup, string subscription,
-        string softDeleteState, string? vaultType, string? softDeleteRetentionDays,
-        string? tenant, CancellationToken cancellationToken)
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays,
+        string? vaultType, string? tenant,
+        CancellationToken cancellationToken)
     {
+        if (softDeleteRetentionDays < 14 || softDeleteRetentionDays > 180)
+        {
+            throw new ArgumentException(
+                "'--soft-delete-retention-days' must be between 14 and 180.",
+                nameof(softDeleteRetentionDays));
+        }
+
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
         var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
         return VaultTypeResolver.IsRsv(resolved)

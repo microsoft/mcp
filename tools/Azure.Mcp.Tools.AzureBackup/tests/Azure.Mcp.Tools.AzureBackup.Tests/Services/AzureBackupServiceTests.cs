@@ -444,53 +444,88 @@ public class AzureBackupServiceTests
 
     #endregion
 
-    #region ConfigureImmutability - State normalization
+    #region ConfigureImmutability - State normalization and payload
 
     [Theory]
-    [InlineData("Enabled", "Unlocked")]
-    [InlineData("enabled", "Unlocked")]
-    [InlineData("ENABLED", "Unlocked")]
-    [InlineData("Unlocked", "Unlocked")]
-    [InlineData("Disabled", "Disabled")]
-    [InlineData("Locked", "Locked")]
-    public async Task ConfigureImmutabilityAsync_NormalizesState(string inputState, string expectedNormalized)
+    [InlineData(AzureBackupImmutabilityState.Enabled, AzureBackupImmutabilityState.Unlocked)]
+    [InlineData(AzureBackupImmutabilityState.Unlocked, AzureBackupImmutabilityState.Unlocked)]
+    [InlineData(AzureBackupImmutabilityState.Disabled, AzureBackupImmutabilityState.Disabled)]
+    [InlineData(AzureBackupImmutabilityState.Locked, AzureBackupImmutabilityState.Locked)]
+    public async Task ConfigureImmutabilityAsync_NormalizesEnabledAliasToUnlocked(AzureBackupImmutabilityState inputState, AzureBackupImmutabilityState expectedNormalized)
     {
-        // RSV vault probe succeeds
         _rsvOps.GetVaultAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", tenant: null, cancellationToken: Arg.Any<CancellationToken>())
             .Returns(new BackupVaultInfo(null, "vault", "RSV", null, "rg", null, null, null, null, null, null, null, null, null));
-        _rsvOps.ConfigureImmutabilityAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", expectedNormalized, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+        _rsvOps.ConfigureImmutabilityAsync(
+                "vault", "rg", "22222222-2222-2222-2222-222222222222",
+                expectedNormalized, AzureBackupImmutabilityType.AsPerPolicy,
+                Arg.Any<int?>(), tenant: null, cancellationToken: Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, "Done"));
 
-        var result = await _service.ConfigureImmutabilityAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", inputState, vaultType: null, tenant: null, cancellationToken: CancellationToken.None);
+        var result = await _service.ConfigureImmutabilityAsync(
+            "vault", "rg", "22222222-2222-2222-2222-222222222222",
+            inputState, AzureBackupImmutabilityType.AsPerPolicy,
+            immutabilityDurationDays: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None);
 
         Assert.Equal("Succeeded", result.Status);
-        await _rsvOps.Received(1).ConfigureImmutabilityAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", expectedNormalized, tenant: null, cancellationToken: Arg.Any<CancellationToken>());
+        await _rsvOps.Received(1).ConfigureImmutabilityAsync(
+            "vault", "rg", "22222222-2222-2222-2222-222222222222",
+            expectedNormalized, AzureBackupImmutabilityType.AsPerPolicy,
+            Arg.Any<int?>(), tenant: null, cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Theory]
-    [InlineData("Invalid")]
-    [InlineData("Enable")]
-    public async Task ConfigureImmutabilityAsync_InvalidState_ThrowsArgumentException(string inputState)
+    [InlineData(null)]
+    [InlineData(29)]
+    [InlineData(36136)]
+    public async Task ConfigureImmutabilityAsync_TimeBased_InvalidDuration_Throws(int? duration)
     {
-        // RSV vault probe succeeds
         _rsvOps.GetVaultAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", tenant: null, cancellationToken: Arg.Any<CancellationToken>())
             .Returns(new BackupVaultInfo(null, "vault", "RSV", null, "rg", null, null, null, null, null, null, null, null, null));
 
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ConfigureImmutabilityAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", inputState, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
+            _service.ConfigureImmutabilityAsync(
+                "vault", "rg", "22222222-2222-2222-2222-222222222222",
+                AzureBackupImmutabilityState.Unlocked, AzureBackupImmutabilityType.TimeBased,
+                immutabilityDurationDays: duration, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
 
-        Assert.Contains("Invalid immutability state", ex.Message);
+        Assert.Contains("immutabilityDurationDays", ex.Message);
     }
 
+    #endregion
+
+    #region ConfigureSoftDelete - retention required
+
     [Theory]
-    [InlineData("")]
-    [InlineData(" ")]
-    public async Task ConfigureImmutabilityAsync_EmptyOrWhitespace_ThrowsArgumentException(string inputState)
+    [InlineData(13)]
+    [InlineData(181)]
+    public async Task ConfigureSoftDeleteAsync_InvalidRetention_Throws(int retention)
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ConfigureImmutabilityAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", inputState, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
+            _service.ConfigureSoftDeleteAsync(
+                "vault", "rg", "22222222-2222-2222-2222-222222222222",
+                AzureBackupSoftDeleteState.On, retention, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
 
-        Assert.Contains("immutabilityState", ex.Message);
+        Assert.Contains("soft-delete-retention-days", ex.Message);
+    }
+
+    [Fact]
+    public async Task ConfigureSoftDeleteAsync_ValidRetention_ForwardsToRsv()
+    {
+        _rsvOps.GetVaultAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .Returns(new BackupVaultInfo(null, "vault", "RSV", null, "rg", null, null, null, null, null, null, null, null, null));
+        _rsvOps.ConfigureSoftDeleteAsync(
+                "vault", "rg", "22222222-2222-2222-2222-222222222222",
+                AzureBackupSoftDeleteState.On, 30, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .Returns(new OperationResult("Succeeded", null, "Done"));
+
+        var result = await _service.ConfigureSoftDeleteAsync(
+            "vault", "rg", "22222222-2222-2222-2222-222222222222",
+            AzureBackupSoftDeleteState.On, 30, vaultType: null, tenant: null, cancellationToken: CancellationToken.None);
+
+        Assert.Equal("Succeeded", result.Status);
+        await _rsvOps.Received(1).ConfigureSoftDeleteAsync(
+            "vault", "rg", "22222222-2222-2222-2222-222222222222",
+            AzureBackupSoftDeleteState.On, 30, tenant: null, cancellationToken: Arg.Any<CancellationToken>());
     }
 
     #endregion

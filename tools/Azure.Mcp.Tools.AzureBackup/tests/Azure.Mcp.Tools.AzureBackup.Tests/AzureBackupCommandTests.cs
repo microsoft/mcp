@@ -1753,7 +1753,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
-                { "soft-delete", "On" }
+                { "soft-delete", "On" },
+                { "soft-delete-retention-days", "14" }
             });
 
         var opResult = result.AssertProperty("result");
@@ -1792,7 +1793,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
-                { "immutability-state", "Disabled" }
+                { "immutability-state", "Disabled" },
+                { "immutability-type", "AsPerPolicy" }
             });
 
         var opResult = result.AssertProperty("result");
@@ -1812,7 +1814,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
-                { "immutability-state", "Enabled" }
+                { "immutability-state", "Enabled" },
+                { "immutability-type", "AsPerPolicy" }
             });
 
         var opResult = result.AssertProperty("result");
@@ -1875,6 +1878,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "immutability-state", "Disabled" },
+                { "immutability-type", "AsPerPolicy" },
                 { "vault-type", "dpp" }
             });
 
@@ -1896,6 +1900,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "immutability-state", "Enabled" },
+                { "immutability-type", "AsPerPolicy" },
                 { "vault-type", "dpp" }
             });
 
