@@ -282,19 +282,23 @@ public class AzureBackupServiceTests
     }
 
     [Fact]
-    public async Task ListVaultsAsync_BothFailWithDifferentExceptions_ThrowsInvalidOperationWithBothMessages()
+    public async Task ListVaultsAsync_BothFailWithDifferentExceptions_ThrowsRequestFailedWithBothMessages()
     {
-        // NEW-1: when the two backend failures are not directly comparable, wrap them
-        // in a single InvalidOperationException whose Message mentions both inner
-        // exception messages so the caller still has actionable context.
+        // NEW-1: when the two backend failures are not directly comparable we still
+        // surface a single exception whose Message mentions both inner messages so the
+        // caller has actionable context.
+        // BUG-A (Aug 2026 report) update: as long as EITHER side is a
+        // RequestFailedException, prefer that type so the classifier buckets the
+        // failure as an Azure service error (not an MCP-side bug).
         _rsvOps.ListVaultsAsync("22222222-2222-2222-2222-222222222222", tenant: null, cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "RSV forbidden"));
         _dppOps.ListVaultsAsync("22222222-2222-2222-2222-222222222222", tenant: null, cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("DPP network issue"));
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await Assert.ThrowsAsync<RequestFailedException>(() =>
             _service.ListVaultsAsync("22222222-2222-2222-2222-222222222222", resourceGroup: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
 
+        Assert.Equal(403, ex.Status);
         Assert.Contains("RSV forbidden", ex.Message);
         Assert.Contains("DPP network issue", ex.Message);
     }
@@ -729,6 +733,151 @@ public class AzureBackupServiceTests
         Assert.Equal("new-policy", capturedPolicy);
         Assert.NotNull(capturedSpec);
         Assert.Equal("resetexclusionsettings", capturedSpec!.Setting);
+    }
+
+    #endregion
+    #region Bug regressions (Aug 2026 report)
+
+    // ------------------------------------------------------------------
+    // BUG-A: BuildBothVaultListingsFailedException must prefer a
+    // RequestFailedException whenever EITHER side is an RFE, not only
+    // when both sides are. Real telemetry showed RSV returning a clean
+    // 422 while DPP raised a non-Azure exception; the old code fell
+    // through to InvalidOperationException and the classifier bucketed
+    // the failure as an MCP-side bug.
+    // ------------------------------------------------------------------
+
+    [Fact]
+    public async Task ListVaultsAsync_RsvRfeDppGeneric_ThrowsRequestFailedException_BugA()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        _rsvOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(422, "Subscription in bad state", "SubscriptionInBadState", null));
+        _dppOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("DPP-side non-Azure error"));
+
+        var ex = await Assert.ThrowsAsync<RequestFailedException>(() =>
+            _service.ListVaultsAsync(sub, resourceGroup: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
+
+        Assert.Equal(422, ex.Status);
+        Assert.Equal("SubscriptionInBadState", ex.ErrorCode);
+        Assert.Contains("Subscription in bad state", ex.Message);
+        Assert.Contains("DPP-side non-Azure error", ex.Message);
+    }
+
+    [Fact]
+    public async Task ListVaultsAsync_RsvGenericDppRfe_ThrowsRequestFailedException_BugA()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        _rsvOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new FormatException("RSV SDK deserialization error"));
+        _dppOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(429, "Throttled", "TooManyRequests", null));
+
+        var ex = await Assert.ThrowsAsync<RequestFailedException>(() =>
+            _service.ListVaultsAsync(sub, resourceGroup: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
+
+        Assert.Equal(429, ex.Status);
+        Assert.Equal("TooManyRequests", ex.ErrorCode);
+        Assert.Contains("Throttled", ex.Message);
+        Assert.Contains("RSV SDK deserialization error", ex.Message);
+    }
+
+    [Fact]
+    public async Task ListVaultsAsync_BothNonRfe_StillThrowsInvalidOperationException()
+    {
+        // When neither side is a RequestFailedException we still fall through to
+        // InvalidOperationException, matching pre-existing behavior for genuine
+        // non-Azure failure combinations.
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        _rsvOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new FormatException("RSV SDK error"));
+        _dppOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("DPP SDK error"));
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _service.ListVaultsAsync(sub, resourceGroup: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
+
+        Assert.Contains("RSV SDK error", ex.Message);
+        Assert.Contains("DPP SDK error", ex.Message);
+    }
+
+    // ------------------------------------------------------------------
+    // BUG-1 regression: MapArmResourceTypeToBackupDataSourceType must
+    // return null (not throw ArgumentNullException) for DPP-only ARM
+    // types. Pinned via GetBackupStatusAsync end-to-end: an unmapped
+    // ARM type must route to the DPP status path instead of throwing.
+    // ------------------------------------------------------------------
+
+    [Fact]
+    public async Task GetBackupStatusAsync_DppOnlyResourceType_DoesNotThrow_Bug1Regression()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        _dppOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .Returns(new List<BackupVaultInfo>());
+
+        var diskId = $"/subscriptions/{sub}/resourceGroups/rg/providers/Microsoft.Compute/disks/mydisk";
+        var result = await _service.GetBackupStatusAsync(
+            diskId, sub, location: "eastus", tenant: null, cancellationToken: CancellationToken.None);
+
+        Assert.Equal("NotProtected", result.ProtectionStatus);
+        Assert.Equal(diskId, result.DatasourceId);
+        await _dppOps.Received(1).ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>());
+    }
+
+    // ------------------------------------------------------------------
+    // BUG-3: ValidateAndParseResourceTypeFilter now throws
+    // RequestFailedException(400) instead of ArgumentException. Workload
+    // aliases like "mssql" are detected explicitly with a hint pointing
+    // to vault-discovery. Validation runs fail-fast before any Azure
+    // calls.
+    // ------------------------------------------------------------------
+
+    [Theory]
+    [InlineData("mssql")]
+    [InlineData("MSSQL")]
+    [InlineData("sql")]
+    [InlineData("sqldatabase")]
+    [InlineData("saphana")]
+    [InlineData("sapase")]
+    [InlineData("azurefiles")]
+    [InlineData("fileshare")]
+    public async Task FindUnprotectedResourcesAsync_WorkloadAliasFilter_ThrowsRequestFailed400_Bug3(string alias)
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+
+        var ex = await Assert.ThrowsAsync<RequestFailedException>(() =>
+            _service.FindUnprotectedResourcesAsync(sub, resourceTypeFilter: alias,
+                resourceGroup: null, tagFilter: null, tenant: null, cancellationToken: CancellationToken.None));
+
+        Assert.Equal(400, ex.Status);
+        Assert.Equal("InvalidWorkloadAliasInResourceTypeFilter", ex.ErrorCode);
+        Assert.Contains("workload", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("discoverySource", ex.Message);
+
+        // Fail-fast: no vault listing calls should have been issued.
+        await _rsvOps.DidNotReceive().ListVaultsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await _dppOps.DidNotReceive().ListVaultsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("badformat")]
+    [InlineData("Microsoft.Foo")]      // missing the /resource part
+    [InlineData("microsoft/compute")]  // slash in wrong place
+    public async Task FindUnprotectedResourcesAsync_MalformedFilter_ThrowsRequestFailed400_Bug3(string bad)
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+
+        var ex = await Assert.ThrowsAsync<RequestFailedException>(() =>
+            _service.FindUnprotectedResourcesAsync(sub, resourceTypeFilter: bad,
+                resourceGroup: null, tagFilter: null, tenant: null, cancellationToken: CancellationToken.None));
+
+        Assert.Equal(400, ex.Status);
+        Assert.Equal("InvalidResourceTypeFilter", ex.ErrorCode);
+        Assert.Contains(bad, ex.Message);
+
+        await _rsvOps.DidNotReceive().ListVaultsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await _dppOps.DidNotReceive().ListVaultsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     #endregion

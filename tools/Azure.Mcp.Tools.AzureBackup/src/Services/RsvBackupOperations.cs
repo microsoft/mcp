@@ -985,14 +985,27 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         catch (RequestFailedException ex) when (ex.ErrorCode == "BMSUserErrorRedundancySettingsUseVaultApi")
         {
             // Legacy API rejected — vault requires Vault PATCH API for redundancy settings.
+            // Preserve any sibling RedundancySettings fields (e.g. StandardTierStorageRedundancy)
+            // that the newer Recovery Services api-version requires to be present on the PATCH
+            // payload. Sending a bare RedundancySettings PATCH with only CrossRegionRestore
+            // populated is rejected as an incomplete PATCH after the Azure.ResourceManager.
+            // RecoveryServices upgrade (state-only PATCH is no longer accepted for
+            // Properties.RedundancySettings on api-version 2026-02-01+).
+            var existingRedundancy = vault.Value.Data.Properties?.RedundancySettings;
+            var redundancySettings = new VaultPropertiesRedundancySettings
+            {
+                CrossRegionRestore = CrossRegionRestore.Enabled
+            };
+            if (existingRedundancy?.StandardTierStorageRedundancy is { } tierRedundancy)
+            {
+                redundancySettings.StandardTierStorageRedundancy = tierRedundancy;
+            }
+
             var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
             {
                 Properties = new RecoveryServicesVaultProperties
                 {
-                    RedundancySettings = new VaultPropertiesRedundancySettings
-                    {
-                        CrossRegionRestore = CrossRegionRestore.Enabled
-                    }
+                    RedundancySettings = redundancySettings
                 }
             };
 

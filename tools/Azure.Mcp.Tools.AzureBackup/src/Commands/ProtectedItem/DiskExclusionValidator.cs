@@ -79,11 +79,9 @@ internal static class DiskExclusionValidator
                     "--disks-list requires --disk-list-setting to be set to 'include' or 'exclude'.");
             }
 
-            if (excludeAllDataDisks && !hasSetting)
-            {
-                // exclude-all-data-disks by itself is a valid shortcut for
-                // "back up only the OS disk" - no explicit setting required.
-            }
+            // --exclude-all-data-disks by itself is a valid shortcut for
+            // "back up only the OS disk" - no explicit setting required, so no
+            // extra check is needed here.
         }
 
         if (hasList)

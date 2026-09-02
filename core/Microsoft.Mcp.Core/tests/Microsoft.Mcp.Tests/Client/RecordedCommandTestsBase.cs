@@ -162,6 +162,27 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     // todo: use this when we have versioned tests to run this against.
     protected virtual string? VersionQualifier => null;
 
+    /// <summary>
+    /// In HTTP mode, verifies that a local-only tool is unavailable and indicates that the test should return early.
+    /// </summary>
+    /// <param name="toolName">The fully qualified MCP tool name.</param>
+    /// <returns><see langword="true"/> when running in HTTP mode; otherwise, <see langword="false"/>.</returns>
+    protected async Task<bool> AssertLocalToolIsUnavailableInHttpMode(string toolName)
+    {
+        if (!string.Equals(Environment.GetEnvironmentVariable("MCP_TEST_TRANSPORT"), "http", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var result = await Client.CallToolAsync(
+            toolName,
+            new Dictionary<string, object?>(),
+            cancellationToken: TestContext.Current.CancellationToken);
+        Assert.True(result.IsError);
+        Assert.Contains("not found", McpTestUtilities.GetFirstText(result.Content), StringComparison.OrdinalIgnoreCase);
+        return true;
+    }
+
     protected override async ValueTask LoadSettingsAsync()
     {
         await base.LoadSettingsAsync();

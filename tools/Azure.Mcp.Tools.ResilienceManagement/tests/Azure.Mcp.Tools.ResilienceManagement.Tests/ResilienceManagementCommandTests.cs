@@ -23,6 +23,13 @@ public class ResilienceManagementCommandTests(
     LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    // Preserve LRO Location paths during recording; replacing the entire header breaks polling playback.
+    public override List<string> DisabledDefaultSanitizers =>
+    [
+        .. base.DisabledDefaultSanitizers,
+        "AZSDK2003"
+    ];
+
     // Prepend the base sanitizers (e.g. WWW-Authenticate) then add tool-specific ones.
     // Sanitize the required per-invocation operation-id request GUID for playback matching and the
     // x-ms-operation-identifier response header, which contains the real tenant ID and object ID.
@@ -39,7 +46,43 @@ public class ResilienceManagementCommandTests(
         }),
         new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("Location")
         {
-            Value = ""
+            Regex = "([?&](?:t|c|s|h)=)(?<value>[^&]+)",
+            GroupForReplace = "value",
+            Value = "sanitized"
+        })
+    ];
+
+    public override List<UriRegexSanitizer> UriRegexSanitizers =>
+    [
+        .. base.UriRegexSanitizers,
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "([?&](?:t|c|s|h)=)(?<value>[^&]+)",
+            GroupForReplace = "value",
+            Value = "sanitized"
+        }),
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = @"resource[Gg]roups/([^?\\/]+)",
+            GroupForReplace = "1",
+            Value = "Sanitized"
+        })
+    ];
+
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        .. base.BodyKeySanitizers,
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..subscription")
+        {
+            Value = "Sanitized"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..healthModelId")
+        {
+            Value = "Sanitized"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..chaosExperimentId")
+        {
+            Value = "Sanitized"
         })
     ];
 
@@ -265,6 +308,100 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
+    [CustomMatcher(compareBody: false)]
+    public async Task Should_start_and_end_drill()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+        bool startAccepted = false;
+
+        try
+        {
+            var startResult = await StartDrillAsync(serviceGroup, drillName);
+            startAccepted = true;
+
+            Assert.False(string.IsNullOrEmpty(startResult.AssertProperty("operationId").GetString()));
+            Assert.Equal("Accepted", startResult.AssertProperty("status").GetString());
+
+            var endResult = await EndDrillAsync(serviceGroup, drillName);
+            startAccepted = false;
+
+            Assert.False(string.IsNullOrEmpty(endResult.AssertProperty("operationId").GetString()));
+            Assert.Equal("Accepted", endResult.AssertProperty("status").GetString());
+        }
+        finally
+        {
+            if (startAccepted)
+            {
+                await EndDrillAsync(serviceGroup, drillName);
+            }
+        }
+    }
+
+    private async Task<JsonElement> StartDrillAsync(string serviceGroup, string drillName)
+    {
+        const int maxAttempts = 36;
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            JsonElement? response = await CallToolAsync(
+                "resilience_drill_start",
+                new()
+                {
+                    { "service-group", serviceGroup },
+                    { "drill", drillName },
+                    { "mode", "TestFailover" }
+                },
+                resultProcessor: element => element);
+            Assert.True(response.HasValue);
+
+            var status = response.Value.AssertProperty("status").GetInt32();
+            if (status == 200)
+            {
+                return response.Value.AssertProperty("results");
+            }
+
+            Assert.Equal(409, status);
+            await Task.Delay(PollInterval(15000), TestContext.Current.CancellationToken);
+        }
+
+        Assert.Fail($"The drill start operation was not accepted after {maxAttempts} attempts.");
+        return default;
+    }
+
+    private async Task<JsonElement> EndDrillAsync(string serviceGroup, string drillName)
+    {
+        const int maxAttempts = 36;
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            JsonElement? response = await CallToolAsync(
+                "resilience_drill_end",
+                new()
+                {
+                    { "service-group", serviceGroup },
+                    { "drill", drillName },
+                    { "attestation", "Success" },
+                    { "attestation-notes", "Azure MCP recorded lifecycle test completed." }
+                },
+                resultProcessor: element => element);
+            Assert.True(response.HasValue);
+
+            var status = response.Value.AssertProperty("status").GetInt32();
+            if (status == 200)
+            {
+                return response.Value.AssertProperty("results");
+            }
+
+            Assert.Equal(409, status);
+            await Task.Delay(PollInterval(15000), TestContext.Current.CancellationToken);
+        }
+
+        Assert.Fail($"The drill end operation was not accepted after {maxAttempts} attempts.");
+        return default;
+    }
+
+    [Fact]
     public async Task Should_list_drill_runs()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
@@ -375,7 +512,7 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_get_recovery_plan()
+    public async Task Should_get_recoveryplan()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
@@ -394,7 +531,7 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_update_recovery_plan()
+    public async Task Should_update_recoveryplan()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
@@ -455,7 +592,7 @@ public class ResilienceManagementCommandTests(
 
     [Fact]
     [CustomMatcher(compareBody: false)]
-    public async Task Should_check_recovery_plan_readiness()
+    public async Task Should_check_recoveryplan_readiness()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
@@ -477,7 +614,7 @@ public class ResilienceManagementCommandTests(
 
     [Fact]
     [CustomMatcher(compareBody: false)]
-    public async Task Should_create_update_and_delete_recovery_plan()
+    public async Task Should_create_update_and_delete_recoveryplan()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("lifecycleServiceGroupName", "PLANLIFECYCLESERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveVariable("lifecycleRecoveryPlanName", $"mcp-lifecycle-{Guid.NewGuid().ToString("N")[..8]}");
@@ -595,7 +732,7 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_update_recovery_plan_resources()
+    public async Task Should_update_recoveryplan_resources()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
@@ -726,6 +863,48 @@ public class ResilienceManagementCommandTests(
         JsonElement qualifications = result.AssertProperty("recoveryResourceQualifications");
         Assert.Equal(JsonValueKind.Array, qualifications.ValueKind);
         Assert.NotEmpty(qualifications.EnumerateArray());
+    }
+
+    [Fact]
+    public async Task Should_validate_recoveryplan_for_reprotect()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+
+        var result = await CallToolAsync(
+            "resilience_recoveryplan_validateforreprotect",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan }
+            });
+
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
+        JsonElement qualifications = result.AssertProperty("recoveryResourceQualifications");
+        Assert.Equal(JsonValueKind.Array, qualifications.ValueKind);
+        Assert.NotEmpty(qualifications.EnumerateArray());
+    }
+
+    [Fact]
+    public async Task Should_validate_recoveryplan_for_operation()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+
+        var result = await CallToolAsync(
+            "resilience_recoveryplan_validateforoperation",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recovery-plan", recoveryPlan },
+                { "operation-name", "Failover" }
+            });
+
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
+        Assert.Equal("Failover", result.AssertProperty("operationName").GetString());
+        Assert.True(result.AssertProperty("isValid").GetBoolean());
     }
 
     [Fact]

@@ -7,6 +7,7 @@
     <PackageReference Include="xunit.v3.mtp-v2" />
     <PackageReference Include="coverlet.MTP" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\McpOutputSizeMeasurer.csproj" />
   </ItemGroup>

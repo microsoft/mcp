@@ -524,7 +524,7 @@ The `[Option]` attribute drives automatic option registration and binding via `O
 - **Required**: Driven by the `required` keyword (`RequiredMemberAttribute`). Use `required` on required options; use nullable types (`?`) for optional options.
 - **Description**: Always required, passed using attribute properties: `[Option(Description = "description")]`.
 - **Shared descriptions**: Use constants from `OptionDescriptions` (e.g., `OptionDescriptions.Subscription`, `OptionDescriptions.Tenant`).
-- **Nested objects**: Use `[OptionContainer(Prefix = "prefix")]` on a property of a complex type. Its child properties become `--prefix-child-name`. Example: `ModelOption` containing `[Option(Name = "world")]` attributed with `[OptionContainer(Prefix = "hello")]` produces `--hello-world`.
+- **Nested objects**: Use `[OptionContainer<TContainer>(Prefix = "prefix")]` on a property of a complex type. Its child properties become `--prefix-child-name`. Example: `ModelOption` containing `[Option(Name = "world")]` attributed with `[OptionContainer<TContainer>(Prefix = "hello")]` produces `--hello-world`.
 - **Property ordering**: List command-specific options first, then sink common/infrastructure options to the bottom in this order: `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`. This keeps the most relevant options visible at a glance.
 
 ### Usage Patterns
@@ -1549,6 +1549,17 @@ dotnet test --verbosity normal
 Azure service commands requiring test resource deployment must add a bicep template, `tests/test-resources.bicep`, to their toolset directory. Additionally, all Azure service commands must include a `test-resources-post.ps1` file in the same directory, even if it contains only the basic template without custom logic. See `/tools/Azure.Mcp.Tools.Storage/tests/test-resources.bicep` and `/tools/Azure.Mcp.Tools.Storage/tests/test-resources-post.ps1` for canonical examples.
 
 All live tests **must** be recorded for playback using `RecordedCommandTestsBase`. See [`/docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md) for the full recording workflow, sanitizer configuration, and migration guide.
+
+Tools marked `LocalRequired = true` are not exposed by the remote HTTP server. In every test for such a tool in a class extending `RecordedCommandTestsBase`, call the inherited helper before exercising the tool and return early when it reports HTTP mode:
+
+```csharp
+if (await AssertLocalToolIsUnavailableInHttpMode("{toolset}_{resource}_{operation}"))
+{
+    return;
+}
+```
+
+The helper asserts that the tool is unavailable in HTTP mode. Use it instead of repeating environment detection and unavailable-tool assertions in each toolset.
 
 #### Live Test Resource Infrastructure
 

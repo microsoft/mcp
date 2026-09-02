@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Tools.IoTHub.Commands.Device;
 using Azure.Mcp.Tools.IoTHub.Commands.IoTHub;
+using Azure.Mcp.Tools.IoTHub.Commands.Query;
 using Azure.Mcp.Tools.IoTHub.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -24,6 +25,10 @@ public class IoTHubSetup : IAreaSetup
 
         services.AddSingleton<IoTHubGetCommand>();
         services.AddSingleton<IoTHubDeviceListCommand>();
+        services.AddSingleton<IoTHubDeviceShowCommand>();
+        services.AddSingleton<IoTHubDeviceStatisticsCommand>();
+        services.AddSingleton<IoTHubDeviceTwinGetCommand>();
+        services.AddSingleton<IoTHubQueryRunCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -39,6 +44,16 @@ public class IoTHubSetup : IAreaSetup
         var device = new CommandGroup("device", "IoT Hub device registry operations.");
         iothub.AddSubGroup(device);
         device.AddCommand<IoTHubDeviceListCommand>(serviceProvider);
+        device.AddCommand<IoTHubDeviceShowCommand>(serviceProvider);
+        device.AddCommand<IoTHubDeviceStatisticsCommand>(serviceProvider);
+
+        var twin = new CommandGroup("twin", "IoT Hub device twin operations.");
+        device.AddSubGroup(twin);
+        twin.AddCommand<IoTHubDeviceTwinGetCommand>(serviceProvider);
+
+        var query = new CommandGroup("query", "IoT Hub query operations.");
+        iothub.AddSubGroup(query);
+        query.AddCommand<IoTHubQueryRunCommand>(serviceProvider);
 
         return iothub;
     }

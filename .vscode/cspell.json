@@ -539,6 +539,8 @@
     "usgovcloudapi",
     "usgovernment",
     "validateforfailover",
+    "validateforoperation",
+    "validateforreprotect",
     "vally",
     "varchar",
     "vaultconfig",

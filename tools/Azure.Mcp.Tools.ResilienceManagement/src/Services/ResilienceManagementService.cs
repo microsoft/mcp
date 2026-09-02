@@ -672,6 +672,123 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return new RecoveryPlanValidateForFailoverResult(operationId, qualifications);
     }
 
+    public Task<RecoveryPlanValidateForReprotectResult> ValidateRecoveryPlanForReprotectAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string>? selectedResourceIds = null, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        return ExecuteWithTimeoutAsync(
+            token => ValidateRecoveryPlanForReprotectCoreAsync(serviceGroup, recoveryPlan, selectedResourceIds, tenant, token),
+            "recovery plan reprotect validation",
+            RecoveryPlanOperationTimeout,
+            cancellationToken);
+    }
+
+    private async Task<RecoveryPlanValidateForReprotectResult> ValidateRecoveryPlanForReprotectCoreAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string>? selectedResourceIds, string? tenant, CancellationToken cancellationToken)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+
+        var recoveryPlanId = RecoveryPlanResource.CreateResourceIdentifier(serviceGroup, recoveryPlan);
+        RecoveryPlanResource recoveryPlanResource = await armClient.GetRecoveryPlanResource(recoveryPlanId).GetAsync(cancellationToken);
+        var content = new ReprotectContent();
+        foreach (string selectedResourceId in selectedResourceIds ?? [])
+        {
+            content.ReprotectRequestSelectedResourceIds.Add(new ResourceIdentifier(selectedResourceId));
+        }
+
+        string operationId = Guid.NewGuid().ToString();
+        ArmOperation<ValidateForRecoveryOperationBaseResult> operation = await recoveryPlanResource.ValidateForReprotectAsync(
+            WaitUntil.Started,
+            operationId,
+            content,
+            cancellationToken);
+        await WaitForRecoveryPlanLroCompletionAsync(operation, cancellationToken);
+
+        RecoveryPlanValidateForFailoverResult result = CreateRecoveryPlanValidateForFailoverResult(
+            operationId,
+            operation.GetRawResponse().Content,
+            operation.Value.RecoveryResourceQualifications);
+        return new RecoveryPlanValidateForReprotectResult(
+            result.OperationId,
+            result.RecoveryResourceQualifications);
+    }
+
+    public Task<RecoveryPlanValidateForOperationResult> ValidateRecoveryPlanForOperationAsync(string serviceGroup, string recoveryPlan, RecoveryOperationNames operationName, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        return ExecuteWithTimeoutAsync(
+            token => ValidateRecoveryPlanForOperationCoreAsync(serviceGroup, recoveryPlan, operationName, tenant, token),
+            "recovery plan operation validation",
+            RecoveryPlanOperationTimeout,
+            cancellationToken);
+    }
+
+    private async Task<RecoveryPlanValidateForOperationResult> ValidateRecoveryPlanForOperationCoreAsync(string serviceGroup, string recoveryPlan, RecoveryOperationNames operationName, string? tenant, CancellationToken cancellationToken)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+
+        var recoveryPlanId = RecoveryPlanResource.CreateResourceIdentifier(serviceGroup, recoveryPlan);
+        RecoveryPlanResource recoveryPlanResource = await armClient.GetRecoveryPlanResource(recoveryPlanId).GetAsync(cancellationToken);
+        var content = new ValidateForOperationContent(operationName);
+        string operationId = Guid.NewGuid().ToString();
+        ArmOperation<ArmResponseErrorResponseResult> operation = await recoveryPlanResource.ValidateForOperationAsync(
+            WaitUntil.Started,
+            operationId,
+            content,
+            cancellationToken);
+        await WaitForRecoveryPlanLroCompletionAsync(operation, cancellationToken);
+
+        return CreateRecoveryPlanValidateForOperationResult(
+            operationId,
+            operationName.ToString(),
+            operation.GetRawResponse().Content);
+    }
+
+    internal static RecoveryPlanValidateForOperationResult CreateRecoveryPlanValidateForOperationResult(
+        string operationId,
+        string operationName,
+        BinaryData operationResponse)
+    {
+        using JsonDocument document = JsonDocument.Parse(operationResponse);
+        JsonElement root = document.RootElement;
+        if (root.TryGetProperty("properties", out JsonElement properties))
+        {
+            if (properties.ValueKind == JsonValueKind.String)
+            {
+                string resultJson = properties.GetString() ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(resultJson))
+                {
+                    return new RecoveryPlanValidateForOperationResult(operationId, operationName, true, null, null);
+                }
+
+                using JsonDocument resultDocument = JsonDocument.Parse(resultJson);
+                return CreateRecoveryPlanValidateForOperationResult(operationId, operationName, resultDocument.RootElement);
+            }
+
+            if (properties.ValueKind == JsonValueKind.Object)
+            {
+                return CreateRecoveryPlanValidateForOperationResult(operationId, operationName, properties);
+            }
+        }
+
+        return CreateRecoveryPlanValidateForOperationResult(operationId, operationName, root);
+    }
+
+    private static RecoveryPlanValidateForOperationResult CreateRecoveryPlanValidateForOperationResult(
+        string operationId,
+        string operationName,
+        JsonElement result)
+    {
+        JsonElement error = GetOptionalObject(result, "error");
+        string? errorCode = GetOptionalString(error, "code");
+        // RO returns no error object on success; its legacy response example uses code "None".
+        // Any other error object represents a failed validation, even when its code is missing.
+        bool isValid = error.ValueKind != JsonValueKind.Object ||
+            string.Equals(errorCode, "None", StringComparison.OrdinalIgnoreCase);
+        return new RecoveryPlanValidateForOperationResult(
+            operationId,
+            operationName,
+            isValid,
+            isValid ? null : errorCode,
+            isValid ? null : GetOptionalString(error, "message"));
+    }
+
     public Task<RecoveryPlanReadinessResult> CheckRecoveryPlanReadinessAsync(string serviceGroup, string recoveryPlan, string? tenant = null, CancellationToken cancellationToken = default)
     {
         return ExecuteWithTimeoutAsync(
@@ -1504,6 +1621,40 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         ResilienceManagementDrillResource drillResource = armClient.GetResilienceManagementDrillResource(drillId);
         var operation = await drillResource.DeleteAsync(WaitUntil.Started, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
+    }
+
+    public async Task<string> StartDrillAsync(string serviceGroup, string drill, string mode, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+
+        var drillId = ResilienceManagementDrillResource.CreateResourceIdentifier(serviceGroup, drill);
+        ResilienceManagementDrillResource drillResource = armClient.GetResilienceManagementDrillResource(drillId);
+        string operationId = Guid.NewGuid().ToString();
+
+        await drillResource.StartAsync(
+            WaitUntil.Started,
+            operationId,
+            new DrillStartContent(new DrillMode(mode)),
+            cancellationToken);
+
+        return operationId;
+    }
+
+    public async Task<string> EndDrillAsync(string serviceGroup, string drill, string attestation, string attestationNotes, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+
+        var drillId = ResilienceManagementDrillResource.CreateResourceIdentifier(serviceGroup, drill);
+        ResilienceManagementDrillResource drillResource = armClient.GetResilienceManagementDrillResource(drillId);
+        string operationId = Guid.NewGuid().ToString();
+
+        await drillResource.EndAsync(
+            WaitUntil.Started,
+            operationId,
+            new DrillEndContent(new DrillAttestation(attestation), attestationNotes),
+            cancellationToken);
+
+        return operationId;
     }
 
     public async Task<IEnumerable<ResourceSummary>> ListDrillResourcesAsync(string serviceGroup, string drill, string? tenant = null, CancellationToken cancellationToken = default)
