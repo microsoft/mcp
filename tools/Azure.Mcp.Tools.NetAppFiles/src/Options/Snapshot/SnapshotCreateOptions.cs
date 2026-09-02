@@ -1,20 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.Snapshot;
 
 public class SnapshotCreateOptions : BaseNetAppFilesOptions
 {
+    [Option(Description = "The name of the Azure NetApp Files account (e.g., 'myanfaccount').")]
+    public new required string Account { get; set; }
+
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public new required string ResourceGroup { get; set; }
+
     [Option(Description = NetAppFilesOptionDefinitions.Pool)]
-    public string? Pool { get; set; }
+    public required string Pool { get; set; }
 
     [Option(Description = NetAppFilesOptionDefinitions.Volume)]
-    public string? Volume { get; set; }
+    public required string Volume { get; set; }
 
     [Option(Description = NetAppFilesOptionDefinitions.Snapshot)]
-    public string? Snapshot { get; set; }
+    public required string Snapshot { get; set; }
 
     [Option(Description = NetAppFilesOptionDefinitions.Location)]
     public string? Location { get; set; }

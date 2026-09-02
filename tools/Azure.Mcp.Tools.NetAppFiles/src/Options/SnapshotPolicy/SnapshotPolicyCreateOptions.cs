@@ -1,17 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.SnapshotPolicy;
 
 public class SnapshotPolicyCreateOptions : BaseNetAppFilesOptions
 {
+    [Option(Description = "The name of the Azure NetApp Files account (e.g., 'myanfaccount').")]
+    public new required string Account { get; set; }
+
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public new required string ResourceGroup { get; set; }
+
     [Option(Description = NetAppFilesOptionDefinitions.SnapshotPolicy)]
-    public string? SnapshotPolicy { get; set; }
+    public required string SnapshotPolicy { get; set; }
 
     [Option(Description = NetAppFilesOptionDefinitions.Location)]
-    public string? Location { get; set; }
+    public required string Location { get; set; }
 
     [Option(Description = NetAppFilesOptionDefinitions.HourlyScheduleMinute)]
     public int? HourlyScheduleMinute { get; set; }

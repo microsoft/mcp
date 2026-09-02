@@ -34,10 +34,10 @@ public class PoolUpdateCommandTests : SubscriptionCommandUnitTestsBase<PoolUpdat
     [Theory]
     [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --subscription sub123", true)]
     [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --subscription sub123 --size 4398046511104", true)]
-    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --subscription sub123 --qosType Manual", true)]
-    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --subscription sub123 --serviceLevel Ultra", true)]
-    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --subscription sub123 --sizeInBytes 4398046511104", true)]
-    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --subscription sub123 --customThroughputMibps 1024", true)]
+    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --subscription sub123 --qos-type Manual", true)]
+    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --subscription sub123 --service-level Ultra", true)]
+    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --subscription sub123 --size-in-bytes 4398046511104", true)]
+    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --subscription sub123 --custom-throughput-mibps 1024", true)]
     [InlineData("--pool mypool --resource-group myrg --location eastus --subscription sub123", false)] // Missing account
     [InlineData("--account myanfaccount --resource-group myrg --location eastus --subscription sub123", false)] // Missing pool
     [InlineData("--account myanfaccount --pool mypool --location eastus --subscription sub123", false)] // Missing resource-group
@@ -460,10 +460,10 @@ public class PoolUpdateCommandTests : SubscriptionCommandUnitTestsBase<PoolUpdat
             "--account", account, "--pool", pool,
             "--resource-group", resourceGroup, "--location", location,
             "--subscription", subscription,
-            "--serviceLevel", serviceLevel,
-            "--sizeInBytes", sizeInBytes.ToString(),
-            "--customThroughputMibps", customThroughputMibps.ToString(),
-            "--qosType", qosType
+            "--service-level", serviceLevel,
+            "--size-in-bytes", sizeInBytes.ToString(),
+            "--custom-throughput-mibps", customThroughputMibps.ToString(),
+            "--qos-type", qosType
         ]);
 
         // Assert

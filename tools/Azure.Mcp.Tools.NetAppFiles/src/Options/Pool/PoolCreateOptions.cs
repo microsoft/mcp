@@ -2,13 +2,20 @@
 // Licensed under the MIT License.
 
 using Microsoft.Mcp.Core.Options;
+using Azure.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.Pool;
 
 public class PoolCreateOptions : BaseNetAppFilesOptions
 {
+    [Option(Description = "The name of the Azure NetApp Files account (e.g., 'myanfaccount').")]
+    public new required string Account { get; set; }
+
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public new required string ResourceGroup { get; set; }
+
     [Option(Description = NetAppFilesOptionDefinitions.Pool)]
-    public string? Pool { get; set; }
+    public required string Pool { get; set; }
 
     [Option(Description = NetAppFilesOptionDefinitions.Location)]
     public string? Location { get; set; }

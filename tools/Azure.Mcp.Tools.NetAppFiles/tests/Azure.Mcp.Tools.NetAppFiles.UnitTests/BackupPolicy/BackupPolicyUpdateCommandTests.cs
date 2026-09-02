@@ -32,12 +32,12 @@ public class BackupPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<B
     }
 
     [Theory]
-    [InlineData("--account myanfaccount --backupPolicy mypolicy --resource-group myrg --location eastus --subscription sub123", true)]
-    [InlineData("--account myanfaccount --backupPolicy mypolicy --resource-group myrg --location eastus --subscription sub123 --enabled false", true)]
-    [InlineData("--backupPolicy mypolicy --resource-group myrg --location eastus --subscription sub123", false)] // Missing account
+    [InlineData("--account myanfaccount --backup-policy mypolicy --resource-group myrg --location eastus --subscription sub123", true)]
+    [InlineData("--account myanfaccount --backup-policy mypolicy --resource-group myrg --location eastus --subscription sub123 --enabled false", true)]
+    [InlineData("--backup-policy mypolicy --resource-group myrg --location eastus --subscription sub123", false)] // Missing account
     [InlineData("--account myanfaccount --resource-group myrg --location eastus --subscription sub123", false)] // Missing backupPolicy
-    [InlineData("--account myanfaccount --backupPolicy mypolicy --location eastus --subscription sub123", false)] // Missing resource-group
-    [InlineData("--account myanfaccount --backupPolicy mypolicy --resource-group myrg --subscription sub123", false)] // Missing location
+    [InlineData("--account myanfaccount --backup-policy mypolicy --location eastus --subscription sub123", false)] // Missing resource-group
+    [InlineData("--account myanfaccount --backup-policy mypolicy --resource-group myrg --subscription sub123", false)] // Missing location
     [InlineData("", false)] // No parameters
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -119,10 +119,10 @@ public class BackupPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<B
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", account, "--backupPolicy", backupPolicy,
+            "--account", account, "--backup-policy", backupPolicy,
             "--resource-group", resourceGroup, "--location", location,
-            "--subscription", subscription, "--dailyBackupsToKeep", "5",
-            "--weeklyBackupsToKeep", "2", "--monthlyBackupsToKeep", "1"
+            "--subscription", subscription, "--daily-backups-to-keep", "5",
+            "--weekly-backups-to-keep", "2", "--monthly-backups-to-keep", "1"
         ]);
 
         // Assert
@@ -176,7 +176,7 @@ public class BackupPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<B
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", account, "--backupPolicy", backupPolicy,
+            "--account", account, "--backup-policy", backupPolicy,
             "--resource-group", resourceGroup, "--location", location,
             "--subscription", subscription
         ]);
@@ -204,7 +204,7 @@ public class BackupPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<B
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupPolicy", "mypolicy",
+            "--account", "myanfaccount", "--backup-policy", "mypolicy",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
@@ -231,7 +231,7 @@ public class BackupPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<B
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupPolicy", "mypolicy",
+            "--account", "myanfaccount", "--backup-policy", "mypolicy",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
@@ -257,7 +257,7 @@ public class BackupPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<B
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupPolicy", "mypolicy",
+            "--account", "myanfaccount", "--backup-policy", "mypolicy",
             "--resource-group", "nonexistentrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
@@ -283,7 +283,7 @@ public class BackupPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<B
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupPolicy", "mypolicy",
+            "--account", "myanfaccount", "--backup-policy", "mypolicy",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
@@ -309,7 +309,7 @@ public class BackupPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<B
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupPolicy", "mypolicy",
+            "--account", "myanfaccount", "--backup-policy", "mypolicy",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
@@ -347,7 +347,7 @@ public class BackupPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<B
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupPolicy", "mypolicy",
+            "--account", "myanfaccount", "--backup-policy", "mypolicy",
             "--resource-group", "myrg", "--location", "westus2",
             "--subscription", "sub123"
         ]);
@@ -402,10 +402,10 @@ public class BackupPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<B
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", account, "--backupPolicy", backupPolicy,
+            "--account", account, "--backup-policy", backupPolicy,
             "--resource-group", resourceGroup, "--location", location,
-            "--subscription", subscription, "--dailyBackupsToKeep", "5",
-            "--weeklyBackupsToKeep", "2", "--monthlyBackupsToKeep", "1"
+            "--subscription", subscription, "--daily-backups-to-keep", "5",
+            "--weekly-backups-to-keep", "2", "--monthly-backups-to-keep", "1"
         ]);
 
         // Assert
@@ -448,10 +448,10 @@ public class BackupPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<B
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", account, "--backupPolicy", backupPolicy,
+            "--account", account, "--backup-policy", backupPolicy,
             "--resource-group", resourceGroup, "--location", location,
-            "--subscription", subscription, "--dailyBackupsToKeep", "5",
-            "--weeklyBackupsToKeep", "2", "--monthlyBackupsToKeep", "1",
+            "--subscription", subscription, "--daily-backups-to-keep", "5",
+            "--weekly-backups-to-keep", "2", "--monthly-backups-to-keep", "1",
             "--enabled", "false", "--tags", "{\"env\":\"test\",\"owner\":\"anf\"}"
         ]);
 
@@ -482,7 +482,7 @@ public class BackupPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<B
         var baseArgs = new List<string>
         {
             "--account", "myanfaccount",
-            "--backupPolicy", "mypolicy",
+            "--backup-policy", "mypolicy",
             "--resource-group", "myrg",
             "--location", "eastus",
             "--subscription", "sub123"

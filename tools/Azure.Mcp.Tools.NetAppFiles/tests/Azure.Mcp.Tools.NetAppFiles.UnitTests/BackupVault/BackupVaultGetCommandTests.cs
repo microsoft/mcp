@@ -133,7 +133,7 @@ public class BackupVaultGetCommandTests : SubscriptionCommandUnitTestsBase<Backu
     [InlineData("--subscription sub123 --resource-group rg1", true)]
     [InlineData("--subscription sub123 --ids /subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.NetApp/netAppAccounts/account1/backupVaults/vault1", true)]
     [InlineData("--subscription sub123 --account myanfaccount", true)]
-    [InlineData("--subscription sub123 --account myanfaccount --backupVault myvault", true)]
+    [InlineData("--subscription sub123 --account myanfaccount --backup-vault myvault", true)]
     [InlineData("--account myanfaccount", false)] // Missing subscription
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -180,7 +180,7 @@ public class BackupVaultGetCommandTests : SubscriptionCommandUnitTestsBase<Backu
             .Returns(Task.FromResult(expectedVaults));
 
         // Act
-        var response = await ExecuteCommandAsync(["--account", account, "--backupVault", backupVault, "--subscription", subscription]);
+        var response = await ExecuteCommandAsync(["--account", account, "--backup-vault", backupVault, "--subscription", subscription]);
 
         // Assert
         Assert.NotNull(response);
@@ -227,7 +227,7 @@ public class BackupVaultGetCommandTests : SubscriptionCommandUnitTestsBase<Backu
             Arg.Any<string?>(), Arg.Is(backupVault), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Backup vault not found"));
 
-        var response = await ExecuteCommandAsync(["--backupVault", backupVault, "--subscription", subscription]);
+        var response = await ExecuteCommandAsync(["--backup-vault", backupVault, "--subscription", subscription]);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);

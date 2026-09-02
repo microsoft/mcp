@@ -77,6 +77,8 @@ public class AccountUpdateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
 
         // Act
         var response = await ExecuteCommandAsync(args);
+        var parsedArgs = CommandDefinition.Parse(args);
+        var options = Command.BindOptions(parsedArgs);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -87,7 +89,8 @@ public class AccountUpdateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
         }
         else
         {
-            var expectedString = "--ids or both --account and --resource-group";
+            var expectedString = options.Subscription == null ? "required" : "--ids or both --account and --resource-group";
+            
             Assert.Contains(expectedString, response.Message.ToLower());
         }
     }
@@ -450,16 +453,16 @@ public class AccountUpdateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             "--ids", id,
             "--subscription", "00000000-0000-0000-0000-000000000000",
             "--tags", "{\"env\":\"prod\"}",
-            "--keySource", "Microsoft.KeyVault",
-            "--keyName", "cmkKey",
-            "--keyVaultResourceId", "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myrg/providers/Microsoft.KeyVault/vaults/kv1",
-            "--keyVaultUri", "https://kv1.vault.azure.net/",
-            "--federatedClientId", "fed-id",
-            "--userAssignedIdentity", "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myrg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/u1",
-            "--identityType", "UserAssigned",
-            "--userAssignedIdentities", "{\"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myrg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/u1\":{}}",
-            "--activeDirectories", "[{\"dns\":\"10.0.0.4\"}]",
-            "--nfsV4IdDomain", "contoso.local"
+            "--key-source", "Microsoft.KeyVault",
+            "--key-name", "cmkKey",
+            "--key-vault-resource-id", "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myrg/providers/Microsoft.KeyVault/vaults/kv1",
+            "--key-vault-uri", "https://kv1.vault.azure.net/",
+            "--federated-client-id", "fed-id",
+            "--user-assigned-identity", "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myrg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/u1",
+            "--identity-type", "UserAssigned",
+            "--user-assigned-identities", "{\"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myrg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/u1\":{}}",
+            "--active-directories", "[{\"dns\":\"10.0.0.4\"}]",
+            "--nfs-v4-id-domain", "contoso.local"
         ]);
 
         // Assert

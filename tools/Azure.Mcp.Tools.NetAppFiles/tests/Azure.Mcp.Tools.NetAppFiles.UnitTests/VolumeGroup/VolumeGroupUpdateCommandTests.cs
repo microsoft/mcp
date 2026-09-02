@@ -32,12 +32,12 @@ public class VolumeGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<Vo
     }
 
     [Theory]
-    [InlineData("--account myanfaccount --volumeGroup myvg --resource-group myrg --location eastus --subscription sub123", true)]
-    [InlineData("--account myanfaccount --volumeGroup myvg --resource-group myrg --location eastus --subscription sub123 --groupDescription UpdatedDescription", true)]
+    [InlineData("--account myanfaccount --volume-group myvg --resource-group myrg --location eastus --subscription sub123", true)]
+    [InlineData("--account myanfaccount --volume-group myvg --resource-group myrg --location eastus --subscription sub123 --group-description UpdatedDescription", true)]
     [InlineData("--ids /subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/volumeGroups/myvg --location eastus --subscription sub123", true)]
-    [InlineData("--volumeGroup myvg --resource-group myrg --location eastus --subscription sub123", false)] // Missing account
+    [InlineData("--volume-group myvg --resource-group myrg --location eastus --subscription sub123", false)] // Missing account
     [InlineData("--account myanfaccount --resource-group myrg --location eastus --subscription sub123", false)] // Missing volumeGroup
-    [InlineData("--account myanfaccount --volumeGroup myvg --location eastus --subscription sub123", false)] // Missing resource-group
+    [InlineData("--account myanfaccount --volume-group myvg --location eastus --subscription sub123", false)] // Missing resource-group
     [InlineData("", false)] // No parameters
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -117,9 +117,9 @@ public class VolumeGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<Vo
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", account, "--volumeGroup", volumeGroup,
+            "--account", account, "--volume-group", volumeGroup,
             "--resource-group", resourceGroup, "--location", location,
-            "--groupDescription", groupDescription, "--subscription", subscription
+            "--group-description", groupDescription, "--subscription", subscription
         ]);
 
         // Assert
@@ -172,7 +172,7 @@ public class VolumeGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<Vo
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", account, "--volumeGroup", volumeGroup,
+            "--account", account, "--volume-group", volumeGroup,
             "--resource-group", resourceGroup, "--location", location,
             "--tags", tagsJson, "--subscription", subscription
         ]);
@@ -189,7 +189,7 @@ public class VolumeGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<Vo
         // Arrange
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--volumeGroup", "myvg",
+            "--account", "myanfaccount", "--volume-group", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
             "--tags", "not-valid-json", "--subscription", "sub123"
         ]);
@@ -215,7 +215,7 @@ public class VolumeGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<Vo
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--volumeGroup", "myvg",
+            "--account", "myanfaccount", "--volume-group", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
@@ -240,7 +240,7 @@ public class VolumeGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<Vo
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--volumeGroup", "myvg",
+            "--account", "myanfaccount", "--volume-group", "myvg",
             "--resource-group", "nonexistentrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
@@ -264,7 +264,7 @@ public class VolumeGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<Vo
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--volumeGroup", "myvg",
+            "--account", "myanfaccount", "--volume-group", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
@@ -288,7 +288,7 @@ public class VolumeGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<Vo
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--volumeGroup", "myvg",
+            "--account", "myanfaccount", "--volume-group", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
         ]);
@@ -302,9 +302,9 @@ public class VolumeGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<Vo
     {
         // Act
         var args = CommandDefinition.Parse([
-            "--account", "myanfaccount", "--volumeGroup", "myvg",
+            "--account", "myanfaccount", "--volume-group", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
-            "--groupDescription", "Updated description",
+            "--group-description", "Updated description",
             "--tags", "{\"env\":\"prod\"}",
             "--subscription", "sub123"
         ]);
@@ -364,7 +364,7 @@ public class VolumeGroupUpdateCommandTests : SubscriptionCommandUnitTestsBase<Vo
     public async Task ExecuteAsync_ReturnsBadRequest_ForUnsupportedUpdateArguments(string unsupportedArg)
     {
         // Act
-        var response = await ExecuteCommandAsync($"--account myanfaccount --volumeGroup myvg --resource-group myrg --location eastus --subscription sub123 {unsupportedArg}");
+        var response = await ExecuteCommandAsync($"--account myanfaccount --volume-group myvg --resource-group myrg --location eastus --subscription sub123 {unsupportedArg}");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

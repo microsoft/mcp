@@ -39,8 +39,6 @@ public sealed class VolumeGetCommand(ILogger<VolumeGetCommand> logger, INetAppFi
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VolumeGetOptions options, CancellationToken cancellationToken)
     {
-        Console.WriteLine(options);
-
         try
         {
             var volumes = await _netAppFilesService.GetVolumeDetails(

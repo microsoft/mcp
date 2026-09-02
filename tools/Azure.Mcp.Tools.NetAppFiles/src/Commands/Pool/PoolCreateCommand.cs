@@ -113,12 +113,12 @@ public sealed class PoolCreateCommand(ILogger<PoolCreateCommand> logger, INetApp
 
         if (hasSize && hasSizeInBytes)
         {
-            throw new ArgumentException("Use either --size or --sizeInBytes, not both.");
+            throw new ArgumentException("Use either --size or --size-in-bytes, not both.");
         }
 
         if (!hasSize && !hasSizeInBytes)
         {
-            throw new ArgumentException("Either --size or --sizeInBytes must be provided.");
+            throw new ArgumentException("Either --size or --size-in-bytes must be provided.");
         }
 
         return hasSize ? size!.Value : sizeInBytes!.Value;

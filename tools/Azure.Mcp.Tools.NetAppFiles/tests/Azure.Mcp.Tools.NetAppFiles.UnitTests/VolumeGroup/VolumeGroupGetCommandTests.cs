@@ -131,8 +131,8 @@ public class VolumeGroupGetCommandTests : SubscriptionCommandUnitTestsBase<Volum
     [Theory]
     [InlineData("--subscription sub123", true)]
     [InlineData("--subscription sub123 --account myanfaccount", true)]
-    [InlineData("--subscription sub123 --account myanfaccount --volumeGroup myvg", true)]
-    [InlineData("--subscription sub123 --volumeGroup myvg", true)] // VolumeGroup without account is valid
+    [InlineData("--subscription sub123 --account myanfaccount --volume-group myvg", true)]
+    [InlineData("--subscription sub123 --volume-group myvg", true)] // VolumeGroup without account is valid
     [InlineData("--account myanfaccount", false)] // Missing subscription
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -179,7 +179,7 @@ public class VolumeGroupGetCommandTests : SubscriptionCommandUnitTestsBase<Volum
             .Returns(Task.FromResult(expectedVolumeGroups));
 
         // Act
-        var response = await ExecuteCommandAsync(["--account", account, "--volumeGroup", volumeGroup, "--subscription", subscription]);
+        var response = await ExecuteCommandAsync(["--account", account, "--volume-group", volumeGroup, "--subscription", subscription]);
 
         // Assert
         Assert.NotNull(response);
@@ -226,7 +226,7 @@ public class VolumeGroupGetCommandTests : SubscriptionCommandUnitTestsBase<Volum
             Arg.Any<string?>(), Arg.Is(volumeGroup), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Volume group not found"));
 
-        var response = await ExecuteCommandAsync(["--volumeGroup", volumeGroup, "--subscription", subscription]);
+        var response = await ExecuteCommandAsync(["--volume-group", volumeGroup, "--subscription", subscription]);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);

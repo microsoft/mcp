@@ -120,7 +120,7 @@ public sealed class VolumeGroupUpdateCommand(ILogger<VolumeGroupUpdateCommand> l
             string.IsNullOrWhiteSpace(options.VolumeGroup) ||
             string.IsNullOrWhiteSpace(options.ResourceGroup))
         {
-            throw new ArgumentException("Either --ids or all of --account, --volumeGroup, and --resource-group must be provided for volume group update.");
+            throw new ArgumentException("Either --ids or all of --account, --volume-group, and --resource-group must be provided for volume group update.");
         }
     }
 

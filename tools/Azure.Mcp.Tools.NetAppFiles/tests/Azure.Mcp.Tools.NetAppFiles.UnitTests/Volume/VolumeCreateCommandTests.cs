@@ -33,13 +33,13 @@ public class VolumeCreateCommandTests : SubscriptionCommandUnitTestsBase<VolumeC
     }
 
     [Theory]
-    [InlineData("--account myanfaccount --pool mypool --volume myvol --resource-group myrg --location eastus --creationToken myvol --usageThreshold 107374182400 --subnetId /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", true)]
-    [InlineData("--account myanfaccount --pool mypool --volume myvol --resource-group myrg --location eastus --creationToken myvol --usageThreshold 107374182400 --vnet myvnet --subnet mysubnet --subscription sub123", true)]
-    [InlineData("--account myanfaccount --pool mypool --volume myvol --resource-group myrg --location eastus --creationToken myvol --usageThreshold 107374182400 --subnetId /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123 --serviceLevel Premium", true)]
-    [InlineData("--pool mypool --volume myvol --resource-group myrg --location eastus --creationToken myvol --usageThreshold 107374182400 --subnetId /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", false)] // Missing account
-    [InlineData("--account myanfaccount --volume myvol --resource-group myrg --location eastus --creationToken myvol --usageThreshold 107374182400 --subnetId /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", false)] // Missing pool
-    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --creationToken myvol --usageThreshold 107374182400 --subnetId /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", false)] // Missing volume
-    [InlineData("--account myanfaccount --pool mypool --volume myvol --location eastus --creationToken myvol --usageThreshold 107374182400 --subnetId /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", false)] // Missing resource-group
+    [InlineData("--account myanfaccount --pool mypool --volume myvol --resource-group myrg --location eastus --creation-token myvol --usage-threshold 107374182400 --subnet-id /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", true)]
+    [InlineData("--account myanfaccount --pool mypool --volume myvol --resource-group myrg --location eastus --creation-token myvol --usage-threshold 107374182400 --vnet myvnet --subnet mysubnet --subscription sub123", true)]
+    [InlineData("--account myanfaccount --pool mypool --volume myvol --resource-group myrg --location eastus --creation-token myvol --usage-threshold 107374182400 --subnet-id /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123 --service-level Premium", true)]
+    [InlineData("--pool mypool --volume myvol --resource-group myrg --location eastus --creation-token myvol --usage-threshold 107374182400 --subnet-id /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", false)] // Missing account
+    [InlineData("--account myanfaccount --volume myvol --resource-group myrg --location eastus --creation-token myvol --usage-threshold 107374182400 --subnet-id /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", false)] // Missing pool
+    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --creation-token myvol --usage-threshold 107374182400 --subnet-id /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", false)] // Missing volume
+    [InlineData("--account myanfaccount --pool mypool --volume myvol --location eastus --creation-token myvol --usage-threshold 107374182400 --subnet-id /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", false)] // Missing resource-group
     [InlineData("", false)] // No parameters
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -129,8 +129,8 @@ public class VolumeCreateCommandTests : SubscriptionCommandUnitTestsBase<VolumeC
         var response = await ExecuteCommandAsync([
             "--account", account, "--pool", pool, "--volume", volume,
             "--resource-group", resourceGroup, "--location", location,
-            "--creationToken", creationToken, "--usageThreshold", usageThreshold.ToString(),
-            "--subnetId", subnetId, "--subscription", subscription
+            "--creation-token", creationToken, "--usage-threshold", usageThreshold.ToString(),
+            "--subnet-id", subnetId, "--subscription", subscription
         ]);
 
         // Assert
@@ -172,8 +172,8 @@ public class VolumeCreateCommandTests : SubscriptionCommandUnitTestsBase<VolumeC
         var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
             "--resource-group", "myrg", "--location", "eastus",
-            "--creationToken", "myvol", "--usageThreshold", "107374182400",
-            "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--creation-token", "myvol", "--usage-threshold", "107374182400",
+            "--subnet-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
             "--subscription", "sub123"
         ]);
 
@@ -199,8 +199,8 @@ public class VolumeCreateCommandTests : SubscriptionCommandUnitTestsBase<VolumeC
         var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
             "--resource-group", "myrg", "--location", "eastus",
-            "--creationToken", "myvol", "--usageThreshold", "107374182400",
-            "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--creation-token", "myvol", "--usage-threshold", "107374182400",
+            "--subnet-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
             "--subscription", "sub123"
         ]);
 
@@ -225,8 +225,8 @@ public class VolumeCreateCommandTests : SubscriptionCommandUnitTestsBase<VolumeC
         var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
             "--resource-group", "nonexistentrg", "--location", "eastus",
-            "--creationToken", "myvol", "--usageThreshold", "107374182400",
-            "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--creation-token", "myvol", "--usage-threshold", "107374182400",
+            "--subnet-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
             "--subscription", "sub123"
         ]);
 
@@ -251,8 +251,8 @@ public class VolumeCreateCommandTests : SubscriptionCommandUnitTestsBase<VolumeC
         var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
             "--resource-group", "myrg", "--location", "eastus",
-            "--creationToken", "myvol", "--usageThreshold", "107374182400",
-            "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--creation-token", "myvol", "--usage-threshold", "107374182400",
+            "--subnet-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
             "--subscription", "sub123"
         ]);
 
@@ -277,8 +277,8 @@ public class VolumeCreateCommandTests : SubscriptionCommandUnitTestsBase<VolumeC
         var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
             "--resource-group", "myrg", "--location", "eastus",
-            "--creationToken", "myvol", "--usageThreshold", "107374182400",
-            "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--creation-token", "myvol", "--usage-threshold", "107374182400",
+            "--subnet-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
             "--subscription", "sub123"
         ]);
 
@@ -316,8 +316,8 @@ public class VolumeCreateCommandTests : SubscriptionCommandUnitTestsBase<VolumeC
         var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
             "--resource-group", "myrg", "--location", "eastus",
-            "--creationToken", "myvol", "--usageThreshold", "214748364800",
-            "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--creation-token", "myvol", "--usage-threshold", "214748364800",
+            "--subnet-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
             "--subscription", "sub123"
         ]);
 
@@ -383,9 +383,9 @@ public class VolumeCreateCommandTests : SubscriptionCommandUnitTestsBase<VolumeC
         var response = await ExecuteCommandAsync([
             "--account", account, "--pool", pool, "--volume", volume,
             "--resource-group", resourceGroup, "--location", location,
-            "--creationToken", creationToken, "--usageThreshold", usageThreshold.ToString(),
-            "--subnetId", subnetId, "--subscription", subscription,
-            "--serviceLevel", "Premium"
+            "--creation-token", creationToken, "--usage-threshold", usageThreshold.ToString(),
+            "--subnet-id", subnetId, "--subscription", subscription,
+            "--service-level", "Premium"
         ]);
 
         // Assert
@@ -408,8 +408,8 @@ public class VolumeCreateCommandTests : SubscriptionCommandUnitTestsBase<VolumeC
         var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
             "--resource-group", "myrg", "--location", "eastus",
-            "--creationToken", "myvol", "--usageThreshold", "107374182400",
-            "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--creation-token", "myvol", "--usage-threshold", "107374182400",
+            "--subnet-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
             "--subscription", "sub123", "--no-wait"
         ]);
 
@@ -426,8 +426,8 @@ public class VolumeCreateCommandTests : SubscriptionCommandUnitTestsBase<VolumeC
         var response = await ExecuteCommandAsync([
             "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
             "--resource-group", "myrg", "--location", "eastus",
-            "--creationToken", "myvol", "--usageThreshold", "107374182400",
-            "--subnetId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--creation-token", "myvol", "--usage-threshold", "107374182400",
+            "--subnet-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
             "--subscription", "sub123", "--acquirePolicyToken"
         ]);
 

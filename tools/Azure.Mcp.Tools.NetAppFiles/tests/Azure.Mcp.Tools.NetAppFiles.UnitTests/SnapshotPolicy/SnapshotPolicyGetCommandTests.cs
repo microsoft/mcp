@@ -131,8 +131,7 @@ public class SnapshotPolicyGetCommandTests : SubscriptionCommandUnitTestsBase<Sn
     [Theory]
     [InlineData("--subscription sub123", true)]
     [InlineData("--subscription sub123 --account myanfaccount", true)]
-    [InlineData("--subscription sub123 --account myanfaccount --snapshotPolicy mypolicy", true)]
-    [InlineData("--subscription sub123 --account-name myanfaccount --name mypolicy --resource-group myrg", true)]
+    [InlineData("--subscription sub123 --account myanfaccount --snapshot-policy mypolicy", true)]
     [InlineData("--account myanfaccount", false)] // Missing subscription
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -179,7 +178,7 @@ public class SnapshotPolicyGetCommandTests : SubscriptionCommandUnitTestsBase<Sn
             .Returns(Task.FromResult(expectedPolicies));
 
         // Act
-        var response = await ExecuteCommandAsync(["--account", account, "--snapshotPolicy", snapshotPolicy, "--subscription", subscription]);
+        var response = await ExecuteCommandAsync(["--account", account, "--snapshot-policy", snapshotPolicy, "--subscription", subscription]);
 
         // Assert
         Assert.NotNull(response);
@@ -226,7 +225,7 @@ public class SnapshotPolicyGetCommandTests : SubscriptionCommandUnitTestsBase<Sn
             Arg.Any<string?>(), Arg.Is(snapshotPolicy), Arg.Any<string?>(), Arg.Any<IReadOnlyList<string>?>(), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Snapshot policy not found"));
 
-        var response = await ExecuteCommandAsync(["--snapshotPolicy", snapshotPolicy, "--subscription", subscription]);
+        var response = await ExecuteCommandAsync(["--snapshot-policy", snapshotPolicy, "--subscription", subscription]);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -317,7 +316,7 @@ public class SnapshotPolicyGetCommandTests : SubscriptionCommandUnitTestsBase<Sn
 
         var response = await ExecuteCommandAsync([
             "--account", account,
-            "--snapshotPolicy", snapshotPolicy,
+            "--snapshot-policy", snapshotPolicy,
             "--resource-group", resourceGroup,
             "--ids", id,
             "--subscription", subscription]);
@@ -329,46 +328,6 @@ public class SnapshotPolicyGetCommandTests : SubscriptionCommandUnitTestsBase<Sn
             Arg.Is(snapshotPolicy),
             Arg.Is(resourceGroup),
             Arg.Is<IReadOnlyList<string>?>(ids => ids != null && ids.Count == 1 && ids[0] == id),
-            Arg.Is(subscription),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_PassesAzureCliAliasParameters()
-    {
-        // Arrange
-        var account = "myanfaccount";
-        var snapshotPolicy = "mypolicy";
-        var subscription = "sub123";
-        var expectedPolicies = new ResourceQueryResults<SnapshotPolicyInfo>(
-            [new($"{account}/{snapshotPolicy}", "eastus", "rg1", "Succeeded", true, 0, 5, 12, 0, 5, "Monday", 4, "1,15", 2)],
-            false);
-
-        Service.GetSnapshotPolicyDetails(
-            Arg.Is(account),
-            Arg.Is(snapshotPolicy),
-            Arg.Any<string?>(),
-            Arg.Any<IReadOnlyList<string>?>(),
-            Arg.Is(subscription),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedPolicies));
-
-        var response = await ExecuteCommandAsync([
-            "--account-name", account,
-            "--name", snapshotPolicy,
-            "--subscription", subscription]);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        await Service.Received(1).GetSnapshotPolicyDetails(
-            Arg.Is(account),
-            Arg.Is(snapshotPolicy),
-            Arg.Any<string?>(),
-            Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),

@@ -32,11 +32,11 @@ public class BackupUpdateCommandTests : SubscriptionCommandUnitTestsBase<BackupU
     }
 
     [Theory]
-    [InlineData("--account myanfaccount --backupVault myvault --backup mybackup --resource-group myrg --location eastus --subscription sub123", true)]
-    [InlineData("--backupVault myvault --backup mybackup --resource-group myrg --location eastus --subscription sub123", false)] // Missing account
+    [InlineData("--account myanfaccount --backup-vault myvault --backup mybackup --resource-group myrg --location eastus --subscription sub123", true)]
+    [InlineData("--backup-vault myvault --backup mybackup --resource-group myrg --location eastus --subscription sub123", false)] // Missing account
     [InlineData("--account myanfaccount --backup mybackup --resource-group myrg --location eastus --subscription sub123", false)] // Missing backupVault
-    [InlineData("--account myanfaccount --backupVault myvault --resource-group myrg --location eastus --subscription sub123", false)] // Missing backup
-    [InlineData("--account myanfaccount --backupVault myvault --backup mybackup --location eastus --subscription sub123", false)] // Missing resource-group
+    [InlineData("--account myanfaccount --backup-vault myvault --resource-group myrg --location eastus --subscription sub123", false)] // Missing backup
+    [InlineData("--account myanfaccount --backup-vault myvault --backup mybackup --location eastus --subscription sub123", false)] // Missing resource-group
     [InlineData("", false)] // No parameters
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -116,7 +116,7 @@ public class BackupUpdateCommandTests : SubscriptionCommandUnitTestsBase<BackupU
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", account, "--backupVault", backupVault,
+            "--account", account, "--backup-vault", backupVault,
             "--backup", backup,
             "--resource-group", resourceGroup, "--location", location,
             "--subscription", subscription, "--label", label
@@ -172,7 +172,7 @@ public class BackupUpdateCommandTests : SubscriptionCommandUnitTestsBase<BackupU
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", account, "--backupVault", backupVault,
+            "--account", account, "--backup-vault", backupVault,
             "--backup", backup,
             "--resource-group", resourceGroup, "--location", location,
             "--subscription", subscription
@@ -200,7 +200,7 @@ public class BackupUpdateCommandTests : SubscriptionCommandUnitTestsBase<BackupU
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--account", "myanfaccount", "--backup-vault", "myvault",
             "--backup", "mybackup",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
@@ -227,7 +227,7 @@ public class BackupUpdateCommandTests : SubscriptionCommandUnitTestsBase<BackupU
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--account", "myanfaccount", "--backup-vault", "myvault",
             "--backup", "mybackup",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
@@ -253,7 +253,7 @@ public class BackupUpdateCommandTests : SubscriptionCommandUnitTestsBase<BackupU
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--account", "myanfaccount", "--backup-vault", "myvault",
             "--backup", "mybackup",
             "--resource-group", "nonexistentrg", "--location", "eastus",
             "--subscription", "sub123"
@@ -279,7 +279,7 @@ public class BackupUpdateCommandTests : SubscriptionCommandUnitTestsBase<BackupU
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--account", "myanfaccount", "--backup-vault", "myvault",
             "--backup", "mybackup",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
@@ -305,7 +305,7 @@ public class BackupUpdateCommandTests : SubscriptionCommandUnitTestsBase<BackupU
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--account", "myanfaccount", "--backup-vault", "myvault",
             "--backup", "mybackup",
             "--resource-group", "myrg", "--location", "eastus",
             "--subscription", "sub123"
@@ -345,7 +345,7 @@ public class BackupUpdateCommandTests : SubscriptionCommandUnitTestsBase<BackupU
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--account", "myanfaccount", "--backup-vault", "myvault",
             "--backup", "mybackup",
             "--resource-group", "myrg", "--location", "westus2",
             "--subscription", "sub123"
@@ -402,7 +402,7 @@ public class BackupUpdateCommandTests : SubscriptionCommandUnitTestsBase<BackupU
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", account, "--backupVault", backupVault,
+            "--account", account, "--backup-vault", backupVault,
             "--backup", backup,
             "--resource-group", resourceGroup, "--location", location,
             "--subscription", subscription, "--label", label

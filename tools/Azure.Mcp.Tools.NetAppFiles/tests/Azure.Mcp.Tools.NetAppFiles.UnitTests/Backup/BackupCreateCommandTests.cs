@@ -32,11 +32,11 @@ public class BackupCreateCommandTests : SubscriptionCommandUnitTestsBase<BackupC
     }
 
     [Theory]
-    [InlineData("--account myanfaccount --backupVault myvault --backup mybackup --resource-group myrg --location eastus --volumeResourceId /subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume --subscription sub123", true)]
-    [InlineData("--backupVault myvault --backup mybackup --resource-group myrg --location eastus --volumeResourceId /subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume --subscription sub123", false)] // Missing account
-    [InlineData("--account myanfaccount --backup mybackup --resource-group myrg --location eastus --volumeResourceId /subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume --subscription sub123", false)] // Missing backupVault
-    [InlineData("--account myanfaccount --backupVault myvault --resource-group myrg --location eastus --volumeResourceId /subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume --subscription sub123", false)] // Missing backup
-    [InlineData("--account myanfaccount --backupVault myvault --backup mybackup --location eastus --volumeResourceId /subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume --subscription sub123", false)] // Missing resource-group
+    [InlineData("--account myanfaccount --backup-vault myvault --backup mybackup --resource-group myrg --location eastus --volume-resource-id /subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume --subscription sub123", true)]
+    [InlineData("--backup-vault myvault --backup mybackup --resource-group myrg --location eastus --volume-resource-id /subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume --subscription sub123", false)] // Missing account
+    [InlineData("--account myanfaccount --backup mybackup --resource-group myrg --location eastus --volume-resource-id /subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume --subscription sub123", false)] // Missing backupVault
+    [InlineData("--account myanfaccount --backup-vault myvault --resource-group myrg --location eastus --volume-resource-id /subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume --subscription sub123", false)] // Missing backup
+    [InlineData("--account myanfaccount --backup-vault myvault --backup mybackup --location eastus --volume-resource-id /subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume --subscription sub123", false)] // Missing resource-group
     [InlineData("", false)] // No parameters
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -118,10 +118,10 @@ public class BackupCreateCommandTests : SubscriptionCommandUnitTestsBase<BackupC
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", account, "--backupVault", backupVault,
+            "--account", account, "--backup-vault", backupVault,
             "--backup", backup,
             "--resource-group", resourceGroup, "--location", location,
-            "--volumeResourceId", volumeResourceId,
+            "--volume-resource-id", volumeResourceId,
             "--subscription", subscription, "--label", label
         ]);
 
@@ -177,10 +177,10 @@ public class BackupCreateCommandTests : SubscriptionCommandUnitTestsBase<BackupC
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", account, "--backupVault", backupVault,
+            "--account", account, "--backup-vault", backupVault,
             "--backup", backup,
             "--resource-group", resourceGroup, "--location", location,
-            "--volumeResourceId", volumeResourceId,
+            "--volume-resource-id", volumeResourceId,
             "--subscription", subscription
         ]);
 
@@ -207,10 +207,10 @@ public class BackupCreateCommandTests : SubscriptionCommandUnitTestsBase<BackupC
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--account", "myanfaccount", "--backup-vault", "myvault",
             "--backup", "mybackup",
             "--resource-group", "myrg", "--location", "eastus",
-            "--volumeResourceId", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume",
+            "--volume-resource-id", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume",
             "--subscription", "sub123"
         ]);
 
@@ -236,10 +236,10 @@ public class BackupCreateCommandTests : SubscriptionCommandUnitTestsBase<BackupC
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--account", "myanfaccount", "--backup-vault", "myvault",
             "--backup", "mybackup",
             "--resource-group", "myrg", "--location", "eastus",
-            "--volumeResourceId", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume",
+            "--volume-resource-id", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume",
             "--subscription", "sub123"
         ]);
 
@@ -264,10 +264,10 @@ public class BackupCreateCommandTests : SubscriptionCommandUnitTestsBase<BackupC
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--account", "myanfaccount", "--backup-vault", "myvault",
             "--backup", "mybackup",
             "--resource-group", "nonexistentrg", "--location", "eastus",
-            "--volumeResourceId", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume",
+            "--volume-resource-id", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume",
             "--subscription", "sub123"
         ]);
 
@@ -292,10 +292,10 @@ public class BackupCreateCommandTests : SubscriptionCommandUnitTestsBase<BackupC
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--account", "myanfaccount", "--backup-vault", "myvault",
             "--backup", "mybackup",
             "--resource-group", "myrg", "--location", "eastus",
-            "--volumeResourceId", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume",
+            "--volume-resource-id", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume",
             "--subscription", "sub123"
         ]);
 
@@ -320,10 +320,10 @@ public class BackupCreateCommandTests : SubscriptionCommandUnitTestsBase<BackupC
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--account", "myanfaccount", "--backup-vault", "myvault",
             "--backup", "mybackup",
             "--resource-group", "myrg", "--location", "eastus",
-            "--volumeResourceId", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume",
+            "--volume-resource-id", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvolume",
             "--subscription", "sub123"
         ]);
 
@@ -362,10 +362,10 @@ public class BackupCreateCommandTests : SubscriptionCommandUnitTestsBase<BackupC
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--backupVault", "myvault",
+            "--account", "myanfaccount", "--backup-vault", "myvault",
             "--backup", "mybackup",
             "--resource-group", "myrg", "--location", "westus2",
-            "--volumeResourceId", volumeResourceId,
+            "--volume-resource-id", volumeResourceId,
             "--subscription", "sub123"
         ]);
 
@@ -421,10 +421,10 @@ public class BackupCreateCommandTests : SubscriptionCommandUnitTestsBase<BackupC
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", account, "--backupVault", backupVault,
+            "--account", account, "--backup-vault", backupVault,
             "--backup", backup,
             "--resource-group", resourceGroup, "--location", location,
-            "--volumeResourceId", volumeResourceId,
+            "--volume-resource-id", volumeResourceId,
             "--subscription", subscription, "--label", label
         ]);
 

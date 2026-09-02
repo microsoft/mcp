@@ -33,8 +33,8 @@ public class VolumeUpdateCommandTests : SubscriptionCommandUnitTestsBase<VolumeU
 
     [Theory]
     [InlineData("--account myanfaccount --pool mypool --volume myvol --resource-group myrg --location eastus --subscription sub123", true)]
-    [InlineData("--account myanfaccount --pool mypool --volume myvol --resource-group myrg --location eastus --subscription sub123 --usageThreshold 214748364800", true)]
-    [InlineData("--account myanfaccount --pool mypool --volume myvol --resource-group myrg --location eastus --subscription sub123 --serviceLevel Ultra", true)]
+    [InlineData("--account myanfaccount --pool mypool --volume myvol --resource-group myrg --location eastus --subscription sub123 --usage-threshold 214748364800", true)]
+    [InlineData("--account myanfaccount --pool mypool --volume myvol --resource-group myrg --location eastus --subscription sub123 --service-level Ultra", true)]
     [InlineData("--pool mypool --volume myvol --resource-group myrg --location eastus --subscription sub123", false)] // Missing account
     [InlineData("--account myanfaccount --volume myvol --resource-group myrg --location eastus --subscription sub123", false)] // Missing pool
     [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --subscription sub123", false)] // Missing volume
@@ -402,8 +402,8 @@ public class VolumeUpdateCommandTests : SubscriptionCommandUnitTestsBase<VolumeU
             "--account", account, "--pool", pool, "--volume", volume,
             "--resource-group", resourceGroup, "--location", location,
             "--subscription", subscription,
-            "--usageThreshold", usageThreshold.ToString(),
-            "--serviceLevel", "Ultra"
+            "--usage-threshold", usageThreshold.ToString(),
+            "--service-level", "Ultra"
         ]);
 
         // Assert

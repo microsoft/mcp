@@ -32,11 +32,11 @@ public class VolumeGroupCreateCommandTests : SubscriptionCommandUnitTestsBase<Vo
     }
 
     [Theory]
-    [InlineData("--account myanfaccount --volumeGroup myvg --resource-group myrg --location eastus --applicationType SAP-HANA --applicationIdentifier SH1 --subscription sub123", true)]
-    [InlineData("--account myanfaccount --volumeGroup myvg --resource-group myrg --location eastus --applicationType SAP-HANA --applicationIdentifier SH1 --subscription sub123 --groupDescription MyDescription", true)]
-    [InlineData("--volumeGroup myvg --resource-group myrg --location eastus --applicationType SAP-HANA --applicationIdentifier SH1 --subscription sub123", false)] // Missing account
-    [InlineData("--account myanfaccount --resource-group myrg --location eastus --applicationType SAP-HANA --applicationIdentifier SH1 --subscription sub123", false)] // Missing volumeGroup
-    [InlineData("--account myanfaccount --volumeGroup myvg --location eastus --applicationType SAP-HANA --applicationIdentifier SH1 --subscription sub123", false)] // Missing resource-group
+    [InlineData("--account myanfaccount --volume-group myvg --resource-group myrg --location eastus --application-type SAP-HANA --application-identifier SH1 --subscription sub123", true)]
+    [InlineData("--account myanfaccount --volume-group myvg --resource-group myrg --location eastus --application-type SAP-HANA --application-identifier SH1 --subscription sub123 --group-description MyDescription", true)]
+    [InlineData("--volume-group myvg --resource-group myrg --location eastus --application-type SAP-HANA --application-identifier SH1 --subscription sub123", false)] // Missing account
+    [InlineData("--account myanfaccount --resource-group myrg --location eastus --application-type SAP-HANA --application-identifier SH1 --subscription sub123", false)] // Missing volumeGroup
+    [InlineData("--account myanfaccount --volume-group myvg --location eastus --application-type SAP-HANA --application-identifier SH1 --subscription sub123", false)] // Missing resource-group
     [InlineData("", false)] // No parameters
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -119,10 +119,10 @@ public class VolumeGroupCreateCommandTests : SubscriptionCommandUnitTestsBase<Vo
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", account, "--volumeGroup", volumeGroup,
+            "--account", account, "--volume-group", volumeGroup,
             "--resource-group", resourceGroup, "--location", location,
-            "--applicationType", applicationType, "--applicationIdentifier", applicationIdentifier,
-            "--groupDescription", groupDescription, "--subscription", subscription
+            "--application-type", applicationType, "--application-identifier", applicationIdentifier,
+            "--group-description", groupDescription, "--subscription", subscription
         ]);
 
         // Assert
@@ -160,9 +160,9 @@ public class VolumeGroupCreateCommandTests : SubscriptionCommandUnitTestsBase<Vo
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--volumeGroup", "myvg",
+            "--account", "myanfaccount", "--volume-group", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
-            "--applicationType", "SAP-HANA", "--applicationIdentifier", "SH1",
+            "--application-type", "SAP-HANA", "--application-identifier", "SH1",
             "--subscription", "sub123"
         ]);
 
@@ -187,9 +187,9 @@ public class VolumeGroupCreateCommandTests : SubscriptionCommandUnitTestsBase<Vo
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--volumeGroup", "myvg",
+            "--account", "myanfaccount", "--volume-group", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
-            "--applicationType", "SAP-HANA", "--applicationIdentifier", "SH1",
+            "--application-type", "SAP-HANA", "--application-identifier", "SH1",
             "--subscription", "sub123"
         ]);
 
@@ -213,9 +213,9 @@ public class VolumeGroupCreateCommandTests : SubscriptionCommandUnitTestsBase<Vo
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--volumeGroup", "myvg",
+            "--account", "myanfaccount", "--volume-group", "myvg",
             "--resource-group", "nonexistentrg", "--location", "eastus",
-            "--applicationType", "SAP-HANA", "--applicationIdentifier", "SH1",
+            "--application-type", "SAP-HANA", "--application-identifier", "SH1",
             "--subscription", "sub123"
         ]);
 
@@ -239,9 +239,9 @@ public class VolumeGroupCreateCommandTests : SubscriptionCommandUnitTestsBase<Vo
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--volumeGroup", "myvg",
+            "--account", "myanfaccount", "--volume-group", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
-            "--applicationType", "SAP-HANA", "--applicationIdentifier", "SH1",
+            "--application-type", "SAP-HANA", "--application-identifier", "SH1",
             "--subscription", "sub123"
         ]);
 
@@ -265,9 +265,9 @@ public class VolumeGroupCreateCommandTests : SubscriptionCommandUnitTestsBase<Vo
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--volumeGroup", "myvg",
+            "--account", "myanfaccount", "--volume-group", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
-            "--applicationType", "SAP-HANA", "--applicationIdentifier", "SH1",
+            "--application-type", "SAP-HANA", "--application-identifier", "SH1",
             "--subscription", "sub123"
         ]);
 
@@ -302,10 +302,10 @@ public class VolumeGroupCreateCommandTests : SubscriptionCommandUnitTestsBase<Vo
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--volumeGroup", "myvg",
+            "--account", "myanfaccount", "--volume-group", "myvg",
             "--resource-group", "myrg", "--location", "eastus",
-            "--applicationType", "SAP-HANA", "--applicationIdentifier", "SH1",
-            "--groupDescription", "Volume group for SAP HANA",
+            "--application-type", "SAP-HANA", "--application-identifier", "SH1",
+            "--group-description", "Volume group for SAP HANA",
             "--subscription", "sub123"
         ]);
 
@@ -360,11 +360,11 @@ public class VolumeGroupCreateCommandTests : SubscriptionCommandUnitTestsBase<Vo
         // Act
         var response = await ExecuteCommandAsync([
             "--account", "myanfaccount",
-            "--volumeGroup", "myvg",
+            "--volume-group", "myvg",
             "--resource-group", "myrg",
             "--location", "eastus",
-            "--applicationType", "SAP-HANA",
-            "--applicationIdentifier", "SH1",
+            "--application-type", "SAP-HANA",
+            "--application-identifier", "SH1",
             "--tags", "{\"env\":\"test\",\"owner\":\"team\"}",
             "--subscription", "sub123"
         ]);
@@ -385,11 +385,11 @@ public class VolumeGroupCreateCommandTests : SubscriptionCommandUnitTestsBase<Vo
         // Act
         var response = await ExecuteCommandAsync([
             "--account", "myanfaccount",
-            "--volumeGroup", "myvg",
+            "--volume-group", "myvg",
             "--resource-group", "myrg",
             "--location", "eastus",
-            "--applicationType", "SAP-HANA",
-            "--applicationIdentifier", "SH1",
+            "--application-type", "SAP-HANA",
+            "--application-identifier", "SH1",
             "--pool", "mypool",
             "--subscription", "sub123"
         ]);

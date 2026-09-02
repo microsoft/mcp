@@ -136,7 +136,7 @@ public sealed class SnapshotPolicyUpdateCommand(ILogger<SnapshotPolicyUpdateComm
 
         if (string.IsNullOrWhiteSpace(options.Account) || string.IsNullOrWhiteSpace(options.SnapshotPolicy) || string.IsNullOrWhiteSpace(options.ResourceGroup))
         {
-            throw new ArgumentException("Either --ids or all of --account, --snapshotPolicy, and --resource-group must be provided for snapshot policy update.");
+            throw new ArgumentException("Either --ids or all of --account, --snapshot-policy, and --resource-group must be provided for snapshot policy update.");
         }
     }
 

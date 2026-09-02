@@ -33,9 +33,9 @@ public class PoolCreateCommandTests : SubscriptionCommandUnitTestsBase<PoolCreat
 
     [Theory]
     [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --size 4398046511104 --subscription sub123", true)]
-    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --size 4398046511104 --subscription sub123 --serviceLevel Premium", true)]
-    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --size 4398046511104 --subscription sub123 --qosType Auto", true)]
-    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --sizeInBytes 4398046511104 --subscription sub123", true)]
+    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --size 4398046511104 --subscription sub123 --service-level Premium", true)]
+    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --size 4398046511104 --subscription sub123 --qos-type Auto", true)]
+    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --size-in-bytes 4398046511104 --subscription sub123", true)]
     [InlineData("--pool mypool --resource-group myrg --location eastus --size 4398046511104 --subscription sub123", false)] // Missing account
     [InlineData("--account myanfaccount --resource-group myrg --location eastus --size 4398046511104 --subscription sub123", false)] // Missing pool
     [InlineData("--account myanfaccount --pool mypool --location eastus --size 4398046511104 --subscription sub123", false)] // Missing resource-group
@@ -359,7 +359,7 @@ public class PoolCreateCommandTests : SubscriptionCommandUnitTestsBase<PoolCreat
             "--account", account, "--pool", pool,
             "--resource-group", resourceGroup, "--location", location,
             "--size", size.ToString(), "--subscription", subscription,
-            "--serviceLevel", "Premium"
+            "--service-level", "Premium"
         ]);
 
         // Assert
@@ -407,12 +407,12 @@ public class PoolCreateCommandTests : SubscriptionCommandUnitTestsBase<PoolCreat
             "--pool", pool,
             "--resource-group", resourceGroup,
             "--location", location,
-            "--sizeInBytes", sizeInBytes.ToString(),
+            "--size-in-bytes", sizeInBytes.ToString(),
             "--subscription", subscription,
-            "--serviceLevel", "Flexible",
-            "--qosType", "Manual",
-            "--coolAccess", "true",
-            "--customThroughputMibps", "256",
+            "--service-level", "Flexible",
+            "--qos-type", "Manual",
+            "--cool-access", "true",
+            "--custom-throughput-mibps", "256",
             "--tags", tagsJson
         ]);
 
@@ -447,13 +447,13 @@ public class PoolCreateCommandTests : SubscriptionCommandUnitTestsBase<PoolCreat
             "--resource-group", "myrg",
             "--location", "eastus",
             "--size", "4398046511104",
-            "--sizeInBytes", "4398046511104",
+            "--size-in-bytes", "4398046511104",
             "--subscription", "sub123"
         ]);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("either --size or --sizeInBytes", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("either --size or --size-in-bytes", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

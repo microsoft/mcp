@@ -33,18 +33,6 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.SnapshotPolicy;
 public sealed class SnapshotPolicyGetCommand(ILogger<SnapshotPolicyGetCommand> logger, INetAppFilesService netAppFilesService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<SnapshotPolicyGetOptions, SnapshotPolicyGetCommand.SnapshotPolicyGetCommandResult>(subscriptionResolver)
 {
-    private static readonly Option<string> AccountNameOption = new("--account-name")
-    {
-        Description = "Alias for --account (Azure CLI compatibility).",
-        Required = false
-    };
-
-    private static readonly Option<string> NameOption = new("--name")
-    {
-        Description = "Alias for --snapshotPolicy (Azure CLI compatibility).",
-        Required = false
-    };
-
     private readonly ILogger<SnapshotPolicyGetCommand> _logger = logger;
 
     private readonly INetAppFilesService _netAppFilesService = netAppFilesService;

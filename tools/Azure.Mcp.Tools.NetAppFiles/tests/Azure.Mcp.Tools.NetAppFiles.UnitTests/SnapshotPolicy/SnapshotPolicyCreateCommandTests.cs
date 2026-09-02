@@ -32,11 +32,11 @@ public class SnapshotPolicyCreateCommandTests : SubscriptionCommandUnitTestsBase
     }
 
     [Theory]
-    [InlineData("--account myanfaccount --snapshotPolicy mypolicy --resource-group myrg --location eastus --subscription sub123", true)]
-    [InlineData("--snapshotPolicy mypolicy --resource-group myrg --location eastus --subscription sub123", false)]
+    [InlineData("--account myanfaccount --snapshot-policy mypolicy --resource-group myrg --location eastus --subscription sub123", true)]
+    [InlineData("--snapshot-policy mypolicy --resource-group myrg --location eastus --subscription sub123", false)]
     [InlineData("--account myanfaccount --resource-group myrg --location eastus --subscription sub123", false)]
-    [InlineData("--account myanfaccount --snapshotPolicy mypolicy --location eastus --subscription sub123", false)]
-    [InlineData("--account myanfaccount --snapshotPolicy mypolicy --resource-group myrg --subscription sub123", false)]
+    [InlineData("--account myanfaccount --snapshot-policy mypolicy --location eastus --subscription sub123", false)]
+    [InlineData("--account myanfaccount --snapshot-policy mypolicy --resource-group myrg --subscription sub123", false)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -119,23 +119,23 @@ public class SnapshotPolicyCreateCommandTests : SubscriptionCommandUnitTestsBase
         // Act
         var response = await ExecuteCommandAsync([
             "--account", "myanfaccount",
-            "--snapshotPolicy", "mypolicy",
+            "--snapshot-policy", "mypolicy",
             "--resource-group", "myrg",
             "--location", "eastus",
             "--subscription", "sub123",
-            "--hourlyScheduleMinute", "5",
-            "--hourlyScheduleSnapshotsToKeep", "3",
-            "--dailyScheduleHour", "12",
-            "--dailyScheduleMinute", "15",
-            "--dailyScheduleSnapshotsToKeep", "7",
-            "--weeklyScheduleDay", "Monday",
-            "--weeklyScheduleHour", "6",
-            "--weeklyScheduleMinute", "25",
-            "--weeklyScheduleSnapshotsToKeep", "4",
-            "--monthlyScheduleDaysOfMonth", "1,15",
-            "--monthlyScheduleHour", "7",
-            "--monthlyScheduleMinute", "35",
-            "--monthlyScheduleSnapshotsToKeep", "2",
+            "--hourly-schedule-minute", "5",
+            "--hourly-schedule-snapshots-to-keep", "3",
+            "--daily-schedule-hour", "12",
+            "--daily-schedule-minute", "15",
+            "--daily-schedule-snapshots-to-keep", "7",
+            "--weekly-schedule-day", "Monday",
+            "--weekly-schedule-hour", "6",
+            "--weekly-schedule-minute", "25",
+            "--weekly-schedule-snapshots-to-keep", "4",
+            "--monthly-schedule-days-of-month", "1,15",
+            "--monthly-schedule-hour", "7",
+            "--monthly-schedule-minute", "35",
+            "--monthly-schedule-snapshots-to-keep", "2",
             "--enabled", "true",
             "--tags", "{\"env\":\"test\"}"
         ]);
@@ -201,19 +201,19 @@ public class SnapshotPolicyCreateCommandTests : SubscriptionCommandUnitTestsBase
         // Act
         var response = await ExecuteCommandAsync([
             "--account", "myanfaccount",
-            "--snapshotPolicy", "mypolicy",
+            "--snapshot-policy", "mypolicy",
             "--resource-group", "myrg",
             "--location", "eastus",
             "--subscription", "sub123",
-            "--hourlyScheduleMinute", "0",
-            "--hourlyScheduleSnapshotsToKeep", "5",
-            "--dailyScheduleHour", "8",
-            "--dailyScheduleMinute", "10",
-            "--dailyScheduleSnapshotsToKeep", "4",
-            "--weeklyScheduleDay", "Friday",
-            "--weeklyScheduleSnapshotsToKeep", "2",
-            "--monthlyScheduleDaysOfMonth", "1",
-            "--monthlyScheduleSnapshotsToKeep", "1"
+            "--hourly-schedule-minute", "0",
+            "--hourly-schedule-snapshots-to-keep", "5",
+            "--daily-schedule-hour", "8",
+            "--daily-schedule-minute", "10",
+            "--daily-schedule-snapshots-to-keep", "4",
+            "--weekly-schedule-day", "Friday",
+            "--weekly-schedule-snapshots-to-keep", "2",
+            "--monthly-schedule-days-of-month", "1",
+            "--monthly-schedule-snapshots-to-keep", "1"
         ]);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -250,7 +250,7 @@ public class SnapshotPolicyCreateCommandTests : SubscriptionCommandUnitTestsBase
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--snapshotPolicy", "mypolicy",
+            "--account", "myanfaccount", "--snapshot-policy", "mypolicy",
             "--resource-group", "myrg", "--location", "eastus", "--subscription", "sub123"
         ]);
 
@@ -263,7 +263,7 @@ public class SnapshotPolicyCreateCommandTests : SubscriptionCommandUnitTestsBase
     {
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--snapshotPolicy", "mypolicy",
+            "--account", "myanfaccount", "--snapshot-policy", "mypolicy",
             "--resource-group", "myrg", "--location", "eastus", "--subscription", "sub123",
             "--acquirePolicyToken"
         ]);
@@ -277,7 +277,7 @@ public class SnapshotPolicyCreateCommandTests : SubscriptionCommandUnitTestsBase
     {
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--snapshotPolicy", "mypolicy",
+            "--account", "myanfaccount", "--snapshot-policy", "mypolicy",
             "--resource-group", "myrg", "--location", "eastus", "--subscription", "sub123",
             "--changeReference", "CR-123"
         ]);
@@ -291,7 +291,7 @@ public class SnapshotPolicyCreateCommandTests : SubscriptionCommandUnitTestsBase
     {
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--snapshotPolicy", "mypolicy",
+            "--account", "myanfaccount", "--snapshot-policy", "mypolicy",
             "--resource-group", "myrg", "--location", "eastus", "--subscription", "sub123",
             "--tags", "{invalid-json}"
         ]);
@@ -333,7 +333,7 @@ public class SnapshotPolicyCreateCommandTests : SubscriptionCommandUnitTestsBase
 
         // Act
         var response = await ExecuteCommandAsync([
-            "--account", "myanfaccount", "--snapshotPolicy", "mypolicy",
+            "--account", "myanfaccount", "--snapshot-policy", "mypolicy",
             "--resource-group", "myrg", "--location", "eastus", "--subscription", "sub123"
         ]);
 

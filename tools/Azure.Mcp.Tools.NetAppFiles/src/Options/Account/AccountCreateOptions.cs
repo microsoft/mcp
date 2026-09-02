@@ -15,7 +15,7 @@ public class AccountCreateOptions : ISubscriptionOption
     public required string Account { get; set; }
 
     [Option(Description = NetAppFilesOptionDefinitions.Location)]
-    public string? Location { get; set; }
+    public required string Location { get; set; }
 
     [Option(Description = NetAppFilesOptionDefinitions.Tags)]
     public string? Tags { get; set; }

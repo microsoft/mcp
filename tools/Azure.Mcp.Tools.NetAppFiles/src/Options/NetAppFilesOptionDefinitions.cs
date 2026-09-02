@@ -327,7 +327,7 @@ public static class NetAppFilesOptionDefinitions
 
     internal const string Size = "Provisioned size of the pool in bytes. Must be a multiple of 4398046511104 (4 TiB). Minimum 4398046511104 bytes (4 TiB).";
 
-    internal const string SizeInBytes = "Provisioned size of the pool in bytes. Allowed values are in 1 TiB chunks (value must be a multiple of 1099511627776). Use either --size or --sizeInBytes, not both.";
+    internal const string SizeInBytes = "Provisioned size of the pool in bytes. Allowed values are in 1 TiB chunks (value must be a multiple of 1099511627776). Use either --size or --size-in-bytes, not both.";
 
     internal const string CustomThroughputMibps = "Maximum throughput in MiB/s for manual QoS pools with Flexible service level.";
 

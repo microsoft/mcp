@@ -128,8 +128,8 @@ public class BackupGetCommandTests : SubscriptionCommandUnitTestsBase<BackupGetC
     [Theory]
     [InlineData("--subscription sub123", true)]
     [InlineData("--subscription sub123 --account myanfaccount", true)]
-    [InlineData("--subscription sub123 --account myanfaccount --backupVault myvault", true)]
-    [InlineData("--subscription sub123 --account myanfaccount --backupVault myvault --backup mybackup", true)]
+    [InlineData("--subscription sub123 --account myanfaccount --backup-vault myvault", true)]
+    [InlineData("--subscription sub123 --account myanfaccount --backup-vault myvault --backup mybackup", true)]
     [InlineData("--account myanfaccount", false)] // Missing subscription
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -177,7 +177,7 @@ public class BackupGetCommandTests : SubscriptionCommandUnitTestsBase<BackupGetC
             .Returns(Task.FromResult(expectedBackups));
 
         // Act
-        var response = await ExecuteCommandAsync(["--account", account, "--backupVault", backupVault, "--backup", backup, "--subscription", subscription]);
+        var response = await ExecuteCommandAsync(["--account", account, "--backup-vault", backupVault, "--backup", backup, "--subscription", subscription]);
 
         // Assert
         Assert.NotNull(response);

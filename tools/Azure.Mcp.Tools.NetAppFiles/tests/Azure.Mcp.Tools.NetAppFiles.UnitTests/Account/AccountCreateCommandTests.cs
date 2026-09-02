@@ -475,16 +475,16 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             "--location", location,
             "--subscription", subscription,
             "--tags", tagsJson,
-            "--keyName", "cmkKey",
-            "--keySource", "Microsoft.KeyVault",
-            "--keyVaultResourceId", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.KeyVault/vaults/kv1",
-            "--keyVaultUri", "https://kv1.vault.azure.net/",
-            "--federatedClientId", "fed-client-id",
-            "--userAssignedIdentity", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/u1",
-            "--identityType", "UserAssigned",
-            "--userAssignedIdentities", userAssignedIdentitiesJson,
-            "--activeDirectories", activeDirectoriesJson,
-            "--nfsV4IdDomain", "contoso.local"
+            "--key-name", "cmkKey",
+            "--key-source", "Microsoft.KeyVault",
+            "--key-vault-resource-id", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.KeyVault/vaults/kv1",
+            "--key-vault-uri", "https://kv1.vault.azure.net/",
+            "--federated-client-id", "fed-client-id",
+            "--user-assigned-identity", "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/u1",
+            "--identity-type", "UserAssigned",
+            "--user-assigned-identities", userAssignedIdentitiesJson,
+            "--active-directories", activeDirectoriesJson,
+            "--nfs-v4-id-domain", "contoso.local"
         ]);
 
         // Assert

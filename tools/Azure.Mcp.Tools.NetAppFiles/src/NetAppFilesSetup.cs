@@ -43,6 +43,7 @@ public class NetAppFilesSetup : IAreaSetup
         services.AddSingleton<PoolCreateCommand>();
         services.AddSingleton<PoolGetCommand>();
         services.AddSingleton<PoolUpdateCommand>();
+        // Start of Replication Commands
         services.AddSingleton<ReplicationApproveCommand>();
         services.AddSingleton<ReplicationAuthorizeExternalReplicationCommand>();
         services.AddSingleton<ReplicationFinalizeExternalReplicationCommand>();
@@ -56,6 +57,7 @@ public class NetAppFilesSetup : IAreaSetup
         services.AddSingleton<ReplicationResumeCommand>();
         services.AddSingleton<ReplicationStatusCommand>();
         services.AddSingleton<ReplicationSuspendCommand>();
+        // End of Replication Commands
         services.AddSingleton<SnapshotCreateCommand>();
         services.AddSingleton<SnapshotGetCommand>();
         services.AddSingleton<SnapshotUpdateCommand>();

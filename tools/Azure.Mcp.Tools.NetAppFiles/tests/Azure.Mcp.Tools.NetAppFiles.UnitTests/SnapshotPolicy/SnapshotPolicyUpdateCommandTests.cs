@@ -34,10 +34,10 @@ public class SnapshotPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase
     }
 
     [Theory]
-    [InlineData("--account myanfaccount --snapshotPolicy mypolicy --resource-group myrg --subscription sub123", true)]
-    [InlineData("--snapshotPolicy mypolicy --resource-group myrg --subscription sub123", false)]
+    [InlineData("--account myanfaccount --snapshot-policy mypolicy --resource-group myrg --subscription sub123", true)]
+    [InlineData("--snapshot-policy mypolicy --resource-group myrg --subscription sub123", false)]
     [InlineData("--account myanfaccount --resource-group myrg --subscription sub123", false)]
-    [InlineData("--account myanfaccount --snapshotPolicy mypolicy --subscription sub123", false)]
+    [InlineData("--account myanfaccount --snapshot-policy mypolicy --subscription sub123", false)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -122,23 +122,23 @@ public class SnapshotPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase
         // Act
         var response = await ExecuteCommandAsync([
             "--account", "myanfaccount",
-            "--snapshotPolicy", "mypolicy",
+            "--snapshot-policy", "mypolicy",
             "--resource-group", "myrg",
             "--location", "eastus",
             "--subscription", "sub123",
-            "--hourlyScheduleMinute", "5",
-            "--hourlyScheduleSnapshotsToKeep", "3",
-            "--dailyScheduleHour", "12",
-            "--dailyScheduleMinute", "15",
-            "--dailyScheduleSnapshotsToKeep", "7",
-            "--weeklyScheduleDay", "Monday",
-            "--weeklyScheduleHour", "6",
-            "--weeklyScheduleMinute", "25",
-            "--weeklyScheduleSnapshotsToKeep", "4",
-            "--monthlyScheduleDaysOfMonth", "1,15",
-            "--monthlyScheduleHour", "7",
-            "--monthlyScheduleMinute", "35",
-            "--monthlyScheduleSnapshotsToKeep", "2",
+            "--hourly-schedule-minute", "5",
+            "--hourly-schedule-snapshots-to-keep", "3",
+            "--daily-schedule-hour", "12",
+            "--daily-schedule-minute", "15",
+            "--daily-schedule-snapshots-to-keep", "7",
+            "--weekly-schedule-day", "Monday",
+            "--weekly-schedule-hour", "6",
+            "--weekly-schedule-minute", "25",
+            "--weekly-schedule-snapshots-to-keep", "4",
+            "--monthly-schedule-days-of-month", "1,15",
+            "--monthly-schedule-hour", "7",
+            "--monthly-schedule-minute", "35",
+            "--monthly-schedule-snapshots-to-keep", "2",
             "--enabled", "false",
             "--tags", "{\"env\":\"test\"}"
         ]);
@@ -180,7 +180,7 @@ public class SnapshotPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase
     [InlineData("--force-string", "force-string")]
     public async Task ExecuteAsync_RejectsUnsupportedArguments(string extraArgs, string expectedArgument)
     {
-        var response = await ExecuteCommandAsync($"--account myanfaccount --snapshotPolicy mypolicy --resource-group myrg --subscription sub123 {extraArgs}");
+        var response = await ExecuteCommandAsync($"--account myanfaccount --snapshot-policy mypolicy --resource-group myrg --subscription sub123 {extraArgs}");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains(expectedArgument, response.Message, StringComparison.OrdinalIgnoreCase);
@@ -192,7 +192,7 @@ public class SnapshotPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase
         // Act
         var response = await ExecuteCommandAsync([
             "--account", "myanfaccount",
-            "--snapshotPolicy", "mypolicy",
+            "--snapshot-policy", "mypolicy",
             "--resource-group", "myrg",
             "--subscription", "sub123",
             "--tags", "{invalid-json}"
@@ -234,7 +234,7 @@ public class SnapshotPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase
         // Act
         var response = await ExecuteCommandAsync([
             "--account", "myanfaccount",
-            "--snapshotPolicy", "mypolicy",
+            "--snapshot-policy", "mypolicy",
             "--resource-group", "myrg",
             "--subscription", "sub123"
         ]);
@@ -278,7 +278,7 @@ public class SnapshotPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase
         // Act
         var response = await ExecuteCommandAsync([
             "--account", "myanfaccount",
-            "--snapshotPolicy", "mypolicy",
+            "--snapshot-policy", "mypolicy",
             "--resource-group", "myrg",
             "--subscription", "sub123"
         ]);
@@ -301,22 +301,22 @@ public class SnapshotPolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase
         // Act
         var args = CommandDefinition.Parse([
             "--account", "myanfaccount",
-            "--snapshotPolicy", "mypolicy",
+            "--snapshot-policy", "mypolicy",
             "--resource-group", "myrg",
             "--subscription", "sub123",
-            "--hourlyScheduleMinute", "15",
-            "--hourlyScheduleSnapshotsToKeep", "3",
-            "--dailyScheduleHour", "6",
-            "--dailyScheduleMinute", "30",
-            "--dailyScheduleSnapshotsToKeep", "7",
-            "--weeklyScheduleDay", "Wednesday",
-            "--weeklyScheduleHour", "5",
-            "--weeklyScheduleMinute", "20",
-            "--weeklyScheduleSnapshotsToKeep", "2",
-            "--monthlyScheduleDaysOfMonth", "1,15",
-            "--monthlyScheduleHour", "8",
-            "--monthlyScheduleMinute", "45",
-            "--monthlyScheduleSnapshotsToKeep", "1",
+            "--hourly-schedule-minute", "15",
+            "--hourly-schedule-snapshots-to-keep", "3",
+            "--daily-schedule-hour", "6",
+            "--daily-schedule-minute", "30",
+            "--daily-schedule-snapshots-to-keep", "7",
+            "--weekly-schedule-day", "Wednesday",
+            "--weekly-schedule-hour", "5",
+            "--weekly-schedule-minute", "20",
+            "--weekly-schedule-snapshots-to-keep", "2",
+            "--monthly-schedule-days-of-month", "1,15",
+            "--monthly-schedule-hour", "8",
+            "--monthly-schedule-minute", "45",
+            "--monthly-schedule-snapshots-to-keep", "1",
             "--enabled", "true",
             "--tags", "{\"env\":\"test\"}"
         ]);

@@ -131,7 +131,7 @@ public class BackupPolicyGetCommandTests : SubscriptionCommandUnitTestsBase<Back
     [Theory]
     [InlineData("--subscription sub123", true)]
     [InlineData("--subscription sub123 --account myanfaccount", true)]
-    [InlineData("--subscription sub123 --account myanfaccount --backupPolicy mypolicy", true)]
+    [InlineData("--subscription sub123 --account myanfaccount --backup-policy mypolicy", true)]
     [InlineData("--subscription sub123 --resource-group myrg", true)]
     [InlineData("--subscription sub123 --ids /subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myacc/backupPolicies/mypolicy", true)]
     [InlineData("--account myanfaccount", false)] // Missing subscription
@@ -180,7 +180,7 @@ public class BackupPolicyGetCommandTests : SubscriptionCommandUnitTestsBase<Back
             .Returns(Task.FromResult(expectedPolicies));
 
         // Act
-        var response = await ExecuteCommandAsync(["--account", account, "--backupPolicy", backupPolicy, "--subscription", subscription]);
+        var response = await ExecuteCommandAsync(["--account", account, "--backup-policy", backupPolicy, "--subscription", subscription]);
 
         // Assert
         Assert.NotNull(response);
@@ -229,7 +229,7 @@ public class BackupPolicyGetCommandTests : SubscriptionCommandUnitTestsBase<Back
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Backup policy not found"));
 
         // Act
-        var response = await ExecuteCommandAsync(["--backupPolicy", backupPolicy, "--subscription", subscription]);
+        var response = await ExecuteCommandAsync(["--backup-policy", backupPolicy, "--subscription", subscription]);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
