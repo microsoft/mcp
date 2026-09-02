@@ -16,35 +16,26 @@ internal static class RecommendationStateUpdateValidator
     {
         ArgumentNullException.ThrowIfNull(errors);
 
-        if (recommendationStatus != RecommendationStatus.Postponed &&
-            postponedUntilDateTime is not null)
-        {
-            errors.Add(
-                "--postponed-until-date-time can only be used when --recommendation-status is Postponed.");
-            AddDismissReasonValidationError(
-                recommendationStatus,
-                recommendationDismissReason,
-                errors);
-            return;
-        }
-
-        if (!TryParsePostponedUntilDateTime(
-            postponedUntilDateTime,
-            out var parsedPostponedUntilDateTime,
-            out var error) &&
-            recommendationStatus == RecommendationStatus.Postponed)
+        DateTimeOffset? parsedPostponedUntilDateTime = null;
+        if (recommendationStatus == RecommendationStatus.Postponed &&
+            !TryParsePostponedUntilDateTime(
+                postponedUntilDateTime,
+                out parsedPostponedUntilDateTime,
+                out var error))
         {
             errors.Add(error!);
-            AddDismissReasonValidationError(
+        }
+        else
+        {
+            AddPostponementDateValidationError(
                 recommendationStatus,
-                recommendationDismissReason,
+                postponedUntilDateTime is not null,
+                parsedPostponedUntilDateTime,
                 errors);
-            return;
         }
 
-        AddValidationErrors(
+        AddDismissReasonValidationError(
             recommendationStatus,
-            parsedPostponedUntilDateTime,
             recommendationDismissReason,
             errors);
     }
@@ -57,9 +48,26 @@ internal static class RecommendationStateUpdateValidator
     {
         ArgumentNullException.ThrowIfNull(errors);
 
+        AddPostponementDateValidationError(
+            recommendationStatus,
+            postponedUntilDateTime is not null,
+            postponedUntilDateTime,
+            errors);
+        AddDismissReasonValidationError(
+            recommendationStatus,
+            recommendationDismissReason,
+            errors);
+    }
+
+    private static void AddPostponementDateValidationError(
+        RecommendationStatus recommendationStatus,
+        bool postponedUntilDateTimeWasProvided,
+        DateTimeOffset? postponedUntilDateTime,
+        ICollection<string> errors)
+    {
         if (recommendationStatus == RecommendationStatus.Postponed)
         {
-            if (postponedUntilDateTime is null)
+            if (!postponedUntilDateTimeWasProvided || postponedUntilDateTime is null)
             {
                 errors.Add("--postponed-until-date-time is required when --recommendation-status is Postponed.");
             }
@@ -68,16 +76,11 @@ internal static class RecommendationStateUpdateValidator
                 errors.Add("--postponed-until-date-time must be in the future.");
             }
         }
-        else if (postponedUntilDateTime is not null)
+        else if (postponedUntilDateTimeWasProvided)
         {
             errors.Add(
                 "--postponed-until-date-time can only be used when --recommendation-status is Postponed.");
         }
-
-        AddDismissReasonValidationError(
-            recommendationStatus,
-            recommendationDismissReason,
-            errors);
     }
 
     public static bool TryParsePostponedUntilDateTime(
