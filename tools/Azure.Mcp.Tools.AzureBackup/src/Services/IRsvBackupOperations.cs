@@ -84,6 +84,18 @@ public interface IRsvBackupOperations
         string policyName,
         string? containerName,
         string? datasourceType,
+        DiskExclusionSpec? diskExclusion,
+        string? tenant,
+        CancellationToken cancellationToken);
+
+    Task<ProtectResult> UpdateProtectionAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string datasourceId,
+        string? policyName,
+        DiskExclusionSpec? diskExclusion,
+        string? containerName,
         string? tenant,
         CancellationToken cancellationToken);
 

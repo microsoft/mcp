@@ -206,15 +206,47 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         string? aksIncludedNamespaces, string? aksExcludedNamespaces,
         string? aksLabelSelectors, string? aksIncludeClusterScopeResources,
         string? aksSnapshotResourceGroup,
+        DiskExclusionSpec? diskExclusion,
         string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
         var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
 
-        return VaultTypeResolver.IsRsv(resolvedType)
-            ? await rsvOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, containerName, datasourceType, tenant, cancellationToken)
-            : await dppOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, datasourceType, aksIncludedNamespaces, aksExcludedNamespaces, aksLabelSelectors, aksIncludeClusterScopeResources, aksSnapshotResourceGroup, tenant, cancellationToken);
+        if (VaultTypeResolver.IsRsv(resolvedType))
+        {
+            return await rsvOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, containerName, datasourceType, diskExclusion, tenant, cancellationToken);
+        }
+
+        if (diskExclusion is not null && diskExclusion.HasAnyValue)
+        {
+            throw new ArgumentException(
+                "Selective disk backup (--disk-list-setting, --disks-list, --exclude-all-data-disks) is only supported for RSV (Recovery Services vault) IaaS VM protected items. " +
+                "See https://learn.microsoft.com/azure/backup/selective-disk-backup-restore for details.");
+        }
+
+        return await dppOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, datasourceType, aksIncludedNamespaces, aksExcludedNamespaces, aksLabelSelectors, aksIncludeClusterScopeResources, aksSnapshotResourceGroup, tenant, cancellationToken);
+    }
+
+    public async Task<ProtectResult> UpdateProtectionAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string datasourceId, string? policyName,
+        DiskExclusionSpec? diskExclusion,
+        string? vaultType, string? containerName,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
+
+        if (!VaultTypeResolver.IsRsv(resolvedType))
+        {
+            throw new NotSupportedException(
+                "The 'protecteditem update-protection' command is only supported for RSV (Recovery Services vault) IaaS VM protected items. " +
+                "For DPP (Backup vault) instances, delete and recreate the protection to change policy or disk exclusion settings.");
+        }
+
+        return await rsvOps.UpdateProtectionAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, diskExclusion, containerName, tenant, cancellationToken);
     }
 
     public async Task<ProtectedItemInfo> GetProtectedItemAsync(

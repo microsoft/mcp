@@ -1067,7 +1067,7 @@ azmcp azurebackup protecteditem get --subscription <subscription> \
                                     [--protected-item <protected-item>] \
                                     [--container <container>]
 
-# Enables backup protection for a resource by creating a protected item or backup instance. For RSV the tool waits for the underlying ConfigureBackup job to reach a terminal state and returns the final job status; for DPP the tool waits for the protect operation to complete and reads back the backup instance, returning ProtectionStatus (DPP protection is not a job - use 'azurebackup protecteditem get' or 'list' to verify).
+# Enables backup protection for a resource by creating a protected item or backup instance. For RSV the tool waits for the underlying ConfigureBackup job to reach a terminal state and returns the final job status; for DPP the tool waits for the protect operation to complete and reads back the backup instance, returning ProtectionStatus (DPP protection is not a job - use 'azurebackup protecteditem get' or 'list' to verify). For RSV IaaS VM datasources, --disk-list-setting, --disks-list, and --exclude-all-data-disks configure selective disk backup (see https://learn.microsoft.com/azure/backup/selective-disk-backup-restore).
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup protecteditem protect --subscription <subscription> \
                                         --resource-group <resource-group> \
@@ -1076,7 +1076,23 @@ azmcp azurebackup protecteditem protect --subscription <subscription> \
                                         --policy <policy> \
                                         [--vault-type <vault-type>] \
                                         [--container <container>] \
-                                        [--datasource-type <RSV: VM|SQL|SAPHANA|SAPASE|AzureFileShare; DPP: AzureDisk|AzureBlob|AKS|ElasticSAN|PostgreSQLFlexible|ADLS|CosmosDB>]
+                                        [--datasource-type <RSV: VM|SQL|SAPHANA|SAPASE|AzureFileShare; DPP: AzureDisk|AzureBlob|AKS|ElasticSAN|PostgreSQLFlexible|ADLS|CosmosDB>] \
+                                        [--disk-list-setting <include|exclude|resetexclusionsettings>] \
+                                        [--disks-list <lun[,lun...]>] \
+                                        [--exclude-all-data-disks]
+
+# Updates the backup configuration of an already-protected RSV IaaS VM. Supports changing the attached backup policy and/or the selective disk backup configuration. Only supported for RSV IaaS VM protected items. At least one of --policy, --disk-list-setting, --disks-list, or --exclude-all-data-disks must be provided.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup protecteditem update-protection --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --vault <vault> \
+                                                  --datasource-id <datasource-id> \
+                                                  [--vault-type <vault-type>] \
+                                                  [--container <container>] \
+                                                  [--policy <policy>] \
+                                                  [--disk-list-setting <include|exclude|resetexclusionsettings>] \
+                                                  [--disks-list <lun[,lun...]>] \
+                                                  [--exclude-all-data-disks]
 
 # Restores a soft-deleted backup item to an active protection state. For RSV vaults, pass the datasource ARM resource ID as --datasource-id. For DPP vaults, pass the datasource ARM resource ID to find and restore the soft-deleted backup instance.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired

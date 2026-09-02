@@ -81,4 +81,9 @@ public static class AzureBackupOptionDefinitions
     internal const string PrivateEndpointAutoApprove = "When true, auto-approve the Private Endpoint Connection after creation (requires Microsoft.RecoveryServices/vaults/privateEndpointConnectionsApproval/action).";
     internal const string PrivateEndpointDescription = "Optional description passed to the vault owner when approving or rejecting the connection.";
     internal const string PrivateEndpointAction = "Decision to apply to the pending Private Endpoint Connection: 'approve' or 'reject'.";
+
+    // Selective Disk Backup (IaaS VM only) - see https://learn.microsoft.com/azure/backup/selective-disk-backup-restore
+    internal const string DiskListSetting = "Disk exclusion mode for IaaS VM backup: 'include' (back up only the LUNs in --disks-list), 'exclude' (back up all disks except the LUNs in --disks-list), or 'resetexclusionsettings' (remove any selective disk configuration and back up all disks). Only supported for RSV IaaS VM protected items.";
+    internal const string DisksList = "Comma-separated data disk LUNs (non-negative integers, e.g. '0,1,3') to include or exclude based on --disk-list-setting. Ignored when --disk-list-setting is 'resetexclusionsettings' or when --exclude-all-data-disks is true.";
+    internal const string ExcludeAllDataDisks = "When true, back up only the OS disk and exclude every data disk. Overrides --disks-list. Only supported for RSV IaaS VM protected items.";
 }
