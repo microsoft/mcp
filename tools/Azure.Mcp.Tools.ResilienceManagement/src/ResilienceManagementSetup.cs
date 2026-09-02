@@ -52,6 +52,7 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<DrillRunAddNotesCommand>();
         services.AddSingleton<DrillRunFailoverCommand>();
         services.AddSingleton<DrillRunResumeCommand>();
+        services.AddSingleton<DrillRunMarkCompleteCommand>();
         services.AddSingleton<DrillRunReprotectCommand>();
         services.AddSingleton<DrillRunResourceGetCommand>();
     }
@@ -150,6 +151,7 @@ public class ResilienceManagementSetup : IAreaSetup
         drillRuns.AddCommand<DrillRunAddNotesCommand>(serviceProvider);
         drillRuns.AddCommand<DrillRunFailoverCommand>(serviceProvider);
         drillRuns.AddCommand<DrillRunResumeCommand>(serviceProvider);
+        drillRuns.AddCommand<DrillRunMarkCompleteCommand>(serviceProvider);
         drillRuns.AddCommand<DrillRunReprotectCommand>(serviceProvider);
 
         // Create resource subgroup under drill run

@@ -3819,6 +3819,13 @@ azmcp resilience drill run resume --service-group <service-group> \
                                   --drill <drill> \
                                   --drill-run <drill-run>
 
+# Mark a drill run stage complete, disabling further retries on that stage
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run mark-complete --service-group <service-group> \
+                                         --drill <drill> \
+                                         --drill-run <drill-run> \
+                                         --stage <stage>
+
 # Reprotect failed-over resources in a drill run
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill run reprotect --service-group <service-group> \

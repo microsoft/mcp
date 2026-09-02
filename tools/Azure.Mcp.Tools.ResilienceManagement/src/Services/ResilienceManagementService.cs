@@ -20,6 +20,15 @@ public sealed class ResilienceManagementService(IAzureService azureService)
     private static readonly TimeSpan ReadinessJobPollingInterval = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan ReadinessTimeout = TimeSpan.FromMinutes(10);
 
+    // The Drills backend reads the per-operation id from the operationId query parameter, but the generated SDK only
+    // emits the operation-id header. Install a policy that mirrors the header into the query for long-running operations.
+    private static ArmClientOptions CreateArmClientOptionsWithOperationIdPolicy()
+    {
+        var options = new ArmClientOptions();
+        options.AddPolicy(new OperationIdQueryParameterPolicy(), HttpPipelinePosition.PerCall);
+        return options;
+    }
+
     public async Task<IEnumerable<ResourceSummary>> ListGoalTemplatesAsync(string serviceGroup, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
@@ -1223,7 +1232,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
     public async Task FailoverDrillRunAsync(string serviceGroup, string drill, string drillRun, IEnumerable<string> sourceLocations, IEnumerable<string>? selectedResourceIds = null, bool autoFailover = false, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, armClientOptions: CreateArmClientOptionsWithOperationIdPolicy(), cancellationToken: cancellationToken);
 
         var requestProperties = new FailoverRequestProperties(sourceLocations);
         foreach (string resourceId in selectedResourceIds ?? [])
@@ -1246,7 +1255,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
     public async Task ResumeDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, armClientOptions: CreateArmClientOptionsWithOperationIdPolicy(), cancellationToken: cancellationToken);
 
         var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
         DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
@@ -1254,9 +1263,23 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         await drillRunResource.ResumeAsync(WaitUntil.Started, Guid.NewGuid().ToString(), cancellationToken);
     }
 
+    public async Task<DrillRunMarkCompleteResult> MarkDrillRunCompleteAsync(string serviceGroup, string drill, string drillRun, string stage, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, armClientOptions: CreateArmClientOptionsWithOperationIdPolicy(), cancellationToken: cancellationToken);
+
+        var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
+        DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
+        var content = new MarkAsCompleteContent(new DrillRunSubtasks(stage));
+        string operationId = Guid.NewGuid().ToString();
+
+        var operation = await drillRunResource.MarkAsCompleteAsync(WaitUntil.Started, operationId, content, cancellationToken);
+
+        return new DrillRunMarkCompleteResult(operationId, operation.HasCompleted);
+    }
+
     public async Task ReprotectDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, cancellationToken: cancellationToken);
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, retryPolicy: retryPolicy, armClientOptions: CreateArmClientOptionsWithOperationIdPolicy(), cancellationToken: cancellationToken);
 
         var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
         DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);

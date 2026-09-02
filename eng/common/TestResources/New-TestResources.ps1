@@ -393,6 +393,13 @@ try {
     $deleteAfter = [DateTime]::UtcNow.AddHours($DeleteAfterHours).ToString('o')
     $tags['DeleteAfter'] = $deleteAfter
 
+    # Local-only: policy-required tags for the ResilienceManagement test subscription. Do NOT commit.
+    $tags['ManagerAlias'] = 'dhruvbharuka'
+    $tags['Owner'] = 'dhruvbharuka'
+    $tags['Workload'] = 'ResilienceMCPTests'
+    $tags['TestType'] = 'Functional'
+    $tags['DeleteBy'] = '09-2026'
+
     if ($CI) {
         # Add tags for the current CI job.
         $tags += @{
