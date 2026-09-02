@@ -34,7 +34,10 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
 
-        var query = $"{OptimizationKqlQueries.TopCostSavingsQuery}\n| limit {top}";
+        // Normalize the multi-line raw string query to CRLF so the request body is byte-identical
+        // across platforms; raw string literal line endings follow the checkout EOL (CRLF on
+        // Windows, LF on Linux), which otherwise breaks recorded-test playback matching.
+        var query = $"{OptimizationKqlQueries.TopCostSavingsQuery.ReplaceLineEndings("\r\n")}\n| limit {top}";
         var (rows, truncated, candidates) = await QueryResourceGraphAsync(
             query, subscription, tenant, cancellationToken, returnCandidatesOnMultipleMatch: true);
 
