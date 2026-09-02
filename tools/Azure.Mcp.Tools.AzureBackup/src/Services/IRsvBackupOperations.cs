@@ -69,12 +69,10 @@ public interface IRsvBackupOperations
         CancellationToken cancellationToken);
 
     Task<OperationResult> UpdatePolicyAsync(
+        Policy.PolicyUpdateRequest request,
         string vaultName,
         string resourceGroup,
         string subscription,
-        string policyName,
-        string? scheduleTime,
-        string? dailyRetentionDays,
         string? tenant,
         CancellationToken cancellationToken);
 
