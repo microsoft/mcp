@@ -1,7 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "Fixed `azurebackup governance immutability` and `azurebackup governance soft-delete` payloads that were silently broken by the RecoveryServices SDK 1.3.0 upgrade. Immutability now always sends `ImmutabilityConfiguration.Type` when the state is not Disabled (required on api-version 2026-05-01+), and soft-delete always sends `SoftDeleteRetentionPeriodInDays` plus `EnhancedSecurityState` (required on api-version 2026-02-01+). Regression-prevention unit tests target the payload builders directly."
-  - section: "Breaking Changes"
-    description: "`azurebackup governance immutability` now requires `--immutability-type` (`AsPerPolicy` or `TimeBased`). `TimeBased` additionally requires `--immutability-duration-days` between 30 and 36135. `Locked` state is IRREVERSIBLE."
-  - section: "Breaking Changes"
-    description: "`azurebackup governance soft-delete` now requires `--soft-delete-retention-days` between 14 and 180. `AlwaysOn` state is IRREVERSIBLE."
