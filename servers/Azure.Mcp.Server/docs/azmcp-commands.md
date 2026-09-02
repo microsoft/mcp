@@ -4945,14 +4945,15 @@ azmcp azureterraform azapi get --resource-type <resource-type> \
 
 ```bash
 # List all available Azure Verified Modules (AVM) for Terraform (both resource and pattern modules)
+# Returns each module with a moduleType field: 'resource' (avm-res-*) or 'pattern' (avm-ptn-*)
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azureterraform avm list
 
-# List all available versions of a specified Azure Verified Module
+# List all available versions of a specified Azure Verified Module (both resource and pattern modules)
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azureterraform avm versions --module-name <module-name>
 
-# Retrieve the documentation (README.md) for a specific version of an Azure Verified Module
+# Retrieve the documentation (README.md) for a specific version of an Azure Verified Module (both resource and pattern modules)
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azureterraform avm get --module-name <module-name> \
                              --module-version <module-version>
