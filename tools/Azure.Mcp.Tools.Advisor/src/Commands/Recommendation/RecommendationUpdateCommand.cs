@@ -51,7 +51,7 @@ public sealed class RecommendationUpdateCommand(
             validationResult.Errors.Add("--recommendation-id is required and cannot be empty.");
         }
 
-        RecommendationStateUpdateValidator.AddValidationErrors(
+        RecommendationStateUpdateValidator.AddCommandValidationErrors(
             options.RecommendationStatus,
             options.PostponedUntilDateTime,
             options.RecommendationDismissReason,
@@ -65,6 +65,10 @@ public sealed class RecommendationUpdateCommand(
     {
         try
         {
+            _ = RecommendationStateUpdateValidator.TryParsePostponedUntilDateTime(
+                options.PostponedUntilDateTime,
+                out var postponedUntilDateTime,
+                out _);
             var recommendationDismissReason = RecommendationStateUpdateValidator.ResolveDismissReason(
                 options.RecommendationStatus,
                 options.RecommendationDismissReason);
@@ -72,7 +76,7 @@ public sealed class RecommendationUpdateCommand(
                 options.Subscription!,
                 options.RecommendationId.Trim(),
                 options.RecommendationStatus,
-                options.PostponedUntilDateTime,
+                postponedUntilDateTime,
                 recommendationDismissReason,
                 options.Tenant,
                 cancellationToken);
@@ -103,12 +107,12 @@ public sealed class RecommendationUpdateCommand(
             "Advisor recommendation state cannot be updated because state changes are not allowed for recommendations with an Undefined customer state",
         RequestFailedException { ErrorCode: "ResolvedRecommendationStateChangeBlocked" } =>
             "Advisor recommendation state cannot be updated because the recommendation has already been marked as resolved by the Advisor platform",
-        RequestFailedException { ErrorCode: "InvalidRequestPayload" } reqEx =>
-            $"Advisor rejected the recommendation state update. {reqEx.Message}",
-        RequestFailedException { ErrorCode: "InvalidSubscriptionId" } reqEx =>
-            $"Advisor rejected the subscription. {reqEx.Message}",
-        RequestFailedException { ErrorCode: "InvalidRecommendationId" } reqEx =>
-            $"Advisor rejected the recommendation ID. {reqEx.Message}",
+        RequestFailedException { ErrorCode: "InvalidRequestPayload" } =>
+            "Advisor rejected the recommendation state update because the request payload was invalid",
+        RequestFailedException { ErrorCode: "InvalidSubscriptionId" } =>
+            "Advisor rejected the subscription. Verify --subscription",
+        RequestFailedException { ErrorCode: "InvalidRecommendationId" } =>
+            "Advisor rejected the recommendation ID. Verify --recommendation-id",
         RequestFailedException { ErrorCode: "RecommendationNotFound" } =>
             "Advisor recommendation not found. Verify --subscription and --recommendation-id",
         RequestFailedException { ErrorCode: "ConcurrentModification" } =>
@@ -118,10 +122,13 @@ public sealed class RecommendationUpdateCommand(
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             "Authorization failed updating the Advisor recommendation. Verify you have permission to update recommendation state",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
-            $"Advisor rejected the recommendation state update. {reqEx.Message}",
+            "Advisor rejected the recommendation state update",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "The Advisor recommendation was modified concurrently. Retrieve the latest recommendation and retry",
-        RequestFailedException reqEx => reqEx.Message,
+        RequestFailedException { ErrorCode: not null } reqEx =>
+            $"Advisor recommendation update failed with error code '{reqEx.ErrorCode}'",
+        RequestFailedException reqEx =>
+            $"Advisor recommendation update failed with status code {reqEx.Status}",
         _ => base.GetErrorMessage(ex)
     };
 

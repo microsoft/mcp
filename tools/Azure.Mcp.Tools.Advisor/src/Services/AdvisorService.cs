@@ -550,7 +550,6 @@ public class AdvisorService(IAzureService azureService)
     private static RequestFailedException CreateRecommendationUpdateException(Response response)
     {
         string? errorCode = null;
-        string? errorMessage = null;
 
         try
         {
@@ -563,12 +562,6 @@ public class AdvisorService(IAzureService azureService)
                 {
                     errorCode = code.GetString();
                 }
-
-                if (error.TryGetProperty("message", out var messageElement) &&
-                    messageElement.ValueKind == JsonValueKind.String)
-                {
-                    errorMessage = messageElement.GetString()?.Trim();
-                }
             }
         }
         catch (JsonException)
@@ -576,15 +569,9 @@ public class AdvisorService(IAzureService azureService)
             // The status code remains authoritative when the service returns a non-JSON error body.
         }
 
-        var message = (errorCode, errorMessage) switch
-        {
-            (not null, not null) =>
-                $"Advisor recommendation update failed with error code '{errorCode}': {errorMessage}",
-            (not null, null) =>
-                $"Advisor recommendation update failed with error code '{errorCode}'.",
-            _ =>
-                $"Advisor recommendation update failed with status code {response.Status}."
-        };
+        var message = errorCode is not null
+            ? $"Advisor recommendation update failed with error code '{errorCode}'."
+            : $"Advisor recommendation update failed with status code {response.Status}.";
 
         return new RequestFailedException(
             response.Status,

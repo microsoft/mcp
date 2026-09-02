@@ -51,7 +51,7 @@ public class AdvisorRecommendationUpdateServiceTests
             "subscription-name",
             "rec/1",
             RecommendationStatus.Completed,
-            DateTimeOffset.UtcNow.AddDays(10),
+            postponedUntilDateTime: null,
             recommendationDismissReason: null,
             cancellationToken: TestContext.Current.CancellationToken);
 
@@ -217,7 +217,26 @@ public class AdvisorRecommendationUpdateServiceTests
     }
 
     [Fact]
-    public async Task UpdateRecommendationAsync_BackendJsonError_UsesErrorCodeAndMessage()
+    public async Task UpdateRecommendationAsync_PostponementDateForCompleted_ThrowsArgumentException()
+    {
+        var service = new AdvisorService(_azureService);
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.UpdateRecommendationAsync(
+                SubscriptionId,
+                "rec-1",
+                RecommendationStatus.Completed,
+                DateTimeOffset.UtcNow.AddDays(1),
+                cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Contains(
+            "--postponed-until-date-time can only be used when --recommendation-status is Postponed",
+            exception.Message);
+        _azureService.DidNotReceive().GetClient(Arg.Any<string?>());
+    }
+
+    [Fact]
+    public async Task UpdateRecommendationAsync_BackendJsonError_UsesErrorCodeWithoutMessage()
     {
         const string rawBody = """
             {
@@ -242,7 +261,7 @@ public class AdvisorRecommendationUpdateServiceTests
 
         Assert.Equal((int)HttpStatusCode.BadRequest, exception.Status);
         Assert.Contains("RecommendationStateNotAllowed", exception.Message);
-        Assert.Contains("internal backend details", exception.Message);
+        Assert.DoesNotContain("internal backend details", exception.Message);
     }
 
     [Theory]
@@ -266,7 +285,7 @@ public class AdvisorRecommendationUpdateServiceTests
         HttpStatusCode.Conflict,
         "ConcurrentModification",
         "The recommendation was modified by another operation. Please retrieve the latest version and retry.")]
-    public async Task UpdateRecommendationAsync_KnownLifecycleError_PreservesCodeAndPublicMessage(
+    public async Task UpdateRecommendationAsync_KnownLifecycleError_PreservesCodeWithoutBackendMessage(
         HttpStatusCode statusCode,
         string errorCode,
         string errorMessage)
@@ -293,7 +312,8 @@ public class AdvisorRecommendationUpdateServiceTests
                 cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal(errorCode, exception.ErrorCode);
-        Assert.Contains(errorMessage, exception.Message);
+        Assert.Contains(errorCode, exception.Message);
+        Assert.DoesNotContain(errorMessage, exception.Message);
     }
 
     [Fact]

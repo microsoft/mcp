@@ -16,7 +16,7 @@ public sealed class RecommendationUpdateOptions : ISubscriptionOption
     public required RecommendationStatus RecommendationStatus { get; set; }
 
     [Option(Description = "The date and time until which the recommendation is postponed, in ISO 8601 format with a timezone offset. Required when --recommendation-status is Postponed and must represent a future instant.")]
-    public DateTimeOffset? PostponedUntilDateTime { get; set; }
+    public string? PostponedUntilDateTime { get; set; }
 
     [Option(Description = "The reason for dismissing the recommendation. " +
         "Map natural-language intent as follows: cost investment is too high to ExcessiveCostInvestmentRequired; unclear steps to ImplementationStepsAreUnclear; " +

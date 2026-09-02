@@ -110,6 +110,54 @@ public class RecommendationUpdateCommandTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_PostponedWithoutTimezoneOffset_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--recommendation-id", "rec-1",
+            "--recommendation-status", "Postponed",
+            "--postponed-until-date-time", "2099-01-01T12:30:00");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("must end in 'Z' or an explicit timezone offset", response.Message);
+        await Service.DidNotReceive().UpdateRecommendationAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RecommendationStatus>(),
+            Arg.Any<DateTimeOffset?>(),
+            Arg.Any<RecommendationDismissReason?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("New")]
+    [InlineData("Completed")]
+    [InlineData("Dismissed")]
+    public async Task ExecuteAsync_PostponementDateForNonPostponedStatus_ReturnsBadRequest(
+        string recommendationStatus)
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--recommendation-id", "rec-1",
+            "--recommendation-status", recommendationStatus,
+            "--postponed-until-date-time", "2099-01-01T12:30:00Z");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(
+            "--postponed-until-date-time can only be used when --recommendation-status is Postponed",
+            response.Message);
+        await Service.DidNotReceive().UpdateRecommendationAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RecommendationStatus>(),
+            Arg.Any<DateTimeOffset?>(),
+            Arg.Any<RecommendationDismissReason?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ExecuteAsync_DismissReasonForCompleted_ReturnsBadRequest()
     {
         var response = await ExecuteCommandAsync(
@@ -189,12 +237,16 @@ public class RecommendationUpdateCommandTests
 
         Assert.Equal(statusCode, response.Status);
         Assert.Contains(expectedMessage, response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Backend error", response.Message);
     }
 
     [Theory]
     [InlineData("SecurityRecommendationStateChangeBlocked", "Security category")]
     [InlineData("UndefinedRecommendationStateChangeBlocked", "Undefined")]
     [InlineData("ResolvedRecommendationStateChangeBlocked", "resolved by the Advisor platform")]
+    [InlineData("InvalidRequestPayload", "request payload was invalid")]
+    [InlineData("InvalidSubscriptionId", "Verify --subscription")]
+    [InlineData("InvalidRecommendationId", "Verify --recommendation-id")]
     [InlineData("RecommendationNotFound", "not found")]
     [InlineData("ConcurrentModification", "modified concurrently")]
     public async Task ExecuteAsync_KnownLifecycleFailure_ReturnsActionableMessage(
@@ -222,6 +274,7 @@ public class RecommendationUpdateCommandTests
             "--recommendation-status", "Completed");
 
         Assert.Contains(expectedMessage, response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Backend explanation", response.Message);
     }
 
     [Fact]
