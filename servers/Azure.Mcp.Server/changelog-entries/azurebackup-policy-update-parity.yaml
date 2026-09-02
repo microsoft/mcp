@@ -1,3 +1,0 @@
-changes:
-  - section: Features Added
-    description: "`azmcp azurebackup policy update` now accepts the full IaasVM policy surface (time zone, schedule frequency/times/days-of-week, and weekly/monthly/yearly long-term retention flags) for parity with `az backup policy set`. Legacy `--schedule-time` and `--daily-retention-days` continue to work unchanged."
