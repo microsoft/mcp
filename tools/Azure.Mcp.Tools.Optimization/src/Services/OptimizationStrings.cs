@@ -10,15 +10,15 @@ internal static class OptimizationStrings
     public const string ErrorInvalidResourceId =
         "Invalid Azure resource ID format. Ensure it starts with '/subscriptions/' and is a valid ARM ID.";
 
-    // Delivered inside the response payload so the agent renders the chart on the first turn without being re-prompted.
+    // Delivered inside the response payload to guide how the agent presents the utilization data.
     public const string ExplanationRenderingInstructions =
-        "ACTION REQUIRED NOW: Immediately render the recentUtilization (and longTermUtilization when present) series as an " +
-        "inline line/time-series chart in this reply, without asking for permission. Put the timestamp on the x-axis and " +
-        "percentage on the y-axis; draw separate lines for current versus target CPU, used-memory, and network utilization; " +
-        "and mark the threshold levels from thresholds. Use your native inline chart/visualization capability \u2014 do NOT " +
-        "write HTML, generate images, create files, run code, or link to external tools. After the chart, briefly summarize " +
-        "the recommendation, the current-versus-target configuration, the max-utilization comparison, and any threshold " +
-        "risks. If inline chart rendering is not possible at all, skip the chart \u2014 do not create any files or artifacts.";
+        "When possible, render the recentUtilization (and longTermUtilization when present) series as an inline " +
+        "line/time-series chart, with the timestamp on the x-axis and percentage on the y-axis. Draw separate lines for " +
+        "current versus target CPU and used-memory utilization; include network utilization only when network values are " +
+        "present (it may be absent). Mark the threshold levels from thresholds when available. Prefer a native inline " +
+        "chart/visualization capability if one is available. After the chart, briefly summarize the recommendation, the " +
+        "current-versus-target configuration, the max-utilization comparison, and any threshold risks. If inline chart " +
+        "rendering is not available, summarize the data in text instead.";
 
     // Shared
     public const string NotAvailableValue = "N/A";

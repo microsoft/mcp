@@ -82,42 +82,68 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
                 0, resourceId, null, null, null, null, null, null, null);
         }
 
-        // When no target SKU is supplied, derive it from the top alternative resize recommendation so
-        // the caller can invoke this tool directly without a separate 'alternatives' round-trip.
-        var resolvedTargetSku = string.IsNullOrWhiteSpace(targetSku)
-            ? await ResolveTargetSkuAsync(resourceId, subscription, tenant, cancellationToken)
-            : targetSku;
-
+        // When no target SKU is supplied, project only the current utilization (no target comparison).
         var credential = await GetCredential(tenant, cancellationToken);
         var armHost = AzureService.CloudConfiguration.ArmEnvironment.Endpoint.ToString();
         var armScope = AzureService.CloudConfiguration.ArmEnvironment.DefaultScope;
         var httpClient = AzureService.GetClient();
 
         var computeClient = new OptimizationComputeSkuClient(httpClient, credential, armHost, armScope);
-        var comparison = await computeClient.GetComparisonAsync(resourceId, resolvedTargetSku, cancellationToken);
 
-        var resolvedTargetInstances = comparison.CurrentInstanceCount;
+        string location;
+        string resourceKind;
+        SkuConfiguration currentConfiguration;
+        SkuConfiguration? targetConfiguration;
+        RecommendationExplanation projection;
 
-        double? currentNetworkMbps = null;
-        double? targetNetworkMbps = null;
-        var projection = new RecommendationExplanation
+        if (string.IsNullOrWhiteSpace(targetSku))
         {
-            ResourceId = resourceId,
-            RecommendationMessage = $"Project {comparison.Current.Name} to {comparison.Target.Name}",
-            SKU = comparison.Current.Name,
-            NewSKU = comparison.Target.Name,
-            SkuCores = comparison.Current.AvailableVcpus,
-            NewSkuCores = comparison.Target.AvailableVcpus,
-            MemoryGB = comparison.Current.MemoryGB,
-            NewMemoryGB = comparison.Target.MemoryGB,
-            NetworkMbps = currentNetworkMbps,
-            NewNetworkMbps = targetNetworkMbps,
-            CurrentInstanceCount = comparison.CurrentInstanceCount,
-            NewInstanceCount = resolvedTargetInstances,
-            MaxCpuThreshold = DefaultThreshold,
-            MaxMemoryThreshold = DefaultThreshold,
-            MaxNetworkThreshold = DefaultThreshold,
-        };
+            var current = await computeClient.GetCurrentAsync(resourceId, cancellationToken);
+            location = current.Location;
+            resourceKind = current.ResourceKind;
+            currentConfiguration = new SkuConfiguration(
+                current.Current.Name, current.CurrentInstanceCount, current.Current.AvailableVcpus, current.Current.MemoryGB, null);
+            targetConfiguration = null;
+            projection = new RecommendationExplanation
+            {
+                ResourceId = resourceId,
+                RecommendationMessage = $"Current utilization for {current.Current.Name}",
+                SKU = current.Current.Name,
+                SkuCores = current.Current.AvailableVcpus,
+                MemoryGB = current.Current.MemoryGB,
+                CurrentInstanceCount = current.CurrentInstanceCount,
+                MaxCpuThreshold = DefaultThreshold,
+                MaxMemoryThreshold = DefaultThreshold,
+                MaxNetworkThreshold = DefaultThreshold,
+            };
+        }
+        else
+        {
+            var comparison = await computeClient.GetComparisonAsync(resourceId, targetSku, cancellationToken);
+            var resolvedTargetInstances = comparison.CurrentInstanceCount;
+            location = comparison.Location;
+            resourceKind = comparison.ResourceKind;
+            currentConfiguration = new SkuConfiguration(
+                comparison.Current.Name, comparison.CurrentInstanceCount, comparison.Current.AvailableVcpus, comparison.Current.MemoryGB, null);
+            targetConfiguration = new SkuConfiguration(
+                comparison.Target.Name, resolvedTargetInstances, comparison.Target.AvailableVcpus, comparison.Target.MemoryGB, null);
+            projection = new RecommendationExplanation
+            {
+                ResourceId = resourceId,
+                RecommendationMessage = $"Project {comparison.Current.Name} to {comparison.Target.Name}",
+                SKU = comparison.Current.Name,
+                NewSKU = comparison.Target.Name,
+                SkuCores = comparison.Current.AvailableVcpus,
+                NewSkuCores = comparison.Target.AvailableVcpus,
+                MemoryGB = comparison.Current.MemoryGB,
+                NewMemoryGB = comparison.Target.MemoryGB,
+                CurrentInstanceCount = comparison.CurrentInstanceCount,
+                NewInstanceCount = resolvedTargetInstances,
+                MaxCpuThreshold = DefaultThreshold,
+                MaxMemoryThreshold = DefaultThreshold,
+                MaxNetworkThreshold = DefaultThreshold,
+            };
+        }
 
         var includeDetail = view is UtilizationView.Detail or UtilizationView.Both;
         var includeTrend = view is UtilizationView.Trend or UtilizationView.Both;
@@ -152,10 +178,10 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
             OptimizationStrings.ExplanationRenderingInstructions,
             rows.Count,
             resourceId,
-            comparison.Location,
-            comparison.ResourceKind,
-            new SkuConfiguration(comparison.Current.Name, comparison.CurrentInstanceCount, comparison.Current.AvailableVcpus, comparison.Current.MemoryGB, null),
-            new SkuConfiguration(comparison.Target.Name, resolvedTargetInstances, comparison.Target.AvailableVcpus, comparison.Target.MemoryGB, null),
+            location,
+            resourceKind,
+            currentConfiguration,
+            targetConfiguration,
             new UtilizationThresholds(DefaultThreshold, DefaultThreshold, DefaultThreshold),
             recentUtilization,
             longTermUtilization);
@@ -165,35 +191,6 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
     {
         var utcTicks = value.UtcTicks - (value.UtcTicks % interval.Ticks);
         return new DateTimeOffset(utcTicks, TimeSpan.Zero);
-    }
-
-    /// <summary>
-    /// Derives a target SKU from the top alternative resize recommendation (lowest option with a
-    /// proposed SKU) for the specified resource when the caller did not supply one.
-    /// </summary>
-    private async Task<string> ResolveTargetSkuAsync(
-        string resourceId,
-        string subscription,
-        string? tenant,
-        CancellationToken cancellationToken)
-    {
-        var alternatives = await GetAlternativesAsync(
-            resourceId, subscription, tenant, cancellationToken);
-
-        var targetSku = alternatives
-            .Where(a => !string.IsNullOrWhiteSpace(a.ProposedSku))
-            .OrderBy(a => a.Option)
-            .Select(a => a.ProposedSku)
-            .FirstOrDefault();
-
-        if (string.IsNullOrWhiteSpace(targetSku))
-        {
-            throw new InvalidOperationException(
-                "No target SKU was provided and no alternative resize recommendation was found to derive one from. " +
-                "Specify a target SKU explicitly.");
-        }
-
-        return targetSku;
     }
 
     /// <summary>

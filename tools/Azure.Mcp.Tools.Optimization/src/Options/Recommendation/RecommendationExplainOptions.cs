@@ -17,8 +17,8 @@ public class RecommendationExplainOptions : ISubscriptionOption
     public string? ResourceId { get; set; }
 
     [Option(Description = "Optional target Azure VM SKU to compare against the current SKU, e.g. 'Standard_E2as_v5'. " +
-        "If omitted, the tool automatically derives it from the top alternative resize recommendation for the resource, " +
-        "so you do not need to call the 'alternatives' tool first. Only set this when the user explicitly names a SKU.")]
+        "When omitted, only the current utilization is returned (no target configuration or projected target series). " +
+        "Set this only when the user explicitly names a SKU to project against.")]
     public string? TargetSku { get; set; }
 
     [Option(Description = "Which utilization view(s) to return: 'Detail' (default, 7-day / 30-minute maximum), " +

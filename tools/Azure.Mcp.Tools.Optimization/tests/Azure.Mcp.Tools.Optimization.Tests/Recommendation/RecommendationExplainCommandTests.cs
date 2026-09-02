@@ -32,6 +32,7 @@ public class RecommendationExplainCommandTests
     [InlineData("--subscription sub123 --resource-id /subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm1 --target-sku Standard_E2as_v5", true)]
     [InlineData("--subscription sub123 --target-sku Standard_E2as_v5", false)]  // missing resource-id
     [InlineData("--subscription sub123 --resource-id /subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm1", true)]  // target-sku optional; auto-derived
+    [InlineData("--subscription sub123 --resource-id /subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm1/providers/Microsoft.Advisor/recommendations/11111111-1111-1111-1111-111111111111", true)]  // Advisor recommendation id is accepted
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)

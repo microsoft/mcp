@@ -18,30 +18,26 @@ namespace Azure.Mcp.Tools.Optimization.Commands.Recommendation;
     Id = "c3e9a4f6-1d5b-6a8c-0e4f-3b7d9c1a5e62",
     Name = "explain",
     Title = "Explain Recommendation with Utilization Projection",
-    Description = "Explain a specific Azure Advisor cost/right-size recommendation for a resource AND show current " +
-        "versus target-SKU utilization in the same call. IMPORTANT: this tool ALWAYS returns utilization time-series that " +
-        "you MUST render as an inline chart on the SAME turn you receive the response \u2014 rendering the chart is a required " +
-        "part of completing this tool call, not an optional follow-up. Call this whenever the user asks to 'explain recommendation N', " +
-        "'explain this recommendation', 'tell me more about recommendation N', 'why is this recommended', or 'go deeper on' " +
-        "a recommendation after listing recommendations with the 'list' tool. Pass the --resource-id " +
-        "from the corresponding row returned by the 'list' tool. --target-sku is OPTIONAL: pass " +
-        "the target VM/VMSS SKU to project against only if the user already named one. If omitted, the tool automatically " +
-        "derives the target SKU from the top alternative resize recommendation for the resource, so you can call this " +
-        "directly WITHOUT first calling the 'alternatives' tool. Returns the matching recommendation count, a " +
-        "current-versus-target configuration (current/target SKU, instance count, vCPUs, memory), the utilization thresholds, and the " +
-        "projected CPU / used-memory / total-network utilization time-series (current versus target) as structured JSON over a " +
-        "seven-day window in 30-minute maximum buckets (detail view) by default. Set --view to 'Trend' (six-hour) or 'Both' only " +
-        "when the user explicitly asks for longer-term trend data. Utilization is read from Azure Monitor; target vCPU and memory " +
-        "come from the Microsoft.Compute Resource SKUs API. The response contains structured JSON only \u2014 there is no markdown " +
-        "summary. As soon as you receive the response, ALWAYS render the returned utilization time-series as an inline chart " +
-        "yourself \u2014 immediately, without asking for permission. Plot the recentUtilization (and longTermUtilization when " +
-        "present) series as a line/time-series chart with the timestamp on the x-axis and percentage on the y-axis, drawing " +
-        "separate lines for current versus target CPU, used-memory, and network utilization, and mark the corresponding threshold " +
-        "levels from thresholds. Draw the chart directly in the conversation using your native inline chart/visualization " +
-        "capability. Then briefly summarize the recommendation, the current-versus-target configuration, the maximum utilization " +
-        "comparison, and any threshold risks. Do NOT write HTML, generate images, CREATE FILES, run code, or link to external tools " +
-        "to render the chart. If inline chart rendering is not possible at all, simply skip the chart \u2014 do not create any " +
-        "additional files or artifacts to work around it. " +
+    Description = "Explain a specific Azure Advisor cost/right-size recommendation for a resource and return its " +
+        "utilization time-series, which can be rendered as an inline chart. Call this whenever the user asks to " +
+        "'explain recommendation N', 'explain this recommendation', 'tell me more about recommendation N', 'why is this " +
+        "recommended', or 'go deeper on' a recommendation after listing recommendations with the 'list' tool. Pass the " +
+        "--resource-id from the corresponding row returned by the 'list' tool. --target-sku is OPTIONAL: pass the target " +
+        "VM/VMSS SKU to project against only if the user names one. When --target-sku is omitted, the response contains " +
+        "ONLY the current utilization (no target configuration and no projected target series); provide a target SKU to " +
+        "get a current-versus-target comparison. Returns the matching recommendation count, the current (and, when a " +
+        "target SKU is given, target) configuration (SKU, instance count, vCPUs, memory), the utilization thresholds, and " +
+        "the CPU / used-memory / total-network utilization time-series as structured JSON over a seven-day window in " +
+        "30-minute maximum buckets (detail view) by default. Network utilization may be absent and should be treated as " +
+        "optional. Set --view to 'Trend' (six-hour) or 'Both' only when the user explicitly asks for longer-term trend " +
+        "data. Utilization is read from Azure Monitor; vCPU and memory come from the Microsoft.Compute Resource SKUs API. " +
+        "The response contains structured JSON only \u2014 there is no markdown summary. When possible, render the " +
+        "recentUtilization (and longTermUtilization when present) series as an inline line/time-series chart with the " +
+        "timestamp on the x-axis and percentage on the y-axis, drawing lines for current (and target when present) CPU " +
+        "and used-memory utilization, including network only when network values are present, and marking the threshold " +
+        "levels from thresholds when available. Then briefly summarize the recommendation, the configuration, the maximum " +
+        "utilization, and any threshold risks. If inline chart rendering is not available, summarize the data in text " +
+        "instead. " +
         "Pass the user's subscription name or id straight to --subscription; a name is resolved to its id internally, so do " +
         "NOT call the 'subscription list' tool first.",
     Destructive = false,
@@ -67,7 +63,7 @@ public sealed class RecommendationExplainCommand(
         {
             validationResult.Errors.Add("--resource-id is required.");
         }
-        else if (!ArmResourceId.IsValid(options.ResourceId))
+        else if (!ArmResourceId.IsValid(ArmResourceId.StripAdvisorRecommendationSuffix(options.ResourceId)))
         {
             validationResult.Errors.Add(OptimizationStrings.ErrorInvalidResourceId);
         }

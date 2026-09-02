@@ -55,6 +55,25 @@ internal sealed class OptimizationComputeSkuClient(
             target);
     }
 
+    /// <summary>
+    /// Resolves only the current SKU specifications for a compute resource, without a target
+    /// comparison. Used when the caller did not supply a target SKU.
+    /// </summary>
+    public async Task<(string Location, string ResourceKind, int CurrentInstanceCount, VmSkuSpecifications Current)> GetCurrentAsync(
+        string resourceId,
+        CancellationToken cancellationToken)
+    {
+        var resource = await GetResourceAsync(resourceId, cancellationToken).ConfigureAwait(false);
+        var skus = await GetRegionalSkusAsync(
+            resource.SubscriptionId,
+            resource.Location,
+            cancellationToken).ConfigureAwait(false);
+
+        var current = FindSku(skus, resource.CurrentSku, resource.Location, requireAvailable: false);
+
+        return (resource.Location, resource.ResourceKind, resource.InstanceCount, current);
+    }
+
     private async Task<ResourceMetadata> GetResourceAsync(
         string resourceId,
         CancellationToken cancellationToken)
