@@ -52,7 +52,7 @@ A command's plane is determined by its **deliverable call**: the request that pr
 
 | Value | Meaning |
 |---|---|
-| `Data` | The deliverable is a workload call against a service data-plane API. |
+| `Data` | The tool performs its action(s) against a service data-plane API. |
 | `Control` | The deliverable is a call against Azure Resource Manager or another management-plane API. |
 | `Both` | The command has two genuine user-facing deliverables, one on each plane. |
 | `NotApplicable` | The command does not perform an Azure service-plane operation, such as `tools list`, `server start`, or a local-only utility. |
