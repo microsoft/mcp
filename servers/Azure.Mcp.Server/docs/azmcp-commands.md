@@ -2796,7 +2796,7 @@ azmcp foundryextensions knowledge index list \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundryextensions knowledge index schema \
     --endpoint <project-endpoint> \
-    --index-name <index-name>
+    --index <index-name>
 
 # Create chat completions using Azure OpenAI in Microsoft Foundry
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2804,7 +2804,7 @@ azmcp foundryextensions openai chat-completions-create \
     --subscription <subscription> \
     --resource-group <resource-group> \
     --resource-name <resource-name> \
-    --deployment-name <deployment-name> \
+    --deployment <deployment-name> \
     --message-array <json-message-array>
 
 # Create text completions using Azure OpenAI in Microsoft Foundry
@@ -2813,7 +2813,7 @@ azmcp foundryextensions openai create-completion \
     --subscription <subscription> \
     --resource-group <resource-group> \
     --resource-name <resource-name> \
-    --deployment-name <deployment-name> \
+    --deployment <deployment-name> \
     --prompt-text <prompt>
 
 # Create embeddings using Azure OpenAI in Microsoft Foundry
@@ -2822,7 +2822,7 @@ azmcp foundryextensions openai embeddings-create \
     --subscription <subscription> \
     --resource-group <resource-group> \
     --resource-name <resource-name> \
-    --deployment-name <deployment-name> \
+    --deployment <deployment-name> \
     --input-text <text>
 
 # List available Azure OpenAI model deployments in a Microsoft Foundry resource
