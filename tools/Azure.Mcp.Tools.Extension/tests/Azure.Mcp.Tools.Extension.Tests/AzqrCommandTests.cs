@@ -2,11 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Extension.Commands;
+using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Time;
@@ -18,15 +17,25 @@ namespace Azure.Mcp.Tools.Extension.Tests;
 public sealed class AzqrCommandTests : SubscriptionCommandUnitTestsBase<AzqrCommand, IExternalProcessService>
 {
     private readonly IAzureService _azureService;
+    private readonly IAzqrCliService _azqrCliService;
     private readonly IDateTimeProvider _dateTimeProvider;
 
     public AzqrCommandTests()
     {
         _azureService = Substitute.For<IAzureService>();
+        _azqrCliService = Substitute.For<IAzqrCliService>();
         _dateTimeProvider = Substitute.For<IDateTimeProvider>();
+        _azqrCliService.GetSupportedExecutablePath().Returns("azqr");
 
         Services.AddSingleton(_azureService);
+        Services.AddSingleton(_azqrCliService);
         Services.AddSingleton(_dateTimeProvider);
+    }
+
+    [Fact]
+    public void Metadata_RequiresLocalExecution()
+    {
+        Assert.True(Command.Metadata.LocalRequired);
     }
 
     [Fact]
@@ -45,17 +54,6 @@ public sealed class AzqrCommandTests : SubscriptionCommandUnitTestsBase<AzqrComm
         // Create empty files to simulate the report generation
         File.WriteAllText(xlsxReportFilePath, "");
         File.WriteAllText(jsonReportFilePath, "");
-
-        // Create a temporary fake azqr executable
-        var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        var tempAzqrName = isWindows ? "azqr.exe" : "azqr";
-        var tempAzqrPath = Path.Combine(Path.GetTempPath(), tempAzqrName);
-        File.WriteAllText(tempAzqrPath, string.Empty); // Empty file is enough for path check
-
-        // Set the private static s_cachedAzqrPath field via reflection
-        var field = typeof(AzqrCommand).GetField("s_cachedAzqrPath", BindingFlags.Static | BindingFlags.NonPublic);
-        var originalAzqrPath = field?.GetValue(null);
-        field?.SetValue(null, tempAzqrPath);
 
         Service.ExecuteAsync(
             Arg.Any<string>(),
@@ -91,10 +89,6 @@ public sealed class AzqrCommandTests : SubscriptionCommandUnitTestsBase<AzqrComm
             if (File.Exists(jsonReportFilePath))
             {
                 File.Delete(jsonReportFilePath);
-            }
-            if (File.Exists(tempAzqrPath))
-            {
-                File.Delete(tempAzqrPath);
             }
         }
     }

@@ -985,8 +985,8 @@
           "description": "This tool does not handle sensitive or secret information."
         },
         "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
+          "value": true,
+          "description": "This tool requires local execution and is not available in remote server mode."
         }
       },
       "mappedToolList": [
