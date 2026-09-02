@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -60,7 +59,6 @@ public sealed class DrillRunAddNotesCommandTests : CommandUnitTestsBase<DrillRun
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -96,7 +94,6 @@ public sealed class DrillRunAddNotesCommandTests : CommandUnitTestsBase<DrillRun
             DrillRun,
             Notes,
             null,
-            null,
             Arg.Any<CancellationToken>());
     }
 
@@ -114,7 +111,6 @@ public sealed class DrillRunAddNotesCommandTests : CommandUnitTestsBase<DrillRun
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 

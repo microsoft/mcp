@@ -62,7 +62,6 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
                 options.SelectedResourceIds,
                 options.AutoFailover,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             var result = new DrillRunFailoverCommandResult(options.DrillRun, Accepted: true);

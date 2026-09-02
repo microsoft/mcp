@@ -44,7 +44,6 @@ public sealed class DrillRunReprotectCommand(ILogger<DrillRunReprotectCommand> l
                 options.Drill,
                 options.DrillRun,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             var result = new DrillRunReprotectCommandResult(options.DrillRun, Accepted: true);

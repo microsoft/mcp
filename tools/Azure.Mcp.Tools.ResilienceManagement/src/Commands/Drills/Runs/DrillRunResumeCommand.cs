@@ -44,7 +44,6 @@ public sealed class DrillRunResumeCommand(ILogger<DrillRunResumeCommand> logger,
                 options.Drill,
                 options.DrillRun,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             var result = new DrillRunResumeCommandResult(options.DrillRun, Accepted: true);

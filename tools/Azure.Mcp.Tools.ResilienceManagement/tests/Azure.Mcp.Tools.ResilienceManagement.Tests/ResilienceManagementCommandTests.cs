@@ -66,6 +66,14 @@ public class ResilienceManagementCommandTests(
             Regex = @"resource[Gg]roups/([^?\\/]+)",
             GroupForReplace = "1",
             Value = "Sanitized"
+        }),
+        // The Drills backend requires a fresh operationId query parameter per invocation, so recorded requests
+        // never match on replay unless the value is normalized for matching purposes.
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "operationId=(?<opId>[0-9a-fA-F-]{36})",
+            GroupForReplace = "opId",
+            Value = "sanitized"
         })
     ];
 
@@ -83,19 +91,6 @@ public class ResilienceManagementCommandTests(
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..chaosExperimentId")
         {
             Value = "Sanitized"
-        })
-    ];
-
-    // The Drills backend requires a fresh operationId query parameter per invocation, so recorded requests never
-    // match on replay unless the value is normalized for matching purposes (same treatment as the operation-id header).
-    public override List<UriRegexSanitizer> UriRegexSanitizers =>
-    [
-        .. base.UriRegexSanitizers,
-        new UriRegexSanitizer(new UriRegexSanitizerBody
-        {
-            Regex = "operationId=(?<opId>[0-9a-fA-F-]{36})",
-            GroupForReplace = "opId",
-            Value = "sanitized"
         })
     ];
 

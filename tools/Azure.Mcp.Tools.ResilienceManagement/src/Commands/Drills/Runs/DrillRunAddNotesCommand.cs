@@ -50,7 +50,6 @@ public sealed class DrillRunAddNotesCommand(ILogger<DrillRunAddNotesCommand> log
                 options.DrillRun,
                 options.Notes,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             var result = new DrillRunAddNotesCommandResult(options.DrillRun, Accepted: true);
