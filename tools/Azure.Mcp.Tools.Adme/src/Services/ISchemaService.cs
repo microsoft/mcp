@@ -18,6 +18,7 @@ public interface ISchemaService
         string endpoint,
         string dataPartition,
         string kind,
+        string? tenant,
         CancellationToken cancellationToken);
 
     /// <summary>
@@ -26,6 +27,7 @@ public interface ISchemaService
     Task<SchemaListResponse> ListSchemasAsync(
         string endpoint,
         string dataPartition,
+        string? tenant,
         string? authority,
         string? source,
         string? entityType,

@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Identity;
 using Azure.Mcp.Tools.Adme.Commands.Schema;
 using Azure.Mcp.Tools.Adme.Models.Schema;
 using Azure.Mcp.Tools.Adme.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Adme.Tests.Commands.Schema;
@@ -21,7 +23,7 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
             [
                 new SchemaInfo
                 {
-                    SchemaIdentity = new SchemaIdentity { Id = "osdu:wks:master-data--Well:1.0.0" },
+                    SchemaIdentity = new SchemaIdentity { Id = TestConstants.WellKind },
                     Status = "PUBLISHED",
                     Scope = "SHARED",
                 }
@@ -31,28 +33,30 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
             TotalCount = 3,
         };
         Service.ListSchemasAsync(
-                "https://sample.energy.azure.com",
-                "opendes",
-                "osdu",
-                "wks",
-                "master-data--Well",
-                SchemaStatus.PUBLISHED,
-                SchemaScope.SHARED,
-                1,
-                0,
-                0,
-                true,
-                2,
-                25,
-                Arg.Any<CancellationToken>())
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            TestConstants.Tenant,
+            TestConstants.WellAuthority,
+            TestConstants.WellSource,
+            TestConstants.WellEntityType,
+            SchemaStatus.PUBLISHED,
+            SchemaScope.SHARED,
+            1,
+            0,
+            0,
+            true,
+            2,
+            25,
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
-            "--endpoint", "https://sample.energy.azure.com",
-            "--data-partition", "opendes",
-            "--authority", "osdu",
-            "--source", "wks",
-            "--entity-type", "master-data--Well",
+            "--endpoint", TestConstants.Endpoint,
+            "--data-partition", TestConstants.DataPartition,
+            "--tenant", TestConstants.Tenant,
+            "--authority", TestConstants.WellAuthority,
+            "--source", TestConstants.WellSource,
+            "--entity-type", TestConstants.WellEntityType,
             "--status", "PUBLISHED",
             "--scope", "SHARED",
             "--schema-version-major", "1",
@@ -68,11 +72,12 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
         Assert.Equal(expected.TotalCount, result.TotalCount);
         Assert.Equal(expected.SchemaInfos.Single().SchemaIdentity?.Id, result.SchemaInfos.Single().SchemaIdentity?.Id);
         await Service.Received(1).ListSchemasAsync(
-            "https://sample.energy.azure.com",
-            "opendes",
-            "osdu",
-            "wks",
-            "master-data--Well",
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            TestConstants.Tenant,
+            TestConstants.WellAuthority,
+            TestConstants.WellSource,
+            TestConstants.WellEntityType,
             SchemaStatus.PUBLISHED,
             SchemaScope.SHARED,
             1,
@@ -85,38 +90,40 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
     }
 
     [Fact]
-    public async Task Execute_WithNoFilters_AppliesDefaults()
+    public async Task Execute_WithNoFilters_PreservesNullStatusAndAppliesPagingDefaults()
     {
         Service.ListSchemasAsync(
-                "https://sample.energy.azure.com",
-                "opendes",
-                null,
-                null,
-                null,
-                SchemaStatus.PUBLISHED,
-                null,
-                null,
-                null,
-                null,
-                false,
-                0,
-                100,
-                Arg.Any<CancellationToken>())
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            false,
+            0,
+            100,
+            Arg.Any<CancellationToken>())
             .Returns(new SchemaListResponse { SchemaInfos = [] });
 
         var response = await ExecuteCommandAsync(
-            "--endpoint", "https://sample.energy.azure.com",
-            "--data-partition", "opendes");
+            "--endpoint", TestConstants.Endpoint,
+            "--data-partition", TestConstants.DataPartition);
 
         var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.SchemaListResponse);
         Assert.Empty(result.SchemaInfos);
         await Service.Received(1).ListSchemasAsync(
-            "https://sample.energy.azure.com",
-            "opendes",
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
             null,
             null,
             null,
-            SchemaStatus.PUBLISHED,
+            null,
+            null,
             null,
             null,
             null,
@@ -130,18 +137,53 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    public async Task Execute_WhenAuthenticationFails_ReturnsUnauthorizedWithSignInGuidance(
+        bool credentialUnavailable)
+    {
+        var exception = credentialUnavailable
+            ? new CredentialUnavailableException("No credential available.")
+            : new AuthenticationFailedException("Token acquisition failed.");
+        Service.ListSchemasAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<SchemaStatus?>(),
+                Arg.Any<SchemaScope?>(),
+                Arg.Any<int?>(),
+                Arg.Any<int?>(),
+                Arg.Any<int?>(),
+                Arg.Any<bool>(),
+                Arg.Any<int>(),
+                Arg.Any<int>(),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(exception);
+
+        var response = await ExecuteCommandAsync(
+            "--endpoint", TestConstants.Endpoint,
+            "--data-partition", TestConstants.DataPartition);
+
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.Status);
+        Assert.Contains("az login", response.Message);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
     public async Task Execute_WithoutRequiredTargetOption_DoesNotCallService(bool omitEndpoint)
     {
         var arguments = omitEndpoint
-            ? new[] { "--data-partition", "opendes" }
-            : new[] { "--endpoint", "https://sample.energy.azure.com" };
+            ? new[] { "--data-partition", TestConstants.DataPartition }
+            : new[] { "--endpoint", TestConstants.Endpoint };
 
         var response = await ExecuteCommandAsync(arguments);
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().ListSchemasAsync(
             default!, default!, default, default, default, default, default, default,
-            default, default, default, default, default, TestContext.Current.CancellationToken);
+            default, default, default, default, default, default, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -150,8 +192,8 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
     [InlineData("--data-partition", " ")]
     public async Task Execute_WithInvalidTarget_DoesNotCallService(string option, string value)
     {
-        var endpoint = option == "--endpoint" ? value : "https://sample.energy.azure.com";
-        var dataPartition = option == "--data-partition" ? value : "opendes";
+        var endpoint = option == "--endpoint" ? value : TestConstants.Endpoint;
+        var dataPartition = option == "--data-partition" ? value : TestConstants.DataPartition;
 
         var response = await ExecuteCommandAsync(
             "--endpoint", endpoint,
@@ -160,6 +202,6 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().ListSchemasAsync(
             default!, default!, default, default, default, default, default, default,
-            default, default, default, default, default, TestContext.Current.CancellationToken);
+            default, default, default, default, default, default, TestContext.Current.CancellationToken);
     }
 }

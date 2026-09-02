@@ -16,5 +16,6 @@ public interface IHealthService
     Task<HealthCheckResult> CheckHealthAsync(
         string endpoint,
         string dataPartition,
+        string? tenant,
         CancellationToken cancellationToken);
 }

@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.Adme.Tests;
 public sealed class AdmeServiceHelperTests
 {
     [Theory]
-    [InlineData("https://sample.energy.azure.com")]
+    [InlineData(TestConstants.Endpoint)]
     [InlineData("https://sample.oep.ppe.azure-int.net")]
     public void ValidateEndpoint_AcceptsTrustedEndpoint(string endpoint)
     {

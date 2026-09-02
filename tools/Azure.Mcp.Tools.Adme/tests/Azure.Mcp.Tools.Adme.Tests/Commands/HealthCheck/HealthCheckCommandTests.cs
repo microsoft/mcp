@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Identity;
 using Azure.Mcp.Tools.Adme.Commands.HealthCheck;
 using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Adme.Tests.Commands.HealthCheck;
@@ -16,14 +18,16 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
     public async Task Execute_ForwardsRequestAndReturnsHealth()
     {
         Service.CheckHealthAsync(
-                "https://sample.energy.azure.com",
-                "opendes",
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            TestConstants.Tenant,
                 Arg.Any<CancellationToken>())
             .Returns(new HealthCheckResult(true, null, true, null, 200));
 
         var response = await ExecuteCommandAsync(
-            "--endpoint", "https://sample.energy.azure.com",
-            "--data-partition", "opendes");
+            "--endpoint", TestConstants.Endpoint,
+            "--data-partition", TestConstants.DataPartition,
+            "--tenant", TestConstants.Tenant);
 
         var result = ValidateAndDeserializeResponse(
             response,
@@ -39,12 +43,13 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
         Service.CheckHealthAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
+                Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
             .Returns<HealthCheckResult>(_ => throw new InvalidOperationException("boom"));
 
         var response = await ExecuteCommandAsync(
-            "--endpoint", "https://sample.energy.azure.com",
-            "--data-partition", "opendes");
+            "--endpoint", TestConstants.Endpoint,
+            "--data-partition", TestConstants.DataPartition);
 
         Assert.NotEqual(System.Net.HttpStatusCode.OK, response.Status);
         Assert.Contains("boom", response.Message);
@@ -53,17 +58,41 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    public async Task Execute_WhenAuthenticationFails_ReturnsUnauthorizedWithSignInGuidance(
+        bool credentialUnavailable)
+    {
+        var exception = credentialUnavailable
+            ? new CredentialUnavailableException("No credential available.")
+            : new AuthenticationFailedException("Token acquisition failed.");
+        Service.CheckHealthAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(exception);
+
+        var response = await ExecuteCommandAsync(
+            "--endpoint", TestConstants.Endpoint,
+            "--data-partition", TestConstants.DataPartition);
+
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.Status);
+        Assert.Contains("az login", response.Message);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
     public async Task Execute_WithoutRequiredTargetOption_DoesNotCallService(bool omitEndpoint)
     {
         var arguments = omitEndpoint
-            ? new[] { "--data-partition", "opendes" }
-            : new[] { "--endpoint", "https://sample.energy.azure.com" };
+            ? new[] { "--data-partition", TestConstants.DataPartition }
+            : new[] { "--endpoint", TestConstants.Endpoint };
 
         var response = await ExecuteCommandAsync(arguments);
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().CheckHealthAsync(
-            default!, default!, TestContext.Current.CancellationToken);
+            default!, default!, default, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -72,8 +101,8 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
     [InlineData("--data-partition", " ")]
     public async Task Execute_WithInvalidTarget_DoesNotCallService(string option, string value)
     {
-        var endpoint = option == "--endpoint" ? value : "https://sample.energy.azure.com";
-        var dataPartition = option == "--data-partition" ? value : "opendes";
+        var endpoint = option == "--endpoint" ? value : TestConstants.Endpoint;
+        var dataPartition = option == "--data-partition" ? value : TestConstants.DataPartition;
 
         var response = await ExecuteCommandAsync(
             "--endpoint", endpoint,
@@ -81,6 +110,6 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().CheckHealthAsync(
-            default!, default!, TestContext.Current.CancellationToken);
+            default!, default!, default, TestContext.Current.CancellationToken);
     }
 }

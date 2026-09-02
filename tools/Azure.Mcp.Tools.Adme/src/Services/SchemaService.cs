@@ -27,6 +27,7 @@ public sealed class SchemaService(
         string endpoint,
         string dataPartition,
         string kind,
+        string? tenant,
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(kind);
@@ -35,6 +36,7 @@ public sealed class SchemaService(
             _httpClientFactory,
             endpoint,
             dataPartition,
+            tenant,
             $"{BasePath}/{Uri.EscapeDataString(kind)}",
             AdmeJsonContext.Default.JsonElement,
             cancellationToken);
@@ -46,6 +48,7 @@ public sealed class SchemaService(
     public Task<SchemaListResponse> ListSchemasAsync(
         string endpoint,
         string dataPartition,
+        string? tenant,
         string? authority,
         string? source,
         string? entityType,
@@ -80,6 +83,7 @@ public sealed class SchemaService(
             _httpClientFactory,
             endpoint,
             dataPartition,
+            tenant,
             AdmeServiceHelper.AppendQuery(BasePath, query),
             AdmeJsonContext.Default.SchemaListResponse,
             cancellationToken);

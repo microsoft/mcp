@@ -21,7 +21,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Schema;
         lightweight descriptors (id, entityType, version, status, scope) - NOT the full field definitions;
         use 'azmcp adme schema get' for those.
 
-        Required: --endpoint and --data-partition.
+        Required: --endpoint and --data-partition. Optional: --tenant for cross-tenant authentication.
 
         Filters: --authority (e.g. 'osdu'), --source (e.g. 'wks'), --entity-type (e.g. 'master-data--Well');
         --status ('PUBLISHED', 'DEVELOPMENT', or 'OBSOLETE'); --scope ('SHARED' = system/OSDU schemas,
@@ -32,9 +32,8 @@ namespace Azure.Mcp.Tools.Adme.Commands.Schema;
         When --latest-version is true, supply version filters in order: major, then minor, then patch.
         A minor version without a major version, or a patch version without a minor version, is invalid.
 
-        --status defaults to 'PUBLISHED', which is what you usually want when enumerating usable kinds.
-        With no status filter, results mix PUBLISHED/DEVELOPMENT/OBSOLETE; prefer status='PUBLISHED'
-        when enumerating usable kinds, and surface each result's status to the user for clarity.
+        With no status filter, results mix PUBLISHED/DEVELOPMENT/OBSOLETE. To enumerate usable kinds,
+        prefer status='PUBLISHED' and surface each result's status to the user for clarity.
         """,
     Destructive = false,
     Idempotent = true,
@@ -43,7 +42,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Schema;
     LocalRequired = false,
     Secret = false)]
 public sealed class SchemaListCommand(ISchemaService schemaService)
-    : BaseCommand<SchemaListOptions, SchemaListResponse>
+    : AuthenticatedCommand<SchemaListOptions, SchemaListResponse>
 {
     private readonly ISchemaService _schemaService = schemaService;
 
@@ -64,10 +63,11 @@ public sealed class SchemaListCommand(ISchemaService schemaService)
             var result = await _schemaService.ListSchemasAsync(
                 options.Endpoint,
                 options.DataPartition,
+                options.Tenant,
                 options.Authority,
                 options.Source,
                 options.EntityType,
-                options.Status ?? SchemaStatus.PUBLISHED,
+                options.Status,
                 options.Scope,
                 options.SchemaVersionMajor,
                 options.SchemaVersionMinor,

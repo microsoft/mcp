@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Adme.Models.Schema;
+using Azure.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Adme.Options.Schema;
@@ -20,8 +21,8 @@ public sealed class SchemaListOptions
     [Option(Description = "Filter by the entity type segment of the kind, for example 'master-data--Well' or 'work-product-component--WellLog'.")]
     public string? EntityType { get; set; }
 
-    [Option(Description = "Filter by lifecycle status: PUBLISHED, DEVELOPMENT, or OBSOLETE. Defaults to PUBLISHED, which is what you usually want when enumerating usable kinds; widen it only when the user explicitly asks for draft or retired schemas.")]
-    public SchemaStatus? Status { get; set; } = SchemaStatus.PUBLISHED;
+    [Option(Description = "Filter by lifecycle status: PUBLISHED, DEVELOPMENT, or OBSOLETE. Omit to return schemas in all lifecycle statuses.")]
+    public SchemaStatus? Status { get; set; }
 
     [Option(Description = "Filter by scope: SHARED for system-defined OSDU schemas, INTERNAL for schemas defined in this data partition. Omit to return both.")]
     public SchemaScope? Scope { get; set; }
@@ -50,4 +51,6 @@ public sealed class SchemaListOptions
     [Option(Description = "The data partition to target, for example 'contoso-dp1'.")]
     public required string DataPartition { get; set; }
 
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
 }

@@ -17,10 +17,6 @@ public sealed class SchemaRecordedTests(
 {
     private const string SchemaListTool = "adme_schema_list";
     private const string SchemaGetTool = "adme_schema_get";
-    private const string WellEntityType = "master-data--Well";
-    private const string WksSource = "wks";
-    private const string OsduAuthority = "osdu";
-    private const string WellKind = "osdu:wks:master-data--Well:1.0.0";
     private const string WellSchemaIdPrefix = "osdu:wks:master-data--Well:";
     private const string NonexistentKind = "osdu:wks:made-up--DoesNotExist:9.9.9";
 
@@ -39,8 +35,8 @@ public sealed class SchemaRecordedTests(
     public async Task SchemaList_returns_descriptors_for_well_entity()
     {
         var arguments = CreateArguments();
-        arguments["entity-type"] = WellEntityType;
-        arguments["source"] = WksSource;
+        arguments["entity-type"] = TestConstants.WellEntityType;
+        arguments["source"] = TestConstants.WellSource;
 
         var result = await CallToolResultsAsync(SchemaListTool, arguments);
         var infos = result.GetProperty("schemaInfos");
@@ -57,9 +53,9 @@ public sealed class SchemaRecordedTests(
     public async Task SchemaList_latestVersion_narrows_to_single_version()
     {
         var allArguments = CreateArguments();
-        allArguments["authority"] = OsduAuthority;
-        allArguments["entity-type"] = WellEntityType;
-        allArguments["source"] = WksSource;
+        allArguments["authority"] = TestConstants.WellAuthority;
+        allArguments["entity-type"] = TestConstants.WellEntityType;
+        allArguments["source"] = TestConstants.WellSource;
         var latestArguments = new Dictionary<string, object?>(allArguments)
         {
             ["latest-version"] = true,
@@ -79,7 +75,7 @@ public sealed class SchemaRecordedTests(
     public async Task SchemaList_fetches_multiple_schemas_from_source()
     {
         var arguments = CreateArguments();
-        arguments["source"] = WksSource;
+        arguments["source"] = TestConstants.WellSource;
         arguments["limit"] = 5;
 
         var result = await CallToolResultsAsync(SchemaListTool, arguments);
@@ -92,9 +88,9 @@ public sealed class SchemaRecordedTests(
     public async Task SchemaList_version_filters_return_exact_match()
     {
         var arguments = CreateArguments();
-        arguments["authority"] = OsduAuthority;
-        arguments["source"] = WksSource;
-        arguments["entity-type"] = WellEntityType;
+        arguments["authority"] = TestConstants.WellAuthority;
+        arguments["source"] = TestConstants.WellSource;
+        arguments["entity-type"] = TestConstants.WellEntityType;
         arguments["schema-version-major"] = 1;
         arguments["schema-version-minor"] = 0;
         arguments["limit"] = 3;
@@ -116,7 +112,7 @@ public sealed class SchemaRecordedTests(
     public async Task SchemaList_status_filter_narrows_results()
     {
         var allArguments = CreateArguments();
-        allArguments["source"] = WksSource;
+        allArguments["source"] = TestConstants.WellSource;
         allArguments["limit"] = 100;
         var publishedArguments = new Dictionary<string, object?>(allArguments)
         {
@@ -140,7 +136,7 @@ public sealed class SchemaRecordedTests(
     public async Task SchemaList_offset_advances_to_a_different_page()
     {
         var page1Arguments = CreateArguments();
-        page1Arguments["source"] = WksSource;
+        page1Arguments["source"] = TestConstants.WellSource;
         page1Arguments["offset"] = 0;
         page1Arguments["limit"] = 2;
         var page2Arguments = new Dictionary<string, object?>(page1Arguments)
@@ -163,7 +159,7 @@ public sealed class SchemaRecordedTests(
     public async Task SchemaGet_returns_full_schema_with_data_properties()
     {
         var arguments = CreateArguments();
-        arguments["kind"] = WellKind;
+        arguments["kind"] = TestConstants.WellKind;
 
         var result = await CallToolResultsAsync(SchemaGetTool, arguments);
 

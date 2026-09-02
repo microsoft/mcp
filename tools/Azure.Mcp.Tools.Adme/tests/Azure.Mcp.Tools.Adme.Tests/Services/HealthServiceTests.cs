@@ -16,13 +16,14 @@ public sealed class HealthServiceTests
     [Fact]
     public async Task CheckHealthAsync_SucceedsAndSendsAuthenticationHeaders()
     {
-        var provider = CreateCredentialProvider("token-abc");
+        var provider = CreateCredentialProvider(TestConstants.AccessToken);
         var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
         var service = new HealthService(provider, new FakeHttpClientFactory(handler));
 
         var result = await service.CheckHealthAsync(
-            "https://sample.energy.azure.com",
-            "opendes",
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            TestConstants.Tenant,
             TestContext.Current.CancellationToken);
 
         Assert.True(result.AuthOk);
@@ -30,23 +31,25 @@ public sealed class HealthServiceTests
         Assert.Equal(200, result.ConnectivityStatusCode);
         Assert.Equal("/api/storage/v2/info", handler.LastRequest!.RequestUri!.AbsolutePath);
         Assert.Equal("Bearer", handler.LastRequest.Headers.Authorization!.Scheme);
-        Assert.Equal("token-abc", handler.LastRequest.Headers.Authorization.Parameter);
-        Assert.Equal("opendes", handler.LastRequest.Headers.GetValues("data-partition-id").Single());
+        Assert.Equal(TestConstants.AccessToken, handler.LastRequest.Headers.Authorization.Parameter);
+        Assert.Equal(TestConstants.DataPartition, handler.LastRequest.Headers.GetValues("data-partition-id").Single());
+        await provider.Received(1).GetTokenCredentialAsync(TestConstants.Tenant, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task CheckHealthAsync_WhenAuthenticationFails_DoesNotCallAdme()
     {
         var provider = Substitute.For<IAzureTokenCredentialProvider>();
-        provider.GetTokenCredentialAsync(null, Arg.Any<CancellationToken>())
+        provider.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns<Task<TokenCredential>>(_ => throw new InvalidOperationException("no credential available"));
         var handler = new StubHttpMessageHandler(_ =>
             throw new InvalidOperationException("ADME should not be called when auth fails"));
         var service = new HealthService(provider, new FakeHttpClientFactory(handler));
 
         var result = await service.CheckHealthAsync(
-            "https://sample.energy.azure.com",
-            "opendes",
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            null,
             TestContext.Current.CancellationToken);
 
         Assert.False(result.AuthOk);
@@ -67,8 +70,9 @@ public sealed class HealthServiceTests
         var service = new HealthService(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
 
         var result = await service.CheckHealthAsync(
-            "https://sample.energy.azure.com",
-            "opendes",
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            null,
             TestContext.Current.CancellationToken);
 
         Assert.True(result.AuthOk);
@@ -91,7 +95,8 @@ public sealed class HealthServiceTests
 
         await Assert.ThrowsAsync<System.Security.SecurityException>(() => service.CheckHealthAsync(
             endpoint,
-            "opendes",
+            TestConstants.DataPartition,
+            null,
             TestContext.Current.CancellationToken));
     }
 
@@ -101,7 +106,7 @@ public sealed class HealthServiceTests
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
             .Returns(new AccessToken(token, DateTimeOffset.UtcNow.AddHours(1)));
         var provider = Substitute.For<IAzureTokenCredentialProvider>();
-        provider.GetTokenCredentialAsync(null, Arg.Any<CancellationToken>()).Returns(credential);
+        provider.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
         return provider;
     }
 }

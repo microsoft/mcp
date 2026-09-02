@@ -65,13 +65,14 @@ internal static class AdmeServiceHelper
         IHttpClientFactory httpClientFactory,
         string endpoint,
         string dataPartition,
+        string? tenant,
         string path,
         JsonTypeInfo<T> typeInfo,
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(dataPartition);
         var endpointUri = ValidateEndpoint(new Uri(endpoint));
-        var credential = await credentialProvider.GetTokenCredentialAsync(tenantId: null, cancellationToken);
+        var credential = await credentialProvider.GetTokenCredentialAsync(tenant, cancellationToken);
         var accessToken = await credential.GetTokenAsync(
             new TokenRequestContext([AuthScope]), cancellationToken);
 

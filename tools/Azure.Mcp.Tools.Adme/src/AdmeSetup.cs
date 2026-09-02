@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Tools.Adme.Commands.HealthCheck;
 using Azure.Mcp.Tools.Adme.Commands.Schema;
 using Azure.Mcp.Tools.Adme.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
 
@@ -24,7 +26,13 @@ public sealed class AdmeSetup : IAreaSetup
     /// </summary>
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddHttpClient(AdmeServiceHelper.HttpClientName);
+        services.AddHttpClient(AdmeServiceHelper.HttpClientName)
+            .AddStandardResilienceHandler(options =>
+            {
+                options.Retry.ShouldHandle = args => ValueTask.FromResult(
+                    args.Outcome.Result is not { StatusCode: HttpStatusCode.InternalServerError }
+                    && HttpClientResiliencePredicates.IsTransient(args.Outcome));
+            });
         services.AddSingleton<IHealthService, HealthService>();
         services.AddSingleton<ISchemaService, SchemaService>();
         services.AddSingleton<HealthCheckCommand>();

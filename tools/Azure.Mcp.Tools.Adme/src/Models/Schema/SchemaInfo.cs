@@ -24,4 +24,7 @@ public sealed record SchemaInfo
 
     [JsonPropertyName("createdBy")]
     public string? CreatedBy { get; init; }
+
+    [JsonPropertyName("supersededBy")]
+    public SchemaIdentity? SupersededBy { get; init; }
 }

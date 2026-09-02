@@ -330,18 +330,21 @@ azmcp server info
 # Check authentication and connectivity for an ADME endpoint and data partition
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme health check --endpoint <endpoint> \
-                         --data-partition <data-partition>
+                         --data-partition <data-partition> \
+                         [--tenant <tenant>]
 
 # Get a schema by its fully-qualified OSDU kind
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme schema get --endpoint <endpoint> \
                        --data-partition <data-partition> \
-                       --kind <authority:source:entity-type:version>
+                       --kind <authority:source:entity-type:version> \
+                       [--tenant <tenant>]
 
 # List schemas with optional identity, lifecycle, scope, version, and paging filters
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme schema list --endpoint <endpoint> \
                         --data-partition <data-partition> \
+                        [--tenant <tenant>] \
                         [--authority <authority>] \
                         [--source <source>] \
                         [--entity-type <entity-type>] \

@@ -20,7 +20,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Schema;
         Get the full JSON schema definition for one OSDU kind - its fields, types, and structure - from a data
         partition.
 
-        Required: --kind, --endpoint, and --data-partition.
+        Required: --kind, --endpoint, and --data-partition. Optional: --tenant for cross-tenant authentication.
 
         --kind must be a FULLY-QUALIFIED kind 'authority:source:type:version', for example
         'osdu:wks:master-data--Well:1.0.0'. Wildcards are not supported; use 'azmcp adme schema list' to
@@ -33,7 +33,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Schema;
     LocalRequired = false,
     Secret = false)]
 public sealed class SchemaGetCommand(ISchemaService schemaService)
-    : BaseCommand<SchemaGetOptions, JsonElement>
+    : AuthenticatedCommand<SchemaGetOptions, JsonElement>
 {
     private readonly ISchemaService _schemaService = schemaService;
 
@@ -55,6 +55,7 @@ public sealed class SchemaGetCommand(ISchemaService schemaService)
                 options.Endpoint,
                 options.DataPartition,
                 options.Kind,
+                options.Tenant,
                 cancellationToken);
             context.Response.Results = ResponseResult.Create(result, AdmeJsonContext.Default.JsonElement);
         }

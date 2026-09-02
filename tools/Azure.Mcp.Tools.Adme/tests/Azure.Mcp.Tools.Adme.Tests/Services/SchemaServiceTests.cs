@@ -18,13 +18,14 @@ public sealed class SchemaServiceTests
     public async Task GetSchemaAsync_SendsEscapedKindAuthenticationAndPartition()
     {
         var handler = JsonHandler(HttpStatusCode.OK, """{"title":"Well"}""");
-        var provider = CreateCredentialProvider("token-abc");
+        var provider = CreateCredentialProvider(TestConstants.AccessToken);
         var service = new SchemaService(provider, new FakeHttpClientFactory(handler));
 
         var result = await service.GetSchemaAsync(
-            "https://sample.energy.azure.com",
-            "opendes",
-            "osdu:wks:master-data--Well:1.0.0",
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            TestConstants.WellKind,
+            TestConstants.Tenant,
             TestContext.Current.CancellationToken);
 
         Assert.Equal("Well", result.GetProperty("title").GetString());
@@ -34,25 +35,27 @@ public sealed class SchemaServiceTests
             "master-data--Well%3A1.0.0",
             handler.LastRequest!.RequestUri!.PathAndQuery);
         Assert.Equal("Bearer", handler.LastRequest.Headers.Authorization!.Scheme);
-        Assert.Equal("token-abc", handler.LastRequest.Headers.Authorization.Parameter);
-        Assert.Equal("opendes", handler.LastRequest.Headers.GetValues("data-partition-id").Single());
-        await provider.Received(1).GetTokenCredentialAsync(null, Arg.Any<CancellationToken>());
+        Assert.Equal(TestConstants.AccessToken, handler.LastRequest.Headers.Authorization.Parameter);
+        Assert.Equal(TestConstants.DataPartition, handler.LastRequest.Headers.GetValues("data-partition-id").Single());
+        await provider.Received(1).GetTokenCredentialAsync(TestConstants.Tenant, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ListSchemasAsync_MapsFiltersToAdmeQueryAndDeserializesResponse()
     {
         var handler = JsonHandler(HttpStatusCode.OK, """
-            {"schemaInfos":[{"schemaIdentity":{"id":"osdu:wks:master-data--Well:1.4.0"},"status":"PUBLISHED","scope":"SHARED"}],"offset":2,"count":1,"totalCount":3}
+            {"schemaInfos":[{"schemaIdentity":{"id":"osdu:wks:master-data--Well:1.4.0"},"status":"PUBLISHED","scope":"SHARED","supersededBy":{"id":"osdu:wks:master-data--Well:2.0.0"}}],"offset":2,"count":1,"totalCount":3}
             """);
-        var service = new SchemaService(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
+        var provider = CreateCredentialProvider();
+        var service = new SchemaService(provider, new FakeHttpClientFactory(handler));
 
         var result = await service.ListSchemasAsync(
-            "https://sample.energy.azure.com",
-            "opendes",
-            "osdu",
-            "wks",
-            "master-data--Well",
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            TestConstants.Tenant,
+            TestConstants.WellAuthority,
+            TestConstants.WellSource,
+            TestConstants.WellEntityType,
             SchemaStatus.PUBLISHED,
             SchemaScope.SHARED,
             1,
@@ -64,11 +67,13 @@ public sealed class SchemaServiceTests
             TestContext.Current.CancellationToken);
 
         Assert.Equal(3, result.TotalCount);
-        Assert.Equal("osdu:wks:master-data--Well:1.4.0", Assert.Single(result.SchemaInfos).SchemaIdentity?.Id);
+        var schemaInfo = Assert.Single(result.SchemaInfos);
+        Assert.Equal("osdu:wks:master-data--Well:1.4.0", schemaInfo.SchemaIdentity?.Id);
+        Assert.Equal("osdu:wks:master-data--Well:2.0.0", schemaInfo.SupersededBy?.Id);
         var query = ParseQuery(handler.LastRequest!.RequestUri!.Query);
-        Assert.Equal("osdu", query["authority"]);
-        Assert.Equal("wks", query["source"]);
-        Assert.Equal("master-data--Well", query["entityType"]);
+        Assert.Equal(TestConstants.WellAuthority, query["authority"]);
+        Assert.Equal(TestConstants.WellSource, query["source"]);
+        Assert.Equal(TestConstants.WellEntityType, query["entityType"]);
         Assert.Equal("PUBLISHED", query["status"]);
         Assert.Equal("SHARED", query["scope"]);
         Assert.Equal("1", query["schemaVersionMajor"]);
@@ -77,6 +82,7 @@ public sealed class SchemaServiceTests
         Assert.Equal("true", query["latestVersion"]);
         Assert.Equal("2", query["offset"]);
         Assert.Equal("25", query["limit"]);
+        await provider.Received(1).GetTokenCredentialAsync(TestConstants.Tenant, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -86,11 +92,12 @@ public sealed class SchemaServiceTests
         var service = new SchemaService(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
 
         await service.ListSchemasAsync(
-            "https://sample.energy.azure.com",
-            "opendes",
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
             null,
             null,
-            "master-data--Well",
+            null,
+            TestConstants.WellEntityType,
             null,
             null,
             null,
@@ -103,7 +110,7 @@ public sealed class SchemaServiceTests
 
         var query = ParseQuery(handler.LastRequest!.RequestUri!.Query);
         Assert.Equal(3, query.Count);
-        Assert.Equal("master-data--Well", query["entityType"]);
+        Assert.Equal(TestConstants.WellEntityType, query["entityType"]);
         Assert.Equal("0", query["offset"]);
         Assert.Equal("100", query["limit"]);
     }
@@ -122,8 +129,9 @@ public sealed class SchemaServiceTests
 
         await Assert.ThrowsAsync<System.Security.SecurityException>(() => service.GetSchemaAsync(
             endpoint,
-            "opendes",
-            "osdu:wks:master-data--Well:1.0.0",
+            TestConstants.DataPartition,
+            TestConstants.WellKind,
+            null,
             TestContext.Current.CancellationToken));
     }
 
@@ -134,9 +142,10 @@ public sealed class SchemaServiceTests
         var service = new SchemaService(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
 
         var exception = await Assert.ThrowsAsync<HttpRequestException>(() => service.GetSchemaAsync(
-            "https://sample.energy.azure.com",
-            "opendes",
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
             "osdu:wks:missing:1.0.0",
+            null,
             TestContext.Current.CancellationToken));
 
         Assert.Equal(HttpStatusCode.NotFound, exception.StatusCode);
@@ -149,7 +158,7 @@ public sealed class SchemaServiceTests
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
             .Returns(new AccessToken(token, DateTimeOffset.UtcNow.AddHours(1)));
         var provider = Substitute.For<IAzureTokenCredentialProvider>();
-        provider.GetTokenCredentialAsync(null, Arg.Any<CancellationToken>()).Returns(credential);
+        provider.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
         return provider;
     }
 

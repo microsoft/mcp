@@ -7,7 +7,5 @@ version: "0.2"
 import:
   - ../../.vscode/cspell.json
 words:
-  - adme
   - opendes
-  - osdu
   - wks

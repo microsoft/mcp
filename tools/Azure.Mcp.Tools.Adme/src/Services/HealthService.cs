@@ -24,6 +24,7 @@ public sealed class HealthService(
     public async Task<HealthCheckResult> CheckHealthAsync(
         string endpoint,
         string dataPartition,
+        string? tenant,
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(dataPartition);
@@ -32,7 +33,7 @@ public sealed class HealthService(
 
         try
         {
-            var credential = await _credentialProvider.GetTokenCredentialAsync(tenantId: null, cancellationToken);
+            var credential = await _credentialProvider.GetTokenCredentialAsync(tenant, cancellationToken);
             var accessToken = await credential.GetTokenAsync(
                 new TokenRequestContext([AdmeServiceHelper.AuthScope]), cancellationToken);
             token = accessToken.Token;

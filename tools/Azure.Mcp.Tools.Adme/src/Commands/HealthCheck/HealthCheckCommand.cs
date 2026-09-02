@@ -21,7 +21,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.HealthCheck;
         Use this first when other tools fail, to tell a sign-in or token problem apart from a wrong endpoint,
         wrong data partition, or blocked network path.
 
-        Required: --endpoint and --data-partition.
+        Required: --endpoint and --data-partition. Optional: --tenant for cross-tenant authentication.
 
         Returns: authOk plus authError, connectivityOk plus connectivityError, and the HTTP
         connectivityStatusCode returned by the service (401/403 points at auth or entitlements, 404 usually means a
@@ -34,7 +34,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.HealthCheck;
     LocalRequired = false,
     Secret = false)]
 public sealed class HealthCheckCommand(IHealthService healthService)
-    : BaseCommand<HealthCheckOptions, HealthCheckResult>
+    : AuthenticatedCommand<HealthCheckOptions, HealthCheckResult>
 {
     private readonly IHealthService _healthService = healthService;
 
@@ -55,6 +55,7 @@ public sealed class HealthCheckCommand(IHealthService healthService)
             var result = await _healthService.CheckHealthAsync(
                 options.Endpoint,
                 options.DataPartition,
+                options.Tenant,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
