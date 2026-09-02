@@ -193,12 +193,12 @@ compatible clients. Two structured output modes are available:
 - `compact` returns concise text in `content` and the complete result in `structuredContent`.
 
 ```bash
-# Return the complete result in both content fields
+# Return the complete result in content and structuredContent
 azmcp server start \
     --mode all \
     --structured-output-mode duplicated
 
-# Return concise text alongside the complete structured result
+# Return concise text in content and the complete result in structuredContent
 azmcp server start \
     --mode all \
     --structured-output-mode compact
