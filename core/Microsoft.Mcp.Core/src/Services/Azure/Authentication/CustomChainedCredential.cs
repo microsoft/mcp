@@ -614,9 +614,14 @@ internal class SafeTokenCredential(
         {
             return _innerCredential.GetToken(requestContext, cancellationToken);
         }
-        catch (CredentialUnavailableException)
+        catch (CredentialUnavailableException ex)
         {
-            throw; // Re-throw CredentialUnavailableException as-is
+            if (_includeExceptionMessage)
+            {
+                throw;
+            }
+
+            throw CreateCredentialUnavailableException(ex);
         }
         catch (Exception ex)
         {
@@ -631,9 +636,14 @@ internal class SafeTokenCredential(
         {
             return await _innerCredential.GetTokenAsync(requestContext, cancellationToken);
         }
-        catch (CredentialUnavailableException)
+        catch (CredentialUnavailableException ex)
         {
-            throw; // Re-throw CredentialUnavailableException as-is
+            if (_includeExceptionMessage)
+            {
+                throw;
+            }
+
+            throw CreateCredentialUnavailableException(ex);
         }
         catch (Exception ex)
         {

@@ -202,6 +202,54 @@ public class CustomChainedCredentialTests
         Assert.Null(exception.InnerException);
     }
 
+    [Fact]
+    public void AzurePipelinesCredential_UnavailableFailure_DoesNotExposeInnerExceptionMessage()
+    {
+        const string sensitiveValue = "system-access-token-value-must-not-leak";
+        var credential = new SafeTokenCredential(
+            new UnavailableTokenCredential(sensitiveValue),
+            "AzurePipelinesCredential",
+            includeExceptionMessage: false);
+
+        var exception = Assert.Throws<CredentialUnavailableException>(() =>
+            credential.GetToken(new TokenRequestContext(["https://management.azure.com/.default"]), CancellationToken.None));
+
+        Assert.Equal("AzurePipelinesCredential is not available.", exception.Message);
+        Assert.DoesNotContain(sensitiveValue, exception.ToString());
+        Assert.Null(exception.InnerException);
+    }
+
+    [Fact]
+    public async Task AzurePipelinesCredential_UnavailableFailureAsync_DoesNotExposeInnerExceptionMessage()
+    {
+        const string sensitiveValue = "system-access-token-value-must-not-leak";
+        var credential = new SafeTokenCredential(
+            new UnavailableTokenCredential(sensitiveValue),
+            "AzurePipelinesCredential",
+            includeExceptionMessage: false);
+
+        var exception = await Assert.ThrowsAsync<CredentialUnavailableException>(async () =>
+            await credential.GetTokenAsync(new TokenRequestContext(["https://management.azure.com/.default"]), CancellationToken.None));
+
+        Assert.Equal("AzurePipelinesCredential is not available.", exception.Message);
+        Assert.DoesNotContain(sensitiveValue, exception.ToString());
+        Assert.Null(exception.InnerException);
+    }
+
+    [Fact]
+    public void CredentialUnavailableFailure_WithMessageEnabled_RethrowsOriginalException()
+    {
+        var innerException = new CredentialUnavailableException("credential diagnostic");
+        var credential = new SafeTokenCredential(
+            new UnavailableTokenCredential(innerException),
+            "TestCredential");
+
+        var exception = Assert.Throws<CredentialUnavailableException>(() =>
+            credential.GetToken(new TokenRequestContext(["https://management.azure.com/.default"]), CancellationToken.None));
+
+        Assert.Same(innerException, exception);
+    }
+
     /// <summary>
     /// Tests that explicit InteractiveBrowserCredential request creates successfully.
     /// Expected: Uses InteractiveBrowserCredential when explicitly requested.
@@ -654,6 +702,27 @@ public class CustomChainedCredentialTests
 
         public override ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken) =>
             throw new InvalidOperationException(exceptionMessage);
+    }
+
+    private sealed class UnavailableTokenCredential : TokenCredential
+    {
+        private readonly CredentialUnavailableException _exception;
+
+        internal UnavailableTokenCredential(string exceptionMessage)
+            : this(new CredentialUnavailableException(exceptionMessage))
+        {
+        }
+
+        internal UnavailableTokenCredential(CredentialUnavailableException exception)
+        {
+            _exception = exception;
+        }
+
+        public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken) =>
+            throw _exception;
+
+        public override ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken) =>
+            throw _exception;
     }
 
     /// <summary>
