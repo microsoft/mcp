@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Advisor.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
@@ -14,6 +15,9 @@ public class RecommendationListOptions : ISubscriptionOption
 
     [Option(Description = "Filter recommendations by business impact ('High', 'Medium', or 'Low'). Case-insensitive exact match.")]
     public string? Impact { get; set; }
+
+    [Option(Description = "Filter recommendations by status ('New', 'Postponed', 'Dismissed', or 'Completed'). Defaults to 'New' when omitted.")]
+    public RecommendationStatus? Status { get; set; }
 
     [Option(Description = "Filter recommendations by the recommendation type ID GUID. " +
         "Uses a case-insensitive exact match and can be combined with other filters.")]

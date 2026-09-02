@@ -6,7 +6,9 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
+using Azure.Mcp.Tools.Advisor.Options.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
+using Microsoft.Mcp.Core.Commands;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -190,6 +192,45 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     }
 
     [Fact]
+    public async Task ExecuteAsync_Handles404NotFound()
+    {
+        var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Not found");
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(notFoundException);
+
+        var response = await ExecuteCommandAsync("--subscription", "test-subscription");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("Advisor recommendation not found", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_MissingResourceGroup_ReturnsNotFound()
+    {
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new KeyNotFoundException("Resource group 'missing' does not exist"));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-subscription",
+            "--resource-group", "missing");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("Resource group 'missing' does not exist", response.Message);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_ForwardsFiltersToService()
     {
         // Arrange
@@ -208,6 +249,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
             "--subscription", "sub123",
             "--category", "Security",
             "--impact", "High",
+            "--status", "Postponed",
             "--recommendation-type-id", "1D70919C-1A4A-4F79-8300-BB576C291E9D",
             "--resource-type", "Microsoft.Storage/storageAccounts",
             "--resource", "mystorage",
@@ -218,6 +260,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Assert.NotNull(captured);
         Assert.Equal("Security", captured!.Category);
         Assert.Equal("High", captured.Impact);
+        Assert.Equal(Models.RecommendationStatus.Postponed, captured.Status);
         Assert.Equal("1d70919c-1a4a-4f79-8300-bb576c291e9d", captured.RecommendationTypeId);
         Assert.Equal("Microsoft.Storage/storageAccounts", captured.ResourceType);
         Assert.Equal("mystorage", captured.Resource);
@@ -254,8 +297,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Assert.Equal("High", captured.Impact);
         Assert.Equal("Microsoft.Storage/storageAccounts", captured.ResourceType);
         Assert.Equal("mystorage", captured.Resource);
-        // --search is intentionally left untrimmed to preserve free-text intent.
-        Assert.Equal("  encryption  ", captured.Search);
+        Assert.Equal("encryption", captured.Search);
     }
 
     [Fact]
@@ -280,6 +322,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Assert.NotNull(captured);
         Assert.Null(captured!.Category);
         Assert.Null(captured.Impact);
+        Assert.Null(captured.Status);
         Assert.Null(captured.RecommendationTypeId);
         Assert.Null(captured.ResourceType);
         Assert.Null(captured.Resource);
@@ -291,6 +334,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     [InlineData("--recommendation-type-id", "{1d70919c-1a4a-4f79-8300-bb576c291e9d}")]
     [InlineData("--category", "Unknown")]
     [InlineData("--impact", "Critical")]
+    [InlineData("--status", "Unknown")]
     public async Task ExecuteAsync_InvalidClosedFilter_ReturnsBadRequest(string option, string value)
     {
         var response = await ExecuteCommandAsync("--subscription", "sub123", option, value);
@@ -304,6 +348,22 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
             Arg.Any<int>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public void ValidateOptions_UndefinedStatus_AddsValidationError()
+    {
+        var options = new RecommendationListOptions
+        {
+            Subscription = "sub123",
+            Status = (Models.RecommendationStatus)999,
+        };
+        var validationResult = new ValidationResult();
+
+        Command.ValidateOptions(options, validationResult);
+
+        Assert.False(validationResult.IsValid);
+        Assert.Contains(validationResult.Errors, error => error.Contains("--status", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -475,18 +535,33 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     [InlineData("--sub-category", "ZoneResiliency")]
     [InlineData("--tracking-ids", "QNY1-HB8")]
     [InlineData("--retirement-date", "ge:2026-03-31")]
-    public async Task ExecuteAsync_SecurityMetadataFilters_ReturnBadRequest(
+    public async Task ExecuteAsync_SecurityMetadataFilters_AreAccepted(
         string option,
         string value)
     {
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--category", "Security",
             option,
             value);
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("not applicable to Security", response.Message);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListRecommendationsAsync(
+            "sub123",
+            Arg.Any<string?>(),
+            Arg.Is<Models.RecommendationFilters>(filters => filters.Category == "Security"),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

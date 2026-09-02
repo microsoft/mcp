@@ -20,10 +20,19 @@ internal static class RecommendationFilterValidator
 
     private static readonly string[] AllowedImpacts = ["High", "Medium", "Low"];
 
+    private static readonly string[] AllowedStatuses =
+    [
+        nameof(RecommendationStatus.New),
+        nameof(RecommendationStatus.Postponed),
+        nameof(RecommendationStatus.Dismissed),
+        nameof(RecommendationStatus.Completed),
+    ];
+
     internal static void Validate(RecommendationListOptions options, ValidationResult validationResult)
     {
         ValidateAllowedValue("--category", options.Category, AllowedCategories, validationResult);
         ValidateAllowedValue("--impact", options.Impact, AllowedImpacts, validationResult);
+        ValidateAllowedValue("--status", options.Status?.ToString(), AllowedStatuses, validationResult);
         ValidateOptionalValue("--resource-type", options.ResourceType, validationResult);
         ValidateOptionalValue("--resource", options.Resource, validationResult);
         ValidateOptionalValue("--search", options.Search, validationResult);
@@ -47,15 +56,6 @@ internal static class RecommendationFilterValidator
             options.SubCategory,
             options.TrackingIds,
             options.RetirementDate);
-
-        if (string.Equals(options.Category?.Trim(), "Security", StringComparison.OrdinalIgnoreCase) &&
-            (!string.IsNullOrWhiteSpace(options.SubCategory) ||
-             options.TrackingIds?.Any(id => !string.IsNullOrWhiteSpace(id)) == true ||
-             !string.IsNullOrWhiteSpace(options.RetirementDate)))
-        {
-            validationResult.Errors.Add(
-                "Subcategory, tracking ID, and retirement-date filters are not applicable to Security recommendations.");
-        }
     }
 
     internal static string? NormalizeRecommendationTypeId(string? recommendationTypeId) =>

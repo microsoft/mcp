@@ -35,6 +35,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> | none |
 | advisor_recommendation_list | List individual active Azure Advisor recommendation records in resource group <resource-group> in subscription <subscription> | none |
 | advisor_recommendation_list | Show me high-impact Security recommendations in subscription <subscription> | none |
+| advisor_recommendation_list | Show me dismissed Advisor recommendations in subscription <subscription> | none |
 | advisor_recommendation_list | Show me the top 10 medium-impact Advisor recommendations in subscription <subscription> | none |
 | advisor_recommendation_list | List individual active Azure Advisor Cost recommendation records affecting storage accounts in subscription <subscription> | none |
 | advisor_recommendation_list | Find individual active Azure Advisor recommendation records whose problem text mentions "right-size" in subscription <subscription> | none |

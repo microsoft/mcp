@@ -51,8 +51,17 @@ public class AdvisorService(IAzureService azureService)
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(top, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(top, 100);
+
+        var subscriptionResource = await AzureService.GetSubscription(
+            subscription,
+            tenant,
+            cancellationToken: cancellationToken);
+        var metadataTenant = subscriptionResource.Data.TenantId.ToString();
+
         Dictionary<string, RecommendationMetadata>? metadataByTypeId =
-            await ResolveMetadataFilterMatchesAsync(filters, tenant, cancellationToken);
+            await ResolveMetadataFilterMatchesAsync(filters, metadataTenant, cancellationToken);
 
         if (metadataByTypeId is { Count: 0 })
         {
@@ -74,17 +83,17 @@ public class AdvisorService(IAzureService azureService)
             tenant: tenant,
             cancellationToken: cancellationToken);
 
-        if (recommendations.Results.Count == 0 || IsDirectSecurityQuery(filters))
+        if (recommendations.Results.Count == 0)
         {
             return recommendations;
         }
 
-        // Enrich non-Security recommendations with matching type-level metadata before returning them.
+        // Enrich recommendations with matching type-level metadata before returning them.
         metadataByTypeId ??= BuildMetadataLookup(
             await GetRecommendationMetadataByTypeIdsAsync(
                 recommendations.Results.Select(r => r.Properties.RecommendationTypeId),
                 MetadataJoinLanguage,
-                tenant,
+                metadataTenant,
                 cancellationToken));
 
         return new(
@@ -122,17 +131,10 @@ public class AdvisorService(IAzureService azureService)
     // Resolve these filters against metadata so category and impact match the enriched values returned.
     // This adds a catalog lookup and can produce a broad recommendationTypeId predicate.
     internal static bool HasMetadataFilters(RecommendationFilters? filters) =>
-        !IsSecurityCategory(filters?.Category) &&
-        (HasMetadataOnlyFilters(filters) ||
+        HasMetadataOnlyFilters(filters) ||
             (!string.IsNullOrWhiteSpace(filters?.Category) ||
             !string.IsNullOrWhiteSpace(filters?.Impact) ||
-            !string.IsNullOrWhiteSpace(filters?.ResourceType)));
-
-    internal static bool IsDirectSecurityQuery(RecommendationFilters? filters) =>
-        IsSecurityCategory(filters?.Category);
-
-    private static bool IsSecurityCategory(string? category) =>
-        string.Equals(category?.Trim(), "Security", StringComparison.OrdinalIgnoreCase);
+            !string.IsNullOrWhiteSpace(filters?.ResourceType));
 
     /// <summary>
     /// Resolves metadata-backed filters against metadata first and returns matching recommendation type IDs.
@@ -198,8 +200,8 @@ public class AdvisorService(IAzureService azureService)
             {
                 Properties = recommendation.Properties with
                 {
-                    Category = metadata.Category,
-                    Impact = metadata.Impact,
+                    Category = metadata.Category ?? recommendation.Properties.Category,
+                    Impact = metadata.Impact ?? recommendation.Properties.Impact,
                     ShortDescription = recommendation.Properties.ShortDescription ??
                         (metadata.DisplayName is null
                             ? null
@@ -728,10 +730,13 @@ public class AdvisorService(IAzureService azureService)
         RecommendationFilters? filters,
         IEnumerable<string>? recommendationTypeIds = null)
     {
-        // Advisor surfaces recommendations in several lifecycle states (e.g. 'New', 'Dismissed', 'Postponed').
-        // Only 'New' recommendations are active and actionable, so we always constrain results to these and
-        // never expose dismissed or postponed noise in lists or summaries.
-        var clauses = new List<string> { ActiveRecommendationClause };
+        // New recommendations are active and actionable, so use that status unless the caller explicitly
+        // requests another lifecycle state.
+        var status = filters?.Status ?? RecommendationStatus.New;
+        var clauses = new List<string>
+        {
+            $"tostring(properties.recommendationStatus) =~ '{status}'",
+        };
 
         if (filters is not null)
         {
@@ -780,7 +785,7 @@ public class AdvisorService(IAzureService azureService)
         return string.Join(" and ", clauses);
     }
 
-    // KQL clause that restricts results to active ('New') recommendations only.
+    // Default KQL clause that restricts results to active ('New') recommendations.
     internal const string ActiveRecommendationClause = "tostring(properties.recommendationStatus) =~ 'New'";
 
     private static string SanitizeForKql(string value) => EscapeKqlString(value.Replace("|", string.Empty));
@@ -797,6 +802,9 @@ public class AdvisorService(IAzureService azureService)
                 ImpactedField: advisorRecommendation.Properties?.ImpactedField,
                 ImpactedValue: advisorRecommendation.Properties?.ImpactedValue,
                 RecommendationStatus: advisorRecommendation.Properties?.RecommendationStatus,
+                CompletionType: advisorRecommendation.Properties?.CompletionType,
+                RecommendationDismissReason: advisorRecommendation.Properties?.RecommendationDismissReason,
+                PostponedUntilDateTime: advisorRecommendation.Properties?.PostponedUntilDateTime,
                 LastRefreshed: advisorRecommendation.Properties?.LastRefreshed,
                 LastUpdated: advisorRecommendation.Properties?.LastUpdated,
                 CreatedTime: advisorRecommendation.Properties?.CreatedTime,

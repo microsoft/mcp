@@ -6,6 +6,7 @@ namespace Azure.Mcp.Tools.Advisor.Models;
 public sealed record RecommendationFilters(
     string? Category = null,
     string? Impact = null,
+    RecommendationStatus? Status = null,
     string? RecommendationTypeId = null,
     string? ResourceType = null,
     string? Resource = null,

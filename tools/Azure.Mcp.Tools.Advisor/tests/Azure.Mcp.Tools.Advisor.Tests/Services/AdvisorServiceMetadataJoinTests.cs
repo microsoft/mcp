@@ -74,34 +74,21 @@ public class AdvisorServiceMetadataJoinTests
                 RecommendationTypeId: "1d70919c-1a4a-4f79-8300-bb576c291e9d")));
     }
 
-    [Theory]
-    [InlineData("Security", true)]
-    [InlineData(" security ", true)]
-    [InlineData("Cost", false)]
-    [InlineData(null, false)]
-    public void IsDirectSecurityQuery_IdentifiesSecurityQueries(
-        string? category,
-        bool expected)
-    {
-        Assert.Equal(expected, AdvisorService.IsDirectSecurityQuery(
-            new RecommendationFilters(Category: category)));
-    }
-
     [Fact]
-    public void SecurityQueryWithMetadataOnlyFilters_BypassesMetadata()
+    public void SecurityQueryWithMetadataOnlyFilters_UsesMetadata()
     {
         var filters = new RecommendationFilters(
             Category: "Security",
             SubCategory: "ZoneResiliency");
 
-        Assert.True(AdvisorService.IsDirectSecurityQuery(filters));
-        Assert.False(AdvisorService.HasMetadataFilters(filters));
+        Assert.True(AdvisorService.HasMetadataFilters(filters));
     }
+
     [Theory]
-    [InlineData("Security", null, null, false)]
+    [InlineData("Security", null, null, true)]
     [InlineData(null, "High", null, true)]
     [InlineData(null, null, "Microsoft.Storage/storageAccounts", true)]
-    public void HasMetadataFilters_MetadataBackedFilters_HandlesSecurityException(
+    public void HasMetadataFilters_MetadataBackedFilters_UsesMetadataForAllCategories(
         string? category,
         string? impact,
         string? resourceType,
@@ -115,9 +102,9 @@ public class AdvisorServiceMetadataJoinTests
     }
 
     [Fact]
-    public void SecurityCategoryDoesNotRequireMetadataLookup()
+    public void SecurityCategoryRequiresMetadataLookup()
     {
-        Assert.False(AdvisorService.HasMetadataFilters(
+        Assert.True(AdvisorService.HasMetadataFilters(
             new RecommendationFilters(Category: "Security", Impact: "High")));
     }
     [Fact]
@@ -303,7 +290,7 @@ public class AdvisorServiceMetadataJoinTests
     }
 
     [Fact]
-    public void JoinWithMetadata_BlankMetadataImpactAndSubCategory_AreNotBackfilledFromInstance()
+    public void JoinWithMetadata_BlankMetadataImpact_PreservesInstanceImpact()
     {
         var joined = AdvisorService.JoinWithMetadata(
             [new Models.Recommendation(
@@ -314,7 +301,8 @@ public class AdvisorServiceMetadataJoinTests
             AdvisorService.BuildMetadataLookup([CreateMetadata("Type-A", impact: null, subCategory: null)]));
 
         var result = Assert.Single(joined);
-        Assert.Null(result.Properties.Impact);
+        Assert.Equal("Security", result.Properties.Category);
+        Assert.Equal("Medium", result.Properties.Impact);
         Assert.Null(result.Properties.ExtendedProperties);
     }
 
@@ -443,14 +431,14 @@ public class AdvisorServiceMetadataJoinTests
     }
 
     [Fact]
-    public void JoinWithMetadata_BlankMetadataCategory_ReturnsMetadataValue()
+    public void JoinWithMetadata_BlankMetadataCategory_PreservesInstanceValue()
     {
         var joined = AdvisorService.JoinWithMetadata(
             [new Models.Recommendation(
                 new Models.RecommendationProperties(Category: "Cost", RecommendationTypeId: "Type-A"))],
             AdvisorService.BuildMetadataLookup([CreateMetadata("Type-A", category: null)]));
 
-        Assert.Null(Assert.Single(joined).Properties.Category);
+        Assert.Equal("Cost", Assert.Single(joined).Properties.Category);
     }
 
     [Fact]

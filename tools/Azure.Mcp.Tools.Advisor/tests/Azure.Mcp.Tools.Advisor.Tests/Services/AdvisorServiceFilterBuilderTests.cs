@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Advisor.Tests.Services;
 
 public class AdvisorServiceFilterBuilderTests
 {
-    // Every filter is always AND-ed with this clause so only active ('New') recommendations are returned.
+    // This default clause is used when no explicit status filter is provided.
     private const string StatusClause = "tostring(properties.recommendationStatus) =~ 'New'";
 
     [Fact]
@@ -22,6 +22,20 @@ public class AdvisorServiceFilterBuilderTests
     public void BuildAdditionalFilter_AllFieldsNull_ReturnsStatusClauseOnly()
     {
         Assert.Equal(StatusClause, AdvisorService.BuildAdditionalFilter(new RecommendationFilters()));
+    }
+
+    [Theory]
+    [InlineData(RecommendationStatus.New, "New")]
+    [InlineData(RecommendationStatus.Postponed, "Postponed")]
+    [InlineData(RecommendationStatus.Dismissed, "Dismissed")]
+    [InlineData(RecommendationStatus.Completed, "Completed")]
+    public void BuildAdditionalFilter_Status_UsesRequestedStatus(
+        RecommendationStatus status,
+        string expectedStatus)
+    {
+        var result = AdvisorService.BuildAdditionalFilter(new RecommendationFilters(Status: status));
+
+        Assert.Equal($"tostring(properties.recommendationStatus) =~ '{expectedStatus}'", result);
     }
 
     [Fact]

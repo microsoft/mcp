@@ -59,6 +59,7 @@ public class AdvisorServiceConversionTests
                     "impactedField": "Microsoft.Compute/virtualMachines",
                     "impactedValue": "vm1",
                     "recommendationStatus": "New",
+                    "completionType": "Succeeded",
                     "recommendationDismissReason": "Other",
                     "postponedUntilDateTime": "2027-07-01T00:00:00Z",
                     "suppressionId": "suppression-id",
@@ -141,6 +142,11 @@ public class AdvisorServiceConversionTests
         Assert.Equal("vm1", result.Properties.ImpactedValue);
         Assert.Equal("Type-A", result.Properties.RecommendationTypeId);
         Assert.Equal("New", result.Properties.RecommendationStatus);
+        Assert.Equal("Succeeded", result.Properties.CompletionType);
+        Assert.Equal("Other", result.Properties.RecommendationDismissReason);
+        Assert.Equal(
+            DateTimeOffset.Parse("2027-07-01T00:00:00Z", CultureInfo.InvariantCulture),
+            result.Properties.PostponedUntilDateTime);
         Assert.Equal(
             DateTimeOffset.Parse("2026-05-13T03:19:48.0318731Z", CultureInfo.InvariantCulture),
             result.Properties.CreatedTime);
@@ -187,8 +193,9 @@ public class AdvisorServiceConversionTests
         var serialized = JsonSerializer.Serialize(
             result,
             Azure.Mcp.Tools.Advisor.Commands.AdvisorJsonContext.Default.Recommendation);
-        Assert.DoesNotContain("recommendationDismissReason", serialized);
-        Assert.DoesNotContain("postponedUntilDateTime", serialized);
+        Assert.Contains("\"completionType\":\"Succeeded\"", serialized);
+        Assert.Contains("\"recommendationDismissReason\":\"Other\"", serialized);
+        Assert.Contains("\"postponedUntilDateTime\":\"2027-07-01T00:00:00+00:00\"", serialized);
         Assert.DoesNotContain("suppressionId", serialized);
     }
 

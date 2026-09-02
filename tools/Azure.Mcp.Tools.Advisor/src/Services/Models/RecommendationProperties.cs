@@ -26,6 +26,15 @@ internal sealed class RecommendationProperties
     /// <summary> The lifecycle state of the recommendation (e.g., New, Dismissed, Postponed). </summary>
     public string? RecommendationStatus { get; set; }
 
+    /// <summary> The way the recommendation was completed. </summary>
+    public string? CompletionType { get; set; }
+
+    /// <summary> The reason the recommendation was dismissed. </summary>
+    public string? RecommendationDismissReason { get; set; }
+
+    /// <summary> The time until which the recommendation is postponed. </summary>
+    public DateTimeOffset? PostponedUntilDateTime { get; set; }
+
     /// <summary> The time the recommendation was first generated. </summary>
     public DateTimeOffset? CreatedTime { get; set; }
 

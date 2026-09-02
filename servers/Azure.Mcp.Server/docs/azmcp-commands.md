@@ -323,7 +323,7 @@ azmcp server info
 
 ```bash
 # List Advisor recommendations in a subscription, with optional filters
-# Only active recommendations (status 'New') are returned; completed, dismissed, and postponed ones are excluded
+# Filter by status (New, Postponed, Dismissed, or Completed); status defaults to New when omitted
 # --tracking-ids and --retirement-date can be used independently or together
 # --sub-category is optional with these filters; when specified, it must be ServiceUpgradeAndRetirement
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -331,6 +331,7 @@ azmcp advisor recommendation list --subscription <subscription> \
                                   [--top <top>] \
                                   [--category <category>] \
                                   [--impact <impact>] \
+                                  [--status <New|Postponed|Dismissed|Completed>] \
                                   [--recommendation-type-id <guid>] \
                                   [--resource-type <resource-type>] \
                                   [--resource <resource>] \
