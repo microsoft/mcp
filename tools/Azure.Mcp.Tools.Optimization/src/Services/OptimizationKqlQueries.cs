@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// cSpell:ignore advisorresources resourcecontainers isnotnull lookback leftouter todatetime strcmp Recomm tobool todouble tolower toreal
+
 namespace Azure.Mcp.Tools.Optimization.Services;
 
 /// <summary>

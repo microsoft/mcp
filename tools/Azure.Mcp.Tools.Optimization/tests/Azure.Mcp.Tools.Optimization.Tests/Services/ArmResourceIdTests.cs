@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// cSpell:ignore advisorx
+
 using Azure.Mcp.Tools.Optimization.Services;
 using Xunit;
 

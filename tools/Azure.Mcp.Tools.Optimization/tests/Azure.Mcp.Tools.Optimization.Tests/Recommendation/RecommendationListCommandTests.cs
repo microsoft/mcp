@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// cSpell:ignore subcat
+
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;

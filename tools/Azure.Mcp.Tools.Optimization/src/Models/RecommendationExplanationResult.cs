@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// cSpell:ignore Vcpus
+
 namespace Azure.Mcp.Tools.Optimization.Models;
 
 /// <summary>Current or target SKU/instance configuration surfaced by the explanation tool.</summary>

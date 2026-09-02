@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// cSpell:ignore Vcpus
+
 namespace Azure.Mcp.Tools.Optimization.Models;
 
 /// <summary>Current versus target VM SKU comparison used by the recommendation explanation.</summary>

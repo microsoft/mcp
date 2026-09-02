@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// cSpell:ignore metricnames todouble todynamic
+
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
