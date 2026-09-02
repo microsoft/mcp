@@ -238,6 +238,8 @@ eng/common/TestResources/New-TestResources.ps1 `
 
 Azure resource commands **require recorded live tests**. See `docs/recorded-tests.md` for the record/playback workflow.
 
+For tools marked `LocalRequired = true`, every applicable test in a class extending `RecordedCommandTestsBase` must call `AssertLocalToolIsUnavailableInHttpMode(toolName)` and return early when it returns `true`. This verifies that remote HTTP mode excludes the local-only tool.
+
 ### Testing Your Local Build
 
 Point your `mcp.json` at the freshly built binary:

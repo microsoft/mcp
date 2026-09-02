@@ -2,15 +2,83 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.38 (Unreleased)
+## 3.0.0-beta.40 (2026-09-01)
 
 ### Features Added
 
+- Added `--disable-proxy-tools` to server start options to disable tools that are proxied from sources configured in `/Resources/registry.json`. [[#3287](https://github.com/microsoft/mcp/pull/3287)]
+- Added Azure IoT Hub device and query read tools: [[#3180](https://github.com/microsoft/mcp/pull/3180)]
+  - `iothub_device_show`: Show a device identity from an IoT Hub device registry
+  - `iothub_device_stats`: Get device statistics for an IoT Hub identity registry
+  - `iothub_device_twin_get`: Get a device twin from an IoT Hub device registry
+  - `iothub_query_run`: Run an IoT Hub query (raw SQL or structured predicates) and return a single page of results; a bare `SELECT *` also returns a discoveredFields catalog of queryable field paths
+- Added the resilience recovery plan validate-for-reprotect tool to report per-resource reprotect qualification and blocking reasons. [[#3356](https://github.com/microsoft/mcp/pull/3356)]
+- Added the resilience recovery plan validate-for-operation tool to check whether a plan is eligible to start a specified recovery operation. [[#3356](https://github.com/microsoft/mcp/pull/3356)]
+- Added the resilience drill end tool. [[#3353](https://github.com/microsoft/mcp/pull/3353)]
+- Added the resilience drill start tool. [[#3353](https://github.com/microsoft/mcp/pull/3353)]
+- Added the `azmcp monitor metrics batchquery` command for querying Azure Monitor metrics across multiple resources in a single request. [[#3393](https://github.com/microsoft/mcp/pull/3393)]
+
 ### Breaking Changes
+
+- Removed the confirmation-only `--force` parameter from SQL server delete and `--confirm` parameters from SRE Agent delete tools. [[#3415](https://github.com/microsoft/mcp/pull/3415)]
+- Removed custom retry policy options from subscription and resource group tools and shared Azure service APIs. [[#3419](https://github.com/microsoft/mcp/pull/3419)]
+- Removed custom retry policy options from Redis, Resilience Management, Resource Health, Search, and Service Bus tools. [[#3412](https://github.com/microsoft/mcp/pull/3412)]
+- Removed custom retry policy options from Authorization, Azure Backup, and Azure Migrate tools. [[#3405](https://github.com/microsoft/mcp/pull/3405)]
+- Removed custom retry policy options from Communication, Compute, Container Apps, and Cosmos tools. [[#3406](https://github.com/microsoft/mcp/pull/3406)]
+- Removed custom retry policy options from Device Registry, Event Grid, Event Hubs, File Shares, and Foundry Extensions tools. [[#3407](https://github.com/microsoft/mcp/pull/3407)]
+- Removed custom retry policy options from Function App, Grafana, Insights, IoT Hub, Key Vault, and Kusto tools. [[#3409](https://github.com/microsoft/mcp/pull/3409)]
+- Removed custom retry policy options from Load Testing, Managed Lustre, Marketplace, Monitor, Policy, and Postgres tools. [[#3410](https://github.com/microsoft/mcp/pull/3410)]
+- Removed custom retry policy options from Service Fabric, SignalR, Speech, SQL, SRE Agent, Storage, and Storage Sync tools. [[#3413](https://github.com/microsoft/mcp/pull/3413)]
+- Removed custom retry policy options from Virtual Desktop and Workbooks tools. [[#3414](https://github.com/microsoft/mcp/pull/3414)]
+- Removed custom retry policy options from ACR, Advisor, AKS, App Configuration, Application Insights, and App Service tools. [[#3404](https://github.com/microsoft/mcp/pull/3404)]
 
 ### Bugs Fixed
 
-### Other Changes
+- Nested command options (`[OptionContainer]`) are now preserved in trimmed Azure MCP Server distributions. [[#3376](https://github.com/microsoft/mcp/pull/3376)]
+- Azure Backup: `azmcp_azurebackup_vault_list` and other vault-listing paths now surface a `RequestFailedException` (with the original HTTP status) whenever either the RSV or DPP backend returns a `RequestFailedException`, instead of wrapping mixed-failure cases in an `InvalidOperationException`. Restores meaningful HTTP status codes (e.g. 422, 429) and prevents classifying real Azure service failures as MCP-side bugs. [[#3448](https://github.com/microsoft/mcp/pull/3448)]
+- Azure Backup: `azmcp_azurebackup_protecteditem_get` (DPP path) no longer fails the entire list when a single backup instance deserializes to an unknown polymorphic subtype. The DPP protected-item enumerator now skips individual bad items (matching the resilient pattern already used for DPP policy listing) and returns the remaining valid items. [[#3448](https://github.com/microsoft/mcp/pull/3448)]
+- Azure Backup: `azmcp_azurebackup_governance_find-unprotected` now validates the `--resource-type-filter` value up-front and returns a customer-facing 400 (`RequestFailedException`) for malformed inputs or workload aliases (e.g. `mssql`, `saphana`, `sapase`, `azurefiles`) with a hint pointing to the vault-discovery path. Previously the tool threw an `ArgumentException` that was classified as an MCP-side bug. [[#3448](https://github.com/microsoft/mcp/pull/3448)]
+- Azure Backup: Added regression coverage for `azmcp_azurebackup_backup_status` against DPP-only ARM resource types (e.g. `Microsoft.Compute/disks`) to pin the null-cast in the ARM-type-to-DataSourceType mapping and prevent the previously-observed `ArgumentNullException`. [[#3448](https://github.com/microsoft/mcp/pull/3448)]
+- Azure Backup: `azmcp_azurebackup_disasterrecovery_enable-crr` — DPP vault Enable-CRR now preserves existing `FeatureSettings` sibling fields on the PATCH payload. The newer Azure.ResourceManager.DataProtectionBackup api-version rejects a bare `FeatureSettings` PATCH containing only `CrossRegionRestoreState`. This is a follow-on to the SDK upgrade in PR #3279. [[#3450](https://github.com/microsoft/mcp/pull/3450)]
+- Azure Backup: `azmcp_azurebackup_disasterrecovery_enable-crr` — RSV vault Enable-CRR Vault-PATCH fallback (triggered by `BMSUserErrorRedundancySettingsUseVaultApi`) now preserves the existing `RedundancySettings.StandardTierStorageRedundancy` sibling field on the PATCH payload. The newer Azure.ResourceManager.RecoveryServices api-version rejects state-only PATCH on `Properties.RedundancySettings`. Follow-on to PR #3279. [[#3450](https://github.com/microsoft/mcp/pull/3450)]
+- Azure Backup: `azmcp_azurebackup_protecteditem_undelete` — searching for the soft-deleted backup instance no longer blanks out the entire list when the DPP SDK throws on an unknown polymorphic discriminator introduced by a newer service version. Uses the resilient enumerator pattern already established in `ListPoliciesAsync`. [[#3450](https://github.com/microsoft/mcp/pull/3450)]
+- Azure Backup: `azmcp_azurebackup_recoverypoint_get` (list mode) — DPP recovery-point enumeration no longer blanks out the entire list when a single item throws on an unknown polymorphic discriminator introduced by a newer service version. Uses the resilient enumerator pattern already established in `ListPoliciesAsync`. [[#3450](https://github.com/microsoft/mcp/pull/3450)]
+
+## 3.0.0-beta.39 (2026-08-27)
+
+### Features Added
+
+- Added support for creating, replacing, and removing additional recovery groups and their manual or Custom Runbook pre/post actions through the `azmcp resilience recoveryplan create` command. [[#3352](https://github.com/microsoft/mcp/pull/3352)]
+- Added the resilience recovery plan validate-for-failover tool to report per-resource failover qualification and blocking reasons. [[#3354](https://github.com/microsoft/mcp/pull/3354)]
+- Added the `azmcp resilience drill delete` command to delete a resilience drill from an Azure service group. [[#3343](https://github.com/microsoft/mcp/pull/3343)]
+- Added AMLFS expansion job commands (create, get, delete) to resize Azure Managed Lustre filesystem storage capacity. [[#3344](https://github.com/microsoft/mcp/pull/3344)]
+- Added the resilience drill create command for creating or updating zonal and regional drills in Azure service groups. [[#3320](https://github.com/microsoft/mcp/pull/3320)]
+- Added the resilience drill update tool for changing supporting resource placement, RBAC setup mode, and recovery plan association. [[#3324](https://github.com/microsoft/mcp/pull/3324)]
+- Added `azurebackup resourceguard` command group with `create`, `get`, and `delete` operations for managing Multi-User Authorization Resource Guards. [[#3322](https://github.com/microsoft/mcp/pull/3322)]
+- Added `azurebackup security disable-mua` command to explicitly disable Multi-User Authorization on a vault. [[#3322](https://github.com/microsoft/mcp/pull/3322)]
+- Added `azurebackup vault privateendpoint` command group for managing Private Endpoints (v2 experience) on Recovery Services vaults (RSV). Includes `create`, `get`, `delete`, and `approve-reject` (with an `--action approve|reject` parameter) operations. Backup vaults (DPP) are not supported and return a clear error directing users to RSV. [[#3345](https://github.com/microsoft/mcp/pull/3345)]
+
+### Breaking Changes
+
+- Renamed `azurebackup security configure-mua` to `azurebackup security enable-mua`. [[#3322](https://github.com/microsoft/mcp/pull/3322)]
+
+### Bugs Fixed
+
+- Aligned resilience recovery group and action input validation with the service API contract. [[#3352](https://github.com/microsoft/mcp/pull/3352)]
+- Fixed `azurebackup security configure-mua` (now `enable-mua`) silently disabling MUA when `--resource-guard-id` was omitted. The parameter is now required for enabling MUA; use the new `azurebackup security disable-mua` command to disable. [[#3322](https://github.com/microsoft/mcp/pull/3322)]
+
+## 3.0.0-beta.38 (2026-08-25)
+
+### Features Added
+
+- Added the `azmcp resilience drill run get` command to list runs of a resilience drill or get a specific drill run. [[#3318](https://github.com/microsoft/mcp/pull/3318)]
+- Added the `azmcp resilience drill run resource get` command to list resources of a resilience drill run or get a specific drill run resource. [[#3318](https://github.com/microsoft/mcp/pull/3318)]
+- Added the `azmcp resilience recoveryplan checkreadiness` command to discover and assess whether a recovery plan and its protected resources are ready for recovery operations. The command waits for the readiness job and returns its status, errors, failed tasks, and failed resources. [[#3268](https://github.com/microsoft/mcp/pull/3268)]
+- The `azmcp search index query` command now uses the full Lucene query syntax by default and supports a new optional `--query-type` option to select between `simple`, `full`, and `semantic` queries. [[#3251](https://github.com/microsoft/mcp/pull/3251)]
+
+### Breaking Changes
+
+- Renamed the recovery plan command group from `azmcp resilience recovery plan` to `azmcp resilience recoveryplan` and the recovery job command group from `azmcp resilience recovery job` to `azmcp resilience recoveryjob`. Existing get commands now use the corresponding single-word resource group names. [[#3268](https://github.com/microsoft/mcp/pull/3268)]
 
 ## 3.0.0-beta.37 (2026-08-20)
 

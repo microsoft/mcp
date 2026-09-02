@@ -1,0 +1,5 @@
+changes:
+  - section: "Features Added"
+    description: "Added selective disk backup support for RSV IaaS VM protected items. `azurebackup protecteditem protect` now accepts `--disk-list-setting` (`include`|`exclude`|`resetexclusionsettings`), `--disks-list` (comma-separated data-disk LUNs, e.g. `0,1,3`), and `--exclude-all-data-disks` to back up only the OS disk. Applies to RSV IaaS VM only. In-guest workloads (SQL / SAP HANA / SAP ASE in IaaS VM), Azure File Share, and all DPP (Backup vault) datasources return a validation error when disk-exclusion options are supplied. See https://learn.microsoft.com/azure/backup/selective-disk-backup-restore."
+  - section: "Features Added"
+    description: "Added `azurebackup protecteditem update-protection` command to change the backup policy and/or selective disk configuration on an already-protected RSV IaaS VM. Requires at least one of `--policy`, `--disk-list-setting`, `--disks-list`, or `--exclude-all-data-disks`. IaaS VM only: DPP vaults, RSV in-guest workloads (SQL / SAP HANA / SAP ASE), and Azure File Share are not supported."

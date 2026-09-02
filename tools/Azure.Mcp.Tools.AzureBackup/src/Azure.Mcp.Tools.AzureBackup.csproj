@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Azure.Core" />
     <PackageReference Include="Azure.ResourceManager" />
+    <PackageReference Include="Azure.ResourceManager.Network" />
     <PackageReference Include="Azure.ResourceManager.RecoveryServices" />
     <PackageReference Include="Azure.ResourceManager.RecoveryServicesBackup" />
     <PackageReference Include="Azure.ResourceManager.DataProtectionBackup" />

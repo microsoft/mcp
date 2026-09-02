@@ -41,12 +41,20 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<RecoveryPlanGetCommand>();
         services.AddSingleton<RecoveryPlanCreateCommand>();
         services.AddSingleton<RecoveryPlanDeleteCommand>();
+        services.AddSingleton<RecoveryPlanValidateForFailoverCommand>();
+        services.AddSingleton<RecoveryPlanValidateForReprotectCommand>();
+        services.AddSingleton<RecoveryPlanValidateForOperationCommand>();
         services.AddSingleton<RecoveryPlanUpdateResourcesCommand>();
         services.AddSingleton<RecoveryPlanCheckReadinessCommand>();
         services.AddSingleton<RecoveryResourceGetCommand>();
         services.AddSingleton<RecoveryJobGetCommand>();
         services.AddSingleton<RecoveryJobResourceGetCommand>();
+        services.AddSingleton<DrillCreateCommand>();
         services.AddSingleton<DrillGetCommand>();
+        services.AddSingleton<DrillStartCommand>();
+        services.AddSingleton<DrillEndCommand>();
+        services.AddSingleton<DrillUpdateCommand>();
+        services.AddSingleton<DrillDeleteCommand>();
         services.AddSingleton<DrillResourceGetCommand>();
         services.AddSingleton<DrillRunGetCommand>();
         services.AddSingleton<DrillRunAddNotesCommand>();
@@ -110,9 +118,12 @@ public class ResilienceManagementSetup : IAreaSetup
         recoveryPlans.AddCommand<RecoveryPlanGetCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanCreateCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanDeleteCommand>(serviceProvider);
+        recoveryPlans.AddCommand<RecoveryPlanValidateForFailoverCommand>(serviceProvider);
+        recoveryPlans.AddCommand<RecoveryPlanValidateForReprotectCommand>(serviceProvider);
+        recoveryPlans.AddCommand<RecoveryPlanValidateForOperationCommand>(serviceProvider);
         recoveryPlans.AddCommand<RecoveryPlanCheckReadinessCommand>(serviceProvider);
 
-        // Create resource subgroup under recovery plan
+        // Create resource subgroup under recoveryplan
         var recoveryResources = new CommandGroup("resource", "Resilience recovery resource operations - Commands for listing, getting, and updating the resources (members) of a resilience recovery plan.");
         recoveryPlans.AddSubGroup(recoveryResources);
 
@@ -132,10 +143,16 @@ public class ResilienceManagementSetup : IAreaSetup
         recoveryJobResources.AddCommand<RecoveryJobResourceGetCommand>(serviceProvider);
 
         // Create drill subgroup
-        var drills = new CommandGroup("drill", "Resilience drill operations - Commands for listing and getting resilience drills for an Azure service group.");
+        var drills = new CommandGroup("drill", "Resilience drill operations - Commands for creating, listing, getting, updating, starting, ending, and deleting resilience drills for an Azure service group.");
         resilienceManagement.AddSubGroup(drills);
 
+        drills.AddCommand<DrillCreateCommand>(serviceProvider);
         drills.AddCommand<DrillGetCommand>(serviceProvider);
+        drills.AddCommand<DrillStartCommand>(serviceProvider);
+        drills.AddCommand<DrillEndCommand>(serviceProvider);
+        drills.AddCommand<DrillUpdateCommand>(serviceProvider);
+        drills.AddCommand<DrillDeleteCommand>(serviceProvider);
+
 
         // Create resource subgroup under drill
         var drillResources = new CommandGroup("resource", "Resilience drill resource operations - Commands for listing and getting the resources (targets) of a resilience drill.");

@@ -8,6 +8,7 @@ using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Models;
+using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.ResourceManager.Search;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Indexes;
@@ -16,7 +17,6 @@ using Azure.Search.Documents.KnowledgeBases;
 using Azure.Search.Documents.KnowledgeBases.Models;
 using Azure.Search.Documents.Models;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 
@@ -35,7 +35,6 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         string subscription,
         string? resourceGroup = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
@@ -52,7 +51,7 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
                 return cachedRgServices;
             }
 
-            var subForRg = await AzureService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
+            var subForRg = await AzureService.GetSubscription(subscription, tenantId, cancellationToken: cancellationToken);
             var rgResource = (await subForRg.GetResourceGroupAsync(resourceGroup, cancellationToken)).Value;
             var rgServices = new List<string>();
             await foreach (var service in rgResource.GetSearchServices().GetAllAsync(cancellationToken: cancellationToken))
@@ -77,7 +76,7 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
             return cachedServices;
         }
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenantId, cancellationToken: cancellationToken);
         var services = new List<string>();
         await foreach (var service in subscriptionResource.GetSearchServicesAsync(cancellationToken: cancellationToken))
         {
@@ -95,7 +94,6 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
     public async Task<List<IndexInfo>> GetIndexDetails(
         string serviceName,
         string? indexName,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(serviceName), serviceName));
@@ -104,7 +102,7 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
 
         if (string.IsNullOrEmpty(indexName))
         {
-            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+            var searchClient = await GetSearchIndexClient(serviceName, cancellationToken);
             await foreach (var index in searchClient.GetIndexesAsync(cancellationToken: cancellationToken))
             {
                 indexes.Add(MapToIndexInfo(index));
@@ -113,7 +111,7 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         }
         else
         {
-            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+            var searchClient = await GetSearchIndexClient(serviceName, cancellationToken);
             var index = await searchClient.GetIndexAsync(indexName, cancellationToken: cancellationToken);
 
             indexes.Add(MapToIndexInfo(index.Value));
@@ -126,7 +124,8 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         string serviceName,
         string indexName,
         string searchText,
-        RetryPolicyOptions? retryPolicy = null,
+        IndexQueryType? queryType = null,
+        string? semanticConfiguration = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -134,7 +133,7 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
             (nameof(indexName), indexName),
             (nameof(searchText), searchText));
 
-        var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+        var searchClient = await GetSearchIndexClient(serviceName, cancellationToken);
         var indexDefinition = await searchClient.GetIndexAsync(indexName, cancellationToken: cancellationToken);
         var client = searchClient.GetSearchClient(indexName);
 
@@ -145,9 +144,10 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         };
 
         var vectorFields = FindVectorFields(indexDefinition.Value);
-        // TODO (alzimmer): this isn't useed and probably should be.
+        // TODO (alzimmer): this isn't used and probably should be.
         var vectorizableFields = FindVectorizableFields(indexDefinition.Value, vectorFields);
         ConfigureSearchOptions(searchText, options, indexDefinition.Value, vectorFields);
+        ConfigureQueryType(options, indexDefinition.Value, queryType, semanticConfiguration);
 
         var searchResponse = await client.SearchAsync(searchText, SearchJsonContext.Default.JsonElement, options, cancellationToken: cancellationToken);
 
@@ -157,13 +157,12 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
     public async Task<List<KnowledgeSourceInfo>> ListKnowledgeSources(
         string serviceName,
         string? knowledgeSourceName = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(serviceName), serviceName));
 
         var sources = new List<KnowledgeSourceInfo>();
-        var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+        var searchClient = await GetSearchIndexClient(serviceName, cancellationToken);
 
         if (string.IsNullOrEmpty(knowledgeSourceName))
         {
@@ -187,13 +186,12 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
     public async Task<List<KnowledgeBaseInfo>> ListKnowledgeBases(
         string serviceName,
         string? knowledgeBaseName = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(serviceName), serviceName));
 
         var bases = new List<KnowledgeBaseInfo>();
-        var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+        var searchClient = await GetSearchIndexClient(serviceName, cancellationToken);
 
         if (string.IsNullOrEmpty(knowledgeBaseName))
         {
@@ -222,12 +220,11 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         string baseName,
         string? query,
         IEnumerable<(string role, string message)>? messages,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(serviceName), serviceName), (nameof(baseName), baseName));
 
-        var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+        var searchClient = await GetSearchIndexClient(serviceName, cancellationToken);
 
         var knowledgeBase = await searchClient.GetKnowledgeBaseAsync(baseName, cancellationToken: cancellationToken);
         if (knowledgeBase?.Value == null)
@@ -238,7 +235,6 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         var clientOptions = AddDefaultPolicies(new SearchClientOptions());
         clientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
         clientOptions.Audience = GetSearchAudience();
-        ConfigureRetryPolicy(clientOptions, retryPolicy);
 
         var knowledgeBaseClient = new KnowledgeBaseRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(null, cancellationToken), clientOptions);
         var useMinimalReasoning = knowledgeBase.Value.RetrievalReasoningEffort is KnowledgeRetrievalMinimalReasoningEffort;
@@ -336,7 +332,7 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         return vectorizableFields;
     }
 
-    private async Task<SearchIndexClient> GetSearchIndexClient(string serviceName, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken = default)
+    private async Task<SearchIndexClient> GetSearchIndexClient(string serviceName, CancellationToken cancellationToken = default)
     {
         ValidateServiceName(serviceName);
         var key = CacheKeyBuilder.Build(SearchServicesCacheKey, serviceName, AzureService.CloudConfiguration.CloudType.ToString());
@@ -348,7 +344,6 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
             var clientOptions = AddDefaultPolicies(new SearchClientOptions());
             clientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
             clientOptions.Audience = GetSearchAudience();
-            ConfigureRetryPolicy(clientOptions, retryPolicy);
 
             var endpoint = new Uri(GetSearchEndpoint(serviceName));
             searchClient = new SearchIndexClient(endpoint, credential, clientOptions);
@@ -371,6 +366,41 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         foreach (var vf in vectorFields)
         {
             options.VectorSearch.Queries.Add(new VectorizableTextQuery(q) { Fields = { vf }, KNearestNeighborsCount = 50 });
+        }
+    }
+
+    internal static void ConfigureQueryType(
+        SearchOptions options,
+        SearchIndex indexDefinition,
+        IndexQueryType? queryType,
+        string? semanticConfiguration = null)
+    {
+        switch (queryType)
+        {
+            case IndexQueryType.Simple:
+                options.QueryType = SearchQueryType.Simple;
+                break;
+
+            case IndexQueryType.Semantic:
+                var semanticConfigurationName = string.IsNullOrWhiteSpace(semanticConfiguration)
+                    ? indexDefinition.SemanticSearch?.DefaultConfigurationName
+                        ?? indexDefinition.SemanticSearch?.Configurations?.FirstOrDefault()?.Name
+                    : semanticConfiguration;
+
+                options.QueryType = SearchQueryType.Semantic;
+                options.SemanticSearch = new SemanticSearchOptions
+                {
+                    SemanticConfigurationName = semanticConfigurationName,
+                    QueryCaption = new(QueryCaptionType.Extractive),
+                    QueryAnswer = new(QueryAnswerType.Extractive)
+                };
+                break;
+
+            // Full Lucene syntax is used by default as it is a superset of the simple syntax.
+            case IndexQueryType.Full:
+            default:
+                options.QueryType = SearchQueryType.Full;
+                break;
         }
     }
 

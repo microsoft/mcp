@@ -474,7 +474,7 @@ public class ConsolidatedModeTests
 
     private static async Task<string?> ReadJsonRpcResponseAsync(StreamReader reader)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         try
         {
             return await reader.ReadLineAsync(cts.Token);

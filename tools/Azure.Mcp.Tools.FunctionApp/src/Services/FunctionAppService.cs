@@ -5,7 +5,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.ResourceManager.AppService;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.FunctionApp.Services;
@@ -25,12 +24,11 @@ public sealed class FunctionAppService(IAzureService azureService, ICacheService
         string? functionAppName,
         string? resourceGroup,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var functionApps = new List<FunctionAppInfo>();
         if (string.IsNullOrEmpty(functionAppName))
         {

@@ -10,8 +10,10 @@ words:
   - afsfileshare
   - azsubscriptionguid
   - azuredatalakestorage
+  - azurefiles
   - azureiaasvm
   - backupconfig
+  - badformat
   - badvalue
   - bper
   - centraluseuap
@@ -47,6 +49,7 @@ words:
   - postgresqlflexible
   - ppaf
   - previlige
+  - privateendpoint
   - prometeia
   - recognised
   - sapasedatabase

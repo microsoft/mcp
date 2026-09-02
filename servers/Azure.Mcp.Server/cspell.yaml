@@ -13,6 +13,7 @@ words:
   - appconfiguration
   - appsettings
   - azclis
+  - azurefiles
   - azureicon
   - azuremanagedlustre
   - azuremigrate
@@ -68,6 +69,7 @@ words:
   - platformlandingzone
   - precheck
   - prereq
+  - privateendpoint
   - registeredserver
   - reprotect
   - reprotection

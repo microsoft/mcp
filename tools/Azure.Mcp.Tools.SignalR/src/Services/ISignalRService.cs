@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.SignalR.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.SignalR.Services;
 
@@ -16,6 +15,5 @@ public interface ISignalRService
         string? resourceGroup,
         string? signalRName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

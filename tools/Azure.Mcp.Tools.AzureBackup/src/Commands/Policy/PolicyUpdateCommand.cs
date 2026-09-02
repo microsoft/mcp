@@ -34,18 +34,45 @@ public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAz
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
 
+        var validation = Services.Policy.PolicyUpdateValidator.Validate(options);
+        if (!validation.IsValid)
+        {
+            context.Response.Status = HttpStatusCode.BadRequest;
+            context.Response.Message = string.Join(" ", validation.Issues.Select(i => $"[{i.Flag}] {i.Message}"));
+            return context.Response;
+        }
+
         try
         {
+            var request = new Services.Policy.PolicyUpdateRequest
+            {
+                Policy = options.Policy,
+                ScheduleTime = options.ScheduleTime,
+                DailyRetentionDays = options.DailyRetentionDays,
+                TimeZone = options.TimeZone,
+                ScheduleFrequency = options.ScheduleFrequency,
+                ScheduleTimes = options.ScheduleTimes,
+                ScheduleDaysOfWeek = options.ScheduleDaysOfWeek,
+                WeeklyRetentionWeeks = options.WeeklyRetentionWeeks,
+                WeeklyRetentionDaysOfWeek = options.WeeklyRetentionDaysOfWeek,
+                MonthlyRetentionMonths = options.MonthlyRetentionMonths,
+                MonthlyRetentionWeekOfMonth = options.MonthlyRetentionWeekOfMonth,
+                MonthlyRetentionDaysOfWeek = options.MonthlyRetentionDaysOfWeek,
+                MonthlyRetentionDaysOfMonth = options.MonthlyRetentionDaysOfMonth,
+                YearlyRetentionYears = options.YearlyRetentionYears,
+                YearlyRetentionMonths = options.YearlyRetentionMonths,
+                YearlyRetentionWeekOfMonth = options.YearlyRetentionWeekOfMonth,
+                YearlyRetentionDaysOfWeek = options.YearlyRetentionDaysOfWeek,
+                YearlyRetentionDaysOfMonth = options.YearlyRetentionDaysOfMonth,
+            };
+
             var result = await _azureBackupService.UpdatePolicyAsync(
+                request,
                 options.Vault,
                 options.ResourceGroup,
                 options.Subscription!,
-                options.Policy,
                 options.VaultType,
-                options.ScheduleTime,
-                options.DailyRetentionDays,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
