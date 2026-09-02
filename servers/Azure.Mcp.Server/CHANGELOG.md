@@ -51,6 +51,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Namespace and single-proxy routing failures now consistently identify tool-call error responses with `isError: true`.
 - Fixed `azurebackup governance immutability` and `azurebackup governance soft-delete` payloads that were silently broken by the RecoveryServices SDK 1.3.0 upgrade. Immutability now always sends `ImmutabilityConfiguration.Type` when the state is not Disabled (required on api-version 2026-05-01+), and soft-delete always sends `SoftDeleteRetentionPeriodInDays` plus `EnhancedSecurityState` (required on api-version 2026-02-01+). Regression-prevention unit tests target the payload builders directly. [[#3430](https://github.com/microsoft/mcp/pull/3430)]
 
+### Other Changes
+
 #### Dependency Updates
 
 - Updated ModelContextProtocol packages to 2.2.0. [[#3496](https://github.com/microsoft/mcp/pull/3496)]
