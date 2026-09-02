@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -14,6 +15,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Client;
@@ -316,7 +318,7 @@ public class SingleProxyToolLoaderTests
         var command = Substitute.For<IBaseCommand>();
         command.Id.Returns("storage_account_list");
         command.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
-        command.GetCommand().Returns(new System.CommandLine.Command("account_list", "List storage accounts"));
+        command.GetCommand().Returns(new Command("account_list", "List storage accounts"));
         commandFactory.GroupCommands(Arg.Is<string[]>(groups => groups.Length == 1 && groups[0] == "storage"))
             .Returns(new Dictionary<string, IBaseCommand> { ["account_list"] = command });
 
@@ -352,15 +354,20 @@ public class SingleProxyToolLoaderTests
         var command = Substitute.For<IBaseCommand>();
         command.Id.Returns("storage_account_list");
         command.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
-        command.GetCommand().Returns(new System.CommandLine.Command("account_list", "List storage accounts"));
-        command.ExecuteAsync(Arg.Any<Microsoft.Mcp.Core.Models.Command.CommandContext>(), Arg.Any<System.CommandLine.ParseResult>(), Arg.Any<CancellationToken>())
-            .Returns(new Microsoft.Mcp.Core.Models.Command.CommandResponse
+        command.GetCommand().Returns(new Command("account_list", "List storage accounts"));
+        command.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
+            .Returns(new CommandResponse
             {
                 Status = System.Net.HttpStatusCode.OK,
                 Message = "Managed command executed"
             });
 
         var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("azure", "Azure Server");
+        rootGroup.AddSubGroup(new CommandGroup("storage", "Storage tools"));
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Is<string[]>(groups => groups.Length == 1 && groups[0] == "storage"))
+            .Returns(new Dictionary<string, IBaseCommand> { ["account_list"] = command });
         commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand> { ["account_list"] = command });
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         var toolLoader = new SingleProxyToolLoader(
@@ -379,8 +386,8 @@ public class SingleProxyToolLoaderTests
         var textContent = Assert.IsType<TextContentBlock>(Assert.Single(result.Content));
         Assert.Contains("Managed command executed", textContent.Text);
         await command.Received(1).ExecuteAsync(
-            Arg.Is<Microsoft.Mcp.Core.Models.Command.CommandContext>(context => context.McpServer == request.Server),
-            Arg.Any<System.CommandLine.ParseResult>(),
+            Arg.Is<CommandContext>(context => context.McpServer == request.Server),
+            Arg.Any<ParseResult>(),
             TestContext.Current.CancellationToken);
         await discoveryStrategy.DidNotReceive().GetOrCreateClientAsync(
             Arg.Any<string>(), Arg.Any<McpClientOptions?>(), Arg.Any<CancellationToken>());
@@ -493,15 +500,11 @@ public class SingleProxyToolLoaderTests
             CreateServerConfigurationOptions(),
             discoveryStrategy);
 
-        var result = await loader.CallToolHandler(
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => loader.CallToolHandler(
             CreateCallToolRequestWithToolAndCommand("storage", "account_list"),
-            TestContext.Current.CancellationToken);
+            TestContext.Current.CancellationToken).AsTask());
 
-        Assert.True(result.IsError);
-        Assert.Contains(
-            "Transport failed.",
-            Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text,
-            StringComparison.Ordinal);
+        Assert.Contains("Transport failed.", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -544,7 +547,7 @@ public class SingleProxyToolLoaderTests
         var request = McpTestUtilities.CreateToolCallRequest("storage");
 
         // Act
-        var tools = await toolLoader.GetToolListAsync(request, "storage", TestContext.Current.CancellationToken);
+        var tools = await toolLoader.GetToolsInGroupAsync(request, "storage", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(tools);
@@ -591,7 +594,7 @@ public class SingleProxyToolLoaderTests
         var request = McpTestUtilities.CreateToolCallRequest("storage");
 
         // Act
-        var tools = await toolLoader.GetToolListAsync(request, "storage", TestContext.Current.CancellationToken);
+        var tools = await toolLoader.GetToolsInGroupAsync(request, "storage", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(tools);
@@ -718,9 +721,9 @@ public class SingleProxyToolLoaderTests
 
         // Assert
         Assert.False(writeToolExecuted, "Non-read-only tool should not be executed in read-only mode");
-        Assert.True(result.IsError);
+        Assert.Null(result.IsError); // No error should happen. Instead learning should be called.
         var textContent = result.Content.OfType<TextContentBlock>().First();
-        Assert.Contains("read-only mode", textContent.Text);
+        Assert.Contains("Here are the available commands and their input schema", textContent.Text);
     }
 
     [Fact]
@@ -790,9 +793,9 @@ public class SingleProxyToolLoaderTests
 
         // Assert
         Assert.False(localToolExecuted, "Local-required tool should not be executed in HTTP mode");
-        Assert.True(result.IsError);
+        Assert.Null(result.IsError); // No error should happen. Instead learning should be called.
         var textContent = result.Content.OfType<TextContentBlock>().First();
-        Assert.Contains("HTTP mode", textContent.Text);
+        Assert.Contains("Here are the available commands and their input schema", textContent.Text);
     }
 
     [Fact]
@@ -852,9 +855,9 @@ public class SingleProxyToolLoaderTests
 
         // Assert
         Assert.False(toolExecuted, "Tool without ReadOnlyHint should not be executed in read-only mode");
-        Assert.True(result.IsError);
+        Assert.Null(result.IsError); // No error should happen. Instead learning should be called.
         var textContent = result.Content.OfType<TextContentBlock>().First();
-        Assert.Contains("read-only mode", textContent.Text);
+        Assert.Contains("Here are the available tools", textContent.Text);
     }
 
     [Fact]
