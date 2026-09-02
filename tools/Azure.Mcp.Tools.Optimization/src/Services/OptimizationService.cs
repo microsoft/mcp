@@ -26,7 +26,7 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
 
     private readonly ILogger<OptimizationService> _logger = logger;
 
-    public async Task<ResourceQueryResults<CostSavingsRecommendation>> ListCostSavingsAsync(
+    public async Task<CostSavingsResult> ListCostSavingsAsync(
         string subscription,
         int top,
         string? tenant = null,
@@ -35,11 +35,16 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
         ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
 
         var query = $"{OptimizationKqlQueries.TopCostSavingsQuery}\n| limit {top}";
-        var (rows, truncated) = await QueryResourceGraphAsync(
-            query, subscription, tenant, cancellationToken);
+        var (rows, truncated, candidates) = await QueryResourceGraphAsync(
+            query, subscription, tenant, cancellationToken, returnCandidatesOnMultipleMatch: true);
+
+        if (candidates is not null)
+        {
+            return new CostSavingsResult([], false, candidates);
+        }
 
         var recommendations = rows.Select(ConvertToCostSavings).ToList();
-        return new ResourceQueryResults<CostSavingsRecommendation>(recommendations, truncated);
+        return new CostSavingsResult(recommendations, truncated);
     }
 
     public async Task<IReadOnlyList<AlternativeRecommendation>> GetAlternativesAsync(
@@ -55,7 +60,7 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
         resourceId = ArmResourceId.StripAdvisorRecommendationSuffix(resourceId);
 
         var query = $"{OptimizationKqlQueries.BuildAlternativesQuery(resourceId)}\n| limit {AlternativesLimit}";
-        var (rows, _) = await QueryResourceGraphAsync(query, subscription, tenant, cancellationToken);
+        var (rows, _, _) = await QueryResourceGraphAsync(query, subscription, tenant, cancellationToken);
 
         return AlternativeRecommendationsArgParser.Parse(rows, resourceId);
     }
@@ -75,7 +80,7 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
         resourceId = ArmResourceId.StripAdvisorRecommendationSuffix(resourceId);
 
         var query = $"{OptimizationKqlQueries.BuildAdvisorRecommendationQuery(resourceId)}\n| limit {ExplanationLimit}";
-        var (rows, _) = await QueryResourceGraphAsync(query, subscription, tenant, cancellationToken);
+        var (rows, _, _) = await QueryResourceGraphAsync(query, subscription, tenant, cancellationToken);
 
         if (rows.Count == 0)
         {
@@ -197,21 +202,30 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
 
     /// <summary>
     /// Runs a raw Azure Resource Graph query scoped to a single subscription and returns the
-    /// cloned data rows plus the truncation flag.
+    /// cloned data rows plus the truncation flag. When <paramref name="returnCandidatesOnMultipleMatch"/>
+    /// is true and the subscription name matches more than one subscription, the candidate
+    /// subscriptions are returned instead of throwing.
     /// </summary>
-    private async Task<(List<JsonElement> Rows, bool Truncated)> QueryResourceGraphAsync(
+    private async Task<(List<JsonElement> Rows, bool Truncated, IReadOnlyList<SubscriptionOption>? Candidates)> QueryResourceGraphAsync(
         string query,
         string subscription,
         string? tenant,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool returnCandidatesOnMultipleMatch = false)
     {
-        var (subscriptionId, subscriptionTenantId) = await ResolveSubscriptionAsync(
-            subscription, tenant, cancellationToken);
+        var (subscriptionId, subscriptionTenantId, candidates) = await ResolveSubscriptionAsync(
+            subscription, tenant, returnCandidatesOnMultipleMatch, cancellationToken);
+
+        if (candidates is not null)
+        {
+            return ([], false, candidates);
+        }
+
         var tenantResource = await GetTenantResourceAsync(subscriptionTenantId, cancellationToken);
 
         var queryContent = new ResourceQueryContent(query)
         {
-            Subscriptions = { subscriptionId },
+            Subscriptions = { subscriptionId! },
         };
 
         ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
@@ -229,24 +243,27 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
             }
         }
 
-        return (rows, result?.ResultTruncated == ResultTruncated.True);
+        return (rows, result?.ResultTruncated == ResultTruncated.True, null);
     }
 
     /// <summary>
     /// Resolves the subscription id and owning tenant. When the caller passes a subscription name,
     /// the id is looked up through an Azure Resource Graph query over resourcecontainers rather than
-    /// enumerating every subscription.
+    /// enumerating every subscription. When <paramref name="returnCandidatesOnMultipleMatch"/> is
+    /// true and the name matches more than one subscription, the candidates are returned so the
+    /// caller can ask the user to select the correct one; otherwise an exception is thrown.
     /// </summary>
-    private async Task<(string SubscriptionId, Guid? TenantId)> ResolveSubscriptionAsync(
+    private async Task<(string? SubscriptionId, Guid? TenantId, IReadOnlyList<SubscriptionOption>? Candidates)> ResolveSubscriptionAsync(
         string subscription,
         string? tenant,
+        bool returnCandidatesOnMultipleMatch,
         CancellationToken cancellationToken)
     {
         var tenantId = Guid.TryParse(tenant, out var parsedTenant) ? parsedTenant : (Guid?)null;
 
         if (Guid.TryParse(subscription, out _))
         {
-            return (subscription, tenantId);
+            return (subscription, tenantId, null);
         }
 
         var tenantResource = await GetTenantResourceAsync(tenantId, cancellationToken);
@@ -270,7 +287,22 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
 
         if (matches.Count > 1)
         {
-            throw new InvalidOperationException($"Multiple subscriptions found with name '{subscription}'.");
+            if (returnCandidatesOnMultipleMatch)
+            {
+                var candidates = matches
+                    .Select(m => new SubscriptionOption(
+                        GetString(m, "subscriptionId"),
+                        GetString(m, "name"),
+                        GetString(m, "tenantId")))
+                    .ToList();
+                return (null, null, candidates);
+            }
+
+            var options = string.Join(
+                "; ",
+                matches.Select(m => $"'{GetString(m, "name")}' ({GetString(m, "subscriptionId")})"));
+            throw new InvalidOperationException(
+                $"Multiple subscriptions match '{subscription}'. Please select the correct one by specifying its exact name or subscription id: {options}.");
         }
 
         var subscriptionId = GetString(matches[0], "subscriptionId")
@@ -279,7 +311,7 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
             ? matchTenant
             : tenantId;
 
-        return (subscriptionId, resolvedTenantId);
+        return (subscriptionId, resolvedTenantId, null);
     }
 
     private async Task<TenantResource> GetTenantResourceAsync(Guid? tenantId, CancellationToken cancellationToken)

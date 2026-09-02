@@ -41,7 +41,7 @@ public class RecommendationListCommandTests
                 Arg.Any<int>(),
                 Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new ResourceQueryResults<CostSavingsRecommendation>([], false));
+                .Returns(new CostSavingsResult([], false));
         }
 
         var response = await ExecuteCommandAsync(args);
@@ -67,7 +67,7 @@ public class RecommendationListCommandTests
             Arg.Any<int>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new ResourceQueryResults<CostSavingsRecommendation>(expected, false));
+            .Returns(new CostSavingsResult(expected, false));
 
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
@@ -75,6 +75,32 @@ public class RecommendationListCommandTests
         Assert.Single(result.Recommendations);
         Assert.Equal("name1", result.Recommendations[0].Name);
         Assert.False(result.AreResultsTruncated);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenMultipleSubscriptionsMatch_AsksUserToSelect()
+    {
+        var candidates = new List<SubscriptionOption>
+        {
+            new("sub1", "contoso-dev", "tenant1"),
+            new("sub2", "contoso-prod", "tenant1"),
+        };
+        Service.ListCostSavingsAsync(
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new CostSavingsResult([], false, candidates));
+
+        var response = await ExecuteCommandAsync("--subscription", "contoso");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, OptimizationJsonContext.Default.RecommendationListResult);
+        Assert.Empty(result.Recommendations);
+        Assert.NotNull(result.SubscriptionOptions);
+        Assert.Equal(2, result.SubscriptionOptions!.Count);
+        Assert.NotNull(result.Message);
+        Assert.Contains("select", result.Message!.ToLower());
     }
 
     [Fact]

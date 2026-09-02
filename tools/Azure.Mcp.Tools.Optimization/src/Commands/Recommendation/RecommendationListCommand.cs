@@ -61,8 +61,16 @@ public sealed class RecommendationListCommand(
                 options.Tenant,
                 cancellationToken);
 
+            var message = results.SubscriptionOptions is { Count: > 0 }
+                ? $"Multiple subscriptions match '{options.Subscription}'. Please select the correct one and re-run using its exact subscription id."
+                : null;
+
             context.Response.Results = ResponseResult.Create(
-                new RecommendationListResult(results?.Results ?? [], results?.AreResultsTruncated ?? false),
+                new RecommendationListResult(
+                    results.Recommendations,
+                    results.AreResultsTruncated,
+                    message,
+                    results.SubscriptionOptions),
                 OptimizationJsonContext.Default.RecommendationListResult);
         }
         catch (Exception ex)
@@ -83,5 +91,9 @@ public sealed class RecommendationListCommand(
         _ => base.GetErrorMessage(ex)
     };
 
-    public sealed record RecommendationListResult(List<CostSavingsRecommendation> Recommendations, bool AreResultsTruncated);
+    public sealed record RecommendationListResult(
+        List<CostSavingsRecommendation> Recommendations,
+        bool AreResultsTruncated,
+        string? Message = null,
+        IReadOnlyList<SubscriptionOption>? SubscriptionOptions = null);
 }

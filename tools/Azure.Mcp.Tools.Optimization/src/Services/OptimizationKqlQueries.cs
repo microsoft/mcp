@@ -18,7 +18,7 @@ internal static class OptimizationKqlQueries
     public static string BuildSubscriptionIdByNameQuery(string subscriptionName) =>
         "resourcecontainers " +
         "| where type =~ 'microsoft.resources/subscriptions' " +
-        $"| where name =~ '{EscapeKql(subscriptionName)}' " +
+        $"| where name contains '{EscapeKql(subscriptionName)}' " +
         "| project subscriptionId, tenantId, name";
 
     /// <summary>ARG query returning the alternative resize/SKU options for a compute resource.</summary>

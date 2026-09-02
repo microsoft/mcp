@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Optimization.Models;
 
 namespace Azure.Mcp.Tools.Optimization.Services;
@@ -10,9 +9,10 @@ public interface IOptimizationService
 {
     /// <summary>
     /// Returns the top Azure Advisor cost-saving recommendations for a subscription, ranked by
-    /// impact and currency-normalized annual savings.
+    /// impact and currency-normalized annual savings. When the subscription name matches more than
+    /// one subscription, the returned result carries the candidate subscriptions instead.
     /// </summary>
-    Task<ResourceQueryResults<CostSavingsRecommendation>> ListCostSavingsAsync(
+    Task<CostSavingsResult> ListCostSavingsAsync(
         string subscription,
         int top,
         string? tenant = null,
