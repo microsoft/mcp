@@ -17,7 +17,7 @@ public interface IAzureBackupService
     Task<BackupPolicyInfo> GetPolicyAsync(string vaultName, string resourceGroup, string subscription, string policyName, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
     Task<List<BackupPolicyInfo>> ListPoliciesAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
     Task<OperationResult> CreatePolicyAsync(Policy.PolicyCreateRequest request, string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
-    Task<OperationResult> UpdatePolicyAsync(string vaultName, string resourceGroup, string subscription, string policyName, string? vaultType = null, string? scheduleTime = null, string? dailyRetentionDays = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<OperationResult> UpdatePolicyAsync(Policy.PolicyUpdateRequest request, string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
 
     // Protection operations
     Task<ProtectResult> ProtectItemAsync(string vaultName, string resourceGroup, string subscription, string datasourceId, string policyName, string? vaultType = null, string? containerName = null, string? datasourceType = null, string? aksIncludedNamespaces = null, string? aksExcludedNamespaces = null, string? aksLabelSelectors = null, string? aksIncludeClusterScopeResources = null, string? aksSnapshotResourceGroup = null, string? tenant = null, CancellationToken cancellationToken = default);
