@@ -69,6 +69,11 @@ public class TagName
     public const string ToolName = "ToolName";
 
     /// <summary>
+    /// A sanitized message describing why an MCP tool returned a failed result.
+    /// </summary>
+    public const string ToolFailureMessage = "ToolFailureMessage";
+
+    /// <summary>
     /// Name of the area of the tool that was executed.
     /// </summary>
     public const string ToolArea = "ToolArea";
