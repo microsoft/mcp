@@ -1,0 +1,5 @@
+changes:
+  - section: "Features Added"
+    description: "Expanded `advisor recommendation summary` with lifecycle status, metadata subcategory, service-retirement date, and recommendation type groupings and filters."
+  - section: "Bugs Fixed"
+    description: "Corrected Advisor recommendation type and impacted resource type summary keys, added metadata-authoritative category and impact values, rejected invalid summary filters and top limits, and excluded legacy or service-group recommendation records."
