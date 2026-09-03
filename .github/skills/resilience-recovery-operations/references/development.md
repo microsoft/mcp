@@ -34,11 +34,13 @@ When implementation depends on SDK contracts, service behavior, or portal workfl
 
 Use [recorded-tests.md](../../../../docs/recorded-tests.md) for the canonical recording workflow. Run these Resilience Management commands from the repository root.
 
-Authenticate to the Microsoft tenant:
+Authenticate with Azure PowerShell using the tenant that contains the test subscription and service group:
 
 ```powershell
-Connect-AzAccount -TenantId 72f988bf-86f1-41af-91ab-2d7cd011db47
+Connect-AzAccount
 ```
+
+If the active tenant is not the test tenant, use `Connect-AzAccount -TenantId <tenant-id>`. Ensure the local test settings use the same tenant.
 
 Build the server and referenced toolset:
 
