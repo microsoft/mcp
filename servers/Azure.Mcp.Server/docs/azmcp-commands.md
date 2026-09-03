@@ -3672,6 +3672,198 @@ azmcp managedlustre fs blob import delete --subscription <subscription> \
                                          --job-name <job-name>
 ```
 
+### Azure NetApp Files Operations
+
+#### Account Operations
+
+```bash
+# Create a new NetApp Files account in a resource group
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account create --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --account <account> \
+                                 --location <location>
+
+
+# Get details for all NetApp Files accounts in a subscription, or a specific account
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account get --subscription <subscription>
+azmcp netappfiles account get --subscription <subscription> --account <account>
+```
+
+```bash
+# Update an existing NetApp Files account (supports updating tags)
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account update --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --account <account> \
+                                 --location <location>
+azmcp netappfiles account update --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --account <account> \
+                                 --location <location> \
+                                 --tags '{"key1":"value1","key2":"value2"}'
+```
+
+#### Backup Operations
+
+```bash
+# Create a new NetApp Files backup in a specified backup vault under a NetApp account
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backup create --account <account> --backup-vault <backup-vault> --backup <backup> --resource-group <resource-group> --location <location> --volume-resource-id <volume-resource-id> --subscription <subscription>
+azmcp netappfiles backup create --account <account> --backup-vault <backup-vault> --backup <backup> --resource-group <resource-group> --location <location> --volume-resource-id <volume-resource-id> --subscription <subscription> --label <label>
+
+```bash
+# Update an existing NetApp Files backup in a specified backup vault under a NetApp account
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backup update --account <account> --backup-vault <backup-vault> --backup <backup> --resource-group <resource-group> --location <location> --subscription <subscription>
+azmcp netappfiles backup update --account <account> --backup-vault <backup-vault> --backup <backup> --resource-group <resource-group> --location <location> --subscription <subscription> --label <label>
+```
+
+#### Backup Policy Operations
+
+```bash
+# Create a new NetApp Files backup policy in a specified account and resource group
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backuppolicy create --account <account> --backup-policy <backup-policy> --resource-group <resource-group> --location <location> --subscription <subscription>
+azmcp netappfiles backuppolicy create --account <account> --backup-policy <backup-policy> --resource-group <resource-group> --location <location> --subscription <subscription> --daily-backups-to-keep <daily> --weekly-backups-to-keep <weekly> --monthly-backups-to-keep <monthly>
+```
+
+#### Backup Policy Operations
+
+```bash
+# Get details for all NetApp Files backup policies in a subscription, or filter by account and/or backup policy name
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backuppolicy get --subscription <subscription>
+azmcp netappfiles backuppolicy get --subscription <subscription> --account <account>
+azmcp netappfiles backuppolicy get --subscription <subscription> --account <account> --backup-policy <backup-policy>
+
+# Update an existing NetApp Files backup policy in a specified account and resource group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backuppolicy update --account <account> --backup-policy <backup-policy> --resource-group <resource-group> --location <location> --subscription <subscription>
+azmcp netappfiles backuppolicy update --account <account> --backup-policy <backup-policy> --resource-group <resource-group> --location <location> --subscription <subscription> --daily-backups-to-keep <daily> --weekly-backups-to-keep <weekly> --monthly-backups-to-keep <monthly>
+```
+
+#### Backup Vault Operations
+
+```bash
+# Get details for all NetApp Files backup vaults in a subscription, or filter by account and/or backup vault name
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backupvault get --subscription <subscription>
+azmcp netappfiles backupvault get --subscription <subscription> --account <account>
+azmcp netappfiles backupvault get --subscription <subscription> --account <account> --backup-vault <backup-vault>
+
+# Create an Azure NetApp Files backup vault in a specified account and resource group
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backupvault create --account <account> --backup-vault <backup-vault> --resource-group <resource-group> --location <location> --subscription <subscription>
+
+# Update an existing Azure NetApp Files backup vault in a specified account and resource group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backupvault update --account <account> --backup-vault <backup-vault> --resource-group <resource-group> --location <location> --subscription <subscription>
+azmcp netappfiles backupvault update --account <account> --backup-vault <backup-vault> --resource-group <resource-group> --location <location> --subscription <subscription> --tags '{"key1":"value1","key2":"value2"}'
+```
+
+#### Capacity Pool Operations
+
+```bash
+# Get details for all NetApp Files capacity pools in a subscription, or filter by account and/or pool name
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles pool get --subscription <subscription>
+azmcp netappfiles pool get --subscription <subscription> --account <account>
+azmcp netappfiles pool get --subscription <subscription> --account <account> --pool <pool>
+
+
+# Create an Azure NetApp Files capacity pool in a specified account
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles pool create --account <account> --pool <pool> --resource-group <resource-group> --location <location> --size <size> --subscription <subscription>
+azmcp netappfiles pool create --account <account> --pool <pool> --resource-group <resource-group> --location <location> --size <size> --subscription <subscription> --service-level <service-level> --qos-type <qos-type>
+
+# Update an existing Azure NetApp Files capacity pool in a specified account
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles pool update --account <account> --pool <pool> --resource-group <resource-group> --location <location> --subscription <subscription>
+azmcp netappfiles pool update --account <account> --pool <pool> --resource-group <resource-group> --location <location> --subscription <subscription> --size <size> --qos-type <qos-type> --tags '{"key1":"value1","key2":"value2"}'
+```
+
+#### Snapshot Operations
+
+```bash
+# Get details for all NetApp Files snapshots in a subscription, or filter by account, pool, volume, and/or snapshot name
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles snapshot get --subscription <subscription>
+azmcp netappfiles snapshot get --subscription <subscription> --account <account>
+azmcp netappfiles snapshot get --subscription <subscription> --account <account> --pool <pool> --volume <volume> --snapshot <snapshot>
+
+# Create an Azure NetApp Files snapshot for a specified volume
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles snapshot create --account <account> --pool <pool> --volume <volume> --snapshot <snapshot> --resource-group <resource-group> --location <location> --subscription <subscription>
+
+# Update an existing Azure NetApp Files snapshot for a specified volume
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles snapshot update --account <account> --pool <pool> --volume <volume> --snapshot <snapshot> --resource-group <resource-group> --location <location> --subscription <subscription>
+```
+
+#### Snapshot Policy Operations
+
+```bash
+# Create an Azure NetApp Files snapshot policy in a specified account
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles snapshotpolicy create --account <account> --snapshot-policy <snapshot-policy> --resource-group <resource-group> --location <location> --subscription <subscription>
+azmcp netappfiles snapshotpolicy create --account <account> --snapshot-policy <snapshot-policy> --resource-group <resource-group> --location <location> --subscription <subscription> --hourly-schedule-minute <minute> --hourly-schedule-snapshots-to-keep <count> --daily-schedule-hour <hour> --daily-schedule-minute <minute> --daily-schedule-snapshots-to-keep <count> --weekly-schedule-day <day> --weekly-schedule-snapshots-to-keep <count> --monthly-schedule-days-of-month <days> --monthly-schedule-snapshots-to-keep <count>
+
+# Get details for all NetApp Files snapshot policies in a subscription, or filter by account and/or snapshot policy name
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles snapshotpolicy get --subscription <subscription>
+azmcp netappfiles snapshotpolicy get --subscription <subscription> --account <account>
+azmcp netappfiles snapshotpolicy get --subscription <subscription> --account <account> --snapshot-policy <snapshot-policy>
+
+# Update an existing Azure NetApp Files snapshot policy in a specified account
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles snapshotpolicy update --account <account> --snapshot-policy <snapshot-policy> --resource-group <resource-group> --location <location> --subscription <subscription>
+azmcp netappfiles snapshotpolicy update --account <account> --snapshot-policy <snapshot-policy> --resource-group <resource-group> --location <location> --subscription <subscription> --hourly-schedule-minute <minute> --hourly-schedule-snapshots-to-keep <count> --daily-schedule-hour <hour> --daily-schedule-minute <minute> --daily-schedule-snapshots-to-keep <count> --weekly-schedule-day <day> --weekly-schedule-snapshots-to-keep <count> --monthly-schedule-days-of-month <days> --monthly-schedule-snapshots-to-keep <count>
+```
+
+#### Volume Operations
+
+```bash
+# Get details for all NetApp Files volumes in a subscription, or filter by account, pool, and/or volume name
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volume get --subscription <subscription>
+azmcp netappfiles volume get --subscription <subscription> --account <account>
+azmcp netappfiles volume get --subscription <subscription> --account <account> --pool <pool> --volume <volume>
+
+# Create an Azure NetApp Files volume in a specified capacity pool
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volume create --subscription <subscription> --account <account> --pool <pool> --volume <volume> --resource-group <resourceGroup> --location <location> --creation-token <creationToken> --usage-threshold <usageThreshold> --subnet-id <subnetId>
+azmcp netappfiles volume create --subscription <subscription> --account <account> --pool <pool> --volume <volume> --resource-group <resourceGroup> --location <location> --creation-token <creationToken> --usage-threshold <usageThreshold> --subnet-id <subnetId> --service-level Premium --protocolTypes NFSv3
+
+# Update an existing Azure NetApp Files volume in a specified capacity pool
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volume update --subscription <subscription> --account <account> --pool <pool> --volume <volume> --resource-group <resourceGroup> --location <location>
+azmcp netappfiles volume update --subscription <subscription> --account <account> --pool <pool> --volume <volume> --resource-group <resourceGroup> --location <location> --usage-threshold <usageThreshold> --service-level Ultra
+azmcp netappfiles volume update --subscription <subscription> --account <account> --pool <pool> --volume <volume> --resource-group <resourceGroup> --location <location> --tags '{"env":"prod"}'
+```
+
+#### Volume Group Operations
+
+```bash
+# Get details for all NetApp Files volume groups in a subscription, or filter by account and/or volume group name
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volumegroup get --subscription <subscription>
+azmcp netappfiles volumegroup get --subscription <subscription> --account <account>
+azmcp netappfiles volumegroup get --subscription <subscription> --account <account> --volume-group <volumeGroup>
+
+# Create an Azure NetApp Files volume group in a specified account
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volumegroup create --subscription <subscription> --account <account> --volume-group <volumeGroup> --resource-group <resourceGroup> --location <location> --application-type <applicationType> --application-identifier <applicationIdentifier>
+azmcp netappfiles volumegroup create --subscription <subscription> --account <account> --volume-group <volumeGroup> --resource-group <resourceGroup> --location <location> --application-type SAP-HANA --application-identifier SH1 --group-description "My volume group"
+
+# Update an existing Azure NetApp Files volume group in a specified account
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volumegroup update --subscription <subscription> --account <account> --volume-group <volumeGroup> --resource-group <resourceGroup> --location <location>
+azmcp netappfiles volumegroup update --subscription <subscription> --account <account> --volume-group <volumeGroup> --resource-group <resourceGroup> --location <location> --group-description "Updated description"
+azmcp netappfiles volumegroup update --subscription <subscription> --account <account> --volume-group <volumeGroup> --resource-group <resourceGroup> --location <location> --tags '{"env":"prod"}'
+```
+
 ### Azure Migrate Operations
 
 #### Platform Landing Zone Modification Guidance
