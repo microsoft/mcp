@@ -7,6 +7,10 @@ using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Advisor.Validation;
 
+/// <summary>
+/// Validates service-retirement filters shared by Advisor metadata, recommendation list,
+/// and recommendation summary commands.
+/// </summary>
 internal static class ServiceRetirementFilterValidator
 {
     private static readonly string[] AllowedRetirementDateOperators = ["eq", "lt", "le", "gt", "ge"];
@@ -22,10 +26,11 @@ internal static class ServiceRetirementFilterValidator
             serviceRetirementOnly ||
             trackingIds?.Any(id => !string.IsNullOrWhiteSpace(id)) == true ||
             !string.IsNullOrWhiteSpace(retirementDate);
+        var normalizedSubCategory = subCategory?.Trim();
 
         if (hasServiceRetirementFilter &&
-            !string.IsNullOrWhiteSpace(subCategory) &&
-            !subCategory.Trim().Equals(
+            !string.IsNullOrWhiteSpace(normalizedSubCategory) &&
+            !normalizedSubCategory.Equals(
                 RecommendationMetadataFilters.ServiceRetirementSubCategory,
                 StringComparison.OrdinalIgnoreCase))
         {

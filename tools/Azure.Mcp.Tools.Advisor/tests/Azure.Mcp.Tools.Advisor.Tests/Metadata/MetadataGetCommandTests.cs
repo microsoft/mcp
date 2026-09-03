@@ -166,7 +166,7 @@ public class MetadataGetCommandTests : CommandUnitTestsBase<MetadataGetCommand, 
     [InlineData(" en ", "en")]
     [InlineData("  fr-FR  ", "fr")]
     [InlineData("   ", "en")]
-    public async Task ExecuteAsync_NormalizesLanguageToCatalogValue(string input, string expected)
+    public async Task ExecuteAsync_NormalizesLanguageToMetadataValue(string input, string expected)
     {
         Service.GetRecommendationMetadataAsync(
             Arg.Any<string>(),

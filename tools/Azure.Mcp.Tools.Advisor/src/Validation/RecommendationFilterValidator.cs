@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Advisor.Models;
+using Azure.Mcp.Tools.Advisor.Options.Recommendation;
 using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Advisor.Validation;
@@ -17,6 +19,37 @@ internal static class RecommendationFilterValidator
     ];
 
     internal static readonly string[] AllowedImpacts = ["High", "Medium", "Low"];
+
+    private static readonly string[] AllowedStatuses =
+    [
+        nameof(RecommendationStatus.New),
+        nameof(RecommendationStatus.Postponed),
+        nameof(RecommendationStatus.Dismissed),
+        nameof(RecommendationStatus.Completed),
+    ];
+
+    internal static void Validate(RecommendationListOptions options, ValidationResult validationResult)
+    {
+        ValidateAllowedValue("--category", options.Category, AllowedCategories, validationResult);
+        ValidateAllowedValue("--impact", options.Impact, AllowedImpacts, validationResult);
+        ValidateAllowedValue("--status", options.Status?.ToString(), AllowedStatuses, validationResult);
+        ValidateOptionalValue("--resource-type", options.ResourceType, validationResult);
+        ValidateOptionalValue("--resource", options.Resource, validationResult);
+        ValidateOptionalValue("--search", options.Search, validationResult);
+        ValidateOptionalValue("--sub-category", options.SubCategory, validationResult);
+        ValidateRecommendationTypeId(options.RecommendationTypeId, validationResult);
+
+        if (options.TrackingIds?.Any(string.IsNullOrWhiteSpace) == true)
+        {
+            validationResult.Errors.Add("--tracking-ids cannot contain empty values.");
+        }
+
+        ServiceRetirementFilterValidator.Validate(
+            validationResult,
+            options.SubCategory,
+            options.TrackingIds,
+            options.RetirementDate);
+    }
 
     internal static void ValidateCommon(
         ValidationResult validationResult,
@@ -36,14 +69,7 @@ internal static class RecommendationFilterValidator
         ValidateOptionalValue("--resource", resource, validationResult);
         ValidateOptionalValue("--search", search, validationResult);
         ValidateOptionalValue("--sub-category", subCategory, validationResult);
-
-        if (recommendationTypeId is not null &&
-            !Guid.TryParseExact(recommendationTypeId.Trim(), "D", out _))
-        {
-            validationResult.Errors.Add(
-                $"Invalid --recommendation-type-id value '{recommendationTypeId}'. " +
-                "Use a GUID in xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx format.");
-        }
+        ValidateRecommendationTypeId(recommendationTypeId, validationResult);
 
         ServiceRetirementFilterValidator.Validate(
             validationResult,
@@ -58,7 +84,9 @@ internal static class RecommendationFilterValidator
             ? parsed.ToString("D")
             : null;
 
-    internal static string? NormalizeAllowedValue(string? value, IReadOnlyCollection<string> allowedValues)
+    internal static string? NormalizeAllowedValue(
+        string? value,
+        IReadOnlyCollection<string> allowedValues)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -67,6 +95,19 @@ internal static class RecommendationFilterValidator
 
         return allowedValues.FirstOrDefault(
             candidate => candidate.Equals(value.Trim(), StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static void ValidateRecommendationTypeId(
+        string? recommendationTypeId,
+        ValidationResult validationResult)
+    {
+        if (recommendationTypeId is not null &&
+            !Guid.TryParseExact(recommendationTypeId.Trim(), "D", out _))
+        {
+            validationResult.Errors.Add(
+                $"Invalid --recommendation-type-id value '{recommendationTypeId}'. " +
+                "Use a GUID in xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx format.");
+        }
     }
 
     private static void ValidateAllowedValue(

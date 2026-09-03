@@ -70,6 +70,28 @@ public class RecommendationQueryBuilderTests
             result);
     }
 
+    [Theory]
+    [InlineData(RecommendationStatus.New, "New")]
+    [InlineData(RecommendationStatus.Postponed, "Postponed")]
+    [InlineData(RecommendationStatus.Dismissed, "Dismissed")]
+    [InlineData(RecommendationStatus.Completed, "Completed")]
+    public void BuildInstancePredicates_ListUsesEverySupportedStatus(
+        RecommendationStatus status,
+        string expectedStatus)
+    {
+        var result = RecommendationQueryBuilder.BuildInstancePredicates(
+            new RecommendationFilters(Status: status),
+            includeStatus: true,
+            useRequestedStatus: true,
+            includeCategoryAndImpact: true,
+            resourceTypeUsesImpactedField: false);
+
+        Assert.Equal(
+            $"{RecommendationQueryBuilder.CurrentRecommendationEngineClause} and " +
+            $"tostring(properties.recommendationStatus) =~ '{expectedStatus}'",
+            result);
+    }
+
     [Fact]
     public void BuildInstancePredicates_AllInstanceFilters_UsesExpectedSemantics()
     {
@@ -126,6 +148,46 @@ public class RecommendationQueryBuilderTests
         Assert.DoesNotContain("properties.category", result);
         Assert.DoesNotContain("properties.impact", result);
         Assert.Contains("tostring(properties.recommendationTypeId) in~ ('Type-A', 'Type-B')", result);
+    }
+
+    [Fact]
+    public void BuildInstancePredicates_MetadataOnlyFilters_AddNoInstanceClauses()
+    {
+        var result = RecommendationQueryBuilder.BuildInstancePredicates(
+            new RecommendationFilters(
+                SubCategory: "ServiceUpgradeAndRetirement",
+                TrackingIds: ["QNY1-HB8", "9G0V-_G8"],
+                RetirementDateOperator: "ge",
+                RetirementDate: new DateOnly(2026, 3, 31)),
+            includeStatus: true,
+            useRequestedStatus: true,
+            includeCategoryAndImpact: true,
+            resourceTypeUsesImpactedField: false);
+
+        Assert.Equal(
+            $"{RecommendationQueryBuilder.CurrentRecommendationEngineClause} and " +
+            RecommendationQueryBuilder.ActiveRecommendationClause,
+            result);
+    }
+
+    [Fact]
+    public void BuildInstancePredicates_ResolvedMetadataIds_IntersectsTypeId()
+    {
+        var typeId = "1d70919c-1a4a-4f79-8300-bb576c291e9d";
+        var result = RecommendationQueryBuilder.BuildInstancePredicates(
+            new RecommendationFilters(RecommendationTypeId: typeId),
+            includeStatus: true,
+            useRequestedStatus: true,
+            includeCategoryAndImpact: true,
+            resourceTypeUsesImpactedField: false,
+            recommendationTypeIds: ["Type-A", typeId]);
+
+        Assert.Contains(
+            $"tostring(properties.recommendationTypeId) =~ '{typeId}'",
+            result);
+        Assert.Contains(
+            $"tostring(properties.recommendationTypeId) in~ ('Type-A', '{typeId}')",
+            result);
     }
 
     [Fact]
