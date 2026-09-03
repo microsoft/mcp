@@ -41,8 +41,8 @@ public sealed class SchemaGetCommand(ISchemaService schemaService)
     public override void ValidateOptions(SchemaGetOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceHelper.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
-        AdmeServiceHelper.ValidateKind(options.Kind, validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateKind(options.Kind, validationResult);
     }
 
     /// <summary>

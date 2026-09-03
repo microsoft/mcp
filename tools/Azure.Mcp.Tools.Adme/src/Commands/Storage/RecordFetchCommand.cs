@@ -49,7 +49,7 @@ public sealed class RecordFetchCommand(IStorageService storageService)
     public override void ValidateOptions(RecordFetchOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceHelper.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
 
         if (options.Attributes is not null
             && (options.Attributes.Length == 0 || options.Attributes.Any(string.IsNullOrWhiteSpace)))
@@ -66,7 +66,7 @@ public sealed class RecordFetchCommand(IStorageService storageService)
         {
             foreach (var id in options.Ids)
             {
-                AdmeServiceHelper.ValidateRecordId(id, "--ids", validationResult);
+                AdmeServiceValidator.ValidateRecordId(id, "--ids", validationResult);
             }
 
             if (options.Ids.Length > (projecting ? MaxProjectionIds : MaxBatchIds))

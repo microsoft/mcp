@@ -44,8 +44,8 @@ public sealed class RecordListCommand(IStorageService storageService)
     public override void ValidateOptions(RecordListOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceHelper.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
-        AdmeServiceHelper.ValidateKind(options.Kind, validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateKind(options.Kind, validationResult);
 
         if (options.Limit is < 1 or > MaxLimit)
         {

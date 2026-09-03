@@ -45,8 +45,8 @@ public sealed class RecordGetCommand(IStorageService storageService)
     public override void ValidateOptions(RecordGetOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceHelper.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
-        AdmeServiceHelper.ValidateRecordId(options.Id, "--id", validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateRecordId(options.Id, "--id", validationResult);
 
         if (options.Attributes is not null
             && (options.Attributes.Length == 0 || options.Attributes.Any(string.IsNullOrWhiteSpace)))

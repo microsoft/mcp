@@ -1367,6 +1367,39 @@
       ]
     },
     {
+      "name": "search_azure_data_manager_for_energy_records",
+      "description": "Search OSDU records in Azure Data Manager for Energy by indexed fields and wildcard or multiple kinds, with cursor pagination, aggregation, projection, sorting, and spatial filtering.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not modify resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "A continuation cursor can advance when consumed and must not be replayed after a failed request."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "adme_search"
+      ]
+    },
+    {
       "name": "get_azure_data_manager_for_energy_schemas",
       "description": "Get a specific OSDU schema definition or list schema descriptors in an Azure Data Manager for Energy data partition, with optional identity, lifecycle, scope, version, and paging filters.",
       "toolMetadata": {

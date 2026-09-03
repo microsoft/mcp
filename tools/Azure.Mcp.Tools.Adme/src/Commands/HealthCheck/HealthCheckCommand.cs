@@ -42,7 +42,7 @@ public sealed class HealthCheckCommand(IHealthService healthService)
     public override void ValidateOptions(HealthCheckOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceHelper.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
     }
 
     /// <summary>

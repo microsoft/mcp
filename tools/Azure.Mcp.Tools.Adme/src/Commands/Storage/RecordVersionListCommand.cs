@@ -40,8 +40,8 @@ public sealed class RecordVersionListCommand(IStorageService storageService)
     public override void ValidateOptions(RecordVersionListOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceHelper.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
-        AdmeServiceHelper.ValidateRecordId(options.Id, "--id", validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateRecordId(options.Id, "--id", validationResult);
     }
 
     /// <summary>
