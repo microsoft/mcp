@@ -13,9 +13,11 @@ public static class AzureBackupOptionDefinitions
     internal const string Policy = "The name of the backup policy.";
     internal const string Location = "The Azure region (e.g., 'eastus', 'westus2').";
     internal const string DatasourceId = "The datasource identifier. For VM/FileShare/DPP workloads, use the ARM resource ID (e.g., '/subscriptions/.../virtualMachines/myvm'). For RSV in-guest workloads (SQL/SAPHANA), use the protectable item name from 'protectableitem list' (e.g., 'SAPHanaDatabase;instance;dbname').";
-    internal const string ImmutabilityState = "Immutability state: 'Disabled', 'Enabled', or 'Locked' (irreversible).";
-    internal const string SoftDelete = "Soft delete state: 'AlwaysOn', 'On', or 'Off'.";
-    internal const string SoftDeleteRetentionDays = "Soft delete retention period (14-180 days).";
+    internal const string ImmutabilityState = "Vault immutability state. 'Locked' is IRREVERSIBLE - once locked, immutability cannot be disabled. 'Enabled' is a backward-compatible alias for 'Unlocked'.";
+    internal const string ImmutabilityType = "Immutability duration mode. 'AsPerPolicy' derives retention from the backup policy. 'TimeBased' pins retention to a fixed number of days from '--immutability-duration-days'. Ignored by the service when '--immutability-state' is 'Disabled'.";
+    internal const string ImmutabilityDurationDays = "Fixed immutability duration in days (30-36135). Required when '--immutability-type' is 'TimeBased'; ignored when 'AsPerPolicy'.";
+    internal const string SoftDelete = "Vault soft delete state. 'Off' disables soft delete. 'On' enables soft delete for the configured retention period. 'AlwaysOn' is IRREVERSIBLE - once set, soft delete cannot be disabled.";
+    internal const string SoftDeleteRetentionDays = "Soft delete retention period in days (14-180). Required - the Recovery Services API rejects state-only updates on api-version 2026-02-01 and later.";
     internal const string WorkloadType = "Workload type: VM, SQL, SAPHANA, SAPASE, AzureFileShare (RSV types); AzureDisk, AzureBlob, AKS, ElasticSAN, PostgreSQLFlexible, ADLS, CosmosDB (DPP types). Also accepts aliases like AzureVM, SQLDatabase, etc.";
     public const string WorkloadTypeName = "workload-type";
     internal const string DailyRetentionDays = "Daily recovery point retention in days. Defaults to datasource-specific value if omitted.";
@@ -81,4 +83,9 @@ public static class AzureBackupOptionDefinitions
     internal const string PrivateEndpointAutoApprove = "When true, auto-approve the Private Endpoint Connection after creation (requires Microsoft.RecoveryServices/vaults/privateEndpointConnectionsApproval/action).";
     internal const string PrivateEndpointDescription = "Optional description passed to the vault owner when approving or rejecting the connection.";
     internal const string PrivateEndpointAction = "Decision to apply to the pending Private Endpoint Connection: 'approve' or 'reject'.";
+
+    // Selective Disk Backup (IaaS VM only) - see https://learn.microsoft.com/azure/backup/selective-disk-backup-restore
+    internal const string DiskListSetting = "Disk exclusion mode for IaaS VM backup: 'include' (back up only the LUNs in --disks-list), 'exclude' (back up all disks except the LUNs in --disks-list), or 'resetexclusionsettings' (remove any selective disk configuration and back up all disks). Only supported for RSV IaaS VM protected items.";
+    internal const string DisksList = "Comma-separated data disk LUNs (non-negative integers, e.g. '0,1,3') to include or exclude based on --disk-list-setting. Ignored when --disk-list-setting is 'resetexclusionsettings' or when --exclude-all-data-disks is true.";
+    internal const string ExcludeAllDataDisks = "When true, back up only the OS disk and exclude every data disk. Overrides --disks-list. Only supported for RSV IaaS VM protected items.";
 }

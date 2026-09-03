@@ -1,3 +1,0 @@
-changes:
-  - section: Breaking Changes
-    description: Removed custom retry policy options from Redis, Resilience Management, Resource Health, Search, and Service Bus tools.
