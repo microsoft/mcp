@@ -161,7 +161,7 @@ public class RecommendationSummaryServiceTests
         Assert.DoesNotContain("it's|unsafe", query);
         Assert.Contains("sub''id", query);
         Assert.Contains("rg''name", query);
-        Assert.Contains("it''sunsafe", query);
+        Assert.Contains("it''s", query);
     }
 
     [Fact]

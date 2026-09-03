@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "Use it for an executive summary or main themes, counts by category or business impact, top recommendation types, ranking resource types by critical or High-impact recommendations, lifecycle counts for New, Completed, Dismissed, and Postponed recommendations, and metadata subcategory breakdowns such as ZoneResiliency. " +
         "Count overdue service-retirement Advisor recommendations that are still active, or group active service-retirement recommendations by retirement date. " +
         "This includes services retiring on an exact date, on or before a date, on or after a specified date, in the next N days or months, or soon. " +
+        "For requests to summarize, count, or group retirements in the next N days or months by retirement date, always use this summary tool; recommendation list is capped and must not be counted client-side. " +
         "Group by recommendation-type, category, impact, resource-type, status, sub-category, or retirement-date; category is the default. " +
         "All groups return canonical key, label, and count values. Recommendation-type keys are stable type ID GUIDs with English metadata labels. " +
         "All groupings except status include only active New recommendations; status includes every backend lifecycle state. " +
