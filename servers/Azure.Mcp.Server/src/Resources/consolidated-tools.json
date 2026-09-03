@@ -4466,6 +4466,7 @@
       },
       "mappedToolList": [
         "azurebackup_vault_update",
+        "azurebackup_container_refresh",
         "azurebackup_policy_update",
         "azurebackup_governance_immutability",
         "azurebackup_governance_soft-delete",

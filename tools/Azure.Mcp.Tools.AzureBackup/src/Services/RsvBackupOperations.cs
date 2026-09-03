@@ -2087,6 +2087,27 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         return items;
     }
 
+    public async Task RefreshContainersAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string? filter,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+
+        await rgResource.RefreshProtectionContainerAsync(vaultName, FabricName, filter: filter, cancellationToken: cancellationToken);
+    }
+
     /// <summary>
     /// Normalizes user-provided workload type values to the API filter format.
     /// The REST API filter expects specific types like "SAPHanaDatabase" but users

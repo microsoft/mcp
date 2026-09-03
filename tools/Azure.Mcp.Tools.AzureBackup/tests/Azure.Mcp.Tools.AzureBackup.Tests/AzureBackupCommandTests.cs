@@ -1738,6 +1738,36 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
     #endregion
 
+    #region Container Tests (RSV)
+
+    /// <summary>
+    /// Validates that container refresh triggers RSV discovery successfully.
+    /// Uses the default AzureStorage filter (Azure File share discovery); the response is a
+    /// fire-and-forget acceptance record, not a container list.
+    /// </summary>
+    [Fact]
+    public async Task ContainerRefresh_RsvVault_TriggersDiscovery_Successfully()
+    {
+        // Container refresh is RSV-only
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+
+        var result = await CallToolAsync(
+            "azurebackup_container_refresh",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName }
+            });
+
+        Assert.Equal("Accepted", result.AssertProperty("status").GetString());
+        Assert.Equal(vaultName, result.AssertProperty("vault").GetString());
+        Assert.Equal("Azure", result.AssertProperty("fabric").GetString());
+        Assert.Equal("backupManagementType eq 'AzureStorage'", result.AssertProperty("filter").GetString());
+    }
+
+    #endregion
+
     #region Governance Tests (RSV)
 
     [Fact]
