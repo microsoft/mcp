@@ -10,7 +10,7 @@ disable-model-invocation: false
 
 # Azure Resilience Management Operations
 
-Use the Azure Resilience Management MCP tools exclusively. Do not use Azure CLI (`az`), `az rest`, direct HTTP/REST calls, PowerShell Azure commands, or SDK code as a fallback. This skill covers all tools registered under the `resilience` namespace.
+For operational Azure requests, use the Azure Resilience Management MCP tools exclusively. Do not use Azure CLI (`az`), `az rest`, direct HTTP/REST calls, PowerShell Azure commands, or SDK code as an operational fallback. This restriction does not apply to development tasks such as implementing, testing, recording, or debugging tools; follow the repository development workflow and use its required tooling. This skill covers all tools registered under the `resilience` namespace.
 
 - See [tool reference](./references/tools.md) for exact tool names, parameters, and enum values.
 - See [workflow recipes](./references/workflows.md) for end-to-end operation sequences and state gates.
@@ -30,7 +30,7 @@ Use the Azure Resilience Management MCP tools exclusively. Do not use Azure CLI 
 9. If a prerequisite fails, report per-resource blockers and do not start the dependent destructive operation.
 10. Use `recoveryplan` as the recovery plan parameter for every tool.
 11. For Recovery Orchestration (RO) recovery plan updates only, do not use or imply HTTP `PATCH`; the current SDK does not support RO recovery plan PATCH. Get the existing plan and preserve unchanged values in the create-or-update request.
-12. If no registered Resilience Management MCP tool supports the requested operation, state that the operation is unavailable through the current toolset. Do not work around the gap with `az`, REST, or another execution surface.
+12. For operational Azure requests, if no registered Resilience Management MCP tool supports the requested operation, state that the operation is unavailable through the current toolset. Do not work around the gap with `az`, REST, or another execution surface.
 
 ## Route the Request
 
@@ -77,7 +77,7 @@ Use the Azure Resilience Management MCP tools exclusively. Do not use Azure CLI 
 2. Run the mandatory pre-validation in the matching workflow recipe.
 3. Stop if no resources qualify, readiness fails, or the state does not support the operation.
 4. Execute only after required selectors and choices are provided.
-5. Return accepted status plus operation/job IDs; inspect status only through get tools.
+5. Report the status returned by the command. If it returns `Accepted`, include operation/job IDs and inspect subsequent status only through get tools; otherwise, report the completed result.
 
 ### Monitor asynchronous operations
 
