@@ -189,7 +189,7 @@ Rules:
 - Use `[Option("description")]` for the description — property name auto-converts to `--kebab-case`
 - Use `[Option(Name = "custom")]` only when the default kebab-case conversion is wrong (e.g., when property is named `FooBar` and has `[Option(Name = "foobar")]` you get `--foobar` instead of `--foo-bar`)
 - Use `[Option(OptionDescriptions.X)]` for shared descriptions (`Subscription`, `Tenant`, `ResourceGroup`, `AuthMethod`)
-- Use `[OptionContainer(Prefix = "prefix")]` for model types which contain nested parameters. `"prefix"` will be prepended to the `[Option]`s in the model type (e.g., when `[OptionContainer(Prefix = "foo")]`'s model contains `[Option(Name = "bar")]` the parameter name is `--foo-bar`).
+- Use `[OptionContainer<TContainer>(Prefix = "prefix")]` for model types which contain nested parameters. `"prefix"` will be prepended to the `[Option]`s in the model type (e.g., when `[OptionContainer<TContainer>(Prefix = "foo")]`'s model contains `[Option(Name = "bar")]` the parameter name is `--foo-bar`).
 - Use `subscription` (never `subscriptionId`) — supports both IDs and names
 - Use `resourceGroup` (never `resourceGroupName`)
 - Use singular nouns for resources (`server` not `serverName`)
@@ -355,7 +355,22 @@ var client = new BlobServiceClient(new(endpoint), credential, options);
 
 Reference implementations: `StorageService`, `CosmosService`, `SearchService`, `ConfidentialLedgerService`.
 
-### 1d. Command Class
+### 1d. Long-running operations
+
+Long-running operations (at this time) don't offer the ability to configure polling intervals, and even if they were
+able to there is a limit on how small of a polling interval can be used. Due to this, to prevent long-running operations
+with a significant number of polls from wasting CPU time waiting during testing, all long-running operations should use
+a two call pattern. The first call is the service method starting the polling operation, that should pass
+`WaitUntil.Started` to simply begin the operation. Then waiting for completion should call
+`BaseAzureService.WaitForLroCompletionAsync` to wait for completion in a way that testing can ignore the polling
+interval to prevent CPU wait loops that aren't necessary when playback testing.
+
+```csharp
+var lroOperation = Service.LroAsync(WaitUntil.Started, cancellationToken);
+await WaitForLroCompletionAsync(lroOperation, cancellationToken);
+```
+
+### 1e. Command Class
 
 File: `src/Commands/{Resource}/{Resource}{Operation}Command.cs`
 
@@ -490,7 +505,7 @@ public abstract class Base{Toolset}Command<
 }
 ```
 
-### 1e. JSON Serialization Context
+### 1f. JSON Serialization Context
 
 File: `src/Commands/{Toolset}JsonContext.cs`
 
@@ -510,7 +525,7 @@ Guidelines:
 - Filename must match class name (`{Toolset}JsonContext.cs`)
 - Use `{Toolset}JsonContext.Default.{CommandResult}` when serializing — never `JsonSerializer.Deserialize<T>()` without a context
 
-### 1f. Register Command
+### 1g. Register Command
 
 File: `src/{Toolset}Setup.cs`
 
@@ -785,6 +800,19 @@ public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fi
     }
 }
 ```
+
+#### `LocalRequired` tools
+
+Remote HTTP mode intentionally excludes tools marked `LocalRequired = true`. Every recorded test for such a tool must verify that exclusion and return before exercising local-only behavior:
+
+```csharp
+if (await AssertLocalToolIsUnavailableInHttpMode("{toolset}_{resource}_{operation}"))
+{
+    return;
+}
+```
+
+Use the inherited helper in every applicable test in a class extending `RecordedCommandTestsBase`; do not duplicate the transport check or unavailable-tool assertions.
 
 ### 3c. Record and Verify
 

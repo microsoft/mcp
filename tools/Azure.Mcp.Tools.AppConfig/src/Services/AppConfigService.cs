@@ -29,7 +29,6 @@ public sealed class AppConfigService(IAzureService azureService)
             "Microsoft.AppConfiguration/configurationStores",
             resourceGroup,
             subscription,
-            null,
             ConvertToAppConfigurationAccountModel,
             tenant: tenant,
             cancellationToken: cancellationToken);
@@ -208,7 +207,6 @@ public sealed class AppConfigService(IAzureService azureService)
             "Microsoft.AppConfiguration/configurationStores",
             null, // all resource groups
             subscription,
-            null,
             ConvertToAppConfigurationAccountModel,
             additionalFilter: $"name =~ '{EscapeKqlString(accountName)}'",
             tenant: tenant,

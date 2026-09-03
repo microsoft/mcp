@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Globalization;
 using System.Text.Json;
 using Azure.Mcp.Tools.Advisor.Services;
 using Xunit;
@@ -48,13 +49,79 @@ public class AdvisorServiceConversionTests
                 "id": "/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Advisor/recommendations/rec1",
                 "type": "Microsoft.Advisor/recommendations",
                 "name": "rec1",
+                "subscriptionId": "abc",
+                "resourceGroup": "rg1",
+                "tenantId": "tenant1",
                 "properties": {
                     "category": "Security",
                     "impact": "High",
-                    "shortDescription": { "problem": "Enable encryption at rest" },
+                    "recommendationTypeId": "Type-A",
+                    "impactedField": "Microsoft.Compute/virtualMachines",
+                    "impactedValue": "vm1",
+                    "recommendationStatus": "New",
+                    "completionType": "Succeeded",
+                    "reason": "Other",
+                    "postponedTime": "2027-07-01T00:00:00Z",
+                    "suppressionId": "suppression-id",
+                    "createdTime": "2026-05-13T03:19:48.0318731Z",
+                    "lastUpdated": "2026-05-14T03:19:48.0318731Z",
+                    "lastRefreshed": "2026-05-15T03:19:48.0318731Z",
+                    "shortDescription": {
+                        "problem": "Enable encryption at rest",
+                        "solution": "Turn on encryption"
+                    },
+                    "extendedProperties": {
+                        "recommendationSubCategory": "Scalability",
+                        "maturityLevel": "Preview",
+                        "recommendationOfferingId": "offering1"
+                    },
                     "resourceMetadata": {
-                        "resourceId": "/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/mystorage"
-                    }
+                        "resourceId": "/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/mystorage",
+                        "action": {
+                            "actionId": "0574d759-144a-4fdc-9201-83370c3bd756",
+                            "actionType": 0,
+                            "extensionName": "Microsoft_Azure_Storage",
+                            "bladeName": "StorageAccountBlade",
+                            "metadata": { "id": "{resourceId}" }
+                        }
+                    },
+                    "description": "Configure diagnostic settings",
+                    "label": "Configure monitoring",
+                    "learnMoreLink": "https://learn.microsoft.com/azure/azure-monitor/",
+                    "potentialBenefits": "Enhanced monitoring",
+                    "actions": [{
+                        "actionId": "b713bb56-949d-412e-8163-d4a7a2d66e61",
+                        "description": "Open the monitoring guide",
+                        "actionType": "Document",
+                        "documentLink": "https://learn.microsoft.com/azure/azure-monitor/",
+                        "extensionName": "Microsoft_Azure_Monitoring",
+                        "bladeName": "MonitoringMenuBlade",
+                        "metadata": { "source": "Advisor" },
+                        "condition": "true",
+                        "actionApplicabilityScope": "Resource",
+                        "isRecommendedAction": true,
+                        "recommendedActionButtonText": "Open guide",
+                        "copilotCompetencyId": "monitoring",
+                        "copilotCompetencyDisplayName": "Monitoring",
+                        "promptId": "prompt1",
+                        "displayPromptMessage": "Review monitoring guidance",
+                        "promptMessage": "Review this resource's monitoring configuration",
+                        "copilotAdditionalContext": ["resourceId", "recommendationTypeId"]
+                    }],
+                    "remediation": {
+                        "httpMethod": "PATCH",
+                        "uri": "/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/mystorage",
+                        "actionId": "b713bb56-949d-412e-8163-d4a7a2d66e61",
+                        "implication": "The storage account configuration will change",
+                        "documentationLink": "https://learn.microsoft.com/azure/storage/",
+                        "requestBody": { "properties": { "supportsHttpsTrafficOnly": true } },
+                        "asyncRequestDetails": { "statusUri": "{azureAsyncOperation}" }
+                    },
+                    "trackedProperties": { "priority": "High" },
+                    "review": { "name": "Review test", "id": "review1" },
+                    "resourceWorkload": { "name": "Test workload", "id": "workload1" },
+                    "sourceSystem": "Review",
+                    "notes": "Review the diagnostic settings"
                 }
             }
             """;
@@ -64,11 +131,91 @@ public class AdvisorServiceConversionTests
 
         Assert.Equal(
             "/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/mystorage",
-            result.ResourceId);
-        Assert.Equal("Enable encryption at rest", result.RecommendationText);
-        Assert.Equal("Security", result.Category);
-        Assert.Equal("High", result.Impact);
-        Assert.Equal("Microsoft.Storage/storageAccounts", result.ImpactedResourceType);
+            result.Properties.ResourceMetadata!.ResourceId);
+        Assert.Equal("/subscriptions/abc/resourceGroups/rg1/providers/Microsoft.Advisor/recommendations/rec1", result.Id);
+        Assert.Equal("rec1", result.Name);
+        Assert.Equal("Microsoft.Advisor/recommendations", result.Type);
+        Assert.Equal("Security", result.Properties.Category);
+        Assert.Equal("High", result.Properties.Impact);
+        Assert.Equal("Scalability", result.Properties.ExtendedProperties!["recommendationSubCategory"].GetString());
+        Assert.Equal("Microsoft.Compute/virtualMachines", result.Properties.ImpactedField);
+        Assert.Equal("vm1", result.Properties.ImpactedValue);
+        Assert.Equal("Type-A", result.Properties.RecommendationTypeId);
+        Assert.Equal("New", result.Properties.RecommendationStatus);
+        Assert.Equal("Succeeded", result.Properties.CompletionType);
+        Assert.Equal("Other", result.Properties.RecommendationDismissReason);
+        Assert.Equal(
+            DateTimeOffset.Parse("2027-07-01T00:00:00Z", CultureInfo.InvariantCulture),
+            result.Properties.PostponedUntilDateTime);
+        Assert.Equal(
+            DateTimeOffset.Parse("2026-05-13T03:19:48.0318731Z", CultureInfo.InvariantCulture),
+            result.Properties.CreatedTime);
+        Assert.Equal(
+            DateTimeOffset.Parse("2026-05-14T03:19:48.0318731Z", CultureInfo.InvariantCulture),
+            result.Properties.LastUpdated);
+        Assert.Equal(
+            DateTimeOffset.Parse("2026-05-15T03:19:48.0318731Z", CultureInfo.InvariantCulture),
+            result.Properties.LastRefreshed);
+        Assert.Equal(JsonValueKind.String, result.Properties.ExtendedProperties!["maturityLevel"].ValueKind);
+        Assert.Equal("Preview", result.Properties.ExtendedProperties["maturityLevel"].GetString());
+        Assert.Equal("offering1", result.Properties.ExtendedProperties["recommendationOfferingId"].GetString());
+        Assert.Equal("Enable encryption at rest", result.Properties.ShortDescription!.Problem);
+        Assert.Equal("Turn on encryption", result.Properties.ShortDescription.Solution);
+        Assert.Equal("Configure diagnostic settings", result.Properties.Description);
+        Assert.Equal("Configure monitoring", result.Properties.Label);
+        Assert.Equal("https://learn.microsoft.com/azure/azure-monitor/", result.Properties.LearnMoreLink);
+        Assert.Equal("Enhanced monitoring", result.Properties.PotentialBenefits);
+        var action = result.Properties.Actions!.Value.EnumerateArray().Single();
+        Assert.Equal("b713bb56-949d-412e-8163-d4a7a2d66e61", action.GetProperty("actionId").GetString());
+        Assert.Equal("Document", action.GetProperty("actionType").GetString());
+        Assert.Equal("Advisor", action.GetProperty("metadata").GetProperty("source").GetString());
+        Assert.True(action.GetProperty("isRecommendedAction").GetBoolean());
+        Assert.Equal(2, action.GetProperty("copilotAdditionalContext").GetArrayLength());
+        Assert.Equal("PATCH", result.Properties.Remediation!.Value.GetProperty("httpMethod").GetString());
+        Assert.Equal(
+            "b713bb56-949d-412e-8163-d4a7a2d66e61",
+            result.Properties.Remediation.Value.GetProperty("actionId").GetString());
+        Assert.True(
+            result.Properties.Remediation.Value.GetProperty("requestBody").GetProperty("properties")
+                .GetProperty("supportsHttpsTrafficOnly")
+                .GetBoolean());
+        Assert.Equal(
+            "{azureAsyncOperation}",
+            result.Properties.Remediation.Value.GetProperty("asyncRequestDetails").GetProperty("statusUri").GetString());
+        Assert.Equal("High", result.Properties.TrackedProperties!.Value.GetProperty("priority").GetString());
+        Assert.Equal("review1", result.Properties.Review!.Value.GetProperty("id").GetString());
+        Assert.Equal("Review test", result.Properties.Review.Value.GetProperty("name").GetString());
+        Assert.Equal("workload1", result.Properties.ResourceWorkload!.Value.GetProperty("id").GetString());
+        Assert.Equal("Test workload", result.Properties.ResourceWorkload.Value.GetProperty("name").GetString());
+        Assert.Equal("Review", result.Properties.SourceSystem);
+        Assert.Equal("Review the diagnostic settings", result.Properties.Notes);
+
+        var serialized = JsonSerializer.Serialize(
+            result,
+            Azure.Mcp.Tools.Advisor.Commands.AdvisorJsonContext.Default.Recommendation);
+        Assert.Contains("\"completionType\":\"Succeeded\"", serialized);
+        Assert.Contains("\"recommendationDismissReason\":\"Other\"", serialized);
+        Assert.Contains("\"postponedUntilDateTime\":\"2027-07-01T00:00:00+00:00\"", serialized);
+        Assert.DoesNotContain("suppressionId", serialized);
+    }
+
+    [Fact]
+    public void ConvertToAdvisorRecommendationModel_MissingShortDescription_LeavesItNull()
+    {
+        const string json = """
+            {
+                "id": "/subscriptions/abc/providers/Microsoft.Advisor/recommendations/rec3",
+                "properties": { "category": "Cost" }
+            }
+            """;
+
+        using var doc = JsonDocument.Parse(json);
+        var result = AdvisorService.ConvertToAdvisorRecommendationModel(doc.RootElement);
+
+        Assert.Null(result.Properties.ShortDescription);
+        Assert.Null(result.Properties.RecommendationStatus);
+        Assert.Null(result.Properties.CreatedTime);
+        Assert.Null(result.Properties.ExtendedProperties);
     }
 
     [Fact]
@@ -88,11 +235,10 @@ public class AdvisorServiceConversionTests
         using var doc = JsonDocument.Parse(json);
         var result = AdvisorService.ConvertToAdvisorRecommendationModel(doc.RootElement);
 
-        Assert.Equal("Unknown", result.ResourceId);
-        Assert.Equal("Right-size your VMs", result.RecommendationText);
-        Assert.Equal("Cost", result.Category);
-        Assert.Null(result.Impact);
-        Assert.Null(result.ImpactedResourceType);
+        Assert.Null(result.Properties.ResourceMetadata?.ResourceId);
+        Assert.Equal("Right-size your VMs", result.Properties.ShortDescription!.Problem);
+        Assert.Equal("Cost", result.Properties.Category);
+        Assert.Null(result.Properties.Impact);
     }
 
     [Fact]
@@ -116,6 +262,6 @@ public class AdvisorServiceConversionTests
         using var doc = JsonDocument.Parse(json);
         var result = AdvisorService.ConvertToAdvisorRecommendationModel(doc.RootElement);
 
-        Assert.Equal("Medium", result.Impact);
+        Assert.Equal("Medium", result.Properties.Impact);
     }
 }

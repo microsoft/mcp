@@ -264,6 +264,11 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact]
     public async Task Should_upload_blob()
     {
+        if (await AssertLocalToolIsUnavailableInHttpMode("storage_blob_upload"))
+        {
+            return;
+        }
+
         // Create a temporary file to upload
         var tempFileName = RegisterOrRetrieveVariable("blobName", $"test-upload-{DateTime.UtcNow.Ticks}.txt");
         var tempFilePath = Path.Combine(Path.GetTempPath(), tempFileName);
@@ -318,8 +323,7 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             {
             { "subscription", Settings.SubscriptionName },
             { "tenant", Settings.TenantId },
-            { "account", Settings.ResourceBaseName },
-            { "retry-max-retries", 0 }
+            { "account", Settings.ResourceBaseName }
             });
 
         var actual = result.AssertProperty("containers");
@@ -337,8 +341,7 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             { "subscription", Settings.SubscriptionName },
             { "tenant", Settings.TenantId },
             { "account", Settings.ResourceBaseName },
-            { "prefix", "ba" },
-            { "retry-max-retries", 0 }
+            { "prefix", "ba" }
             });
 
         var actual = result.AssertProperty("containers");

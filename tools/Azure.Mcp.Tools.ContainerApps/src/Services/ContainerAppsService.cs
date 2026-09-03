@@ -22,7 +22,6 @@ public sealed class ContainerAppsService(IAzureService azureService)
             "Microsoft.App/containerApps",
             resourceGroup,
             subscription,
-            null,
             ConvertToContainerAppInfoModel,
             tenant: tenant,
             cancellationToken: cancellationToken);
